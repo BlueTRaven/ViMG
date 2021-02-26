@@ -1,0 +1,168 @@
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ViMG
+{
+	public static class MeshHelper
+	{
+		[Flags]
+		public enum CubeFace
+		{
+			NONE = 0,
+			LEFT = 1 << 0,
+			RIGHT = 1 << 1,
+			UP = 1 << 2,
+			DOWN = 1 << 3,
+			FRONT = 1 << 4,
+			BACK = 1 << 5,
+			ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK
+		}
+
+		public static SimpleMesh<VertexPositionColorTextureNormal, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
+		{
+			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<int> indices = new List<int>();
+
+			MakeCubeVertsVertexPositionColorTextureNormal(min, max, faces, color, vertices, indices);
+
+			if (texture == null)
+				return new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
+			else return new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, texture);
+		}
+
+		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+		{
+			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+			if (faces.Has(CubeFace.BACK))
+				MakeQuadVertsVertexPositionColorTextureNormal(l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, 1), color, vertices, indices);
+
+			if (faces.Has(CubeFace.LEFT))
+				MakeQuadVertsVertexPositionColorTextureNormal(r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(-1, 0, 0), color, vertices, indices);
+
+			if (faces.Has(CubeFace.FRONT))
+				MakeQuadVertsVertexPositionColorTextureNormal(r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, -1), color, vertices, indices);
+
+			if (faces.Has(CubeFace.RIGHT))
+				MakeQuadVertsVertexPositionColorTextureNormal(l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(1, 0, 0), color, vertices, indices);
+
+			if (faces.Has(CubeFace.UP))
+				MakeQuadVertsVertexPositionColorTextureNormal(l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, 1, 0), color, vertices, indices);
+
+			if (faces.Has(CubeFace.DOWN))
+				MakeQuadVertsVertexPositionColorTextureNormal(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices);
+		}
+
+		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexPositionColorTextureNormal> vertices, List<int> indices, int textureX = -1, int textureY = -1, int textureWidth = -1, int textureHeight = -1)
+		{
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			if (textureX == -1)
+			{
+				vertices.Add(new VertexPositionColorTextureNormal(a, color, new Vector2(0, 0), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(b, color, new Vector2(1, 0), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(c, color, new Vector2(1, 1), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(d, color, new Vector2(0, 1), normal));
+			}
+			else
+			{
+				vertices.Add(new VertexPositionColorTextureNormal(a, color, new Vector2(0, 0), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(b, color, new Vector2(1, 0), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(c, color, new Vector2(1, 1), normal));
+				vertices.Add(new VertexPositionColorTextureNormal(d, color, new Vector2(0, 1), normal));
+			}
+		}
+
+		public static SimpleMesh<VertexPositionColor, int> MakeCubeVertexPositionColor(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
+		{
+			List<VertexPositionColor> vertices = new List<VertexPositionColor>();
+			List<int> indices = new List<int>();
+
+			MakeCubeVertsVertexPositionColor(min, max, faces, color, vertices, indices);
+
+			if (texture == null)
+				return new SimpleMesh<VertexPositionColor, int>(device, vertices, indices);
+			else return new SimpleMesh<VertexPositionColor, int>(device, vertices, indices, texture);
+		}
+
+		public static void MakeCubeVertsVertexPositionColor(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexPositionColor> vertices, List<int> indices)
+		{
+			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+			if (faces.Has(CubeFace.BACK))
+				MakeQuadVertsVertexPositionColor(l_t_n, r_t_n, r_b_n, l_b_n, color, vertices, indices);
+
+			if (faces.Has(CubeFace.LEFT))
+				MakeQuadVertsVertexPositionColor(r_t_n, r_t_f, r_b_f, r_b_n, color, vertices, indices);
+
+			if (faces.Has(CubeFace.FRONT))
+				MakeQuadVertsVertexPositionColor(r_t_f, l_t_f, l_b_f, r_b_f, color, vertices, indices);
+
+			if (faces.Has(CubeFace.RIGHT))
+				MakeQuadVertsVertexPositionColor(l_t_f, l_t_n, l_b_n, l_b_f, color, vertices, indices);
+
+			if (faces.Has(CubeFace.UP))
+				MakeQuadVertsVertexPositionColor(l_t_f, r_t_f, r_t_n, l_t_n, color, vertices, indices);
+
+			if (faces.Has(CubeFace.DOWN))
+				MakeQuadVertsVertexPositionColor(r_b_f, l_b_f, l_b_n, r_b_n, color, vertices, indices);
+		}
+
+		public static void MakeQuadVertsVertexPositionColor(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Color color, List<VertexPositionColor> vertices, List<int> indices)
+		{
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColor(a, color));
+			vertices.Add(new VertexPositionColor(b, color));
+			vertices.Add(new VertexPositionColor(c, color));
+			vertices.Add(new VertexPositionColor(d, color));
+		}
+
+		public static void MakeQuadVertsVertexPositionTexture(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector2 atx, Vector2 btx, Vector2 ctx, Vector2 dtx, 
+			List<VertexPositionTexture> vertices, List<int> indices)
+		{
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionTexture(a, atx));
+			vertices.Add(new VertexPositionTexture(b, btx));
+			vertices.Add(new VertexPositionTexture(c, ctx));
+			vertices.Add(new VertexPositionTexture(d, dtx));
+		}
+	}
+}

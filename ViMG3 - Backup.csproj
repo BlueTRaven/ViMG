@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="BrUtility\**" />
+    <EmbeddedResource Remove="BrUtility\**" />
+    <None Remove="BrUtility\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="BrUtility\BrAssetsManager\BrAssetsManager.csproj" />
+    <ProjectReference Include="BrUtility\BrUtility\BrUtility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.2007" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.2006" />
+  </ItemGroup>
+
+</Project>
