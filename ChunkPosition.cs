@@ -52,7 +52,7 @@ namespace ViMG
 
 		public override string ToString()
 		{
-			return base.ToString() + " X: " + X.ToString() + " Y: " + Y.ToString() + " Z: " + Z.ToString();
+			return " X: " + X.ToString() + " Y: " + Y.ToString() + " Z: " + Z.ToString();
 		}
 
 		public override bool Equals(object obj)

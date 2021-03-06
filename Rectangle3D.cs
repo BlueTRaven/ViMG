@@ -10,6 +10,8 @@ namespace ViMG
 		public Vector3 Position;
 		public Vector3 Size;
 
+		public Vector3 FarPosition => Position + Size;
+
 		public float Left => Position.X + Size.X;
 		public float Right => Position.X;
 

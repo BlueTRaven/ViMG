@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Items;
 
 namespace ViMG
 {
@@ -17,10 +18,8 @@ namespace ViMG
 	{
 		public const float GRAVITY = -9.8f;
 
-		public CubeRegistry CubeRegistry;
-
 		public readonly int sizeInChunks;
-		public readonly float sizeInCubes;
+		public readonly int sizeInCubes;
 
 		private readonly ChunkManager chunkManager;
 
@@ -40,6 +39,7 @@ namespace ViMG
 
 		public DenseHitboxArray HitboxManager = new DenseHitboxArray(32);
 		public ProjectileManager ProjectileManager;
+		public EntityManager EntityManager;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -60,14 +60,13 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
+		public GenericPool<ChunkData> ChunkDatas = new GenericPool<ChunkData>(() => new ChunkData());
+
 		public World(GraphicsDevice device, int worldSize)
 		{
 			this.sizeInCubes = worldSize;
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
-
-			CubeRegistry = new CubeRegistry();
-			CubeRegistry.RegisterCubes();
 
 			mesh = MeshHelper.MakeCubeVertexPositionColor(device, new Vector3(0), new Vector3(worldSize) * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshWireframeCube = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
@@ -99,11 +98,15 @@ namespace ViMG
 
 			meshMaxDrawDistBottom = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
-			chunkManager = new ChunkManager(device, sizeInChunks, this);
+			chunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
 			ProjectileManager = new ProjectileManager(device);
+			EntityManager = new EntityManager(this);
 
 			player = new Player(this);
+
+			Main.CubeEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
+			Main.CubeEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 		}
 
 		public void Initialize()
@@ -122,7 +125,7 @@ namespace ViMG
 				ChunkPosition pos = ChunkPosition.CubeChunk(playerPos);
 				pos.Y -= y;
 
-				if (IsInWorldBounds(pos) && !GetChunkManager().IsChunkGenerated(pos))
+				if (chunkManager.IsInWorldBounds(pos) && !GetChunkManager().IsChunkGenerated(pos))
 				{
 					GetChunkManager().MarkGenerateDirty(pos);
 				}
@@ -134,7 +137,7 @@ namespace ViMG
 			bool ok = false;
 			player.Position = GetFirstSolidDown(playerPos.InWorldSpace(out ok)).InWorldSpace(out ok) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 
-			Main.FogHandler.Set(1300f, 1700f, SkyColor);
+			Main.FogHandler.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
 			//Main.FogHandler.Set(750f, 800f, SkyColor);
 		}
 
@@ -149,6 +152,7 @@ namespace ViMG
 			player.Update(deltaTime);
 
 			ProjectileManager.Update(this, deltaTime);
+			EntityManager.Update(deltaTime);
 
 			foreach (var mined in miningCubes)
 			{
@@ -183,7 +187,7 @@ namespace ViMG
 			{
 				CubePosition pos = GetFirstSolidDown(new Vector3(Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE), sizeInCubes * Cube.CUBE_SCALE, Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE)));
 
-				if (IsInWorldBounds(pos))
+				if (chunkManager.IsInWorldBounds(pos))
 				{
 					slimes.Add(new Slime(this, pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
 				}
@@ -194,7 +198,7 @@ namespace ViMG
 			{
 				slime.Update(deltaTime);
 
-				if (!IsInWorldBounds(slime.Position))
+				if (!chunkManager.IsInWorldBounds(slime.Position))
 				{
 					slime.Kill();
 					toRemove.Add(slime);
@@ -227,7 +231,7 @@ namespace ViMG
 
 							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
-							if (IsInWorldBounds(chunkPos) && length < DrawRadius && Main.camera.FrustumIntersects(chunkManager.GetChunk(chunkPos).Bounds))
+							if (chunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && Main.camera.FrustumIntersects(chunkManager.GetChunk(chunkPos).Bounds))
 							{
 								chunkDrawPositions.Add(chunkPos);
 							}
@@ -259,6 +263,39 @@ namespace ViMG
 
 			device.DepthStencilState = Main.genericDSS;
 			device.RasterizerState = Main.genericRS;
+			device.BlendState = BlendState.AlphaBlend;
+			float dist = 1700f;
+
+			Vector3 camChunkPosWS = -Main.camera.Position;
+			if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
+				dist = MathHelper.Lerp(200f, 1700f, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
+			else if (camChunkPosWS.Y < -200f)
+				dist = 200f;
+
+			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+			camChunkPosWS.Y -= dist;
+			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+			//if (camChunkPosWS.Y < 0)
+			//camChunkPosWS.Y = 0;
+
+			Vector2 center = new Vector2(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE / 2f);
+			Vector2 distFromCenter = new Vector2(center.X - (-Main.camera.Position.X), center.Y - (-Main.camera.Position.Z));
+
+			float len = distFromCenter.Length();
+
+			if (len > (sizeInCubes * Cube.CUBE_SCALE / 2f) - 200f)
+			{
+				float lend = len - ((sizeInCubes * Cube.CUBE_SCALE / 2f) - 200f);
+				float percent = 1 - (lend / 100f);
+				percent = MathHelper.Clamp(percent, 0, 1);
+
+				dist = MathHelper.Lerp(0, dist, percent);
+			}
+
+			if (!player.InWater)
+				Main.FogHandler.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			else
+				Main.FogHandler.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"));
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
@@ -272,26 +309,11 @@ namespace ViMG
 				}
 			}
 
-			float dist = 1700f;
-
-			Vector3 camChunkPosWS = -Main.camera.Position;
-			if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
-				dist = MathHelper.Lerp(200f, 1700f, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
-			else if (camChunkPosWS.Y < -200f)
-				dist = 200f;
-			Main.FogHandler.Set(Math.Max(0, dist - 400f), Math.Max(200f, dist), SkyColor);
-
-			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-			camChunkPosWS.Y -= dist;
-			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-			//if (camChunkPosWS.Y < 0)
-				//camChunkPosWS.Y = 0;
-
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
 			foreach (var mined in miningCubes)
 			{
-				Cube cube = CubeRegistry.Get(mined.Value.chunk.GetData().GetRaw(mined.Value.position));
+				Cube cube = Main.Registry.CubeRegistry.Get(mined.Value.chunk.GetData().GetRaw(mined.Value.position));
 
 				float percent = (float)mined.Value.progress / (float)cube.MineProgressRequirement;
 
@@ -309,6 +331,7 @@ namespace ViMG
 			}
 
 			ProjectileManager.Draw(device, effect);
+			EntityManager.Draw(device);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
@@ -379,6 +402,11 @@ namespace ViMG
 			}
 		}
 
+		public ChunkManager GetChunkManager()
+		{
+			return chunkManager;
+		}
+
 		public void MineCube(CubePosition position)
 		{
 			Chunk chunk = chunkManager.GetChunk(position);
@@ -391,7 +419,7 @@ namespace ViMG
 				timer = 2
 			};
 
-			Cube cube = CubeRegistry.Get(GetRaw(position));
+			Cube cube = Main.Registry.CubeRegistry.Get(chunkManager.GetRaw(position));
 
 			if (cube != null)
 			{
@@ -402,6 +430,16 @@ namespace ViMG
 					{
 						miningCubes.Remove(position);
 						mined.chunk.GetData().SetCube(position, 0);
+
+						List<ItemInstance> items = new List<ItemInstance>();
+						cube.GetDrops(items);
+
+						foreach (ItemInstance item in items)
+						{
+							EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
+							ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+							EntityManager.Add(ent);
+						}
 					}
 					else miningCubes[position] = mined;
 				}
@@ -420,7 +458,7 @@ namespace ViMG
 			for (int y = 0; y < sizeInCubes; y++)
 			{
 				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-				if (IsInWorldBounds(pos) && GetRaw(pos) != 0)
+				if (chunkManager.IsInWorldBounds(pos) && chunkManager.GetRaw(pos) != 0)
 					return pos;
 			}
 
@@ -438,77 +476,20 @@ namespace ViMG
 
 			List<CubePosition> positions = new List<CubePosition>();
 
-			if (IsInWorldBounds(down))
+			if (chunkManager.IsInWorldBounds(down))
 				positions.Add(down);
-			if (IsInWorldBounds(up))
+			if (chunkManager.IsInWorldBounds(up))
 				positions.Add(up);
-			if (IsInWorldBounds(left))
+			if (chunkManager.IsInWorldBounds(left))
 				positions.Add(left);
-			if (IsInWorldBounds(right))
+			if (chunkManager.IsInWorldBounds(right))
 				positions.Add(right);
-			if (IsInWorldBounds(front))
+			if (chunkManager.IsInWorldBounds(front))
 				positions.Add(front);
-			if (IsInWorldBounds(back))
+			if (chunkManager.IsInWorldBounds(back))
 				positions.Add(back);
 
 			return positions;
-		}
-
-		public bool IsInWorldBounds(Vector3 position)
-		{
-			return IsInWorldBounds(CubePosition.FromWorldSpace(position));
-		}
-
-		public bool IsInWorldBounds(CubePosition position)
-		{
-			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-				return false;
-			else
-			{
-				return position.X >= 0 && position.X < sizeInCubes &&
-					position.Y >= 0 && position.Y < sizeInCubes &&
-					position.Z >= 0 && position.Z < sizeInCubes;
-			}
-		}
-
-		public bool IsInWorldBounds(ChunkPosition position)
-		{
-			return position.X >= 0 && position.X < sizeInChunks &&
-					position.Y >= 0 && position.Y < sizeInChunks &&
-					position.Z >= 0 && position.Z < sizeInChunks;
-		}
-
-		public ChunkManager GetChunkManager()
-		{
-			return chunkManager;
-		}
-
-		// Takes a world space position.
-		public int GetRaw(Vector3 position)
-		{
-			return GetRaw(CubePosition.FromWorldSpace(position));
-		}
-
-		public int GetRaw(CubePosition position)
-		{
-			return chunkManager.GetChunk(position).GetData().GetRaw(position);
-		}
-
-		public int GetRaw(int x, int y, int z)
-		{
-			return GetRaw(new CubePosition(x, y, z));
-		}
-
-		public Cube.CubeInstance GetCube(CubePosition position)
-		{
-			Chunk chunk = chunkManager.GetChunk(position);
-
-			return chunk.GetData().GetCube(position);
-		}
-
-		public Cube.CubeInstance GetCube(int x, int y, int z)
-		{
-			return GetCube(new CubePosition(x, y, z));
 		}
 
 		public MeshHelper.CubeFace GetClearSides(CubePosition position)
@@ -516,24 +497,24 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
 				position = position.InCubeSpace(chunkManager.GetChunk(position));
 
-			if (GetRaw(position) == 0)
+			if (chunkManager.GetRaw(position) == 0)
 				return MeshHelper.CubeFace.ALL;
 
 			MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-			if (position.X == 0 || GetCube(position.X - 1, position.Y, position.Z).cubeId == 0)
+			if (position.X == 0 || chunkManager.GetCubeInstance(position.X - 1, position.Y, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.LEFT;
-			if (position.X == sizeInCubes - 1 || GetCube(position.X + 1, position.Y, position.Z).cubeId == 0)
+			if (position.X == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X + 1, position.Y, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.RIGHT;
 
-			if (position.Y == 0 || GetCube(position.X, position.Y - 1, position.Z).cubeId == 0)
+			if (position.Y == 0 || chunkManager.GetCubeInstance(position.X, position.Y - 1, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.DOWN;
-			if (position.Y == sizeInCubes - 1 || GetCube(position.X, position.Y + 1, position.Z).cubeId == 0)
+			if (position.Y == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X, position.Y + 1, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.UP;
 
-			if (position.Z == 0 || GetCube(position.X, position.Y, position.Z - 1).cubeId == 0)
+			if (position.Z == 0 || chunkManager.GetCubeInstance(position.X, position.Y, position.Z - 1).cubeId == 0)
 				faces |= MeshHelper.CubeFace.FRONT;
-			if (position.Z == sizeInCubes - 1 || GetCube(position.X, position.Y, position.Z + 1).cubeId == 0)
+			if (position.Z == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X, position.Y, position.Z + 1).cubeId == 0)
 				faces |= MeshHelper.CubeFace.BACK;
 
 			return faces;

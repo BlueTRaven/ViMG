@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ViMG.Cubes;
 
@@ -53,11 +55,32 @@ namespace ViMG
 			holeLocationY = random.Next(192, 320);
 		}
 
-		// Return a list. Chunks can "cascade" generate, meaning they force the generation of other chunks around them.
-		public List<Chunk> GenerateChunk(ChunkPosition position)
+		public Chunk MakeChunk(GenericPool<ChunkData> chunkDatas, ChunkPosition position)
 		{
-			Chunk chunk = new Chunk(position);
+			return new Chunk(chunkDatas, position);
+		}
 
+		public void GenerateChunkBroad(Chunk chunk, ChunkPosition position)
+		{
+			int[,] heightMap = GenerateHeight(chunk);
+
+			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+			{
+				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+				{
+					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+					{	
+						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+						int id = GenerateCubeBroad(chunk, pos, heightMap);
+						chunk.GetData().SetCube(pos, id, false);
+					}
+				}
+			}
+		}
+
+		public void GenerateChunkDetail(Chunk chunk, ChunkPosition position)
+		{
 			int[,] heightMap = GenerateHeight(chunk);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -66,10 +89,12 @@ namespace ViMG
 				{
 					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 					{
-						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+						int sample = heightMap[x, z];
 
-						int id = GenerateCube(chunk, pos, heightMap);
-						chunk.GetData().SetCube(pos, id, false);
+						if (y == sample + 1 && random.Next(0, 32) == 0)
+						{
+							
+						}
 					}
 				}
 			}
@@ -82,12 +107,10 @@ namespace ViMG
 					{
 						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
-						chunk.GetData().DirtyCubeUpdate(pos);
+						chunk.GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostGenerate(chunk.GetData(), pos);
 					}
 				}
 			}
-
-			return new List<Chunk>() { chunk };
 		}
 
 		private int[,] GenerateHeight(Chunk chunk)
@@ -108,7 +131,7 @@ namespace ViMG
 			return heightMap;
 		}
 
-		private int GenerateCube(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap)
+		private int GenerateCubeBroad(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap)
 		{
 			CubePosition chunkSpacePos = cubeSpacePos;
 			cubeSpacePos = cubeSpacePos.InCubeSpace(chunk);
@@ -128,17 +151,24 @@ namespace ViMG
 
 			if (cubeSpacePos.Y <= sample)
 			{
-				if (cubeSpacePos.Y == sample)
+				if (cubeSpacePos.Y == sample && cubeSpacePos.Y >= SEA_LEVEL)
 					return 2;
 				else
 				{
-					if (cubeSpacePos.Y < 48)
-						return 3;
+					if (cubeSpacePos.Y < sample - 8)
+					{
+						if (Main.random.Next(0, 32) == 0)
+							return 5;
+						else return 3;
+					}
 					else return 1;
 				}
 			}
 			else
 			{
+				if (cubeSpacePos.Y == sample + 1 && random.Next(0, 32) == 0)
+					return 6;
+				
 				if (cubeSpacePos.Y < SEA_LEVEL)
 					return 4;
 				else return 0;

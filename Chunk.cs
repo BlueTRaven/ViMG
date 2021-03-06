@@ -10,13 +10,11 @@ namespace ViMG
 {
 	public class Chunk
 	{
-		private readonly int x;
-		private readonly int y;
-		private readonly int z;
+		private ChunkPosition position;
 
 		public const int CHUNK_SIZE = 16;
 
-		public ChunkPosition Position => new ChunkPosition(x, y, z);
+		public ChunkPosition Position => position;
 
 		private ChunkData data;
 
@@ -29,18 +27,21 @@ namespace ViMG
 
 		public Rectangle3D Bounds => new Rectangle3D(Position.InWorldSpace(), new Vector3(CHUNK_SIZE * Cube.CUBE_SCALE));
 
-		public Chunk(int x, int y, int z)
+		public Chunk(GenericPool<ChunkData> chunkDatas, int x, int y, int z) : this(chunkDatas, new ChunkPosition(x, y, z))
 		{
-			data = new ChunkData(this);
-
-			this.x = x;
-			this.y = y;
-			this.z = z;
 		}
 
-		public Chunk(ChunkPosition position) : this(position.X, position.Y, position.Z)
+		public Chunk(GenericPool<ChunkData> chunkDatas, ChunkPosition position)
 		{
+			data = chunkDatas.Get();
+			data.SetChunk(this);
 
+			this.position = position;
+		}
+
+		~Chunk()
+		{
+			world.ChunkDatas.Return(data);
 		}
 
 		public void Initialize(World world)
@@ -78,12 +79,12 @@ namespace ViMG
 				{
 					for (int z = 0; z < CHUNK_SIZE; z++)
 					{
-						Cube.CubeInstance cube = data.GetCube(x, y, z);
+						Cube.CubeInstance cube = data.GetCubeInstance(x, y, z);
 						Cube.CubeVisualInstance visInstance = data.GetVisual(x, y, z);
 
-						if (cube.cubeId != 0 && cube.cubeId <= world.CubeRegistry.Count)
+						if (cube.cubeId != 0 && cube.cubeId <= Main.Registry.CubeRegistry.Count)
 						{
-							Cube c = world.CubeRegistry.Get(cube.cubeId);
+							Cube c = Main.Registry.CubeRegistry.Get(cube.cubeId);
 
 							//c.Draw(device, effect, cube, visInstance);
 						}
@@ -102,7 +103,7 @@ namespace ViMG
 				mesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(CHUNK_SIZE) * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			}
 
-			mesh.Draw(device, Main.BasicEffect, new Vector3(x, y, z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One);
+			mesh.Draw(device, Main.BasicEffect, new Vector3(position.X, position.Y, position.Z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One);
 		}
 	}
 }

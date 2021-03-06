@@ -6,18 +6,23 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.Items;
 
 namespace ViMG
 {
 	public class Player
 	{
+		public const int GROUP_PLAYER_SOURCE = 2;
+
 		public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
 
 		private enum State
 		{
 			Noclip,
-			Normal
+			Normal,
+			Attack,
+			Hurt,
 		}
 
 		public Vector3 Position;
@@ -35,6 +40,7 @@ namespace ViMG
 		private World world;
 
 		private bool onGround;
+		public bool InWater;
 
 		private Rectangle3D Bounds => new Rectangle3D(Position + new Vector3(-Cube.CUBE_SCALE * 0.85f / 2f, -Cube.CUBE_SCALE * 2f, -Cube.CUBE_SCALE * 0.85f / 2f),
 			new Vector3(Cube.CUBE_SCALE * 0.85f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.85f));
@@ -47,7 +53,10 @@ namespace ViMG
 		private float hitboxTimer;
 		private float hitboxSize;
 		private const float HITBOX_TIME = 3f / Main.FIXED_FPS;
-		private float attackTimer;
+		private float attackStateTimer;
+		private float attackStateMoveTimer;
+		private float itemUseCooldownTimer;
+		private float useTimer;
 		private const float ATTACK_TIME = 0.5f;
 
 		private World.RaycastResult lookAtResult;
@@ -55,13 +64,20 @@ namespace ViMG
 		private CubePosition placeAtPos;
 		private float lookAtColSine;
 		private const float lookAtColTimeMax = 0.5f;
-		private float lookAtColTimer = lookAtColTimeMax;
+		private float alive = lookAtColTimeMax;
+
+		private const float PULL_RADIUS = 65;
+		private const float NEUTRAL_RADIUS = 50;
+		private const float PUSH_RADIUS = 35;
+		private Vector3 attackStateTargetPos;
 
 		private SimpleMesh<VertexPositionColor, int> lookAtMesh;
 		private SimpleMesh<VertexPositionColorTextureNormal, int> itemMesh;
 
-		public List<Item> items = new List<Item>();
-		public int currentItem;
+		private Inventory inventory;
+		private InventoryInteractorPlayer inventoryInteractor;
+		
+		private bool inventoryOpen;
 
 		public Player(World world)
 		{
@@ -73,22 +89,110 @@ namespace ViMG
 			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 			originalMS = Mouse.GetState();
 
-			items.Add(new ItemSwordBase());
-			items.Add(new ItemPickaxeBase());
-			items.Add(new ItemCube(world.CubeRegistry.Get(1), 1));
-			items.Add(new ItemCube(world.CubeRegistry.Get(3), 3));
+			inventory = new Inventory(32);
+			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
+			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_base"), 1, 1));
+			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 4, 1));
+
+			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1), 12);
+			inventoryInteractor = new InventoryInteractorPlayer(inventory, 4, 8);
 		}
 
 		public void Update(double deltaTime)
 		{
-			if (world.IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
+			if (Main.Debug)
+				state = State.Noclip;
+			else state = State.Normal;
+
+			if (world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
 				return;
 
 			if (hurtbox == -1)
-				hurtbox = world.HitboxManager.Add(Bounds, Vector3.Zero, 0);
+				hurtbox = world.HitboxManager.Add(Bounds, Vector3.Zero, 0, -1, -1f);
 			else world.HitboxManager.Update(hurtbox, Bounds);
 
-			UpdateMovement(deltaTime);
+			if (state == State.Noclip)
+			{
+				UpdateMovement(deltaTime);
+			}
+			else if (state == State.Normal)
+			{
+				invulnTimer -= (float)deltaTime;
+
+				UpdateMovement(deltaTime);
+
+				Position += Velocity * (float)deltaTime;
+
+				UpdateCollision();
+			}
+			else if (state == State.Attack)
+			{
+				invulnTimer -= (float)deltaTime;
+
+				attackStateTimer -= (float)deltaTime;
+				attackStateMoveTimer -= (float)deltaTime;
+
+				UpdateMovement(deltaTime / 2f);
+
+				Position += Velocity * (float)deltaTime;
+
+				UpdateCollision();
+
+				Vector3 dir = attackStateTargetPos - Position;
+				if (dir.Length() < PULL_RADIUS)
+				{
+					if (dir.Length() < NEUTRAL_RADIUS)
+					{
+						if (dir.Length() < PUSH_RADIUS)
+						{
+							Position -= Vector3.Normalize(dir) * Math.Min(dir.Length(), 128);
+						}
+						else
+						{
+							Velocity.X *= 0.55f;
+							Velocity.Z *= 0.55f;
+						}
+					}
+					else
+					{
+						Velocity = Vector3.Normalize(dir) * 512;
+					}
+				}
+				else
+				{
+					if (attackStateMoveTimer <= 0)
+					{
+						Velocity.Y += World.GRAVITY;
+						Velocity.X *= 0.55f;
+						Velocity.Z *= 0.55f;
+					}
+				}
+
+				if (attackStateTimer <= 0)
+					state = State.Normal;
+			}
+			else if (state == State.Hurt)
+			{
+				inputLockupTimer -= (float)deltaTime;
+
+				if (inputLockupTimer <= 0)
+					state = State.Normal;
+			}
+
+			Vector2 center = new Vector2(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
+			Vector2 distFromCenter = new Vector2(center.X - Position.X, center.Y - Position.Z);
+
+			if (distFromCenter.Length() > world.sizeInCubes * Cube.CUBE_SCALE / 2f)
+			{
+				distFromCenter = Vector2.Normalize(distFromCenter) * (world.sizeInCubes * Cube.CUBE_SCALE / 2f - 100f);
+				//distFromCenter.X *= -1;
+				//distFromCenter.Y *= -1;
+
+				Position.X = center.X + distFromCenter.X;
+				Position.Z = center.Y + distFromCenter.Y;
+			}
+
+			UpdateItemPickup();
 
 			if (invulnTimer <= 0)
 			{
@@ -107,8 +211,10 @@ namespace ViMG
 
 								Velocity = new Vector3(direction.X * 128, 128, direction.Z * 128);
 
-								inputLockupTimer = 1;
-								invulnTimer = 0.25f;
+								state = State.Hurt;
+
+								inputLockupTimer = 0.25f;
+								invulnTimer = 0.5f;
 							}
 						}
 					}
@@ -132,84 +238,80 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.G))
 			{
-				if (state == State.Noclip)
-					state = State.Normal;
-				else if (state == State.Normal)
-					state = State.Noclip;
+				Main.Debug = !Main.Debug;
 			}
 
-			if (Main.inputManager.JustPressed(Keys.V))
+			if (Main.inputManager.JustPressed(Keys.E))
 			{
-				world.ProjectileManager.Add(new Entities.ProjectileManager.Projectile(Position, -Main.camera.Forward * 0, 4, 20, Main.assetsManager.GetAsset<Texture2D>("bullet"), 1, true));
+				inventoryOpen = !inventoryOpen;
+				Main.DrawCursor = inventoryOpen;
+				Main.MouseControl = inventoryOpen;
+				Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D1))
 			{
-				currentItem = 0;
+				inventoryInteractor.HighlightIndex = 0;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D2))
 			{
-				currentItem = 1;
+				inventoryInteractor.HighlightIndex = 1;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D3))
 			{
-				currentItem = 2;
+				inventoryInteractor.HighlightIndex = 2;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D4))
 			{
-				currentItem = 3;
+				inventoryInteractor.HighlightIndex = 3;
 			}
 
-			if (attackTimer <= 0)
+			if (Main.inputManager.JustPressed(Keys.D5))
 			{
-				if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-				{
-					if (items[currentItem].LeftClick(this, -Main.camera.Forward))
-						PerformAction();
-				}
+				inventoryInteractor.HighlightIndex = 4;
+			}
 
-				if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
-				{
-					if (items[currentItem].RightClick(this, -Main.camera.Forward))
-						PerformAction();
-				}
+			if (Main.inputManager.JustPressed(Keys.D6))
+			{
+				inventoryInteractor.HighlightIndex = 5;
+			}
+
+			if (Main.inputManager.JustPressed(Keys.D7))
+			{
+				inventoryInteractor.HighlightIndex = 6;
+			}
+			
+			if (Main.inputManager.JustPressed(Keys.D8))
+			{
+				inventoryInteractor.HighlightIndex = 7;
 			}
 
 			lookAtResult = world.Raycast(-Main.camera.Position, -Main.camera.Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0;
+				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
 			{
-				if (world.IsInWorldBounds(lookAtResult.hit))
+				if (world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 				{
 					this.lookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
-
-					/*if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
-					{
-						List<CubePosition> positions = world.GetAdjacentsInWorld(lookAtPos);
-						world.MineCube(lookAtPos);
-						foreach (CubePosition pos in positions)
-							world.MineCube(pos);
-						//Chunk chunk = world.GetChunkManager().GetChunk(lookAtPos);
-						//chunk.GetData().SetCube(lookAtPos, 0);
-					}
-
-					if (world.IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
-					{
-						Chunk chunk = world.GetChunkManager().GetChunk(placeAtPos);
-						chunk.GetData().SetCube(placeAtPos, 2);
-					}*/
 				}
 			}
 
-			UpdateMouse();
+			if (inventoryOpen)
+			{
+				inventoryInteractor.Update();
+			}
+			else
+			{
+				UpdateMouse();
+			}
 
 			Main.camera.Position = -Position;
 
@@ -224,7 +326,7 @@ namespace ViMG
 						chunkPos.Y += y;
 						chunkPos.Z += z;
 
-						if (world.IsInWorldBounds(chunkPos))
+						if (world.GetChunkManager().IsInWorldBounds(chunkPos))
 						{
 							if (!world.GetChunkManager().IsChunkGenerated(chunkPos))
 							{
@@ -235,12 +337,14 @@ namespace ViMG
 				}
 			}
 
-			invulnTimer -= (float)deltaTime;
-			inputLockupTimer -= (float)deltaTime;
 			hitboxTimer -= (float)deltaTime;
-			attackTimer -= (float)deltaTime;
-			lookAtColTimer += (float)deltaTime;
-			lookAtColSine = (float)(Math.Sin(2 * Math.PI * ((lookAtColTimer % lookAtColTimeMax) / lookAtColTimeMax)) + 1f) / 2f;
+
+			useTimer -= (float)deltaTime;
+			itemUseCooldownTimer -= (float)deltaTime;
+
+			alive += (float)deltaTime;
+
+			lookAtColSine = (float)(Math.Sin(2 * Math.PI * ((alive % lookAtColTimeMax) / lookAtColTimeMax)) + 1f) / 2f;
 		}
 
 		private void UpdateMovement(double deltaTime)
@@ -269,14 +373,14 @@ namespace ViMG
 				if (Main.inputManager.IsPressed(Keys.D))
 					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed * (float)deltaTime;
 			}
-			else if (state == State.Normal)
+			else
 			{
 				Vector3 actualMaxVel = MaxVelocity;
 
 				bool movementPressed = false;
 				bool running = false;
 
-				if (inputLockupTimer <= 0)
+				if (inputLockupTimer <= 0 && !inventoryOpen)
 				{
 					if (Main.inputManager.IsHeld(Keys.LeftShift))
 						running = true;
@@ -328,6 +432,36 @@ namespace ViMG
 					}
 
 					Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+
+					if (itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+					{
+						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+						{
+							if (inventory.Get(inventoryInteractor.HighlightIndex).item != null && inventory.Get(inventoryInteractor.HighlightIndex).item.LeftClick(this, inventory, inventoryInteractor.HighlightIndex, -Main.camera.Forward))
+								PerformAction();
+						}
+
+						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+						{
+							if (inventory.Get(inventoryInteractor.HighlightIndex).item != null && inventory.Get(inventoryInteractor.HighlightIndex).item.RightClick(this, inventory, inventoryInteractor.HighlightIndex, -Main.camera.Forward))
+								PerformAction();
+						}
+					}
+
+					if (Main.inputManager.JustPressed(Keys.Q))
+					{
+						if (inventory.Get(inventoryInteractor.HighlightIndex).valid)
+						{
+							EntityItem ent = new Entities.EntityItem(Position, new ItemInstance(inventory.Get(inventoryInteractor.HighlightIndex), 1));
+							world.EntityManager.Add(ent);
+							ent.Velocity = -Main.camera.Forward * 100;
+
+							inventory.Remove(inventoryInteractor.HighlightIndex, 1);
+						}
+					}
+
 				}
 				else
 				{
@@ -337,43 +471,63 @@ namespace ViMG
 
 						if (velXY.Length() > 0)
 						{
-							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.85f;
+							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.65f;
+						}
+
+						Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+					}
+					else
+					{
+						Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+
+						if (velXY.Length() > 0)
+						{
+							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.95f;
 						}
 
 						Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 					}
 				}
 
+				if (Main.inputManager.JustPressed(Keys.V))
+				{
+					Tree tree = new Tree(Position - new Vector3(0, Bounds.Size.Y, 0));
+					world.EntityManager.Add(tree);
+				}
+
 				Velocity.Y += World.GRAVITY;
 				if (Velocity.Y > actualMaxVel.Y)
 					Velocity.Y = actualMaxVel.Y;
+			}
+		}
 
-				Position += Velocity * (float)deltaTime;
+		private void UpdateItemPickup()
+		{
+			const float suckRadius = Cube.CUBE_SCALE * 3f;
+			const float pickupRadius = Cube.CUBE_SCALE * 1.5f;
 
-				onGround = false;
-				UpdateCollision();
-				/*for (int x = -1; x <= 1; x++)
+			var items = world.EntityManager.GetAll<EntityItem>();
+			if (items != null)
+			{
+				foreach (var ent in items)
 				{
-					for (int y = -1; y <= 1; y++)
-					{
-						for (int z = -1; z <= 1; z++)
-						{
-							Vector3 pos = Position + new Vector3(x, y, z) * Cube.CUBE_SCALE;
-							if (world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0)
-							{
-								Rectangle3D cubeBounds = new Rectangle3D(CubePosition.RoundToCubeSpace(Position) + (new Vector3(x, y, z) * Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE));
-								Rectangle3D playerBounds = bounds.Offset(Position);
+					EntityItem item = ent as EntityItem;
 
-								if (cubeBounds.Intersects(playerBounds))
-								{
-									Position.Y += cubeBounds.Top - playerBounds.Bottom;
-									Velocity.Y = 0;
-									onGround = true;
-								}
-							}
-						}
+					if (!inventory.CanAdd(item.Item.item))
+						continue;
+
+					Vector3 dir = Position - ent.Position;
+
+					if (item.CanBePickedUp && dir.Length() < pickupRadius)
+					{
+						if (inventory.Add(item.Item))
+							world.EntityManager.Remove(ent);
 					}
-				}*/
+					else if (item.CanBePickedUp && dir.Length() < suckRadius)
+					{
+						item.MoveTowards(Position);
+					}
+				}
 			}
 		}
 
@@ -395,6 +549,30 @@ namespace ViMG
 
 		private void UpdateCollision()
 		{
+			/*for (int x = -1; x <= 1; x++)
+				{
+					for (int y = -1; y <= 1; y++)
+					{
+						for (int z = -1; z <= 1; z++)
+						{
+							Vector3 pos = Position + new Vector3(x, y, z) * Cube.CUBE_SCALE;
+							if (world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0)
+							{
+								Rectangle3D cubeBounds = new Rectangle3D(CubePosition.RoundToCubeSpace(Position) + (new Vector3(x, y, z) * Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE));
+								Rectangle3D playerBounds = bounds.Offset(Position);
+
+								if (cubeBounds.Intersects(playerBounds))
+								{
+									Position.Y += cubeBounds.Top - playerBounds.Bottom;
+									Velocity.Y = 0;
+									onGround = true;
+								}
+							}
+						}
+					}
+				}*/
+			onGround = false;
+
 			const float height = Cube.CUBE_SCALE * 2f;
 			for (int i = 0; i < 4; i++)
 			{
@@ -402,7 +580,7 @@ namespace ViMG
 				Vector3 dir = new Vector3(0, height, 0);
 				var resultDown = world.RaycastVector(startPos, dir, height, (Vector3 pos) =>
 				{
-					return world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0;
+					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 				});
 
 				if (resultDown.hasHit)
@@ -417,33 +595,43 @@ namespace ViMG
 
 			const float sideWidth = 0.45f;
 
+			InWater = false;
+
 			for (int i = 0; i < 4; i++)
 			{
 				Vector3 startPos = new Vector3(Position.X, Position.Y - height + Cube.CUBE_SCALE * 0.5f, Position.Z);
 				ref Vector3 dir = ref directions[i];
 				var resultSideBot = world.RaycastVector(startPos, dir, Cube.CUBE_SCALE * sideWidth, (Vector3 pos) =>
 				{
-					return world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0;
+					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) != Main.Registry.CubeRegistry.Air;
 				});
 
 				if (resultSideBot.hasHit)
 				{
 					CubePosition pos = CubePosition.FromWorldSpace(resultSideBot.hit);
 
-					Vector3 offset = resultSideBot.hit - directions[i] * Cube.CUBE_SCALE * sideWidth;
+					if (world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).GetType() == typeof(CubeWater))
+						InWater = true;
+					else
+					{
+						Vector3 offset = resultSideBot.hit - directions[i] * Cube.CUBE_SCALE * sideWidth;
 
-					Position = new Vector3(offset.X, Position.Y, offset.Z);
+						Position = new Vector3(offset.X, Position.Y, offset.Z);
 
-					if (dir.X > 0 || dir.X < 0)
-						Velocity.X = 0;
-					if (dir.Z > 0 || dir.Z < 0)
-						Velocity.Z = 0;
+						if (dir.X > 0 || dir.X < 0)
+							Velocity.X = 0;
+						if (dir.Z > 0 || dir.Z < 0)
+							Velocity.Z = 0;
+					}
 				}
 			}
 		}
 
 		private void UpdateMouse()
 		{
+			if (inventoryOpen)
+				return;
+
 			currentMS = Mouse.GetState();
 
 			if (currentMS != originalMS)
@@ -467,10 +655,56 @@ namespace ViMG
 
 		public void PerformAction()
 		{
-			attackTimer = ATTACK_TIME;
+			useTimer = ATTACK_TIME;
 		}
 
-		public void SpawnHitbox()
+		public void PerformAttack(float cooldownTimer)
+		{
+			Velocity.X = -Main.camera.Forward.X * 512f;
+
+			if (onGround)
+				Velocity.Y = -Main.camera.Forward.Y * 64f;
+			else if (Velocity.Y > 20)
+				Velocity.Y = 20;
+
+			Velocity.Z = -Main.camera.Forward.Z * 512f;
+
+			var hitboxes = world.HitboxManager.GetAll();
+
+			DenseHitboxArray.Hitbox nearestHitbox = new DenseHitboxArray.Hitbox();
+			float nearestDot = float.MinValue;
+
+			foreach (var hitbox in hitboxes)
+			{
+				if (hitbox.index == this.hitbox || hitbox.group != 1)
+					continue;
+
+				Vector3 dir = hitbox.bounds.Center - Position;
+				if (dir.Length() < PULL_RADIUS + 20)
+				{
+					float dot = Vector3.Dot(-Main.camera.Forward, Vector3.Normalize(dir));
+
+					if (dot > nearestDot)
+					{
+						nearestDot = dot;
+						nearestHitbox = hitbox;
+					}
+				}
+			}
+
+			if (nearestHitbox.active)
+			{
+				attackStateTargetPos = nearestHitbox.bounds.Center;
+			}
+
+			this.itemUseCooldownTimer = cooldownTimer;
+			this.attackStateTimer = itemUseCooldownTimer;
+			this.attackStateMoveTimer = 1f / Main.FIXED_FPS;
+
+			state = State.Attack;
+		}
+
+		public void SpawnHitbox(int damage, float knockback = 1)
 		{
 			const float hitboxSize = Cube.CUBE_SCALE * 1.75f;
 
@@ -482,21 +716,24 @@ namespace ViMG
 			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(rect, -Main.camera.Forward, 2);
+			hitbox = world.HitboxManager.Add(rect, -Main.camera.Forward, GROUP_PLAYER_SOURCE, damage, knockback);
 
 			hitboxTimer = HITBOX_TIME;
 
-			attackTimer = ATTACK_TIME;
+			useTimer = ATTACK_TIME;
 		}
 
 		public void Draw(GraphicsDevice device)
 		{
+			if (inventory.Get(inventoryInteractor.HighlightIndex).item != null)
+				inventory.Get(inventoryInteractor.HighlightIndex).item.Draw(device, this, -Main.camera.Forward);
+
 			if (lookAtMesh == null)
 			{
 				lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			}
 
-			if (lookAtResult.hasHit && world.IsInWorldBounds(lookAtResult.hit))
+			if (lookAtResult.hasHit && world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 			{
 				device.DepthStencilState = Main.genericDSS;
 				device.RasterizerState = Main.wireframeRS;
@@ -505,94 +742,34 @@ namespace ViMG
 					Matrix.CreateScale(1.126f) *
 					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) * 
 					Matrix.CreateTranslation(lookAtPos.InWorldSpace(null)));
+				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
 
-				//DrawHelper3D.DrawCubeImmediate(device, lookAtPos.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE), );
-				//world.DrawWireframeUnscaled(device, lookAtResult.hit, Vector3.One);
-				//world.DrawWireframeCube(device, lookAtPos.InWorldSpace(null), Color.Red);
-				//world.DrawWireframeCube(device, placeAtPos);
+				device.DepthStencilState = Main.genericDSS;
+				device.RasterizerState = Main.genericRS;
 			}
-
-			device.DepthStencilState = Main.nodepthDSS;
-			device.RasterizerState = Main.noCullRS;
-
-			if (itemMesh == null)
-			{
-				Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
-				Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-
-				Vector3 a = new Vector3(max.X, min.Y, max.Z);
-				Vector3 b = new Vector3(min.X, min.Y, max.Z);
-				Vector3 c = new Vector3(min.X, max.Y, max.Z);
-				Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-				List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
-				List<int> indices = new List<int>();
-
-				Vector2 atx = new Vector2(0, 1);
-				Vector2 btx = new Vector2(1, 1);
-				Vector2 ctx = new Vector2(1, 0);
-				Vector2 dtx = new Vector2(0, 0);
-
-				int offset = vertices.Count;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-				vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-				vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-				vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
-
-				//Texture2D tex = Main.assetsManager.GetAsset<Texture2D>("swrod");
-				itemMesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
-			}
-
-			items[currentItem].Draw(device, this, -Main.camera.Forward);
-			
-			//itemMesh.Draw(device, Main.CubeEffect,
-				//GetHeldMatrix(), items[currentItem].Texture, items[currentItem].SourceRect);
 		}
 
 		public void DrawUI(SpriteBatch batch)
 		{
-			const int padding = 8;
-			const int margin = 8;
 
-			const int scale = 4;
+			inventoryInteractor.DrawUnopened(batch);
 
-			for (int i = 0; i < items.Count; i++)
-			{
-				Item item = items[i];
-
-				if (item != null)
-				{
-					Vector2 pos = new Vector2(margin + i * 16 * scale + i * padding * scale, margin);
-					if (currentItem == i)
-					{
-						batch.DrawRectangle(new RectangleF(pos, 16 * scale, 16 * scale), Color.Gray * 0.25f);
-						batch.DrawHollowRectangle(new RectangleF(pos, 16 * scale, 16 * scale), 4, Color.Black);
-					}
-
-					batch.Draw(item.Texture, pos, item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-				}
-			}
+			if (inventoryOpen)
+				inventoryInteractor.DrawOpen(batch);
 		}
 
 		public Matrix GetHeldMatrix()
 		{
-			float percent = attackTimer / ATTACK_TIME;
+			float percent = useTimer / ATTACK_TIME;
 
-			if (attackTimer <= 0)
+			if (useTimer <= 0)
 				percent = 0;
 
-			return Matrix.CreateRotationX(-Main.camera.Rotation.X) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+			return Matrix.CreateTranslation(Vector3.Forward * Cube.CUBE_SCALE * 2 + Vector3.Down * Cube.CUBE_SCALE * 1.25f + Vector3.Right * Cube.CUBE_SCALE * 0.85f) *
+				Matrix.CreateRotationX(-Main.camera.Rotation.X - MathHelper.ToRadians(35) * percent) *
+					Matrix.CreateRotationY(-Main.camera.Rotation.Y - MathHelper.ToRadians(35) * percent) *
 					Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-					Matrix.CreateRotationX(-MathHelper.ToRadians(35) * percent) *
-					Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE + Main.camera.Right * 16);
+					Matrix.CreateTranslation(Position /*- Main.camera.Forward * Cube.CUBE_SCALE * 2 + Main.camera.Right * 8*/);
 		}
 
 		public void DrawDebug(GraphicsDevice device)

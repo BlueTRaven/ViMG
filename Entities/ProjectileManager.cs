@@ -9,31 +9,58 @@ namespace ViMG.Entities
 {
 	public class ProjectileManager
 	{
+		public struct ProjectileVisStats
+		{
+			public float scale;
+			public Texture2D texture;
+
+			public ProjectileVisStats(Texture2D texture, float scale)
+			{
+				this.texture = texture;
+				this.scale = scale;
+			}
+		}
+
+		public struct ProjectileStats
+		{
+			public int group;
+			public int damage;
+			public bool dieOnCollision;
+
+			public ProjectileStats(int group, int damage, bool dieOnCollision)
+			{
+				this.group = group;
+				this.damage = damage;
+				this.dieOnCollision = dieOnCollision;
+			}
+		}
+
 		public struct Projectile
 		{
 			public Vector3 position;
 			public Vector3 velocity;
 			public float timeLeft;
-			
-			public float scale;
-			public Texture2D texture;
 
-			public int damage;
-			public bool dieOnCollision;
+			public ProjectileVisStats visStats;
+			public ProjectileStats stats;
 
 			public readonly bool active;
 
-			public Projectile(Vector3 position, Vector3 velocity, float timeLeft, float scale, Texture2D texture, int damage, bool dieOnCollision)
+			public Rectangle3D bounds;
+			public int hitbox;
+
+			public Projectile(Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
 			{
 				this.position = position;
 				this.velocity = velocity;
 				this.timeLeft = timeLeft;
-				this.scale = scale;
-				this.texture = texture;
-				this.damage = damage;
-				this.dieOnCollision = dieOnCollision;
+				this.visStats = visStats;
+				this.stats = stats;
 
 				active = true;
+
+				bounds = new Rectangle3D();
+				hitbox = -1;
 			}
 		}
 
@@ -82,22 +109,41 @@ namespace ViMG.Entities
 				if (!projectiles[i].active)
 					continue;
 
+				if (projectiles[i].hitbox == -1)
+				{
+					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
+				}
+
 				projectiles[i].timeLeft -= (float)deltaTime;
 
 				if (projectiles[i].timeLeft <= 0)
+				{
+					if (projectiles[i].hitbox != -1)
+						world.HitboxManager.Remove(projectiles[i].hitbox);
+
 					projectiles[i] = new Projectile();
+				}
 
 				var result = world.Raycast(projectiles[i].position, projectiles[i].position + projectiles[i].velocity, (Vector3 pos) =>
 				{
-					return world.GetRaw(pos) != 0;
+					return world.GetChunkManager().GetRaw(pos) != 0;
 				});
 
 				if (!result.hasHit)
-					projectiles[i].position += projectiles[i].velocity;
+				{
+					projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
+
+					world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+				}
 				else
 				{
-					if (projectiles[i].dieOnCollision)
+					if (projectiles[i].stats.dieOnCollision)
+					{
+						if (projectiles[i].hitbox != -1)
+							world.HitboxManager.Remove(projectiles[i].hitbox);
+
 						projectiles[i] = new Projectile();
+					}
 				}
 			}
 		}
@@ -109,16 +155,16 @@ namespace ViMG.Entities
 				if (projectiles[i].active)
 				{
 					mesh.Draw(device, effect,
-						Matrix.CreateScale(projectiles[i].scale) *
+						Matrix.CreateScale(projectiles[i].visStats.scale) *
 						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
 						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 						Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].texture);
+						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.texture);
 				}
 			}
 		}
 
-		public int Add(Projectile projectile)
+		public int Add(Projectile projectile, Rectangle3D bounds)
 		{
 			for (int i = 0; i < 1024; i++)
 			{
@@ -126,6 +172,7 @@ namespace ViMG.Entities
 				{
 					projectiles[i] = projectile;
 
+					projectiles[i].bounds = bounds;
 					return i;
 				}
 			}

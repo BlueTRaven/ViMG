@@ -61,7 +61,8 @@ namespace ViMG
 				{
 					Stopwatch watch = Stopwatch.StartNew();
 
-					Chunk chunk = generator.GenerateChunk(pos)[0];
+					//BROKEN
+					Chunk chunk = null;// generator.GenerateChunk(pos)[0];
 					chunk.GetData().IsThreadedLoad = true;
 					//generated.Add((pos, generator.GenerateChunk(world, pos)));
 					generatedChunks.Add(pos, chunk);
@@ -86,7 +87,7 @@ namespace ViMG
 				{
 					Stopwatch watch = Stopwatch.StartNew();
 
-					meshed.Add((pos, mesher.GenerateChunk(registry, generatedChunks[pos])));
+					//meshed.Add((pos, mesher.GenerateChunk(generatedChunks[pos])));
 
 					watch.Stop();
 

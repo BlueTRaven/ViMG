@@ -173,13 +173,13 @@ namespace ViMG
 				effect.Parameters["Texture"].SetValue(useTexture);
 			}
 
-			Texture2D fogHeightMap = Main.assetsManager.GetAsset<Texture2D>("height_fog_map");
+			/*Texture2D fogHeightMap = Main.assetsManager.GetAsset<Texture2D>("height_fog_map");
 
 			if (fogHeightMap != null)
 			{
 				device.SamplerStates[1] = Main.clampSS;
-				effect.Parameters["TextureHeightFogMap"].SetValue(fogHeightMap);
-			}
+				//effect.Parameters["TextureHeightFogMap"].SetValue(fogHeightMap);
+			}*/
 
 			if (sourceRectangle != null)
 			{

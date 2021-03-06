@@ -1,39 +1,29 @@
-﻿using System;
+﻿using BrUtility;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using ViMG.Cubes;
 
 namespace ViMG
 {
-	public class ChunkData
+	public class ChunkData : IPoolable
 	{
 		// Kinda hacky
 		public bool IsThreadedLoad;
 
-		private int[,,] cubes;
-		private Cube.CubeVisualInstance[,,] cubeVisualInstances;
+		private int[] cubes;
+		//private int[,,] cubes;
+		private Cube.CubeVisualInstance[] cubeVisualInstances;
+		//private Cube.CubeVisualInstance[,,] cubeVisualInstances;
 
 		private Chunk chunk;
 
-		public ChunkData(Chunk chunk)
+		public ChunkData()
 		{
-			this.chunk = chunk;
+			cubes = new int[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)]; //new int[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 
-			cubes = new int[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
-
-			cubeVisualInstances = new Cube.CubeVisualInstance[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
-
-			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-			{
-				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-				{
-					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-					{
-						cubes[x, y, z] = 0;
-						cubeVisualInstances[x, y, z] = Cube.CubeVisualInstance.CreateDirty();
-					}
-				}
-			}
+			cubeVisualInstances = new Cube.CubeVisualInstance[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)];//[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 		}
 
 		public void SetChunk(Chunk chunk)
@@ -48,13 +38,13 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			if (cubeVisualInstances[position.X, position.Y, position.Z].dirty)
+			if (cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty)
 			{
 				ChunkUpdate++;
-				DirtyCubeUpdate(position);
+				DirtyCubeUpdate(position, chunk.GetWorld());
 			}
 
-			return cubeVisualInstances[position.X, position.Y, position.Z];
+			return cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
 		}
 
 		public Cube.CubeVisualInstance GetVisual(int x, int y, int z)
@@ -67,50 +57,117 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			return cubes[position.X, position.Y, position.Z];
+			return cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
 		}
 
 		public int GetRaw(int x, int y, int z)
 		{
-			return cubes[x, y, z];
+			return cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)];
 		}
 
-		public Cube.CubeInstance GetCube(CubePosition position)
+		public int GetRawOrAdjacent(CubePosition position, World world)
+		{
+			if (IsInChunkBounds(position))
+				return GetRaw(position.X, position.Y, position.Z);
+			else return world.GetChunkManager().GetRaw(position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk));
+		}
+
+		public Optional<Cube> GetCube(CubePosition position)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
 			if (IsInChunkBounds(position))
-				return new Cube.CubeInstance(chunk, position, cubes[position.X, position.Y, position.Z]);
-			else return new Cube.CubeInstance();
+				return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
+			else return new Optional<Cube>();
 		}
 
-		public Cube.CubeInstance GetCube(int x, int y, int z)
+		public Optional<Cube> GetCube(int x, int y, int z)
+		{
+			return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]));
+		}
+
+		public Optional<Cube> GetCubeOrAdjacent(int x, int y, int z, World world)
 		{
 			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
+			if (IsInChunkBounds(x, y, z))
+				return GetCube(x, y, z);
+			else return world.GetChunkManager().GetCube(position.InCubeSpace(chunk));
+		}
+
+		public Optional<Cube> GetCubeOrAdjacent(CubePosition position, World world)
+		{
+			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+				position.InChunkSpace(chunk);
+
 			if (IsInChunkBounds(position))
-				return new Cube.CubeInstance(chunk, position, cubes[x, y, z]);
+				return GetCube(position);
+			else return world.GetChunkManager().GetCube(position.InCubeSpace(chunk));
+		}
+
+		public Cube.CubeInstance GetCubeInstance(CubePosition position)
+		{
+			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+				position = position.InChunkSpace(chunk);
+
+			if (IsInChunkBounds(position))
+				return new Cube.CubeInstance(chunk, position, cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]);
 			else return new Cube.CubeInstance();
+		}
+
+		public Cube.CubeInstance GetCubeInstance(int x, int y, int z)
+		{
+			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+			if (IsInChunkBounds(x, y, z))
+				return new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
+			else return new Cube.CubeInstance();
+		}
+
+		public Cube.CubeInstance GetCubeInstanceOrAdjacent(int x, int y, int z, World world)
+		{
+			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+			if (IsInChunkBounds(x, y, z))
+				return GetCubeInstance(x, y, z);//new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
+			else return world.GetChunkManager().GetCubeInstance(position.InCubeSpace(chunk));
 		}
 
 		public bool IsInChunkBounds(CubePosition position)
 		{
-			return position.X >= 0 && position.X < Chunk.CHUNK_SIZE &&
-				position.Y >= 0 && position.Y < Chunk.CHUNK_SIZE &&
-				position.Z >= 0 && position.Z < Chunk.CHUNK_SIZE;
+			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
+			{
+				return position.X >= 0 && position.X < Chunk.CHUNK_SIZE &&
+					position.Y >= 0 && position.Y < Chunk.CHUNK_SIZE &&
+					position.Z >= 0 && position.Z < Chunk.CHUNK_SIZE;
+			}
+			else
+			{
+				return position.X >= chunk.Position.X * Chunk.CHUNK_SIZE && position.X <= chunk.Position.X * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+					position.Y >= chunk.Position.Y * Chunk.CHUNK_SIZE && position.Y <= chunk.Position.Y * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+					position.Z >= chunk.Position.Z * Chunk.CHUNK_SIZE && position.Z <= chunk.Position.Z * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE;
+			}
 		}
 
-		public Cube.CubeVisualInstance DirtyCubeUpdate(CubePosition position)
+		public bool IsInChunkBounds(int x, int y, int z)
+		{
+			return x >= 0 && x < Chunk.CHUNK_SIZE &&
+					y >= 0 && y < Chunk.CHUNK_SIZE &&
+					z >= 0 && z < Chunk.CHUNK_SIZE;
+		}
+
+		public Cube.CubeVisualInstance DirtyCubeUpdate(CubePosition position, World world)
 		{
 			CubePosition cubeSpacePos = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk);
 			CubePosition chunkSpacePos = position.Coord == CubePosition.CoordinateSpace.ChunkSpace ? position : position.InChunkSpace(chunk);
 
 			Cube.CubeVisualInstance clean = Cube.CubeVisualInstance.CreateClean();
 
-			clean.clearSides = GetClearSides(chunkSpacePos);
+			clean.clearSides = GetClearSides(chunkSpacePos, world);
+			//clean.adjacents = GetAdjacentCubes(chunkSpacePos);
 
-			cubeVisualInstances[chunkSpacePos.X, chunkSpacePos.Y, chunkSpacePos.Z] = clean;
+			cubeVisualInstances[chunkSpacePos.X + Chunk.CHUNK_SIZE * (chunkSpacePos.Y + Chunk.CHUNK_SIZE * chunkSpacePos.Z)] = clean;
 			return clean;
 		}
 
@@ -119,10 +176,15 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			cubeVisualInstances[position.X, position.Y, position.Z].dirty = true;
+			cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty = true;
 
 			if (markChunk)
 				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position);
+		}
+
+		private bool IsInChunkBounds(in CubePosition position)
+		{
+			return position.X < 0 || position.X >= Chunk.CHUNK_SIZE || position.Y < 0 || position.Y >= Chunk.CHUNK_SIZE || position.Z < 0 || position.Z >= Chunk.CHUNK_SIZE;
 		}
 
 		// If a CubePosition overflows, use this to mark the correct cube as dirty.
@@ -133,14 +195,14 @@ namespace ViMG
 
 			position = position.InCubeSpace(chunk);
 
-			if (chunk.GetWorld().IsInWorldBounds(position))
+			if (chunk.GetWorld().GetChunkManager().IsInWorldBounds(position))
 			{
 				Chunk offsetChunk = chunk.GetWorld().GetChunkManager().GetChunk(position.InCubeSpace(chunk));
 				offsetChunk.GetData().MarkDirty(position.InChunkSpace(offsetChunk));
 			}
 		}
 
-		private CubePosition[] offsets = new CubePosition[6]
+		private static CubePosition[] offsets = new CubePosition[6]
 		{
 			new CubePosition(-1, 0, 0),
 			new CubePosition(1, 0, 0),
@@ -169,10 +231,13 @@ namespace ViMG
 
 		public void SetCube(CubePosition position, int id, bool markDirty = true)
 		{
+			if (Thread.CurrentThread != Main.MainThread && !chunk.Initialized)
+				throw new Exception("Cannot set chunk outside of main thread after initialization.");
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 			
-			cubes[position.X, position.Y, position.Z] = id;
+			cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)] = id;
 
 			if (markDirty)
 			{
@@ -181,30 +246,203 @@ namespace ViMG
 			}
 		}
 
-		public MeshHelper.CubeFace GetClearSides(CubePosition position)
+		public Cube.CubeVisualInstance.AdjacentCubes GetAdjacentCubes(CubePosition position)
 		{
-			if (GetRaw(position) == 0)
+			int num = 0;
+
+			for (int x = -1; x <= 1; x++)
+			{
+				for (int y = -1; y <= 1; y++)
+				{
+					for (int z = -1; z <= 1; z++)
+					{
+						if (x == 0 && y == 0 && z == 0)
+							continue;
+
+						CubePosition offPos = new CubePosition(position.X + x, position.Y + y, position.Z + z);
+
+						if (GetCubeInstance(offPos).cubeId > 0)
+							num += 1 << x + y + z;
+					}
+				}
+			}
+
+			return (Cube.CubeVisualInstance.AdjacentCubes)num;
+		}
+
+		public MeshHelper.CubeFace GetClearSides(CubePosition position, World world)
+		{
+			Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+			if (cube == Main.Registry.CubeRegistry.Air)
 				return MeshHelper.CubeFace.ALL;
+			else if (cube.Transparency == Cube.TransparencyValue.Invisible)
+				return MeshHelper.CubeFace.NONE;
 
 			MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-			//TODO handle overflow into other chunks
-			if (GetCube(position.X - 1, position.Y, position.Z).cubeId == 0)
+			/*for (int x = -1; x <= 1; x++)
+			{ 
+				for (int y = -1; y <= 1; y++)
+				{
+					for (int z = -1; z <= 1; z++)
+					{
+						if (x == 0 && y == 0 && z == 0)
+							continue;
+
+						MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
+
+						int ox = position.X + x;
+						int oy = position.Y + y;
+						int oz = position.Z + z;
+
+						int id = -1;
+
+						if (IsInChunkBounds(new CubePosition(ox, oy, oz)))
+							id = GetRaw(ox, oy, oz);
+
+						if (x != 0 && y == 0 && z == 0)
+						{
+							if (x < 0)
+								side = MeshHelper.CubeFace.LEFT;
+							else if (x > 0) side = MeshHelper.CubeFace.RIGHT;
+						
+							if (id <= 0)
+								faces |= side;
+						}
+
+						if (y != 0 && x == 0 && z == 0)
+						{
+							if (y < 0)
+								side = MeshHelper.CubeFace.DOWN;
+							else if (y > 0) side = MeshHelper.CubeFace.UP;
+
+							if (id <= 0)
+								faces |= side;
+						}
+
+						if (z != 0 && y == 0 && x == 0)
+						{
+							if (z < 0)
+								side = MeshHelper.CubeFace.FRONT;
+							else if (z > 0) side = MeshHelper.CubeFace.BACK;
+							
+							if (id <= 0)
+								faces |= side;
+						}
+					}
+				}
+			}*/
+
+			/*for (int i = -1; i <= 1; i++)
+			{
+				//if (i == 0)
+					//continue;
+
+				int x = position.X + i;
+
+				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
+
+				if (i < 0)
+					side = MeshHelper.CubeFace.LEFT;
+				else if (i > 0) side = MeshHelper.CubeFace.RIGHT;
+
+				if (x < 0 || x >= Chunk.CHUNK_SIZE)
+					faces |= side;
+				else if (GetRaw(x, position.Y, position.Z) == 0)
+					faces |= side;
+			}
+
+			for (int i = -1; i <= 1; i++)
+			{
+				int y = position.Y + i;
+
+				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
+
+				if (i < 0)
+					side = MeshHelper.CubeFace.DOWN;
+				else if (i > 0) side = MeshHelper.CubeFace.UP;
+
+				if (y < 0 || y >= Chunk.CHUNK_SIZE)
+					faces |= side;
+				else if (GetRaw(position.X, y, position.Z) == 0)
+					faces |= side;
+			}
+
+			for (int i = -1; i <= 1; i++)
+			{
+				int z = position.Z + i;
+
+				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
+
+				if (i < 0)
+					side = MeshHelper.CubeFace.FRONT;
+				else if (i > 0) side = MeshHelper.CubeFace.BACK;
+
+				if (z < 0 || z >= Chunk.CHUNK_SIZE)
+					faces |= side;
+				else if (GetRaw(position.X, position.Y, z) == 0)
+					faces |= side;
+			}*/
+
+			if (HasClearSide(position.X - 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X - 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.LEFT;
-			if (GetCube(position.X + 1, position.Y, position.Z).cubeId == 0)
+			if (HasClearSide(position.X + 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X + 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.RIGHT;
 
-			if (GetCube(position.X, position.Y - 1, position.Z).cubeId == 0)
+			if (HasClearSide(position.X, position.Y - 1, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y - 1, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.DOWN;
-			if (GetCube(position.X, position.Y + 1, position.Z).cubeId == 0)
+			if (HasClearSide(position.X, position.Y + 1, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y + 1, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.UP;
 
-			if (GetCube(position.X, position.Y, position.Z - 1).cubeId == 0)
+			if (HasClearSide(position.X, position.Y, position.Z - 1, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y, position.Z - 1, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.FRONT;
-			if (GetCube(position.X, position.Y, position.Z + 1).cubeId == 0)
+			if (HasClearSide(position.X, position.Y, position.Z + 1, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y, position.Z + 1, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.BACK;
 
 			return faces;
+		}
+
+		private bool HasClearSide(int x, int y, int z, Cube currentCube, World world)
+		{
+			Cube adjacentCube = GetCubeOrAdjacent(x, y, z, world).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+			if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent || adjacentCube.Transparency == Cube.TransparencyValue.Invisible)
+				return true;
+			if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+			{
+				if (currentCube == adjacentCube)
+					return false;
+				else return true;
+			}
+			else return false;
+		}
+
+		public void OnGet<T>(GenericPool<T> pool) where T : IPoolable
+		{
+			//x + WIDTH * (y + DEPTH * z)
+			for (int i = 0; i < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; i++)
+			{
+				cubes[i] = 0;
+				cubeVisualInstances[i] = Cube.CubeVisualInstance.CreateDirty();
+			}
+
+			/*for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+			{
+				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+				{
+					for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+					{
+						cubes[x, y, z] = 0;
+						cubeVisualInstances[x, y, z] = Cube.CubeVisualInstance.CreateDirty();
+					}
+				}
+			}*/
+		}
+
+		public void OnReturned<T>(GenericPool<T> pool) where T : IPoolable
+		{
+			chunk = null;
 		}
 	}
 }

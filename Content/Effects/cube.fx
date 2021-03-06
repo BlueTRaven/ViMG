@@ -9,6 +9,11 @@ matrix View;
 matrix WorldNormal;
 matrix WorldViewProjection;
 
+float3 WorldSize;
+float3 CubeSize;
+float2 MaxReachable;
+
+float AOStrength;
 float AmbientStrength;
 float SpecularStrength;
 
@@ -17,7 +22,6 @@ float3 LightColor;
 
 float3 CameraPos;
 
-float3 FogColor;
 float FogStart;
 float FogEnd;
 
@@ -33,6 +37,7 @@ struct VertexShaderInput
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
 	float3 Normal : NORMAL0;
+	float AO : TEXCOORD1;
 };
 
 struct VertexShaderOutput
@@ -40,10 +45,10 @@ struct VertexShaderOutput
 	float4 Position : SV_POSITION;
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
-	float3 P : TEXCOORD5;
 	float3 PositionWS : TEXCOORD1;
 	float3 PositionSS : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
+	float AO : TEXCOORD4;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -51,11 +56,11 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
 	output.Position = mul(input.Position, WorldViewProjection);
-	output.P = input.Position.xyz;
 	output.PositionWS = mul(input.Position, World).xyz;
 	output.PositionSS = mul(float4(output.PositionWS, 1), View).xyz;
 	output.Color = input.Color;
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
+	output.AO = input.AO;
 		
 	if (UseSourceRect)
 	{
@@ -71,12 +76,26 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
+	float4 worldColor = tex2D(Texture, input.TexCoord) * input.Color;
+
+	if (worldColor.a < 0.01)
+		discard;
+		
 	float3 norm = normalize(input.Normal);
 	float3 lightDir = normalize(LightPos - input.PositionWS);
 	
+	float WorldDistStart = (WorldSize.x / 2 * CubeSize.x) - 800;
+	float WorldDistEnd = (WorldSize.x / 2 * CubeSize.x) - 400;
+	
 	//fog
+	float3 centerHoriz = float3(WorldSize.x / 2 * CubeSize.x, input.PositionWS.y, WorldSize.z / 2 * CubeSize.z);
+	float distWorldCenter = length(centerHoriz - input.PositionWS);
+	float fogFactorWorldCenter = (distWorldCenter - WorldDistStart) / (WorldDistEnd - WorldDistStart);
+	
 	float distance = length(-CameraPos - input.PositionWS);
 	float fogFactor = (distance - FogStart) / (FogEnd - FogStart);
+	
+	fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
 	//ambient
@@ -92,12 +111,11 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	
 	float specToCam = pow(max(dot(camDir, reflectDir), 0), 32);
 	float3 specularColor = specToCam * LightColor * SpecularStrength;
+		
+	float4 finalColor = float4(ambientColor + diffuseColor, 1.0) * worldColor;
+	finalColor.rgb *= input.AO;
 	
-	float4 worldColor = tex2D(Texture, input.TexCoord) * input.Color;
-	
-	float4 finalColor = float4(ambientColor + diffuseColor + specularColor, 1.0) * worldColor;
-	
-	float percent = 1 - (max(4 * 20, input.PositionWS.y) / (512 * 20));
+	float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));
 	percent = clamp(percent, 0, 1);
 	float4 worldHeightColor = tex2D(TextureHeightFogMap, float2(0, percent));
 	

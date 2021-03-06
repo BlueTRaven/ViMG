@@ -6,24 +6,18 @@ using System.Text;
 
 namespace ViMG.Cubes
 {
-	public class CubeRegistry
+	public class CubeRegistry : ObjRegistry<Cube>
 	{
-		private List<Cube> registry = new List<Cube>();
-		public int Count => registry.Count;
+		public readonly Cube Air = new CubeAir();
 
-		public void RegisterCubes()
+		public override void RegisterAll()
 		{
-			registry.Add(new Cube(new RectangleF(0, 0, 16, 16), Color.White, 2));
-			registry.Add(new CubeGrass());
-			registry.Add(new Cube(new RectangleF(16, 0, 16, 16), Color.White, 5));
-			registry.Add(new Cube(new RectangleF(0, 16, 16, 16), Color.White, 1));
-		}
-
-		public Cube Get(int index)
-		{
-			if (index == 0)
-				return null;
-			return registry[index - 1];
+			Register(new CubeDirt());
+			Register(new CubeGrass());
+			Register(new CubeStone());
+			Register(new CubeWater());
+			Register(new CubeIronOre());
+			Register(new CubeTree());
 		}
 	}
 }

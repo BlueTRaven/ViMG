@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
-	public class Cube
+	public class Cube : IRegisterable
 	{
 		public struct CubeInstance
 		{
@@ -39,18 +40,67 @@ namespace ViMG.Cubes
 
 			public MeshHelper.CubeFace clearSides;  //sides that are clear of other cubes
 
-			public static CubeVisualInstance CreateClean()
+			public AdjacentCubes adjacents;
+
+			[Flags]
+			public enum AdjacentCubes
 			{
-				var cached = new CubeVisualInstance();
-				cached.dirty = false;
-				return cached;
+				None = 1,
+				TopLeftBack		= 1 << 0 + 0 + 0,
+				TopBack			= 1 << 1 + 0 + 0,
+				TopRightBack	= 1 << 2 + 0 + 0,
+				MidLeftBack		= 1 << 3,
+				MidBack			= 1 << 4,
+				MidRightBack	= 1 << 5,
+				BotLeftBack		= 1 << 6,
+				BotBack			= 1 << 7,
+				BotRightBack	= 1 << 8,
+				TopLeftMid		= 1 << 9,
+				TopMid			= 1 << 10,
+				TopRightMid		= 1 << 11,
+				MidLeftMid		= 1 << 12,
+				// our block
+				MidRightMid		= 1 << 13,
+				BotLeftMid		= 1 << 15,
+				BotMid			= 1 << 16,
+				BotRightMid		= 1 << 17,
+				TopLeftFront	= 1 << 18,
+				TopFront		= 1 << 19,
+				TopRightFront	= 1 << 20,
+				MidLeftFront	= 1 << 21,
+				MidFront		= 1 << 22,
+				MidRightFront	= 1 << 23,
+				BotLeftFront	= 1 << 24,
+				BotFront		= 1 << 25,
+				BotRightFront	= 1 << 26
 			}
 
-			public static CubeVisualInstance CreateDirty()
+			private static CubeVisualInstance Clean;
+			private static CubeVisualInstance Dirty;
+
+			static CubeVisualInstance()
 			{
-				var cached = new CubeVisualInstance();
-				cached.dirty = true;
-				return cached;
+				Clean = new CubeVisualInstance();
+				Clean.dirty = false;
+
+				Dirty = new CubeVisualInstance();
+				Dirty.dirty = true;
+			}
+
+			public static ref readonly CubeVisualInstance CreateClean()
+			{
+				return ref Clean;
+				/*var cached = new CubeVisualInstance();
+				cached.dirty = false;
+				return cached;*/
+			}
+
+			public static ref readonly CubeVisualInstance CreateDirty()
+			{
+				return ref Dirty;
+				//var cached = new CubeVisualInstance();
+				//cached.dirty = true;
+				//return cached;
 			}
 		}
 
@@ -93,6 +143,15 @@ namespace ViMG.Cubes
 			5,  //32 - back
 		};
 
+		public enum TransparencyValue
+		{
+			Opaque,
+			Transparent,
+			TransparentOccludesSiblings, //occludes "siblings", or cubes of the same type
+			Invisible,	//don't mesh at all
+		}
+
+		public string Identifier { get; private set; }
 		private readonly RectangleF[] sourceRectSides = new RectangleF[6];
 		private readonly RectangleF sourceRect;
 		private readonly Color tintColor;
@@ -100,19 +159,26 @@ namespace ViMG.Cubes
 		public SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
 
 		public int MineProgressRequirement;
+		public bool Solid = true;
 
-		public Cube(RectangleF sourceRect, Color color, int mineProgressRequirement)
+		public TransparencyValue Transparency;
+
+		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressRequirement)
 		{
+			this.Identifier = identifier;
+
 			this.sourceRect = sourceRect;
 			Array.Fill(sourceRectSides, sourceRect);
 			this.tintColor = color;
 			this.MineProgressRequirement = mineProgressRequirement;
 		}
 
-		public Cube(RectangleF[] sourceRectSides, Color color, int mineProgressRequirement)
+		public Cube(string identifier, RectangleF[] sourceRectSides, Color color, int mineProgressRequirement)
 		{
 			if (sourceRectSides.Length != 6)
 				throw new Exception("Cubes cannot have more or less than 6 sides.");
+
+			this.Identifier = identifier;
 
 			this.sourceRect = sourceRectSides[0];
 			this.sourceRectSides = sourceRectSides;
@@ -133,6 +199,21 @@ namespace ViMG.Cubes
 			}
 
 			return RectangleF.Empty;
+		}
+
+		public virtual void GetDrops(List<ItemInstance> itemsToDrop)
+		{
+
+		}
+
+		public virtual bool CanMine(CubePosition position)
+		{
+			return true;
+		}
+
+		public virtual void PostGenerate(ChunkData chunkData, CubePosition position)
+		{
+
 		}
 
 		public SimpleMesh<VertexPositionColorTextureNormal, int> GetMesh(GraphicsDevice device)

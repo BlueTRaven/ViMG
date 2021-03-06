@@ -113,6 +113,11 @@ namespace ViMG
 			return wsRounded;
 		}
 
+		public static Rectangle3D BoundsWorldSpace(CubePosition position)
+		{
+			return new Rectangle3D(position.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE));
+		}
+
 		public static bool operator ==(CubePosition posA, CubePosition posB)
 		{
 			return posA.X == posB.X && posA.Y == posB.Y && posA.Z == posB.Z;
@@ -121,6 +126,15 @@ namespace ViMG
 		public static bool operator !=(CubePosition posA, CubePosition posB)
 		{
 			return posA.X != posB.X || posA.Y != posB.Y || posA.Z != posB.Z;
+		}
+
+		public static CubePosition operator +(CubePosition posA, CubePosition posB)
+		{
+			if (posA.Coord == posB.Coord)
+			{
+				return new CubePosition(posA.X + posB.X, posA.Y + posB.Y, posA.Z + posB.Z, posA.Coord);
+			}
+			else return new CubePosition();
 		}
 	}
 }
