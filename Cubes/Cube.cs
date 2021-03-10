@@ -151,6 +151,7 @@ namespace ViMG.Cubes
 			Invisible,	//don't mesh at all
 		}
 
+		public int Id { get; private set; }
 		public string Identifier { get; private set; }
 		private readonly RectangleF[] sourceRectSides = new RectangleF[6];
 		private readonly RectangleF sourceRect;
@@ -186,6 +187,11 @@ namespace ViMG.Cubes
 			this.MineProgressRequirement = mineProgressRequirement;
 		}
 
+		public void SetId(int id)
+		{
+			this.Id = id;
+		}
+
 		public RectangleF GetSourceRect()
 		{
 			return sourceRect;
@@ -211,7 +217,12 @@ namespace ViMG.Cubes
 			return true;
 		}
 
-		public virtual void PostGenerate(ChunkData chunkData, CubePosition position)
+		public virtual void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+		{
+
+		}
+
+		public virtual void PostChunkInit(ChunkData chunkData, CubePosition position)
 		{
 
 		}

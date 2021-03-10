@@ -77,6 +77,7 @@ namespace ViMG.Entities
 		{
 			foreach (Entity entity in entities)
 			{
+				if (Main.camera.FrustumContains(entity.Position))
 				entity.Draw(device);
 			}
 		}

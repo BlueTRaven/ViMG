@@ -8,6 +8,7 @@ using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Items;
+using ViMG.UIs;
 
 namespace ViMG
 {
@@ -75,10 +76,8 @@ namespace ViMG
 		private SimpleMesh<VertexPositionColorTextureNormal, int> itemMesh;
 
 		private Inventory inventory;
-		private InventoryInteractorPlayer inventoryInteractor;
+		private UIInventoryPlayer inventoryInteractor;
 		
-		private bool inventoryOpen;
-
 		public Player(World world)
 		{
 			this.world = world;
@@ -94,15 +93,18 @@ namespace ViMG
 			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_base"), 1, 1));
 			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 4, 1));
 
-			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1), 12);
-			inventoryInteractor = new InventoryInteractorPlayer(inventory, 4, 8);
+			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 16, 1), 11);
+			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 16, 1), 12);
+			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 4, 1), 13);
+			inventoryInteractor = new UIInventoryPlayer(inventory, 4, 8);
 		}
 
 		public void Update(double deltaTime)
 		{
 			if (Main.Debug)
 				state = State.Noclip;
-			else state = State.Normal;
+			else if (state == State.Noclip)
+				state = State.Normal;
 
 			if (world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
 				return;
@@ -214,7 +216,7 @@ namespace ViMG
 								state = State.Hurt;
 
 								inputLockupTimer = 0.25f;
-								invulnTimer = 0.5f;
+								invulnTimer = 4;
 							}
 						}
 					}
@@ -236,6 +238,16 @@ namespace ViMG
 				}
 			}
 
+			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
+
+			float positionY = Position.Y;
+			float start = 3772;
+			float end = 3772 - 128;
+
+			float factor = 1 - ((positionY - start) / (end - start));
+			factor = Math.Clamp(factor, 0, 1);
+			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(factor);
+
 			if (Main.inputManager.JustPressed(Keys.G))
 			{
 				Main.Debug = !Main.Debug;
@@ -243,9 +255,9 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.E))
 			{
-				inventoryOpen = !inventoryOpen;
-				Main.DrawCursor = inventoryOpen;
-				Main.MouseControl = inventoryOpen;
+				inventoryInteractor.Opened = !inventoryInteractor.Opened;
+				Main.DrawCursor = inventoryInteractor.Opened;
+				Main.MouseControl = inventoryInteractor.Opened;
 				Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 			}
 
@@ -304,14 +316,8 @@ namespace ViMG
 				}
 			}
 
-			if (inventoryOpen)
-			{
-				inventoryInteractor.Update();
-			}
-			else
-			{
-				UpdateMouse();
-			}
+			inventoryInteractor.Update();
+			UpdateMouse();
 
 			Main.camera.Position = -Position;
 
@@ -380,7 +386,7 @@ namespace ViMG
 				bool movementPressed = false;
 				bool running = false;
 
-				if (inputLockupTimer <= 0 && !inventoryOpen)
+				if (inputLockupTimer <= 0 && !inventoryInteractor.Opened)
 				{
 					if (Main.inputManager.IsHeld(Keys.LeftShift))
 						running = true;
@@ -491,8 +497,10 @@ namespace ViMG
 
 				if (Main.inputManager.JustPressed(Keys.V))
 				{
-					Tree tree = new Tree(Position - new Vector3(0, Bounds.Size.Y, 0));
-					world.EntityManager.Add(tree);
+					//Main.LightManager.MakeLight(Position, 100, 105, Color.White);
+					world.EntityManager.Add(new GlowNode(Position, 100, 16, Color.White));
+					//Tree tree = new Tree(Position - new Vector3(0, Bounds.Size.Y, 0), Main.random.Next(3, 12), );
+					//world.EntityManager.Add(tree);
 				}
 
 				Velocity.Y += World.GRAVITY;
@@ -549,6 +557,54 @@ namespace ViMG
 
 		private void UpdateCollision()
 		{
+			onGround = false;
+
+			for (int x = -2; x <= 2; x++)
+			{
+				for (int y = -2; y <= 2; y++)
+				{
+					for (int z = -2; z <= 2; z++)
+					{
+						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
+
+						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
+						{
+							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+							Vector3 checkPos = Position - new Vector3(0, Bounds.Size.Y - 16, 0);
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8, out Vector3 change))
+							{
+								Position = checkPos + new Vector3(0, Bounds.Size.Y - 16, 0) + change;
+
+								if (change.Y > 0)
+								{
+									Velocity.Y = 0;
+									onGround = true;
+								}
+								else if (change.Y < 0)
+									Velocity.Y = 0;
+								else if (change.X != 0)
+									Velocity.X = 0;
+								else if (change.Z != 0)
+									Velocity.Z = 0;
+							}
+							else if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f, out Vector3 change1))
+							{
+								Position += change1;
+
+								if (change1.Y != 0)
+									Velocity.Y = 0;
+								else if (change1.X != 0)
+									Velocity.X = 0;
+								else if (change1.Z != 0)
+									Velocity.Z = 0;
+							}
+						}
+					}
+				}
+			}
+
+			return;
 			/*for (int x = -1; x <= 1; x++)
 				{
 					for (int y = -1; y <= 1; y++)
@@ -571,7 +627,6 @@ namespace ViMG
 						}
 					}
 				}*/
-			onGround = false;
 
 			const float height = Cube.CUBE_SCALE * 2f;
 			for (int i = 0; i < 4; i++)
@@ -588,6 +643,25 @@ namespace ViMG
 					CubePosition pos = CubePosition.FromWorldSpace(resultDown.hit);
 
 					Position.Y = pos.Y * Cube.CUBE_SCALE + Cube.CUBE_SCALE + height;
+					Velocity.Y = 0;
+					onGround = true;
+				}
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				Vector3 startPos = new Vector3(Position.X + offsetsDown[i].X, Position.Y + height / 2f, Position.Z + offsetsDown[i].Y);
+				Vector3 dir = new Vector3(0, height / 2f, 0);
+				var resultDown = world.RaycastVector(startPos, dir, -height, (Vector3 pos) =>
+				{
+					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+				});
+
+				if (resultDown.hasHit)
+				{
+					CubePosition pos = CubePosition.FromWorldSpace(resultDown.hit);
+
+					Position.Y = pos.Y * Cube.CUBE_SCALE - height / 2f;
 					Velocity.Y = 0;
 					onGround = true;
 				}
@@ -629,7 +703,7 @@ namespace ViMG
 
 		private void UpdateMouse()
 		{
-			if (inventoryOpen)
+			if (inventoryInteractor.Opened)
 				return;
 
 			currentMS = Mouse.GetState();
@@ -725,6 +799,11 @@ namespace ViMG
 
 		public void Draw(GraphicsDevice device)
 		{
+			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
+
+			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
+			Main.LightManager.SetToEffect(Main.CubeEffect);
+
 			if (inventory.Get(inventoryInteractor.HighlightIndex).item != null)
 				inventory.Get(inventoryInteractor.HighlightIndex).item.Draw(device, this, -Main.camera.Forward);
 
@@ -751,11 +830,7 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-
-			inventoryInteractor.DrawUnopened(batch);
-
-			if (inventoryOpen)
-				inventoryInteractor.DrawOpen(batch);
+			inventoryInteractor.Draw(batch);
 		}
 
 		public Matrix GetHeldMatrix()

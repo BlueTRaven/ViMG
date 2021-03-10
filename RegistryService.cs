@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Items;
+using ViMG.Recipes;
 
 namespace ViMG
 {
@@ -10,17 +11,20 @@ namespace ViMG
 	{
 		public ItemRegistry ItemRegistry;
 		public CubeRegistry CubeRegistry;
+		public RecipeRegistry RecipeRegistry;
 
 		public RegistryService()
 		{
 			ItemRegistry = new ItemRegistry();
 			CubeRegistry = new CubeRegistry();
+			RecipeRegistry = new RecipeRegistry();
 		}
 
 		public void Register()
 		{
 			CubeRegistry.RegisterAll();
 			ItemRegistry.RegisterAll();
+			RecipeRegistry.RegisterAll();
 		}
 	}
 }

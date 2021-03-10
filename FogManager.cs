@@ -7,13 +7,13 @@ using System.Text;
 
 namespace ViMG
 {
-	public class FogHandler
+	public class FogManager
 	{
 		private readonly Effect effect;
 
 		public Texture2D ColorHeightMap;
 
-		public FogHandler(Effect effect)
+		public FogManager(Effect effect)
 		{
 			this.effect = effect;
 		}

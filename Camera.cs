@@ -181,7 +181,7 @@ namespace ViMG
 			return projectionMatrix;
 		}
 
-		public bool FrustumIntersects(Rectangle3D bounds)
+		public BoundingFrustum GetFrustum()
 		{
 			if (frustum == null)
 				frustum = new BoundingFrustum(GetViewMatrix() * GetProjectionMatrix());
@@ -192,9 +192,23 @@ namespace ViMG
 				frustumDirty = false;
 			}
 
+			return frustum;
+		}
+
+		public bool FrustumIntersects(Rectangle3D bounds)
+		{
+			GetFrustum();
+
 			BoundingBox box = new BoundingBox(bounds.Position, bounds.Position + bounds.Size);
 
 			return frustum.Intersects(box);
+		}
+
+		public bool FrustumContains(Vector3 position)
+		{
+			GetFrustum();
+
+			return frustum.Contains(position) == ContainmentType.Contains || frustum.Contains(position) == ContainmentType.Intersects;
 		}
 	}
 }

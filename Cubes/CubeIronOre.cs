@@ -9,7 +9,7 @@ namespace ViMG.Cubes
 {
 	public class CubeIronOre : Cube
 	{
-		public CubeIronOre() : base("iron_ore", new RectangleF(0, 48, 16, 16), Color.White, 8)
+		public CubeIronOre() : base("ore_iron", new RectangleF(0, 48, 16, 16), Color.White, 8)
 		{
 		}
 

@@ -31,6 +31,11 @@ float2 SourceRectFarPos;
 float2 TextureSize;
 float2 TexCoordOffset;
 
+float3 LightsPosition[16];
+float LightsStart[16];
+float LightsEnd[16];
+float3 LightsColor[16];
+
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -98,9 +103,29 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
+	float closestLightStart;
+	float closestLightEnd;
+	float3 closestLightColor;
+	float closestDistance = 10000000;
+	for (int i = 0; i < 16; i++)
+	{
+		if (length(LightsPosition[i] - input.PositionWS) < closestDistance)
+		{
+			closestLightStart = LightsStart[i];
+			closestLightEnd = LightsEnd[i];
+			closestLightColor = LightsColor[i];
+			closestDistance = length(LightsPosition[i] - input.PositionWS);
+		}
+	}
+	
+	float lightFactor = 1 - ((closestDistance - closestLightStart) / (closestLightEnd - closestLightStart));
+	lightFactor = clamp(lightFactor, 0, 1);
+
 	//ambient
 	float3 ambientColor = LightColor * AmbientStrength;
 
+	ambientColor = lerp(ambientColor, closestLightColor, lightFactor);
+	
 	//diffuse
 	float diffDotToCam = max(dot(norm, lightDir), 0.0);
 	float3 diffuseColor = diffDotToCam * LightColor;
@@ -112,7 +137,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	float specToCam = pow(max(dot(camDir, reflectDir), 0), 32);
 	float3 specularColor = specToCam * LightColor * SpecularStrength;
 		
-	float4 finalColor = float4(ambientColor + diffuseColor, 1.0) * worldColor;
+	float4 finalColor = float4(ambientColor, 1.0) * worldColor;
 	finalColor.rgb *= input.AO;
 	
 	float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));

@@ -1,59 +1,70 @@
-﻿using BrUtility;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 
-namespace ViMG.Items
+namespace ViMG.Entities
 {
-	public abstract class Item : IRegisterable
+	public class GlowNode : Entity
 	{
-		public readonly Texture2D Texture;
-		public readonly RectangleF SourceRect;
+		private readonly float radius;
+		private readonly float fade;
+		private readonly Color color;
 
-		public string Identifier { get; private set; }
+		private int light = -1;
 
-		public string Name = "";
-		public string Description = "";
+		private SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
 
-		protected static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
-
-		public Item(string identifier, Texture2D texture, RectangleF sourceRect)
+		public GlowNode(Vector3 position, float radius, float fade, Color color)
 		{
-			this.Identifier = identifier;
-			this.Texture = texture;
-			this.SourceRect = sourceRect;
+			this.Position = position;
+			this.radius = radius;
+			this.fade = fade;
+			this.color = color;
 		}
 
-		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public override void Update(double deltaTime)
 		{
-			return false;
+			base.Update(deltaTime);
+
+			BoundingSphere sphere = new BoundingSphere(Position, radius);
+
+			if (!Main.camera.GetFrustum().Intersects(sphere))
+			{
+				if (light != -1)
+				{
+					Main.LightManager.KillLight(light);
+					light = -1;
+				}
+			}
+			else
+			{
+				if (light == -1)
+				{
+					light = Main.LightManager.MakeLight(Position, radius - fade, radius, color);
+				}
+			}
 		}
 
-		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public override void Draw(GraphicsDevice device)
 		{
-			return false;
-		}
+			base.Draw(device);
 
-		public void Draw(GraphicsDevice device, Player player, Vector3 facing)
-		{
-			Draw(device, player.GetHeldMatrix());
-		}
-
-		public virtual void Draw(GraphicsDevice device, Matrix transform)
-		{
 			if (mesh == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeEffect, transform, Texture, SourceRect);
+			mesh.Draw(device, Main.CubeEffect,
+				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateTranslation(Position));
 		}
 
-		private static void MakeMesh(GraphicsDevice device)
+		private void MakeMesh(GraphicsDevice device)
 		{
-			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);
@@ -94,7 +105,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
+			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
 		}
 	}
 }

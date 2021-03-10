@@ -20,12 +20,5 @@ namespace ViMG.Items
 
 			return true;
 		}
-
-		public override void Draw(GraphicsDevice device, Matrix transform)
-		{
-			base.Draw(device, transform);
-
-			mesh.Draw(device, Main.CubeEffect, transform, Texture, SourceRect);
-		}
 	}
 }

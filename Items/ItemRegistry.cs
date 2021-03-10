@@ -15,6 +15,11 @@ namespace ViMG.Items
 			Register(new ItemGun());
 			Register(new ItemBullet());
 			Register(new ItemIronChunk());
+			Register(new ItemWood());
+			Register(new ItemFlask());
+			Register(new ItemFlaskHealthPotion1());
+			Register(new ItemGlowdust());
+			Register(new ItemGlowNode());
 			RegisterItemCubes();
 		}
 

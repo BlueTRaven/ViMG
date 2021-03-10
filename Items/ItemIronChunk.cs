@@ -11,13 +11,8 @@ namespace ViMG.Items
 	{
 		public ItemIronChunk() : base("iron_chunk", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 16, 16, 16))
 		{
-		}
-
-		public override void Draw(GraphicsDevice device, Matrix transform)
-		{
-			base.Draw(device, transform);
-
-			mesh.Draw(device, Main.CubeEffect, transform, Texture, SourceRect);
+			Name = "Iron Ore Chunk";
+			Description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
 		}
 	}
 }

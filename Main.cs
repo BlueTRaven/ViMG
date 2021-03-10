@@ -55,7 +55,8 @@ namespace ViMG
 		public static bool Debug;
 		
 		public static WorldViewProjection WVP;
-		public static FogHandler FogHandler;
+		public static FogManager FogManager;
+		public static LightManager LightManager;
 
 		public const int FIXED_FPS = 60;
 
@@ -169,14 +170,16 @@ namespace ViMG
 			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
 
 			CubeEffect = assetsManager.GetAsset<Effect>("cube");
-			FogHandler = new FogHandler(CubeEffect);
+			FogManager = new FogManager(CubeEffect);
+			LightManager = new LightManager();
 
 			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
-			CubeEffect.Parameters["AmbientStrength"].SetValue(0.1f);
+			CubeEffect.Parameters["AmbientStrength"].SetValue(1f);
 			//CubeEffect.Parameters["SpecularStrength"].SetValue(0.5f);
 			CubeEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
 
-			FogHandler.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			LightManager.SetToEffect(CubeEffect);
 		}
 
 		protected override void Update(GameTime gt)
@@ -221,7 +224,7 @@ namespace ViMG
 			}
 
 			CubeEffect.Parameters["CameraPos"].SetValue(camera.Position);
-			CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
+			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
 
 			if (IsActive && !paused && !MouseControl)
 				Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
@@ -245,7 +248,7 @@ namespace ViMG
 
 			GraphicsDevice.SetRenderTarget(null);
 
-			batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
+			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
 			batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
 
@@ -257,11 +260,11 @@ namespace ViMG
 
 				TextHelper.DrawText(batch, font,
 					frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Enums.Alignment.BottomRight, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 				TextHelper.DrawText(batch, font,
 					"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
 					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(-camera.Position).ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Enums.Alignment.BottomRight, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds."
 					+ "\nChunk Queue: " + ChunkManager.QueueGenerate + "/" + ChunkManager.QueueMesh;

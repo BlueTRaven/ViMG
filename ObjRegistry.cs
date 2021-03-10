@@ -15,7 +15,7 @@ namespace ViMG
 
 		}
 
-		protected void Register(T obj)
+		protected virtual void Register(T obj)
 		{
 			registryByName.Add(obj.Identifier, registry.Count + 1);
 			registry.Add(obj);

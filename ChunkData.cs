@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,9 +14,7 @@ namespace ViMG
 		public bool IsThreadedLoad;
 
 		private int[] cubes;
-		//private int[,,] cubes;
 		private Cube.CubeVisualInstance[] cubeVisualInstances;
-		//private Cube.CubeVisualInstance[,,] cubeVisualInstances;
 
 		private Chunk chunk;
 
@@ -29,6 +28,11 @@ namespace ViMG
 		public void SetChunk(Chunk chunk)
 		{
 			this.chunk = chunk;
+		}
+
+		public Chunk GetChunk()
+		{
+			return chunk;
 		}
 
 		public static int ChunkUpdate = 0;
@@ -134,6 +138,11 @@ namespace ViMG
 			else return world.GetChunkManager().GetCubeInstance(position.InCubeSpace(chunk));
 		}
 
+		public bool IsInChunkBounds(Vector3 position)
+		{
+			return IsInChunkBounds(CubePosition.FromWorldSpace(position));
+		}
+
 		public bool IsInChunkBounds(CubePosition position)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
@@ -144,9 +153,9 @@ namespace ViMG
 			}
 			else
 			{
-				return position.X >= chunk.Position.X * Chunk.CHUNK_SIZE && position.X <= chunk.Position.X * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
-					position.Y >= chunk.Position.Y * Chunk.CHUNK_SIZE && position.Y <= chunk.Position.Y * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
-					position.Z >= chunk.Position.Z * Chunk.CHUNK_SIZE && position.Z <= chunk.Position.Z * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE;
+				return position.X >= chunk.Position.X * Chunk.CHUNK_SIZE && position.X < chunk.Position.X * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+					position.Y >= chunk.Position.Y * Chunk.CHUNK_SIZE && position.Y < chunk.Position.Y * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+					position.Z >= chunk.Position.Z * Chunk.CHUNK_SIZE && position.Z < chunk.Position.Z * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE;
 			}
 		}
 
@@ -223,9 +232,34 @@ namespace ViMG
 
 				CubePosition newPos = new CubePosition(position.X + offset.X, position.Y + offset.Y, position.Z + offset.Z, CubePosition.CoordinateSpace.ChunkSpace);
 
-				if (newPos.X < 0 || newPos.X >= Chunk.CHUNK_SIZE || newPos.Y < 0 || newPos.Y >= Chunk.CHUNK_SIZE || newPos.Z < 0 || newPos.Z >= Chunk.CHUNK_SIZE)
+				if (!IsInChunkBounds(newPos))
 					MarkOffsetChunkDirty(newPos);
 				else MarkDirty(newPos, false);
+			}
+		}
+
+		private void CubeUpdate(CubePosition position, int updatedId)
+		{
+			for (int i = 0; i < 6; i++)
+			{
+				ref CubePosition offset = ref offsets[i];
+				CubePosition newPos = new CubePosition(position.X + offset.X, position.Y + offset.Y, position.Z + offset.Z, CubePosition.CoordinateSpace.ChunkSpace);
+
+				if (!IsInChunkBounds(newPos))
+				{
+					Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(newPos.InCubeSpace(chunk));
+					CubePosition adjPos = newPos.InCubeSpace(chunk);
+
+					GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+
+					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+				}
+				else
+				{
+					GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
+
+					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+				}
 			}
 		}
 
@@ -237,6 +271,11 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 			
+			if (markDirty)
+			{
+				CubeUpdate(position, id);
+			}
+
 			cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)] = id;
 
 			if (markDirty)

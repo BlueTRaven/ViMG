@@ -41,13 +41,26 @@ namespace ViMG
 
 		~Chunk()
 		{
-			world.ChunkDatas.Return(data);
+			world.GetChunkManager().ChunkDatas.Return(data);
 		}
 
 		public void Initialize(World world)
 		{
 			this.world = world;
 			initialized = true;
+
+			for (int x = 0; x < CHUNK_SIZE; x++)
+			{
+				for (int y = 0; y < CHUNK_SIZE; y++)
+				{
+					for (int z = 0; z < CHUNK_SIZE; z++)
+					{
+						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+						GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkInit(GetData(), pos);
+					}
+				}
+			}
 		}
 
 		public World GetWorld()

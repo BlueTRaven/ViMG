@@ -18,6 +18,13 @@ namespace ViMG.Cubes
 			Register(new CubeWater());
 			Register(new CubeIronOre());
 			Register(new CubeTree());
+			Register(new CubeGlowDustOre());
+		}
+
+		protected override void Register(Cube obj)
+		{
+			obj.SetId(Count + 1);
+			base.Register(obj);
 		}
 	}
 }

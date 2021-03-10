@@ -136,5 +136,14 @@ namespace ViMG
 			}
 			else return new CubePosition();
 		}
+
+		public static CubePosition operator -(CubePosition posA, CubePosition posB)
+		{
+			if (posA.Coord == posB.Coord)
+			{
+				return new CubePosition(posA.X - posB.X, posA.Y - posB.Y, posA.Z - posB.Z, posA.Coord);
+			}
+			else return new CubePosition();
+		}
 	}
 }

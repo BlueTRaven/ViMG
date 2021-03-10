@@ -60,8 +60,6 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
-		public GenericPool<ChunkData> ChunkDatas = new GenericPool<ChunkData>(() => new ChunkData());
-
 		public World(GraphicsDevice device, int worldSize)
 		{
 			this.sizeInCubes = worldSize;
@@ -137,7 +135,7 @@ namespace ViMG
 			bool ok = false;
 			player.Position = GetFirstSolidDown(playerPos.InWorldSpace(out ok)).InWorldSpace(out ok) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 
-			Main.FogHandler.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
 			//Main.FogHandler.Set(750f, 800f, SkyColor);
 		}
 
@@ -158,6 +156,8 @@ namespace ViMG
 			{
 				MinedCube mc = mined.Value;
 
+				Cube cube = mc.chunk.GetData().GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
 				mc.timer -= (float)deltaTime;
 				if (mc.timer <= 0)
 				{
@@ -165,9 +165,9 @@ namespace ViMG
 					mc.timer = 2;
 				}
 
-				if (mc.progress <= 0)
+				if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
 					miningRemove.Add(mc.position);
-				else miningUpdate.Add(mc);//miningCubes[mc.position] = mc;
+				else miningUpdate.Add(mc);
 			}
 
 			foreach (var pos in miningRemove)
@@ -293,9 +293,9 @@ namespace ViMG
 			}
 
 			if (!player.InWater)
-				Main.FogHandler.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
+				Main.FogManager.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
 			else
-				Main.FogHandler.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"));
+				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"));
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
@@ -307,27 +307,35 @@ namespace ViMG
 					mesh.Draw(device, effect, transform);
 					NumChunksDrawn++;
 				}
+
+				/*chunkManager.GetChunk(pos).DrawDebug(device);
+
+				device.RasterizerState = Main.genericRS;
+				device.DepthStencilState = Main.genericDSS;*/
 			}
 
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
 			foreach (var mined in miningCubes)
 			{
-				Cube cube = Main.Registry.CubeRegistry.Get(mined.Value.chunk.GetData().GetRaw(mined.Value.position));
+				Cube cube = mined.Value.chunk.GetData().GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-				float percent = (float)mined.Value.progress / (float)cube.MineProgressRequirement;
+				if (cube != Main.Registry.CubeRegistry.Air)
+				{
+					float percent = (float)mined.Value.progress / (float)cube.MineProgressRequirement;
 
-				float stepped = ((int)(percent * 8f)) / 8f;
+					float stepped = ((int)(percent * 8f)) / 8f;
 
-				RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
+					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
-				effect.Parameters["TexCoordOffset"].SetValue(new Vector2(stepped, 0));
-				meshMiningCube.Draw(device, effect, 
-					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) * 
-					Matrix.CreateScale(1.125f) * 
-					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) * 
-					Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)));
-				effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);
+					effect.Parameters["TexCoordOffset"].SetValue(new Vector2(stepped, 0));
+					meshMiningCube.Draw(device, effect,
+						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+						Matrix.CreateScale(1.125f) *
+						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)));
+					effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);
+				}
 			}
 
 			ProjectileManager.Draw(device, effect);
@@ -395,7 +403,7 @@ namespace ViMG
 			{
 				Main.BasicEffect.DiffuseColor = color.Value.ToVector3();
 			}
-			meshWireframeUnscaled.Draw(device, Main.BasicEffect, position, Vector3.Zero, scale);
+			meshWireframeUnscaled.Draw(device, Main.BasicEffect, Matrix.CreateScale(scale) * Matrix.CreateTranslation(position));
 			if (color.HasValue)
 			{
 				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
@@ -407,7 +415,16 @@ namespace ViMG
 			return chunkManager;
 		}
 
-		public void MineCube(CubePosition position)
+		public void OnCubeUpdate(ChunkData updatingParent, CubePosition updating, int updatedId)
+		{
+			foreach (Entity entity in EntityManager.GetEntities())
+			{
+				//if (updatingParent.IsInChunkBounds(entity.Position))
+					entity.OnCubeUpdated(updatingParent, updating, updatedId);
+			}
+		}
+
+		public void MineCube(CubePosition position, bool instant = false)
 		{
 			Chunk chunk = chunkManager.GetChunk(position);
 
@@ -423,6 +440,23 @@ namespace ViMG
 
 			if (cube != null)
 			{
+				if (instant)
+				{
+					mined.chunk.GetData().SetCube(position, 0);
+
+					List<ItemInstance> items = new List<ItemInstance>();
+					cube.GetDrops(items);
+
+					foreach (ItemInstance item in items)
+					{
+						EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
+						ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+						EntityManager.Add(ent);
+					}
+
+					return;
+				}
+
 				if (miningCubes.ContainsKey(position))
 				{
 					mined.progress = miningCubes[position].progress + 1;
@@ -447,6 +481,20 @@ namespace ViMG
 				{
 					if (mined.progress < cube.MineProgressRequirement)
 						miningCubes.Add(position, mined);
+					else
+					{
+						mined.chunk.GetData().SetCube(position, 0);
+
+						List<ItemInstance> items = new List<ItemInstance>();
+						cube.GetDrops(items);
+
+						foreach (ItemInstance item in items)
+						{
+							EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
+							ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+							EntityManager.Add(ent);
+						}
+					} 
 				}
 			}
 		}

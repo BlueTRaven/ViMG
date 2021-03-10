@@ -8,13 +8,13 @@ namespace ViMG.Recipes
 {
 	public class RecipeFuzzy : Recipe
 	{
-		public RecipeFuzzy(CubeCatalyst catalyst, ItemLayout layout) : base(catalyst, layout)
+		public RecipeFuzzy(CubeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs)
 		{
 		}
 
 		public override bool Matches(Inventory inventory)
 		{
-			for (int i = 0; i < Layout.items.Length; i++)
+			for (int i = 0; i < Layout.Length; i++)
 			{
 				if (!ItemMatches(inventory, i))
 					return false;
@@ -25,7 +25,7 @@ namespace ViMG.Recipes
 
 		private bool ItemMatches(Inventory inventory, int index)
 		{
-			ref ItemInstance item = ref Layout.items[index];
+			ref ItemInstance item = ref Layout[index];
 			int req = item.num;
 
 			for (int i = 0; i < inventory.NumSlots; i++)

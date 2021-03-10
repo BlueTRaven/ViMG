@@ -80,51 +80,28 @@ namespace ViMG.Entities
 			CubePosition ourBoundsNear = CubePosition.FromWorldSpace(ourBounds.Position);
 			CubePosition ourBoundsFar = CubePosition.FromWorldSpace(ourBounds.FarPosition);
 
-			bool anyCol = false;
-
-			for (int x = -1; x <= 1; x++)
+			for (int x = ourBoundsNear.X - 1; x <= ourBoundsFar.X; x++)
 			{
-				for (int y = -1; y <= 1; y++)
+				for (int y = ourBoundsFar.Y - 1; y <= ourBoundsFar.Y; y++)
 				{
-					for (int z = -1; z <= 1; z++)
+					for (int z = ourBoundsNear.Z - 1; z <= ourBoundsFar.Z; z++)
 					{
-						CubePosition pos = new CubePosition((int)(Position.X / 20) + x, (int)(Position.Y / 20) + y, (int)(Position.Z / 20) + z);
+						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
 						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							if (ourBounds.Intersects(cubeBounds))
+							if (CollisionHelper.CheckCollision(cubeBounds, Position, 8, out Vector3 change))
 							{
-								/*float xb = Math.Min(ourBounds.Left - cubeBounds.Right, cubeBounds.Left - ourBounds.Right);
+								Position += change;
 
-								float yb = Math.Min(ourBounds.Top - cubeBounds.Bottom, cubeBounds.Top - ourBounds.Bottom);
-
-								float zb = Math.Min(ourBounds.Back - cubeBounds.Front, cubeBounds.Back - ourBounds.Front );
-
-								float vx = Math.Abs(Velocity.X);
-								float vy = Math.Abs(Velocity.Y);
-								float vz = Math.Abs(Velocity.Z);
-
-								if (xb > yb && xb > zb && vx > vy && vx > vz)
-								{
-									Position.X += xb;
-								}
-								else if (yb > xb && yb > zb && vy > vx && vy > vz)
-								{
-									Position.Y += yb;
-								}
-								else if (zb > xb && zb > yb && vz > vx && vz > vy)
-								{
-									Position.Z += zb;
-								}
-
-								ourBounds = Bounds;*/
-
-								Position.Y = cubeBounds.Top + bounds.Size.Y / 2f;
-								Velocity.Y = 0;
-
-								anyCol = true;
+								if (change.Y != 0)
+									Velocity.Y = 0;
+								else if (change.X != 0)
+									Velocity.X = 0;
+								else if (change.Z != 0)
+									Velocity.Z = 0;
 							}
 						}
 					}
@@ -133,113 +110,6 @@ namespace ViMG.Entities
 
 			//if (!anyCol)
 				//Position += Velocity * (float)deltaTime;
-		}
-
-		//TODO implement
-		public Vector3 MoveInCollisionGrid(Vector3 delta)
-		{
-			const float epsilon = 1E-5f;
-
-			Vector3 d = delta;
-			Vector3 position = Position;
-			Vector3 start = Position;
-			Rectangle3D startBounds = Bounds;
-			bool hadCollision = false;
-			while (d.X != 0 || d.Y != 0 || d.Z != 0)
-			{
-				if (d.X != 0)
-				{
-					float inc = MathF.Abs(d.X) < 1 ? d.X : MathF.Sign(d.X);
-					position.X += inc;
-					if (Check(startBounds, CubePosition.FromWorldSpace(position)))
-					{
-						hadCollision = true;
-						float x;
-						if (d.X > 0)
-						{
-							x = MathF.Ceiling(startBounds.FarPosition.X) - 1 - startBounds.Size.X - epsilon;
-						}
-						else
-						{
-							x = MathF.Floor(startBounds.Position.X) + 1 + epsilon;
-						}
-						d.X = 0;
-						position.X = x;
-					}
-					else
-					{
-						d.X -= inc;
-					}
-				}
-				if (d.Y != 0)
-				{
-					float inc = MathF.Abs(d.Y) < 1 ? d.Y : MathF.Sign(d.Y);
-					position.Y += inc;
-					if (Check(startBounds, CubePosition.FromWorldSpace(position)))
-					{
-						hadCollision = true;
-						float y;
-						if (d.Y > 0)
-						{
-							y = MathF.Ceiling(startBounds.FarPosition.Y) - 1 - startBounds.Size.Y - epsilon;
-						}
-						else
-						{
-							y = MathF.Floor(startBounds.Position.Y) + 1 + epsilon;
-						}
-						d.Y = 0;
-						position.Y = y;
-					}
-					else
-					{
-						d.Y -= inc;
-					}
-				}
-				if (d.Z != 0)
-				{
-					float inc = MathF.Abs(d.Z) < 1 ? d.Z : MathF.Sign(d.Z);
-					position.Z += inc;
-					if (Check(startBounds, CubePosition.FromWorldSpace(position)))
-					{
-						hadCollision = true;
-						float z;
-						if (d.Z > 0)
-						{
-							z = MathF.Ceiling(startBounds.FarPosition.Z) - 1 - startBounds.Size.Z;
-						}
-						else
-						{
-							z = MathF.Floor(startBounds.Position.Z) + 1;
-						}
-						d.Z = 0;
-						position.Z = z;
-					}
-					else
-					{
-						d.Z -= inc;
-					}
-				}
-			}
-			if (hadCollision)
-			{
-				return position - start;
-			}
-			else
-			{
-				return delta;
-			}
-		}
-
-		private bool Check(Rectangle3D entBounds, CubePosition position)
-		{
-			if (world.GetChunkManager().GetCubeInstance(position).cubeId > 0)
-			{
-				Rectangle3D bounds = CubePosition.BoundsWorldSpace(position);
-
-				return entBounds.Intersects(bounds);
-			}
-
-			return false;
 		}
 
 		public void MoveTowards(Vector3 position)
@@ -266,7 +136,7 @@ namespace ViMG.Entities
 			//device.RasterizerState = Main.noCullRS;
 
 			Item.item.Draw(device, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-				Matrix.CreateScale(0.25f) *
+				Matrix.CreateScale(0.5f) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
 				Matrix.CreateTranslation(new Vector3(0, 5 * bobPercent, 0)) *
 				//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *

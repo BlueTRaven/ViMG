@@ -12,13 +12,8 @@ namespace ViMG.Items
 	{
 		public ItemSlimeChunk() : base("slime_chunk", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 112, 16, 16))
 		{
-		}
-
-		public override void Draw(GraphicsDevice device, Matrix transform)
-		{
-			base.Draw(device, transform);
-
-			mesh.Draw(device, Main.CubeEffect, transform, Texture, SourceRect);
+			Name = "Slime Chunk";
+			Description = "A gooey chunk of slime. Smells surprisingly nice.";
 		}
 	}
 }

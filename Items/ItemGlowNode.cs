@@ -1,19 +1,20 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities;
 
 namespace ViMG.Items
 {
-	public class ItemCube : Item
+	public class ItemGlowNode : Item
 	{
-		private int cubeId;
-
-		public ItemCube(Cube cube, int cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), cube.GetSourceRect(MeshHelper.CubeFace.FRONT))
+		public ItemGlowNode() : base("glow_node", Main.assetsManager.GetAsset<Texture2D>("glow_node"), new RectangleF(0, 0, 16, 16))
 		{
-			this.cubeId = cubeId;
+			Name = "Glow Node";
+			Description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing)
@@ -32,8 +33,10 @@ namespace ViMG.Items
 
 					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
-						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
-						chunk.GetData().SetCube(placeAtPos, cubeId);
+						player.GetWorld().EntityManager.Add(new GlowNode(placeAtPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f), 100, 16, Color.White));
+
+						/*Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
+						chunk.GetData().SetCube(placeAtPos, cubeId);*/
 						inventory.Remove(index, 1);
 
 						return true;
@@ -42,16 +45,6 @@ namespace ViMG.Items
 			}
 
 			return false;
-		}
-
-		public override void Draw(GraphicsDevice device, Matrix transform)
-		{
-			//base.Draw(device, transform);
-
-			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-			var mesh = cube.GetMesh(device);
-
-			mesh.Draw(device, Main.CubeEffect, transform);
 		}
 	}
 }

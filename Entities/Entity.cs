@@ -30,5 +30,10 @@ namespace ViMG.Entities
 		{
 
 		}
+
+		public virtual void OnCubeUpdated(ChunkData updatingParent, CubePosition updating, int updatedId)
+		{
+
+		}
 	}
 }
