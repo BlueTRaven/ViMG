@@ -8,7 +8,7 @@ namespace ViMG.Recipes
 {
 	public class RecipeFuzzy : Recipe
 	{
-		public RecipeFuzzy(CubeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs)
+		public RecipeFuzzy(IRecipeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs, int weight = 1) : base(catalyst, layout, outputs, weight)
 		{
 		}
 

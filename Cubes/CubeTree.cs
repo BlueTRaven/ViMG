@@ -15,9 +15,9 @@ namespace ViMG.Cubes
 			Transparency = TransparencyValue.Invisible;
 		}
 
-		public override void PostChunkInit(ChunkData chunkData, CubePosition position)
+		public override void PostChunkGen(ChunkData chunkData, CubePosition position)
 		{
-			base.PostChunkInit(chunkData, position);
+			base.PostChunkGen(chunkData, position);
 
 			int size = 0;
 

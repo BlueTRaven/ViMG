@@ -2,12 +2,16 @@
 #include "platform_defines.fxh"
 
 sampler2D Texture : register(s0);
-sampler2D TextureHeightFogMap : register(s1);
+sampler2D TextureHeightFogMapDay : register(s1);
+sampler2D TextureHeightFogMapNight : register(s2);
+sampler2D TextureLightDepth : register(s3);
 
 matrix World;
 matrix View;
 matrix WorldNormal;
 matrix WorldViewProjection;
+
+float3 TintColor;
 
 float3 WorldSize;
 float3 CubeSize;
@@ -17,6 +21,7 @@ float AOStrength;
 float AmbientStrength;
 float SpecularStrength;
 
+matrix LightViewProjection;
 float3 LightPos;
 float3 LightColor;
 
@@ -24,12 +29,16 @@ float3 CameraPos;
 
 float FogStart;
 float FogEnd;
+float HeightFogMapLerp;
 
 uint UseSourceRect;
 float2 SourceRectPos;
 float2 SourceRectFarPos;
 float2 TextureSize;
 float2 TexCoordOffset;
+
+uint EnableShadows;
+uint EnableFog;
 
 float3 LightsPosition[16];
 float LightsStart[16];
@@ -54,7 +63,10 @@ struct VertexShaderOutput
 	float3 PositionSS : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 	float AO : TEXCOORD4;
+	float4 PositionLS : TEXCOORD5;
 };
+
+float Shadow(float4 positionLS, float3 normal, float3 lightDir);
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
@@ -66,7 +78,8 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	output.Color = input.Color;
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
 	output.AO = input.AO;
-		
+	output.PositionLS = mul(float4(output.PositionWS, 1), LightViewProjection);
+	
 	if (UseSourceRect)
 	{
 		float2 xy = SourceRectPos / TextureSize;
@@ -140,13 +153,47 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	float4 finalColor = float4(ambientColor, 1.0) * worldColor;
 	finalColor.rgb *= input.AO;
 	
-	float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));
-	percent = clamp(percent, 0, 1);
-	float4 worldHeightColor = tex2D(TextureHeightFogMap, float2(0, percent));
+	finalColor.rgb *= TintColor;
 	
-	float4 fogModColor = lerp(finalColor, worldHeightColor, fogFactor);
+	if (EnableFog > 0)
+	{
+		float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));
+		percent = clamp(percent, 0, 1);
+		float4 worldHeightColorDay = tex2D(TextureHeightFogMapDay, float2(0, percent));
+		float4 worldHeightColorNight = tex2D(TextureHeightFogMapNight, float2(0, percent));
+
+		float4 lerpedColor = lerp(worldHeightColorDay, worldHeightColorNight, HeightFogMapLerp);
+		
+		finalColor = lerp(finalColor, lerpedColor, fogFactor);
+	}
 	
-	return fogModColor;
+	if (EnableShadows > 0)
+	{	
+		float shadow = Shadow(input.PositionLS, input.Normal, lightDir);
+		finalColor.rgb *= 1 - shadow;
+	}
+	
+	return finalColor;
+}
+
+float Shadow(float4 positionLS, float3 normal, float3 lightDir)
+{
+	float3 projCoords = positionLS.xyz / positionLS.w;
+	
+	projCoords = projCoords * 0.5 + 0.5;
+	
+	float closestDepth = 1- tex2D(TextureLightDepth, float2(projCoords.x, 1 - projCoords.y)).r;
+	
+	float currentDepth = projCoords.z;
+	
+	float bias = 0;//max(0.05 * (1 - dot(normal, lightDir)), 0.005);
+	
+	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+	
+	if (projCoords.z > 1.0)
+		shadow = 0.0;
+	
+	return shadow;
 }
 
 technique BasicColorDrawing

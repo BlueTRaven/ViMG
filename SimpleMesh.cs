@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -71,6 +72,8 @@ namespace ViMG
 			if (uploaded)
 				throw new Exception("Cannot upload twice.");
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			vbo = new VertexBuffer(device, typeof(TVert), vertices.Count, BufferUsage.WriteOnly);
 			vbo.SetData(vertices.ToArray());
 
@@ -81,6 +84,10 @@ namespace ViMG
 			indexCount = indices.Count;
 
 			uploaded = true;
+
+			watch.Stop();
+
+			Console.WriteLine("Uploaded mesh in " + watch.Elapsed.TotalSeconds + "s");
 		}
 
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices, Texture2D texture) : this(device, vertices, indices)
@@ -133,13 +140,20 @@ namespace ViMG
 			if (!Use())
 				return;
 
+			//bandaid fix. I guess monogame doesn't correctly flush textures, so I do it manually here.
+			//TODO optimize this
+			for (int i = 0; i < 16; i++)
+			{
+				device.Textures[i] = null;
+			}
+
 			bool isDepth = effect.Name == "Effects/depth";
 
 			if (isDepth)
 			{
 				Main.WVP.SetWorld(transform);
 
-				effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+				//effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 				foreach (var pass in effect.CurrentTechnique.Passes)
 				{
@@ -156,13 +170,6 @@ namespace ViMG
 			effect.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(transform)));
 			effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
-			//bandaid fix. I guess monogame doesn't correctly flush textures, so I do it manually here.
-			//TODO optimize this
-			for (int i = 0; i < 16; i++)
-			{
-				device.Textures[i] = null;
-			}
-
 			Texture2D useTexture = texture;
 
 			if (useTexture != null || overrideTexture != null)
@@ -172,14 +179,6 @@ namespace ViMG
 
 				effect.Parameters["Texture"].SetValue(useTexture);
 			}
-
-			/*Texture2D fogHeightMap = Main.assetsManager.GetAsset<Texture2D>("height_fog_map");
-
-			if (fogHeightMap != null)
-			{
-				device.SamplerStates[1] = Main.clampSS;
-				//effect.Parameters["TextureHeightFogMap"].SetValue(fogHeightMap);
-			}*/
 
 			if (sourceRectangle != null)
 			{

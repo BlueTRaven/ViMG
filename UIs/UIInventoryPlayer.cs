@@ -9,18 +9,11 @@ using ViMG.Recipes;
 
 namespace ViMG.UIs
 {
-	public class UIInventoryPlayer
+	public class UIInventoryPlayer : UIInventory
 	{
-		private const int PADDING = 0 * SCALE;
-		private const int MARGIN = 8 * SCALE;
-		private const int PADDING_CRAFTING = 8 * SCALE;
-		private const int MARGIN_CRAFTING = 8 * SCALE;
-		private const int SIZE = 16 * SCALE;
-		private const int SCALE = 2;
-
+		private Player player;
 		private Inventory inventory;
-		private int rows;
-		private int columns;
+		private Inventory craftInventory;
 
 		public int HoverIndex;
 		public int HighlightIndex;
@@ -28,116 +21,214 @@ namespace ViMG.UIs
 
 		private ItemInstance held;
 
-		public UIInventoryPlayer(Inventory inventory, int rows, int columns)
-		{
-			this.inventory = inventory;
+		private bool craftInventoryUpdated;
+		private Recipe currentRecipe;
 
-			this.rows = rows;
-			this.columns = columns;
+		public UIInventoryPlayer(Player player, Inventory playerInventory, Inventory craftInventory)
+		{
+			this.player = player;
+
+			this.inventory = playerInventory;
+
+			this.craftInventory = craftInventory;
 		}
 
-		public void Update()
+		public override void Update()
 		{
+			base.Update();
+
 			UI.Start();
 
-			for (int y = 0; y < (Opened ? rows : 1); y++)
-			{
-				for (int x = 0; x < columns; x++)
-				{
-					int i = y * columns + x;
+			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-					Vector2 pos = new Vector2(MARGIN + x * SIZE + x * PADDING, MARGIN + y * SIZE + y * PADDING);
-					RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
+			UIInventoryHelper.DoPlayerInventory(player, inventory, ref held, (Opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, SIZE, PADDING);
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(16, 0, 16, 16), new RectangleF(0, 0, 16, 16), new RectangleF(0, 0, 16, 16)),
-									inventory.Get(i));
-
-					if (itemslot.button.clicked)
-					{
-						if (!held.valid && itemslot.item.valid)
-						{
-							held = itemslot.item.Copy();
-							inventory.Remove(i, held.num);
-						}
-						else if (held.valid && itemslot.item.valid)
-						{
-							// Merge stacks
-							if (inventory.Get(i).item == held.item)
-							{
-								inventory.Set(new ItemInstance(held, itemslot.item.num + held.num), i);
-								held = new ItemInstance();
-							}
-							else
-							{
-								// Swap stacks
-								var oldHeld = held;
-								held = itemslot.item.Copy();
-								inventory.Set(oldHeld, i);
-							}
-						}
-						else if (held.valid && !itemslot.item.valid)
-						{
-							inventory.Set(held, i);
-							held = new ItemInstance();
-						}
-					}
-				}
-			}
+			UI.EndParent();
 
 			if (Opened)
 			{
-				var recipes = Main.Registry.RecipeRegistry.GetRecipes();
-				
-				for (int i = 0; i < Main.Registry.RecipeRegistry.Count; i++)
+				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+
+				UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN));
+
+				Vector2 pos = new Vector2();
+				RectangleF bounds = new RectangleF();
+
+				pos = new Vector2(16 * 3.5f * SCALE, 0);
+
+				UI.EndParent();
+
+				UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + 32));
+
+				UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
+
+				UI.StartParent(new Vector2(MARGIN));
+
+				for (int y = 0; y < 2; y++)
 				{
-					int yoff = (MARGIN + SIZE + MARGIN + MARGIN) * i;
-
-					Recipe recipe = recipes[i];
-
-					for (int y = 0; y < 2; y++)
+					for (int x = 0; x < 3; x++)
 					{
-						for (int x = 0; x < 3; x++)
+						int i = y * 3 + x;
+
+						pos = new Vector2(x * SIZE, y * SIZE);
+						bounds = new RectangleF(pos, SIZE, SIZE);
+
+						var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+										new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+										craftInventory.Get(i));
+
+
+						var output = UIInventoryHelper.ItemSlotClickOutput.None;
+						if ((output = UIInventoryHelper.HandleItemSlot(player, craftInventory, i, itemslot, ref held, new UIInventoryHelper.WhiteListNone())) != UIInventoryHelper.ItemSlotClickOutput.None)
 						{
-							Vector2 pos = new Vector2(MARGIN + columns * SIZE + columns * PADDING + MARGIN_CRAFTING + x * SIZE, MARGIN + SIZE + y * SIZE + yoff);
-							RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
+							if (output == UIInventoryHelper.ItemSlotClickOutput.NeedsSwapInventory)
+							{
+								UIInventoryHelper.SwapInventory(craftInventory, inventory, i);
+							}
 
-							int recipeItemIndex = y * columns + x;
+							craftInventoryUpdated = true;
+						}
+					}
+				}
 
-							if (recipeItemIndex < recipe.Layout.Length)
-								UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
-									new RectangleF(16, 0, 16, 16), new RectangleF(0, 0, 16, 16), new RectangleF(0, 0, 16, 16)), 
-									recipe.Layout[recipeItemIndex]);
-							else UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(16, 0, 16, 16), new RectangleF(0, 0, 16, 16), new RectangleF(0, 0, 16, 16)),
-									new ItemInstance());
+				if (craftInventoryUpdated)
+				{
+					currentRecipe = FindRecipe(craftInventory);
+
+					if (currentRecipe != null)
+					{
+						for (int i = 0; i < Math.Min(2, currentRecipe.Outputs.Length); i++)
+						{
+							craftInventory.Set(currentRecipe.Outputs[i], 6 + i);
+						}
+					}
+					else
+					{
+						craftInventory.Set(new ItemInstance(), 6);
+						craftInventory.Set(new ItemInstance(), 7);
+					}
+
+					craftInventoryUpdated = false;
+				}
+
+				bounds = new RectangleF(3 * SIZE, 0, SIZE, SIZE);
+
+				UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
+
+				bounds.x += SIZE;
+
+				UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+								craftInventory.Get(6));
+
+				bounds.x += SIZE;
+
+				UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+								craftInventory.Get(7));
+
+				bounds.y += SIZE;
+
+				UI.Button craftRecipeButton = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16));
+				if (craftRecipeButton.clickLeft)
+				{
+					if (currentRecipe != null)
+						CraftItem(currentRecipe);
+				}
+				else if (craftRecipeButton.hovered)
+				{
+					UI.DisableParent();
+					UI.MakeLabel("Craft Recipe", fi, 256, Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16));
+					UI.EnableParent();
+				}
+
+				pos = new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2);
+				bounds = new RectangleF(pos, SIZE, SIZE);
+
+				UI.Button recipeBookButton = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16));
+
+				if (recipeBookButton.hovered)
+				{
+					UI.DisableParent();
+					UI.MakeLabel("Recipe Book", fi, 128, Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16));
+					UI.EnableParent();
+				}
+				
+				if (recipeBookButton.clickLeft)
+				{
+					player.OpenUI(new UIRecipeBook(Main.Registry.RecipeRegistry.PlayerInventoryCatalyst, new ItemInstance()));
+				}
+
+				UI.EndParent();
+
+				UI.EndParent();
+
+				if (Main.Debug)
+				{
+					UI.StartParent(new Vector2(MARGIN, 256));
+
+					var allItems = Main.Registry.ItemRegistry.GetIterable();
+					for (int i = 0; i < allItems.Count; i++)
+					{
+						int x = i % 8;
+						int y = i / 8;
+						RectangleF b = new RectangleF(x * SIZE, y * SIZE, SIZE, SIZE);
+
+						var cheatSlot = UI.MakeItemSlot(UI.MakeButton(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+									new ItemInstance(allItems[i], 999, 1));
+
+						if (cheatSlot.button.clickLeft)
+						{
+							inventory.Add(new ItemInstance(allItems[i], 999, 1));
+						}
+						else if (cheatSlot.button.clickRight)
+						{
+							inventory.Add(new ItemInstance(allItems[i], 1, 1));
 						}
 					}
 
-					if (recipe.Outputs.Length > 0)
+					UI.EndParent();
+				}
+			}
+			else
+			{
+				for (int y = 0; y < 2; y++)
+				{
+					for (int x = 0; x < 3; x++)
 					{
-						Vector2 pos = new Vector2(MARGIN + columns * SIZE + columns * PADDING + MARGIN_CRAFTING + 3 * SIZE + MARGIN_CRAFTING, MARGIN + SIZE + yoff);
-						RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
+						int i = y * 3 + x;
 
-						UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(16, 0, 16, 16), new RectangleF(0, 0, 16, 16), new RectangleF(0, 0, 16, 16)),
-									recipe.Outputs[0]);
-
-						pos.Y += SIZE;
-						bounds = new RectangleF(pos, SIZE, SIZE);
-
-						if (UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16)).clicked)
+						ItemInstance item = craftInventory.Get(i);
+						if (item.valid)
 						{
-							CraftItem(recipe);
+							inventory.Add(item);
+							craftInventory.Remove(i, item.num);
 						}
 					}
 				}
 			}
+		}
+
+		private Recipe FindRecipe(Inventory inventory)
+		{
+			// Null is the equivalent of the "inventory" catalyst
+			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.PlayerInventoryCatalyst);
+
+			for (int i = 0; i < recipes.Count; i++)
+			{
+				Recipe recipe = recipes[i];
+
+				if (recipe.Matches(inventory))
+					return recipe;
+			}
+
+			return null;
 		}
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(inventory))
+			if (recipe.Matches(craftInventory))
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
@@ -145,17 +236,15 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-						while (numLeft > 0)
-						{
-							inventory.Find(recipe.Layout[i].item, out int index);
+							craftInventory.Find(recipe.Layout[i], 6, out int index);
 
 							int overflow = inventory.Get(i).num - numLeft;
-							inventory.Remove(index, numLeft);
+							craftInventory.Remove(index, numLeft);
+							craftInventoryUpdated = true;
 
 							if (overflow < 0)
 								numLeft -= Math.Abs(overflow);
 							else numLeft -= numLeft;
-						}
 					}
 				}
 
@@ -166,145 +255,16 @@ namespace ViMG.UIs
 			}
 		}
 
-		/*private Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF sourceRect, RectangleF sourceRectHovered)
+		public override void Draw(SpriteBatch batch)
 		{
-			bool hovered = bounds.Contains(Main.inputManager.GetMousePosition().ToVector2());
-			bool clicked = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
-			bool held = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
-
-			Button button = new Button()
-			{
-				hovered = hovered,
-				clicked = clicked,
-				held = held,
-
-				bounds = bounds,
-				texture = texture,
-				sourceRect = hovered ? sourceRectHovered : sourceRect
-			};
-
-			buttons.Add(button);
-
-			return button;
-		}*/
-
-		/*private ItemSlot MakeItemSlot(RectangleF bounds, ItemInstance item)
-		{
-			bool hovered = bounds.Contains(Main.inputManager.GetMousePosition().ToVector2());
-			bool clicked = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
-			bool held = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
-
-			Button button = new Button()
-			{
-				hovered = hovered,
-				clicked = clicked,
-				held = held,
-
-				bounds = bounds,
-				texture = Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				sourceRect = hovered ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16)
-			};
-
-			ItemSlot itemSlot = new ItemSlot()
-			{
-				button = button,
-				item = item
-			};
-
-			itemslots.Add(itemSlot);
-
-			return itemSlot;
-		}*/
-
-		public void Draw(SpriteBatch batch)
-		{
-			if (Opened)
-			{
-				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, false);
-
-				TextHelper.DrawText(batch, fi, "Inputs", Color.White, new RectangleF(MARGIN + columns * SIZE + columns * PADDING + MARGIN_CRAFTING, MARGIN, 16 * 3 * SCALE, 16).ToRectangle(), Enums.Alignment.TopLeft, 16 * 3 * SCALE, overflowAction: TextHelper.OverFlowAction.None);
-
-				TextHelper.DrawText(batch, fi, "Outputs", Color.White, new RectangleF(16 * 3.5f * SCALE + MARGIN + columns * SIZE + columns * PADDING + MARGIN_CRAFTING, MARGIN, 16 * 3 * SCALE, 16).ToRectangle(), Enums.Alignment.TopLeft, 16 * 3 * SCALE, overflowAction: TextHelper.OverFlowAction.None);
-			}
+			base.Draw(batch);
 
 			UI.Draw(batch, SCALE);
 
-			/*foreach (ItemSlot itemSlot in itemslots)
-			{
-				DrawItemSlot(batch, itemSlot);
-			}
-
-			foreach (Button button in buttons)
-			{
-				batch.Draw(button.texture, button.bounds.Position, button.sourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, SCALE, SpriteEffects.None, 0.75f);
-			}*/
-
 			if (Opened)
 			{
-				if (held.valid)
-				{
-					var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
-
-					Vector2 pos = Main.inputManager.GetMousePosition().ToVector2();
-					RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
-
-					batch.Draw(held.item.Texture, pos, held.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, SCALE, SpriteEffects.None, 0);
-
-					TextHelper.DrawText(batch, fi,
-						held.num.ToString(), Color.White, bounds.ToRectangle(), Enums.Alignment.BottomRight, (int)bounds.width, overflowAction: TextHelper.OverFlowAction.None);
-				}
+				UIInventoryHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 			}
 		}
-
-		/*private void DrawItemSlot(SpriteBatch batch, ItemSlot itemSlot)
-		{
-			Vector2 mousePos = Main.inputManager.GetMousePosition().ToVector2();
-
-			if (itemSlot.button.hovered)
-			{
-				batch.Draw(itemSlot.button.texture, itemSlot.button.bounds.Position, new Rectangle(16, 0, 16, 16), Color.White, 0, Vector2.Zero, SCALE, SpriteEffects.None, 0.85f);
-
-				if (itemSlot.item.item != null)
-				{
-					const int minW = 128;
-					const int minH = 16;
-
-					const int maxW = 256;
-
-					var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
-
-					string name = itemSlot.item.item.Name;
-					string description = itemSlot.item.item.Description;
-
-					float widthName = fi.StringWidth(name);
-					Size sizeDescription = fi.StringSize(TextHelper.WrapText(fi, description, maxW));
-
-					float textWidthMax = Math.Max(minW, Math.Max(widthName, sizeDescription.Width));
-
-					float height = fi.StringHeight(name);
-					height += sizeDescription.Height;
-					height += 8;	//for padding
-
-					RectangleF bounds = new RectangleF(mousePos + new Vector2(16), textWidthMax, Math.Max(height, minH));
-					batch.DrawRectangle(bounds, new Color(139, 139, 139, 255), 0.89f);
-					
-					TextHelper.DrawText(batch, fi, name, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
-
-					bounds.y += fi.StringHeight(name);
-					bounds.y += 8;
-					TextHelper.DrawText(batch, fi, description, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
-				}
-			}
-			else
-				batch.Draw(itemSlot.button.texture, itemSlot.button.bounds.Position, new Rectangle(0, 0, 16, 16), Color.White, 0, Vector2.Zero, SCALE, SpriteEffects.None, 0.85f);
-
-			if (itemSlot.item.item != null)
-			{
-				batch.Draw(itemSlot.item.item.Texture, itemSlot.button.bounds.Position, itemSlot.item.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, SCALE, SpriteEffects.None, 0.86f);
-
-				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black),
-					itemSlot.item.num.ToString(), Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, (int)itemSlot.button.bounds.width, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
-			}
-		}*/
 	}
 }

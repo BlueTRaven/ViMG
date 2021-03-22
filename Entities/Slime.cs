@@ -7,20 +7,18 @@ using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
 
-namespace ViMG
+namespace ViMG.Entities
 {
-	public class Slime
+	public class Slime : Entity, IHitboxOwner
 	{
 		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
-		private World world;
-		public Vector3 Position;
 		public Vector3 Velocity;
 
 		public Vector3 MaxVelocity = new Vector3(64, 340, 64);
 
-		private SimpleMesh<VertexPositionColor, int> meshDebugCube;
-		private SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
-		private SimpleMesh<VertexPositionColorTextureNormal, int> meshHealthbar;
+		private static SimpleMesh<VertexPositionColor, int> meshDebugCube;
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshHealthbar;
 
 		private bool onGround;
 
@@ -33,23 +31,29 @@ namespace ViMG
 		private int health;
 		private int maxHealth = 4;
 
-		public bool Dead;
+		private Vector3 jumpDir;
+		private int numJumps;
 
-		public Slime(World world, Vector3 position)
+		private NoticeHandler<Player> noticeHandler;
+
+		public Slime(Vector3 position)
 		{
-			this.world = world;
 			this.Position = position;
 
 			health = maxHealth;
 		}
 
-		public void Update(double deltaTime)
+		public override void Initialize(World world)
 		{
-			if (Dead)
-				return;
+			base.Initialize(world);
 
+			noticeHandler = new NoticeHandler<Player>(this, 128, false);
+		}
+
+		public override void Update(double deltaTime)
+		{
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(Bounds, Vector3.Zero, GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
 			else world.HitboxManager.Update(hitbox, Bounds);
 
 			Vector3 actualMaxVel = MaxVelocity;
@@ -62,8 +66,26 @@ namespace ViMG
 				{
 					if (Main.random.Next(0, 64) == 0)
 					{
-						Vector2 playerDir = Vector2.Normalize(new Vector2(world.player.Position.X, world.player.Position.Z) - new Vector2(Position.X, Position.Z));
-						Velocity = new Vector3(playerDir.X * 32, MaxVelocity.Y * 0.75f, playerDir.Y * 32);
+						if (!noticeHandler.Noticed)
+						{
+							if (numJumps == 0)
+							{
+								numJumps = Main.random.Next(1, 6);
+
+								jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+								jumpDir.Normalize();
+							}
+
+							Velocity = new Vector3(jumpDir.X * 32, MaxVelocity.Y * 0.75f, jumpDir.Y * 32);
+
+							numJumps--;
+						}
+						else
+						{
+							Vector2 playerDir = Vector2.Normalize(new Vector2(world.player.Position.X, world.player.Position.Z) - new Vector2(Position.X, Position.Z));
+							Velocity = new Vector3(playerDir.X * 32, MaxVelocity.Y * 0.75f, playerDir.Y * 32);
+						}
+					
 						onGround = false;
 					}
 				}
@@ -78,8 +100,6 @@ namespace ViMG
 				}
 
 				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-
-				UpdateDamage(deltaTime);
 			}
 
 			if (Velocity.Y < -actualMaxVel.Y)
@@ -102,6 +122,8 @@ namespace ViMG
 			UpdateCollision();
 
 			invulnTimer -= (float)deltaTime;
+
+			noticeHandler.Update();
 		}
 
 		private Vector2[] offsetsDown = new Vector2[4]
@@ -119,38 +141,6 @@ namespace ViMG
 			new Vector3(0, 0, -1),
 			new Vector3(0, 0, 1)
 		};
-
-		private void UpdateDamage(double deltaTime)
-		{
-			DenseHitboxArray.Hitbox[] hitboxes = world.HitboxManager.GetAll();
-			for (int i = 0; i < world.HitboxManager.Capacity; i++)
-			{
-				ref DenseHitboxArray.Hitbox hitbox = ref hitboxes[i];
-
-				if (hitbox.active)
-				{
-					if (hitbox.group == Player.GROUP_PLAYER_SOURCE)
-					{
-						if (hitbox.bounds.Intersects(Bounds))
-						{
-							Vector3 direction = Vector3.Normalize(hitbox.direction);
-
-							Velocity = new Vector3(direction.X * 64, 128, direction.Z * 64);
-
-							health -= hitbox.damage;
-
-							if (health <= 0)
-							{
-								Kill();
-							}
-
-							invulnTimer = 0.25f;
-							break;	//break because another hitbox shouldn't be able to hit us anyway...
-						}
-					}
-				}
-			}
-		}
 
 		private void UpdateCollision()
 		{
@@ -196,28 +186,25 @@ namespace ViMG
 			}
 		}
 
-		public void Kill()
+		public override void OnDelete()
 		{
 			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
 			ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 128, Main.random.NextFloat(-100, 100));
 			world.EntityManager.Add(ent);
 			world.HitboxManager.Remove(hitbox);
 			hitbox = -1;
-			Dead = true;
 		}
 
-		public void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device)
 		{
-			if (Dead)
-				return;
-
 			if (mesh == null)
 				MakeMeshes(device);
 
 			mesh.Draw(device, Main.CubeEffect, 
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position));
+				Matrix.CreateTranslation(Position),
+				null, noticeHandler.Noticed ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16));
 
 			meshHealthbar.Draw(device, Main.CubeEffect, 
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
@@ -225,20 +212,9 @@ namespace ViMG
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position));
-
-			/*if (invulnTimer > 0)
-				Main.BasicEffect.DiffuseColor = Color.Red.ToVector3();
-
-			meshQuad.Draw(device, Main.BasicEffect, 
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) * 
-				Matrix.CreateTranslation(Position));
-
-			if (invulnTimer > 0)
-				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();*/
 		}
 
-		private void MakeMeshes(GraphicsDevice device)
+		private static void MakeMeshes(GraphicsDevice device)
 		{
 			meshDebugCube = MeshHelper.MakeCubeVertexPositionColor(device, -new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f), 
 				new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
@@ -325,6 +301,30 @@ namespace ViMG
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Red, ctx, new Vector3(0, 0, -1)));
 
 			meshHealthbar = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
+		}
+
+		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+		{
+			if (invulnTimer <= 0)
+			{
+				if (other.group == Player.GROUP_PLAYER_DEAL_SOURCE)
+				{
+					Vector3 direction = Vector3.Normalize(other.direction);
+
+					Velocity = new Vector3(direction.X * 64, 128, direction.Z * 64);
+
+					health -= other.damage;
+
+					if (health <= 0)
+					{
+						world.EntityManager.Remove(this);
+					}
+
+					invulnTimer = 0.25f;
+
+					noticeHandler.OnTakeDamage();
+				}
+			}
 		}
 	}
 }

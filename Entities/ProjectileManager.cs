@@ -7,16 +7,18 @@ using System.Text;
 
 namespace ViMG.Entities
 {
-	public class ProjectileManager
+	public class ProjectileManager : IHitboxOwner
 	{
 		public struct ProjectileVisStats
 		{
 			public float scale;
+			public RectangleF sourceRect;
 			public Texture2D texture;
 
-			public ProjectileVisStats(Texture2D texture, float scale)
+			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale)
 			{
 				this.texture = texture;
+				this.sourceRect = sourceRect;
 				this.scale = scale;
 			}
 		}
@@ -25,12 +27,18 @@ namespace ViMG.Entities
 		{
 			public int group;
 			public int damage;
+			public float collisionRadius;
+			public float size;
+			public bool gravity;
 			public bool dieOnCollision;
 
-			public ProjectileStats(int group, int damage, bool dieOnCollision)
+			public ProjectileStats(int group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
 			{
 				this.group = group;
 				this.damage = damage;
+				this.collisionRadius = collisionRadius;
+				this.size = size;
+				this.gravity = gravity;
 				this.dieOnCollision = dieOnCollision;
 			}
 		}
@@ -111,7 +119,7 @@ namespace ViMG.Entities
 
 				if (projectiles[i].hitbox == -1)
 				{
-					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
+					projectiles[i].hitbox = world.HitboxManager.Add(this, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
 				}
 
 				projectiles[i].timeLeft -= (float)deltaTime;
@@ -124,7 +132,44 @@ namespace ViMG.Entities
 					projectiles[i] = new Projectile();
 				}
 
-				var result = world.Raycast(projectiles[i].position, projectiles[i].position + projectiles[i].velocity, (Vector3 pos) =>
+				if (projectiles[i].stats.gravity)
+				{
+					projectiles[i].velocity.Y += World.GRAVITY;
+
+					if (projectiles[i].velocity.Y < -340)
+						projectiles[i].velocity.Y = -340;
+				}
+
+				projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
+
+				world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+
+				for (int x = -1; x <= 1; x++)
+				{
+					for (int y = -1; y <= 1; y++)
+					{
+						for (int z = -1; z <= 1; z++)
+						{
+							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+
+							if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
+							{
+								if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position, projectiles[i].stats.collisionRadius, out Vector3 change))
+								{
+									if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
+									{
+										if (projectiles[i].hitbox != -1)
+											world.HitboxManager.Remove(projectiles[i].hitbox);
+
+										projectiles[i] = new Projectile();
+									}	
+								}
+							}
+						}
+					}
+				}
+
+				/*var result = world.Raycast(projectiles[i].position, projectiles[i].position + projectiles[i].velocity, (Vector3 pos) =>
 				{
 					return world.GetChunkManager().GetRaw(pos) != 0;
 				});
@@ -144,7 +189,7 @@ namespace ViMG.Entities
 
 						projectiles[i] = new Projectile();
 					}
-				}
+				}*/
 			}
 		}
 
@@ -159,7 +204,7 @@ namespace ViMG.Entities
 						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
 						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 						Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.texture);
+						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.texture, projectiles[i].visStats.sourceRect);
 				}
 			}
 		}
@@ -183,6 +228,10 @@ namespace ViMG.Entities
 		public ref Projectile Get(int index)
 		{
 			return ref projectiles[index];
+		}
+
+		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+		{
 		}
 	}
 }

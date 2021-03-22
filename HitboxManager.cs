@@ -2,10 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities;
 
 namespace ViMG
 {
-	public class DenseHitboxArray
+	public class HitboxManager
 	{
 		public readonly struct Hitbox 
 		{
@@ -15,6 +16,7 @@ namespace ViMG
 			public readonly Rectangle3D bounds;
 			public readonly Vector3 direction;
 
+			public readonly IHitboxOwner owner;
 			public readonly int group;
 
 			public readonly int damage;
@@ -24,6 +26,7 @@ namespace ViMG
 			{
 				this.index = index;
 				active = false;
+				owner = null;
 				bounds = new Rectangle3D();
 				direction = Vector3.Zero;
 				group = -1;
@@ -31,10 +34,11 @@ namespace ViMG
 				knockback = -1;
 			}
 
-			public Hitbox(int index, Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
+			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
 			{
 				this.index = index;
 				active = true;
+				this.owner = owner;
 				this.bounds = bounds;
 				this.direction = direction;
 				this.group = group;
@@ -46,81 +50,96 @@ namespace ViMG
 			{
 				this.index = old.index;
 				active = true;
+				this.owner = old.owner;
 				this.bounds = bounds;
 				this.direction = old.direction;
 				this.group = old.group;
 				this.damage = old.damage;
 				this.knockback = old.knockback;
 			}
+
+			public static Hitbox Invalid = new Hitbox();
 		}
 
-		private Hitbox[] rectangles;
+		private Hitbox[] hitboxes;
 
 		private int capacity;
 		public int Capacity => capacity;
 		private readonly int grow;
 
-		public DenseHitboxArray(int capacity, int grow = 32)
+		public HitboxManager(int capacity, int grow = 32)
 		{
 			this.capacity = capacity;
 			this.grow = grow;
 
-			rectangles = new Hitbox[capacity];
+			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
-				ref Hitbox hitbox = ref rectangles[i];
+				ref Hitbox hitbox = ref hitboxes[i];
 
 				if (!hitbox.active)
 				{
-					hitbox = new Hitbox(i, bounds, direction, group, damage, knockback);
+					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback);
 
 					return i;
 				}
 			}
 
 			Grow();
-			return Add(bounds, direction, group, damage, knockback);
+			return Add(owner, bounds, direction, group, damage, knockback);
 		}
 
 		private void Grow()
 		{
-			Hitbox[] old = rectangles;
+			Hitbox[] old = hitboxes;
 
 			capacity += grow;
 
-			rectangles = new Hitbox[capacity];
+			hitboxes = new Hitbox[capacity];
 
 			for (int i = 0; i < old.Length; i++)
 			{
-				rectangles[i] = old[i];
+				hitboxes[i] = old[i];
 			}
 		}
 
 		public ref Hitbox Get(int index)
 		{
-			return ref rectangles[index];
+			if (index < 0)
+				return ref Hitbox.Invalid;
+			else return ref hitboxes[index];
 		}
 
 		public void Remove(int index)
 		{
-			rectangles[index] = new Hitbox(index);
+			hitboxes[index] = new Hitbox(index);
 		}
 
 		public void Update(int index, Rectangle3D bounds)
 		{
-			if (rectangles[index].active)
+			if (hitboxes[index].active)
 			{
-				rectangles[index] = new Hitbox(rectangles[index], bounds);
+				hitboxes[index] = new Hitbox(hitboxes[index], bounds);
+			}
+
+			for (int i = 0; i < hitboxes.Length; i++)
+			{
+				ref Hitbox hitbox = ref hitboxes[i];
+
+				if (hitbox.bounds.Intersects(bounds))
+				{
+					hitboxes[index].owner.OnInteractWithOther(hitboxes[index], hitbox);
+				}
 			}
 		}
 
 		public Hitbox[] GetAll()
 		{
-			return rectangles;
+			return hitboxes;
 		}
 	}
 }

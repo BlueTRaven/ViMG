@@ -77,7 +77,11 @@ namespace ViMG
 					}
 				}
 			}
+
+			chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
 		}
+
+		private List<Chunk> detailCascadedChunks = new List<Chunk>();
 
 		public void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
 		{
@@ -106,20 +110,86 @@ namespace ViMG
 							}
 						}
 
-						if (pos.Y <= sample - 8 && random.Next(0, 512) == 0)
+						if (pos.Y < sample - 64)
 						{
-							int size = random.Next(3, 6);
-							GenerateOreDetail(manager, chunk, pos, size, Main.Registry.CubeRegistry.Get("ore_iron"), Main.Registry.CubeRegistry.Get("stone"));
+							if (random.NextDouble() < 1.0 / 400000.0)
+							{
+								int caveW = random.Next(16, 64);
+								int caveH = random.Next(16, 64);
+								int caveZ = random.Next(16, 64);
+
+								GOL3DSim sim = new GOL3DSim(random, caveW, caveH, caveZ, 15, 0.4f, 13, 10);
+
+								sim.DoSim();
+
+								List<CubePosition> altarSpawnPositions = new List<CubePosition>();
+
+								for (int sx = 0; sx < caveW; sx++)
+								{
+									for (int sy = 0; sy < caveH; sy++)
+									{
+										for (int sz = 0; sz < caveZ; sz++)
+										{
+											CubePosition gol3dPos = pos + new CubePosition(sx, sy, sz, CubePosition.CoordinateSpace.CubeSpace);
+
+											if (!sim.Get(sx, sy, sz))
+											{
+												SetCubeOrAdjacent(manager, chunk, gol3dPos, 0);
+											}
+											else
+											{
+												if (sy + 1 < caveH && !sim.Get(sx, sy + 1, sz))
+												{
+													if (random.NextDouble() < 0.25)
+													{
+														SetCubeOrAdjacent(manager, chunk, gol3dPos, Main.Registry.CubeRegistry.Get("altar_brick").Id);
+													}
+
+													if ((noise.GetSimplex(gol3dPos.X, gol3dPos.Y, gol3dPos.Z) + 1) / 2f < 0.25f)
+													{
+														if (random.NextDouble() < 0.0125)
+														{
+															gol3dPos.Y += 1;
+															altarSpawnPositions.Add(gol3dPos);
+														}
+														SetCubeOrAdjacent(manager, chunk, gol3dPos, Main.Registry.CubeRegistry.Get("altar_brick").Id);
+													}
+												}
+											}
+										}
+									}
+								}
+
+								foreach (CubePosition altarSpawnPosition in altarSpawnPositions)
+								{
+									SetCubeOrAdjacent(manager, chunk, altarSpawnPosition, Main.Registry.CubeRegistry.Get("ancient_altar").Id);
+								}
+							}
 						}
 
-						if (pos.Y <= sample - 8 && random.Next(0, 384) == 0)
-						{
-							int size = random.Next(4, 12);
-							GenerateOreDetail(manager, chunk, pos, size, Main.Registry.CubeRegistry.Get("ore_glowdust"), Main.Registry.CubeRegistry.Get("stone"));
-						}
+						GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, EaseLinear,
+							Main.Registry.CubeRegistry.Get("ore_iron"), Main.Registry.CubeRegistry.Get("stone"));
+
+						GenerateOreDetail(manager, chunk, pos, 4, 12, sample - 16, 0, 1f / 800f, EaseLinear,
+							Main.Registry.CubeRegistry.Get("ore_glowdust"), Main.Registry.CubeRegistry.Get("stone"));
+
+						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 16, 96, 1f / 1024f, EaseLinear,
+							Main.Registry.CubeRegistry.Get("ore_tin"), Main.Registry.CubeRegistry.Get("stone"));
+
+						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 24, 48, 1f / 1024f, EaseLinear,
+							Main.Registry.CubeRegistry.Get("ore_copper"), Main.Registry.CubeRegistry.Get("stone"));
 					}
 				}
 			}
+
+			foreach (Chunk cascadedChunk in detailCascadedChunks)
+			{
+				cascadedChunk.PostChunkGen(cascadedChunk.GetWorld());
+			}
+
+			detailCascadedChunks.Clear();
+
+			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 		}
 
 		private void SetCube(Chunk chunk, CubePosition pos, int id)
@@ -132,17 +202,24 @@ namespace ViMG
 			if (!manager.IsInWorldBounds(pos))
 				return;
 
+			// Chunks that have already been fully generated can be marked as dirty
 			if (chunk.GetData().IsInChunkBounds(pos))
+			{
 				chunk.GetData().SetCube(pos, id, false);
+			}
 			else
 			{
 				ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos.InCubeSpace(chunk));
 
 				var posInNewChunk = pos.InChunkSpace(manager.GetChunk(chunkPos));
 
-				if (manager.GetChunkGenerationStep(chunkPos) == ChunkManager.GenerationStep.Broad)
+				if (manager.GetChunk(chunkPos).GetData().GenStep == ChunkData.GenerationStep.Broad)
 					manager.GenerateChunkBroad(chunkPos);
+
 				manager.GetChunk(chunkPos).GetData().SetCube(posInNewChunk, id, false);
+				if (manager.GetChunk(chunkPos).Initialized)
+					detailCascadedChunks.Add(manager.GetChunk(chunkPos));
+				manager.MarkDirty(chunkPos);
 			}
 		}
 
@@ -185,21 +262,31 @@ namespace ViMG
 			if (cubeSpacePos.Y <= sample)
 			{
 				if (cubeSpacePos.Y == sample && cubeSpacePos.Y >= SEA_LEVEL)
+				{
 					return 2;
+				}
 				else
 				{
+					if (cubeSpacePos.Y >= sample - 4 && cubeSpacePos.Y <= sample && cubeSpacePos.Y <= SEA_LEVEL)
+					{
+						return Main.Registry.CubeRegistry.Get("sand").Id;
+					}
+
 					if (cubeSpacePos.Y < sample - 8)
 					{
 						return GenerateCubeCaveLayer(chunk, cubeSpacePos, heightMap);
 					}
-					else return 1;
+					else
+					{
+						if (random.NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
+							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
+						return 1;
+					}
 				}
 			}
 			else
 			{
-				/*if (cubeSpacePos.Y == sample + 1 && random.Next(0, 32) == 0)
-					return 6;*/
-				
+				//water if below sea level, air otherwise
 				if (cubeSpacePos.Y < SEA_LEVEL)
 					return 4;
 				else return 0;
@@ -208,6 +295,8 @@ namespace ViMG
 
 		private int GenerateCubeCaveLayer(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap)
 		{
+			//return 3;
+
 			CubePosition chunkSpacePosition = cubeSpacePos.InChunkSpace(chunk);
 
 			int offset = random.Next();
@@ -227,42 +316,60 @@ namespace ViMG
 			else return 0;
 		}
 
-		private void GenerateOreDetail(ChunkManager manager, Chunk chunk, CubePosition cubeSpacePos, int size, Cube ore, Cube mediumCube)
+		private delegate float EaseFunction(float scale);
+
+		private void GenerateOreDetail(ChunkManager manager, Chunk chunk, CubePosition startPos, int minSize, int maxSize, int minDepth, int maxDepth, float chance, EaseFunction spawnEaseFunction, Cube ore, Cube mediumCube)
 		{
-			CubePosition nextPos = cubeSpacePos;
-			Chunk nextChunk = chunk;
-			int lastDirection = 0;
-
-			while (size > 0 && chunk.GetData().GetCube(nextPos.InChunkSpace(nextChunk)).GetOrDefault(Main.Registry.CubeRegistry.Air) == mediumCube)
+			if (startPos.Y >= maxDepth && startPos.Y < minDepth) 
 			{
-				SetCubeOrAdjacent(manager, chunk, nextPos, ore.Id);
-				nextChunk = manager.GetChunk(nextPos);
+				float easeScale = (float)(startPos.Y - minDepth) / (float)(maxDepth - minDepth);
 
-				lastDirection = random.Next(0, 6);
+				float easeChance = spawnEaseFunction(easeScale);
 
-				switch (lastDirection)
+				float realChance = easeChance * chance;
+
+				bool shouldSpawn = random.NextFloat(0, 1) < realChance;
+
+				if (!shouldSpawn)
+					return;
+
+				int size = random.Next(minSize, maxSize);
+
+				CubePosition nextPos = startPos;
+				Chunk nextChunk = chunk;
+				int lastDirection = 0;
+
+				while (size > 0 && chunk.GetData().GetCube(nextPos.InChunkSpace(nextChunk)).GetOrDefault(Main.Registry.CubeRegistry.Air) == mediumCube)
 				{
-					case 0:
-						nextPos = nextPos + new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-					case 1:
-						nextPos = nextPos - new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-					case 2:
-						nextPos = nextPos + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-					case 3:
-						nextPos = nextPos - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-					case 4:
-						nextPos = nextPos + new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-					case 5:
-						nextPos = nextPos - new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
-						break;
-				}
+					SetCubeOrAdjacent(manager, chunk, nextPos, ore.Id);
+					nextChunk = manager.GetChunk(nextPos);
 
-				size--;
+					lastDirection = random.Next(0, 6);
+
+					switch (lastDirection)
+					{
+						case 0:
+							nextPos = nextPos + new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+						case 1:
+							nextPos = nextPos - new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+						case 2:
+							nextPos = nextPos + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+						case 3:
+							nextPos = nextPos - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+						case 4:
+							nextPos = nextPos + new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+						case 5:
+							nextPos = nextPos - new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
+							break;
+					}
+
+					size--;
+				}
 			}
 		}
 
@@ -284,10 +391,20 @@ namespace ViMG
 			return -1;
 		}
 
+		private float EaseLinear(float t)
+		{
+			return t;
+		}
+
 		private float Ease(float t)
 		{
 			return t == 0 ? 0 : (float)Math.Pow(2f, 10f * t - 10f);
 			//return 1 - (float)Math.Sqrt(1 - (float)Math.Pow(t, 2));
+		}
+
+		private float EaseReverse(float t)
+		{
+			return 1 - Ease(t);
 		}
 
 		private int OldGen(Chunk chunk, CubePosition position)

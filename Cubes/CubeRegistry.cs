@@ -19,6 +19,15 @@ namespace ViMG.Cubes
 			Register(new CubeIronOre());
 			Register(new CubeTree());
 			Register(new CubeGlowDustOre());
+			Register(new CubeFurnace());
+			Register(new CubeGlowNode());
+			Register(new CubeAnvilIron());
+			Register(new CubeTinOre());
+			Register(new CubeCopperOre());
+			Register(new CubeAltarBrick());
+			Register(new CubeAncientAltar());
+			Register(new CubeBrittleBone());
+			Register(new CubeSand());
 		}
 
 		protected override void Register(Cube obj)

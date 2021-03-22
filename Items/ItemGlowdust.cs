@@ -10,8 +10,8 @@ namespace ViMG.Items
 	{
 		public ItemGlowdust() : base("glowdust", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 16, 16, 16))
 		{
-			Name = "Glowdust";
-			Description = "A strange glowing dust that sticks to your fingers.";
+			name = "Glowdust";
+			description = "A strange glowing dust that sticks to your fingers.";
 		}
 	}
 }

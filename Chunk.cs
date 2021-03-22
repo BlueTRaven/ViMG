@@ -35,6 +35,7 @@ namespace ViMG
 		{
 			data = chunkDatas.Get();
 			data.SetChunk(this);
+			data.GenStep = ChunkData.GenerationStep.Broad;
 
 			this.position = position;
 		}
@@ -49,6 +50,11 @@ namespace ViMG
 			this.world = world;
 			initialized = true;
 
+			PostChunkGen(world);
+		}
+
+		public void PostChunkGen(World world)
+		{
 			for (int x = 0; x < CHUNK_SIZE; x++)
 			{
 				for (int y = 0; y < CHUNK_SIZE; y++)
@@ -57,7 +63,7 @@ namespace ViMG
 					{
 						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
-						GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkInit(GetData(), pos);
+						GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkGen(GetData(), pos);
 					}
 				}
 			}

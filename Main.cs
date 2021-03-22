@@ -23,8 +23,8 @@ namespace ViMG
         SpriteBatch batch;
 
 		private const float FOV_DEGREES = 90f;
-		private const float NEAR = 0.05f;
-		private const float FAR = 5000f;
+		public const float NEAR = 0.05f;
+		public const float FAR = 5000f;
 
 		public static BasicEffect BasicEffect;
 		public static Effect CubeEffect;
@@ -44,11 +44,13 @@ namespace ViMG
 		public const int SEED = 1338;
 
 		public static RasterizerState genericRS;
+		public static RasterizerState reverseRS;
 		public static DepthStencilState genericDSS;
 		public static RasterizerState wireframeRS;
 		public static DepthStencilState nodepthDSS;
 		public static RasterizerState noCullRS;
 		public static SamplerState clampSS;
+		public static SamplerState shadowBorderClampSS;
 
 		private bool paused;
 
@@ -73,6 +75,7 @@ namespace ViMG
 
 		//Debugging purposes only. Sometimes we want to run (semi)headless for profiling reasons.
 		private const bool NO_RENDER = false;
+		public const bool ENABLE_SHADOWS = false;
 
         public Main()
         {
@@ -84,7 +87,7 @@ namespace ViMG
 				//PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8,
 				SynchronizeWithVerticalRetrace = false,
 				PreferredBackBufferWidth = WindowResolution.X,
-				PreferredBackBufferHeight = WindowResolution.Y
+				PreferredBackBufferHeight = WindowResolution.Y,
 			};
 
             Content.RootDirectory = "Content";
@@ -98,6 +101,7 @@ namespace ViMG
 		protected override void Initialize()
 		{
 			WVP.SetProjection(camera.GetProjectionMatrix());
+			//WVP.SetProjection(Matrix.CreateOrthographicOffCenter(-10.0f, 10.0f, -10.0f, 10.0f, NEAR, FAR));
 
 			BasicEffect = new BasicEffect(GraphicsDevice);
 			BasicEffect.Projection = camera.GetProjectionMatrix();
@@ -115,6 +119,12 @@ namespace ViMG
 				CullMode = CullMode.CullCounterClockwiseFace,
 				//DepthClipEnable = true,
 				//DepthBias = 0.5f
+			};
+
+			reverseRS = new RasterizerState()
+			{
+				FillMode = FillMode.Solid,
+				CullMode = CullMode.CullClockwiseFace
 			};
 
 			nodepthDSS = new DepthStencilState()
@@ -142,6 +152,15 @@ namespace ViMG
 				MaxMipLevel = 4,
 			};
 
+			shadowBorderClampSS = new SamplerState()
+			{
+				AddressU = TextureAddressMode.Border,
+				AddressV = TextureAddressMode.Border,
+				BorderColor = Color.Black,
+				Filter = TextureFilter.Point,
+				MaxMipLevel = 4,
+			};
+
 			GraphicsDevice.DepthStencilState = genericDSS;
 			GraphicsDevice.RasterizerState = genericRS;
 
@@ -153,8 +172,8 @@ namespace ViMG
 			
 			base.Initialize();
 
-			DepthTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
-			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			DepthTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 4, RenderTargetUsage.PreserveContents);
+			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			//GraphicsDevice.SetRenderTarget(WorldTarget);
 
 			Registry = new RegistryService();
@@ -177,8 +196,10 @@ namespace ViMG
 			CubeEffect.Parameters["AmbientStrength"].SetValue(1f);
 			//CubeEffect.Parameters["SpecularStrength"].SetValue(0.5f);
 			CubeEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
+			CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			CubeEffect.Parameters["EnableFog"].SetValue(1);
 
-			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 			LightManager.SetToEffect(CubeEffect);
 		}
 
@@ -254,17 +275,23 @@ namespace ViMG
 
 			world.DrawUI(batch);
 
+			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(WindowResolution.X / 2 - 8, WindowResolution.Y / 2 - 8), null, Color.White);
+
+			batch.End();
+
+			batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
+
 			if (Debug)
 			{
 				TextHelper.FontInfo font = new TextHelper.FontInfo(assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
 				TextHelper.DrawText(batch, font,
 					frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.BottomRight, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 				TextHelper.DrawText(batch, font,
 					"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
 					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(-camera.Position).ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.BottomRight, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds."
 					+ "\nChunk Queue: " + ChunkManager.QueueGenerate + "/" + ChunkManager.QueueMesh;
@@ -274,7 +301,6 @@ namespace ViMG
 					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 			}
 
-			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(WindowResolution.X / 2 - 8, WindowResolution.Y / 2 - 8), null, Color.White);
 
 			batch.End();
 

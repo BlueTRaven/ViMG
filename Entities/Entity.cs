@@ -9,7 +9,9 @@ namespace ViMG.Entities
 	public class Entity
 	{
 		public Vector3 Position;
-		protected World world;
+		public World world;
+
+		public bool AlwaysRender;
 
 		public virtual void Update(double deltaTime)
 		{

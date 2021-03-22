@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
 
@@ -17,7 +18,7 @@ namespace ViMG
 			this.device = device;
 		}
 
-		public ChunkMesh GenerateChunk(Chunk chunk, World world)
+		public ChunkMesh GenerateChunk(Chunk chunk, World world, bool forceUpdate = false)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -37,7 +38,7 @@ namespace ViMG
 						pos = pos.InCubeSpace(chunk);
 
 						Cube.CubeInstance instance = chunk.GetData().GetCubeInstance(pos);
-						Cube.CubeVisualInstance visual = chunk.GetData().GetVisual(pos);
+						Cube.CubeVisualInstance visual = chunk.GetData().GetVisual(pos, forceUpdate);
 
 						if (instance.cubeId == 0 || visual.clearSides == MeshHelper.CubeFace.NONE)
 							continue;
@@ -151,6 +152,7 @@ namespace ViMG
 			if (vertices.Count > 0 && indices.Count > 0)
 			{
 				var mesh = new ChunkMesh(device, vertices, indices);
+
 				return mesh;
 			}
 			else return ChunkMesh.Empty;

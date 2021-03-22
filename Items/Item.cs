@@ -10,13 +10,28 @@ namespace ViMG.Items
 {
 	public abstract class Item : IRegisterable
 	{
+		public struct AttackStats
+		{
+			public float cooldownTime;
+			public int damage;
+			//float size;
+
+			public AttackStats(float cooldownTime, int damage)
+			{
+				this.cooldownTime = cooldownTime;
+				this.damage = damage;
+			}
+		}
+
 		public readonly Texture2D Texture;
 		public readonly RectangleF SourceRect;
 
 		public string Identifier { get; private set; }
 
-		public string Name = "";
-		public string Description = "";
+		protected string name = "";
+		protected string description = "";
+
+		public int Id = -1;
 
 		protected static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
 
@@ -27,22 +42,44 @@ namespace ViMG.Items
 			this.SourceRect = sourceRect;
 		}
 
-		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public virtual string GetName(ItemInstance item)
 		{
+			return name;
+		}
+
+		public virtual string GetDescription(ItemInstance item)
+		{
+			return description;
+		}
+
+		public void SetId(int id)
+		{
+			this.Id = id;
+		}
+
+		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		{
+			itemCooldownTime = 0.25f;
 			return false;
 		}
 
-		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
+			itemCooldownTime = 0.25f;
 			return false;
 		}
 
-		public void Draw(GraphicsDevice device, Player player, Vector3 facing)
+		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{
-			Draw(device, player.GetHeldMatrix());
+			Draw(device, item, player.GetHeldMatrix());
 		}
 
-		public virtual void Draw(GraphicsDevice device, Matrix transform)
+		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+		{
+			batch.Draw(Texture, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+		}
+
+		public virtual void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
 			if (mesh == null)
 				MakeMesh(device);

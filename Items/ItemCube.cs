@@ -16,8 +16,10 @@ namespace ViMG.Items
 			this.cubeId = cubeId;
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
+			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+
 			var lookAtResult = player.GetWorld().Raycast(-Main.camera.Position, -Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
@@ -36,6 +38,11 @@ namespace ViMG.Items
 						chunk.GetData().SetCube(placeAtPos, cubeId);
 						inventory.Remove(index, 1);
 
+						Main.Registry.CubeRegistry.Get(cubeId).OnPlayerPlaced(player, placeAtPos);
+
+						//cubes can be placed as fast as possible
+						itemCooldownTime = 0;
+
 						return true;
 					}
 				}
@@ -44,7 +51,7 @@ namespace ViMG.Items
 			return false;
 		}
 
-		public override void Draw(GraphicsDevice device, Matrix transform)
+		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, transform);
 

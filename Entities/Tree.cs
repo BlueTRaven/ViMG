@@ -18,15 +18,20 @@ namespace ViMG.Entities
 		private int size;
 
 		private CubePosition basePosition;
-		private List<CubePosition> listenPositions;
+
+		private Rectangle3D bounds;
 
 		public Tree(Vector3 position, int size, CubePosition basePosition)
 		{
+			AlwaysRender = true;
+
 			this.Position = position;
 			this.baseSize = size;
 			this.size = baseSize;
 			this.basePosition = basePosition;
 			//this.listenPositions = listenPositions;
+
+			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
 		}
 
 		public override void Update(double deltaTime)
@@ -68,6 +73,9 @@ namespace ViMG.Entities
 
 			if (meshTrunk == null)
 				MakeMesh(device);
+
+			if (Main.camera.GetFrustum().Contains(new BoundingBox(bounds.Position, bounds.FarPosition)) == ContainmentType.Disjoint)
+				return;
 
 			//device.RasterizerState = Main.wireframeRS;
 

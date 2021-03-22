@@ -8,15 +8,18 @@ namespace ViMG.Recipes
 {
 	public abstract class Recipe
 	{
-		public readonly CubeCatalyst Catalyst;
+		public readonly IRecipeCatalyst Catalyst;
 		public readonly ItemInstance[] Layout;
 		public readonly ItemInstance[] Outputs;
 
-		public Recipe(CubeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs)
+		public readonly int Weight;
+
+		public Recipe(IRecipeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs, int weight = 1)
 		{
 			this.Layout = layout;
 			this.Catalyst = catalyst;
 			this.Outputs = outputs;
+			this.Weight = weight;
 		}
 
 		public abstract bool Matches(Inventory inventory);

@@ -26,7 +26,8 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-	float depth = input.RealPosition.z / 1700.0;
+	float depth = input.RealPosition.z / input.RealPosition.w;
+	
 	return float4(depth, depth, depth, 1);
 }
 

@@ -12,8 +12,8 @@ namespace ViMG.Items
 	{
 		public ItemSlimeChunk() : base("slime_chunk", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 112, 16, 16))
 		{
-			Name = "Slime Chunk";
-			Description = "A gooey chunk of slime. Smells surprisingly nice.";
+			name = "Slime Chunk";
+			description = "A gooey chunk of slime. Smells surprisingly nice.";
 		}
 	}
 }

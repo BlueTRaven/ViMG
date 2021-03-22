@@ -10,6 +10,15 @@ namespace ViMG
 {
 	public class ChunkData : IPoolable
 	{
+		public enum GenerationStep
+		{
+			Broad,
+			Detail,
+			Done
+		}
+
+		public GenerationStep GenStep;
+
 		// Kinda hacky
 		public bool IsThreadedLoad;
 
@@ -25,6 +34,14 @@ namespace ViMG
 			cubeVisualInstances = new Cube.CubeVisualInstance[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)];//[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 		}
 
+		public void CloneFrom(ChunkData data)
+		{
+			for (int i = 0; i < cubes.Length; i++)
+			{
+				cubes[i] = data.GetRaw(i);
+			}
+		}
+
 		public void SetChunk(Chunk chunk)
 		{
 			this.chunk = chunk;
@@ -37,12 +54,12 @@ namespace ViMG
 
 		public static int ChunkUpdate = 0;
 
-		public Cube.CubeVisualInstance GetVisual(CubePosition position)
+		public Cube.CubeVisualInstance GetVisual(CubePosition position, bool forceUpdate = false)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			if (cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty)
+			if (forceUpdate || cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty)
 			{
 				ChunkUpdate++;
 				DirtyCubeUpdate(position, chunk.GetWorld());
@@ -62,6 +79,11 @@ namespace ViMG
 				position = position.InChunkSpace(chunk);
 
 			return cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
+		}
+
+		public int GetRaw(int index)
+		{
+			return cubes[index];
 		}
 
 		public int GetRaw(int x, int y, int z)
@@ -263,7 +285,7 @@ namespace ViMG
 			}
 		}
 
-		public void SetCube(CubePosition position, int id, bool markDirty = true)
+		public void SetCube(CubePosition position, int id, bool markDirty = true, bool killTrackedEntities = true)
 		{
 			if (Thread.CurrentThread != Main.MainThread && !chunk.Initialized)
 				throw new Exception("Cannot set chunk outside of main thread after initialization.");
@@ -273,6 +295,18 @@ namespace ViMG
 			
 			if (markDirty)
 			{
+				// no entities will be tracking while chunk is not initialized - skip this step
+				if (chunk.Initialized && killTrackedEntities)
+				{
+					if (GetRaw(position) != id)
+					{
+						var trackingEntity = chunk.GetWorld().EntityManager.GetEntityTrackingPosition(position.InCubeSpace(chunk));
+
+						if (trackingEntity.HasValue())
+							trackingEntity.Get().TrackingCubeDestroyed();
+					}
+				}
+
 				CubeUpdate(position, id);
 			}
 
@@ -283,30 +317,6 @@ namespace ViMG
 				MarkDirty(position);
 				MarkAdjacentsDirty(position);
 			}
-		}
-
-		public Cube.CubeVisualInstance.AdjacentCubes GetAdjacentCubes(CubePosition position)
-		{
-			int num = 0;
-
-			for (int x = -1; x <= 1; x++)
-			{
-				for (int y = -1; y <= 1; y++)
-				{
-					for (int z = -1; z <= 1; z++)
-					{
-						if (x == 0 && y == 0 && z == 0)
-							continue;
-
-						CubePosition offPos = new CubePosition(position.X + x, position.Y + y, position.Z + z);
-
-						if (GetCubeInstance(offPos).cubeId > 0)
-							num += 1 << x + y + z;
-					}
-				}
-			}
-
-			return (Cube.CubeVisualInstance.AdjacentCubes)num;
 		}
 
 		public MeshHelper.CubeFace GetClearSides(CubePosition position, World world)

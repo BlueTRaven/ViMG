@@ -9,10 +9,10 @@ namespace ViMG.Items
 {
 	public class ItemIronChunk : Item
 	{
-		public ItemIronChunk() : base("iron_chunk", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 16, 16, 16))
+		public ItemIronChunk() : base("iron_chunk", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 16, 16, 16))
 		{
-			Name = "Iron Ore Chunk";
-			Description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
+			name = "Iron Ore Chunk";
+			description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
 		}
 	}
 }

@@ -44,55 +44,39 @@ namespace ViMG.Entities
 			if (Velocity.Y < -MaxVelocity.Y)
 				Velocity.Y = -MaxVelocity.Y;
 
-			Velocity.X *= 0.95f;
-			Velocity.Z *= 0.95f;
-
-			//Velocity = MoveInCollisionGrid(Velocity);
-
-			Position += Velocity * (float)deltaTime;
+			Velocity.X *= 0.85f;
+			Velocity.Z *= 0.85f;
 
 			UpdateCollision(deltaTime);
-			//const float height = Cube.CUBE_SCALE / 2f;
-			//UpdateCollision(deltaTime);
-			/*var result = world.Raycast(Position, Position - new Vector3(0, height, 0), (Vector3 pos) =>
-			{
-				return world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0;
-			});
-
-			if (result.hasHit)
-			{
-				Position.Y = result.hit.Y + height;
-
-				//Vector3 pos = CubePosition.FromWorldSpace(result.hit).InWorldSpace(null);
-				//Position.Y = pos.Y + Cube.CUBE_SCALE;
-				Velocity.Y = 0;
-				Velocity.X *= 0.45f;
-				Velocity.Z *= 0.45f;
-			}*/
 
 			sineTimer += (float)deltaTime;
 		}
 
 		private void UpdateCollision(double deltaTime)
 		{
+			if (world.GetChunkManager().GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+			{
+				Position += Velocity * (float)deltaTime;
+			}
+
 			Rectangle3D ourBounds = Bounds;
 
 			CubePosition ourBoundsNear = CubePosition.FromWorldSpace(ourBounds.Position);
 			CubePosition ourBoundsFar = CubePosition.FromWorldSpace(ourBounds.FarPosition);
 
-			for (int x = ourBoundsNear.X - 1; x <= ourBoundsFar.X; x++)
+			for (int x = -1; x <= 1; x++)
 			{
-				for (int y = ourBoundsFar.Y - 1; y <= ourBoundsFar.Y; y++)
+				for (int y = -1; y <= 1; y++)
 				{
-					for (int z = ourBoundsNear.Z - 1; z <= ourBoundsFar.Z; z++)
+					for (int z = -1; z <= 1; z++)
 					{
-						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
+						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
 						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							if (CollisionHelper.CheckCollision(cubeBounds, Position, 8, out Vector3 change))
+							if (CollisionHelper.CheckCollision(cubeBounds, Position, 6, out Vector3 change))
 							{
 								Position += change;
 
@@ -106,10 +90,9 @@ namespace ViMG.Entities
 						}
 					}
 				}
-			}
-
-			//if (!anyCol)
+				//if (!anyCol)
 				//Position += Velocity * (float)deltaTime;
+			}
 		}
 
 		public void MoveTowards(Vector3 position)
@@ -135,7 +118,7 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.noCullRS;
 
-			Item.item.Draw(device, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+			Item.item.Draw(device, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 				Matrix.CreateScale(0.5f) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
 				Matrix.CreateTranslation(new Vector3(0, 5 * bobPercent, 0)) *

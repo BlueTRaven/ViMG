@@ -36,7 +36,7 @@ namespace ViMG
 			for (int i = 0; i < numSlots; i++)
 			{
 				// merge stacks
-				if (items[i].item == item.item)
+				if (items[i].item == item.item && items[i].damage == item.damage)
 				{
 					items[i] = new ItemInstance(items[i], items[i].num + item.num);
 					return true;
@@ -73,9 +73,50 @@ namespace ViMG
 			return ref ItemInstance.Empty;
 		}
 
+		public int FirstEmpty()
+		{
+			for (int i = 0; i < NumSlots; i++)
+			{
+				if (!items[i].valid)
+					return i;
+			}
+
+			return -1;
+		}
+
 		public ref readonly ItemInstance Find(Item item, out int index)
 		{
 			for (int i = 0; i < numSlots; i++)
+			{
+				if (items[i].item == item)
+				{
+					index = i;
+					return ref Get(i);
+				}
+			}
+
+			index = -1;
+			return ref ItemInstance.Empty;
+		}
+
+		public ref readonly ItemInstance Find(ItemInstance item, int max, out int index)
+		{
+			for (int i = 0; i < max; i++)
+			{
+				if (items[i].item == item.item && items[i].damage == item.damage)
+				{
+					index = i;
+					return ref Get(i);
+				}
+			}
+
+			index = -1;
+			return ref ItemInstance.Empty;
+		}
+
+		public ref readonly ItemInstance Find(Item item, int max, out int index)
+		{
+			for (int i = 0; i < max; i++)
 			{
 				if (items[i].item == item)
 				{

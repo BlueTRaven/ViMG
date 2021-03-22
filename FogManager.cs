@@ -18,19 +18,20 @@ namespace ViMG
 			this.effect = effect;
 		}
 
-		public void Set(float start, float end, Texture2D colorMap)
+		public void Set(float start, float end, Texture2D colorMapDay, Texture2D colorMapNight, float percentBetween)
 		{
 			effect.Parameters["FogStart"].SetValue(start);
 			effect.Parameters["FogEnd"].SetValue(end);
 
-			ColorHeightMap = colorMap;
-			effect.Parameters["TextureHeightFogMap"].SetValue(colorMap);
-			//effect.Parameters["FogColor"].SetValue(color.ToVector3());
+			ColorHeightMap = colorMapDay;
+			effect.Parameters["TextureHeightFogMapDay"].SetValue(colorMapDay);
+			effect.Parameters["TextureHeightFogMapNight"].SetValue(colorMapNight);
+			effect.Parameters["HeightFogMapLerp"].SetValue(percentBetween);
 		}
 
 		public void Disable()
 		{
-			Set(Main.camera.Far, Main.camera.Far, DrawHelper.WhitePixel);
+			Set(Main.camera.Far, Main.camera.Far, DrawHelper.WhitePixel, DrawHelper.WhitePixel, 0);
 		}
 	}
 }

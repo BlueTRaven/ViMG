@@ -10,8 +10,8 @@ namespace ViMG.Items
 	{
 		public ItemFlaskHealthPotion1() : base("flask_healthpotion1", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 96, 16, 16))
 		{
-			Name = "Health Potion 1";
-			Description = "A health potion. It smells surprisingly nice.";
+			name = "Health Potion 1";
+			description = "A health potion. It smells surprisingly nice.";
 		}
 	}
 }

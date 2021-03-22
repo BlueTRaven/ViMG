@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Items;
+using ViMG.UIs;
 
 namespace ViMG.Cubes
 {
@@ -39,41 +40,6 @@ namespace ViMG.Cubes
 			public bool dirty;
 
 			public MeshHelper.CubeFace clearSides;  //sides that are clear of other cubes
-
-			public AdjacentCubes adjacents;
-
-			[Flags]
-			public enum AdjacentCubes
-			{
-				None = 1,
-				TopLeftBack		= 1 << 0 + 0 + 0,
-				TopBack			= 1 << 1 + 0 + 0,
-				TopRightBack	= 1 << 2 + 0 + 0,
-				MidLeftBack		= 1 << 3,
-				MidBack			= 1 << 4,
-				MidRightBack	= 1 << 5,
-				BotLeftBack		= 1 << 6,
-				BotBack			= 1 << 7,
-				BotRightBack	= 1 << 8,
-				TopLeftMid		= 1 << 9,
-				TopMid			= 1 << 10,
-				TopRightMid		= 1 << 11,
-				MidLeftMid		= 1 << 12,
-				// our block
-				MidRightMid		= 1 << 13,
-				BotLeftMid		= 1 << 15,
-				BotMid			= 1 << 16,
-				BotRightMid		= 1 << 17,
-				TopLeftFront	= 1 << 18,
-				TopFront		= 1 << 19,
-				TopRightFront	= 1 << 20,
-				MidLeftFront	= 1 << 21,
-				MidFront		= 1 << 22,
-				MidRightFront	= 1 << 23,
-				BotLeftFront	= 1 << 24,
-				BotFront		= 1 << 25,
-				BotRightFront	= 1 << 26
-			}
 
 			private static CubeVisualInstance Clean;
 			private static CubeVisualInstance Dirty;
@@ -151,9 +117,16 @@ namespace ViMG.Cubes
 			Invisible,	//don't mesh at all
 		}
 
+		public enum CollisionValue 
+		{
+			None,
+			Collidable
+		}
+
 		public int Id { get; private set; }
 		public string Identifier { get; private set; }
-		private readonly RectangleF[] sourceRectSides = new RectangleF[6];
+		private readonly CubeFacingLayout layout;
+		//private readonly RectangleF[] sourceRectSides = new RectangleF[6];
 		private readonly RectangleF sourceRect;
 		private readonly Color tintColor;
 
@@ -163,26 +136,29 @@ namespace ViMG.Cubes
 		public bool Solid = true;
 
 		public TransparencyValue Transparency;
+		public CollisionValue Collision = CollisionValue.Collidable;
 
 		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressRequirement)
 		{
 			this.Identifier = identifier;
 
 			this.sourceRect = sourceRect;
-			Array.Fill(sourceRectSides, sourceRect);
+			layout = new CubeFacingLayout(sourceRect);
+			//Array.Fill(sourceRectSides, sourceRect);
 			this.tintColor = color;
 			this.MineProgressRequirement = mineProgressRequirement;
 		}
 
-		public Cube(string identifier, RectangleF[] sourceRectSides, Color color, int mineProgressRequirement)
+		public Cube(string identifier, CubeFacingLayout layout, Color color, int mineProgressRequirement)
 		{
-			if (sourceRectSides.Length != 6)
-				throw new Exception("Cubes cannot have more or less than 6 sides.");
+			/*if (sourceRectSides.Length != 6)
+				throw new Exception("Cubes cannot have more or less than 6 sides.");*/
 
 			this.Identifier = identifier;
 
-			this.sourceRect = sourceRectSides[0];
-			this.sourceRectSides = sourceRectSides;
+			this.sourceRect = layout.Front;
+			this.layout = layout;
+			//this.sourceRectSides = sourceRectSides;
 			this.tintColor = color;
 			this.MineProgressRequirement = mineProgressRequirement;
 		}
@@ -201,9 +177,29 @@ namespace ViMG.Cubes
 		{
 			if (cubeFaceLookup[(int)face] != -1)
 			{
-				return sourceRectSides[cubeFaceLookup[(int)face]];
-			}
+				switch (face)
+				{
+					case MeshHelper.CubeFace.NONE:
+						return RectangleF.Empty;
+					case MeshHelper.CubeFace.LEFT:
+						return layout.Left;
+					case MeshHelper.CubeFace.RIGHT:
+						return layout.Right;
+					case MeshHelper.CubeFace.UP:
+						return layout.Top;
+					case MeshHelper.CubeFace.DOWN:
+						return layout.Bottom;
+					case MeshHelper.CubeFace.FRONT:
+						return layout.Front;
+					case MeshHelper.CubeFace.BACK:
+						return layout.Back;
+					case MeshHelper.CubeFace.ALL:
+						return RectangleF.Empty;
+						//return sourceRectSides[cubeFaceLookup[(int)face]];
+				}
 
+			}
+			
 			return RectangleF.Empty;
 		}
 
@@ -222,7 +218,12 @@ namespace ViMG.Cubes
 
 		}
 
-		public virtual void PostChunkInit(ChunkData chunkData, CubePosition position)
+		public virtual void OnPlayerPlaced(Player player, CubePosition position)
+		{
+
+		}
+
+		public virtual void PostChunkGen(ChunkData chunkData, CubePosition position)
 		{
 
 		}
@@ -245,6 +246,11 @@ namespace ViMG.Cubes
 		public Color GetTintColor()
 		{
 			return tintColor;
+		}
+
+		public void DropSelf(List<ItemInstance> itemsToDrop, int num = 1)
+		{
+			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
 		}
 
 		public static SimpleMesh<VertexPositionColorTextureNormal, int> MakeCubeWithCorrectedTextureCoordinates(GraphicsDevice device, Color color, Texture2D texture)

@@ -8,7 +8,7 @@ namespace ViMG.Recipes
 {
 	public class RecipeLayout : Recipe
 	{
-		public RecipeLayout(CubeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs)
+		public RecipeLayout(IRecipeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs)
 		{
 		}
 

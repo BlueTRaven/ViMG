@@ -13,8 +13,10 @@ namespace ViMG.Items
 		{
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
+			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{

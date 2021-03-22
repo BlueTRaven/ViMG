@@ -17,27 +17,28 @@ namespace ViMG
 	public class World
 	{
 		public const float GRAVITY = -9.8f;
+		public const float DAY_CYCLE_TIME = 60f * 10f;
 
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
 		private readonly ChunkManager chunkManager;
 
-		private SimpleMesh<VertexPositionColor, int> mesh;
 		private SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
 		private SimpleMesh<VertexPositionColorTextureNormal, int> meshMiningCube;
+		private SimpleMesh<VertexPositionColorTextureNormal, int> meshSun;
 
 		private SimpleMesh<VertexPositionColorTextureNormal, int> meshMaxDrawDistBottom;
 
 		public Player player;
-		private List<Slime> slimes = new List<Slime>();
+		private Vector3 playerStartPos;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
 		public int DrawDistanceVert = 6;
 		public int DrawRadius = 6;
 
-		public DenseHitboxArray HitboxManager = new DenseHitboxArray(32);
+		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
 
@@ -66,7 +67,6 @@ namespace ViMG
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
 
-			mesh = MeshHelper.MakeCubeVertexPositionColor(device, new Vector3(0), new Vector3(worldSize) * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshWireframeCube = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshMiningCube = Cube.MakeCubeWithCorrectedTextureCoordinates(device, Color.White, Main.assetsManager.GetAsset<Texture2D>("mine"));
@@ -74,10 +74,10 @@ namespace ViMG
 			Vector3 min = Vector3.Zero;
 			Vector3 max = new Vector3(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE));
 			max.Y = 0;
-			Vector3 a = new Vector3(min.X, min.Y, max.Z);
-			Vector3 b = new Vector3(max.X, min.Y, max.Z);
-			Vector3 c = new Vector3(max.X, min.Y, min.Z);
-			Vector3 d = new Vector3(min.X, min.Y, min.Z);
+			Vector3 a = new Vector3(min.X, min.Y, min.Z);
+			Vector3 b = new Vector3(max.X, min.Y, min.Z);
+			Vector3 c = new Vector3(max.X, min.Y, max.Z);
+			Vector3 d = new Vector3(min.X, min.Y, max.Z);
 
 			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
 			List<int> indices = new List<int>();
@@ -89,19 +89,110 @@ namespace ViMG
 			indices.Add(2);
 			indices.Add(3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Black, new Vector2(0.5f, 0.5f), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Black, new Vector2(0, 0.5f), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Black, new Vector2(0, 1f), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Black, new Vector2(0.5f, 1f), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+
+			max.Y = DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+
+			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
 
 			meshMaxDrawDistBottom = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
+
+			List<VertexPositionColorTextureNormal> sunVertices = new List<VertexPositionColorTextureNormal>();
+			List<int> sunIndices = new List<int>();
+
+			sunIndices.Add(0);
+			sunIndices.Add(1);
+			sunIndices.Add(3);
+			sunIndices.Add(1);
+			sunIndices.Add(2);
+			sunIndices.Add(3);
+
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-80, -80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-80, 80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(80, 80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(80, -80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+
+			meshSun = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, sunVertices, sunIndices);
 
 			chunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
 			ProjectileManager = new ProjectileManager(device);
 			EntityManager = new EntityManager(this);
-
-			player = new Player(this);
 
 			Main.CubeEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -111,12 +202,16 @@ namespace ViMG
 		{
 			chunkManager.Initialize(this);
 
+			player = new Player();
+			EntityManager.Add(player);
+
 			int x = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int z = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 
 			CubePosition playerPos = CubePosition.FromWorldSpace(player.Position);
 			playerPos.X = x;
 			playerPos.Z = z;
+			playerPos.Y = sizeInCubes;
 
 			for (int y = 0; y < sizeInChunks; y++)
 			{
@@ -134,8 +229,9 @@ namespace ViMG
 
 			bool ok = false;
 			player.Position = GetFirstSolidDown(playerPos.InWorldSpace(out ok)).InWorldSpace(out ok) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+			playerStartPos = player.Position;
 
-			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 			//Main.FogHandler.Set(750f, 800f, SkyColor);
 		}
 
@@ -143,11 +239,15 @@ namespace ViMG
 		{
 		}
 
+		private float alive;
+
 		public void Update(double deltaTime)
 		{
+			alive += (float)deltaTime;
+
 			chunkManager.ProcessChunkQueue(this, 0);
 
-			player.Update(deltaTime);
+			//player.Update(deltaTime);
 
 			ProjectileManager.Update(this, deltaTime);
 			EntityManager.Update(deltaTime);
@@ -183,34 +283,18 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
-			if (slimes.Count() < 32 && Main.random.Next(0, 32) == 0)
+			var slimes = EntityManager.GetAll<Slime>();
+
+			if ((slimes == null || slimes.Count < 32) && Main.random.Next(0, 32) == 0)
 			{
 				CubePosition pos = GetFirstSolidDown(new Vector3(Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE), sizeInCubes * Cube.CUBE_SCALE, Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE)));
 
 				if (chunkManager.IsInWorldBounds(pos))
 				{
-					slimes.Add(new Slime(this, pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
+					EntityManager.Add(new Slime(pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
+					//slimes.Add(new Slime(this, pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
 				}
 			}
-
-			List<Slime> toRemove = new List<Slime>();
-			foreach (Slime slime in slimes)
-			{
-				slime.Update(deltaTime);
-
-				if (!chunkManager.IsInWorldBounds(slime.Position))
-				{
-					slime.Kill();
-					toRemove.Add(slime);
-				}
-			}
-
-			foreach (Slime slime in toRemove)
-			{
-				slimes.Remove(slime);
-			}
-
-			toRemove.Clear();
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(-Main.camera.Position);
 
@@ -218,20 +302,18 @@ namespace ViMG
 			{
 				chunkDrawPositions.Clear();
 
-				for (int x = -DrawDistanceHoriz; x <= DrawDistanceHoriz; x++)
+				for (int x = Math.Max(0, camPos.X - DrawDistanceHoriz); x <= Math.Min(sizeInChunks, camPos.X + DrawDistanceHoriz); x++)
 				{
-					for (int y = -DrawDistanceVert; y <= DrawDistanceVert; y++)
+					for (int y = Math.Max(0, camPos.Y - DrawDistanceVert); y <= Math.Min(sizeInChunks, camPos.Y + DrawDistanceVert); y++)
 					{
-						for (int z = -DrawDistanceHoriz; z < DrawDistanceHoriz; z++)
+						for (int z = Math.Max(0, camPos.Z - DrawDistanceHoriz); z <= Math.Min(sizeInChunks, camPos.Z + DrawDistanceHoriz); z++)
 						{
-							ChunkPosition chunkPos = camPos;
-							chunkPos.X += x;
-							chunkPos.Y += y;
-							chunkPos.Z += z;
+							ChunkPosition chunkPos = new ChunkPosition(x, y, z);
 
 							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
-							if (chunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && Main.camera.FrustumIntersects(chunkManager.GetChunk(chunkPos).Bounds))
+							if (chunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
+								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
 							{
 								chunkDrawPositions.Add(chunkPos);
 							}
@@ -256,14 +338,16 @@ namespace ViMG
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-			//DrawDepth(device);
+			DrawDepth(device);
+			Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(Main.DepthTarget);
 
 			device.SetRenderTarget(Main.WorldTarget);
+			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);
 			device.Clear(SkyColor);
 
 			device.DepthStencilState = Main.genericDSS;
 			device.RasterizerState = Main.genericRS;
-			device.BlendState = BlendState.AlphaBlend;
+			device.SamplerStates[2] = Main.clampSS;
 			float dist = 1700f;
 
 			Vector3 camChunkPosWS = -Main.camera.Position;
@@ -293,9 +377,12 @@ namespace ViMG
 			}
 
 			if (!player.InWater)
-				Main.FogManager.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("height_fog_map"));
+			{
+				Main.FogManager.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), GetTimeOfDay());
+			}
 			else
-				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"));
+				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
+			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
@@ -315,6 +402,15 @@ namespace ViMG
 			}
 
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
+
+			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			Main.CubeEffect.Parameters["EnableFog"].SetValue(0);
+			float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
+			meshSun.Draw(device, Main.CubeEffect, 
+				Matrix.CreateTranslation(new Vector3(0, 0, -DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE + Cube.CUBE_SCALE)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+				Matrix.CreateTranslation(player.Position));
+			Main.CubeEffect.Parameters["EnableFog"].SetValue(1);
 
 			foreach (var mined in miningCubes)
 			{
@@ -344,13 +440,8 @@ namespace ViMG
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
 
-			player.Draw(device);
+			//player.Draw(device);
 			player.DrawDebug(device);
-
-			foreach (Slime slime in slimes)
-			{
-				slime.Draw(device);
-			}
 
 			//device.RasterizerState = Main.wireframeRS;
 			//mesh.Draw(device, Main.BasicEffect, Vector3.Zero, Vector3.Zero, Vector3.One);
@@ -363,23 +454,57 @@ namespace ViMG
 
 		public void DrawDepth(GraphicsDevice device)
 		{
+			if (!Main.ENABLE_SHADOWS)
+			{
+				Main.CubeEffect.Parameters["EnableShadows"].SetValue(0);
+				return;
+			}
+			else Main.CubeEffect.Parameters["EnableShadows"].SetValue(1);
+
 			device.SetRenderTarget(Main.DepthTarget);
 
 			device.DepthStencilState = Main.genericDSS;
-			device.RasterizerState = Main.genericRS;
+			device.RasterizerState = Main.reverseRS;
+			device.SamplerStates[2] = Main.shadowBorderClampSS;
 
-			device.Clear(Color.Orange);
+			//device.Clear(Color.White);
+			device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
-			foreach (ChunkPosition pos in chunkDrawPositions)
+			Vector3 lightPos = playerStartPos + new Vector3(0, 100, 0); 
+			Matrix lightProj = Matrix.CreateOrthographicOffCenter(-1000, 1000, 1000, -1000, Main.NEAR, Main.FAR);
+
+			//float rotation = 360f * ((alive % 10f) / 10f);
+			Matrix camera = Matrix.CreateTranslation(-lightPos) * Matrix.CreateRotationX(MathHelper.ToRadians(90)); //Main.camera.GetViewMatrix();
+
+			//Main.WVP.SetProjection(lightProj);
+			//Main.WVP.SetView(camera);
+
+			for (int x = -DrawDistanceHoriz; x <= DrawDistanceHoriz; x++)
 			{
-				ChunkMesh mesh = chunkManager.GetMesh(pos);
-				Matrix transform = chunkManager.GetTransform(pos);
-
-				if (mesh != null)
+				for (int y = -DrawDistanceVert; y <= DrawDistanceVert; y++)
 				{
-					mesh.Draw(device, Main.assetsManager.GetAsset<Effect>("depth"), transform);
+					for (int z = -DrawDistanceHoriz; z < DrawDistanceHoriz; z++)
+					{
+						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(lightPos);
+						chunkPos.X += x;
+						chunkPos.Y += y;
+						chunkPos.Z += z;
+						ChunkMesh mesh = chunkManager.GetMesh(chunkPos);
+						Matrix transform = chunkManager.GetTransform(chunkPos);
+
+						if (mesh != null)
+						{
+							mesh.Draw(device, Main.assetsManager.GetAsset<Effect>("depth"), transform);
+						}
+					}
 				}
 			}
+
+			Main.WVP.SetView(Main.camera.GetViewMatrix());
+			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
+
+			Main.CubeEffect.Parameters["LightViewProjection"].SetValue(lightProj * camera);
+			//Main.CubeEffect.Parameters["LightPos"].SetValue(-lightPos);
 		}
 
 		public void DrawWireframeCube(GraphicsDevice device, Vector3 position, Color? color = null)
@@ -410,6 +535,11 @@ namespace ViMG
 			}
 		}
 
+		public void DrawWireframeUnscaled(GraphicsDevice device, Rectangle3D bounds, Color? color = null)
+		{
+			DrawWireframeUnscaled(device, bounds.Position, bounds.Size, color);
+		}
+
 		public ChunkManager GetChunkManager()
 		{
 			return chunkManager;
@@ -422,6 +552,46 @@ namespace ViMG
 				//if (updatingParent.IsInChunkBounds(entity.Position))
 					entity.OnCubeUpdated(updatingParent, updating, updatedId);
 			}
+		}
+
+		public void SetTimeOfDay(float time)
+		{
+			alive = time;
+		}
+
+		private float GetTimeOfDay()
+		{
+			const float endOfDay = DAY_CYCLE_TIME;
+
+			float timeOfDay = alive % endOfDay;
+
+			float startOffset = endOfDay * 0.08f;
+			float dawnStart = endOfDay - startOffset;
+			float dawnEnd = endOfDay * 0.16f;
+
+			float duskStart = (endOfDay / 2) - (endOfDay * 0.08f);
+			float duskEnd = (endOfDay / 2) + (endOfDay * 0.16f);
+
+			if (timeOfDay > duskEnd && timeOfDay <= dawnStart)
+				return 1;
+			else if (timeOfDay > duskStart && timeOfDay <= duskEnd)
+			{
+				return (timeOfDay - duskStart) / (duskEnd - duskStart);
+			}
+			else if ((timeOfDay > dawnStart && timeOfDay <= endOfDay) || (timeOfDay >= 0 && timeOfDay <= dawnEnd))
+			{
+				float percent = 0;
+				if (timeOfDay > dawnStart)
+					percent = (timeOfDay - dawnStart) / ((timeOfDay + dawnEnd) - dawnStart);
+				else if (timeOfDay <= dawnEnd)
+					percent = (timeOfDay - (-startOffset)) / dawnEnd;
+
+				percent = MathHelper.Clamp(percent, 0, 1);
+
+				return 1 - percent;
+			}
+
+			return 0;
 		}
 
 		public void MineCube(CubePosition position, bool instant = false)

@@ -24,14 +24,16 @@ namespace ViMG.Items
 
 			projStats = new ProjectileManager.ProjectileStats()
 			{
-				group = Player.GROUP_PLAYER_SOURCE,
+				group = Player.GROUP_PLAYER_DEAL_SOURCE,
 				damage = 1,
 				dieOnCollision = true
 			};
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
+			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+
 			int bulletIndex = -1;
 			ItemInstance item = inventory.Find(Main.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
 			if (item.valid)
@@ -44,7 +46,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			return base.LeftClick(player, inventory, index, facing);
+			return base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 		}
 	}
 }

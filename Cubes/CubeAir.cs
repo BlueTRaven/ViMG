@@ -11,6 +11,7 @@ namespace ViMG.Cubes
 		public CubeAir() : base("air", new RectangleF(), Color.White, -1)
 		{
 			Solid = false;
+			Collision = CollisionValue.None;
 			Transparency = TransparencyValue.Invisible;
 		}
 	}

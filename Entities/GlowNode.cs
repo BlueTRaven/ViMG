@@ -1,13 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Items;
 
 namespace ViMG.Entities
 {
-	public class GlowNode : Entity
+	public class GlowNode : Entity, ICubeTracker
 	{
 		private readonly float radius;
 		private readonly float fade;
@@ -17,9 +19,12 @@ namespace ViMG.Entities
 
 		private SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
 
-		public GlowNode(Vector3 position, float radius, float fade, Color color)
+		public CubePosition TrackedPosition { get; private set; }
+
+		public GlowNode(CubePosition position, float radius, float fade, Color color)
 		{
-			this.Position = position;
+			TrackedPosition = position;
+			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 			this.radius = radius;
 			this.fade = fade;
 			this.color = color;
@@ -46,6 +51,14 @@ namespace ViMG.Entities
 					light = Main.LightManager.MakeLight(Position, radius - fade, radius, color);
 				}
 			}
+		}
+
+		public override void OnDelete()
+		{
+			base.OnDelete();
+
+			if (light != -1)
+				Main.LightManager.KillLight(light);
 		}
 
 		public override void Draw(GraphicsDevice device)
@@ -106,6 +119,31 @@ namespace ViMG.Entities
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
+		}
+
+		public bool OnInteract(Player player)
+		{
+			//world.MineCube(TrackedPosition, true);
+			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
+			world.EntityManager.Remove(this);
+			
+			List<ItemInstance> items = new List<ItemInstance>();
+			Main.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
+
+			foreach (ItemInstance item in items)
+			{
+				EntityItem ent = new EntityItem(Position, item);
+				ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+				world.EntityManager.Add(ent);
+			}
+
+			return true;
+		}
+
+		public void TrackingCubeDestroyed()
+		{
+			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
+			world.EntityManager.Remove(this);
 		}
 	}
 }

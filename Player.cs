@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
@@ -12,9 +13,10 @@ using ViMG.UIs;
 
 namespace ViMG
 {
-	public class Player
+	public class Player : Entity, IHitboxOwner
 	{
-		public const int GROUP_PLAYER_SOURCE = 2;
+		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
+		public const int GROUP_PLAYER_DEAL_SOURCE = 2;
 
 		public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
 
@@ -26,7 +28,6 @@ namespace ViMG
 			Hurt,
 		}
 
-		public Vector3 Position;
 		public Vector3 Velocity;
 
 		private float moveSpeed = 8;
@@ -34,11 +35,12 @@ namespace ViMG
 		public Vector3 MaxVelocityRunning = new Vector3(128, 340, 128);
 		public float MaxFallVelocity;
 
+		public float jumpVelocity = 256;
+
 		private MouseState currentMS;
 		private MouseState originalMS;
 
 		private State state;
-		private World world;
 
 		private bool onGround;
 		public bool InWater;
@@ -75,43 +77,70 @@ namespace ViMG
 		private SimpleMesh<VertexPositionColor, int> lookAtMesh;
 		private SimpleMesh<VertexPositionColorTextureNormal, int> itemMesh;
 
-		private Inventory inventory;
-		private UIInventoryPlayer inventoryInteractor;
-		
-		public Player(World world)
-		{
-			this.world = world;
+		public const int INVENTORY_ROWS = 4;
+		public const int INVENTORY_COLUMNS = 8;
 
-			Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
+		private Inventory inventory;
+		private Inventory craftInventory;
+		private UIInventory currentUI;
+		private UIInventoryPlayer uiPlayer;
+		
+		public Player()
+		{
+			AlwaysRender = true;
+			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
 
 			state = State.Noclip;
 			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 			originalMS = Mouse.GetState();
 
-			inventory = new Inventory(32);
-			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
-			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_base"), 1, 1));
-			inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 4, 1));
+			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
+			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
+			inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
+			//inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("debug_depth_target"), 1, 1));
 
-			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 16, 1), 11);
-			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 16, 1), 12);
-			inventory.Set(new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 4, 1), 13);
-			inventoryInteractor = new UIInventoryPlayer(inventory, 4, 8);
+			craftInventory = new Inventory(8);
+
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			currentUI = uiPlayer;
 		}
 
-		public void Update(double deltaTime)
+		public override void Update(double deltaTime)
 		{
 			if (Main.Debug)
 				state = State.Noclip;
 			else if (state == State.Noclip)
 				state = State.Normal;
 
+			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
+			{
+				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
+				{
+					for (int z = -world.DrawDistanceHoriz; z < world.DrawDistanceHoriz; z++)
+					{
+						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(-Main.camera.Position);
+						chunkPos.X += x;
+						chunkPos.Y += y;
+						chunkPos.Z += z;
+
+						if (world.GetChunkManager().IsInWorldBounds(chunkPos))
+						{
+							if (world.GetChunkManager().GetChunkGenerationStep(chunkPos) == ChunkData.GenerationStep.Broad || world.GetChunkManager().GetChunkGenerationStep(chunkPos) == ChunkData.GenerationStep.Detail)
+							{
+								world.GetChunkManager().MarkGenerateDirty(chunkPos);
+							}
+						}
+					}
+				}
+			}
+
 			if (world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
 				return;
 
 			if (hurtbox == -1)
-				hurtbox = world.HitboxManager.Add(Bounds, Vector3.Zero, 0, -1, -1f);
-			else world.HitboxManager.Update(hurtbox, Bounds);
+				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, 0, -1, -1f);
+			else if (state != State.Noclip)
+				world.HitboxManager.Update(hurtbox, Bounds);
 
 			if (state == State.Noclip)
 			{
@@ -134,44 +163,23 @@ namespace ViMG
 				attackStateTimer -= (float)deltaTime;
 				attackStateMoveTimer -= (float)deltaTime;
 
-				UpdateMovement(deltaTime / 2f);
+				UpdateMovement(deltaTime);
 
 				Position += Velocity * (float)deltaTime;
 
 				UpdateCollision();
 
 				Vector3 dir = attackStateTargetPos - Position;
-				if (dir.Length() < PULL_RADIUS)
+				if (dir.Length() < PUSH_RADIUS)
 				{
-					if (dir.Length() < NEUTRAL_RADIUS)
-					{
-						if (dir.Length() < PUSH_RADIUS)
-						{
-							Position -= Vector3.Normalize(dir) * Math.Min(dir.Length(), 128);
-						}
-						else
-						{
-							Velocity.X *= 0.55f;
-							Velocity.Z *= 0.55f;
-						}
-					}
-					else
-					{
-						Velocity = Vector3.Normalize(dir) * 512;
-					}
-				}
-				else
-				{
-					if (attackStateMoveTimer <= 0)
-					{
-						Velocity.Y += World.GRAVITY;
-						Velocity.X *= 0.55f;
-						Velocity.Z *= 0.55f;
-					}
+					Position -= Vector3.Normalize(dir) * Math.Min(dir.Length(), 128);
 				}
 
 				if (attackStateTimer <= 0)
+				{
+					attackStateTargetPos = Vector3.Zero;
 					state = State.Normal;
+				}
 			}
 			else if (state == State.Hurt)
 			{
@@ -196,33 +204,6 @@ namespace ViMG
 
 			UpdateItemPickup();
 
-			if (invulnTimer <= 0)
-			{
-				DenseHitboxArray.Hitbox[] hitboxes = world.HitboxManager.GetAll();
-				for (int i = 0; i < world.HitboxManager.Capacity; i++)
-				{
-					ref DenseHitboxArray.Hitbox hitbox = ref hitboxes[i];
-
-					if (hitbox.active)
-					{
-						if (hitbox.group == 1)
-						{
-							if (hitbox.bounds.Intersects(Bounds))
-							{
-								Vector3 direction = Vector3.Normalize(Bounds.Center - hitbox.bounds.Center);
-
-								Velocity = new Vector3(direction.X * 128, 128, direction.Z * 128);
-
-								state = State.Hurt;
-
-								inputLockupTimer = 0.25f;
-								invulnTimer = 4;
-							}
-						}
-					}
-				}
-			}
-
 			if (hitbox != -1)
 			{
 				if (hitboxTimer <= 0)
@@ -240,13 +221,13 @@ namespace ViMG
 
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
-			float positionY = Position.Y;
+			/*float positionY = Position.Y;
 			float start = 3772;
 			float end = 3772 - 128;
 
 			float factor = 1 - ((positionY - start) / (end - start));
 			factor = Math.Clamp(factor, 0, 1);
-			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(factor);
+			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(factor);*/
 
 			if (Main.inputManager.JustPressed(Keys.G))
 			{
@@ -255,50 +236,53 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.E))
 			{
-				inventoryInteractor.Opened = !inventoryInteractor.Opened;
-				Main.DrawCursor = inventoryInteractor.Opened;
-				Main.MouseControl = inventoryInteractor.Opened;
-				Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+				if (currentUI == uiPlayer)
+				{
+					if (uiPlayer.Opened)
+						CloseUI();
+					else OpenUI(uiPlayer);
+				}
+				else CloseUI();
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D1))
 			{
-				inventoryInteractor.HighlightIndex = 0;
+				uiPlayer.HighlightIndex = 0;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D2))
 			{
-				inventoryInteractor.HighlightIndex = 1;
+				uiPlayer.HighlightIndex = 1;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D3))
 			{
-				inventoryInteractor.HighlightIndex = 2;
+				uiPlayer.HighlightIndex = 2;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D4))
 			{
-				inventoryInteractor.HighlightIndex = 3;
+				uiPlayer.HighlightIndex = 3;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D5))
 			{
-				inventoryInteractor.HighlightIndex = 4;
+				uiPlayer.HighlightIndex = 4;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D6))
 			{
-				inventoryInteractor.HighlightIndex = 5;
+				uiPlayer.HighlightIndex = 5;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.D7))
 			{
-				inventoryInteractor.HighlightIndex = 6;
+				uiPlayer.HighlightIndex = 6;
 			}
 			
 			if (Main.inputManager.JustPressed(Keys.D8))
 			{
-				inventoryInteractor.HighlightIndex = 7;
+				uiPlayer.HighlightIndex = 7;
 			}
 
 			lookAtResult = world.Raycast(-Main.camera.Position, -Main.camera.Position - Main.camera.Forward * INTERACT_DISTANCE,
@@ -316,32 +300,10 @@ namespace ViMG
 				}
 			}
 
-			inventoryInteractor.Update();
+			currentUI.Update();
 			UpdateMouse();
 
 			Main.camera.Position = -Position;
-
-			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
-			{
-				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
-				{
-					for (int z = -world.DrawDistanceHoriz; z < world.DrawDistanceHoriz; z++)
-					{
-						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(-Main.camera.Position);
-						chunkPos.X += x;
-						chunkPos.Y += y;
-						chunkPos.Z += z;
-
-						if (world.GetChunkManager().IsInWorldBounds(chunkPos))
-						{
-							if (!world.GetChunkManager().IsChunkGenerated(chunkPos))
-							{
-								world.GetChunkManager().MarkGenerateDirty(chunkPos);
-							}
-						}
-					}
-				}
-			}
 
 			hitboxTimer -= (float)deltaTime;
 
@@ -359,7 +321,8 @@ namespace ViMG
 			{
 				if (Main.inputManager.JustPressed(Keys.K))
 				{
-					Position = Vector3.Zero;
+					//Position = Vector3.Zero;
+					world.SetTimeOfDay(World.DAY_CYCLE_TIME * 0.8f);
 				}
 
 				const float MIN_CAM_SPEED = 512;
@@ -385,8 +348,9 @@ namespace ViMG
 
 				bool movementPressed = false;
 				bool running = false;
+				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
 
-				if (inputLockupTimer <= 0 && !inventoryInteractor.Opened)
+				if (inputLockupTimer <= 0 && !uiPlayer.Opened)
 				{
 					if (Main.inputManager.IsHeld(Keys.LeftShift))
 						running = true;
@@ -416,12 +380,12 @@ namespace ViMG
 					}
 					if (onGround && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = MaxVelocity.Y;
+						Velocity.Y = jumpVelocity;
 						onGround = false;
 					}
 
 					Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-					Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+					velXY = new Vector2(Velocity.X, Velocity.Z);
 
 					if (velXY.Length() > clampXY.Length())
 					{
@@ -429,83 +393,81 @@ namespace ViMG
 						velXY *= clampXY.Length();
 					}
 
-					if (!movementPressed && onGround)
-					{
-						if (velXY.Length() > 0)
-						{
-							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.85f;
-						}
-					}
-
 					Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
-					if (itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+					if (currentUI == uiPlayer && !uiPlayer.Opened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
 					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
 					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
 					{
 						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
 						{
-							if (inventory.Get(inventoryInteractor.HighlightIndex).item != null && inventory.Get(inventoryInteractor.HighlightIndex).item.LeftClick(this, inventory, inventoryInteractor.HighlightIndex, -Main.camera.Forward))
+							if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.LeftClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
 								PerformAction();
 						}
 
 						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
 						{
-							if (inventory.Get(inventoryInteractor.HighlightIndex).item != null && inventory.Get(inventoryInteractor.HighlightIndex).item.RightClick(this, inventory, inventoryInteractor.HighlightIndex, -Main.camera.Forward))
+							var tracker = world.EntityManager.GetEntityTrackingPosition(lookAtPos);
+							if (tracker.HasValue() && tracker.Get().OnInteract(this))
+								PerformAction();
+							else if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.RightClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
 								PerformAction();
 						}
 					}
 
 					if (Main.inputManager.JustPressed(Keys.Q))
 					{
-						if (inventory.Get(inventoryInteractor.HighlightIndex).valid)
+						if (inventory.Get(uiPlayer.HighlightIndex).valid)
 						{
-							EntityItem ent = new Entities.EntityItem(Position, new ItemInstance(inventory.Get(inventoryInteractor.HighlightIndex), 1));
-							world.EntityManager.Add(ent);
-							ent.Velocity = -Main.camera.Forward * 100;
-
-							inventory.Remove(inventoryInteractor.HighlightIndex, 1);
+							ThrowItem(inventory, uiPlayer.HighlightIndex, 1);
 						}
 					}
-
 				}
-				else
+
+				if (!movementPressed)
 				{
-					if (onGround)
+					if (velXY.Length() > 0)
 					{
-						Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+						float scalar = 0.85f;
 
-						if (velXY.Length() > 0)
-						{
-							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.65f;
-						}
+						if (!onGround)
+							scalar = 0.95f;
 
-						Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-					}
-					else
-					{
-						Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-						if (velXY.Length() > 0)
-						{
-							velXY = Vector2.Normalize(velXY) * velXY.Length() * 0.95f;
-						}
-
-						Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+						velXY = Vector2.Normalize(velXY) * velXY.Length() * scalar;
 					}
 				}
 
-				if (Main.inputManager.JustPressed(Keys.V))
-				{
-					//Main.LightManager.MakeLight(Position, 100, 105, Color.White);
-					world.EntityManager.Add(new GlowNode(Position, 100, 16, Color.White));
-					//Tree tree = new Tree(Position - new Vector3(0, Bounds.Size.Y, 0), Main.random.Next(3, 12), );
-					//world.EntityManager.Add(tree);
-				}
+				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+
+				if (Velocity.Y > 64 && Main.inputManager.JustReleased(Keys.Space))
+					Velocity.Y = 64;
 
 				Velocity.Y += World.GRAVITY;
 				if (Velocity.Y > actualMaxVel.Y)
 					Velocity.Y = actualMaxVel.Y;
+			}
+
+			if (Main.inputManager.JustPressed(Keys.V))
+			{
+				world.EntityManager.Add(new Skeleton(Position));
+
+				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
+				/*using (FileStream fs = new FileStream("./depth.png", FileMode.OpenOrCreate))
+				{
+					Main.DepthTarget.SaveAsPng(fs, Main.DepthTarget.Width, Main.DepthTarget.Height);
+				}*/
+			}
+		}
+
+		public void ThrowItem(Inventory inventory, int index, int num)
+		{
+			if (inventory.Get(uiPlayer.HighlightIndex).valid)
+			{
+				EntityItem ent = new EntityItem(Position, new ItemInstance(inventory.Get(index), num));
+				world.EntityManager.Add(ent);
+				ent.Velocity = -Main.camera.Forward * 100;
+
+				inventory.Remove(index, num);
 			}
 		}
 
@@ -538,22 +500,6 @@ namespace ViMG
 				}
 			}
 		}
-
-		private Vector2[] offsetsDown = new Vector2[4]
-		{
-			new Vector2(-0.325f) * Cube.CUBE_SCALE,
-			new Vector2(-0.325f, 0.325f) * Cube.CUBE_SCALE,
-			new Vector2(0.325f, -0.325f) * Cube.CUBE_SCALE,
-			new Vector2(0.325f) * Cube.CUBE_SCALE
-		};
-
-		private Vector3[] directions = new Vector3[4]
-		{
-			new Vector3(-1, 0, 0),
-			new Vector3(1, 0, 0),
-			new Vector3(0, 0, -1),
-			new Vector3(0, 0, 1)
-		};
 
 		private void UpdateCollision()
 		{
@@ -603,107 +549,11 @@ namespace ViMG
 					}
 				}
 			}
-
-			return;
-			/*for (int x = -1; x <= 1; x++)
-				{
-					for (int y = -1; y <= 1; y++)
-					{
-						for (int z = -1; z <= 1; z++)
-						{
-							Vector3 pos = Position + new Vector3(x, y, z) * Cube.CUBE_SCALE;
-							if (world.IsInWorldBounds(pos) && world.GetRaw(pos) != 0)
-							{
-								Rectangle3D cubeBounds = new Rectangle3D(CubePosition.RoundToCubeSpace(Position) + (new Vector3(x, y, z) * Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE));
-								Rectangle3D playerBounds = bounds.Offset(Position);
-
-								if (cubeBounds.Intersects(playerBounds))
-								{
-									Position.Y += cubeBounds.Top - playerBounds.Bottom;
-									Velocity.Y = 0;
-									onGround = true;
-								}
-							}
-						}
-					}
-				}*/
-
-			const float height = Cube.CUBE_SCALE * 2f;
-			for (int i = 0; i < 4; i++)
-			{
-				Vector3 startPos = new Vector3(Position.X + offsetsDown[i].X, Position.Y - height, Position.Z + offsetsDown[i].Y);
-				Vector3 dir = new Vector3(0, height, 0);
-				var resultDown = world.RaycastVector(startPos, dir, height, (Vector3 pos) =>
-				{
-					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
-				});
-
-				if (resultDown.hasHit)
-				{
-					CubePosition pos = CubePosition.FromWorldSpace(resultDown.hit);
-
-					Position.Y = pos.Y * Cube.CUBE_SCALE + Cube.CUBE_SCALE + height;
-					Velocity.Y = 0;
-					onGround = true;
-				}
-			}
-
-			for (int i = 0; i < 4; i++)
-			{
-				Vector3 startPos = new Vector3(Position.X + offsetsDown[i].X, Position.Y + height / 2f, Position.Z + offsetsDown[i].Y);
-				Vector3 dir = new Vector3(0, height / 2f, 0);
-				var resultDown = world.RaycastVector(startPos, dir, -height, (Vector3 pos) =>
-				{
-					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
-				});
-
-				if (resultDown.hasHit)
-				{
-					CubePosition pos = CubePosition.FromWorldSpace(resultDown.hit);
-
-					Position.Y = pos.Y * Cube.CUBE_SCALE - height / 2f;
-					Velocity.Y = 0;
-					onGround = true;
-				}
-			}
-
-			const float sideWidth = 0.45f;
-
-			InWater = false;
-
-			for (int i = 0; i < 4; i++)
-			{
-				Vector3 startPos = new Vector3(Position.X, Position.Y - height + Cube.CUBE_SCALE * 0.5f, Position.Z);
-				ref Vector3 dir = ref directions[i];
-				var resultSideBot = world.RaycastVector(startPos, dir, Cube.CUBE_SCALE * sideWidth, (Vector3 pos) =>
-				{
-					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) != Main.Registry.CubeRegistry.Air;
-				});
-
-				if (resultSideBot.hasHit)
-				{
-					CubePosition pos = CubePosition.FromWorldSpace(resultSideBot.hit);
-
-					if (world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).GetType() == typeof(CubeWater))
-						InWater = true;
-					else
-					{
-						Vector3 offset = resultSideBot.hit - directions[i] * Cube.CUBE_SCALE * sideWidth;
-
-						Position = new Vector3(offset.X, Position.Y, offset.Z);
-
-						if (dir.X > 0 || dir.X < 0)
-							Velocity.X = 0;
-						if (dir.Z > 0 || dir.Z < 0)
-							Velocity.Z = 0;
-					}
-				}
-			}
 		}
 
 		private void UpdateMouse()
 		{
-			if (inventoryInteractor.Opened)
+			if (uiPlayer.Opened || currentUI != uiPlayer)
 				return;
 
 			currentMS = Mouse.GetState();
@@ -734,18 +584,18 @@ namespace ViMG
 
 		public void PerformAttack(float cooldownTimer)
 		{
-			Velocity.X = -Main.camera.Forward.X * 512f;
+			//Velocity.X = -Main.camera.Forward.X * 512f;
 
 			if (onGround)
 				Velocity.Y = -Main.camera.Forward.Y * 64f;
 			else if (Velocity.Y > 20)
 				Velocity.Y = 20;
 
-			Velocity.Z = -Main.camera.Forward.Z * 512f;
+			//Velocity.Z = -Main.camera.Forward.Z * 512f;
 
 			var hitboxes = world.HitboxManager.GetAll();
 
-			DenseHitboxArray.Hitbox nearestHitbox = new DenseHitboxArray.Hitbox();
+			HitboxManager.Hitbox nearestHitbox = new HitboxManager.Hitbox();
 			float nearestDot = float.MinValue;
 
 			foreach (var hitbox in hitboxes)
@@ -790,22 +640,51 @@ namespace ViMG
 			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(rect, -Main.camera.Forward, GROUP_PLAYER_SOURCE, damage, knockback);
+			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, GROUP_PLAYER_DEAL_SOURCE, damage, knockback);
 
 			hitboxTimer = HITBOX_TIME;
 
 			useTimer = ATTACK_TIME;
 		}
 
-		public void Draw(GraphicsDevice device)
+		public void OpenUI(UIInventory ui)
+		{
+			this.currentUI = ui;
+
+			if (ui == uiPlayer)
+				uiPlayer.Opened = true;
+
+			Main.DrawCursor = true;
+			Main.MouseControl = true;
+
+			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+		}
+
+		public void CloseUI()
+		{
+			this.currentUI = uiPlayer;
+
+			uiPlayer.Opened = false;
+
+			Main.DrawCursor = false;
+			Main.MouseControl = false;
+
+			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+		}
+
+		public override void Draw(GraphicsDevice device)
 		{
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
 			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
 			Main.LightManager.SetToEffect(Main.CubeEffect);
 
-			if (inventory.Get(inventoryInteractor.HighlightIndex).item != null)
-				inventory.Get(inventoryInteractor.HighlightIndex).item.Draw(device, this, -Main.camera.Forward);
+			if (inventory.Get(uiPlayer.HighlightIndex).item != null)
+			{
+				device.DepthStencilState = Main.nodepthDSS;
+				inventory.Get(uiPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(uiPlayer.HighlightIndex), this, -Main.camera.Forward);
+				device.DepthStencilState = Main.genericDSS;
+			}
 
 			if (lookAtMesh == null)
 			{
@@ -830,7 +709,12 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-			inventoryInteractor.Draw(batch);
+			currentUI.Draw(batch);
+		}
+
+		public Inventory GetInventory()
+		{
+			return inventory;
 		}
 
 		public Matrix GetHeldMatrix()
@@ -861,6 +745,24 @@ namespace ViMG
 		public World GetWorld()
 		{
 			return world;
+		}
+
+		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+		{
+			if (invulnTimer <= 0)
+			{
+				if (us.group == GROUP_PLAYER_TAKE_SOURCE && other.group == Slime.GROUP_ENEMYHOSTILE_SOURCE)
+				{
+					Vector3 direction = Vector3.Normalize(Bounds.Center - other.bounds.Center);
+
+					Velocity = new Vector3(direction.X * 128, 128, direction.Z * 128);
+
+					state = State.Hurt;
+
+					inputLockupTimer = 0.25f;
+					invulnTimer = 4;
+				}
+			}
 		}
 	}
 }

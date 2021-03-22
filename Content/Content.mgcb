@@ -142,6 +142,30 @@
 /processorParam:TextureFormat=Color
 /build:Textures/height_fog_map.png
 
+#begin Textures/heightmap_layer1_day.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/heightmap_layer1_day.png
+
+#begin Textures/heightmap_layer1_night.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/heightmap_layer1_night.png
+
 #begin Textures/heightmap_underwater.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -178,7 +202,7 @@
 /processorParam:TextureFormat=Color
 /build:Textures/mine.png
 
-#begin Textures/mine.png
+#begin Textures/skeleton.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -188,7 +212,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Textures/mine.png
+/build:Textures/skeleton.png
 
 #begin Textures/slime.png
 /importer:TextureImporter
