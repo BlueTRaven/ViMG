@@ -11,9 +11,6 @@ using System.Threading;
 
 namespace ViMG
 {
-    /// <summary>
-    /// This is the main type for your game.
-    /// </summary>
     public class Main : Game
     {
 		public static Point WindowResolution = new Point(800, 480);
@@ -54,7 +51,8 @@ namespace ViMG
 
 		private bool paused;
 
-		public static bool Debug;
+		public static bool Debug = true;
+		public static bool DebugChunks;
 		
 		public static WorldViewProjection WVP;
 		public static FogManager FogManager;
@@ -76,6 +74,8 @@ namespace ViMG
 		//Debugging purposes only. Sometimes we want to run (semi)headless for profiling reasons.
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = false;
+
+		public static bool Exit = false;
 
         public Main()
         {
@@ -205,10 +205,9 @@ namespace ViMG
 
 		protected override void Update(GameTime gt)
 		{
-			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-			{
+			if (Exit)
 				Exit();
-			}
+
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
 			IsMouseVisible = DrawCursor;
@@ -216,7 +215,7 @@ namespace ViMG
 			world.UnfixedUpdate();
 
 			time += gt.ElapsedGameTime.TotalSeconds;
-			while (time >= FIXED_STEP)
+			while (time >= FIXED_STEP && !Exit)
 			{
 				time -= FIXED_STEP;
 

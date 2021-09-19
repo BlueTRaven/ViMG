@@ -72,5 +72,10 @@ namespace ViMG
 		{
 			return first.X != second.X || first.Y != second.Y || first.Z != second.Z;
 		}
+
+		public static ChunkPosition operator +(ChunkPosition first, ChunkPosition second)
+		{
+			return new ChunkPosition(first.X + second.X, first.Y + second.Y, first.Z + second.Z);
+		}
 	}
 }

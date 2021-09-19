@@ -9,9 +9,9 @@ namespace ViMG.Items
 {
 	public class ItemCube : Item
 	{
-		private int cubeId;
+		private ushort cubeId;
 
-		public ItemCube(Cube cube, int cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), cube.GetSourceRect(MeshHelper.CubeFace.FRONT))
+		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), cube.GetSourceRect(MeshHelper.CubeFace.FRONT))
 		{
 			this.cubeId = cubeId;
 		}

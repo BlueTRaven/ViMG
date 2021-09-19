@@ -1,4 +1,5 @@
 ﻿using BrAssetsManager;
+using BrNineSlice;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,6 +23,7 @@ namespace ViMG
 			assetTypes.Add(typeof(SpriteFont), new AssetHandlerFont(content, this));
 			assetTypes.Add(typeof(Model), new AssetHandlerModel(content, this));
 			assetTypes.Add(typeof(Effect), new AssetHandlerEffect(content, this));
+			assetTypes.Add(typeof(NineSlice), new AssetHandlerNineSlice(content, this));
 		}
 
 		public override void LoadContent(string fulldirectoryname)

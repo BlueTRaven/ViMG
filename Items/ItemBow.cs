@@ -14,7 +14,6 @@ namespace ViMG.Items
 		private Color color;
 		private string materialName;
 
-		protected static SimpleMesh<VertexPositionColorTextureNormal, int> stringMesh;
 		private readonly AttackStats stats;
 
 		public ItemBow(string material, Color color, AttackStats stats) : base("bow_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 64, 16, 16))
@@ -63,7 +62,7 @@ namespace ViMG.Items
 
 		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
-			if (stringMesh == null)
+			if (mesh == null)
 				MakeMesh(device);
 
 			Main.CubeEffect.Parameters["TintColor"].SetValue(color.ToVector3());

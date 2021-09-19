@@ -1,12 +1,15 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 //using SimplexNoise;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
@@ -60,6 +63,10 @@ namespace ViMG
 		private Dictionary<CubePosition, MinedCube> miningCubes = new Dictionary<CubePosition, MinedCube>();
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
+
+		private WorldSaver saver;
+
+		private ChunkLoadManager chunkLoadManager;
 
 		public World(GraphicsDevice device, int worldSize)
 		{
@@ -202,37 +209,51 @@ namespace ViMG
 		{
 			chunkManager.Initialize(this);
 
-			player = new Player();
-			EntityManager.Add(player);
-
 			int x = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int z = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 
-			CubePosition playerPos = CubePosition.FromWorldSpace(player.Position);
+			CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE, sizeInCubes * Cube.CUBE_SCALE / 2f));
 			playerPos.X = x;
 			playerPos.Z = z;
 			playerPos.Y = sizeInCubes;
 
-			for (int y = 0; y < sizeInChunks; y++)
+			if (!File.Exists("./" + WorldSaver.FILE_NAME_CHUNK))
 			{
-				ChunkPosition pos = ChunkPosition.CubeChunk(playerPos);
-				pos.Y -= y;
+				chunkManager.GenerateWorld(this);
+				saver = new WorldSaver(chunkManager, EntityManager);
+				saver.Save();
 
-				if (chunkManager.IsInWorldBounds(pos) && !GetChunkManager().IsChunkGenerated(pos))
+				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
+
+				player = new Player();
+				EntityManager.Add(player);
+				player.FirstCreated();
+
+				player.Position = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+				playerStartPos = player.Position;
+			}
+			else
+			{
+				saver = new WorldSaver(chunkManager, EntityManager);
+
+				WorldSaver.LoadError error = saver.Load(this);
+
+				if (error == WorldSaver.LoadError.InvalidVersion)
+					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
+
+				if (EntityManager.GetAll<Player>().Count > 0)
+					player = EntityManager.GetAll<Player>().First() as Player;
+				else
 				{
-					GetChunkManager().MarkGenerateDirty(pos);
+					player = new Player();
+					EntityManager.Add(player);
+					player.FirstCreated();
 				}
+
+				playerStartPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 			}
 
-			// do this sync because we have to wait anyway
-			chunkManager.ProcessChunkQueueSync(this);
-
-			bool ok = false;
-			player.Position = GetFirstSolidDown(playerPos.InWorldSpace(out ok)).InWorldSpace(out ok) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
-			playerStartPos = player.Position;
-
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-			//Main.FogHandler.Set(750f, 800f, SkyColor);
 		}
 
 		public void UnfixedUpdate()
@@ -245,9 +266,17 @@ namespace ViMG
 		{
 			alive += (float)deltaTime;
 
-			chunkManager.ProcessChunkQueue(this, 0);
+			if (Main.inputManager.JustPressed(Keys.Escape))
+			{
+				saver.Save();
+				Main.Exit = true;
+			}
 
-			//player.Update(deltaTime);
+			//chunkLoadManager.UpdateLoadTarget(player.Position);
+			//chunkLoadManager.Update(deltaTime);
+			//saver.ProcessLoadQueue(this);
+
+			chunkManager.ProcessChunkQueue(this, 0);
 
 			ProjectileManager.Update(this, deltaTime);
 			EntityManager.Update(deltaTime);
@@ -395,10 +424,13 @@ namespace ViMG
 					NumChunksDrawn++;
 				}
 
-				/*chunkManager.GetChunk(pos).DrawDebug(device);
+				if (Main.Debug && Main.DebugChunks)
+				{
+					chunkManager.GetChunk(pos).DrawDebug(device);
 
-				device.RasterizerState = Main.genericRS;
-				device.DepthStencilState = Main.genericDSS;*/
+					device.RasterizerState = Main.genericRS;
+					device.DepthStencilState = Main.genericDSS;
+				}
 			}
 
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);

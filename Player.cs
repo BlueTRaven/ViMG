@@ -13,6 +13,8 @@ using ViMG.UIs;
 
 namespace ViMG
 {
+	[Serializable]
+	[EntityMeta(2, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
@@ -90,19 +92,22 @@ namespace ViMG
 			AlwaysRender = true;
 			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
 
-			state = State.Noclip;
+			//state = State.Noclip;
 			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 			originalMS = Mouse.GetState();
 
-			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
-			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
-			inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
-			//inventory.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("debug_depth_target"), 1, 1));
-
 			craftInventory = new Inventory(8);
+		}
+
+		public void FirstCreated()
+		{
+			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
 
 			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
 			currentUI = uiPlayer;
+
+			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
+			inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
 		}
 
 		public override void Update(double deltaTime)
@@ -112,29 +117,7 @@ namespace ViMG
 			else if (state == State.Noclip)
 				state = State.Normal;
 
-			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
-			{
-				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
-				{
-					for (int z = -world.DrawDistanceHoriz; z < world.DrawDistanceHoriz; z++)
-					{
-						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(-Main.camera.Position);
-						chunkPos.X += x;
-						chunkPos.Y += y;
-						chunkPos.Z += z;
-
-						if (world.GetChunkManager().IsInWorldBounds(chunkPos))
-						{
-							if (world.GetChunkManager().GetChunkGenerationStep(chunkPos) == ChunkData.GenerationStep.Broad || world.GetChunkManager().GetChunkGenerationStep(chunkPos) == ChunkData.GenerationStep.Detail)
-							{
-								world.GetChunkManager().MarkGenerateDirty(chunkPos);
-							}
-						}
-					}
-				}
-			}
-
-			if (world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
+			if (!Main.Debug && world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
 				return;
 
 			if (hurtbox == -1)
@@ -232,6 +215,11 @@ namespace ViMG
 			if (Main.inputManager.JustPressed(Keys.G))
 			{
 				Main.Debug = !Main.Debug;
+			}
+
+			if (Main.inputManager.JustPressed(Keys.F3))
+			{
+				Main.DebugChunks = !Main.DebugChunks;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.E))
@@ -763,6 +751,32 @@ namespace ViMG
 					invulnTimer = 4;
 				}
 			}
+		}
+
+		public override void OnSave(List<byte> saveBytes)
+		{
+			base.OnSave(saveBytes);
+
+			SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
+			SaveHelper.SaveVector3(saveBytes, Main.camera.Rotation);
+
+			inventory.Save(saveBytes);
+		}
+
+		public override void OnLoad(byte[] loadBytes, in int version)
+		{
+			base.OnLoad(loadBytes, version);
+
+			int index = 0;
+
+			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0);
+
+			Main.camera.Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
+
+			inventory = Inventory.Load(loadBytes, ref index);
+
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			currentUI = uiPlayer;
 		}
 	}
 }

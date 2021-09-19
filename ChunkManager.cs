@@ -27,9 +27,10 @@ namespace ViMG
 			public bool genQueued;
 			public bool meshQueued;
 
-			public ManagedChunk(GenericPool<ChunkData> chunkDatas, int x, int y, int z)
+			public ManagedChunk(GenericPool<ChunkData> chunkDatas, Chunk defaultChunk, int x, int y, int z)
 			{
-				chunk = new Chunk(chunkDatas, x, y, z);
+				chunk = defaultChunk;
+				//chunk = new Chunk(chunkDatas, x, y, z);
 				mesh = null;
 
 				transform = Matrix.Identity;
@@ -41,13 +42,18 @@ namespace ViMG
 			}
 		}
 
+		private Chunk defaultChunk = new Chunk();
+
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
 		private ChunkGenerator generator;
 		private ChunkMesher mesher;
+		private ChunkGenerationThread genThread;
+		private ChunkGenerationThreadDataBus dataBus;
 
-		private ManagedChunk[,,] chunks;
+		private ManagedChunk[] chunks;
+		private HashSet<ChunkPosition> modifiedChunks = new HashSet<ChunkPosition>();
 
 		public GenericPool<ChunkData> ChunkDatas = new GenericPool<ChunkData>(() => new ChunkData());
 
@@ -70,8 +76,6 @@ namespace ViMG
 		public static int TotalQueueGenerate = 0;
 		public static int TotalQueueMesh = 0;
 
-		private ChunkerThread thread;
-
 		//private Queue<ChunkMesh> unuploadedMeshes = new Queue<ChunkMesh>();
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
@@ -79,34 +83,118 @@ namespace ViMG
 			generator = new ChunkGenerator();
 			mesher = new ChunkMesher(device);
 
+			dataBus = new ChunkGenerationThreadDataBus(this);
+			genThread = new ChunkGenerationThread(generator, dataBus);
 			this.sizeInChunks = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
 
-			chunks = new ManagedChunk[sizeInChunks, sizeInChunks, sizeInChunks];
+			chunks = new ManagedChunk[sizeInChunks * sizeInChunks * sizeInChunks];
 
-			for (int x = 0; x < sizeInChunks; x++)
+			for (int i = 0; i < chunks.Length; i++)
+			{
+				int x = i % sizeInChunks;
+				int y = (i / sizeInChunks) % sizeInChunks;
+				int z = i / (sizeInChunks * sizeInChunks);
+
+				chunks[i] = new ManagedChunk(ChunkDatas, defaultChunk, x, y, z);
+			}
+
+			/*for (int x = 0; x < sizeInChunks; x++)
 			{
 				for (int y = 0; y < sizeInChunks; y++)
 				{
 					for (int z = 0; z < sizeInChunks; z++)
 					{
-						chunks[x, y, z] = new ManagedChunk(ChunkDatas, x, y, z);
+						chunks[x, y, z] = new ManagedChunk(ChunkDatas, defaultChunk, x, y, z);
 					}
 				}
-			}
+			}*/
 		}
 
 		public void Initialize(World world)
 		{
 			generator.Initialize(world);
-			thread = new ChunkerThread(generator, mesher);
+			//genThread.Start();
+		}
+
+		public void GenerateWorld(World world)
+		{
+			int num = 0;
+			int total = sizeInChunks * sizeInChunks * sizeInChunks;
+
+			for (int i = 0; i < total; i++)
+			{
+				int x = i % sizeInChunks;
+				int y = (i / sizeInChunks) % sizeInChunks;
+				int z = i / (sizeInChunks * sizeInChunks);
+
+				chunks[i].chunk = generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z));
+				generator.GenerateChunkBroad(chunks[i].chunk, new ChunkPosition(x, y, z));
+
+				num++;
+
+				if (num % sizeInChunks * sizeInChunks == 0)
+					Console.WriteLine("Broad: " + num + " / " + total);
+			}
+
+			num = 0;
+
+			for (int i = 0; i < total; i++)
+			{
+				int x = i % sizeInChunks;
+				int y = (i / sizeInChunks) % sizeInChunks;
+				int z = i / (sizeInChunks * sizeInChunks);
+
+				generator.GenerateChunkDetail(this, chunks[i].chunk, new ChunkPosition(x, y, z));
+
+				num++;
+
+				if (num % sizeInChunks * sizeInChunks == 0)
+					Console.WriteLine("Detail: " + num + " / " + total);
+			}
+
+			for (int i = 0; i < total; i++)
+			{
+				int x = i % sizeInChunks;
+				int y = (i / sizeInChunks) % sizeInChunks;
+				int z = i / (sizeInChunks * sizeInChunks);
+
+				chunks[i].chunk.Initialize(world);
+				chunks[i].chunk.PostChunkGen(world);
+
+				MarkDirty(new ChunkPosition(x, y, z), false);
+				num++;
+
+				if (num % sizeInChunks * sizeInChunks == 0)
+					Console.WriteLine("Init: " + num + " / " + total);
+			}
+
+			chunksToMeshQueue.Sort();
 		}
 
 		public void ProcessChunkQueue(World world, int forceMode)
 		{
-			ProcessPriorityMeshChunks(world);
+			chunksToMeshQueue.Sort();
 
-			ProcessChunkQueueSync(world, 1, 5);
+			if (defaultChunk.Initialized || defaultChunk.GetData().GenStep != ChunkData.GenerationStep.Broad)
+				throw new Exception("???");
+
+			//ProcessPriorityMeshChunks(world);
+
+			ProcessChunkQueueSync(world, 1, 1);
+		}
+
+		public void WaitForFinishGenerate(World world)
+		{
+			while (dataBus.HasChunksToGenerate())
+			{
+				ProcessChunkQueueSync(world);
+			}
+		}
+
+		private int PosToIndex(ChunkPosition position)
+		{
+			return position.X + sizeInChunks * (position.Y + sizeInChunks * position.Z);
 		}
 
 		// Synchronously processess chunks in the queue.
@@ -125,13 +213,13 @@ namespace ViMG
 				{
 					var pos = chunksToMeshQueue.Dequeue();
 
-					if (!chunks[pos.X, pos.Y, pos.Z].meshDirty)
+					if (!chunks[PosToIndex(pos)].meshDirty)
 					{
 						// Already meshed, remove from list
 						continue;
 					}
 
-					if (chunks[pos.X, pos.Y, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 					{
 						// Requeue - try again later.
 						chunksToMeshQueue.Enqueue(pos);
@@ -142,7 +230,7 @@ namespace ViMG
 
 					if (pos.X - 1 >= 0)
 					{
-						if (chunks[pos.X - 1, pos.Y, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X - 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -152,7 +240,7 @@ namespace ViMG
 
 					if (pos.Y - 1 >= 0)
 					{
-						if (chunks[pos.X, pos.Y - 1, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y - 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -162,7 +250,7 @@ namespace ViMG
 
 					if (pos.Z - 1 >= 0)
 					{
-						if (chunks[pos.X, pos.Y, pos.Z - 1].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z - 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -172,7 +260,7 @@ namespace ViMG
 
 					if (pos.X + 1 < Chunk.CHUNK_SIZE)
 					{
-						if (chunks[pos.X + 1, pos.Y, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -182,7 +270,7 @@ namespace ViMG
 
 					if (pos.Y + 1 < Chunk.CHUNK_SIZE)
 					{
-						if (chunks[pos.X, pos.Y + 1, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -192,7 +280,7 @@ namespace ViMG
 
 					if (pos.Z + 1 < Chunk.CHUNK_SIZE)
 					{
-						if (chunks[pos.X, pos.Y, pos.Z + 1].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
 							chunksToMeshQueue.Enqueue(pos);
 							num++;
@@ -218,7 +306,7 @@ namespace ViMG
 					var pos = chunksToGenerateQueue.Dequeue();
 
 					// This check is necessary for 'cascading' generation to work.
-					if (chunks[pos.X, pos.Y, pos.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
+					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
 						continue;	//we've already generated this chunk
 
 					Stopwatch watch = Stopwatch.StartNew();
@@ -234,19 +322,30 @@ namespace ViMG
 			}
 		}
 
+		public Chunk[] GetChunks()
+		{
+			Chunk[] allChunks = new Chunk[chunks.Length];
+			for (int i = 0; i < chunks.Length; i++)
+			{
+				allChunks[i] = chunks[i].chunk;
+			}
+
+			return allChunks;
+		}
+
 		private void GenerateChunk(World world, ChunkPosition position)
 		{
-			if (chunks[position.X, position.Y, position.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
+			if (chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
 			{
 				GenerateChunkBroad(position);
 				GenerateChunkDetail(world, position);
 			}
-			else if (chunks[position.X, position.Y, position.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Detail)
+			else if (chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Detail)
 			{
 				GenerateChunkDetail(world, position);
 			}
 
-			chunks[position.X, position.Y, position.Z].genQueued = false;
+			chunks[PosToIndex(position)].genQueued = false;
 		}
 
 		public void GenerateChunkBroad(ChunkPosition position)
@@ -254,20 +353,23 @@ namespace ViMG
 			Chunk chunk = generator.MakeChunk(ChunkDatas, position);
 			generator.GenerateChunkBroad(chunk, position);
 
-			chunks[position.X, position.Y, position.Z].chunk = chunk;
+			chunks[PosToIndex(position)].chunk = chunk;
 			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Detail;
 		}
 
 		public void GenerateChunkDetail(World world, ChunkPosition position)
 		{
-			Chunk chunk = chunks[position.X, position.Y, position.Z].chunk;
+			Chunk chunk = chunks[PosToIndex(position)].chunk;
 			generator.GenerateChunkDetail(this, chunk, position);
 
-			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Done;
-			chunks[position.X, position.Y, position.Z].chunk.Initialize(world);
+			int index = PosToIndex(position);
 
-			chunks[position.X, position.Y, position.Z].meshDirty = true;
-			chunks[position.X, position.Y, position.Z].meshQueued = true;
+			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Done;
+			chunks[index].chunk.Initialize(world);
+			chunks[index].chunk.PostChunkGen(world);
+
+			chunks[index].meshDirty = true;
+			chunks[index].meshQueued = true;
 			chunksToMeshQueue.Enqueue(position);
 		}
 
@@ -275,9 +377,9 @@ namespace ViMG
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			chunks[pos.X, pos.Y, pos.Z].mesh = mesher.GenerateChunk(chunks[pos.X, pos.Y, pos.Z].chunk, world, true);
-			chunks[pos.X, pos.Y, pos.Z].meshDirty = false;
-			chunks[pos.X, pos.Y, pos.Z].meshQueued = false;
+			chunks[PosToIndex(pos)].mesh = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, true);
+			chunks[PosToIndex(pos)].meshDirty = false;
+			chunks[PosToIndex(pos)].meshQueued = false;
 
 			watch.Stop();
 
@@ -294,7 +396,7 @@ namespace ViMG
 				{
 					var pos = queue.Dequeue();
 
-					if (chunks[pos.X, pos.Y, pos.Z].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 					{
 						throw new Exception("Cannot mesh chunk before it has been generated. Did you try to mark a chunk dirty before it has been generated?");
 					}
@@ -306,55 +408,71 @@ namespace ViMG
 			}
 		}
 
+		#region Get Things
+		public HashSet<ChunkPosition> GetModifiedChunks()
+		{
+			return modifiedChunks;
+		}
+
+		public void ResetModifiedChunks()
+		{
+			modifiedChunks.Clear();
+		}
+
 		public bool IsChunkGenerated(CubePosition position)
 		{
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-			return chunks[chunkPos.X, chunkPos.Y, chunkPos.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
+			return chunks[PosToIndex(chunkPos)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
 		}
 
 		public bool IsChunkGenerated(ChunkPosition position)
 		{
-			return chunks[position.X, position.Y, position.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
+			return chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
 		}
 
 		public ChunkData.GenerationStep GetChunkGenerationStep(CubePosition position)
 		{
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-			return chunks[chunkPos.X, chunkPos.Y, chunkPos.Z].chunk.GetData().GenStep;
+			return chunks[PosToIndex(chunkPos)].chunk.GetData().GenStep;
 		}
 
 		public ChunkData.GenerationStep GetChunkGenerationStep(ChunkPosition position)
 		{
-			return chunks[position.X, position.Y, position.Z].chunk.GetData().GenStep;
+			return chunks[PosToIndex(position)].chunk.GetData().GenStep;
+		}
+
+		public void SetChunk(Chunk chunk)
+		{
+			chunks[PosToIndex(chunk.Position)].chunk = chunk;
 		}
 
 		public Chunk GetChunk(CubePosition position)
 		{
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-			return chunks[chunkPos.X, chunkPos.Y, chunkPos.Z].chunk;
+			return chunks[PosToIndex(chunkPos)].chunk;
 		}
 
 		public Chunk GetChunk(int x, int y, int z)
 		{
-			return chunks[x, y, z].chunk;
+			return chunks[PosToIndex(new ChunkPosition(x, y, z))].chunk;
 		}
 
 		public Chunk GetChunk(ChunkPosition position)
 		{
-			return chunks[position.X, position.Y, position.Z].chunk;
+			return chunks[PosToIndex(position)].chunk;
 		}
 
 		public ChunkMesh GetMesh(ChunkPosition position)
 		{
-			return chunks[position.X, position.Y, position.Z].mesh;
+			return chunks[PosToIndex(position)].mesh;
 		}
 
 		public ChunkMesh GetMesh(int x, int y, int z)
 		{
-			return chunks[x, y, z].mesh;
+			return chunks[PosToIndex(new ChunkPosition(x, y, z))].mesh;
 		}
 
 		public bool IsInWorldBounds(Vector3 position)
@@ -387,17 +505,17 @@ namespace ViMG
 			return GetRaw(CubePosition.FromWorldSpace(position));
 		}
 
-		public int GetRaw(CubePosition position)
+		public ushort GetRaw(CubePosition position)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
 			{
 				Console.WriteLine("Warning: cannot use World.GetRaw with Chunk Space CubePosition.");
-				return -1;
+				return 0;
 			}
 
 			if (IsInWorldBounds(position))
 				return GetChunk(position).GetData().GetRaw(position);
-			else return -1;
+			else return 0;
 		}
 
 		public int GetRaw(int x, int y, int z)
@@ -451,43 +569,56 @@ namespace ViMG
 
 		public Matrix GetTransform(ChunkPosition position)
 		{
-			return chunks[position.X, position.Y, position.Z].transform;
+			return chunks[PosToIndex(position)].transform;
+		}
+#endregion
+
+		public void Unload(ChunkPosition position)
+		{
+			chunks[PosToIndex(position)].mesh = null;
+			chunks[PosToIndex(position)].chunk = defaultChunk;
+		}
+
+		public void UnloadAll()
+		{
+			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
+			{
+				chunks[i].mesh = null;
+				chunks[i].chunk = defaultChunk;
+			}
 		}
 
 		public void MarkGenerateDirty(ChunkPosition position)
 		{
 			// Already queued, ignore
-			if (chunks[position.X, position.Y, position.Z].genQueued)
+			/*if (chunks[PosToIndex(position)].genQueued)
 				return;
 
-			if (chunks[position.X, position.Y, position.Z].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
+			if (chunks[PosToIndex(position)].chunk != null && chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
 				throw new Exception("Tried to mark a chunk to generate after it has already been generated.");
 
 			// supports both generation step broad and detail, but not done.
-			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Broad;
-			chunks[position.X, position.Y, position.Z].genQueued = true;
-			chunksToGenerateQueue.Enqueue(position);
+			if (dataBus.AddChunkToGenerate(position, generator, ChunkDatas))// generator.MakeChunk(ChunkDatas, position));
+				chunks[PosToIndex(position)].genQueued = true;*/
 		}
 
 		// Marks a chunk as dirty, meaning it needs to be remeshed.
-		public void MarkDirty(ChunkPosition position)
+		public void MarkDirty(ChunkPosition position, bool markModified)
 		{
-			chunks[position.X, position.Y, position.Z].meshDirty = true;
-			/*if (chunksToMeshQueue.Count > 15 || chunksToGenerateQueue.Count > 2)
-				priorityMeshChunks.Add(position);
-			else
-			{*/
-				if (!chunksToMeshAlreadyAdded.Contains(position))
-				{
-					chunksToMeshQueue.Enqueue(position);
-					chunksToMeshAlreadyAdded.Add(position);
-				}
-			//}
+			chunks[PosToIndex(position)].meshDirty = true;
+			if (!chunksToMeshAlreadyAdded.Contains(position))
+			{
+				chunksToMeshQueue.EnqueueWithoutSorting(position);
+				chunksToMeshAlreadyAdded.Add(position);
+			}
+
+			if (!modifiedChunks.Contains(position))
+				modifiedChunks.Add(position);
 		}
 
-		public void MarkDirty(int x, int y, int z)
+		public void MarkDirty(int x, int y, int z, bool markModified)
 		{
-			MarkDirty(new ChunkPosition(x, y, z));
+			MarkDirty(new ChunkPosition(x, y, z), markModified);
 		}
 	}
 }

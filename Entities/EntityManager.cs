@@ -8,6 +8,10 @@ namespace ViMG.Entities
 {
 	public class EntityManager
 	{
+		private bool iterating;
+
+		private ulong lastEntityId;
+
 		private List<Entity> entities = new List<Entity>();
 		private Dictionary<Type, List<Entity>> entitiesByType = new Dictionary<Type, List<Entity>>();
 
@@ -18,14 +22,68 @@ namespace ViMG.Entities
 
 		private readonly World world;
 
+		public ulong GetUniqueId()
+		{
+			return lastEntityId++;
+		}
+
+		public void SetUniqueIdSeed(ulong seed)
+		{
+			lastEntityId = seed;
+		}
+
 		public EntityManager(World world)
 		{
 			this.world = world;
 		}
 
+		public void ForceAdd(Entity entity, ulong id)
+		{
+			ReallyAdd(entity, (long)id, true);
+		}
+
+		public void AddTileEntity(ICubeTracker tracker)
+		{
+			if (cubeTrackers.ContainsKey(tracker.TrackedPosition))
+				return;
+			else
+				Add(tracker as Entity);
+		}
+
 		public void Add(Entity entity)
 		{
-			toAddLater.Add(entity);
+			if (iterating)
+				toAddLater.Add(entity);
+			else ReallyAdd(entity);
+		}
+
+		private void ReallyAdd(Entity entity, long id = -1, bool replaceCubeTracker = false)
+		{
+			if (entity is ICubeTracker tracker)
+			{
+				//If entity is already present, then replace it
+				if (cubeTrackers.ContainsKey(tracker.TrackedPosition))
+				{
+					if (replaceCubeTracker)
+					{
+						Remove(cubeTrackers[tracker.TrackedPosition] as Entity);
+						cubeTrackers[tracker.TrackedPosition] = tracker;
+					}
+					else return;	//don't add the entity.
+				}
+				else cubeTrackers.Add(tracker.TrackedPosition, tracker);
+			}
+
+			entities.Add(entity);
+			if (!entitiesByType.ContainsKey(entity.GetType()))
+				entitiesByType.Add(entity.GetType(), new List<Entity>());
+			entitiesByType[entity.GetType()].Add(entity);
+
+			if (id < 0)
+				entity.SetId(GetUniqueId());
+			else entity.SetId((ulong)id);
+
+			entity.Initialize(world);
 		}
 
 		public void Remove(Entity entity)
@@ -38,33 +96,19 @@ namespace ViMG.Entities
 		{
 			foreach (Entity entity in toAddLater)
 			{
-				if (entity is ICubeTracker tracker)
-				{
-					//HACK: if trackers already contains the entity, don't add a new one.
-					//This happens because if a detail phase chunk generation cascades to an adjacent chunk, it calls 
-					//PostChunkInit for every cube in that chunk every time any cube is set. This means lots of PostChunkInit calls!
-					//	(Note: the system no longer does this and now calls PostChunkInit once for every chunk it cascades to.)
-					//The system should be modified so that PostChunkInit is only ever called once for a given chunk after setting cubes in it.
-					//This will probably be an issue still when multiple chunks write to the same chunk.
-					if (!cubeTrackers.ContainsKey(tracker.TrackedPosition))
-						cubeTrackers.Add(tracker.TrackedPosition, tracker);
-					else continue;
-				}
-
-				entities.Add(entity);
-				if (!entitiesByType.ContainsKey(entity.GetType()))
-					entitiesByType.Add(entity.GetType(), new List<Entity>());
-				entitiesByType[entity.GetType()].Add(entity);
-
-				entity.Initialize(world);
+				ReallyAdd(entity);
 			}
 
 			toAddLater.Clear();
+
+			iterating = true;
 
 			foreach (Entity entity in entities)
 			{
 				entity.Update(deltaTime);
 			}
+
+			iterating = false;
 
 			foreach (Entity entity in toDeleteLater)
 			{

@@ -13,14 +13,22 @@ namespace ViMG.Entities
 
 		public bool AlwaysRender;
 
-		public virtual void Update(double deltaTime)
-		{
+		private ulong id = 0;
+		public ulong Id => id;
 
+		public void SetId(ulong id)
+		{
+			this.id = id;
 		}
 
 		public virtual void Initialize(World world)
 		{
 			this.world = world;
+		}
+
+		public virtual void Update(double deltaTime)
+		{
+
 		}
 
 		public virtual void OnDelete()
@@ -34,6 +42,16 @@ namespace ViMG.Entities
 		}
 
 		public virtual void OnCubeUpdated(ChunkData updatingParent, CubePosition updating, int updatedId)
+		{
+
+		}
+
+		public virtual void OnSave(List<byte> saveBytes)
+		{
+
+		}
+
+		public virtual void OnLoad(byte[] loadBytes, in int version)
 		{
 
 		}

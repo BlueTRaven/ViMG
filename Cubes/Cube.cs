@@ -123,7 +123,7 @@ namespace ViMG.Cubes
 			Collidable
 		}
 
-		public int Id { get; private set; }
+		public ushort Id { get; private set; }
 		public string Identifier { get; private set; }
 		private readonly CubeFacingLayout layout;
 		//private readonly RectangleF[] sourceRectSides = new RectangleF[6];
@@ -163,7 +163,7 @@ namespace ViMG.Cubes
 			this.MineProgressRequirement = mineProgressRequirement;
 		}
 
-		public void SetId(int id)
+		public void SetId(ushort id)
 		{
 			this.Id = id;
 		}
@@ -206,6 +206,11 @@ namespace ViMG.Cubes
 		public virtual void GetDrops(List<ItemInstance> itemsToDrop)
 		{
 
+		}
+
+		protected void DropSelf(List<ItemInstance> itemsToDrop)
+		{
+			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
 		}
 
 		public virtual bool CanMine(CubePosition position)

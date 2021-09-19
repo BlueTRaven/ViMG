@@ -28,11 +28,12 @@ namespace ViMG.Cubes
 			Register(new CubeAncientAltar());
 			Register(new CubeBrittleBone());
 			Register(new CubeSand());
+			Register(new CubeChest("wood", 3, 3));
 		}
 
 		protected override void Register(Cube obj)
 		{
-			obj.SetId(Count + 1);
+			obj.SetId((ushort)(Count + 1));
 			base.Register(obj);
 		}
 	}

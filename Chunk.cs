@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ViMG.Cubes;
 
@@ -13,6 +14,7 @@ namespace ViMG
 		private ChunkPosition position;
 
 		public const int CHUNK_SIZE = 16;
+		public const int NUM_CUBES_IN_CHUNK = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 
 		public ChunkPosition Position => position;
 
@@ -23,9 +25,19 @@ namespace ViMG
 
 		private World world;
 
-		private SimpleMesh<VertexPositionColor, int> mesh;
+		private static SimpleMesh<VertexPositionColor, int> mesh;
 
 		public Rectangle3D Bounds => new Rectangle3D(Position.InWorldSpace(), new Vector3(CHUNK_SIZE * Cube.CUBE_SCALE));
+
+		private bool isDefault;
+
+		public Chunk()
+		{
+			isDefault = true;
+
+			data = new ChunkData();
+			data.IsDefault = true;
+		}
 
 		public Chunk(GenericPool<ChunkData> chunkDatas, int x, int y, int z) : this(chunkDatas, new ChunkPosition(x, y, z))
 		{
@@ -47,15 +59,21 @@ namespace ViMG
 
 		public void Initialize(World world)
 		{
+			if (isDefault)
+				throw new Exception("Cannot initialize sentinel chunk.");
+
 			this.world = world;
 			initialized = true;
 
-			PostChunkGen(world);
+			//PostChunkGen(world);
 		}
 
 		public void PostChunkGen(World world)
 		{
-			for (int x = 0; x < CHUNK_SIZE; x++)
+			if (isDefault)
+				throw new Exception("Cannot post gen sentinel chunk.");
+
+			/*for (int x = 0; x < CHUNK_SIZE; x++)
 			{
 				for (int y = 0; y < CHUNK_SIZE; y++)
 				{
@@ -66,6 +84,23 @@ namespace ViMG
 						GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkGen(GetData(), pos);
 					}
 				}
+			}*/
+
+			for (int i = 0; i < NUM_CUBES_IN_CHUNK; i++)
+			{
+				int id = GetData().GetRaw(i);
+
+				if (id > 0)
+				{
+					int x = i % CHUNK_SIZE;
+					int y = (i / CHUNK_SIZE) % CHUNK_SIZE;
+					int z = i / (CHUNK_SIZE * CHUNK_SIZE);
+
+					var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+					Main.Registry.CubeRegistry.Get(id).PostChunkGen(GetData(), pos);
+				}
+
+				//GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkGen(GetData(), pos);
 			}
 		}
 
@@ -79,10 +114,14 @@ namespace ViMG
 
 		public void SetData(ChunkData data)
 		{
+			if (isDefault)
+				throw new Exception("Cannot set data on sentinel chunk.");
+
 			data.SetChunk(this);
 			this.data = data;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ChunkData GetData()
 		{
 			return data;

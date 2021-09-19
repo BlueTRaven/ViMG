@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Text;
 using System.Threading;
+using BrUtility;
 
 namespace ViMG
 {
@@ -10,54 +11,77 @@ namespace ViMG
 	{
 		public class ThreadedChunk
 		{
-			public ChunkPosition position;
-			public ChunkData data;
+			public Chunk chunk;
+			public List<ThreadedChunk> cascadedChunks = new List<ThreadedChunk>();
 
 			public bool syncable;
 		}
 
 		private readonly Dictionary<ChunkPosition, ThreadedChunk> chunks = new Dictionary<ChunkPosition, ThreadedChunk>();
 		private readonly Stack<ThreadedChunk> nextChunks = new Stack<ThreadedChunk>();
-		private readonly List<ThreadedChunk> syncableChunks = new List<ThreadedChunk>();
+		private readonly Queue<ThreadedChunk> syncableChunks = new Queue<ThreadedChunk>();
 		private readonly ChunkManager manager;
 
 		private List<ThreadedChunk> chunksToGenerateQueue = new List<ThreadedChunk>();
 
+		private SemaphoreSlim accessSem;
 		private Mutex accessMut;
 
 		public ChunkGenerationThreadDataBus(ChunkManager manager)
 		{
 			this.manager = manager;
+			accessMut = new Mutex();
+			accessSem = new SemaphoreSlim(1);
 		}
 
-		public void AddChunkToGenerate(ChunkPosition position, ChunkData data)
+		public bool AddChunkToGenerate(ChunkPosition position, ChunkGenerator generator, GenericPool<ChunkData> chunkDatas)
 		{
-			accessMut.WaitOne();
-
-			chunksToGenerateQueue.Add(new ThreadedChunk()
+			if (accessSem.Wait(0))
 			{
-				position = position,
-				data = data,
-				syncable = false
-			});
+				if (!chunks.ContainsKey(position) || chunks[position].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+				{
+					Chunk chunk = generator.MakeChunk(chunkDatas, position);
+					//accessMut.WaitOne();
+					chunksToGenerateQueue.Add(new ThreadedChunk()
+					{
+						chunk = chunk,
+						syncable = false
+					});
 
-			accessMut.ReleaseMutex();
+					accessSem.Release();
+
+					return true;
+				}
+
+				accessSem.Release();
+			}
+			//accessMut.ReleaseMutex();
+
+			return false;
 		}
 
 		// Call from ChunkGenerationThread
 		public void SendToGenerateToThread()
 		{
-			accessMut.WaitOne();
+			if (Thread.CurrentThread == Main.MainThread)
+				throw new Exception("Cannot start generating chunks on main thread.");
+
+			//accessMut;
+			accessSem.Wait();
 
 			foreach (var chunk in chunksToGenerateQueue)
 			{
-				chunks.Add(chunk.position, chunk);
-				nextChunks.Push(chunk);
+				if (!chunks.ContainsKey(chunk.chunk.Position))
+				{
+					chunks.Add(chunk.chunk.Position, chunk);
+					nextChunks.Push(chunk);
+				}
 			}
 
 			chunksToGenerateQueue.Clear();
 
-			accessMut.ReleaseMutex();
+			accessSem.Release();
+			//accessMut.ReleaseMutex();
 		}
 
 		public ChunkManager GetManager()
@@ -70,9 +94,9 @@ namespace ViMG
 			return nextChunks.Count > 0;
 		}
 
-		public ChunkData GetNextChunk()
+		public Chunk GetNextChunk()
 		{
-			return nextChunks.Pop().data;
+			return nextChunks.Pop().chunk;
 		}
 
 		public void FinishChunk(ChunkPosition position)
@@ -82,52 +106,106 @@ namespace ViMG
 
 			chunks[position].syncable = true;
 
-			syncableChunks.Add(chunks[position]);
+			accessSem.Wait();
+			//accessMut.WaitOne();
+
+			syncableChunks.Enqueue(chunks[position]);
+
+			chunks.Remove(position);
+
+			accessSem.Release();
+			//accessMut.ReleaseMutex();
 		}
 
-		public ChunkData GetChunk(ChunkPosition position)
+		public void FinishChunks(List<ChunkPosition> positions)
+		{
+			accessSem.Wait();
+
+			foreach (ChunkPosition pos in positions)
+			{
+				syncableChunks.Enqueue(chunks[pos]);
+				chunks.Remove(pos);
+			}
+
+			accessSem.Release();
+		}
+
+		public Chunk GetChunk(ChunkPosition position, ChunkGenerator generator)
 		{
 			if (Thread.CurrentThread == Main.MainThread)
 				throw new Exception("Cannot get a chunk directly from the data bus on the main thread. Use GetSyncableChunks.");
+
+			accessSem.Wait();
+			//accessMut.WaitOne();
 
 			if (chunks.ContainsKey(position))
 			{
 				var tc = chunks[position];
 				tc.syncable = false;
-				return tc.data;
+
+				accessSem.Release();
+				//accessMut.ReleaseMutex();
+
+				return tc.chunk;
 			}
 			else
 			{
-				ChunkData data = manager.ChunkDatas.Get();
+				ThreadedChunk chunk = new ThreadedChunk()
+				{
+					chunk = generator.MakeChunk(manager.ChunkDatas, position),
+					syncable = false
+				};
+
+				chunks.Add(position, chunk);
 
 				if (manager.GetChunk(position).Initialized)
-					data.CloneFrom(manager.GetChunk(position).GetData());
-
-				chunks.Add(position, new ThreadedChunk()
 				{
-					position = position,
-					data = data,
-					syncable = false
-				});
+					chunk.chunk.GetData().CloneFrom(manager.GetChunk(position).GetData());
+				}
 
-				return data;
+				accessSem.Release();
+				//accessMut.ReleaseMutex();
+
+				return chunk.chunk;
 			}
 		}
 
-		public List<ThreadedChunk> GetSyncableChunks()
+		public bool ChunkExists(Chunk chunk)
 		{
-			accessMut.WaitOne();
+			return chunks.ContainsKey(chunk.Position);
+		}
 
-			foreach (ThreadedChunk chunk in syncableChunks)
+		const int MAX_SYNC_PER_FRAME = 64;
+		private ThreadedChunk[] syncingChunks = new ThreadedChunk[MAX_SYNC_PER_FRAME];
+
+		public ThreadedChunk[] GetSyncableChunks()
+		{
+			if (accessSem.Wait(0))
 			{
-				chunks.Remove(chunk.position);
+				for (int i = 0; i < MAX_SYNC_PER_FRAME; i++)
+					syncingChunks[i] = null;
+
+				if (syncableChunks.Count > 0)
+				{
+					for (int i = 0; i < Math.Min(MAX_SYNC_PER_FRAME, syncableChunks.Count); i++)
+					{
+						ThreadedChunk chunk = syncableChunks.Dequeue();
+
+						syncingChunks[i] = chunk;
+
+						//chunks.Remove(chunk.chunk.Position);
+					}
+
+					//syncableChunks.Clear();
+				}
+
+				accessSem.Release();
+				//accessMut.ReleaseMutex();
+
+				return syncingChunks;
 			}
 
-			List<ThreadedChunk> syncingChunks = new List<ThreadedChunk>(syncableChunks);
-
-			accessMut.ReleaseMutex();
-
-			return syncingChunks;
+			return null;
 		}
 	}
 }

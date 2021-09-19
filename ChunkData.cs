@@ -17,33 +17,53 @@ namespace ViMG
 			Done
 		}
 
+		public enum ThreadStates
+		{
+			GenerationThread,
+			MainThread
+		}
+
 		public GenerationStep GenStep;
+		public ThreadStates ThreadState;
 
 		// Kinda hacky
 		public bool IsThreadedLoad;
 
-		private int[] cubes;
+		private ushort[] cubes;
 		private Cube.CubeVisualInstance[] cubeVisualInstances;
 
 		private Chunk chunk;
 
+		public bool IsDefault;
+
+		public bool IsUsed { get; set; }
+		public int PoolIndex { get; set; }
+
 		public ChunkData()
 		{
-			cubes = new int[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)]; //new int[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
+			cubes = new ushort[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)]; //new int[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 
 			cubeVisualInstances = new Cube.CubeVisualInstance[(int)Math.Pow(Chunk.CHUNK_SIZE, 3)];//[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 		}
 
 		public void CloneFrom(ChunkData data)
 		{
-			for (int i = 0; i < cubes.Length; i++)
+			if (IsDefault)
+				throw new Exception("Cannot clone sentinel chunk data.");
+
+			for (ushort i = 0; i < cubes.Length; i++)
 			{
 				cubes[i] = data.GetRaw(i);
 			}
+
+			GenStep = data.GenStep;
 		}
 
 		public void SetChunk(Chunk chunk)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot set chunk for sentinel chunk data.");
+
 			this.chunk = chunk;
 		}
 
@@ -56,6 +76,12 @@ namespace ViMG
 
 		public Cube.CubeVisualInstance GetVisual(CubePosition position, bool forceUpdate = false)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get visual for sentinel chunk data.");
+
+			if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
+				return Cube.CubeVisualInstance.CreateClean();
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
@@ -73,26 +99,46 @@ namespace ViMG
 			return GetVisual(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace));
 		}
 
-		public int GetRaw(CubePosition position)
+		public Span<ushort> GetAll()
 		{
+			return cubes;
+		}
+
+		public ushort GetRaw(CubePosition position)
+		{
+			if (IsDefault)
+				return 0;
+
+			if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
+				return 0;
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
 			return cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
 		}
 
-		public int GetRaw(int index)
+		public ushort GetRaw(int index)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			return cubes[index];
 		}
 
-		public int GetRaw(int x, int y, int z)
+		public ushort GetRaw(int x, int y, int z)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			return cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)];
 		}
 
-		public int GetRawOrAdjacent(CubePosition position, World world)
+		public ushort GetRawOrAdjacent(CubePosition position, World world)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			if (IsInChunkBounds(position))
 				return GetRaw(position.X, position.Y, position.Z);
 			else return world.GetChunkManager().GetRaw(position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk));
@@ -100,6 +146,9 @@ namespace ViMG
 
 		public Optional<Cube> GetCube(CubePosition position)
 		{
+			if (IsDefault)
+				return new Optional<Cube>();
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
@@ -110,11 +159,17 @@ namespace ViMG
 
 		public Optional<Cube> GetCube(int x, int y, int z)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]));
 		}
 
 		public Optional<Cube> GetCubeOrAdjacent(int x, int y, int z, World world)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
 			if (IsInChunkBounds(x, y, z))
@@ -124,6 +179,9 @@ namespace ViMG
 
 		public Optional<Cube> GetCubeOrAdjacent(CubePosition position, World world)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position.InChunkSpace(chunk);
 
@@ -134,6 +192,9 @@ namespace ViMG
 
 		public Cube.CubeInstance GetCubeInstance(CubePosition position)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
@@ -144,6 +205,9 @@ namespace ViMG
 
 		public Cube.CubeInstance GetCubeInstance(int x, int y, int z)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
 			if (IsInChunkBounds(x, y, z))
@@ -153,6 +217,9 @@ namespace ViMG
 
 		public Cube.CubeInstance GetCubeInstanceOrAdjacent(int x, int y, int z, World world)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot get data from sentinel chunk data.");
+
 			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
 			if (IsInChunkBounds(x, y, z))
@@ -190,6 +257,9 @@ namespace ViMG
 
 		public Cube.CubeVisualInstance DirtyCubeUpdate(CubePosition position, World world)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot call dirty cube update from sentinel chunk data.");
+
 			CubePosition cubeSpacePos = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk);
 			CubePosition chunkSpacePos = position.Coord == CubePosition.CoordinateSpace.ChunkSpace ? position : position.InChunkSpace(chunk);
 
@@ -204,13 +274,16 @@ namespace ViMG
 
 		public void MarkDirty(CubePosition position, bool markChunk = true)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot mark data as dirty in sentinel chunk data.");
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
 			cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty = true;
 
 			if (markChunk)
-				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position);
+				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position, true);
 		}
 
 		private bool IsInChunkBounds(in CubePosition position)
@@ -221,6 +294,9 @@ namespace ViMG
 		// If a CubePosition overflows, use this to mark the correct cube as dirty.
 		private void MarkOffsetChunkDirty(CubePosition position)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot mark data dirty in sentinel chunk data.");
+
 			if (IsThreadedLoad)
 				return;
 
@@ -245,6 +321,9 @@ namespace ViMG
 
 		public void MarkAdjacentsDirty(CubePosition position)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot mark data dirty in sentinel chunk data.");
+
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
@@ -262,6 +341,9 @@ namespace ViMG
 
 		private void CubeUpdate(CubePosition position, int updatedId)
 		{
+			if (IsDefault)
+				throw new Exception("Cannot update data in sentinel chunk data.");
+
 			for (int i = 0; i < 6; i++)
 			{
 				ref CubePosition offset = ref offsets[i];
@@ -285,9 +367,12 @@ namespace ViMG
 			}
 		}
 
-		public void SetCube(CubePosition position, int id, bool markDirty = true, bool killTrackedEntities = true)
+		public void SetCube(CubePosition position, ushort id, bool markDirty = true, bool killTrackedEntities = true)
 		{
-			if (Thread.CurrentThread != Main.MainThread && !chunk.Initialized)
+			if (IsDefault)
+				throw new Exception("Cannot set data in sentinel chunk data.");
+
+			if (Thread.CurrentThread != Main.MainThread && chunk.Initialized)
 				throw new Exception("Cannot set chunk outside of main thread after initialization.");
 
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
@@ -317,6 +402,11 @@ namespace ViMG
 				MarkDirty(position);
 				MarkAdjacentsDirty(position);
 			}
+		}
+
+		public void SetCubeFast(int index, ushort id)
+		{
+			cubes[index] = id;
 		}
 
 		public MeshHelper.CubeFace GetClearSides(CubePosition position, World world)
@@ -469,8 +559,10 @@ namespace ViMG
 
 		public void OnGet<T>(GenericPool<T> pool) where T : IPoolable
 		{
+			IsUsed = true;
 			//x + WIDTH * (y + DEPTH * z)
-			for (int i = 0; i < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; i++)
+			const int size = Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE;
+			for (int i = 0; i < size; i++)
 			{
 				cubes[i] = 0;
 				cubeVisualInstances[i] = Cube.CubeVisualInstance.CreateDirty();
@@ -491,7 +583,13 @@ namespace ViMG
 
 		public void OnReturned<T>(GenericPool<T> pool) where T : IPoolable
 		{
+			IsUsed = false;
+
+			if (IsDefault)
+				throw new Exception("Cannot return sentinel chunk data.");
+
 			chunk = null;
+			Array.Fill<ushort>(cubes, 0);
 		}
 	}
 }

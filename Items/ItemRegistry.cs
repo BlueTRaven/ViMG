@@ -55,7 +55,7 @@ namespace ViMG.Items
 			IReadOnlyList<Cube> cubes = Main.Registry.CubeRegistry.GetIterable();
 			for (int i = 0; i < cubes.Count; i++)
 			{
-				ItemCube itemCube = new ItemCube(cubes[i], i + 1);
+				ItemCube itemCube = new ItemCube(cubes[i], (ushort)(i + 1));
 				Register(itemCube);
 			}
 		}

@@ -23,7 +23,7 @@ namespace ViMG
 
 		public T Get(int index)
 		{
-			if (index == 0)
+			if (index <= 0)
 				return null;
 			return registry[index - 1];
 		}

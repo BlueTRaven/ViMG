@@ -1,33 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Cubes;
 using ViMG.UIs;
 
 namespace ViMG.Entities
 {
 	[Serializable]
-	[EntityMeta(1, 0)]
-	public class EntityFurnace : Entity, ICubeTracker
+	[EntityMeta(0, 0)]
+	public class EntityChest : Entity, ICubeTracker
 	{
-		public CubePosition TrackedPosition 
-		{
-			get;
-			private set; 
-		}
+		public CubePosition TrackedPosition { get; private set; }
 
 		private Inventory inventory;
+		private int rows, columns;
 
-		public EntityFurnace()
-		{
-
-		}
-
-		public EntityFurnace(CubePosition position)
+		public EntityChest(CubePosition position, int rows, int columns)
 		{
 			this.TrackedPosition = position;
+			this.rows = rows;
+			this.columns = columns;
 
-			inventory = new Inventory(5);
+			inventory = new Inventory(rows * columns);
 		}
 
 		public override void Initialize(World world)
@@ -47,7 +40,7 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-			player.OpenUI(new UIInventoryFurnace(player, player.GetInventory(), inventory));
+			player.OpenUI(new UIInventoryChest(player, player.GetInventory(), inventory, rows, columns));
 
 			return true;
 		}
@@ -56,7 +49,8 @@ namespace ViMG.Entities
 		{
 			base.OnSave(saveBytes);
 
-			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+			SaveHelper.SaveInt32(saveBytes, rows);
+			SaveHelper.SaveInt32(saveBytes, columns);
 			inventory.Save(saveBytes);
 		}
 
@@ -66,7 +60,8 @@ namespace ViMG.Entities
 
 			int index = 0;
 
-			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			rows = SaveHelper.LoadInt32(loadBytes, ref index);
+			columns = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			inventory = Inventory.Load(loadBytes, ref index);
 		}

@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj" />
     <ProjectReference Include="BrUtility\BrAssetsManager\BrAssetsManager.csproj" PrivateAssets="All" />
+    <ProjectReference Include="BrUtility\BrNineSlice\BrNineSlice.csproj" />
     <ProjectReference Include="BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />
   </ItemGroup>
 

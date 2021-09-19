@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrUtility", "BrUtility\BrUt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.DesktopGL", "..\..\..\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj", "{D2200198-E0F1-499F-A12E-72E468650769}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrNineSlice", "BrUtility\BrNineSlice\BrNineSlice.csproj", "{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D2200198-E0F1-499F-A12E-72E468650769}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2200198-E0F1-499F-A12E-72E468650769}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2200198-E0F1-499F-A12E-72E468650769}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

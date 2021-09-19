@@ -141,5 +141,48 @@ namespace ViMG
 		{
 			return ref items[index];
 		}
+
+		public void Save(List<byte> saveBytes)
+		{
+			SaveHelper.SaveInt32(saveBytes, numSlots);
+
+			int numValid = 0;
+			for (int i = 0; i < numSlots; i++)
+			{
+				if (Get(i).valid)
+				{
+					numValid++;
+				}
+			}
+
+			SaveHelper.SaveInt32(saveBytes, numValid);
+
+			for (int i = 0; i < numSlots; i++)
+			{
+				if (Get(i).valid)
+				{
+					SaveHelper.SaveInt32(saveBytes, i);
+					SaveHelper.SaveItemInstance(saveBytes, Get(i));
+				}
+			}
+		}
+
+		public static Inventory Load(byte[] loadBytes, ref int index)
+		{
+			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
+			Inventory inv = new Inventory(numSlots);
+
+			int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			for (int i = 0; i < numValid; i++)
+			{
+				int itemIndex = SaveHelper.LoadInt32(loadBytes, ref index);
+				ItemInstance itemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
+
+				inv.Set(itemInstance, itemIndex);
+			}
+
+			return inv;
+		}
 	}
 }

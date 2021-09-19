@@ -7,6 +7,8 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
+	[Serializable]
+	[EntityMeta(0, 0)]
 	public class Tree : Entity
 	{
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshTrunk;
@@ -21,6 +23,11 @@ namespace ViMG.Entities
 
 		private Rectangle3D bounds;
 
+		public Tree()
+		{
+			AlwaysRender = true;
+		}
+
 		public Tree(Vector3 position, int size, CubePosition basePosition)
 		{
 			AlwaysRender = true;
@@ -29,7 +36,6 @@ namespace ViMG.Entities
 			this.baseSize = size;
 			this.size = baseSize;
 			this.basePosition = basePosition;
-			//this.listenPositions = listenPositions;
 
 			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
 		}
@@ -432,6 +438,30 @@ namespace ViMG.Entities
 			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
 			meshTreeTop = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+		}
+
+		public override void OnSave(List<byte> saveBytes)
+		{
+			base.OnSave(saveBytes);
+
+			SaveHelper.SaveInt32(saveBytes, baseSize);
+			SaveHelper.SaveInt32(saveBytes, size);
+
+			SaveHelper.SaveCubePosition(saveBytes, basePosition);
+		}
+
+		public override void OnLoad(byte[] loadBytes, in int version)
+		{
+			base.OnLoad(loadBytes, version);
+
+			int index = 0;
+			baseSize =  SaveHelper.LoadInt32(loadBytes, ref index);
+			size = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+
+			Position = basePosition.InWorldSpace(null) - new Vector3(Cube.CUBE_SCALE + 5, 0, Cube.CUBE_SCALE + 5);
+			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
 		}
 	}
 }

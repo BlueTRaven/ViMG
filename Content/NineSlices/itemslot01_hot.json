@@ -1,0 +1,10 @@
+{
+	"texture": "ui_inventory",
+	"position": "16, 0",
+	"size": "16, 16",
+	"distLeft": 2,
+	"distRight": 2,
+	"distTop": 2,
+	"distBottom": 2,
+	"scale": 1
+}
