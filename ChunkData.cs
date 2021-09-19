@@ -26,9 +26,6 @@ namespace ViMG
 		public GenerationStep GenStep;
 		public ThreadStates ThreadState;
 
-		// Kinda hacky
-		public bool IsThreadedLoad;
-
 		private ushort[] cubes;
 		private Cube.CubeVisualInstance[] cubeVisualInstances;
 
@@ -85,7 +82,7 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			if (forceUpdate || cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty)
+			if (forceUpdate || cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].IsDirty)
 			{
 				ChunkUpdate++;
 				DirtyCubeUpdate(position, chunk.GetWorld());
@@ -265,7 +262,7 @@ namespace ViMG
 
 			Cube.CubeVisualInstance clean = Cube.CubeVisualInstance.CreateClean();
 
-			clean.clearSides = GetClearSides(chunkSpacePos, world);
+			clean.SetFaces(GetClearSides(chunkSpacePos, world));
 			//clean.adjacents = GetAdjacentCubes(chunkSpacePos);
 
 			cubeVisualInstances[chunkSpacePos.X + Chunk.CHUNK_SIZE * (chunkSpacePos.Y + Chunk.CHUNK_SIZE * chunkSpacePos.Z)] = clean;
@@ -280,7 +277,7 @@ namespace ViMG
 			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
 				position = position.InChunkSpace(chunk);
 
-			cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].dirty = true;
+			cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].IsDirty = true;
 
 			if (markChunk)
 				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position, true);
@@ -296,9 +293,6 @@ namespace ViMG
 		{
 			if (IsDefault)
 				throw new Exception("Cannot mark data dirty in sentinel chunk data.");
-
-			if (IsThreadedLoad)
-				return;
 
 			position = position.InCubeSpace(chunk);
 

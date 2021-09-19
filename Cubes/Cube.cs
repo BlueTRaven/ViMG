@@ -37,9 +37,40 @@ namespace ViMG.Cubes
 
 		public struct CubeVisualInstance
 		{
-			public bool dirty;
+			public enum Face : byte
+			{
+				NONE = 0,
+				LEFT = 1 << 0,
+				RIGHT = 1 << 1,
+				UP = 1 << 2,
+				DOWN = 1 << 3,
+				FRONT = 1 << 4,
+				BACK = 1 << 5,
+				ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK,
+				DIRTY = 1 << 6
 
-			public MeshHelper.CubeFace clearSides;  //sides that are clear of other cubes
+			}
+
+			public bool IsDirty { get { return (face & Face.DIRTY) == Face.DIRTY; } set { if (value) face |= Face.DIRTY; else face &= ~Face.DIRTY; } }
+
+			private Face face;
+
+			public CubeVisualInstance(MeshHelper.CubeFace faces, bool dirty)
+			{
+				face = Face.NONE;
+				SetFaces(faces);
+				IsDirty = dirty;
+			}
+
+			public MeshHelper.CubeFace GetFaces()
+			{
+				return (MeshHelper.CubeFace)face;
+			}
+
+			public void SetFaces(MeshHelper.CubeFace faces)
+			{
+				face = (Face)faces;
+			}
 
 			private static CubeVisualInstance Clean;
 			private static CubeVisualInstance Dirty;
@@ -47,10 +78,10 @@ namespace ViMG.Cubes
 			static CubeVisualInstance()
 			{
 				Clean = new CubeVisualInstance();
-				Clean.dirty = false;
+				Clean.IsDirty = false;
 
 				Dirty = new CubeVisualInstance();
-				Dirty.dirty = true;
+				Dirty.IsDirty = true;
 			}
 
 			public static ref readonly CubeVisualInstance CreateClean()
@@ -240,7 +271,7 @@ namespace ViMG.Cubes
 				List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.MakeCubeVerts(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), new CubeVisualInstance() { clearSides = MeshHelper.CubeFace.ALL, dirty = false }, this, vertices, indices);
+				ChunkMesher.MakeCubeVerts(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
 
 				mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}

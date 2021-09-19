@@ -16,30 +16,18 @@ namespace ViMG
 		private VertexBuffer vbo;
 		private IndexBuffer ibo;
 
-		protected GraphicsDevice device;
-
-		private int vertexCount;
-		public int VertexCount => vertexCount;
-		private int indexCount;
-		public int IndexCount => indexCount;
+		//private int vertexCount;
+		public int VertexCount => vbo.VertexCount;
+		//private int indexCount;
+		public int IndexCount => ibo.IndexCount;
 
 		public Texture2D texture;
 
-		protected bool isEmpty;
-		public bool IsEmpty => isEmpty;
+		public bool IsEmpty => vbo == null || vbo.VertexCount == 0;
+		public bool Uploaded => !IsEmpty;
 
 		public static SimpleMesh<TVert, TIndex> Empty { get; private set; }
 
-		private bool uploaded;
-		public bool Uploaded => uploaded;
-
-		private class DelayedUpload 
-		{
-			public List<TVert> vertices;
-			public List<TIndex> indices;
-		}
-
-		private DelayedUpload toUpload;
 
 		static SimpleMesh()
 		{
@@ -48,28 +36,14 @@ namespace ViMG
 
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
-			this.device = device;
-
 			if (Thread.CurrentThread == Main.MainThread)
-				Upload(vertices, indices);
-			else toUpload = new DelayedUpload()
-			{
-				vertices = vertices,
-				indices = indices
-			};
+				Upload(device, vertices, indices);
+			else UploadLater(vertices, indices);
 		}
 
-		public void Upload()
+		public void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
-			if (toUpload != null)
-			{
-				Upload(toUpload.vertices, toUpload.indices);
-			}
-		}
-
-		private void Upload(List<TVert> vertices, List<TIndex> indices)
-		{
-			if (uploaded)
+			if (Uploaded)
 				throw new Exception("Cannot upload twice.");
 
 			Stopwatch watch = Stopwatch.StartNew();
@@ -80,10 +54,8 @@ namespace ViMG
 			ibo = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
 			ibo.SetData(indices.ToArray());
 
-			vertexCount = vertices.Count;
-			indexCount = indices.Count;
-
-			uploaded = true;
+			//vertexCount = vertices.Count;
+			//indexCount = indices.Count;
 
 			watch.Stop();
 
@@ -97,19 +69,17 @@ namespace ViMG
 
 		protected SimpleMesh()
 		{
-			isEmpty = true;
 		}
 
-		public bool Use()
+		protected virtual void UploadLater(List<TVert> vertices, List<TIndex> indices)
 		{
-			if (isEmpty || !uploaded)
-				return false;
 
-			if (toUpload != null)
-			{
-				Upload(toUpload.vertices, toUpload.indices);
-				toUpload = null;
-			}
+		}
+
+		public bool Use(GraphicsDevice device)
+		{
+			if (IsEmpty)
+				return false;
 
 			device.SetVertexBuffer(vbo);
 			device.Indices = ibo;
@@ -137,7 +107,7 @@ namespace ViMG
 
 		public virtual void Draw(GraphicsDevice device, Effect effect, Matrix transform, Texture2D overrideTexture = null, RectangleF? sourceRectangle = null)
 		{
-			if (!Use())
+			if (!Use(device))
 				return;
 
 			//bandaid fix. I guess monogame doesn't correctly flush textures, so I do it manually here.
@@ -200,7 +170,7 @@ namespace ViMG
 
 		public virtual void Draw(GraphicsDevice device, BasicEffect effect, Matrix transform, Texture2D overrideTexture = null)
 		{
-			if (!Use())
+			if (!Use(device))
 				return;
 
 			//basic effect has to be handled differently due to how it caches its values...

@@ -42,8 +42,6 @@ namespace ViMG
 			}
 		}
 
-		private Chunk defaultChunk = new Chunk();
-
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
@@ -96,7 +94,7 @@ namespace ViMG
 				int y = (i / sizeInChunks) % sizeInChunks;
 				int z = i / (sizeInChunks * sizeInChunks);
 
-				chunks[i] = new ManagedChunk(ChunkDatas, defaultChunk, x, y, z);
+				chunks[i] = new ManagedChunk(ChunkDatas, generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z)), x, y, z);
 			}
 
 			/*for (int x = 0; x < sizeInChunks; x++)
@@ -128,7 +126,7 @@ namespace ViMG
 				int y = (i / sizeInChunks) % sizeInChunks;
 				int z = i / (sizeInChunks * sizeInChunks);
 
-				chunks[i].chunk = generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z));
+				//chunks[i].chunk = generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z));
 				generator.GenerateChunkBroad(chunks[i].chunk, new ChunkPosition(x, y, z));
 
 				num++;
@@ -175,9 +173,6 @@ namespace ViMG
 		public void ProcessChunkQueue(World world, int forceMode)
 		{
 			chunksToMeshQueue.Sort();
-
-			if (defaultChunk.Initialized || defaultChunk.GetData().GenStep != ChunkData.GenerationStep.Broad)
-				throw new Exception("???");
 
 			//ProcessPriorityMeshChunks(world);
 
@@ -576,7 +571,7 @@ namespace ViMG
 		public void Unload(ChunkPosition position)
 		{
 			chunks[PosToIndex(position)].mesh = null;
-			chunks[PosToIndex(position)].chunk = defaultChunk;
+			chunks[PosToIndex(position)].chunk.SetData(null);
 		}
 
 		public void UnloadAll()
@@ -584,7 +579,7 @@ namespace ViMG
 			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
 			{
 				chunks[i].mesh = null;
-				chunks[i].chunk = defaultChunk;
+				chunks[i].chunk.SetData(null);
 			}
 		}
 

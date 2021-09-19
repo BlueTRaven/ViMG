@@ -384,7 +384,7 @@ namespace ViMG
 
 			chunk.Initialize(world);
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
-			chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
+			//chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
 
 			if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
 				Console.WriteLine("Loaded " + i + " / " + totalSize + " chunks...");

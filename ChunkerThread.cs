@@ -46,7 +46,7 @@ namespace ViMG
 
 			for (int i = 0; i < meshed.Count; i++)
 			{
-				generatedChunks[meshed[i].Item1].GetData().IsThreadedLoad = false;
+				//generatedChunks[meshed[i].Item1].GetData().IsThreadedLoad = false;
 				finishedChunks.Add((generatedChunks[meshed[i].Item1], meshed[i].Item2));
 			}
 		}
@@ -63,7 +63,7 @@ namespace ViMG
 
 					//BROKEN
 					Chunk chunk = null;// generator.GenerateChunk(pos)[0];
-					chunk.GetData().IsThreadedLoad = true;
+					//chunk.GetData().IsThreadedLoad = true;
 					//generated.Add((pos, generator.GenerateChunk(world, pos)));
 					generatedChunks.Add(pos, chunk);
 					watch.Stop();

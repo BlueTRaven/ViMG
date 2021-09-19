@@ -40,7 +40,7 @@ namespace ViMG
 						Cube.CubeInstance instance = chunk.GetData().GetCubeInstance(pos);
 						Cube.CubeVisualInstance visual = chunk.GetData().GetVisual(pos, forceUpdate);
 
-						if (instance.cubeId == 0 || visual.clearSides == MeshHelper.CubeFace.NONE)
+						if (instance.cubeId == 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
 							continue;
 
 						Cube cube = Main.Registry.CubeRegistry.Get(instance.cubeId);
@@ -169,22 +169,22 @@ namespace ViMG
 			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
 			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
 				MakeQuadVerts(l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1), MeshHelper.CubeFace.FRONT, cube, vertices, indices);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
 				MakeQuadVerts(r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0), MeshHelper.CubeFace.RIGHT, cube, vertices, indices);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
 				MakeQuadVerts(r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1), MeshHelper.CubeFace.BACK, cube, vertices, indices);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
 				MakeQuadVerts(l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0), MeshHelper.CubeFace.LEFT, cube, vertices, indices);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
 				MakeQuadVerts(l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, -1, 0), MeshHelper.CubeFace.DOWN, cube, vertices, indices);
 
-			if ((visual.clearSides & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
+			if ((visual.GetFaces() & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
 				MakeQuadVerts(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
 		}
 

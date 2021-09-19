@@ -23,5 +23,12 @@ namespace ViMG
 		public ChunkMesh(GraphicsDevice device, List<VertexPositionColorTextureNormal> vertices, List<int> indices) : base(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"))
 		{
 		}
+
+		protected override void UploadLater(List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+		{
+			base.UploadLater(vertices, indices);
+
+			Main.DelayedUploaderChunkMesh.meshesToUploadLater.Enqueue(new DelayedUploader<VertexPositionColorTextureNormal, int>.ToUploadLater(this, vertices, indices));
+		}
 	}
 }

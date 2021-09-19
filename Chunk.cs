@@ -29,16 +29,6 @@ namespace ViMG
 
 		public Rectangle3D Bounds => new Rectangle3D(Position.InWorldSpace(), new Vector3(CHUNK_SIZE * Cube.CUBE_SCALE));
 
-		private bool isDefault;
-
-		public Chunk()
-		{
-			isDefault = true;
-
-			data = new ChunkData();
-			data.IsDefault = true;
-		}
-
 		public Chunk(GenericPool<ChunkData> chunkDatas, int x, int y, int z) : this(chunkDatas, new ChunkPosition(x, y, z))
 		{
 		}
@@ -59,9 +49,6 @@ namespace ViMG
 
 		public void Initialize(World world)
 		{
-			if (isDefault)
-				throw new Exception("Cannot initialize sentinel chunk.");
-
 			this.world = world;
 			initialized = true;
 
@@ -70,9 +57,6 @@ namespace ViMG
 
 		public void PostChunkGen(World world)
 		{
-			if (isDefault)
-				throw new Exception("Cannot post gen sentinel chunk.");
-
 			/*for (int x = 0; x < CHUNK_SIZE; x++)
 			{
 				for (int y = 0; y < CHUNK_SIZE; y++)
@@ -114,10 +98,10 @@ namespace ViMG
 
 		public void SetData(ChunkData data)
 		{
-			if (isDefault)
-				throw new Exception("Cannot set data on sentinel chunk.");
+			//support unsetting data
+			if (data != null)
+				data.SetChunk(this);
 
-			data.SetChunk(this);
 			this.data = data;
 		}
 

@@ -10,7 +10,7 @@ namespace ViMG
 	public static class MeshHelper
 	{
 		[Flags]
-		public enum CubeFace
+		public enum CubeFace : byte
 		{
 			NONE = 0,
 			LEFT = 1 << 0,

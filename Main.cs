@@ -34,6 +34,8 @@ namespace ViMG
 		public static ViMGAssetsManager assetsManager;
 		public static RegistryService Registry;
 
+		public static DelayedUploader<VertexPositionColorTextureNormal, int> DelayedUploaderChunkMesh = new DelayedUploader<VertexPositionColorTextureNormal, int>();
+
 		public static FrameCounter frameCounter;
 
 		public static Random random = new Random(SEED);
