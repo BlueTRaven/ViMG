@@ -147,6 +147,15 @@ namespace ViMG
 			return f;
 		}
 
+		public static byte[] LoadBytes(byte[] data, int length, ref int index)
+        {
+			int end = index + length;
+			byte[] rval = data[index..end];
+			index = end;
+
+			return rval;
+        }
+
 		public static Vector3 LoadVector3(byte[] data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
