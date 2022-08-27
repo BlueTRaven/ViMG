@@ -568,6 +568,11 @@ namespace ViMG
 		}
 #endregion
 
+		public void UnloadMesh(ChunkPosition position)
+		{
+			chunks[PosToIndex(position)].mesh = null;
+		}
+
 		public void Unload(ChunkPosition position)
 		{
 			chunks[PosToIndex(position)].mesh = null;

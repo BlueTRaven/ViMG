@@ -1,27 +1,30 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-	<MonoGamePlatform>DesktopGL</MonoGamePlatform>
+    <TargetFrameworks>net5.0-windows</TargetFrameworks>
+	<MonoGamePlatform>Windows</MonoGamePlatform>
 	<RootNamespace>ViMG</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="BrUtility\**" />
+    <Compile Remove="MonoGame\**" />
     <EmbeddedResource Remove="BrUtility\**" />
+    <EmbeddedResource Remove="MonoGame\**" />
     <None Remove="BrUtility\**" />
+    <None Remove="MonoGame\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj" />
+    <PackageReference Include="MonoGame.Content.Builder.Task.Compute" Version="3.8.1.2" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="BrUtility\BrAssetsManager\BrAssetsManager.csproj" PrivateAssets="All" />
-    <ProjectReference Include="BrUtility\BrNineSlice\BrNineSlice.csproj" />
+    <ProjectReference Include="BrUtility\BrNineSlice\BrNineSlice.csproj" PrivateAssets="All" />
     <ProjectReference Include="BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.2008" />
+    <ProjectReference Include="MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj" />
   </ItemGroup>
 
 </Project>

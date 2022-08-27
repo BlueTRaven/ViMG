@@ -112,6 +112,8 @@ namespace ViMG
 
 		public override void Update(double deltaTime)
 		{
+			world.ChunkLoadManager.UpdateLoadTarget(Position);
+
 			if (Main.Debug)
 				state = State.Noclip;
 			else if (state == State.Noclip)
@@ -437,7 +439,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.EntityManager.Add(new Skeleton(Position));
+				world.SetTimeOfDay(World.DAY_CYCLE_TIME * 0.75f);
+				//world.EntityManager.Add(new Skeleton(Position));
 
 				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
 				/*using (FileStream fs = new FileStream("./depth.png", FileMode.OpenOrCreate))
@@ -677,18 +680,21 @@ namespace ViMG
 			if (lookAtMesh == null)
 			{
 				lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+				lookAtMesh.Name = "Look At Mesh";
 			}
 
 			if (lookAtResult.hasHit && world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 			{
 				device.DepthStencilState = Main.genericDSS;
 				device.RasterizerState = Main.wireframeRS;
-				Main.BasicEffect.DiffuseColor = Color.Lerp(Color.Transparent, Color.Red, lookAtColSine).ToVector3();
-				lookAtMesh.Draw(device, Main.BasicEffect, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+				
+				//Main.BasicEffect.DiffuseColor = Color.Lerp(Color.Transparent, Color.Red, lookAtColSine).ToVector3();
+				lookAtMesh.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, 
+					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 					Matrix.CreateScale(1.126f) *
 					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) * 
 					Matrix.CreateTranslation(lookAtPos.InWorldSpace(null)));
-				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
+				//Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
 
 				device.DepthStencilState = Main.genericDSS;
 				device.RasterizerState = Main.genericRS;

@@ -55,6 +55,14 @@ namespace ViMG
 			SaveFloat32(data, vec.Z);
 		}
 
+		public static void SaveVector4(List<byte> data, Vector4 vec)
+		{
+			SaveFloat32(data, vec.X);
+			SaveFloat32(data, vec.Y);
+			SaveFloat32(data, vec.Z);
+			SaveFloat32(data, vec.W);
+		}
+
 		public static void SaveCubePosition(List<byte> data, CubePosition position, Chunk chunk = null)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace && chunk != null)
@@ -120,6 +128,16 @@ namespace ViMG
 			float z = LoadFloat32(data, ref index);
 
 			return new Vector3(x, y, z);
+		}
+
+		public static Vector4 LoadVector4(byte[] data, ref int index)
+		{
+			float x = LoadFloat32(data, ref index);
+			float y = LoadFloat32(data, ref index);
+			float z = LoadFloat32(data, ref index);
+			float w = LoadFloat32(data, ref index);
+
+			return new Vector4(x, y, z, w);
 		}
 
 		public static CubePosition LoadCubePosition(byte[] data, ref int index)

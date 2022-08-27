@@ -22,6 +22,29 @@ namespace ViMG
 		private readonly ChunkManager chunkManager;
 		private readonly EntityManager entityManager;
 
+		private struct EntityLookup
+        {
+			public int cx, cy, cz;
+			public int offset;
+
+			public void Serialize(List<byte> saveBytes)
+            {
+				SaveHelper.SaveInt32(saveBytes, cx);
+				SaveHelper.SaveInt32(saveBytes, cy);
+				SaveHelper.SaveInt32(saveBytes, cy);
+				SaveHelper.SaveInt32(saveBytes, offset);
+			}
+
+			public void Deserialize(byte[] loadBytes)
+            {
+				int index = 0;
+				cx = SaveHelper.LoadInt32(loadBytes, ref index);
+				cy = SaveHelper.LoadInt32(loadBytes, ref index);
+				cz = SaveHelper.LoadInt32(loadBytes, ref index);
+				offset = SaveHelper.LoadInt32(loadBytes, ref index);
+			}
+        }
+
 		public enum LoadError
 		{
 			Success,
@@ -131,7 +154,10 @@ namespace ViMG
 			//v: version (int) overall version of the entity file
 			//emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
 			//c: count of entities
-			//e: entity
+			//et: entity lookup table
+			//  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+			//  o: offset into entity data block
+			//e: entity data block
 			//	i: entity id (int) (index in saved entity array)
 			//	t: type id (int)
 			//	cx, cy, cz: chunk x, y, z (int each) (position in chunks)
@@ -150,44 +176,61 @@ namespace ViMG
 
 					int serializableEntities = 0;
 
-					foreach (Entity entity in entities)
-					{
-						if (entity.GetType().GetCustomAttribute<SerializableAttribute>() != null)
-							serializableEntities++;
-					}
-
-					writer.Write(serializableEntities);
+					List<Entity> entitiesToSerialize = new List<Entity>();
+					//List<EntityLookup> entityLookups = new List<EntityLookup>();
 
 					foreach (Entity entity in entities)
 					{
 						if (entity.GetType().GetCustomAttribute<SerializableAttribute>() != null)
 						{
-							writer.Write(entity.Id);
-							writer.Write(entity.GetType().ToString());
-
-							ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
-							writer.Write(pos.X);
-							writer.Write(pos.Y);
-							writer.Write(pos.Z);
-
-							var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
-
-							if (meta != null)
-								writer.Write(meta.Version);
-
-							List<byte> data = new List<byte>();
-							entity.OnSave(data);
-
-							writer.Write(data.Count);
-
-							int chksum = 0;
-							for (int i = 0; i < data.Count; i++)
-								chksum += data[i];
-
-							writer.Write(chksum);
-
-							writer.Write(data.ToArray());
+							serializableEntities++;
+							entitiesToSerialize.Add(entity);
+							/*ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
+							entityLookups.Add(new EntityLookup()
+							{
+								cx = pos.X,
+								cy = pos.Y,
+								cz = pos.Z,
+								offset = 0
+							});*/
 						}
+					}
+
+					writer.Write(serializableEntities);
+
+					foreach (Entity entity in entitiesToSerialize)
+					{
+						writer.Write(entity.Id);
+						writer.Write(entity.GetType().ToString());
+
+						ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
+						writer.Write(pos.X);
+						writer.Write(pos.Y);
+						writer.Write(pos.Z);
+
+						var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
+
+						if (meta != null)
+							writer.Write(meta.Version);
+						else
+						{
+							Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
+								"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
+							writer.Write(-1);
+						}
+
+						List<byte> data = new List<byte>();
+						entity.OnSave(data);
+
+						writer.Write(data.Count);
+
+						int chksum = 0;
+						for (int i = 0; i < data.Count; i++)
+							chksum += data[i];
+
+						writer.Write(chksum);
+
+						writer.Write(data.ToArray());
 					}
 				}
 
@@ -232,6 +275,12 @@ namespace ViMG
 						int entChksum = reader.ReadInt32();
 
 						byte[] entData = reader.ReadBytes(entDataSize);
+
+						if (entData.Length != entDataSize)
+                        {
+							Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+							continue;
+						}
 
 						int chksum = 0;
 						for (int d = 0; d < entDataSize; d++)

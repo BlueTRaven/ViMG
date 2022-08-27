@@ -12,6 +12,9 @@ namespace ViMG.Entities
 		public World world;
 
 		public bool AlwaysRender;
+		public bool Active = true;				//An entity is INACTIVE when the chunk that contains it unloads.
+		public bool CanBecomeInactive = true;	//Certain entity types (bosses, etc) may wish to never become inactive.
+		public bool DestroyOnInactive = true;	//Most entity types will be destroyed upon becoming inactive by default.
 
 		private ulong id = 0;
 		public ulong Id => id;

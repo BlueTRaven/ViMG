@@ -9,17 +9,23 @@ using ViMG.Items;
 
 namespace ViMG.Entities
 {
+	[Serializable]
 	public class GlowNode : Entity, ICubeTracker
 	{
-		private readonly float radius;
-		private readonly float fade;
-		private readonly Color color;
+		private float radius;
+		private float fade;
+		private Color color;
 
 		private int light = -1;
 
 		private SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
 
 		public CubePosition TrackedPosition { get; private set; }
+
+		public GlowNode()
+        {
+
+        }
 
 		public GlowNode(CubePosition position, float radius, float fade, Color color)
 		{
@@ -30,7 +36,14 @@ namespace ViMG.Entities
 			this.color = color;
 		}
 
-		public override void Update(double deltaTime)
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			DestroyOnInactive = false;	//Don't destroy glow node upon becoming inactive. Otherwise we orphan the cube.
+        }
+
+        public override void Update(double deltaTime)
 		{
 			base.Update(deltaTime);
 
@@ -144,6 +157,30 @@ namespace ViMG.Entities
 		{
 			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
 			world.EntityManager.Remove(this);
+		}
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+			SaveHelper.SaveVector4(saveBytes, color.ToVector4());
+			SaveHelper.SaveFloat32(saveBytes, radius);
+			SaveHelper.SaveFloat32(saveBytes, fade);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+			int index = 0;
+			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			color = new Color(SaveHelper.LoadVector4(loadBytes, ref index));
+			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
+			fade = SaveHelper.LoadFloat32(loadBytes, ref index);
+
+			this.Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+
 		}
 	}
 }

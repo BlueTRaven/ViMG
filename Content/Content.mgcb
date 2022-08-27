@@ -3,7 +3,7 @@
 
 /outputDir:bin/$(Platform)
 /intermediateDir:obj/$(Platform)
-/platform:DesktopGL
+/platform:Windows
 /config:
 /profile:HiDef
 /compress:False
@@ -17,6 +17,7 @@
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
+/processorParam:Defines=
 /build:Effects/cube.fx
 
 #begin Effects/CubeEffect.fx
@@ -24,6 +25,18 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/CubeEffect.fx
+
+#begin Effects/debug_vpc.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/debug_vpc.fx
+
+#begin Effects/debug_vpt.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/debug_vpt.fx
 
 #begin Effects/depth.fx
 /importer:EffectImporter
@@ -36,6 +49,12 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/t.fx
+
+#begin Effects/vpctn.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/vpctn.fx
 
 #begin Fonts/fira_mono.spritefont
 /importer:FontDescriptionImporter

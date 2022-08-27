@@ -1,49 +1,58 @@
-#include "Macros.fxh"
+//#include "Macros.fxh"
 #include "platform_defines.fxh"
 
-sampler2D Texture : register(s0);
-sampler2D TextureHeightFogMapDay : register(s1);
-sampler2D TextureHeightFogMapNight : register(s2);
-sampler2D TextureLightDepth : register(s3);
+DECLARE_TEXTURE(Texture, 0);
+DECLARE_TEXTURE(TextureHeightFogMapDay, 1);
+DECLARE_TEXTURE(TextureHeightFogMapNight, 2);
+DECLARE_TEXTURE(TextureLightDepth, 3);
 
-matrix World;
-matrix View;
-matrix WorldNormal;
-matrix WorldViewProjection;
+cbuffer Whatever : register(b0) 
+{
 
-float3 TintColor;
+	float4x4 World;
+	float4x4 View;
+	float4x4 WorldNormal;
+	float4x4 WorldViewProjection;
 
-float3 WorldSize;
-float3 CubeSize;
-float2 MaxReachable;
+	float3 TintColor;
 
-float AOStrength;
-float AmbientStrength;
-float SpecularStrength;
+	float3 WorldSize;
+	float3 CubeSize;
+	float2 MaxReachable;
 
-matrix LightViewProjection;
-float3 LightPos;
-float3 LightColor;
+	float AOStrength;
+	float AmbientStrength;
+	float SpecularStrength;
 
-float3 CameraPos;
+	float4x4 LightViewProjection;
+	float3 LightPos;
+	float3 LightColor;
 
-float FogStart;
-float FogEnd;
-float HeightFogMapLerp;
+	float3 CameraPos;
 
-uint UseSourceRect;
-float2 SourceRectPos;
-float2 SourceRectFarPos;
-float2 TextureSize;
-float2 TexCoordOffset;
+	float FogStart;
+	float FogEnd;
+	float HeightFogMapLerp;
 
-uint EnableShadows;
-uint EnableFog;
+	bool UseSourceRect;
+	float2 SourceRectPos;
+	float2 SourceRectFarPos;
+	float2 TextureSize;
+	float2 TexCoordOffset;
 
-float3 LightsPosition[16];
-float LightsStart[16];
-float LightsEnd[16];
-float3 LightsColor[16];
+	bool EnableShadows;
+	bool EnableFog;
+}
+
+struct Light 
+{
+	float3 Position;
+	float Start;
+	float3 Color;
+	float End;
+};
+
+StructuredBuffer<Light> Lights : register(t4);
 
 struct VertexShaderInput
 {
@@ -56,7 +65,7 @@ struct VertexShaderInput
 
 struct VertexShaderOutput
 {
-	float4 Position : SV_POSITION;
+	float4 Position : SV_Position;
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
 	float3 PositionWS : TEXCOORD1;
@@ -92,9 +101,9 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	return output;
 }
 
-float4 MainPS(VertexShaderOutput input) : COLOR
+float4 MainPS(VertexShaderOutput input) : SV_Target
 {
-	float4 worldColor = tex2D(Texture, input.TexCoord) * input.Color;
+	float4 worldColor = SAMPLE_TEXTURE(Texture, input.TexCoord) * input.Color;
 
 	if (worldColor.a < 0.01)
 		discard;
@@ -116,28 +125,35 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
-	float closestLightStart;
-	float closestLightEnd;
-	float3 closestLightColor;
-	float closestDistance = 10000000;
+	//float closestLightStart;
+	//float closestLightEnd;
+	//float3 closestLightColor;
+	//float closestDistance = 10000000;
+	float3 sumLights = float3(0, 0, 0);
 	for (int i = 0; i < 16; i++)
 	{
-		if (length(LightsPosition[i] - input.PositionWS) < closestDistance)
+		float distance = length(Lights[i].Position - input.PositionWS);
+		
+		float lightFactor = 1 - ((distance - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
+		lightFactor = clamp(lightFactor, 0, 1);
+		sumLights += Lights[i].Color * lightFactor;
+		/*if (length(Lights[i].Position - input.PositionWS) < closestDistance)
 		{
-			closestLightStart = LightsStart[i];
-			closestLightEnd = LightsEnd[i];
-			closestLightColor = LightsColor[i];
-			closestDistance = length(LightsPosition[i] - input.PositionWS);
-		}
+			closestLightStart = Lights[i].Start;
+			closestLightEnd = Lights[i].End;
+			closestLightColor = Lights[i].Color;
+			closestDistance = length(Lights[i].Position - input.PositionWS);
+		}*/
 	}
 	
-	float lightFactor = 1 - ((closestDistance - closestLightStart) / (closestLightEnd - closestLightStart));
-	lightFactor = clamp(lightFactor, 0, 1);
+	//float lightFactor = 1 - ((closestDistance - closestLightStart) / (closestLightEnd - closestLightStart));
+	//lightFactor = clamp(lightFactor, 0, 1);
 
 	//ambient
 	float3 ambientColor = LightColor * AmbientStrength;
 
-	ambientColor = lerp(ambientColor, closestLightColor, lightFactor);
+	ambientColor += sumLights;
+	ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
 	
 	//diffuse
 	float diffDotToCam = max(dot(norm, lightDir), 0.0);
@@ -159,8 +175,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	{
 		float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));
 		percent = clamp(percent, 0, 1);
-		float4 worldHeightColorDay = tex2D(TextureHeightFogMapDay, float2(0, percent));
-		float4 worldHeightColorNight = tex2D(TextureHeightFogMapNight, float2(0, percent));
+		float4 worldHeightColorDay = SAMPLE_TEXTURE(TextureHeightFogMapDay, float2(0, percent));
+		float4 worldHeightColorNight = SAMPLE_TEXTURE(TextureHeightFogMapNight, float2(0, percent));
 
 		float4 lerpedColor = lerp(worldHeightColorDay, worldHeightColorNight, HeightFogMapLerp);
 		
@@ -182,7 +198,7 @@ float Shadow(float4 positionLS, float3 normal, float3 lightDir)
 	
 	projCoords = projCoords * 0.5 + 0.5;
 	
-	float closestDepth = 1- tex2D(TextureLightDepth, float2(projCoords.x, 1 - projCoords.y)).r;
+	float closestDepth = 1- SAMPLE_TEXTURE(TextureLightDepth, float2(projCoords.x, 1 - projCoords.y)).r;
 	
 	float currentDepth = projCoords.z;
 	
@@ -200,7 +216,7 @@ technique BasicColorDrawing
 {
 	pass P0
 	{
-		VertexShader = compile VS_SHADERMODEL MainVS();
-		PixelShader = compile PS_SHADERMODEL MainPS();
+		VertexShader = compile vs_5_0 MainVS();
+		PixelShader = compile ps_5_0 MainPS();
 	}
 };

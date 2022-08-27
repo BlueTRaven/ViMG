@@ -124,11 +124,12 @@ namespace ViMG.Entities
 			toDeleteLater.Clear();
 		}
 
+		private IReadOnlyList<Entity> emptyList = new List<Entity>();
 		public IReadOnlyList<Entity> GetAll<T>() where T : Entity
 		{
 			if (entitiesByType.ContainsKey(typeof(T)))
 				return entitiesByType[typeof(T)];
-			else return null;
+			else return emptyList;
 		}
 
 		public IReadOnlyList<Entity> GetEntities()

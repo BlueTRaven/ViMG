@@ -53,16 +53,6 @@ namespace ViMG
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			
-			foreach (ChunkPosition pos in unloadChunks)
-			{
-				if (!loadedChunks.Contains(pos))
-					throw new Exception("???");
-
-				//saver.SaveOne(pos);
-				manager.Unload(pos);
-				loadedChunks.Remove(pos);
-			}
-
 			for (int x = -radiusH; x <= radiusH; x++)
 			{
 				for (int y = -radiusV; y <= radiusV; y++)
@@ -70,8 +60,15 @@ namespace ViMG
 					for (int z = -radiusH; z < radiusH; z++)
 					{
 						var pos = baseChunkPos + new ChunkPosition(x, y, z);
-						if (manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
+
+						Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
+						Vector3 dist = new Vector3(pos.X, pos.Y, pos.Z) - new Vector3(baseChunkPos.X, baseChunkPos.Y, baseChunkPos.Z);
+
+						//float len = dist.Length();
+
+						if (distH.Length() < radiusH && manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
 						{
+							manager.MarkDirty(pos, false);
 							//saver.LoadOne(pos);
 							loadedChunks.Add(pos);
 						}
@@ -81,12 +78,22 @@ namespace ViMG
 
 			foreach (ChunkPosition pos in loadedChunks)
 			{
-				Vector3 dist = new Vector3(pos.X, pos.Y, pos.Z) - new Vector3(baseChunkPos.X, baseChunkPos.Y, baseChunkPos.Z);
+				Vector2 dist = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
 
 				float len = dist.Length();
 
 				if (len > unloadRadius)
 					unloadChunks.Add(pos);
+			}
+
+			foreach (ChunkPosition pos in unloadChunks)
+			{
+				if (!loadedChunks.Contains(pos))
+					throw new Exception("???");
+
+				//saver.SaveOne(pos);
+				manager.UnloadMesh(pos);
+				loadedChunks.Remove(pos);
 			}
 
 			unloadChunks.Clear();

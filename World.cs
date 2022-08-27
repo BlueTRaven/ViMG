@@ -66,7 +66,7 @@ namespace ViMG
 
 		private WorldSaver saver;
 
-		private ChunkLoadManager chunkLoadManager;
+		public ChunkLoadManager ChunkLoadManager;
 
 		public World(GraphicsDevice device, int worldSize)
 		{
@@ -254,6 +254,8 @@ namespace ViMG
 			}
 
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
+
+			ChunkLoadManager = new ChunkLoadManager(saver, chunkManager, 6, 6, 8);
 		}
 
 		public void UnfixedUpdate()
@@ -277,6 +279,7 @@ namespace ViMG
 			//saver.ProcessLoadQueue(this);
 
 			chunkManager.ProcessChunkQueue(this, 0);
+			ChunkLoadManager.Update(deltaTime);
 
 			ProjectileManager.Update(this, deltaTime);
 			EntityManager.Update(deltaTime);
@@ -436,13 +439,13 @@ namespace ViMG
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
 			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			Main.CubeEffect.Parameters["EnableFog"].SetValue(0);
+			Main.CubeEffect.Parameters["EnableFog"].SetValue(false);
 			float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 			meshSun.Draw(device, Main.CubeEffect, 
 				Matrix.CreateTranslation(new Vector3(0, 0, -DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE + Cube.CUBE_SCALE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				Matrix.CreateTranslation(player.Position));
-			Main.CubeEffect.Parameters["EnableFog"].SetValue(1);
+			Main.CubeEffect.Parameters["EnableFog"].SetValue(true);
 
 			foreach (var mined in miningCubes)
 			{
@@ -488,10 +491,10 @@ namespace ViMG
 		{
 			if (!Main.ENABLE_SHADOWS)
 			{
-				Main.CubeEffect.Parameters["EnableShadows"].SetValue(0);
+				Main.CubeEffect.Parameters["EnableShadows"].SetValue(false);
 				return;
 			}
-			else Main.CubeEffect.Parameters["EnableShadows"].SetValue(1);
+			else Main.CubeEffect.Parameters["EnableShadows"].SetValue(true);
 
 			device.SetRenderTarget(Main.DepthTarget);
 
@@ -543,28 +546,29 @@ namespace ViMG
 		{
 			device.RasterizerState = Main.wireframeRS;
 
-			if (color.HasValue)
+			/*if (color.HasValue)
 			{
 				Main.BasicEffect.DiffuseColor = color.Value.ToVector3();
-			}
-			meshWireframeCube.Draw(device, Main.BasicEffect, position, Vector3.Zero, Vector3.One);
-			if (color.HasValue)
+			}*/
+			meshWireframeCube.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position));
+			/*if (color.HasValue)
 			{
 				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
-			}
+			}*/
 		}
 
 		public void DrawWireframeUnscaled(GraphicsDevice device, Vector3 position, Vector3 scale, Color? color = null)
 		{
-			if (color.HasValue)
+			/*if (color.HasValue)
 			{
 				Main.BasicEffect.DiffuseColor = color.Value.ToVector3();
-			}
-			meshWireframeUnscaled.Draw(device, Main.BasicEffect, Matrix.CreateScale(scale) * Matrix.CreateTranslation(position));
-			if (color.HasValue)
+			}*/
+			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position) * Matrix.CreateScale(scale));
+			//meshWireframeUnscaled.Draw(device, Main.VertexPositionColorDebugEffect, Matrix.CreateScale(scale) * Matrix.CreateTranslation(position));
+			/*if (color.HasValue)
 			{
 				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
-			}
+			}*/
 		}
 
 		public void DrawWireframeUnscaled(GraphicsDevice device, Rectangle3D bounds, Color? color = null)

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31005.135
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViMG3", "ViMG3.csproj", "{172B53B9-824D-4B4D-8502-737CC0A6FC16}"
 EndProject
@@ -9,9 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrAssetsManager", "BrUtilit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrUtility", "BrUtility\BrUtility\BrUtility.csproj", "{8C9D918A-04F3-4C23-BD50-7F25684C67A1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.DesktopGL", "..\..\..\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj", "{D2200198-E0F1-499F-A12E-72E468650769}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrNineSlice", "BrUtility\BrNineSlice\BrNineSlice.csproj", "{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.WindowsDX", "MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj", "{EA24C086-066A-4A64-8BED-4DB102F2B00C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +31,14 @@ Global
 		{8C9D918A-04F3-4C23-BD50-7F25684C67A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C9D918A-04F3-4C23-BD50-7F25684C67A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C9D918A-04F3-4C23-BD50-7F25684C67A1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2200198-E0F1-499F-A12E-72E468650769}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2200198-E0F1-499F-A12E-72E468650769}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2200198-E0F1-499F-A12E-72E468650769}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2200198-E0F1-499F-A12E-72E468650769}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CC78C9D-8EC7-43C2-B9F2-985F8C66FAA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA24C086-066A-4A64-8BED-4DB102F2B00C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA24C086-066A-4A64-8BED-4DB102F2B00C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA24C086-066A-4A64-8BED-4DB102F2B00C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA24C086-066A-4A64-8BED-4DB102F2B00C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

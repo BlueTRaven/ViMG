@@ -145,7 +145,8 @@ namespace ViMG
 				mesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(CHUNK_SIZE) * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			}
 
-			mesh.Draw(device, Main.BasicEffect, new Vector3(position.X, position.Y, position.Z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One);
+			var mvp = Transform.FromTRS(new Vector3(position.X, position.Y, position.Z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One) * Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+			mesh.Draw(device, Main.VertexPositionColorDebugEffect, mvp);
 		}
 	}
 }

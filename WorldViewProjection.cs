@@ -37,6 +37,21 @@ namespace ViMG
 			isProjDirty = true;
 		}
 
+		public Matrix GetWorld()
+        {
+			return world;
+        }
+
+		public Matrix GetView()
+        {
+			return view;
+        }
+
+		public Matrix GetProjection()
+        {
+			return projection;
+        }
+
 		public Matrix Get()
 		{
 			if (isWorldDirty || isViewDirty || isProjDirty)

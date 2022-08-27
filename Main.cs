@@ -24,6 +24,8 @@ namespace ViMG
 		public const float FAR = 5000f;
 
 		public static BasicEffect BasicEffect;
+		public static Effect VertexPositionColorDebugEffect;
+		public static Effect VertexPositionTextureDebugEffect;
 		public static Effect CubeEffect;
 
 		private World world;
@@ -108,6 +110,7 @@ namespace ViMG
 			BasicEffect = new BasicEffect(GraphicsDevice);
 			BasicEffect.Projection = camera.GetProjectionMatrix();
 			BasicEffect.TextureEnabled = true;
+			BasicEffect.VertexColorEnabled = true;
 
 			genericDSS = new DepthStencilState()
 			{
@@ -174,10 +177,10 @@ namespace ViMG
 			
 			base.Initialize();
 
-			DepthTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 4, RenderTargetUsage.PreserveContents);
+			DepthTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			//GraphicsDevice.SetRenderTarget(WorldTarget);
-
+			
 			Registry = new RegistryService();
 			Registry.Register();
 
@@ -199,7 +202,14 @@ namespace ViMG
 			//CubeEffect.Parameters["SpecularStrength"].SetValue(0.5f);
 			CubeEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
 			CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			CubeEffect.Parameters["EnableFog"].SetValue(1);
+			CubeEffect.Parameters["EnableFog"].SetValue(true);
+
+			VertexPositionColorDebugEffect = assetsManager.GetAsset<Effect>("debug_vpc");
+			VertexPositionColorDebugEffect.Name = "VertexPositionColorDebugEffect";
+			VertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
+			VertexPositionTextureDebugEffect = assetsManager.GetAsset<Effect>("debug_vpt");
+			VertexPositionTextureDebugEffect.Name = "VertexPositionTextureDebugEffect";
+			VertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
 
 			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 			LightManager.SetToEffect(CubeEffect);

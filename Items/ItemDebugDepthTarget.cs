@@ -13,6 +13,9 @@ namespace ViMG.Items
 		private static SimpleMesh<VertexPositionTexture, int> depthMesh;
 		public ItemDebugDepthTarget() : base("debug_depth_target", Main.DepthTarget, new BrUtility.RectangleF(0, 0, Main.DepthTarget.Width, Main.DepthTarget.Height))
 		{
+			name = "SHADOW DEPTH RENDERER";
+			description = "Renders the depth buffer into your very hands.\n" +
+				"Shadows are " + (Main.ENABLE_SHADOWS ? "enabled" : "disabled") + ".";
 		}
 
 		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
@@ -22,7 +25,7 @@ namespace ViMG.Items
 			if (depthMesh == null)
 				MakeMesh(device);
 
-			depthMesh.Draw(device, Main.BasicEffect, transform, Texture);
+			depthMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, transform);
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
@@ -33,7 +36,7 @@ namespace ViMG.Items
 		private void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE * Main.AspectRatio, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			Vector3 max = new Vector3(Texture.Width / Cube.CUBE_SCALE, Texture.Height / Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);
@@ -74,7 +77,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionTexture(d, dtx));
 			vertices.Add(new VertexPositionTexture(c, ctx));
 
-			depthMesh = new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices);
+			depthMesh = new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, Texture);
 		}
 	}
 }

@@ -16,6 +16,17 @@ namespace ViMG
 		private VertexBuffer vbo;
 		private IndexBuffer ibo;
 
+		private string name;
+		public string Name 
+		{
+			get { return name; }
+			set
+            {
+				name = value;
+				vbo.Name = name + " vbo";
+				ibo.Name = name + " ibo";
+            }
+		}
 		//private int vertexCount;
 		public int VertexCount => vbo.VertexCount;
 		//private int indexCount;
@@ -154,14 +165,49 @@ namespace ViMG
 			{
 				RectangleF rect = sourceRectangle.Value;
 
-				effect.Parameters["UseSourceRect"].SetValue(1);
+				effect.Parameters["UseSourceRect"].SetValue(true);
 				effect.Parameters["SourceRectPos"].SetValue(rect.Position);
 				effect.Parameters["SourceRectFarPos"].SetValue(rect.FarPosition);
 				effect.Parameters["TextureSize"].SetValue(new Vector2(useTexture.Width, useTexture.Height));
 			}
-			else effect.Parameters["UseSourceRect"].SetValue(0);
+			else effect.Parameters["UseSourceRect"].SetValue(false);
 
 			foreach (var pass in effect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexCount / 3);
+			}
+		}
+
+		public virtual void DrawDebugVertexPositionColor(GraphicsDevice device, Effect vertexPositionColorDebugEffect, Color color, Matrix transform)
+        {
+			if (!Use(device))
+				return;
+
+			Main.WVP.SetWorld(transform);
+
+			vertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector4());
+			vertexPositionColorDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+
+			foreach (var pass in vertexPositionColorDebugEffect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexCount / 3);
+			}
+		}
+
+		public virtual void DrawDebugVertexPositionTexture(GraphicsDevice device, Effect vertexPositionTextureDebugEffect, Color diffuseColor, Matrix transform)
+        {
+			if (!Use(device))
+				return;
+
+			Main.WVP.SetWorld(transform);
+
+			vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
+			vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(this.texture);
+
+			foreach (var pass in vertexPositionTextureDebugEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexCount / 3);

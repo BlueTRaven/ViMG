@@ -18,7 +18,7 @@ namespace ViMG
 			if (axesMesh == null)
 				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), Main.assetsManager.GetAsset<Texture2D>("axes"));
 
-			axesMesh.Draw(device, Main.BasicEffect, position, Vector3.Zero, Vector3.One);
+			axesMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, Transform.FromTRS(position, Vector3.Zero, Vector3.One));
 		}
 
 		public static SimpleMesh<VertexPositionTexture, int> MakeAxes(GraphicsDevice device, Vector3 min, Vector3 max, Texture2D texture)
@@ -84,17 +84,20 @@ namespace ViMG
 			vertices.Add(new VertexPositionTexture(l_t_n, new Vector2(0.5f, 1f)));
 		}
 
+		[Obsolete]
 		public static void DrawCubeImmediate(GraphicsDevice device, Vector3 position, Vector3 size, Color color, Matrix? matrix = null)
 		{
 			Main.BasicEffect.DiffuseColor = color.ToVector3();
+			var mvp = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 			var mesh = MeshHelper.MakeCubeVertexPositionColor(device, position, position + size, MeshHelper.CubeFace.ALL, color, DrawHelper.WhitePixel);
 
 			if (matrix.HasValue)
 				mesh.Draw(device, Main.BasicEffect, matrix.Value);
-			else mesh.Draw(device, Main.BasicEffect, Vector3.Zero, Vector3.Zero, Vector3.One);
+			else mesh.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, Matrix.Identity);
 			Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
 		}
 
+		[Obsolete]
 		public static void DrawQuadImmediate(GraphicsDevice device, Vector3 min, Vector3 max, Color color)
 		{
 			List<VertexPositionColor> vertices = new List<VertexPositionColor>();
@@ -120,9 +123,10 @@ namespace ViMG
 
 			//MeshHelper.MakeQuadVertsVertexPositionColor(a, b, c, d, color, vertices, indices);
 
-			new SimpleMesh<VertexPositionColor, int>(device, vertices, indices).Draw(device, Main.BasicEffect, Matrix.CreateScale(1));
+			new SimpleMesh<VertexPositionColor, int>(device, vertices, indices).DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, Matrix.Identity);
 		}
 
+		[Obsolete]
 		public static void DrawTexturedQuadImmediate(GraphicsDevice device, Vector3 min, Vector3 max, Matrix transform, Texture2D texture)
 		{
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
@@ -135,7 +139,7 @@ namespace ViMG
 
 			MeshHelper.MakeQuadVertsVertexPositionTexture(a, b, c, d, new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), vertices, indices);
 
-			new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, texture).Draw(device, Main.BasicEffect, transform);
+			new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, texture).DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, transform);
 		}
 	}
 }

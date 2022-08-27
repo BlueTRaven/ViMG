@@ -10,7 +10,35 @@ namespace ViMG
 	{
 		private const int MAX_LIGHTS = 16;
 
-		private readonly struct Light
+		private StructuredBuffer structuredBuffer;
+		private int version;
+		private int lastUploadedVersion;
+
+		public readonly struct Data
+        {
+			public readonly Vector3 position;
+			public readonly float start;
+			public readonly Vector3 color;
+			public readonly float end;
+
+			public Data(Vector3 position, float start, float end, Vector3 color)
+            {
+				this.position = position;
+				this.start = start;
+				this.end = end;
+				this.color = color;
+			}
+
+			public Data(Light light)
+            {
+				this.position = light.position;
+				this.start = light.start;
+				this.end = light.end;
+				this.color = light.color.ToVector3();
+			}
+		}
+
+		public readonly struct Light
 		{
 			public readonly Vector3 position;
 			public readonly float start;
@@ -33,11 +61,7 @@ namespace ViMG
 		}
 
 		private Light[] lights = new Light[MAX_LIGHTS];
-
-		private Vector3[] positions = new Vector3[16] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
-		private float[] starts = new float[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		private float[] ends = new float[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		private Vector3[] colors = new Vector3[16] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, };
+		private Data[] datas = new Data[MAX_LIGHTS];
 
 		public int MakeLight(Vector3 position, float start, float end, Color color)
 		{
@@ -47,6 +71,7 @@ namespace ViMG
 				{
 					lights[i] = new Light(position, start, end, color, i);
 
+					version++;
 					return i;
 				}
 			}
@@ -57,23 +82,30 @@ namespace ViMG
 		public void KillLight(int index)
 		{
 			if (lights[index].active)
+			{
 				lights[index] = new Light();
+				version++;
+			}
 		}
 
 		public void SetToEffect(Effect effect)
 		{
-			for (int i = 0; i < MAX_LIGHTS; i++)
-			{
-				positions[i] = lights[i].position;
-				starts[i] = lights[i].start;
-				ends[i] = lights[i].end;
-				colors[i] = lights[i].color.ToVector3();
-			}
+			if (structuredBuffer == null)
+				structuredBuffer = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS, BufferUsage.WriteOnly, ShaderAccess.Read);
 
-			effect.Parameters["LightsPosition"].SetValue(positions);
-			effect.Parameters["LightsStart"].SetValue(starts);
-			effect.Parameters["LightsEnd"].SetValue(ends);
-			effect.Parameters["LightsColor"].SetValue(colors);
+			if (version != lastUploadedVersion)
+			{
+				lastUploadedVersion = version;
+
+				for (int i = 0; i < MAX_LIGHTS; i++)
+				{
+					datas[i] = new Data(lights[i]);
+				}
+
+				structuredBuffer.SetData(datas);
+
+				effect.Parameters["Lights"].SetValue(structuredBuffer);
+			}
 		}
 	}
 }
