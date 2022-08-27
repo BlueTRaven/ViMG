@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using ViMG.Entities;
 
@@ -22,26 +23,36 @@ namespace ViMG
 		private readonly ChunkManager chunkManager;
 		private readonly EntityManager entityManager;
 
+		private Dictionary<ChunkPosition, EntityLookup> lookups = new Dictionary<ChunkPosition, EntityLookup>();
+
 		private struct EntityLookup
         {
 			public int cx, cy, cz;
-			public int offset;
+			public ulong offset;
+			public int size;
+
+			public const int SIZE = 4 + 4 + 4 + 8;
 
 			public void Serialize(List<byte> saveBytes)
             {
 				SaveHelper.SaveInt32(saveBytes, cx);
 				SaveHelper.SaveInt32(saveBytes, cy);
 				SaveHelper.SaveInt32(saveBytes, cy);
-				SaveHelper.SaveInt32(saveBytes, offset);
+				SaveHelper.SaveUInt64(saveBytes, offset);
+
+				SaveHelper.SaveInt32(saveBytes, size);
 			}
 
-			public void Deserialize(byte[] loadBytes)
+			public void Deserialize(byte[] loadBytes, int version)
             {
 				int index = 0;
 				cx = SaveHelper.LoadInt32(loadBytes, ref index);
 				cy = SaveHelper.LoadInt32(loadBytes, ref index);
 				cz = SaveHelper.LoadInt32(loadBytes, ref index);
-				offset = SaveHelper.LoadInt32(loadBytes, ref index);
+				offset = SaveHelper.LoadUInt64(loadBytes, ref index);
+
+				if (version >= 4)
+					size = SaveHelper.LoadInt32(loadBytes, ref index);
 			}
         }
 
@@ -151,25 +162,30 @@ namespace ViMG
 
 		private void SaveEntities()
 		{
-			//v: version (int) overall version of the entity file
-			//emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
-			//c: count of entities
-			//et: entity lookup table
-			//  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
-			//  o: offset into entity data block
+			//h: header block
+			//	v: version (int) overall version of the entity file
+			//	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
+			//  c: count of entities
+			//	et: entity lookup table 
+			//    note that the count of entities will correspond to the number of lookups here, so there's no need to save that again.
+			//	  lookup table is statically sized.
+			//	  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+			//    o: offset into entity data block
 			//e: entity data block
-			//	i: entity id (int) (index in saved entity array)
-			//	t: type id (int)
-			//	cx, cy, cz: chunk x, y, z (int each) (position in chunks)
-			//	v: version (int)
+			//  h: header block
+			//    s: header size (int) includes data
+			//	  i: entity id (int) (index in saved entity array)
+			//	  t: type id (int)
+			//	  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+			//	  v: version (int)
 			//	s: size (int)
 			//	ck: chksum (int)
-			//	d: data (variable)
+			//	d: data block
 			using (MemoryStream ms = new MemoryStream())
 			{
 				using (BinaryWriter writer = new BinaryWriter(ms, Encoding.ASCII, true))
 				{
-					writer.Write(1);    //version
+					writer.Write(4);    //version
 					writer.Write(entityManager.GetUniqueId());
 
 					var entities = entityManager.GetEntities();
@@ -177,7 +193,7 @@ namespace ViMG
 					int serializableEntities = 0;
 
 					List<Entity> entitiesToSerialize = new List<Entity>();
-					//List<EntityLookup> entityLookups = new List<EntityLookup>();
+					List<EntityLookup> entityLookups = new List<EntityLookup>();
 
 					foreach (Entity entity in entities)
 					{
@@ -185,53 +201,82 @@ namespace ViMG
 						{
 							serializableEntities++;
 							entitiesToSerialize.Add(entity);
-							/*ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
-							entityLookups.Add(new EntityLookup()
-							{
-								cx = pos.X,
-								cy = pos.Y,
-								cz = pos.Z,
-								offset = 0
-							});*/
 						}
 					}
 
-					writer.Write(serializableEntities);
+					//Contains all entities' data.
+					List<byte> entityDataBlock = new List<byte>();
 
 					foreach (Entity entity in entitiesToSerialize)
 					{
-						writer.Write(entity.Id);
-						writer.Write(entity.GetType().ToString());
-
 						ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
-						writer.Write(pos.X);
-						writer.Write(pos.Y);
-						writer.Write(pos.Z);
+						entityLookups.Add(new EntityLookup()
+						{
+							cx = pos.X,
+							cy = pos.Y,
+							cz = pos.Z,
+							offset = (ulong)writer.BaseStream.Position + (ulong)entityDataBlock.Count
+						}); 
+
+						List<byte> entityDataBlockHeader = new List<byte>();
+
+						SaveHelper.SaveUInt64(entityDataBlockHeader, entity.Id);
+						//writer.Write(entity.Id);
+						SaveHelper.SaveString(entityDataBlockHeader, entity.GetType().ToString());
+						//writer.Write(entity.GetType().ToString());
+
+						//writer.Write(pos.X);
+						//writer.Write(pos.Y);
+						//writer.Write(pos.Z);
+						SaveHelper.SaveInt32(entityDataBlockHeader, pos.X);
+						SaveHelper.SaveInt32(entityDataBlockHeader, pos.Y);
+						SaveHelper.SaveInt32(entityDataBlockHeader, pos.Z);
 
 						var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
 
 						if (meta != null)
-							writer.Write(meta.Version);
+							SaveHelper.SaveInt32(entityDataBlockHeader, meta.Version);
+						//writer.Write(meta.Version);
 						else
 						{
 							Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
 								"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
-							writer.Write(-1);
+							SaveHelper.SaveInt32(entityDataBlockHeader, -1);
+							//writer.Write(-1);
 						}
 
-						List<byte> data = new List<byte>();
-						entity.OnSave(data);
+						List<byte> entityDataBlockData = new List<byte>();
+						entity.OnSave(entityDataBlockData);
 
-						writer.Write(data.Count);
+						SaveHelper.SaveInt32(entityDataBlockHeader, entityDataBlockData.Count);
+						//writer.Write(data.Count);
 
 						int chksum = 0;
-						for (int i = 0; i < data.Count; i++)
-							chksum += data[i];
+						for (int i = 0; i < entityDataBlockData.Count; i++)
+							chksum += entityDataBlockData[i];
 
-						writer.Write(chksum);
+						SaveHelper.SaveInt32(entityDataBlockHeader, chksum);
+						//writer.Write(chksum);
 
-						writer.Write(data.ToArray());
+						SaveHelper.SaveBytesFlat(entityDataBlockHeader, entityDataBlockData);
+						//writer.Write(data.ToArray());
+
+						SaveHelper.SaveInt32(entityDataBlock, entityDataBlockHeader.Count);
+						SaveHelper.SaveBytesFlat(entityDataBlock, entityDataBlockHeader);
+						//writer.Write(dataHeader.Count);	//v2
+						//writer.Write(dataHeader.ToArray());
 					}
+
+					writer.Write(serializableEntities);
+
+					List<byte> lookupBlock = new List<byte>();
+					foreach (EntityLookup lookup in entityLookups)
+                    {
+						lookup.Serialize(lookupBlock);
+                    }
+
+					writer.Write(lookupBlock.ToArray());
+					writer.Write(entityDataBlock.ToArray());
 				}
 
 				using (FileStream fs = new FileStream("./" + FILE_NAME_ENTITIES, FileMode.OpenOrCreate, FileAccess.Write))
@@ -243,6 +288,10 @@ namespace ViMG
 
 		private void LoadEntities(EntityManager entityManager)
 		{
+			//In case of failure, keep old lookups.
+			Dictionary<ChunkPosition, EntityLookup> oldLookups = lookups;
+			lookups = new Dictionary<ChunkPosition, EntityLookup>();
+
 			Console.WriteLine("Loading Entities...");
 
 			if (!File.Exists("./" + FILE_NAME_ENTITIES))
@@ -261,41 +310,98 @@ namespace ViMG
 
 					int num = reader.ReadInt32();
 
-					for (int i = 0; i < num; i++)
-					{
-						ulong entId = reader.ReadUInt64();
-						string entType = reader.ReadString();
-
-						int cx = reader.ReadInt32();
-						int cy = reader.ReadInt32();
-						int cz = reader.ReadInt32();
-
-						int entVersion = reader.ReadInt32();
-						int entDataSize = reader.ReadInt32();
-						int entChksum = reader.ReadInt32();
-
-						byte[] entData = reader.ReadBytes(entDataSize);
-
-						if (entData.Length != entDataSize)
+					if (version == 2 || version == 3)
+                    {
+						if (version == 3)
                         {
-							Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
-							continue;
+							//create lookup table
+							EntityLookup lookup = new EntityLookup();
+							lookup.Deserialize(reader.ReadBytes(num * EntityLookup.SIZE), version);
+							lookups.Add(new ChunkPosition(lookup.cx, lookup.cy, lookup.cz), lookup);
 						}
 
-						int chksum = 0;
-						for (int d = 0; d < entDataSize; d++)
-							chksum += entData[d];
 
-						if (entChksum != chksum)
-						{
-							Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+						for (int i = 0; i < num; i++)
+                        {
+							int headerSize = reader.ReadInt32();
+							byte[] bytes = reader.ReadBytes(headerSize);
+
+							int index = 0;
+							ulong entId = SaveHelper.LoadUInt64(bytes, ref index);
+							string entType = SaveHelper.LoadString(bytes, ref index);
+
+							int cx = SaveHelper.LoadInt32(bytes, ref index);
+							int cy = SaveHelper.LoadInt32(bytes, ref index);
+							int cz = SaveHelper.LoadInt32(bytes, ref index);
+
+							int entVersion = SaveHelper.LoadInt32(bytes, ref index);
+							int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
+							int entChksum = SaveHelper.LoadInt32(bytes, ref index);
+
+							byte[] entData = bytes[index..];
+
+							if (entData.Length != entDataSize)
+							{
+								Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+								continue;
+							}
+
+							int chksum = 0;
+							for (int d = 0; d < entDataSize; d++)
+								chksum += entData[d];
+
+							if (entChksum != chksum)
+							{
+								Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+							}
+							else
+							{
+								Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
+								ent.OnLoad(entData, entVersion);
+
+								entityManager.ForceAdd(ent, entId);
+							}
 						}
-						else
-						{
-							Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
-							ent.OnLoad(entData, entVersion);
+                    }
 
-							entityManager.ForceAdd(ent, entId);
+					if (version == 1)
+					{
+						for (int i = 0; i < num; i++)
+						{
+							ulong entId = reader.ReadUInt64();
+							string entType = reader.ReadString();
+
+							int cx = reader.ReadInt32();
+							int cy = reader.ReadInt32();
+							int cz = reader.ReadInt32();
+
+							int entVersion = reader.ReadInt32();
+							int entDataSize = reader.ReadInt32();
+							int entChksum = reader.ReadInt32();
+
+							byte[] entData = reader.ReadBytes(entDataSize);
+
+							if (entData.Length != entDataSize)
+							{
+								Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+								continue;
+							}
+
+							int chksum = 0;
+							for (int d = 0; d < entDataSize; d++)
+								chksum += entData[d];
+
+							if (entChksum != chksum)
+							{
+								Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+							}
+							else
+							{
+								Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
+								ent.OnLoad(entData, entVersion);
+
+								entityManager.ForceAdd(ent, entId);
+							}
 						}
 					}
 				}

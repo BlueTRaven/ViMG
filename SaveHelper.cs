@@ -38,6 +38,12 @@ namespace ViMG
 			data.Add(fourth);
 		}
 
+		public static void SaveUInt64(List<byte> data, ulong i)
+        {
+			SaveInt32(data, (int)(i & (ulong)(4294967295)));
+			SaveInt32(data, (int)((i & (ulong)(4294967295 << 32)) >> 32));
+		}
+
 		public static void SaveFloat32(List<byte> data, float f)
 		{
 			byte[] bytes = BitConverter.GetBytes(f);
@@ -62,6 +68,16 @@ namespace ViMG
 			SaveFloat32(data, vec.Z);
 			SaveFloat32(data, vec.W);
 		}
+
+		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from data2 into data1.
+		//This doesn't need a load variation.
+		public static void SaveBytesFlat(List<byte> data1, List<byte> data2)
+        {
+			for (int i = 0; i < data2.Count; i++)
+            {
+				data1.Add(data2[i]);
+            }
+        }
 
 		public static void SaveCubePosition(List<byte> data, CubePosition position, Chunk chunk = null)
 		{
@@ -111,6 +127,16 @@ namespace ViMG
 			int fourth = data[index++] << 24;
 
 			return first | second | third | fourth;
+		}
+
+		public static ulong LoadUInt64(byte[] data, ref int index)
+		{
+			unchecked
+			{
+				ulong first = (ulong)LoadInt32(data, ref index);
+				ulong second = (ulong)LoadInt32(data, ref index) << 32;
+				return first | second;
+			}
 		}
 
 		public static float LoadFloat32(byte[] data, ref int index)
