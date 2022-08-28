@@ -12,6 +12,18 @@ namespace ViMG
 {
 	public class WorldSaver
 	{
+		//To Save:
+		//Check list of unsaved chunks. (This should be any chunk that has been modified.)
+		//Save them??
+
+		//To Save Entities:
+		//Save should give a list of all chunks being saved.
+		//Determine which entities live in these chunks
+		//Serialize them to bytes
+		//Write header
+		//Write all already saved entities
+		//Write newly saved entities
+
 		public const string FILE_NAME_CHUNK = "world_chunks.vis";
 		public const string FILE_NAME_ENTITIES = "world_entities.vis";
 
@@ -24,6 +36,7 @@ namespace ViMG
 		private readonly EntityManager entityManager;
 
 		private Dictionary<ChunkPosition, List<EntityLookup>> lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
+		private Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
 
 		private struct EntityLookup
 		{
@@ -56,7 +69,72 @@ namespace ViMG
 			}
 		}
 
-		public enum LoadError
+		//The goal with entity data is to have saved data stored in memory so it can be quickly deserialized, without taking up the whole space in RAM.
+		//Essentially: we don't want to load all entities at once, as they may be in chunks that are currently unloaded. 
+		//Therefore we keep them in a serialized state so that when the chunk they belong to loads, it will also load the entities associated with it.
+		private struct EntityData
+		{
+			public ulong id;
+			public string type;
+			public ChunkPosition position;
+			public int version;
+			public int size;
+			public int chksum;
+
+			public byte[] data;
+
+            public EntityData(Entity entity)
+            {
+				List<byte> entityDataBlockData = new List<byte>();
+				entity.OnSave(entityDataBlockData);
+
+				position = ChunkPosition.WorldSpaceChunk(entity.Position);
+
+				List<byte> dataBlock = new List<byte>();
+
+				List<byte> headerBlock = new List<byte>();
+
+				SaveHelper.SaveUInt64(headerBlock, entity.Id);
+				id = entity.Id;
+				SaveHelper.SaveString(headerBlock, entity.GetType().ToString());
+				type = entity.GetType().ToString();
+
+				SaveHelper.SaveInt32(headerBlock, position.X);
+				SaveHelper.SaveInt32(headerBlock, position.Y);
+				SaveHelper.SaveInt32(headerBlock, position.Z);
+
+				var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
+
+				if (meta != null)
+				{
+					SaveHelper.SaveInt32(headerBlock, meta.Version);
+					version = meta.Version;
+				}
+				else
+				{
+					Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
+						"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
+					SaveHelper.SaveInt32(headerBlock, -1);
+					version = -1;
+				}
+
+				SaveHelper.SaveInt32(headerBlock, entityDataBlockData.Count);
+				size = entityDataBlockData.Count;
+
+				chksum = 0;
+				for (int i = 0; i < entityDataBlockData.Count; i++)
+					chksum += entityDataBlockData[i];
+
+				SaveHelper.SaveInt32(headerBlock, chksum);
+
+				SaveHelper.SaveBytesFlat(dataBlock, headerBlock);
+				SaveHelper.SaveBytesFlat(dataBlock, entityDataBlockData);
+
+				data = dataBlock.ToArray();
+            }
+        }
+
+        public enum LoadError
 		{
 			Success,
 			InvalidVersion
@@ -171,16 +249,18 @@ namespace ViMG
 			//	  lookup table is statically sized.
 			//	  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
 			//    o: offset into entity data block
-			//e: entity data block
-			//  h: header block
-			//    s: header size (int) includes data
-			//	  i: entity id (int) (index in saved entity array)
-			//	  t: type id (int)
-			//	  cx, cy, cz: chunk x, y, z (int each) (position in chunks)
-			//	  v: version (int)
-			//	s: size (int)
-			//	ck: chksum (int)
-			//	d: data block
+			//	  s: size of entity in data block
+			//e: entities data block
+			//  e: entity data block
+			//    h: header block
+			//      s: size (int) includes data
+			//  	i: entity id (int) (index in saved entity array)
+			//	    t: type id (int)
+			//	    cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+			//	    v: version (int)
+			//	  s: size (int)
+			//	  ck: chksum (int)
+			//	  d: data block
 			using (MemoryStream ms = new MemoryStream())
 			{
 				using (BinaryWriter writer = new BinaryWriter(ms, Encoding.ASCII, true))
@@ -205,66 +285,30 @@ namespace ViMG
 					}
 
 					//Contains all entities' data.
-					List<byte> entityDataBlock = new List<byte>();
+					List<byte> entitiesDataBlock = new List<byte>();
 
 					foreach (Entity entity in entitiesToSerialize)
 					{
 						ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
-						entityLookups.Add(new EntityLookup()
+
+						if (!entityDatas.ContainsKey(pos))
+							entityDatas.Add(pos, new List<EntityData>());
+						EntityData data = new EntityData(entity);
+						entityDatas[pos].Add(data);
+
+                        byte[] entityDataBlock = data.data;
+
+                        entityLookups.Add(new EntityLookup()
 						{
 							cx = pos.X,
 							cy = pos.Y,
 							cz = pos.Z,
-							offset = (ulong)writer.BaseStream.Position + (ulong)entityDataBlock.Count
+							offset = (ulong)writer.BaseStream.Position + (ulong)entitiesDataBlock.Count,
+							size = entityDataBlock.Length,
 						});
 
-						List<byte> entityDataBlockHeader = new List<byte>();
-
-						SaveHelper.SaveUInt64(entityDataBlockHeader, entity.Id);
-						//writer.Write(entity.Id);
-						SaveHelper.SaveString(entityDataBlockHeader, entity.GetType().ToString());
-						//writer.Write(entity.GetType().ToString());
-
-						//writer.Write(pos.X);
-						//writer.Write(pos.Y);
-						//writer.Write(pos.Z);
-						SaveHelper.SaveInt32(entityDataBlockHeader, pos.X);
-						SaveHelper.SaveInt32(entityDataBlockHeader, pos.Y);
-						SaveHelper.SaveInt32(entityDataBlockHeader, pos.Z);
-
-						var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
-
-						if (meta != null)
-							SaveHelper.SaveInt32(entityDataBlockHeader, meta.Version);
-						//writer.Write(meta.Version);
-						else
-						{
-							Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
-								"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
-							SaveHelper.SaveInt32(entityDataBlockHeader, -1);
-							//writer.Write(-1);
-						}
-
-						List<byte> entityDataBlockData = new List<byte>();
-						entity.OnSave(entityDataBlockData);
-
-						SaveHelper.SaveInt32(entityDataBlockHeader, entityDataBlockData.Count);
-						//writer.Write(data.Count);
-
-						int chksum = 0;
-						for (int i = 0; i < entityDataBlockData.Count; i++)
-							chksum += entityDataBlockData[i];
-
-						SaveHelper.SaveInt32(entityDataBlockHeader, chksum);
-						//writer.Write(chksum);
-
-						SaveHelper.SaveBytesFlat(entityDataBlockHeader, entityDataBlockData);
-						//writer.Write(data.ToArray());
-
-						SaveHelper.SaveInt32(entityDataBlock, entityDataBlockHeader.Count);
-						SaveHelper.SaveBytesFlat(entityDataBlock, entityDataBlockHeader);
-						//writer.Write(dataHeader.Count);	//v2
-						//writer.Write(dataHeader.ToArray());
+						SaveHelper.SaveInt32(entitiesDataBlock, entityDataBlock.Length);
+						SaveHelper.SaveBytesFlat(entitiesDataBlock, entityDataBlock);
 					}
 
 					writer.Write(serializableEntities);
@@ -277,8 +321,8 @@ namespace ViMG
 
 					writer.Write(lookupBlock.Count);
 					writer.Write(lookupBlock.ToArray());
-					writer.Write(entityDataBlock.Count);
-					writer.Write(entityDataBlock.ToArray());
+					writer.Write(entitiesDataBlock.Count);
+					writer.Write(entitiesDataBlock.ToArray());
 				}
 
 				using (FileStream fs = new FileStream("./" + FILE_NAME_ENTITIES, FileMode.OpenOrCreate, FileAccess.Write))
@@ -286,6 +330,49 @@ namespace ViMG
 					fs.Write(ms.GetBuffer());
 				}
 			}
+		}
+
+		private List<byte> SaveOneEntity(Entity entity)
+        {
+			ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
+
+			List<byte> entityDataBlock = new List<byte>();
+			
+			List<byte> entityHeaderBlock = new List<byte>();
+
+			SaveHelper.SaveUInt64(entityHeaderBlock, entity.Id);
+			SaveHelper.SaveString(entityHeaderBlock, entity.GetType().ToString());
+
+			SaveHelper.SaveInt32(entityHeaderBlock, pos.X);
+			SaveHelper.SaveInt32(entityHeaderBlock, pos.Y);
+			SaveHelper.SaveInt32(entityHeaderBlock, pos.Z);
+
+			var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
+
+			if (meta != null)
+				SaveHelper.SaveInt32(entityHeaderBlock, meta.Version);
+			else
+			{
+				Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
+					"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
+				SaveHelper.SaveInt32(entityHeaderBlock, -1);
+			}
+
+			List<byte> entityDataBlockData = new List<byte>();
+			entity.OnSave(entityDataBlockData);
+
+			SaveHelper.SaveInt32(entityHeaderBlock, entityDataBlockData.Count);
+
+			int chksum = 0;
+			for (int i = 0; i < entityDataBlockData.Count; i++)
+				chksum += entityDataBlockData[i];
+
+			SaveHelper.SaveInt32(entityHeaderBlock, chksum);
+
+			SaveHelper.SaveBytesFlat(entityDataBlock, entityHeaderBlock);
+			SaveHelper.SaveBytesFlat(entityDataBlock, entityDataBlockData);
+
+			return entityDataBlock;
 		}
 
 		private void LoadEntities(EntityManager entityManager)
@@ -346,6 +433,7 @@ namespace ViMG
 						int cx = SaveHelper.LoadInt32(bytes, ref index);
 						int cy = SaveHelper.LoadInt32(bytes, ref index);
 						int cz = SaveHelper.LoadInt32(bytes, ref index);
+						ChunkPosition position = new ChunkPosition(cx, cy, cz);
 
 						int entVersion = SaveHelper.LoadInt32(bytes, ref index);
 						int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
@@ -369,10 +457,24 @@ namespace ViMG
 						}
 						else
 						{
-							Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
-							ent.OnLoad(entData, entVersion);
+							if (!entityDatas.ContainsKey(position))
+								entityDatas.Add(position, new List<EntityData>());
+							entityDatas[position].Add(new EntityData() 
+							{
+								id = entId,
+								type = entType,
+								position = position,
+								size = entDataSize,
+								chksum = chksum,
+								version = version,
 
-							entityManager.ForceAdd(ent, entId);
+								data = entData 
+							});
+
+							//Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
+							//ent.OnLoad(entData, entVersion);
+
+							//entityManager.ForceAdd(ent, entId);
 						}
 					}
 				}
@@ -382,6 +484,10 @@ namespace ViMG
 		public LoadError Load(World world)
 		{
 			Console.WriteLine("Loading Save");
+
+			//Load entities first.
+			//This is necessary since entities aren't actually created; they stay as raw data, then are created when the chunk itself is loaded.
+			LoadEntities(entityManager);
 
 			using (FileStream fs = new FileStream("./" + FILE_NAME_CHUNK, FileMode.Open, FileAccess.Read, FileShare.None, (int)ONE_CHUNK_SIZE))
 			{
@@ -409,8 +515,6 @@ namespace ViMG
 
 				Console.WriteLine("Loaded all " + totalSize + " chunks in: " + watch.Elapsed.ToString());
 			}
-
-			LoadEntities(entityManager);
 
 			return LoadError.Success;
 		}
@@ -511,6 +615,20 @@ namespace ViMG
 			chunk.Initialize(world);
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 			//chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
+
+			if (entityDatas.ContainsKey(chunk.Position))
+            {
+				foreach (EntityData entData in entityDatas[chunk.Position])
+                {
+					Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entData.type).Unwrap() as Entity;
+					ent.OnLoad(entData.data, entData.version);
+
+					entityManager.ForceAdd(ent, entData.id);
+				}
+
+				//Remove so we don't end up saving duplicate entities.
+				entityDatas.Remove(chunk.Position);
+			}
 
 			if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
 				Console.WriteLine("Loaded " + i + " / " + totalSize + " chunks...");
