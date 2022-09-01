@@ -275,7 +275,7 @@ namespace ViMG
 				uiPlayer.HighlightIndex = 7;
 			}
 
-			lookAtResult = world.Raycast(-Main.camera.Position, -Main.camera.Position - Main.camera.Forward * INTERACT_DISTANCE,
+			lookAtResult = world.Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
@@ -293,7 +293,7 @@ namespace ViMG
 			currentUI.Update();
 			UpdateMouse();
 
-			Main.camera.Position = -Position;
+			Main.camera.Position = Position;
 
 			hitboxTimer -= (float)deltaTime;
 
@@ -315,7 +315,7 @@ namespace ViMG
 					world.SetTimeOfDay(World.DAY_CYCLE_TIME * 0.8f);
 				}
 
-				const float MIN_CAM_SPEED = 512;
+				const float MIN_CAM_SPEED = Cube.CUBE_SCALE;
 				const float MAX_CAM_SPEED = MIN_CAM_SPEED * 2;
 
 				float moveSpeed = MIN_CAM_SPEED;
@@ -324,13 +324,13 @@ namespace ViMG
 					moveSpeed = MAX_CAM_SPEED;
 
 				if (Main.inputManager.IsPressed(Keys.W))
-					Position -= Vector3.Normalize(Main.camera.Forward) * moveSpeed * (float)deltaTime;
+					Position -= Vector3.Normalize(Main.camera.Forward) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.S))
-					Position += Vector3.Normalize(Main.camera.Forward) * moveSpeed * (float)deltaTime;
+					Position += Vector3.Normalize(Main.camera.Forward) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.A))
-					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed * (float)deltaTime;
+					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.D))
-					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed * (float)deltaTime;
+					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed;
 			}
 			else
 			{
@@ -348,29 +348,31 @@ namespace ViMG
 					if (running)
 						actualMaxVel = MaxVelocityRunning;
 
+					actualMaxVel = actualMaxVel / 20f * Cube.CUBE_SCALE;
+
 					if (Main.inputManager.IsPressed(Keys.W))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
+						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed / 20f * Cube.CUBE_SCALE;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.S))
 					{
-						Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
+						Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed / 20f * Cube.CUBE_SCALE;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.A))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
+						Velocity -= Vector3.Normalize(Main.camera.Right) * moveSpeed / 20f * Cube.CUBE_SCALE;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.D))
 					{
-						Velocity += Vector3.Normalize(Main.camera.Right) * moveSpeed;
+						Velocity += Vector3.Normalize(Main.camera.Right) * moveSpeed / 20f * Cube.CUBE_SCALE;
 						movementPressed = true;
 					}
 					if (onGround && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = jumpVelocity;
+						Velocity.Y = jumpVelocity / 20f * Cube.CUBE_SCALE;
 						onGround = false;
 					}
 
@@ -429,17 +431,17 @@ namespace ViMG
 
 				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
-				if (Velocity.Y > 64 && Main.inputManager.JustReleased(Keys.Space))
-					Velocity.Y = 64;
+				if (Velocity.Y > 64 / 20 * Cube.CUBE_SCALE && Main.inputManager.JustReleased(Keys.Space))
+					Velocity.Y = 64 / 20 * Cube.CUBE_SCALE;
 
-				Velocity.Y += World.GRAVITY;
+				Velocity.Y += World.GRAVITY / 20 * Cube.CUBE_SCALE;
 				if (Velocity.Y > actualMaxVel.Y)
 					Velocity.Y = actualMaxVel.Y;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.SetTimeOfDay(World.DAY_CYCLE_TIME * 0.75f);
+				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
 				//world.EntityManager.Add(new Skeleton(Position));
 
 				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
@@ -508,10 +510,11 @@ namespace ViMG
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							Vector3 checkPos = Position - new Vector3(0, Bounds.Size.Y - 16, 0);
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8, out Vector3 change))
+							float off = (Cube.CUBE_SCALE * 0.75f);
+							Vector3 checkPos = Position - new Vector3(0, Bounds.Size.Y - off, 0);
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
 							{
-								Position = checkPos + new Vector3(0, Bounds.Size.Y - 16, 0) + change;
+								Position = checkPos + new Vector3(0, Bounds.Size.Y - off, 0) + change;
 
 								if (change.Y > 0)
 								{
@@ -525,7 +528,7 @@ namespace ViMG
 								else if (change.Z != 0)
 									Velocity.Z = 0;
 							}
-							else if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f, out Vector3 change1))
+							else if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change1))
 							{
 								Position += change1;
 
@@ -729,10 +732,10 @@ namespace ViMG
 		{
 			if (state == State.Noclip)
 			{
-				DrawHelper3D.DrawAxesImmediate(device, Position - Main.camera.Forward * 40);
+				//DrawHelper3D.DrawAxesImmediate(device, Position - Main.camera.Forward * 40);
 
-				if (hitbox != -1 && world.HitboxManager.Get(hitbox).active)
-					DrawHelper3D.DrawCubeImmediate(device, world.HitboxManager.Get(hitbox).bounds.Position, world.HitboxManager.Get(hitbox).bounds.Size, Color.Red);
+				//if (hitbox != -1 && world.HitboxManager.Get(hitbox).active)
+					//DrawHelper3D.DrawCubeImmediate(device, world.HitboxManager.Get(hitbox).bounds.Position, world.HitboxManager.Get(hitbox).bounds.Size, Color.Red);
 			}
 		}
 

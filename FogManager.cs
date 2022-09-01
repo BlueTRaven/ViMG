@@ -29,9 +29,15 @@ namespace ViMG
 			effect.Parameters["HeightFogMapLerp"].SetValue(percentBetween);
 		}
 
+		public void Enable()
+        {
+			effect.Parameters["EnableFog"].SetValue(true);
+        }
+
 		public void Disable()
 		{
-			Set(Main.camera.Far, Main.camera.Far, DrawHelper.WhitePixel, DrawHelper.WhitePixel, 0);
+			effect.Parameters["EnableFog"].SetValue(false);
+			//Set(Main.camera.Far, Main.camera.Far, DrawHelper.WhitePixel, DrawHelper.WhitePixel, 0);
 		}
 	}
 }

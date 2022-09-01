@@ -22,6 +22,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
 	output.Position = mul(input.Position, WorldViewProjection);
+	output.TexCoord = input.TexCoord;
 
 	return output;
 }

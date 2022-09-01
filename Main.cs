@@ -20,7 +20,7 @@ namespace ViMG
         SpriteBatch batch;
 
 		private const float FOV_DEGREES = 90f;
-		public const float NEAR = 0.05f;
+		public const float NEAR = 0.0005f;
 		public const float FAR = 5000f;
 
 		public static BasicEffect BasicEffect;
@@ -96,7 +96,7 @@ namespace ViMG
 
             Content.RootDirectory = "Content";
 
-			camera = new Camera(new Vector3(0, 0, 0), new Vector3(0, 180, 0), Vector3.One, FOV_DEGREES, NEAR, FAR);
+			camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
 			assetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
@@ -163,7 +163,8 @@ namespace ViMG
 				AddressV = TextureAddressMode.Border,
 				BorderColor = Color.Black,
 				Filter = TextureFilter.Point,
-				MaxMipLevel = 4,
+				MaxMipLevel = 0,
+				MaxAnisotropy = 0,
 			};
 
 			GraphicsDevice.DepthStencilState = genericDSS;
@@ -177,7 +178,7 @@ namespace ViMG
 			
 			base.Initialize();
 
-			DepthTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			DepthTarget = new RenderTarget2D(GraphicsDevice, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			//GraphicsDevice.SetRenderTarget(WorldTarget);
 			
@@ -199,10 +200,12 @@ namespace ViMG
 
 			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
 			CubeEffect.Parameters["AmbientStrength"].SetValue(1f);
-			//CubeEffect.Parameters["SpecularStrength"].SetValue(0.5f);
+			CubeEffect.Parameters["SpecularStrength"].SetValue(1f);
 			CubeEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
+			CubeEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
 			CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			CubeEffect.Parameters["EnableFog"].SetValue(true);
+			CubeEffect.Parameters["EnableFog"].SetValue(false);
+			//CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 
 			VertexPositionColorDebugEffect = assetsManager.GetAsset<Effect>("debug_vpc");
 			VertexPositionColorDebugEffect.Name = "VertexPositionColorDebugEffect";
@@ -255,7 +258,7 @@ namespace ViMG
 				world.Update(deltaTime);
 			}
 
-			CubeEffect.Parameters["CameraPos"].SetValue(camera.Position);
+			CubeEffect.Parameters["CameraPos"].SetValue(-camera.Position);
 			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
 
 			if (IsActive && !paused && !MouseControl)
@@ -301,7 +304,7 @@ namespace ViMG
 					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 				TextHelper.DrawText(batch, font,
 					"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
-					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(-camera.Position).ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
+					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(camera.Position).ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
 					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds."
@@ -320,9 +323,9 @@ namespace ViMG
 
 		private string FormatPos()
 		{
-			string x = String.Format("{0:0.00}", -camera.Position.X);
-			string y = String.Format("{0:0.00}", -camera.Position.Y);
-			string z = String.Format("{0:0.00}", -camera.Position.Z);
+			string x = String.Format("{0:0.00}", camera.Position.X);
+			string y = String.Format("{0:0.00}", camera.Position.Y);
+			string z = String.Format("{0:0.00}", camera.Position.Z);
 
 			return x + " " + y + " " + z;
 		}

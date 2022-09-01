@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using ViMG.Cubes;
+using ViMG.Generation;
 
 namespace ViMG
 {

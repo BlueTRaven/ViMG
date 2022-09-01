@@ -10,8 +10,6 @@ struct VertexShaderInput
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
-	//because we can't read from Position for some wack ass reason...
-	float4 RealPosition : TEXCOORD0;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -19,14 +17,13 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 	
 	output.Position = mul(input.Position, WorldViewProjection);
-	output.RealPosition = mul(input.Position, WorldViewProjection);
 
 	return output;
 }
 
-float4 MainPS(VertexShaderOutput input) : COLOR
+float4 MainPS(VertexShaderOutput input) : SV_Target
 {
-	float depth = input.RealPosition.z / input.RealPosition.w;
+	float depth = input.Position.z / input.Position.w;
 	
 	return float4(depth, depth, depth, 1);
 }

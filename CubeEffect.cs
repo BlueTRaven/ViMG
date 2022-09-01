@@ -87,9 +87,9 @@ namespace ViMG
 		public float FogEnd = 10000;
 		public Vector3 fogColor = Vector3.One;
 
-		private DirectionalLight light0;
-		private DirectionalLight light1;
-		private DirectionalLight light2;
+		private Microsoft.Xna.Framework.Graphics.DirectionalLight light0;
+		private Microsoft.Xna.Framework.Graphics.DirectionalLight light1;
+		private Microsoft.Xna.Framework.Graphics.DirectionalLight light2;
 
 		public CubeEffect(GraphicsDevice graphicsDevice)
 		{
@@ -116,13 +116,13 @@ namespace ViMG
 			specularColorParam = effect.Parameters["SpecularColor"];
 			specularPowerParam = effect.Parameters["SpecularPower"];
 
-			light0 = new DirectionalLight(effect.Parameters["DirLight0Direction"],
+			light0 = new Microsoft.Xna.Framework.Graphics.DirectionalLight(effect.Parameters["DirLight0Direction"],
 				effect.Parameters["DirLight0DiffuseColor"],
 				effect.Parameters["DirLight0SpecularColor"], null);
-			light1 = new DirectionalLight(effect.Parameters["DirLight1Direction"],
+			light1 = new Microsoft.Xna.Framework.Graphics.DirectionalLight(effect.Parameters["DirLight1Direction"],
 				effect.Parameters["DirLight1DiffuseColor"],
 				effect.Parameters["DirLight1SpecularColor"], null);
-			light2 = new DirectionalLight(effect.Parameters["DirLight2Direction"],
+			light2 = new Microsoft.Xna.Framework.Graphics.DirectionalLight(effect.Parameters["DirLight2Direction"],
 				effect.Parameters["DirLight2DiffuseColor"],
 				effect.Parameters["DirLight2SpecularColor"], null);
 

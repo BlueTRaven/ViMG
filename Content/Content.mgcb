@@ -56,13 +56,6 @@
 /processorParam:DebugMode=Auto
 /build:Effects/vpctn.fx
 
-#begin Fonts/fira_mono.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Fonts/fira_mono.spritefont
-
 #begin Fonts/fira_mono_sml.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -76,6 +69,13 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:Fonts/fira_mono_tny.spritefont
+
+#begin Fonts/fira_mono.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/fira_mono.spritefont
 
 #begin Textures/axes.png
 /importer:TextureImporter

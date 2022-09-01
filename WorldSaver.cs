@@ -37,6 +37,7 @@ namespace ViMG
 
 		private Dictionary<ChunkPosition, List<EntityLookup>> lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
 		private Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
+		private int numLoadedEntities;
 
 		private struct EntityLookup
 		{
@@ -332,54 +333,13 @@ namespace ViMG
 			}
 		}
 
-		private List<byte> SaveOneEntity(Entity entity)
-        {
-			ChunkPosition pos = ChunkPosition.WorldSpaceChunk(entity.Position);
-
-			List<byte> entityDataBlock = new List<byte>();
-			
-			List<byte> entityHeaderBlock = new List<byte>();
-
-			SaveHelper.SaveUInt64(entityHeaderBlock, entity.Id);
-			SaveHelper.SaveString(entityHeaderBlock, entity.GetType().ToString());
-
-			SaveHelper.SaveInt32(entityHeaderBlock, pos.X);
-			SaveHelper.SaveInt32(entityHeaderBlock, pos.Y);
-			SaveHelper.SaveInt32(entityHeaderBlock, pos.Z);
-
-			var meta = entity.GetType().GetCustomAttribute<EntityMetaAttribute>();
-
-			if (meta != null)
-				SaveHelper.SaveInt32(entityHeaderBlock, meta.Version);
-			else
-			{
-				Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
-					"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
-				SaveHelper.SaveInt32(entityHeaderBlock, -1);
-			}
-
-			List<byte> entityDataBlockData = new List<byte>();
-			entity.OnSave(entityDataBlockData);
-
-			SaveHelper.SaveInt32(entityHeaderBlock, entityDataBlockData.Count);
-
-			int chksum = 0;
-			for (int i = 0; i < entityDataBlockData.Count; i++)
-				chksum += entityDataBlockData[i];
-
-			SaveHelper.SaveInt32(entityHeaderBlock, chksum);
-
-			SaveHelper.SaveBytesFlat(entityDataBlock, entityHeaderBlock);
-			SaveHelper.SaveBytesFlat(entityDataBlock, entityDataBlockData);
-
-			return entityDataBlock;
-		}
-
 		private void LoadEntities(EntityManager entityManager)
 		{
 			//In case of failure, keep old lookups.
 			Dictionary<ChunkPosition, List<EntityLookup>> oldLookups = lookups;
 			lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
+			entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
+			numLoadedEntities = 0;
 
 			Console.WriteLine("Loading Entities...");
 
@@ -471,6 +431,8 @@ namespace ViMG
 								data = entData 
 							});
 
+							numLoadedEntities++;
+
 							//Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entType).Unwrap() as Entity;
 							//ent.OnLoad(entData, entVersion);
 
@@ -485,9 +447,15 @@ namespace ViMG
 		{
 			Console.WriteLine("Loading Save");
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			//Load entities first.
 			//This is necessary since entities aren't actually created; they stay as raw data, then are created when the chunk itself is loaded.
 			LoadEntities(entityManager);
+
+			watch.Stop();
+
+			Console.WriteLine("Loaded all " + numLoadedEntities + " entities in: " + watch.Elapsed.ToString());
 
 			using (FileStream fs = new FileStream("./" + FILE_NAME_CHUNK, FileMode.Open, FileAccess.Read, FileShare.None, (int)ONE_CHUNK_SIZE))
 			{
@@ -506,7 +474,7 @@ namespace ViMG
 
 				int totalSize = chunkManager.sizeInChunks * chunkManager.sizeInChunks * chunkManager.sizeInChunks;
 
-				Stopwatch watch = Stopwatch.StartNew();
+				watch = Stopwatch.StartNew();
 
 				//LoadByBinaryReader(fs, world, totalSize);
 				LoadBySpan(fs, world, totalSize);
@@ -597,6 +565,7 @@ namespace ViMG
 			Span<byte> buffer = stackalloc byte[(int)Math.Min(ONE_CHUNK_SIZE, left)];
 			fs.Read(buffer);
 
+			ushort[] allCubes = chunk.GetData().GetAll();
 			for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
 			{
 				const int NUM_BYTES_PER_CHUNK = 2;
@@ -605,11 +574,13 @@ namespace ViMG
 				byte a = buffer[offset + 0];
 				byte b = buffer[offset + 1];
 
+				//bitwise operators are not defined for ushort, so we're forced to cast... fun.
 				int id = 0;
 				id |= b << 8;
 				id |= a << 0;
 
-				chunk.GetData().SetCubeFast(j, (ushort)id);
+				allCubes[j] = (ushort)id;
+				//chunk.GetData().SetCubeFast(j, (ushort)id);
 			}
 
 			chunk.Initialize(world);

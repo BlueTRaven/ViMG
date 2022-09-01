@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ViMG
 {
-	public class Camera
+	public abstract class Camera
 	{
 		private Vector3 position;
 		public Vector3 Position
@@ -101,18 +101,6 @@ namespace ViMG
 			}
 		}
 
-		private float fovDegrees;
-		public float FovDegrees
-		{
-			get => fovDegrees;
-			set
-			{
-				fovDegrees = value;
-				projectionDirty = true;
-				frustumDirty = true;
-			}
-		}
-
 		private float near;
 		public float Near
 		{
@@ -120,7 +108,6 @@ namespace ViMG
 			set
 			{
 				near = value;
-				projectionDirty = true;
 				frustumDirty = true;
 			}
 		}
@@ -131,62 +118,48 @@ namespace ViMG
 			set
 			{
 				far = value;
-				projectionDirty = true;
 				frustumDirty = true;
 			}
 		}
 
-		private bool projectionDirty;
-		private Matrix projectionMatrix;
-
 		private bool frustumDirty;
 		private BoundingFrustum frustum;
 
-		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float fovDegrees, float near, float far)
+		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far)
 		{
 			this.position = startPosition;
 			this.rotation = startRotation;
 			this.scale = startScale;
 
-			this.fovDegrees = fovDegrees;
 			this.near = near;
 			this.far = far;
 
 			cameraDirty = true;
-			projectionDirty = true;
 		}
 
 		public Matrix GetViewMatrix()
 		{
 			if (cameraDirty)
 			{
-				camera = Matrix.CreateTranslation(Position) *
+				camera = Matrix.CreateTranslation(-Position) *
 					Matrix.CreateRotationZ(Rotation.Z) *
 					Matrix.CreateRotationY(Rotation.Y) *
-					Matrix.CreateRotationX(Rotation.X);
+					Matrix.CreateRotationX(Rotation.X) *
+					Matrix.CreateScale(scale);
 				cameraDirty = false;
 			}
 
 			return camera;
 		}
 
-		public Matrix GetProjectionMatrix()
-		{
-			if (projectionDirty)
-			{
-				projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(fovDegrees), (float)Main.WindowResolution.X / (float)Main.WindowResolution.Y, near, far);
-				projectionDirty = false;
-			}
-
-			return projectionMatrix;
-		}
+		public abstract Matrix GetProjectionMatrix();
 
 		public BoundingFrustum GetFrustum()
 		{
 			if (frustum == null)
 				frustum = new BoundingFrustum(GetViewMatrix() * GetProjectionMatrix());
 
-			if (frustumDirty || projectionDirty || cameraDirty)
+			if (frustumDirty || cameraDirty)
 			{
 				frustum.Matrix = GetViewMatrix() * GetProjectionMatrix();
 				frustumDirty = false;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using ViMG.Generation;
 
 namespace ViMG
 {
@@ -96,7 +97,7 @@ namespace ViMG
 		{
 			//Chunk chunk = generator.MakeChunk(dataBus.GetManager().ChunkDatas, position);
 			Chunk chunk = dataBus.GetChunk(position, generator);
-			generator.GenerateChunkBroad(chunk, position);
+			generator.GenerateChunkBroad(chunk);
 		}
 
 		private void GenerateChunkDetail(ChunkPosition position, HashSet<Chunk> cascadedChunks)

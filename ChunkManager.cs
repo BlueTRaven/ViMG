@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Generation;
 
 namespace ViMG
 {
@@ -57,12 +58,12 @@ namespace ViMG
 
 		private PriorityQueue<ChunkPosition> chunksToMeshQueue = new PriorityQueue<ChunkPosition>(true, (x) => 
 		{
-			return (int)(-Main.camera.Position - x.InWorldSpace()).Length(); 
+			return (int)(Main.camera.Position - x.InWorldSpace()).Length(); 
 		});
 		private HashSet<ChunkPosition> chunksToMeshAlreadyAdded = new HashSet<ChunkPosition>();
 		private PriorityQueue<ChunkPosition> chunksToGenerateQueue = new PriorityQueue<ChunkPosition>(true, (x) =>
 		{
-			return (int)(-Main.camera.Position - x.InWorldSpace()).Length();
+			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
 		});
 		private HashSet<ChunkPosition> chunksToGenerateAlreadyAdded = new HashSet<ChunkPosition>();
 
@@ -78,7 +79,8 @@ namespace ViMG
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
 		{
-			generator = new ChunkGenerator();
+			//generator = new ChunkGeneratorIsland();
+			generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
 
 			dataBus = new ChunkGenerationThreadDataBus(this);
@@ -127,7 +129,7 @@ namespace ViMG
 				int z = i / (sizeInChunks * sizeInChunks);
 
 				//chunks[i].chunk = generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z));
-				generator.GenerateChunkBroad(chunks[i].chunk, new ChunkPosition(x, y, z));
+				generator.GenerateChunkBroad(chunks[i].chunk);
 
 				num++;
 
@@ -169,6 +171,11 @@ namespace ViMG
 
 			chunksToMeshQueue.Sort();
 		}
+
+		public Vector3 GetPlayerSpawnPos(World world)
+        {
+			return generator.GetPlayerPosition(world, this);
+        }
 
 		public void ProcessChunkQueue(World world, int forceMode)
 		{
@@ -346,7 +353,7 @@ namespace ViMG
 		public void GenerateChunkBroad(ChunkPosition position)
 		{
 			Chunk chunk = generator.MakeChunk(ChunkDatas, position);
-			generator.GenerateChunkBroad(chunk, position);
+			generator.GenerateChunkBroad(chunk);
 
 			chunks[PosToIndex(position)].chunk = chunk;
 			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Detail;

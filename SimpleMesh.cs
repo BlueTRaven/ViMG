@@ -128,23 +128,6 @@ namespace ViMG
 				device.Textures[i] = null;
 			}
 
-			bool isDepth = effect.Name == "Effects/depth";
-
-			if (isDepth)
-			{
-				Main.WVP.SetWorld(transform);
-
-				//effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
-
-				foreach (var pass in effect.CurrentTechnique.Passes)
-				{
-					pass.Apply();
-					device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexCount / 3);
-				}
-
-				return;
-			}
-
 			Main.WVP.SetWorld(transform);
 
 			effect.Parameters["World"].SetValue(transform);
@@ -171,6 +154,22 @@ namespace ViMG
 				effect.Parameters["TextureSize"].SetValue(new Vector2(useTexture.Width, useTexture.Height));
 			}
 			else effect.Parameters["UseSourceRect"].SetValue(false);
+
+			foreach (var pass in effect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexCount / 3);
+			}
+		}
+
+		public virtual void DrawDepth(GraphicsDevice device, Effect effect, Matrix transform)
+        {
+			if (!Use(device))
+				return;
+
+			Main.WVP.SetWorld(transform);
+
+			effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 			foreach (var pass in effect.CurrentTechnique.Passes)
 			{

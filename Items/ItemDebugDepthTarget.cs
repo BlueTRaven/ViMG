@@ -20,7 +20,7 @@ namespace ViMG.Items
 
 		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
-			base.Draw(device, item, transform);
+			//base.Draw(device, item, transform);
 
 			if (depthMesh == null)
 				MakeMesh(device);
@@ -36,7 +36,7 @@ namespace ViMG.Items
 		private void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Texture.Width / Cube.CUBE_SCALE, Texture.Height / Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);
@@ -64,7 +64,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionTexture(c, ctx));
 			vertices.Add(new VertexPositionTexture(d, dtx));
 
-			offset = vertices.Count;
+			/*offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -75,7 +75,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionTexture(b, btx));
 			vertices.Add(new VertexPositionTexture(a, atx));
 			vertices.Add(new VertexPositionTexture(d, dtx));
-			vertices.Add(new VertexPositionTexture(c, ctx));
+			vertices.Add(new VertexPositionTexture(c, ctx));*/
 
 			depthMesh = new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, Texture);
 		}

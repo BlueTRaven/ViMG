@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text;
 using System.Threading;
 using BrUtility;
+using ViMG.Generation;
 
 namespace ViMG
 {

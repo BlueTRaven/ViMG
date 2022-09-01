@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Generation;
 using ViMG.Items;
 
 namespace ViMG
@@ -22,10 +23,11 @@ namespace ViMG
 		public const float GRAVITY = -9.8f;
 		public const float DAY_CYCLE_TIME = 60f * 10f;
 
+		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE + Cube.CUBE_SCALE;
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
-		private readonly ChunkManager chunkManager;
+		public ChunkManager ChunkManager;
 
 		private SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
@@ -67,6 +69,9 @@ namespace ViMG
 		private WorldSaver saver;
 
 		public ChunkLoadManager ChunkLoadManager;
+
+		private const float SUN_LIGHT_DISTANCE = -2;
+		public DirectionalLight directionalLight;
 
 		public World(GraphicsDevice device, int worldSize)
 		{
@@ -189,14 +194,15 @@ namespace ViMG
 			sunIndices.Add(2);
 			sunIndices.Add(3);
 
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-80, -80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-80, 80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(80, 80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(80, -80, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			const float SUN_VERT_DIST = Cube.CUBE_SCALE * 4;
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
 
 			meshSun = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, sunVertices, sunIndices);
 
-			chunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
 			ProjectileManager = new ProjectileManager(device);
 			EntityManager = new EntityManager(this);
@@ -207,7 +213,7 @@ namespace ViMG
 
 		public void Initialize()
 		{
-			chunkManager.Initialize(this);
+			ChunkManager.Initialize(this);
 
 			int x = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int z = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
@@ -219,8 +225,8 @@ namespace ViMG
 
 			if (!File.Exists("./" + WorldSaver.FILE_NAME_CHUNK))
 			{
-				chunkManager.GenerateWorld(this);
-				saver = new WorldSaver(chunkManager, EntityManager);
+				ChunkManager.GenerateWorld(this);
+				saver = new WorldSaver(ChunkManager, EntityManager);
 				saver.Save();
 
 				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
@@ -229,12 +235,12 @@ namespace ViMG
 				EntityManager.Add(player);
 				player.FirstCreated();
 
-				player.Position = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+				player.Position = ChunkManager.GetPlayerSpawnPos(this);
 				playerStartPos = player.Position;
 			}
 			else
 			{
-				saver = new WorldSaver(chunkManager, EntityManager);
+				saver = new WorldSaver(ChunkManager, EntityManager);
 
 				WorldSaver.LoadError error = saver.Load(this);
 
@@ -255,7 +261,10 @@ namespace ViMG
 
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 
-			ChunkLoadManager = new ChunkLoadManager(saver, chunkManager, 6, 6, 8);
+			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8);
+
+			float size = 0.25f;
+			directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, 10);
 		}
 
 		public void UnfixedUpdate()
@@ -278,7 +287,7 @@ namespace ViMG
 			//chunkLoadManager.Update(deltaTime);
 			//saver.ProcessLoadQueue(this);
 
-			chunkManager.ProcessChunkQueue(this, 0);
+			ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime);
 
 			ProjectileManager.Update(this, deltaTime);
@@ -315,20 +324,20 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
-			var slimes = EntityManager.GetAll<Slime>();
+			/*var slimes = EntityManager.GetAll<Slime>();
 
 			if ((slimes == null || slimes.Count < 32) && Main.random.Next(0, 32) == 0)
 			{
 				CubePosition pos = GetFirstSolidDown(new Vector3(Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE), sizeInCubes * Cube.CUBE_SCALE, Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE)));
 
-				if (chunkManager.IsInWorldBounds(pos))
+				if (ChunkManager.IsInWorldBounds(pos))
 				{
 					EntityManager.Add(new Slime(pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
 					//slimes.Add(new Slime(this, pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
 				}
-			}
+			}*/
 
-			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(-Main.camera.Position);
+			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
 			if (chunkDrawPositionsDirty || camPos != oldChunkPosition || (oldCameraRotation - Main.camera.Rotation).Length() > MathHelper.ToRadians(1))
 			{
@@ -344,7 +353,7 @@ namespace ViMG
 
 							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
-							if (chunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
+							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
 								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
 							{
 								chunkDrawPositions.Add(chunkPos);
@@ -358,6 +367,33 @@ namespace ViMG
 
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
+
+            if (!IsNight())
+            {
+                float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
+                directionalLight.camera.Position = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+                    Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+                    Matrix.CreateTranslation(player.Position));
+                directionalLight.camera.Rotation = new Vector3(MathHelper.ToRadians(angle), MathHelper.ToRadians(180), 0);
+            }
+            else
+            {
+                if (GetNightPercent() < 0.5f)
+                {
+                    directionalLight.camera.Position =
+                        Vector3.Transform(new Vector3(0, -(directionalLight.height * 3) * GetNightPercent(), SUN_LIGHT_DISTANCE),
+                        Matrix.CreateRotationY(MathHelper.ToRadians(180)) *
+                        Matrix.CreateTranslation(player.Position));
+                }
+            }
+
+            if (Main.inputManager.IsHeld(Keys.F1))
+			{
+				//Main.camera.Position = directionalLight.camera.Position;
+				//Main.camera.Rotation = directionalLight.camera.Rotation;
+				directionalLight.camera.Position = Main.camera.Position;
+				directionalLight.camera.Rotation = Main.camera.Rotation;
+			}
 		}
 
 		public static int NumChunksDrawn;
@@ -370,7 +406,8 @@ namespace ViMG
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-			DrawDepth(device);
+			directionalLight.DrawShadowmap(this, device);
+
 			Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(Main.DepthTarget);
 
 			device.SetRenderTarget(Main.WorldTarget);
@@ -380,13 +417,19 @@ namespace ViMG
 			device.DepthStencilState = Main.genericDSS;
 			device.RasterizerState = Main.genericRS;
 			device.SamplerStates[2] = Main.clampSS;
-			float dist = 1700f;
 
-			Vector3 camChunkPosWS = -Main.camera.Position;
+			if (Main.inputManager.IsHeld(Keys.F1))
+			{
+				Main.WVP.SetProjection(directionalLight.camera.GetProjectionMatrix());
+				directionalLight.SetPipelineState(device);
+			}
+
+			float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
+			Vector3 camChunkPosWS = Main.camera.Position;
 			if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
-				dist = MathHelper.Lerp(200f, 1700f, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
+				dist = MathHelper.Lerp(64 * Cube.CUBE_SCALE, dist, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
 			else if (camChunkPosWS.Y < -200f)
-				dist = 200f;
+				dist = 64 * Cube.CUBE_SCALE;
 
 			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 			camChunkPosWS.Y -= dist;
@@ -395,9 +438,9 @@ namespace ViMG
 			//camChunkPosWS.Y = 0;
 
 			Vector2 center = new Vector2(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE / 2f);
-			Vector2 distFromCenter = new Vector2(center.X - (-Main.camera.Position.X), center.Y - (-Main.camera.Position.Z));
+			Vector2 distFromCenter = new Vector2(center.X - Main.camera.Position.X, center.Y - Main.camera.Position.Z);
 
-			float len = distFromCenter.Length();
+			/*float len = distFromCenter.Length();
 
 			if (len > (sizeInCubes * Cube.CUBE_SCALE / 2f) - 200f)
 			{
@@ -406,11 +449,11 @@ namespace ViMG
 				percent = MathHelper.Clamp(percent, 0, 1);
 
 				dist = MathHelper.Lerp(0, dist, percent);
-			}
+			}*/
 
 			if (!player.InWater)
 			{
-				Main.FogManager.Set(Math.Max(0, dist - 400f), dist, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), GetTimeOfDay());
+				Main.FogManager.Set(Math.Max(0, dist - 20 * Cube.CUBE_SCALE), dist, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), GetTimeOfDay());
 			}
 			else
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
@@ -418,8 +461,8 @@ namespace ViMG
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
-				ChunkMesh mesh = chunkManager.GetMesh(pos);
-				Matrix transform = chunkManager.GetTransform(pos);
+				ChunkMesh mesh = ChunkManager.GetMesh(pos);
+				Matrix transform = ChunkManager.GetTransform(pos);
 
 				if (mesh != null)
 				{
@@ -429,7 +472,7 @@ namespace ViMG
 
 				if (Main.Debug && Main.DebugChunks)
 				{
-					chunkManager.GetChunk(pos).DrawDebug(device);
+					ChunkManager.GetChunk(pos).DrawDebug(device);
 
 					device.RasterizerState = Main.genericRS;
 					device.DepthStencilState = Main.genericDSS;
@@ -439,13 +482,14 @@ namespace ViMG
 			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
 			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			Main.CubeEffect.Parameters["EnableFog"].SetValue(false);
+			Main.FogManager.Disable();
 			float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 			meshSun.Draw(device, Main.CubeEffect, 
-				Matrix.CreateTranslation(new Vector3(0, 0, -DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE + Cube.CUBE_SCALE)) *
+				Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(player.Position));
-			Main.CubeEffect.Parameters["EnableFog"].SetValue(true);
+				Matrix.CreateTranslation(playerStartPos));
+
+			Main.FogManager.Enable();
 
 			foreach (var mined in miningCubes)
 			{
@@ -478,68 +522,39 @@ namespace ViMG
 			//player.Draw(device);
 			player.DrawDebug(device);
 
+			/*float a1 = 360 * ((alive % 4f) / 4f);
+
+			Matrix camera = //Matrix.CreateTranslation(-lightPos) * Matrix.CreateRotationX(MathHelper.ToRadians(-45));
+					Matrix.CreateTranslation(new Vector3(0, 1000, -1000)) *
+					Matrix.CreateRotationX(MathHelper.ToRadians(a1)) *
+					Matrix.CreateTranslation(playerStartPos);
+			DrawWireframe(device, camera, Color.White);*/
+
 			//device.RasterizerState = Main.wireframeRS;
 			//mesh.Draw(device, Main.BasicEffect, Vector3.Zero, Vector3.Zero, Vector3.One);
+		}
+
+		public void DrawShadowmap(GraphicsDevice device, Effect effect)
+        {
+			//Draw a mesh that should obscure our shadowmap once the sun falls below the horizon.
+			//This point is always at sea level.
+			//We could use any mesh for this, but the sun mesh is convenient for the moment. We might have to change this later.
+			//This mesh only needs to be the width/height of the directional light so there's no bleeding.
+			/*meshSun.Draw(device, Main.CubeEffect,
+				Matrix.CreateRotationY(MathHelper.ToRadians(180)) *
+				Matrix.CreateScale((1f / 80f) * directionalLight.width, (1f / 80f) * directionalLight.height, 1) *
+				Matrix.CreateTranslation(new Vector3(0, -directionalLight.height, SUN_LIGHT_DISTANCE + 50)) *
+				Matrix.CreateTranslation(player.Position.X, ChunkGeneratorIsland.SEA_LEVEL * Cube.CUBE_SCALE, player.Position.Z));
+
+			meshSun.Draw(device, Main.CubeEffect,
+				Matrix.CreateScale((1f / 80f) * directionalLight.width, (1f / 80f) * directionalLight.height, 1) *
+				Matrix.CreateTranslation(new Vector3(0, -directionalLight.height, -(SUN_LIGHT_DISTANCE + 50))) *
+				Matrix.CreateTranslation(player.Position.X, ChunkGeneratorIsland.SEA_LEVEL * Cube.CUBE_SCALE, player.Position.Z));*/
 		}
 
 		public void DrawUI(SpriteBatch batch)
 		{
 			player.DrawUI(batch);
-		}
-
-		public void DrawDepth(GraphicsDevice device)
-		{
-			if (!Main.ENABLE_SHADOWS)
-			{
-				Main.CubeEffect.Parameters["EnableShadows"].SetValue(false);
-				return;
-			}
-			else Main.CubeEffect.Parameters["EnableShadows"].SetValue(true);
-
-			device.SetRenderTarget(Main.DepthTarget);
-
-			device.DepthStencilState = Main.genericDSS;
-			device.RasterizerState = Main.reverseRS;
-			device.SamplerStates[2] = Main.shadowBorderClampSS;
-
-			//device.Clear(Color.White);
-			device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
-
-			Vector3 lightPos = playerStartPos + new Vector3(0, 100, 0); 
-			Matrix lightProj = Matrix.CreateOrthographicOffCenter(-1000, 1000, 1000, -1000, Main.NEAR, Main.FAR);
-
-			//float rotation = 360f * ((alive % 10f) / 10f);
-			Matrix camera = Matrix.CreateTranslation(-lightPos) * Matrix.CreateRotationX(MathHelper.ToRadians(90)); //Main.camera.GetViewMatrix();
-
-			//Main.WVP.SetProjection(lightProj);
-			//Main.WVP.SetView(camera);
-
-			for (int x = -DrawDistanceHoriz; x <= DrawDistanceHoriz; x++)
-			{
-				for (int y = -DrawDistanceVert; y <= DrawDistanceVert; y++)
-				{
-					for (int z = -DrawDistanceHoriz; z < DrawDistanceHoriz; z++)
-					{
-						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(lightPos);
-						chunkPos.X += x;
-						chunkPos.Y += y;
-						chunkPos.Z += z;
-						ChunkMesh mesh = chunkManager.GetMesh(chunkPos);
-						Matrix transform = chunkManager.GetTransform(chunkPos);
-
-						if (mesh != null)
-						{
-							mesh.Draw(device, Main.assetsManager.GetAsset<Effect>("depth"), transform);
-						}
-					}
-				}
-			}
-
-			Main.WVP.SetView(Main.camera.GetViewMatrix());
-			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
-
-			Main.CubeEffect.Parameters["LightViewProjection"].SetValue(lightProj * camera);
-			//Main.CubeEffect.Parameters["LightPos"].SetValue(-lightPos);
 		}
 
 		public void DrawWireframeCube(GraphicsDevice device, Vector3 position, Color? color = null)
@@ -576,9 +591,14 @@ namespace ViMG
 			DrawWireframeUnscaled(device, bounds.Position, bounds.Size, color);
 		}
 
+		public void DrawWireframe(GraphicsDevice device, Matrix transform, Color? color = null)
+        {
+			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), transform);
+		}
+
 		public ChunkManager GetChunkManager()
 		{
-			return chunkManager;
+			return ChunkManager;
 		}
 
 		public void OnCubeUpdate(ChunkData updatingParent, CubePosition updating, int updatedId)
@@ -594,6 +614,11 @@ namespace ViMG
 		{
 			alive = time;
 		}
+
+		public void AddTime(float time)
+        {
+			alive += time;
+        }
 
 		private float GetTimeOfDay()
 		{
@@ -630,9 +655,28 @@ namespace ViMG
 			return 0;
 		}
 
+		public bool IsNight()
+        {
+			return (alive % DAY_CYCLE_TIME) > DAY_CYCLE_TIME / 2f;
+        }
+
+		public float GetNightPercent()
+        {
+			float timeOfDay = alive % DAY_CYCLE_TIME;
+
+			if (!IsNight())
+				return 0;
+            else
+            {
+				float nightTime = timeOfDay - (DAY_CYCLE_TIME / 2f);
+
+				return nightTime / (DAY_CYCLE_TIME / 2f);
+            }
+        }
+
 		public void MineCube(CubePosition position, bool instant = false)
 		{
-			Chunk chunk = chunkManager.GetChunk(position);
+			Chunk chunk = ChunkManager.GetChunk(position);
 
 			MinedCube mined = new MinedCube()
 			{
@@ -642,7 +686,7 @@ namespace ViMG
 				timer = 2
 			};
 
-			Cube cube = Main.Registry.CubeRegistry.Get(chunkManager.GetRaw(position));
+			Cube cube = Main.Registry.CubeRegistry.Get(ChunkManager.GetRaw(position));
 
 			if (cube != null)
 			{
@@ -712,7 +756,7 @@ namespace ViMG
 			for (int y = 0; y < sizeInCubes; y++)
 			{
 				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-				if (chunkManager.IsInWorldBounds(pos) && chunkManager.GetRaw(pos) != 0)
+				if (ChunkManager.IsInWorldBounds(pos) && ChunkManager.GetRaw(pos) != 0)
 					return pos;
 			}
 
@@ -730,17 +774,17 @@ namespace ViMG
 
 			List<CubePosition> positions = new List<CubePosition>();
 
-			if (chunkManager.IsInWorldBounds(down))
+			if (ChunkManager.IsInWorldBounds(down))
 				positions.Add(down);
-			if (chunkManager.IsInWorldBounds(up))
+			if (ChunkManager.IsInWorldBounds(up))
 				positions.Add(up);
-			if (chunkManager.IsInWorldBounds(left))
+			if (ChunkManager.IsInWorldBounds(left))
 				positions.Add(left);
-			if (chunkManager.IsInWorldBounds(right))
+			if (ChunkManager.IsInWorldBounds(right))
 				positions.Add(right);
-			if (chunkManager.IsInWorldBounds(front))
+			if (ChunkManager.IsInWorldBounds(front))
 				positions.Add(front);
-			if (chunkManager.IsInWorldBounds(back))
+			if (ChunkManager.IsInWorldBounds(back))
 				positions.Add(back);
 
 			return positions;
@@ -749,26 +793,26 @@ namespace ViMG
 		public MeshHelper.CubeFace GetClearSides(CubePosition position)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-				position = position.InCubeSpace(chunkManager.GetChunk(position));
+				position = position.InCubeSpace(ChunkManager.GetChunk(position));
 
-			if (chunkManager.GetRaw(position) == 0)
+			if (ChunkManager.GetRaw(position) == 0)
 				return MeshHelper.CubeFace.ALL;
 
 			MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-			if (position.X == 0 || chunkManager.GetCubeInstance(position.X - 1, position.Y, position.Z).cubeId == 0)
+			if (position.X == 0 || ChunkManager.GetCubeInstance(position.X - 1, position.Y, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.LEFT;
-			if (position.X == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X + 1, position.Y, position.Z).cubeId == 0)
+			if (position.X == sizeInCubes - 1 || ChunkManager.GetCubeInstance(position.X + 1, position.Y, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.RIGHT;
 
-			if (position.Y == 0 || chunkManager.GetCubeInstance(position.X, position.Y - 1, position.Z).cubeId == 0)
+			if (position.Y == 0 || ChunkManager.GetCubeInstance(position.X, position.Y - 1, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.DOWN;
-			if (position.Y == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X, position.Y + 1, position.Z).cubeId == 0)
+			if (position.Y == sizeInCubes - 1 || ChunkManager.GetCubeInstance(position.X, position.Y + 1, position.Z).cubeId == 0)
 				faces |= MeshHelper.CubeFace.UP;
 
-			if (position.Z == 0 || chunkManager.GetCubeInstance(position.X, position.Y, position.Z - 1).cubeId == 0)
+			if (position.Z == 0 || ChunkManager.GetCubeInstance(position.X, position.Y, position.Z - 1).cubeId == 0)
 				faces |= MeshHelper.CubeFace.FRONT;
-			if (position.Z == sizeInCubes - 1 || chunkManager.GetCubeInstance(position.X, position.Y, position.Z + 1).cubeId == 0)
+			if (position.Z == sizeInCubes - 1 || ChunkManager.GetCubeInstance(position.X, position.Y, position.Z + 1).cubeId == 0)
 				faces |= MeshHelper.CubeFace.BACK;
 
 			return faces;
@@ -795,7 +839,7 @@ namespace ViMG
 				//avoid a copy with ref...
 				ref CubePosition pos = ref positions[i];
 
-				Chunk chunk = chunkManager.GetChunk(pos);
+				Chunk chunk = ChunkManager.GetChunk(pos);
 
 				chunk.GetData().MarkDirty(pos);
 			}

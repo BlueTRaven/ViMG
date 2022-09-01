@@ -6,43 +6,40 @@ DECLARE_TEXTURE(TextureHeightFogMapDay, 1);
 DECLARE_TEXTURE(TextureHeightFogMapNight, 2);
 DECLARE_TEXTURE(TextureLightDepth, 3);
 
-cbuffer Whatever : register(b0) 
-{
+float4x4 World;
+float4x4 View;
+float4x4 WorldNormal;
+float4x4 WorldViewProjection;
 
-	float4x4 World;
-	float4x4 View;
-	float4x4 WorldNormal;
-	float4x4 WorldViewProjection;
+float3 TintColor;
 
-	float3 TintColor;
+float3 WorldSize;
+float3 CubeSize;
+float2 MaxReachable;
 
-	float3 WorldSize;
-	float3 CubeSize;
-	float2 MaxReachable;
+float3 AmbientColor;
+float AmbientStrength;
+float SpecularStrength;
 
-	float AOStrength;
-	float AmbientStrength;
-	float SpecularStrength;
+float4x4 LightViewProjection;
+float3 LightPos;
+float3 LightColor;
+float2 LightResolution;
 
-	float4x4 LightViewProjection;
-	float3 LightPos;
-	float3 LightColor;
+float3 CameraPos;
 
-	float3 CameraPos;
+float FogStart;
+float FogEnd;
+float HeightFogMapLerp;
 
-	float FogStart;
-	float FogEnd;
-	float HeightFogMapLerp;
+bool UseSourceRect;
+float2 SourceRectPos;
+float2 SourceRectFarPos;
+float2 TextureSize;
+float2 TexCoordOffset;
 
-	bool UseSourceRect;
-	float2 SourceRectPos;
-	float2 SourceRectFarPos;
-	float2 TextureSize;
-	float2 TexCoordOffset;
-
-	bool EnableShadows;
-	bool EnableFog;
-}
+bool EnableShadows;
+bool EnableFog;
 
 struct Light 
 {
@@ -75,8 +72,6 @@ struct VertexShaderOutput
 	float4 PositionLS : TEXCOORD5;
 };
 
-float Shadow(float4 positionLS, float3 normal, float3 lightDir);
-
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
@@ -87,7 +82,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	output.Color = input.Color;
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
 	output.AO = input.AO;
-	output.PositionLS = mul(float4(output.PositionWS, 1), LightViewProjection);
+	output.PositionLS = mul(input.Position, mul(World, LightViewProjection));
 	
 	if (UseSourceRect)
 	{
@@ -101,6 +96,41 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	return output;
 }
 
+float DirectionalShadowFunc(float4 fragPosLightSpace, float3 normal, float3 lightDir)
+{
+	float3 projectedTexCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	projectedTexCoords.xy = (projectedTexCoords.xy * 0.5) + 0.5;
+	projectedTexCoords.y = 1 - projectedTexCoords.y;
+
+	if (projectedTexCoords.z > 1.0)
+		return 0.0;
+
+	float closestDepth = SAMPLE_TEXTURE(TextureLightDepth, projectedTexCoords.xy).r;
+	float currentDepth = projectedTexCoords.z;
+
+	//float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0005);
+	float bias = -max(0.01 * (1.0 - dot(normal, lightDir)), 0.005);
+
+	/*float shadow = 0.0;
+	float2 sampleSize = 1.0 / LightResolution;
+	const int PCF_SAMPLE_COUNT = 1;
+	const int PCF_POW = 9;
+
+	for (int x = -PCF_SAMPLE_COUNT; x <= PCF_SAMPLE_COUNT; ++x)
+	{
+		for (int y = -PCF_SAMPLE_COUNT; y <= PCF_SAMPLE_COUNT; ++y) 
+		{
+			float pcfDepth = SAMPLE_TEXTURE(TextureLightDepth, projectedTexCoords.xy + float2(x, y) * sampleSize).r;
+			shadow += currentDepth - bias < pcfDepth ? 1.0 : 0.0;
+		}
+	}
+
+	shadow /= PCF_POW;*/
+	float shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
+
+	return shadow;
+}
+
 float4 MainPS(VertexShaderOutput input) : SV_Target
 {
 	float4 worldColor = SAMPLE_TEXTURE(Texture, input.TexCoord) * input.Color;
@@ -111,24 +141,23 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	float3 norm = normalize(input.Normal);
 	float3 lightDir = normalize(LightPos - input.PositionWS);
 	
-	float WorldDistStart = (WorldSize.x / 2 * CubeSize.x) - 800;
-	float WorldDistEnd = (WorldSize.x / 2 * CubeSize.x) - 400;
+	//Units are calculated in world space.
+	//Start: distance from world center where gradient starts fading in.
+	//End: distance from world center where gradient ends and turns into solid color.
+	float WorldDistStart = (WorldSize.x / 2 * CubeSize.x) - (64 * CubeSize.x);
+	float WorldDistEnd = (WorldSize.x / 2 * CubeSize.x) - (72 * CubeSize.x);
 	
 	//fog
 	float3 centerHoriz = float3(WorldSize.x / 2 * CubeSize.x, input.PositionWS.y, WorldSize.z / 2 * CubeSize.z);
 	float distWorldCenter = length(centerHoriz - input.PositionWS);
-	float fogFactorWorldCenter = (distWorldCenter - WorldDistStart) / (WorldDistEnd - WorldDistStart);
+	float fogFactorWorldCenter = (distWorldCenter - WorldDistEnd) / (WorldDistStart - WorldDistEnd);
 	
-	float distance = length(-CameraPos - input.PositionWS);
+	float distance = length(input.PositionWS - -CameraPos);
 	float fogFactor = (distance - FogStart) / (FogEnd - FogStart);
 	
-	fogFactor = max(fogFactor, fogFactorWorldCenter);
+	//fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
-	//float closestLightStart;
-	//float closestLightEnd;
-	//float3 closestLightColor;
-	//float closestDistance = 10000000;
 	float3 sumLights = float3(0, 0, 0);
 	for (int i = 0; i < 16; i++)
 	{
@@ -137,20 +166,12 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 		float lightFactor = 1 - ((distance - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
 		lightFactor = clamp(lightFactor, 0, 1);
 		sumLights += Lights[i].Color * lightFactor;
-		/*if (length(Lights[i].Position - input.PositionWS) < closestDistance)
-		{
-			closestLightStart = Lights[i].Start;
-			closestLightEnd = Lights[i].End;
-			closestLightColor = Lights[i].Color;
-			closestDistance = length(Lights[i].Position - input.PositionWS);
-		}*/
+
+		sumLights = clamp(sumLights, float3(0, 0, 0), float3(1, 1, 1));
 	}
 	
-	//float lightFactor = 1 - ((closestDistance - closestLightStart) / (closestLightEnd - closestLightStart));
-	//lightFactor = clamp(lightFactor, 0, 1);
-
 	//ambient
-	float3 ambientColor = LightColor * AmbientStrength;
+	float3 ambientColor = AmbientColor * AmbientStrength;
 
 	ambientColor += sumLights;
 	ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
@@ -165,10 +186,10 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	
 	float specToCam = pow(max(dot(camDir, reflectDir), 0), 32);
 	float3 specularColor = specToCam * LightColor * SpecularStrength;
-		
+
 	float4 finalColor = float4(ambientColor, 1.0) * worldColor;
 	finalColor.rgb *= input.AO;
-	
+
 	finalColor.rgb *= TintColor;
 	
 	if (EnableFog > 0)
@@ -185,8 +206,9 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	
 	if (EnableShadows > 0)
 	{	
-		float shadow = Shadow(input.PositionLS, input.Normal, lightDir);
-		finalColor.rgb *= 1 - shadow;
+		float shadow = DirectionalShadowFunc(input.PositionLS, norm, lightDir);
+		finalColor.rgb *= shadow;
+		//finalColor.rgb *= 1 - shadow;
 	}
 	
 	return finalColor;

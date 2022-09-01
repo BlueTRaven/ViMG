@@ -96,7 +96,12 @@ namespace ViMG
 			return GetVisual(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace));
 		}
 
-		public Span<ushort> GetAll()
+		public Span<ushort> GetAllAsSpan()
+		{
+			return cubes;
+		}
+
+		public ushort[] GetAll()
 		{
 			return cubes;
 		}

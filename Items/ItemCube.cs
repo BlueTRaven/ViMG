@@ -20,7 +20,7 @@ namespace ViMG.Items
 		{
 			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
 
-			var lookAtResult = player.GetWorld().Raycast(-Main.camera.Position, -Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
