@@ -101,7 +101,7 @@ namespace ViMG.Cubes
 			}
 		}
 
-		public const float CUBES_PER_UNIT = 50f;
+		public const float CUBES_PER_UNIT = 5f;
 		public const float CUBE_SCALE = 1f / CUBES_PER_UNIT;
 
 		private readonly int[] cubeFaceLookup = new int[(int)MeshHelper.CubeFace.BACK + 1] 

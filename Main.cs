@@ -181,7 +181,7 @@ namespace ViMG
 			
 			base.Initialize();
 
-			DepthTarget = new RenderTarget2D(GraphicsDevice, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			//DepthTarget = new RenderTarget2D(GraphicsDevice, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			//GraphicsDevice.SetRenderTarget(WorldTarget);
 			
@@ -322,6 +322,11 @@ namespace ViMG
 			batch.End();
 
             base.Draw(gameTime);
+
+			while(GraphicsDevice.GraphicsDebug.TryDequeueMessage(out var message))
+            {
+				Console.WriteLine(message);
+            }
         }
 
 		private string FormatPos()

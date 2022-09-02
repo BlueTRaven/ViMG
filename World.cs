@@ -210,6 +210,9 @@ namespace ViMG
 
 			Main.CubeEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
+
+			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
+				new float[] { Main.camera.Far / 50f, Main.camera.Far / 25f, Main.camera.Far  / 10f, Main.camera.Far / 2f});
 		}
 
 		public void Initialize()
@@ -268,7 +271,6 @@ namespace ViMG
 			float size = Cube.CUBE_SCALE * 10;
 			float depth = Cube.CUBE_SCALE * 40;
 			//directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, depth);
-			directionalLight = new DirectionalLight(Main.camera, Main.camera.Near, Main.camera.Far / 50f);
 		}
 
 		public void UnfixedUpdate()
@@ -375,8 +377,9 @@ namespace ViMG
             if (!IsNight())
             {
                 float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-				directionalLight.camera.Update(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-					Matrix.CreateRotationX(MathHelper.ToRadians(angle))));
+				directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White);
                 //directionalLight.UpdateDirection(player.Position, new Vector3(0, 0, SUN_LIGHT_DISTANCE), new Vector3(MathHelper.ToRadians(angle), 0, 0));
                 /*directionalLight.camera.Position = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
                     Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
@@ -404,6 +407,12 @@ namespace ViMG
 			}
 		}
 
+		//Gets a list of all chunks that should be rendered by the main camera.
+		public List<ChunkPosition> GetChunkDrawPositions()
+        {
+			return chunkDrawPositions;
+        }
+
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
 
@@ -416,7 +425,8 @@ namespace ViMG
 
 			directionalLight.DrawShadowmap(this, device);
 
-			Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(Main.DepthTarget);
+			//Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(directionalLight.GetShadowmapBuffer());
+			Main.CubeEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
 
 			device.SetRenderTarget(Main.WorldTarget);
 			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);

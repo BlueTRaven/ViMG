@@ -1,6 +1,6 @@
 #include "platform_defines.fxh"
 
-matrix WorldViewProjection;
+float4x4 WorldViewProjection;
 
 struct VertexShaderInput
 {
@@ -10,6 +10,7 @@ struct VertexShaderInput
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
+	float4 SamplePosition : TEXCOORD0;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -17,13 +18,14 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 	
 	output.Position = mul(input.Position, WorldViewProjection);
+	output.SamplePosition = mul(input.Position, WorldViewProjection);
 
 	return output;
 }
 
 float4 MainPS(VertexShaderOutput input) : SV_Target
 {
-	float depth = input.Position.z / input.Position.w;
+	float depth = input.SamplePosition.z / input.SamplePosition.w;
 	
 	return float4(depth, depth, depth, 1);
 }

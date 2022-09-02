@@ -1,15 +1,21 @@
 //#include "Macros.fxh"
 #include "platform_defines.fxh"
 
+#define CASCADE_COUNT 16
+
 DECLARE_TEXTURE(Texture, 0);
 DECLARE_TEXTURE(TextureHeightFogMapDay, 1);
 DECLARE_TEXTURE(TextureHeightFogMapNight, 2);
 DECLARE_TEXTURE(TextureLightDepth, 3);
+//DECLARE_TEXTURE_3D(TexturesLightDepth, 5, CASCADE_COUNT);
+Texture2DArray<float4> TexturesLightDepth : register(t5); \
+sampler TexturesLightDepthSampler : register(s5);
 
 float4x4 World;
 float4x4 View;
 float4x4 WorldNormal;
 float4x4 WorldViewProjection;
+float FarPlane;
 
 float3 TintColor;
 
@@ -21,7 +27,10 @@ float3 AmbientColor;
 float AmbientStrength;
 float SpecularStrength;
 
+int CascadePlanesUsed;
+float CascadePlaneDistances[16];
 float4x4 LightViewProjection;
+float4x4 LightViewProjections[CASCADE_COUNT];
 float3 LightDirection;
 float3 LightColor;
 float2 LightResolution;
@@ -99,6 +108,54 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	return output;
 }
 
+float DirectionalShadowFuncCSM(float3 fragPosWorldSpace, float3 normal, float3 lightDir)
+{
+	float4 fragPosViewSpace = mul(float4(fragPosWorldSpace, 1.0), View);
+	float depthValue = abs(fragPosViewSpace.z);
+
+	int layer = -1;
+	for (int i = 0; i < CascadePlanesUsed; ++i)
+	{
+		if (depthValue < CascadePlaneDistances[i])
+		{
+			layer = i;
+			break;
+		}
+	}
+	if (layer == -1)
+	{
+		layer = CascadePlanesUsed;
+	}
+
+	float4 csmFragPosLightSpace = mul(float4(fragPosWorldSpace, 1.0), LightViewProjections[layer]);
+
+	float3 projectedTexCoords = csmFragPosLightSpace.xyz / csmFragPosLightSpace.w;
+	projectedTexCoords.xy = (projectedTexCoords.xy * 0.5) + 0.5;
+	projectedTexCoords.y = 1 - projectedTexCoords.y;
+
+	if (projectedTexCoords.z > 1.0)
+		return 0.0;
+
+	float closestDepth = TexturesLightDepth.Sample(TexturesLightDepthSampler, float3(projectedTexCoords.xy, layer)).r;//SAMPLE_TEXTURE(TexturesLightDepth, float3(projectedTexCoords.xy, layer)).r;
+	float currentDepth = projectedTexCoords.z;
+	
+	//float bias = 0.0018;
+	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+	const float biasModifier = 0.5f;
+	if (layer == CascadePlanesUsed)
+	{
+		bias *= 1 / (FarPlane * biasModifier);
+	}
+	else
+	{
+		bias *= 1 / (CascadePlaneDistances[layer] * biasModifier);
+	}
+
+	float shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
+
+	return shadow;
+}
+
 float DirectionalShadowFunc(float4 fragPosLightSpace, float3 normal, float3 lightDir)
 {
 	float3 projectedTexCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -112,7 +169,7 @@ float DirectionalShadowFunc(float4 fragPosLightSpace, float3 normal, float3 ligh
 	float currentDepth = projectedTexCoords.z;
 
 	//float bias = max(0.05 * (1.0 - dot(float3(-normal.x, normal.y, -normal.z), lightDir)), 0.005);
-	float bias = max(0.01 * (1.0 - dot(lightDir, normal)), 0.005);
+	float bias = max(0.005 * (1.0 - dot(lightDir, normal)), 0.00005);
 
 	float shadow = 0;
 	//float2 sampleSize = 1.0 / float2(1024, 1024);
@@ -210,32 +267,13 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	
 	if (EnableShadows > 0)
 	{	
-		float shadow = DirectionalShadowFunc(input.PositionLS, norm, LightDirection);
+		float shadow = DirectionalShadowFuncCSM(input.PositionWS, norm, LightDirection);
+		//float shadow = DirectionalShadowFunc(input.PositionLS, norm, LightDirection);
 		finalColor.rgb *= shadow;
 		//finalColor.rgb *= 1 - shadow;
 	}
 	
 	return finalColor;
-}
-
-float Shadow(float4 positionLS, float3 normal, float3 lightDir)
-{
-	float3 projCoords = positionLS.xyz / positionLS.w;
-	
-	projCoords = projCoords * 0.5 + 0.5;
-	
-	float closestDepth = 1- SAMPLE_TEXTURE(TextureLightDepth, float2(projCoords.x, 1 - projCoords.y)).r;
-	
-	float currentDepth = projCoords.z;
-	
-	float bias = 0;//max(0.05 * (1 - dot(normal, lightDir)), 0.005);
-	
-	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-	
-	if (projCoords.z > 1.0)
-		shadow = 0.0;
-	
-	return shadow;
 }
 
 technique BasicColorDrawing

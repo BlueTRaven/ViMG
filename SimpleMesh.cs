@@ -195,7 +195,7 @@ namespace ViMG
 			}
 		}
 
-		public virtual void DrawDebugVertexPositionTexture(GraphicsDevice device, Effect vertexPositionTextureDebugEffect, Color diffuseColor, Matrix transform)
+		public virtual void DrawDebugVertexPositionTexture(GraphicsDevice device, Effect vertexPositionTextureDebugEffect, Color diffuseColor, Matrix transform, Texture overrideTexture = null)
         {
 			if (!Use(device))
 				return;
@@ -204,7 +204,7 @@ namespace ViMG
 
 			vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
 			vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
-			vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(this.texture);
+			vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(overrideTexture == null ? texture : overrideTexture);
 
 			foreach (var pass in vertexPositionTextureDebugEffect.CurrentTechnique.Passes)
 			{

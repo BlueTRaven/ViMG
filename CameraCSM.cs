@@ -54,7 +54,7 @@ namespace ViMG
                 maxZ = MathHelper.Max(maxZ, transformed.Z);
             }
 
-            float zRange = 1;
+            float zRange = 2.5f;
 
             if (minZ < 0)
                 minZ *= zRange;

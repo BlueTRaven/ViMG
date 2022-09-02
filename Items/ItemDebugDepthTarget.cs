@@ -10,8 +10,10 @@ namespace ViMG.Items
 {
 	public class ItemDebugDepthTarget : Item
 	{
+		public RenderTarget2D DepthTarget;
+
 		private static SimpleMesh<VertexPositionTexture, int> depthMesh;
-		public ItemDebugDepthTarget() : base("debug_depth_target", Main.DepthTarget, new BrUtility.RectangleF(0, 0, Main.DepthTarget.Width, Main.DepthTarget.Height))
+		public ItemDebugDepthTarget() : base("debug_depth_target", null, new BrUtility.RectangleF(0, 0, 0, 0))
 		{
 			name = "SHADOW DEPTH RENDERER";
 			description = "Renders the depth buffer into your very hands.\n" +
@@ -25,7 +27,7 @@ namespace ViMG.Items
 			if (depthMesh == null)
 				MakeMesh(device);
 
-			depthMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, transform);
+			depthMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, transform, DepthTarget);
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
@@ -77,7 +79,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionTexture(d, dtx));
 			vertices.Add(new VertexPositionTexture(c, ctx));*/
 
-			depthMesh = new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, Texture);
+			depthMesh = new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices);
 		}
 	}
 }

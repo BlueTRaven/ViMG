@@ -14,8 +14,8 @@
     Texture2D<float4> Name : register(t##index); \
     sampler Name##Sampler : register(s##index);
 
-#define DECLARE_TEXTURE_3D(Name, index) \
-	Texture3D<float4> Name : register(t##index); \
+#define DECLARE_TEXTURE_3D(Name, index, size) \
+	Texture3D<float4> Name[size] : register(t##index); \
 	sampler Name##Sampler : register(s##index);
 
 #define SAMPLE_TEXTURE(Name, texCoord)  Name.Sample(Name##Sampler, texCoord)
