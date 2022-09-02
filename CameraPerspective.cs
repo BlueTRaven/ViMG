@@ -9,7 +9,6 @@ namespace ViMG
 {
     public class CameraPerspective : Camera
 	{
-		private bool projectionDirty;
 		private Matrix projectionMatrix;
 
 		private float fovDegrees;
@@ -20,7 +19,7 @@ namespace ViMG
 			projectionDirty = true;
         }
 
-		public override Matrix GetProjectionMatrix()
+		protected override Matrix GetProjectionMatrixInternal()
 		{
 			if (projectionDirty)
 			{

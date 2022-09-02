@@ -10,59 +10,104 @@ namespace ViMG
 {
     public class DirectionalLight
     {
-        public CameraOrthographic camera;
-
-		public struct DirectionalLightGPU
-        {
-			public Matrix ViewProjection;
-			public Vector4 Position;
-			public Vector4 Color;
-        }
+        //public CameraOrthographic camera;
+		public CameraCSM camera;
+		private CameraOrthographic csmCameras;
 
 		public readonly float width;
 		public readonly float height;
 
-		//private DirectionalLightGPU[] data = new DirectionalLightGPU[1];
-		//private StructuredBuffer buffer;
-
-        public DirectionalLight(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float left, float right, float top, float bottom, float near, float far)
+        public DirectionalLight(GraphicsDevice device, Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float left, float right, float top, float bottom, float near, float far)
         {
-            camera = new CameraOrthographic(startPosition, startRotation, startScale, left, right, top, bottom, near, far);
-			camera.Scale = Main.camera.Scale;
+            //camera = new CameraOrthographic(startPosition, startRotation, startScale, left, right, top, bottom, near, far);
 
 			width = Math.Max(left, right) - Math.Min(left, right);
 			height = Math.Max(top, bottom) - Math.Min(top, bottom);
         }
 
+		public DirectionalLight(Camera mainCamera, float near, float far)
+        {
+			camera = new CameraCSM(mainCamera, near, far);
+        }
+
+		public void UpdateDirection(Vector3 position, Vector3 direction, Vector3 angles)
+        {
+			Vector3[] corners = Main.camera.GetFrustum().GetCorners();
+
+			Vector3 center = Vector3.Zero;
+
+			foreach (Vector3 corner in corners)
+			{
+				center += corner;
+			}
+			center /= corners.Length;
+
+			Matrix viewMatrix = 
+				Matrix.CreateTranslation(-center) *
+				Matrix.CreateRotationZ(angles.Z) *
+				Matrix.CreateRotationY(angles.Y) *
+				Matrix.CreateRotationX(angles.X) *
+				Matrix.CreateScale(Vector3.One);
+
+			//Matrix viewMatrix = Matrix.CreateLookAt(position, position - direction, new Vector3(0, 1, 0));
+
+			float minX = float.MaxValue;
+			float maxX = float.MinValue;
+			float minY = float.MaxValue;
+			float maxY = float.MinValue;
+			float minZ = float.MaxValue;
+			float maxZ = float.MinValue;
+
+			foreach (Vector3 corner in corners)
+			{
+				Vector3 transformed = Vector3.Transform(corner, viewMatrix);
+				minX = MathHelper.Min(minX, transformed.X);
+				maxX = MathHelper.Max(maxX, transformed.X);
+				minY = MathHelper.Min(minY, transformed.Y);
+				maxY = MathHelper.Max(maxY, transformed.Y);
+				minZ = MathHelper.Min(minZ, transformed.Z);
+				maxZ = MathHelper.Max(maxZ, transformed.Z);
+			}
+
+			float zRange = 10;
+
+			if (minZ < 0)
+				minZ *= zRange;
+			else minZ /= zRange;
+
+			if (maxZ < 0)
+				maxZ /= zRange;
+			else maxZ *= zRange;
+
+			//Matrix ortho = Matrix.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+
+			//camera = new CameraOrthographic(center, angles, Vector3.One, minX, maxX, maxY, minY, minZ, maxZ);
+			//camera = new CameraOrthographic(center + direction, direction, minZ, maxZ, viewMatrix, ortho);
+		}
+
 		public void SetPipelineState(GraphicsDevice device)
         {
 			device.DepthStencilState = Main.genericDSS;
-			device.RasterizerState = Main.reverseRS;
+			//device.RasterizerState = Main.reverseRS;
 			device.SamplerStates[3] = Main.shadowBorderClampSS;
 		}
 
         public void DrawShadowmap(World world, GraphicsDevice device)
 		{
 			//if (buffer == null)
-				//buffer = new StructuredBuffer(device, typeof(DirectionalLightGPU), 1, BufferUsage.WriteOnly, ShaderAccess.Read);
+			//buffer = new StructuredBuffer(device, typeof(DirectionalLightGPU), 1, BufferUsage.WriteOnly, ShaderAccess.Read);
 
 			if (!Main.ENABLE_SHADOWS)
 			{
-				/*DirectionalLightGPU disabledData = new DirectionalLightGPU()
-				{
-					ViewProjection = Matrix.Identity,
-					Position = new Vector4(camera.Position, 1f),
-					Color = Color.White.ToVector4(),
-				};
-
-				data[0] = disabledData;
-				buffer.SetData(data);
-				Main.CubeEffect.Parameters["DirectionalLights"].SetValue(buffer);*/
-
 				Main.CubeEffect.Parameters["EnableShadows"].SetValue(false);
 				return;
 			}
-			else Main.CubeEffect.Parameters["EnableShadows"].SetValue(true);
+			else
+			{
+				Main.CubeEffect.Parameters["EnableShadows"].SetValue(true);
+				Main.CubeEffect.Parameters["EnablePCF"].SetValue(Main.ENABLE_PCF);
+				Main.CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
+			}
 
 			device.SetRenderTarget(Main.DepthTarget);
 
@@ -116,6 +161,7 @@ namespace ViMG
 			//Main.CubeEffect.Parameters["DirectionalLights"].SetValue(buffer);
 			Main.CubeEffect.Parameters["LightViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 			Main.CubeEffect.Parameters["LightPos"].SetValue(camera.Position);
+			Main.CubeEffect.Parameters["LightDirection"].SetValue(-camera.Forward);
 		}
     }
 }

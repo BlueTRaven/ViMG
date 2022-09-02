@@ -16,7 +16,7 @@ namespace ViMG
 			set
 			{
 				position = value;
-				cameraDirty = true;
+				viewDirty = true;
 				frustumDirty = true;
 			}
 		}
@@ -26,7 +26,7 @@ namespace ViMG
 			set
 			{
 				rotation = value;
-				cameraDirty = true;
+				viewDirty = true;
 				frustumDirty = true;
 			}
 		}
@@ -37,13 +37,14 @@ namespace ViMG
 			set
 			{
 				scale = value;
-				cameraDirty = true;
+				viewDirty = true;
 				frustumDirty = true;
 			}
 		}
 
-		private bool cameraDirty;
-		private Matrix camera;
+		protected bool viewDirty;
+		protected Matrix viewMatrix;
+		protected bool projectionDirty;
 
 		public Vector3 Forward
 		{
@@ -109,23 +110,28 @@ namespace ViMG
 			{
 				near = value;
 				frustumDirty = true;
+				projectionDirty = true;
 			}
 		}
 		private float far;
-		public float Far
+
+        private readonly bool rotationAsDirection;
+
+        public float Far
 		{
 			get => far;
 			set
 			{
 				far = value;
 				frustumDirty = true;
+				projectionDirty = true;
 			}
 		}
 
 		private bool frustumDirty;
 		private BoundingFrustum frustum;
 
-		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far)
+		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far, bool rotationAsDirection = false)
 		{
 			this.position = startPosition;
 			this.rotation = startRotation;
@@ -133,35 +139,52 @@ namespace ViMG
 
 			this.near = near;
 			this.far = far;
-
-			cameraDirty = true;
+            this.rotationAsDirection = rotationAsDirection;
+            viewDirty = true;
 		}
 
 		public Matrix GetViewMatrix()
+        {
+			return GetViewMatrixInternal();
+        }
+
+		protected virtual Matrix GetViewMatrixInternal()
 		{
-			if (cameraDirty)
+			if (viewDirty)
 			{
-				camera = Matrix.CreateTranslation(-Position) *
-					Matrix.CreateRotationZ(Rotation.Z) *
-					Matrix.CreateRotationY(Rotation.Y) *
-					Matrix.CreateRotationX(Rotation.X) *
-					Matrix.CreateScale(scale);
-				cameraDirty = false;
+				if (!rotationAsDirection)
+				{
+					viewMatrix = Matrix.CreateTranslation(-Position) *
+						Matrix.CreateRotationZ(Rotation.Z) *
+						Matrix.CreateRotationY(Rotation.Y) *
+						Matrix.CreateRotationX(Rotation.X) *
+						Matrix.CreateScale(scale);
+				}
+                else
+                {
+					viewMatrix = Matrix.CreateLookAt(-Position, -Position + Rotation, new Vector3(0, 1, 0)) * Matrix.CreateScale(scale);
+                }
+				viewDirty = false;
 			}
 
-			return camera;
+			return viewMatrix;
 		}
 
-		public abstract Matrix GetProjectionMatrix();
+		public Matrix GetProjectionMatrix()
+        {
+			return GetProjectionMatrixInternal();
+        }
+
+		protected abstract Matrix GetProjectionMatrixInternal();
 
 		public BoundingFrustum GetFrustum()
 		{
 			if (frustum == null)
-				frustum = new BoundingFrustum(GetViewMatrix() * GetProjectionMatrix());
+				frustum = new BoundingFrustum(GetViewMatrixInternal() * GetProjectionMatrixInternal());
 
-			if (frustumDirty || cameraDirty)
+			if (frustumDirty || viewDirty)
 			{
-				frustum.Matrix = GetViewMatrix() * GetProjectionMatrix();
+				frustum.Matrix = GetViewMatrixInternal() * GetProjectionMatrixInternal();
 				frustumDirty = false;
 			}
 

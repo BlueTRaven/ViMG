@@ -20,8 +20,8 @@ namespace ViMG
         SpriteBatch batch;
 
 		private const float FOV_DEGREES = 90f;
-		public const float NEAR = 0.0005f;
-		public const float FAR = 5000f;
+		public const float NEAR = 0.005f;
+		public const float FAR = 6 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE + (Cubes.Cube.CUBE_SCALE * 64);
 
 		public static BasicEffect BasicEffect;
 		public static Effect VertexPositionColorDebugEffect;
@@ -31,6 +31,7 @@ namespace ViMG
 		private World world;
 
 		public static Camera camera;
+		public static Camera debugCamera;
 
 		public static InputManager inputManager;
 		public static ViMGAssetsManager assetsManager;
@@ -77,7 +78,8 @@ namespace ViMG
 
 		//Debugging purposes only. Sometimes we want to run (semi)headless for profiling reasons.
 		private const bool NO_RENDER = false;
-		public const bool ENABLE_SHADOWS = false;
+		public const bool ENABLE_SHADOWS = true;
+		public const bool ENABLE_PCF = true;
 
 		public static bool Exit = false;
 
@@ -97,6 +99,7 @@ namespace ViMG
             Content.RootDirectory = "Content";
 
 			camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
+			debugCamera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
 			assetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();

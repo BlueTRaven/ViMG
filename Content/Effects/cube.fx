@@ -22,9 +22,11 @@ float AmbientStrength;
 float SpecularStrength;
 
 float4x4 LightViewProjection;
-float3 LightPos;
+float3 LightDirection;
 float3 LightColor;
 float2 LightResolution;
+
+float3 LightPos;
 
 float3 CameraPos;
 
@@ -40,6 +42,7 @@ float2 TexCoordOffset;
 
 bool EnableShadows;
 bool EnableFog;
+bool EnablePCF;
 
 struct Light 
 {
@@ -108,25 +111,26 @@ float DirectionalShadowFunc(float4 fragPosLightSpace, float3 normal, float3 ligh
 	float closestDepth = SAMPLE_TEXTURE(TextureLightDepth, projectedTexCoords.xy).r;
 	float currentDepth = projectedTexCoords.z;
 
-	//float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0005);
-	float bias = -max(0.01 * (1.0 - dot(normal, lightDir)), 0.005);
+	//float bias = max(0.05 * (1.0 - dot(float3(-normal.x, normal.y, -normal.z), lightDir)), 0.005);
+	float bias = max(0.01 * (1.0 - dot(lightDir, normal)), 0.005);
 
-	/*float shadow = 0.0;
-	float2 sampleSize = 1.0 / LightResolution;
-	const int PCF_SAMPLE_COUNT = 1;
-	const int PCF_POW = 9;
+	float shadow = 0;
+	//float2 sampleSize = 1.0 / float2(1024, 1024);
+	//const int PCF_SAMPLE_COUNT = 1;
+	//const float PCF_POW = 9;
 
-	for (int x = -PCF_SAMPLE_COUNT; x <= PCF_SAMPLE_COUNT; ++x)
-	{
-		for (int y = -PCF_SAMPLE_COUNT; y <= PCF_SAMPLE_COUNT; ++y) 
-		{
-			float pcfDepth = SAMPLE_TEXTURE(TextureLightDepth, projectedTexCoords.xy + float2(x, y) * sampleSize).r;
-			shadow += currentDepth - bias < pcfDepth ? 1.0 : 0.0;
-		}
-	}
+	//for (int x = -1; x <= 1; ++x)
+	//{
+	//	for (int y = -1; y <= 1; ++y)
+	//	{
+	//		float pcfDepth = SAMPLE_TEXTURE(TextureLightDepth, projectedTexCoords.xy + (float2(x, y) * sampleSize)).r;
+	//		shadow += currentDepth - bias < pcfDepth ? 1.0 : 0.0;
+	//	}
+	//}
 
-	shadow /= PCF_POW;*/
-	float shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
+	//shadow /= 9;
+
+	shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
 
 	return shadow;
 }
@@ -155,7 +159,7 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	float distance = length(input.PositionWS - -CameraPos);
 	float fogFactor = (distance - FogStart) / (FogEnd - FogStart);
 	
-	//fogFactor = max(fogFactor, fogFactorWorldCenter);
+	fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
 	float3 sumLights = float3(0, 0, 0);
@@ -206,7 +210,7 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 	
 	if (EnableShadows > 0)
 	{	
-		float shadow = DirectionalShadowFunc(input.PositionLS, norm, lightDir);
+		float shadow = DirectionalShadowFunc(input.PositionLS, norm, LightDirection);
 		finalColor.rgb *= shadow;
 		//finalColor.rgb *= 1 - shadow;
 	}

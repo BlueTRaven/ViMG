@@ -30,6 +30,8 @@ namespace ViMG
 			Hurt,
 		}
 
+		public Vector3 Rotation;
+
 		public Vector3 Velocity;
 
 		private float moveSpeed = 8;
@@ -556,7 +558,7 @@ namespace ViMG
 			{
 				float scalar = 0.25f;
 
-				Vector3 camRotation = Main.camera.Rotation;
+				Vector3 camRotation = Rotation;
 
 				Vector2 delta = new Vector2(originalMS.X, originalMS.Y) - new Vector2(currentMS.X, currentMS.Y);
 				camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
@@ -567,7 +569,8 @@ namespace ViMG
 				else if (camRotation.X < -MathHelper.ToRadians(89))
 					camRotation.X = -MathHelper.ToRadians(89);
 
-				Main.camera.Rotation = camRotation;
+				Rotation = camRotation;
+				Main.camera.Rotation = Rotation;
 			}
 		}
 

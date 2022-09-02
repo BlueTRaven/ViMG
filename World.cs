@@ -23,7 +23,8 @@ namespace ViMG
 		public const float GRAVITY = -9.8f;
 		public const float DAY_CYCLE_TIME = 60f * 10f;
 
-		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE + Cube.CUBE_SCALE;
+		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
@@ -70,7 +71,7 @@ namespace ViMG
 
 		public ChunkLoadManager ChunkLoadManager;
 
-		private const float SUN_LIGHT_DISTANCE = -2;
+		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		public DirectionalLight directionalLight;
 
 		public World(GraphicsDevice device, int worldSize)
@@ -263,8 +264,11 @@ namespace ViMG
 
 			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8);
 
-			float size = 0.25f;
-			directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, 10);
+			//20 cubes in width at all times.
+			float size = Cube.CUBE_SCALE * 10;
+			float depth = Cube.CUBE_SCALE * 40;
+			//directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, depth);
+			directionalLight = new DirectionalLight(Main.camera, Main.camera.Near, Main.camera.Far / 50f);
 		}
 
 		public void UnfixedUpdate()
@@ -371,28 +375,32 @@ namespace ViMG
             if (!IsNight())
             {
                 float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-                directionalLight.camera.Position = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+				directionalLight.camera.Update(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle))));
+                //directionalLight.UpdateDirection(player.Position, new Vector3(0, 0, SUN_LIGHT_DISTANCE), new Vector3(MathHelper.ToRadians(angle), 0, 0));
+                /*directionalLight.camera.Position = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
                     Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(player.Position));
-                directionalLight.camera.Rotation = new Vector3(MathHelper.ToRadians(angle), MathHelper.ToRadians(180), 0);
+                    Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
+                    Matrix.CreateTranslation(player.Position - Main.camera.Forward * Cube.CUBE_SCALE * 8));*/
+                //directionalLight.camera.Rotation = new Vector3(MathHelper.ToRadians(angle), MathHelper.ToRadians(180 + SUN_ANGLE), 0);
             }
             else
             {
                 if (GetNightPercent() < 0.5f)
                 {
-                    directionalLight.camera.Position =
+                    /*directionalLight.camera.Position =
                         Vector3.Transform(new Vector3(0, -(directionalLight.height * 3) * GetNightPercent(), SUN_LIGHT_DISTANCE),
                         Matrix.CreateRotationY(MathHelper.ToRadians(180)) *
-                        Matrix.CreateTranslation(player.Position));
+                        Matrix.CreateTranslation(player.Position));*/
                 }
             }
 
             if (Main.inputManager.IsHeld(Keys.F1))
 			{
-				//Main.camera.Position = directionalLight.camera.Position;
-				//Main.camera.Rotation = directionalLight.camera.Rotation;
-				directionalLight.camera.Position = Main.camera.Position;
-				directionalLight.camera.Rotation = Main.camera.Rotation;
+				Main.debugCamera.Position = directionalLight.camera.Position;
+				Main.debugCamera.Rotation = directionalLight.camera.Rotation;
+				//directionalLight.camera.Position = Main.camera.Position;
+				//directionalLight.camera.Rotation = Main.camera.Rotation;
 			}
 		}
 
@@ -421,6 +429,7 @@ namespace ViMG
 			if (Main.inputManager.IsHeld(Keys.F1))
 			{
 				Main.WVP.SetProjection(directionalLight.camera.GetProjectionMatrix());
+				Main.WVP.SetView(directionalLight.camera.GetViewMatrix());
 				directionalLight.SetPipelineState(device);
 			}
 
@@ -434,22 +443,6 @@ namespace ViMG
 			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 			camChunkPosWS.Y -= dist;
 			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-			//if (camChunkPosWS.Y < 0)
-			//camChunkPosWS.Y = 0;
-
-			Vector2 center = new Vector2(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE / 2f);
-			Vector2 distFromCenter = new Vector2(center.X - Main.camera.Position.X, center.Y - Main.camera.Position.Z);
-
-			/*float len = distFromCenter.Length();
-
-			if (len > (sizeInCubes * Cube.CUBE_SCALE / 2f) - 200f)
-			{
-				float lend = len - ((sizeInCubes * Cube.CUBE_SCALE / 2f) - 200f);
-				float percent = 1 - (lend / 100f);
-				percent = MathHelper.Clamp(percent, 0, 1);
-
-				dist = MathHelper.Lerp(0, dist, percent);
-			}*/
 
 			if (!player.InWater)
 			{
@@ -487,7 +480,8 @@ namespace ViMG
 			meshSun.Draw(device, Main.CubeEffect, 
 				Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(playerStartPos));
+				//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
+				Matrix.CreateTranslation(player.Position));
 
 			Main.FogManager.Enable();
 

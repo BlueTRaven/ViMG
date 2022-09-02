@@ -9,7 +9,6 @@ namespace ViMG
 {
     public class CameraOrthographic : Camera
     {
-		private bool projectionDirty;
 		private Matrix projectionMatrix;
 
 		private float left, right, top, bottom;
@@ -24,7 +23,20 @@ namespace ViMG
 			projectionDirty = true;
 		}
 
-		public override Matrix GetProjectionMatrix()
+		public CameraOrthographic(Vector3 position, Vector3 direction, float near, float far, Matrix view, Matrix projection) : base(position, direction, Vector3.One, near, far, true)
+        {
+			this.viewMatrix = view;
+			this.projectionMatrix = projection;
+			viewDirty = false;
+        }
+
+        protected override Matrix GetViewMatrixInternal()
+        {
+
+            return base.GetViewMatrixInternal();
+        }
+
+		protected override Matrix GetProjectionMatrixInternal()
 		{
 			if (projectionDirty)
 			{
