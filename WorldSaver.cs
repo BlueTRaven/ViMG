@@ -28,6 +28,7 @@ namespace ViMG
 		private const string SAVE_FOLDER = "./saves/";
 		public const string FILE_NAME_CHUNK = "world_chunks.vis";
 		public const string FILE_NAME_ENTITIES = "world_entities.vis";
+		public const string FILE_NAME_SESSION = "session.ses";
 
 		private const long ONE_CHUNK_SIZE = (sizeof(ushort) * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 		private const long HEADER_OFFSET = sizeof(int) * 4;
@@ -36,6 +37,7 @@ namespace ViMG
 
 		private readonly ChunkManager chunkManager;
 		private readonly EntityManager entityManager;
+		private readonly SessionInformation session;
 
 		private Dictionary<ChunkPosition, List<EntityLookup>> lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
 		private Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
@@ -143,13 +145,14 @@ namespace ViMG
 			InvalidVersion
 		}
 
-		public WorldSaver(ChunkManager chunkManager, EntityManager entityManager)
+		public WorldSaver(ChunkManager chunkManager, EntityManager entityManager, SessionInformation session)
 		{
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
+			this.session = session;
 		}
 
-		public string[] GetSaveDirectories()
+		public string[] GetWorldSaveDirectories()
         {
 			string[] strings = Directory.GetDirectories(SAVE_FOLDER); ;
 			
@@ -170,6 +173,8 @@ namespace ViMG
 		public void Save(string folderName)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
+
+			SaveSession();
 
             if (!Directory.Exists(SAVE_FOLDER + folderName))
                 Directory.CreateDirectory(SAVE_FOLDER + folderName);
@@ -212,54 +217,6 @@ namespace ViMG
 			}
 
 			stream.Write(savedChunks);
-		}
-
-		[Obsolete("no longer supporting this method", true)]
-		public void SaveOne(ChunkPosition position)
-		{
-			Chunk chunk = chunkManager.GetChunk(position);
-
-			if (chunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
-				throw new Exception("Cannot save sentinel chunk");
-
-			using (MemoryStream stream = new MemoryStream((int)ONE_CHUNK_SIZE))
-			{
-				using (BinaryWriter bwr = new BinaryWriter(stream, Encoding.ASCII, true))
-				{
-					for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
-					{
-						bwr.Write(chunk.GetData().GetRaw(j));
-					}
-				}
-
-				using (FileStream fs = new FileStream("./" + FILE_NAME_CHUNK, FileMode.OpenOrCreate, FileAccess.Write))
-				{
-					long chunkOff = ONE_CHUNK_SIZE * (position.X + chunkManager.sizeInChunks * (position.Y + chunkManager.sizeInChunks * position.Z));
-					fs.Seek(chunkOff, SeekOrigin.Begin);
-
-					fs.Write(stream.GetBuffer());
-				}
-			}
-
-
-			//Can we just get away with no formatting? just a version number + a hunk of entities
-
-			//To read:
-			//We read the entire entity hunk regardless of whether or not we're loading a single entity in or not. 
-			//read version
-			//read entity manager id, set entity manager id (SetUniqueIdSeed)
-			//read entity
-			//read id
-			//	check id with world. If the world already contains an *active* entity with this id, the seek to the end of the entity definition, ignore the rest.
-			//read type id, decode id, create entity of id type
-			//read cx, cy, cz into a position for later
-			//read version
-			//read the rest until we have read (entity start offset - size) bytes
-			//	pass as List<byte> to the entity we created
-			//
-
-			//Save all entities regardless of whether we're saving one chunk or not
-			//SaveEntities();
 		}
 
 		private void SaveEntities(string folderName)
@@ -626,6 +583,31 @@ namespace ViMG
 
 			if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
 				Console.WriteLine("Loaded " + i + " / " + totalSize + " chunks...");
+		}
+
+		private void SaveSession()
+		{
+			using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+			{
+				using (StreamWriter writer = new StreamWriter(fs))
+				{
+					writer.Write(session.LastLoadedSave);
+				}
+			}
+		}
+
+		public void LoadSession()
+        {
+			if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION))
+				return;
+
+			using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+				using (StreamReader reader = new StreamReader(fs))
+                {
+					session.LastLoadedSave = reader.ReadLine();
+                }
+            }
 		}
 	}
 }

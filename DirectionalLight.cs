@@ -29,14 +29,17 @@ namespace ViMG
         {
 			camera = new CameraCSM(mainCamera, near, far);
 
-			cameras = new CameraCSM[farPlanes.Length];
-			lightViewProjections = new Matrix[farPlanes.Length];
-			targetsArr = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 1, RenderTargetUsage.PreserveContents, false, farPlanes.Length);
-			for (int i = 0; i < farPlanes.Length; i++)
+			cameras = new CameraCSM[farPlanes.Length + 1];
+			lightViewProjections = new Matrix[farPlanes.Length + 1];
+			targetsArr = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 
+				1, RenderTargetUsage.PreserveContents, false, farPlanes.Length + 1);
+			for (int i = 0; i < farPlanes.Length + 1; i++)
             {
 				if (i == 0)
 					cameras[i] = new CameraCSM(mainCamera, mainCamera.Near, farPlanes[i]);
-				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], farPlanes[i]);
+				else if (i < farPlanes.Length)
+					cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], farPlanes[i]);
+				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], mainCamera.Far);
 			}
 
 			target = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);

@@ -229,7 +229,7 @@ namespace ViMG
 			playerPos.Z = z;
 			playerPos.Y = sizeInCubes;
 
-			saver = new WorldSaver(ChunkManager, EntityManager);
+			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
 
 			if (!saver.DoesSaveExist(folderName))
 			{
@@ -275,6 +275,7 @@ namespace ViMG
 			//directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, depth);
 
 			LoadedFolderName = folderName;
+			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 		}
 
 		public void UnfixedUpdate()

@@ -33,7 +33,7 @@ namespace ViMG.UIs
             Main.MouseControl = true;
             Main.DrawCursor = true;
 
-            saver = new WorldSaver(null, null);
+            saver = new WorldSaver(null, null, null);
         }
 
         public void Update(World world)
@@ -52,7 +52,7 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                 {
                     state = MenuState.Worlds;
-                    directories = saver.GetSaveDirectories();
+                    directories = saver.GetWorldSaveDirectories();
                     clicked = true;
                 }
 
@@ -60,7 +60,12 @@ namespace ViMG.UIs
                     UI.MakeLabel("Continue", fi, 128, new Vector2(0, 48)),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                 {
-
+                    if (Main.SessionInformation.LastLoadedSave != null)
+                    {
+                        world.LoadWorld(Main.SessionInformation.LastLoadedSave);
+                        Main.MouseControl = false;
+                        Main.DrawCursor = false;
+                    }
                 }
 
                 if (UI.MakeButton(new RectangleF(0, 96, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 

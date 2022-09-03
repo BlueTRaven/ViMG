@@ -63,6 +63,7 @@ namespace ViMG
 		public static WorldViewProjection WVP;
 		public static FogManager FogManager;
 		public static LightManager LightManager;
+		public static SessionInformation SessionInformation;
 
 		public const int FIXED_FPS = 60;
 
@@ -108,6 +109,10 @@ namespace ViMG
 			assetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
+
+			SessionInformation = new SessionInformation();
+			WorldSaver saver = new WorldSaver(null, null, SessionInformation);
+			saver.LoadSession();
         }
 
 		protected override void Initialize()
