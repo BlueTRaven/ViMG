@@ -43,7 +43,7 @@ namespace ViMG
             float minZ = float.MaxValue;
             float maxZ = float.MinValue;
 
-            foreach (Vector3 corner in corners)
+            /*foreach (Vector3 corner in corners)
             {
                 Vector3 transformed = Vector3.Transform(corner, ourView);
                 minX = MathHelper.Min(minX, transformed.X);
@@ -52,7 +52,27 @@ namespace ViMG
                 maxY = MathHelper.Max(maxY, transformed.Y);
                 minZ = MathHelper.Min(minZ, transformed.Z);
                 maxZ = MathHelper.Max(maxZ, transformed.Z);
+            }*/
+
+            // Calculate the radius of a bounding sphere surrounding the frustum corners
+            var sphereRadius = 0.0f;
+            for (var i = 0; i < 8; ++i)
+            {
+                var dist = (corners[i] - center).Length();
+                sphereRadius = Math.Max(sphereRadius, dist);
             }
+
+            sphereRadius = (float)Math.Ceiling(sphereRadius * 16.0f) / 16.0f;
+
+            maxX = sphereRadius;
+            maxY = sphereRadius;
+            maxZ = sphereRadius;
+            minX = -sphereRadius;
+            minY = -sphereRadius;
+            minZ = -sphereRadius;
+
+            //maxExtents = new Vector3(sphereRadius);
+            //minExtents = -maxExtents;
 
             float zRange = 2.5f;
 
@@ -65,6 +85,27 @@ namespace ViMG
             else maxZ *= zRange;
 
             ourProj = Matrix.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+
+            // Create the rounding matrix, by projecting the world-space origin and determining
+            // the fractional offset in texel space
+            var shadowMatrixTemp = ourView * ourProj;
+            var shadowOrigin = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+            shadowOrigin = Vector4.Transform(shadowOrigin, shadowMatrixTemp);
+            shadowOrigin = shadowOrigin * (1024f / 2.0f);
+
+            var roundedOrigin = new Vector4((float)Math.Round(shadowOrigin.X), (float)Math.Round(shadowOrigin.Y), (float)Math.Round(shadowOrigin.Z), (float)Math.Round(shadowOrigin.W));
+            var roundOffset = roundedOrigin - shadowOrigin;
+            roundOffset = roundOffset * (2.0f / 1024f);
+            roundOffset.Z = 0.0f;
+            roundOffset.W = 0.0f;
+
+            var shadowProj = ourProj;
+            //shadowProj.r[3] = shadowProj.r[3] + roundOffset;
+            shadowProj.M41 += roundOffset.X;
+            shadowProj.M42 += roundOffset.Y;
+            shadowProj.M43 += roundOffset.Z;
+            shadowProj.M44 += roundOffset.W;
+            ourProj = shadowProj;
         }
 
         private Vector3[] corners = new Vector3[8];

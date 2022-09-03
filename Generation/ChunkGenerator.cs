@@ -48,6 +48,12 @@ namespace ViMG.Generation
 			
 		}
 
+		//Creates a random position for a structure in such a way that it will not interfere with other structures.
+		protected Vector2 GetRandomPositionForStructure(Vector2 xzSize)
+        {
+			return Vector2.Zero;
+        }
+
 		protected void SetCube(Chunk chunk, CubePosition pos, ushort id)
 		{
 			chunk.GetData().SetCube(pos, id, false);

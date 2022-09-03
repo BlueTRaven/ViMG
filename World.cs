@@ -20,6 +20,8 @@ namespace ViMG
 {
 	public class World
 	{
+		public string LoadedFolderName;
+
 		public const float GRAVITY = -9.8f;
 		public const float DAY_CYCLE_TIME = 60f * 10f;
 
@@ -215,7 +217,7 @@ namespace ViMG
 				new float[] { Main.camera.Far / 50f, Main.camera.Far / 25f, Main.camera.Far  / 10f, Main.camera.Far / 2f});
 		}
 
-		public void Initialize()
+		public void LoadWorld(string folderName)
 		{
 			ChunkManager.Initialize(this);
 
@@ -227,11 +229,13 @@ namespace ViMG
 			playerPos.Z = z;
 			playerPos.Y = sizeInCubes;
 
-			if (!File.Exists("./" + WorldSaver.FILE_NAME_CHUNK))
+			saver = new WorldSaver(ChunkManager, EntityManager);
+
+			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.GenerateWorld(this);
-				saver = new WorldSaver(ChunkManager, EntityManager);
-				saver.Save();
+				
+				saver.Save(folderName);
 
 				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
 
@@ -244,9 +248,7 @@ namespace ViMG
 			}
 			else
 			{
-				saver = new WorldSaver(ChunkManager, EntityManager);
-
-				WorldSaver.LoadError error = saver.Load(this);
+				WorldSaver.LoadError error = saver.Load(this, folderName);
 
 				if (error == WorldSaver.LoadError.InvalidVersion)
 					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
@@ -271,6 +273,8 @@ namespace ViMG
 			float size = Cube.CUBE_SCALE * 10;
 			float depth = Cube.CUBE_SCALE * 40;
 			//directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, depth);
+
+			LoadedFolderName = folderName;
 		}
 
 		public void UnfixedUpdate()
@@ -285,7 +289,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.Escape))
 			{
-				saver.Save();
+				//TODO open pause GUI. This maybe should be done in Main.cs instead?
+				saver.Save(LoadedFolderName);
 				Main.Exit = true;
 			}
 

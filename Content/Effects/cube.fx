@@ -108,6 +108,17 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	return output;
 }
 
+float SampleWithOffset(float2 baseUV, float u, float v, float2 inv, int layer, float z)
+{
+	float2 uv = baseUV + float2(u, v) * inv;
+
+	float sampledDepth = TexturesLightDepth.Sample(TexturesLightDepthSampler, float3(uv, layer)).r;
+
+	float shadow = z < sampledDepth ? 1.0 : 0.0;
+
+	return shadow;
+}
+
 float DirectionalShadowFuncCSM(float3 fragPosWorldSpace, float3 normal, float3 lightDir)
 {
 	float4 fragPosViewSpace = mul(float4(fragPosWorldSpace, 1.0), View);
@@ -135,25 +146,48 @@ float DirectionalShadowFuncCSM(float3 fragPosWorldSpace, float3 normal, float3 l
 
 	if (projectedTexCoords.z > 1.0)
 		return 0.0;
+	//float bias = 0.005;
+	float bias = max(0.006 * (1.0 - dot(normal, -lightDir)), 0.0005);
 
-	float closestDepth = TexturesLightDepth.Sample(TexturesLightDepthSampler, float3(projectedTexCoords.xy, layer)).r;//SAMPLE_TEXTURE(TexturesLightDepth, float3(projectedTexCoords.xy, layer)).r;
-	float currentDepth = projectedTexCoords.z;
-	
-	//float bias = 0.0018;
-	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-	const float biasModifier = 0.5f;
-	if (layer == CascadePlanesUsed)
-	{
-		bias *= 1 / (FarPlane * biasModifier);
-	}
-	else
-	{
-		bias *= 1 / (CascadePlaneDistances[layer] * biasModifier);
-	}
+	//float closestDepth = TexturesLightDepth.Sample(TexturesLightDepthSampler, float3(projectedTexCoords.xy, layer)).r;//SAMPLE_TEXTURE(TexturesLightDepth, float3(projectedTexCoords.xy, layer)).r;
+	float currentDepth = projectedTexCoords.z - bias;
 
-	float shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
+	float2 uv = projectedTexCoords.xy * LightResolution;
+	float2 invLightResolution = 1.0 / LightResolution;
 
-	return shadow;
+	float2 baseUv;
+	baseUv.x = floor(uv.x + 0.5);
+	baseUv.y = floor(uv.y + 0.5);
+
+	float s = (uv.x + 0.5 - baseUv.x);
+	float t = (uv.y + 0.5 - baseUv.y);
+
+	baseUv -= float2(0.5, 0.5);
+	baseUv *= invLightResolution;
+
+	float uw0 = (3 - 2 * s);
+	float uw1 = (1 + 2 * s);
+
+	float u0 = (2 - s) / uw0 - 1;
+	float u1 = s / uw1 + 1;
+
+	float vw0 = (3 - 2 * t);
+	float vw1 = (1 + 2 * t);
+
+	float v0 = (2 - t) / vw0 - 1;
+	float v1 = t / vw1 + 1;
+
+	float sum = 0;
+	sum += uw0 * vw0 * SampleWithOffset(baseUv, u0, v0, invLightResolution, layer, currentDepth);
+	sum += uw1 * vw0 * SampleWithOffset(baseUv, u1, v0, invLightResolution, layer, currentDepth);
+	sum += uw0 * vw1 * SampleWithOffset(baseUv, u0, v1, invLightResolution, layer, currentDepth);
+	sum += uw1 * vw1 * SampleWithOffset(baseUv, u1, v1, invLightResolution, layer, currentDepth);
+
+	return sum * 1.0f / 16.0;
+
+	//float shadow = currentDepth < closestDepth ? 1.0 : 0.0;
+
+	//return shadow;
 }
 
 float DirectionalShadowFunc(float4 fragPosLightSpace, float3 normal, float3 lightDir)

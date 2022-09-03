@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -24,6 +25,7 @@ namespace ViMG
 		//Write all already saved entities
 		//Write newly saved entities
 
+		private const string SAVE_FOLDER = "./saves/";
 		public const string FILE_NAME_CHUNK = "world_chunks.vis";
 		public const string FILE_NAME_ENTITIES = "world_entities.vis";
 
@@ -147,13 +149,34 @@ namespace ViMG
 			this.entityManager = entityManager;
 		}
 
-		public void Save()
+		public string[] GetSaveDirectories()
+        {
+			string[] strings = Directory.GetDirectories(SAVE_FOLDER); ;
+			
+			for (int i = 0; i < strings.Length; i++)
+            {
+				int ind = strings[i].LastIndexOf('/');
+				strings[i] = strings[i].Substring(ind + 1);
+			}
+
+			return strings;
+        }
+
+		public bool DoesSaveExist(string folderName)
+        {
+			return Directory.Exists(SAVE_FOLDER + folderName + "/");
+        }
+
+		public void Save(string folderName)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var chunks = chunkManager.GetChunks();
+            if (!Directory.Exists(SAVE_FOLDER + folderName))
+                Directory.CreateDirectory(SAVE_FOLDER + folderName);
 
-			using (FileStream fs = new FileStream("./" + FILE_NAME_CHUNK, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, (int)ONE_CHUNK_SIZE * chunks.Length))
+            var chunks = chunkManager.GetChunks();
+
+			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, (int)ONE_CHUNK_SIZE * chunks.Length))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
 
@@ -167,7 +190,7 @@ namespace ViMG
 				}
 			}
 
-			SaveEntities();
+			SaveEntities(folderName);
 
 			watch.Stop();
 
@@ -239,7 +262,7 @@ namespace ViMG
 			//SaveEntities();
 		}
 
-		private void SaveEntities()
+		private void SaveEntities(string folderName)
 		{
 			//h: header block
 			//	v: version (int) overall version of the entity file
@@ -326,14 +349,14 @@ namespace ViMG
 					writer.Write(entitiesDataBlock.ToArray());
 				}
 
-				using (FileStream fs = new FileStream("./" + FILE_NAME_ENTITIES, FileMode.OpenOrCreate, FileAccess.Write))
+				using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES, FileMode.OpenOrCreate, FileAccess.Write))
 				{
 					fs.Write(ms.GetBuffer());
 				}
 			}
 		}
 
-		private void LoadEntities(EntityManager entityManager)
+		private void LoadEntities(EntityManager entityManager, string folderName)
 		{
 			//In case of failure, keep old lookups.
 			Dictionary<ChunkPosition, List<EntityLookup>> oldLookups = lookups;
@@ -343,13 +366,13 @@ namespace ViMG
 
 			Console.WriteLine("Loading Entities...");
 
-			if (!File.Exists("./" + FILE_NAME_ENTITIES))
+			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES))
 			{
 				Console.WriteLine("Could not load entities. The file world_entities.vis does not exist!");
 				return;
 			}
 
-			using (FileStream fs = new FileStream("./" + FILE_NAME_ENTITIES, FileMode.Open, FileAccess.Read, FileShare.None, 1024))
+			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES, FileMode.Open, FileAccess.Read, FileShare.None, 1024))
 			{
 				using (BinaryReader reader = new BinaryReader(fs, Encoding.ASCII, false))
 				{
@@ -443,7 +466,7 @@ namespace ViMG
 			}
 		}
 
-		public LoadError Load(World world)
+		public LoadError Load(World world, string folderName)
 		{
 			Console.WriteLine("Loading Save");
 
@@ -451,13 +474,13 @@ namespace ViMG
 
 			//Load entities first.
 			//This is necessary since entities aren't actually created; they stay as raw data, then are created when the chunk itself is loaded.
-			LoadEntities(entityManager);
+			LoadEntities(entityManager, folderName);
 
 			watch.Stop();
 
 			Console.WriteLine("Loaded all " + numLoadedEntities + " entities in: " + watch.Elapsed.ToString());
 
-			using (FileStream fs = new FileStream("./" + FILE_NAME_CHUNK, FileMode.Open, FileAccess.Read, FileShare.None, (int)ONE_CHUNK_SIZE))
+			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK, FileMode.Open, FileAccess.Read, FileShare.None, (int)ONE_CHUNK_SIZE))
 			{
 				using (BinaryReader br = new BinaryReader(fs, Encoding.ASCII, true))
 				{

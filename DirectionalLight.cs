@@ -19,7 +19,6 @@ namespace ViMG
 		public readonly float height;
 
 		private RenderTarget2D target;
-		private RenderTarget3D targets;
 		private RenderTarget2D targetsArr;
 
 		private Matrix[] lightViewProjections;
@@ -32,7 +31,6 @@ namespace ViMG
 
 			cameras = new CameraCSM[farPlanes.Length];
 			lightViewProjections = new Matrix[farPlanes.Length];
-			targets = new RenderTarget3D(device, 1024, 1024, farPlanes.Length, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 			targetsArr = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 1, RenderTargetUsage.PreserveContents, false, farPlanes.Length);
 			for (int i = 0; i < farPlanes.Length; i++)
             {
@@ -58,7 +56,7 @@ namespace ViMG
 
 		public void UpdateCameras(Vector3 direction, Color color)
         {
-			this.lightDirection = -direction;
+			this.lightDirection = direction;
 			this.lightColor = color.ToVector3();
 
 			for (int i = 0; i < cameras.Length; i++)

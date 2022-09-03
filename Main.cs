@@ -8,6 +8,7 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using ViMG.UIs;
 
 namespace ViMG
 {
@@ -83,6 +84,10 @@ namespace ViMG
 
 		public static bool Exit = false;
 
+		public static bool WorldLoaded = false;
+
+		private UIMainMenu ui;
+
         public Main()
         {
 			MainThread = Thread.CurrentThread;
@@ -147,7 +152,7 @@ namespace ViMG
 			};
 
 			noCullRS = new RasterizerState()
-			{ 
+			{
 				FillMode = FillMode.Solid,
 				CullMode = CullMode.None
 			};
@@ -178,20 +183,20 @@ namespace ViMG
 			DrawHelper.LoadContent(GraphicsDevice);
 
 			IsFixedTimeStep = false;
-			
+
 			base.Initialize();
 
 			//DepthTarget = new RenderTarget2D(GraphicsDevice, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			//GraphicsDevice.SetRenderTarget(WorldTarget);
-			
+
 			Registry = new RegistryService();
 			Registry.Register();
 
 			world = new World(GraphicsDevice, 512);
-			world.Initialize();
-        }
-		
+			//world.LoadWorld("flat01");
+		}
+
         protected override void LoadContent()
         {
 			batch = new SpriteBatch(GraphicsDevice);
@@ -219,6 +224,8 @@ namespace ViMG
 
 			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 			LightManager.SetToEffect(CubeEffect);
+
+			ui = new UIMainMenu();
 		}
 
 		protected override void Update(GameTime gt)
@@ -226,11 +233,15 @@ namespace ViMG
 			if (Exit)
 				Exit();
 
+			WorldLoaded = world.LoadedFolderName != null;
+
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
 			IsMouseVisible = DrawCursor;
 
-			world.UnfixedUpdate();
+			if (WorldLoaded)
+				world.UnfixedUpdate();
+			else ui.Update(world);
 
 			time += gt.ElapsedGameTime.TotalSeconds;
 			while (time >= FIXED_STEP && !Exit)
@@ -258,7 +269,8 @@ namespace ViMG
 				if (inputManager.JustPressed(Keys.O))
 					Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
 
-				world.Update(deltaTime);
+				if (WorldLoaded)
+					world.Update(deltaTime);
 			}
 
 			CubeEffect.Parameters["CameraPos"].SetValue(-camera.Position);
@@ -282,7 +294,8 @@ namespace ViMG
 
 			BasicEffect.View = view;
 
-			world.Draw(GraphicsDevice, CubeEffect);
+			if (WorldLoaded)
+				world.Draw(GraphicsDevice, CubeEffect);
 
 			GraphicsDevice.SetRenderTarget(null);
 
@@ -290,7 +303,9 @@ namespace ViMG
 
 			batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
 
-			world.DrawUI(batch);
+			if (WorldLoaded)
+				world.DrawUI(batch);
+			else ui.Draw(batch);
 
 			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(WindowResolution.X / 2 - 8, WindowResolution.Y / 2 - 8), null, Color.White);
 
