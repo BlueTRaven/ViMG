@@ -38,9 +38,9 @@ namespace ViMG.Items
 
 		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
-			Main.CubeEffect.Parameters["TintColor"].SetValue(color.ToVector3());
+			Main.CubeLitEffect.Parameters["TintColor"].SetValue(color.ToVector3());
 			base.Draw(device, item, transform);
-			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)

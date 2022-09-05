@@ -425,13 +425,16 @@ namespace ViMG
 
 		public LoadError Load(World world, string folderName)
 		{
-			Console.WriteLine("Loading Save");
+			Console.WriteLine("Loading Save " + folderName + "...");
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			//Load entities first.
-			//This is necessary since entities aren't actually created; they stay as raw data, then are created when the chunk itself is loaded.
-			LoadEntities(entityManager, folderName);
+			if (entityManager != null)
+			{
+				//Load entities first.
+				//This is necessary since entities aren't actually created; they stay as raw data, then are created when the chunk itself is loaded.
+				LoadEntities(entityManager, folderName);
+			}
 
 			watch.Stop();
 
@@ -463,6 +466,8 @@ namespace ViMG
 
 				Console.WriteLine("Loaded all " + totalSize + " chunks in: " + watch.Elapsed.ToString());
 			}
+
+			Console.WriteLine("Loaded Save " + folderName + ".");
 
 			return LoadError.Success;
 		}
@@ -587,7 +592,10 @@ namespace ViMG
 
 		private void SaveSession()
 		{
-			using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+			if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION))
+				File.Create(SAVE_FOLDER + FILE_NAME_SESSION);
+
+			using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION, FileMode.Truncate, FileAccess.Write, FileShare.None))
 			{
 				using (StreamWriter writer = new StreamWriter(fs))
 				{

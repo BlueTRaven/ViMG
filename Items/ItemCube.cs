@@ -58,7 +58,7 @@ namespace ViMG.Items
 			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 			var mesh = cube.GetMesh(device);
 
-			mesh.Draw(device, Main.CubeEffect, transform);
+			mesh.Draw(device, Main.CubeLitEffect, transform);
 		}
 	}
 }

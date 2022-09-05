@@ -31,13 +31,15 @@ namespace ViMG
 		public readonly int sizeInCubes;
 
 		public ChunkManager ChunkManager;
+		private ChunkManager ChunkManager2;	//Test to see if we can have 2 worlds loaded at once
 
-		private SimpleMesh<VertexPositionColor, int> meshWireframeCube;
-		private SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
-		private SimpleMesh<VertexPositionColorTextureNormal, int> meshMiningCube;
-		private SimpleMesh<VertexPositionColorTextureNormal, int> meshSun;
+		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
+		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMiningCube;
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshSun;
 
-		private SimpleMesh<VertexPositionColorTextureNormal, int> meshMaxDrawDistBottom;
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMaxDrawDistBottom;
+		private static bool meshesLoaded;
 
 		public Player player;
 		private Vector3 playerStartPos;
@@ -70,11 +72,14 @@ namespace ViMG
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
 		private WorldSaver saver;
+		private WorldSaver saver2;
 
 		public ChunkLoadManager ChunkLoadManager;
+		private ChunkLoadManager ChunkLoadManager2;
 
 		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		public DirectionalLight directionalLight;
+		private int currentCascadeDebug;
 
 		public World(GraphicsDevice device, int worldSize)
 		{
@@ -82,6 +87,26 @@ namespace ViMG
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
 
+			if (!meshesLoaded)
+				CreateMeshes(device);
+
+			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+			//ChunkManager2 = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+
+			ProjectileManager = new ProjectileManager(device);
+			EntityManager = new EntityManager(this);
+
+			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
+			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
+			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
+			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
+
+			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
+				new float[] { Main.camera.Far / 50f, Main.camera.Far / 25f, Main.camera.Far  / 10f, Main.camera.Far / 2f});
+		}
+
+		private void CreateMeshes(GraphicsDevice device)
+        {
 			meshWireframeCube = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshMiningCube = Cube.MakeCubeWithCorrectedTextureCoordinates(device, Color.White, Main.assetsManager.GetAsset<Texture2D>("mine"));
@@ -205,16 +230,7 @@ namespace ViMG
 
 			meshSun = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, sunVertices, sunIndices);
 
-			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
-
-			ProjectileManager = new ProjectileManager(device);
-			EntityManager = new EntityManager(this);
-
-			Main.CubeEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
-			Main.CubeEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-
-			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
-				new float[] { Main.camera.Far / 50f, Main.camera.Far / 25f, Main.camera.Far  / 10f, Main.camera.Far / 2f});
+			meshesLoaded = true;
 		}
 
 		public void LoadWorld(string folderName)
@@ -230,6 +246,7 @@ namespace ViMG
 			playerPos.Y = sizeInCubes;
 
 			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
+			saver2 = new WorldSaver(ChunkManager2, null, Main.SessionInformation);
 
 			if (!saver.DoesSaveExist(folderName))
 			{
@@ -249,6 +266,7 @@ namespace ViMG
 			else
 			{
 				WorldSaver.LoadError error = saver.Load(this, folderName);
+				//error = saver2.Load(this, "flat01");
 
 				if (error == WorldSaver.LoadError.InvalidVersion)
 					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
@@ -268,11 +286,7 @@ namespace ViMG
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 
 			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8);
-
-			//20 cubes in width at all times.
-			float size = Cube.CUBE_SCALE * 10;
-			float depth = Cube.CUBE_SCALE * 40;
-			//directionalLight = new DirectionalLight(playerStartPos, Vector3.Zero, Vector3.One, -size, size, size, -size, 0, depth);
+			ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
 
 			LoadedFolderName = folderName;
 			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
@@ -286,6 +300,20 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
+			/*if (Main.inputManager.JustPressed(Keys.K))
+            {
+				ChunkLoadManager.UnloadAll();
+				var tmpLM = ChunkLoadManager;
+				ChunkLoadManager = ChunkLoadManager2;
+				ChunkLoadManager2 = tmpLM;
+
+				var tmpCM = ChunkManager;
+				ChunkManager = ChunkManager2;
+				ChunkManager2 = tmpCM;
+            }*/
+
+			ChunkLoadManager.UpdateLoadTarget(player.Position);
+
 			alive += (float)deltaTime;
 
 			if (Main.inputManager.JustPressed(Keys.Escape))
@@ -294,10 +322,6 @@ namespace ViMG
 				saver.Save(LoadedFolderName);
 				Main.Exit = true;
 			}
-
-			//chunkLoadManager.UpdateLoadTarget(player.Position);
-			//chunkLoadManager.Update(deltaTime);
-			//saver.ProcessLoadQueue(this);
 
 			ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime);
@@ -406,8 +430,13 @@ namespace ViMG
 
             if (Main.inputManager.IsHeld(Keys.F1))
 			{
-				Main.debugCamera.Position = directionalLight.camera.Position;
-				Main.debugCamera.Rotation = directionalLight.camera.Rotation;
+				if (Main.inputManager.JustPressed(Keys.OemOpenBrackets))
+					currentCascadeDebug = currentCascadeDebug - 1 < 0 ? directionalLight.cameras.Length - 1 : currentCascadeDebug - 1;
+				if (Main.inputManager.JustPressed(Keys.OemCloseBrackets))
+					currentCascadeDebug = (currentCascadeDebug + 1) % directionalLight.cameras.Length;
+
+				Main.debugCamera.Position = directionalLight.cameras[currentCascadeDebug].Position;
+				Main.debugCamera.Rotation = directionalLight.cameras[currentCascadeDebug].Rotation;
 				//directionalLight.camera.Position = Main.camera.Position;
 				//directionalLight.camera.Rotation = Main.camera.Rotation;
 			}
@@ -432,7 +461,7 @@ namespace ViMG
 			directionalLight.DrawShadowmap(this, device);
 
 			//Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(directionalLight.GetShadowmapBuffer());
-			Main.CubeEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
+			Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
 
 			device.SetRenderTarget(Main.WorldTarget);
 			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);
@@ -444,8 +473,8 @@ namespace ViMG
 
 			if (Main.inputManager.IsHeld(Keys.F1))
 			{
-				Main.WVP.SetProjection(directionalLight.camera.GetProjectionMatrix());
-				Main.WVP.SetView(directionalLight.camera.GetViewMatrix());
+				Main.WVP.SetProjection(directionalLight.cameras[currentCascadeDebug].GetProjectionMatrix());
+				Main.WVP.SetView(directionalLight.cameras[currentCascadeDebug].GetViewMatrix());
 				directionalLight.SetPipelineState(device);
 			}
 
@@ -466,7 +495,7 @@ namespace ViMG
 			}
 			else
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
-			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
+			Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
@@ -488,12 +517,12 @@ namespace ViMG
 				}
 			}
 
-			meshMaxDrawDistBottom.Draw(device, effect, camChunkPosWS, Vector3.Zero, Vector3.One);
+			meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
-			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 			Main.FogManager.Disable();
 			float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-			meshSun.Draw(device, Main.CubeEffect, 
+			meshSun.Draw(device, Main.CubeLitEffect, 
 				Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *

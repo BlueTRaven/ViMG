@@ -79,8 +79,8 @@ namespace ViMG
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
 		{
-			//generator = new ChunkGeneratorIsland();
-			generator = new ChunkGeneratorFlat();
+			generator = new ChunkGeneratorIsland();
+			//generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
 
 			dataBus = new ChunkGenerationThreadDataBus(this);
@@ -215,13 +215,15 @@ namespace ViMG
 				{
 					var pos = chunksToMeshQueue.Dequeue();
 
-					if (!chunks[PosToIndex(pos)].meshDirty)
+					var c = chunks[PosToIndex(pos)];
+
+					if (!c.meshDirty)
 					{
 						// Already meshed, remove from list
 						continue;
 					}
 
-					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+					if (c.chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 					{
 						// Requeue - try again later.
 						chunksToMeshQueue.Enqueue(pos);
@@ -578,6 +580,14 @@ namespace ViMG
 		public void UnloadMesh(ChunkPosition position)
 		{
 			chunks[PosToIndex(position)].mesh = null;
+		}
+
+		public void UnloadAllMeshes()
+		{
+			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
+			{
+				chunks[i].mesh = null;
+			}
 		}
 
 		public void Unload(ChunkPosition position)

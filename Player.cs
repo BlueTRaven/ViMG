@@ -114,7 +114,7 @@ namespace ViMG
 
 		public override void Update(double deltaTime)
 		{
-			world.ChunkLoadManager.UpdateLoadTarget(Position);
+			//world.ChunkLoadManager.UpdateLoadTarget(Position);
 
 			if (Main.Debug)
 				state = State.Noclip;
@@ -311,12 +311,6 @@ namespace ViMG
 		{
 			if (state == State.Noclip)
 			{
-				if (Main.inputManager.JustPressed(Keys.K))
-				{
-					//Position = Vector3.Zero;
-					world.SetTimeOfDay(World.DAY_CYCLE_TIME * 0.8f);
-				}
-
 				const float MIN_CAM_SPEED = Cube.CUBE_SCALE;
 				const float MAX_CAM_SPEED = MIN_CAM_SPEED * 2;
 
@@ -674,7 +668,7 @@ namespace ViMG
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
 			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
-			Main.LightManager.SetToEffect(Main.CubeEffect);
+			Main.LightManager.SetToEffect(Main.CubeLitEffect);
 
 			if (inventory.Get(uiPlayer.HighlightIndex).item != null)
 			{

@@ -12,8 +12,7 @@ namespace ViMG
     {
         //public CameraOrthographic camera;
 		public CameraCSM camera;
-		//TODO: array of cameras
-		private CameraCSM[] cameras;
+		public CameraCSM[] cameras;
 
 		public readonly float width;
 		public readonly float height;
@@ -24,6 +23,8 @@ namespace ViMG
 		private Matrix[] lightViewProjections;
 		private Vector3 lightDirection;
 		private Vector3 lightColor;
+
+		private float[] farPlanes;
 
 		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] farPlanes)
         {
@@ -44,9 +45,11 @@ namespace ViMG
 
 			target = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
-			Main.CubeEffect.Parameters["CascadePlanesUsed"].SetValue(farPlanes.Length);
-			Main.CubeEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
-			Main.CubeEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
+			this.farPlanes = farPlanes;
+
+			Main.CubeLitEffect.Parameters["NumCascades"].SetValue(farPlanes.Length);
+			Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
+			Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
 			(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
 		}
 
@@ -74,14 +77,14 @@ namespace ViMG
 		{
 			if (!Main.ENABLE_SHADOWS)
 			{
-				Main.CubeEffect.Parameters["EnableShadows"].SetValue(false);
+				Main.CubeLitEffect.Parameters["EnableShadows"].SetValue(false);
 				return;
 			}
 			else
 			{
-				Main.CubeEffect.Parameters["EnableShadows"].SetValue(true);
-				Main.CubeEffect.Parameters["EnablePCF"].SetValue(Main.ENABLE_PCF);
-				Main.CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
+				Main.CubeLitEffect.Parameters["EnableShadows"].SetValue(true);
+				Main.CubeLitEffect.Parameters["EnablePCF"].SetValue(Main.ENABLE_PCF);
+				Main.CubeLitEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 			}
 
 			SetPipelineState(device);
@@ -101,16 +104,43 @@ namespace ViMG
 				DrawOneCamera(device, camera, world);
 
 				lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+
+				/*var texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
+				   * Matrix.CreateTranslation(0.5f, 0.5f, 0.0f);
+				var shadowMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+				shadowMatrix = shadowMatrix * texScaleBias;
+
+				// Store the split distance in terms of view space depth
+				var clipDist = Main.camera.Far - Main.camera.Near;
+
+				//shadowCamera: lightViewProjections/CameraCSM
+				//camera: Main.camera
+				farPlanes[i] = Main.camera.Near + splitDist * clipDist;
+
+				// Calculate the position of the lower corner of the cascade partition, in the UV space
+				// of the first cascade partition
+				var invCascadeMat = Matrix.Invert(shadowMatrix);
+				var cascadeCorner = Vector4.Transform(Vector3.Zero, invCascadeMat).ToVector3();
+				cascadeCorner = Vector4.Transform(cascadeCorner, globalShadowMatrix).ToVector3();
+
+				// Do the same for the upper corner
+				var otherCorner = Vector4.Transform(Vector3.One, invCascadeMat).ToVector3();
+				otherCorner = Vector4.Transform(otherCorner, globalShadowMatrix).ToVector3();
+
+				// Calculate the scale and offset
+				var cascadeScale = Vector3.One / (otherCorner - cascadeCorner);
+				_meshEffect.CascadeOffsets[cascadeIdx] = new Vector4(-cascadeCorner, 0.0f);
+				_meshEffect.CascadeScales[cascadeIdx] = new Vector4(cascadeScale, 1.0f);*/
 			}
 
 			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
 			Main.WVP.SetView(Main.camera.GetViewMatrix());
 
-			Main.CubeEffect.Parameters["LightViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
-			Main.CubeEffect.Parameters["LightPos"].SetValue(camera.Position);
-			Main.CubeEffect.Parameters["LightDirection"].SetValue(lightDirection);
-			Main.CubeEffect.Parameters["LightViewProjections"].SetValue(lightViewProjections);
-			Main.CubeEffect.Parameters["LightColor"].SetValue(lightColor);
+			Main.CubeLitEffect.Parameters["LightViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+			Main.CubeLitEffect.Parameters["LightPos"].SetValue(camera.Position);
+			Main.CubeLitEffect.Parameters["LightDirection"].SetValue(lightDirection);
+			Main.CubeLitEffect.Parameters["LightViewProjections"].SetValue(lightViewProjections);
+			Main.CubeLitEffect.Parameters["LightColor"].SetValue(lightColor);
 			//Main.CubeEffect.Parameters["LightDirections"].SetValue(lightDirections);
 		}
 

@@ -34,7 +34,7 @@ namespace ViMG.Items
 			{
 				if (mesh != null)
 				{
-					mesh.Draw(device, Main.CubeEffect, transform, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16));
+					mesh.Draw(device, Main.CubeLitEffect, transform, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16));
 				}
 			}
 		}

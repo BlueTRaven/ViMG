@@ -13,12 +13,17 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Effects/cube.fx
+#begin Effects/cube_lit.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/processorParam:Defines=
-/build:Effects/cube.fx
+/build:Effects/cube_lit.fx
+
+#begin Effects/cube_unlit.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/cube_unlit.fx
 
 #begin Effects/CubeEffect.fx
 /importer:EffectImporter

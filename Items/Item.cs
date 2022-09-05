@@ -84,7 +84,7 @@ namespace ViMG.Items
 			if (mesh == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeEffect, transform, Texture, SourceRect);
+			mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

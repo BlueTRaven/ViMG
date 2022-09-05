@@ -65,11 +65,11 @@ namespace ViMG.Items
 			if (mesh == null)
 				MakeMesh(device);
 
-			Main.CubeEffect.Parameters["TintColor"].SetValue(color.ToVector3());
+			Main.CubeLitEffect.Parameters["TintColor"].SetValue(color.ToVector3());
 			base.Draw(device, item, transform);
-			Main.CubeEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 
-			mesh.Draw(device, Main.CubeEffect, transform, null, new RectangleF(112, 64, 16, 16));
+			mesh.Draw(device, Main.CubeLitEffect, transform, null, new RectangleF(112, 64, 16, 16));
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)

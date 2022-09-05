@@ -5,14 +5,18 @@
     <TargetFrameworks>net5.0-windows</TargetFrameworks>
 	<MonoGamePlatform>Windows</MonoGamePlatform>
 	<RootNamespace>ViMG</RootNamespace>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="BrUtility\**" />
+    <Compile Remove="MigrationBackup\**" />
     <Compile Remove="MonoGame\**" />
     <EmbeddedResource Remove="BrUtility\**" />
+    <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="MonoGame\**" />
     <None Remove="BrUtility\**" />
+    <None Remove="MigrationBackup\**" />
     <None Remove="MonoGame\**" />
   </ItemGroup>
 

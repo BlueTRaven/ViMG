@@ -113,10 +113,11 @@ namespace ViMG
 			}
 		}
 
-		private void UnloadAll()
+		public void UnloadAll()
 		{
 			loadedChunks.Clear();
-			manager.UnloadAll();
+			manager.UnloadAllMeshes();
+			//manager.UnloadAll();
 		}
 	}
 }

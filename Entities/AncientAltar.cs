@@ -68,10 +68,10 @@ namespace ViMG.Entities
 			if (mesh == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeEffect, Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
+			mesh.Draw(device, Main.CubeLitEffect, Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), null, new RectangleF(112, 16, 16, 16));
 
-			mesh.Draw(device, Main.CubeEffect, Matrix.CreateRotationY(-MathHelper.ToRadians(45f)) *
+			mesh.Draw(device, Main.CubeLitEffect, Matrix.CreateRotationY(-MathHelper.ToRadians(45f)) *
 				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), null, new RectangleF(112, 16, 16, 16));
 		}
 

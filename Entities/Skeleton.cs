@@ -152,7 +152,7 @@ namespace ViMG.Entities
 
 			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
 
-			mesh.Draw(device, Main.CubeEffect,
+			mesh.Draw(device, Main.CubeLitEffect,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position));
