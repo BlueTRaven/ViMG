@@ -307,9 +307,9 @@ float3 ShadowVisibility(float3 positionWS, float depthVS, float nDotL, float3 no
 
 float4 MainPS(VSOutputCube input) : SV_Target
 {
-	float4 worldColor = SAMPLE_TEXTURE(Texture, input.TexCoord) * input.Color;
+	float4 diffuseAlbedo = SAMPLE_TEXTURE(Texture, input.TexCoord) * input.Color;
 
-	if (worldColor.a < 0.01)
+	if (diffuseAlbedo.a < 0.01)
 		discard;
 		
 	float3 normalWS = normalize(input.Normal);
@@ -333,26 +333,26 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	fogFactor = max(fogFactor, fogFactorWorldCenter);
 	fogFactor = clamp(fogFactor, 0, 1);
 	
-	float3 sumLights = float3(0, 0, 0);
+	float3 pointLightsColor = float3(0, 0, 0);
 	for (int i = 0; i < 16; i++)
 	{
 		float distance = length(Lights[i].Position - input.PositionWS);
 		
 		float lightFactor = 1 - ((distance - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
 		lightFactor = clamp(lightFactor, 0, 1);
-		sumLights += Lights[i].Color * lightFactor;
+		pointLightsColor += Lights[i].Color * lightFactor;
 
-		sumLights = clamp(sumLights, float3(0, 0, 0), float3(1, 1, 1));
+		pointLightsColor = clamp(pointLightsColor, float3(0, 0, 0), float3(1, 1, 1));
 	}
 	
 	//ambient
 	float3 ambientColor = AmbientColor * AmbientStrength;
 
-	ambientColor += sumLights;
-	ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
+	//ambientColor += pointLightsColor;
+	//ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
 	
 	//diffuse
-	float diffDotToCam = max(dot(normalWS, lightDir), 0.0);
+	float diffDotToCam = max(dot(normalWS, LightDirection), 0.0);
 	float3 diffuseColor = diffDotToCam * LightColor;
 	
 	//specular
@@ -362,11 +362,21 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	float specToCam = pow(max(dot(camDir, reflectDir), 0), 32);
 	float3 specularColor = specToCam * LightColor * SpecularStrength;
 
-	float4 finalColor = float4(ambientColor, 1.0) * worldColor;
-	finalColor.rgb *= input.AO;
+	float3 shadowColor = 1;
+	if (EnableShadows > 0)
+	{
+		float ndotl = saturate(dot(normalWS, LightDirection));
+		shadowColor = ShadowVisibility(input.PositionWS, input.DepthVS, ndotl, normalWS);
+	}
 
-	finalColor.rgb *= TintColor;
+	float3 colorWithoutAlpha = (pointLightsColor + ambientColor + shadowColor * (diffuseColor + specularColor)) * (diffuseAlbedo.rgb * input.AO) * TintColor;
+	float4 finalColor = float4(colorWithoutAlpha, diffuseAlbedo.a);
+	//float4 finalColor = float4(ambientColor, 1.0) * diffuseAlbedo;
+	//finalColor.rgb *= input.AO;
+
+	//finalColor.rgb *= TintColor;
 	
+	//Fog is, for the moment, applied over top of all other calculations.
 	if (EnableFog > 0)
 	{
 		float percent = 1 - (max(4 * CubeSize.y, input.PositionWS.y) / (WorldSize.y * CubeSize.y));
@@ -377,21 +387,6 @@ float4 MainPS(VSOutputCube input) : SV_Target
 		float4 lerpedColor = lerp(worldHeightColorDay, worldHeightColorNight, HeightFogMapLerp);
 		
 		finalColor = lerp(finalColor, lerpedColor, fogFactor);
-	}
-	
-	if (EnableShadows > 0)
-	{	
-		float ndotl = saturate(dot(normalWS, LightDirection));
-		float3 shadow = ShadowVisibility(input.PositionWS, input.DepthVS, ndotl, normalWS);
-		finalColor.rgb *= shadow;;
-		/*float shadow = DirectionalShadowFuncCSM(input.PositionWS, normalWS, LightDirection);
-		//float shadow = DirectionalShadowFunc(input.PositionLS, normalWS, LightDirection);
-
-		float d = dot(input.Normal, -LightDirection);
-		if (d > 0)
-			shadow = 0;
-		finalColor.rgb *= shadow;*/
-		//finalColor.rgb *= 1 - shadow;
 	}
 	
 	return finalColor;

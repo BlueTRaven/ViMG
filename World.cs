@@ -23,7 +23,7 @@ namespace ViMG
 		public string LoadedFolderName;
 
 		public const float GRAVITY = -9.8f;
-		public const float DAY_CYCLE_TIME = 60f * 10f;
+		public const float DAY_CYCLE_TIME = 10f;//60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -404,28 +404,12 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-            if (!IsNight())
+            //if (!IsNight())
             {
                 float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 				directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White);
-                //directionalLight.UpdateDirection(player.Position, new Vector3(0, 0, SUN_LIGHT_DISTANCE), new Vector3(MathHelper.ToRadians(angle), 0, 0));
-                /*directionalLight.camera.Position = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-                    Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-                    Matrix.CreateTranslation(player.Position - Main.camera.Forward * Cube.CUBE_SCALE * 8));*/
-                //directionalLight.camera.Rotation = new Vector3(MathHelper.ToRadians(angle), MathHelper.ToRadians(180 + SUN_ANGLE), 0);
-            }
-            else
-            {
-                if (GetNightPercent() < 0.5f)
-                {
-                    /*directionalLight.camera.Position =
-                        Vector3.Transform(new Vector3(0, -(directionalLight.height * 3) * GetNightPercent(), SUN_LIGHT_DISTANCE),
-                        Matrix.CreateRotationY(MathHelper.ToRadians(180)) *
-                        Matrix.CreateTranslation(player.Position));*/
-                }
             }
 
             if (Main.inputManager.IsHeld(Keys.F1))
