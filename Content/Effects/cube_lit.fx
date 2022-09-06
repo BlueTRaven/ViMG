@@ -15,17 +15,7 @@ float4x4 World;
 float4x4 View;
 float4x4 WorldNormal;
 float4x4 WorldViewProjection;
-float FarPlane;
-
-float3 TintColor;
-
-float3 WorldSize;
-float3 CubeSize;
-float2 MaxReachable;
-
-float3 AmbientColor;
-float AmbientStrength;
-float SpecularStrength;
+//float FarPlane;
 
 uint NumCascades;
 float CascadePlaneDistances[CASCADE_COUNT];
@@ -35,6 +25,16 @@ float4x4 LightViewProjections[CASCADE_COUNT];
 float3 LightDirection;
 float3 LightColor;
 float2 LightResolution;
+
+float3 TintColor;
+
+float3 WorldSize;
+float3 CubeSize;
+//float2 MaxReachable;
+
+float3 AmbientColor;
+float AmbientStrength;
+float SpecularStrength;
 
 //Used for non-CSM directional shadow
 float4x4 LightViewProjection;
@@ -220,13 +220,13 @@ float3 SampleShadowmapCascade(float3 shadowPosition, uint cascade)
 
 	float3 cascadeColor = float3(1.0f, 1.0f, 1.0f);
 
-	float2 shadowMapSize;
-	float numSlices;
-	TexturesLightDepth.GetDimensions(shadowMapSize.x, shadowMapSize.y, numSlices);
+	float2 shadowMapSize = LightResolution;
+	//float numSlices;
+	//TexturesLightDepth.GetDimensions(shadowMapSize.x, shadowMapSize.y, numSlices);
 
 	float lightDepth = shadowPosition.z;
 
-	const float bias = 0.05;
+	const float bias = 0.002f;
 
 	lightDepth -= bias;
 
@@ -244,23 +244,23 @@ float3 SampleShadowmapCascade(float3 shadowPosition, uint cascade)
 	baseUv -= float2(0.5, 0.5);
 	baseUv *= shadowMapSizeInv;
 
-	float sampledDepth = SAMPLE_TEXTURE(TexturesLightDepth, float3(baseUv.xy, cascade)).r;
+	float sampledDepth = SAMPLE_TEXTURE(TexturesLightDepth, float3(shadowPosition.xy, cascade)).r;
 
 	return lightDepth < sampledDepth ? 1.0 : 0.0;
 }
 
 float3 GetShadowPosOffset(float nDotL, float3 normal)
 {
-	float2 shadowMapSize;
-	float numSlices;
-	TexturesLightDepth.GetDimensions(shadowMapSize.x, shadowMapSize.y, numSlices);
+	float2 shadowMapSize = LightResolution;
+	//float numSlices;
+	//TexturesLightDepth.GetDimensions(shadowMapSize.x, shadowMapSize.y, numSlices);
 
 	float texelSize = 2.0f / shadowMapSize.x;
 	float nmlOffsetScale = saturate(1.0f - nDotL);
 	return texelSize * nmlOffsetScale * normal;
 }
 
-float3 ShadowVisibility(float3 positionWS, float depthVS, float nDotL, float3 normal, uint2 screenPos)
+float3 ShadowVisibility(float3 positionWS, float depthVS, float nDotL, float3 normal)
 {
 	float3 shadowVisibility = 1.0;
 	uint cascade = 0;
@@ -273,15 +273,36 @@ float3 ShadowVisibility(float3 positionWS, float depthVS, float nDotL, float3 no
 			cascade = i + 1;
 	}
 
+	/*const float3 CascadeColors[5] =
+	{
+		float3(1.0f, 0.0f, 0.0f),
+		float3(0.0f, 1.0f, 0.0f),
+		float3(0.0f, 0.0f, 1.0f),
+		float3(1.0f, 1.0f, 0.0f),
+		float3(0.0f, 1.0f, 1.0f),
+	};*/
+
 	float3 offset = GetShadowPosOffset(nDotL, normal) / abs(CascadeScales[cascade].z);
 
 	float3 samplePos = positionWS + offset;
 	float3 shadowPosition = mul(float4(samplePos, 1.0f), LightViewProjection).xyz;
 
-	float v = DirectionalShadowFuncCSM(positionWS, normal, LightDirection);
-	shadowVisibility = float3(v, v, v);
+	shadowVisibility = SampleShadowmapCascade(shadowPosition, cascade);//DirectionalShadowFuncCSM(positionWS, normal, LightDirection);
 
-	return shadowVisibility;
+	const float BlendThreshold = 0.1f;
+	float nextSplit = CascadePlaneDistances[cascade];
+	float splitSize = cascade == 0 ? nextSplit : nextSplit - CascadePlaneDistances[cascade - 1];
+	float splitDist = (nextSplit - depthVS) / splitSize;
+
+	[branch]
+	if (splitDist <= BlendThreshold && cascade != NumCascades - 1)
+	{
+		float3 nextSplitVisibility = SampleShadowmapCascade(shadowPosition, cascade + 1);
+		float lerpAmt = smoothstep(0.0f, BlendThreshold, splitDist);
+		shadowVisibility = lerp(nextSplitVisibility, shadowVisibility, lerpAmt);
+	}
+
+	return shadowVisibility;// *CascadeColors[cascade];
 }
 
 float4 MainPS(VSOutputCube input) : SV_Target
@@ -291,7 +312,8 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	if (worldColor.a < 0.01)
 		discard;
 		
-	float3 norm = normalize(input.Normal);
+	float3 normalWS = normalize(input.Normal);
+
 	float3 lightDir = normalize(LightPos - input.PositionWS);
 	
 	//Units are calculated in world space.
@@ -330,12 +352,12 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
 	
 	//diffuse
-	float diffDotToCam = max(dot(norm, lightDir), 0.0);
+	float diffDotToCam = max(dot(normalWS, lightDir), 0.0);
 	float3 diffuseColor = diffDotToCam * LightColor;
 	
 	//specular
 	float3 camDir = normalize(CameraPos - input.PositionWS);
-	float3 reflectDir = reflect(camDir, norm);
+	float3 reflectDir = reflect(camDir, normalWS);
 	
 	float specToCam = pow(max(dot(camDir, reflectDir), 0), 32);
 	float3 specularColor = specToCam * LightColor * SpecularStrength;
@@ -359,13 +381,16 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	
 	if (EnableShadows > 0)
 	{	
-		float shadow = DirectionalShadowFuncCSM(input.PositionWS, norm, LightDirection);
-		//float shadow = DirectionalShadowFunc(input.PositionLS, norm, LightDirection);
+		float ndotl = saturate(dot(normalWS, LightDirection));
+		float3 shadow = ShadowVisibility(input.PositionWS, input.DepthVS, ndotl, normalWS);
+		finalColor.rgb *= shadow;;
+		/*float shadow = DirectionalShadowFuncCSM(input.PositionWS, normalWS, LightDirection);
+		//float shadow = DirectionalShadowFunc(input.PositionLS, normalWS, LightDirection);
 
-		float d = dot(norm, -LightDirection);
+		float d = dot(input.Normal, -LightDirection);
 		if (d > 0)
 			shadow = 0;
-		finalColor.rgb *= shadow;
+		finalColor.rgb *= shadow;*/
 		//finalColor.rgb *= 1 - shadow;
 	}
 	

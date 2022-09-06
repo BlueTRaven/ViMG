@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +12,20 @@ namespace ViMG
     public class CameraCSM : Camera
     {
         private Camera mainCamera;
+        private readonly float prevSplit;
+        private readonly float split;
         private float ourNear;
         private float ourFar;
 
         private Matrix ourView;
         private Matrix ourProj;
 
-        public CameraCSM(Camera mainCamera, float near, float far) 
+        public CameraCSM(Camera mainCamera, float near, float far, float prevSplit, float split) 
             : base(Vector3.Zero, Vector3.Zero, Vector3.One, near, far, false)
         {
             this.mainCamera = mainCamera;
+            this.prevSplit = prevSplit;
+            this.split = split;
         }
 
         public void Update(Vector3 direction)
@@ -33,8 +38,6 @@ namespace ViMG
                 center += corner;
             }
             center /= corners.Length;
-
-            ourView = Matrix.CreateLookAt(center, center - direction, new Vector3(0, 1, 0));
 
             float minX = float.MaxValue;
             float maxX = float.MinValue;
@@ -74,7 +77,7 @@ namespace ViMG
             //maxExtents = new Vector3(sphereRadius);
             //minExtents = -maxExtents;
 
-            float zRange = 2.5f;
+            /*float zRange = 2.5f;
 
             if (minZ < 0)
                 minZ *= zRange;
@@ -82,9 +85,14 @@ namespace ViMG
 
             if (maxZ < 0)
                 maxZ /= zRange;
-            else maxZ *= zRange;
+            else maxZ *= zRange;*/
 
-            ourProj = Matrix.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+            float cascadeExtents = maxZ - minZ;
+            Vector3 scp = center + direction * -minZ;
+
+            ourView = Matrix.CreateLookAt(scp, center, new Vector3(0, 1, 0));
+
+            ourProj = Matrix.CreateOrthographicOffCenter(minX, maxX, minY, maxY, 0, cascadeExtents);
 
             // Create the rounding matrix, by projecting the world-space origin and determining
             // the fractional offset in texel space
@@ -113,15 +121,29 @@ namespace ViMG
         private void CalculateFrustumCorners()
         {
             //dumbass shit to get mainCamera.GetProjectionMatrix to produce a new value (it's cached and only marked dirty under certain circumstances)
-            float near = mainCamera.Near;
-            float far = mainCamera.Far;
-            mainCamera.Near = Near;
-            mainCamera.Far = Far;
-            int i = 0;
+            //float near = mainCamera.Near;
+            //float far = mainCamera.Far;
+            //mainCamera.Near = Near;
+            //mainCamera.Far = Far;
+
+            ResetViewFrustumCorners();
+
             Matrix inv = Matrix.Invert(mainCamera.GetViewMatrix() * mainCamera.GetProjectionMatrix());
 
+            for (int i = 0; i < 8; ++i)
+                corners[i] = Vector4.Transform(corners[i], inv).ToVector3();
+
+            for (var i = 0; i < 4; ++i)
+            {
+                var cornerRay = corners[i + 4] - corners[i];
+                var nearCornerRay = cornerRay * prevSplit;
+                var farCornerRay = cornerRay * split;
+                corners[i + 4] = corners[i] + farCornerRay;
+                corners[i] = corners[i] + nearCornerRay;
+            }
             //corners = mainCamera.GetFrustum().GetCorners();
 
+            /*int ci = 0;
             for (int x = 0; x < 2; ++x)
             {
                 for (int y = 0; y < 2; ++y)
@@ -129,14 +151,26 @@ namespace ViMG
                     for (int z = 0; z < 2; ++z)
                     {
                         Vector4 pt = Vector4.Transform(new Vector4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f), inv);
-                        corners[i] = new Vector3(pt.X / pt.W, pt.Y / pt.W, pt.Z / pt.W);
-                        i++;
+                        corners[ci] = new Vector3(pt.X / pt.W, pt.Y / pt.W, pt.Z / pt.W);
+                        ci++;
                     }
                 }
-            }
+            }*/
 
-            mainCamera.Near = near;
-            mainCamera.Far = far;
+            //mainCamera.Near = near;
+            //mainCamera.Far = far;
+        }
+
+        private void ResetViewFrustumCorners()
+        {
+            corners[0] = new Vector3(-1.0f, 1.0f, 0.0f);
+            corners[1] = new Vector3(1.0f, 1.0f, 0.0f);
+            corners[2] = new Vector3(1.0f, -1.0f, 0.0f);
+            corners[3] = new Vector3(-1.0f, -1.0f, 0.0f);
+            corners[4] = new Vector3(-1.0f, 1.0f, 1.0f);
+            corners[5] = new Vector3(1.0f, 1.0f, 1.0f);
+            corners[6] = new Vector3(1.0f, -1.0f, 1.0f);
+            corners[7] = new Vector3(-1.0f, -1.0f, 1.0f);
         }
 
         protected override Matrix GetProjectionMatrixInternal()

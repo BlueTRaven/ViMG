@@ -200,6 +200,12 @@ namespace ViMG
 			Registry.Register();
 
 			world = new World(GraphicsDevice, 512);
+
+#if DEBUG
+			world.LoadWorld(SessionInformation.LastLoadedSave);
+			Main.MouseControl = false;
+			Main.DrawCursor = false;
+#endif
 			//world.LoadWorld("flat01");
 		}
 

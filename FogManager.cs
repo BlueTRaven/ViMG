@@ -24,6 +24,8 @@ namespace ViMG
 		{
 			effect.Parameters["FogStart"].SetValue(start);
 			effect.Parameters["FogEnd"].SetValue(end);
+			unlitEffect.Parameters["FogStart"].SetValue(start);
+			unlitEffect.Parameters["FogEnd"].SetValue(end);
 
 			ColorHeightMap = colorMapDay;
 			effect.Parameters["TextureHeightFogMapDay"].SetValue(colorMapDay);

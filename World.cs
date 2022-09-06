@@ -102,7 +102,7 @@ namespace ViMG
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 
 			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
-				new float[] { Main.camera.Far / 50f, Main.camera.Far / 25f, Main.camera.Far  / 10f, Main.camera.Far / 2f});
+				new float[] { 1f / 50f,  1f / 25f, 1f / 10f, 1f / 2f});
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -153,10 +153,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -166,10 +166,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -179,10 +179,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -192,10 +192,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -205,10 +205,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.Black, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
 
 			meshMaxDrawDistBottom = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
@@ -471,11 +471,14 @@ namespace ViMG
 			device.RasterizerState = Main.genericRS;
 			device.SamplerStates[2] = Main.clampSS;
 
+			bool drawSkybox = true;
 			if (Main.inputManager.IsHeld(Keys.F1))
 			{
 				Main.WVP.SetProjection(directionalLight.cameras[currentCascadeDebug].GetProjectionMatrix());
 				Main.WVP.SetView(directionalLight.cameras[currentCascadeDebug].GetViewMatrix());
 				directionalLight.SetPipelineState(device);
+
+				drawSkybox = false;
 			}
 
 			float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
@@ -516,19 +519,22 @@ namespace ViMG
 					device.DepthStencilState = Main.genericDSS;
 				}
 			}
+			if (drawSkybox)
+			{
+				meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
 
-			meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
+				Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+				Main.FogManager.Disable();
 
-			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			Main.FogManager.Disable();
-			float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-			meshSun.Draw(device, Main.CubeLitEffect, 
-				Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-				Matrix.CreateTranslation(player.Position));
+				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
+				meshSun.Draw(device, Main.CubeLitEffect,
+					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
+					Matrix.CreateTranslation(player.Position));
 
-			Main.FogManager.Enable();
+				Main.FogManager.Enable();
+			}
 
 			foreach (var mined in miningCubes)
 			{

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -24,39 +25,67 @@ namespace ViMG
 		private Vector3 lightDirection;
 		private Vector3 lightColor;
 
+		private Vector4[] cascadeOffsets;
+		private Vector4[] cascadeScales;
+
+		private float[] splitDistances;
 		private float[] farPlanes;
 
-		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] farPlanes)
-        {
-			camera = new CameraCSM(mainCamera, near, far);
+		private RasterizerState rs;
 
-			cameras = new CameraCSM[farPlanes.Length + 1];
-			lightViewProjections = new Matrix[farPlanes.Length + 1];
+		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] splitDistances)
+        {
+			int num = splitDistances.Length + 1;
+			this.splitDistances = new float[num];
+			for (int i = 0; i < num - 1; i++)
+				this.splitDistances[i] = splitDistances[i];
+			this.splitDistances[num - 1] = 1.0f;
+
+			farPlanes = new float[num];
+
+			for (int i = 0; i < num; i++)
+            {
+				if (i < num - 1)
+					farPlanes[i] = mainCamera.Far * splitDistances[i];
+				else farPlanes[i] = mainCamera.Far;
+            }
+
+			camera = new CameraCSM(mainCamera, near, far, -1, -1);
+
+			cameras = new CameraCSM[num];
+			lightViewProjections = new Matrix[num];
+			cascadeOffsets = new Vector4[num];
+			cascadeScales = new Vector4[num];
 			targetsArr = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 
-				1, RenderTargetUsage.PreserveContents, false, farPlanes.Length + 1);
-			for (int i = 0; i < farPlanes.Length + 1; i++)
+				1, RenderTargetUsage.PreserveContents, false, num);
+			for (int i = 0; i < num; i++)
             {
 				if (i == 0)
-					cameras[i] = new CameraCSM(mainCamera, mainCamera.Near, farPlanes[i]);
-				else if (i < farPlanes.Length)
-					cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], farPlanes[i]);
-				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], mainCamera.Far);
+					cameras[i] = new CameraCSM(mainCamera, mainCamera.Near, farPlanes[i], 0, splitDistances[i]);
+				else if (i < num - 1)
+					cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], farPlanes[i], splitDistances[i - 1], splitDistances[i]);
+				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], mainCamera.Far, splitDistances[i - 1], 1f);
 			}
 
 			target = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
-			this.farPlanes = farPlanes;
-
-			Main.CubeLitEffect.Parameters["NumCascades"].SetValue(farPlanes.Length);
-			Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
-			Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
+			Main.CubeLitEffect.Parameters["NumCascades"].SetValue(num);
+			//Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
+			//Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
 			(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
+
+			rs = new RasterizerState()
+			{
+				FillMode = FillMode.Solid,
+				CullMode = CullMode.None,
+				DepthClipEnable = false,
+			};
 		}
 
 		public void SetPipelineState(GraphicsDevice device)
         {
 			device.DepthStencilState = Main.genericDSS;
-			//device.RasterizerState = Main.reverseRS;
+			device.RasterizerState = rs;
 			device.SamplerStates[3] = Main.shadowBorderClampSS;
 		}
 
@@ -87,6 +116,10 @@ namespace ViMG
 				Main.CubeLitEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 			}
 
+			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
+			Matrix texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
+				   * Matrix.CreateTranslation(0.5f, 0.5f, 0.0f);
+
 			SetPipelineState(device);
 			//device.SetRenderTarget(target);
 			//device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
@@ -97,7 +130,6 @@ namespace ViMG
 			{
 				CameraCSM camera = cameras[i];
 
-				//device.SetRenderTarget(targets, i);
 				device.SetRenderTarget(targetsArr, i);
 				device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
@@ -105,8 +137,6 @@ namespace ViMG
 
 				lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
-				/*var texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
-				   * Matrix.CreateTranslation(0.5f, 0.5f, 0.0f);
 				var shadowMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 				shadowMatrix = shadowMatrix * texScaleBias;
 
@@ -115,7 +145,7 @@ namespace ViMG
 
 				//shadowCamera: lightViewProjections/CameraCSM
 				//camera: Main.camera
-				farPlanes[i] = Main.camera.Near + splitDist * clipDist;
+				farPlanes[i] = Main.camera.Near + splitDistances[i] * clipDist;
 
 				// Calculate the position of the lower corner of the cascade partition, in the UV space
 				// of the first cascade partition
@@ -129,19 +159,60 @@ namespace ViMG
 
 				// Calculate the scale and offset
 				var cascadeScale = Vector3.One / (otherCorner - cascadeCorner);
-				_meshEffect.CascadeOffsets[cascadeIdx] = new Vector4(-cascadeCorner, 0.0f);
-				_meshEffect.CascadeScales[cascadeIdx] = new Vector4(cascadeScale, 1.0f);*/
+				cascadeOffsets[i] = new Vector4(-cascadeCorner, 0.0f);
+				cascadeScales[i] = new Vector4(cascadeScale, 1.0f);
 			}
 
 			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
 			Main.WVP.SetView(Main.camera.GetViewMatrix());
 
-			Main.CubeLitEffect.Parameters["LightViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+			Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
+			Main.CubeLitEffect.Parameters["LightViewProjection"].SetValue(globalShadowMatrix);
 			Main.CubeLitEffect.Parameters["LightPos"].SetValue(camera.Position);
 			Main.CubeLitEffect.Parameters["LightDirection"].SetValue(lightDirection);
 			Main.CubeLitEffect.Parameters["LightViewProjections"].SetValue(lightViewProjections);
 			Main.CubeLitEffect.Parameters["LightColor"].SetValue(lightColor);
+			Main.CubeLitEffect.Parameters["CascadeOffsets"].SetValue(cascadeOffsets);
+			Main.CubeLitEffect.Parameters["CascadeScales"].SetValue(cascadeScales);
 			//Main.CubeEffect.Parameters["LightDirections"].SetValue(lightDirections);
+		}
+
+		private Vector3[] corners = new Vector3[8];
+		private Matrix MakeGlobalShadowMatrix(Camera camera, Vector3 direction)
+		{
+			// Get the 8 points of the view frustum in world space
+			corners[0] = new Vector3(-1.0f, 1.0f, 0.0f);
+			corners[1] = new Vector3(1.0f, 1.0f, 0.0f);
+			corners[2] = new Vector3(1.0f, -1.0f, 0.0f);
+			corners[3] = new Vector3(-1.0f, -1.0f, 0.0f);
+			corners[4] = new Vector3(-1.0f, 1.0f, 1.0f);
+			corners[5] = new Vector3(1.0f, 1.0f, 1.0f);
+			corners[6] = new Vector3(1.0f, -1.0f, 1.0f);
+			corners[7] = new Vector3(-1.0f, -1.0f, 1.0f);
+
+			var invViewProj = Matrix.Invert(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+			var frustumCenter = Vector3.Zero;
+			for (var i = 0; i < 8; i++)
+			{
+				corners[i] = Vector4.Transform(corners[i], invViewProj).ToVector3();
+				frustumCenter += corners[i];
+			}
+
+			frustumCenter /= 8.0f;
+
+			// Pick the up vector to use for the light camera
+			var upDir = Vector3.Up;
+
+			// Get position of the shadow camera
+			var shadowCameraPos = frustumCenter + direction * -0.5f;
+
+			// Come up with a new orthographic camera for the shadow caster
+			Matrix shadowProj = Matrix.CreateOrthographicOffCenter(-0.5f, 0.5f, -0.5f, 0.5f, 0, 1.0f);
+			Matrix shadowView = Matrix.CreateLookAt(shadowCameraPos, frustumCenter, upDir);
+
+			var texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f);
+			texScaleBias.Translation = new Vector3(0.5f, 0.5f, 0.0f);
+			return (shadowView * shadowProj) * texScaleBias;
 		}
 
 		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, World world)
