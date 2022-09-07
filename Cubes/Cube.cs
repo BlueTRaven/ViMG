@@ -198,6 +198,8 @@ namespace ViMG.Cubes
 		public void SetId(ushort id)
 		{
 			this.Id = id;
+
+			Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
 
 		public RectangleF GetSourceRect()

@@ -277,9 +277,10 @@ namespace ViMG
 				uiPlayer.HighlightIndex = 7;
 			}
 
-			lookAtResult = world.Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * INTERACT_DISTANCE,
+			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
+				//return true;
 				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
@@ -663,12 +664,12 @@ namespace ViMG
 			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
 			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
-			Main.LightManager.SetToEffect(Main.CubeLitEffect);
+			world.LightManager.UpdateDatas(Main.CubeLitEffect);
 
 			if (inventory.Get(uiPlayer.HighlightIndex).item != null)
 			{

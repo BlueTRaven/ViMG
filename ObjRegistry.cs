@@ -10,10 +10,21 @@ namespace ViMG
 		private Dictionary<string, int> registryByName = new Dictionary<string, int>();
 		public int Count => registry.Count;
 
-		public virtual void RegisterAll()
+		public void RegisterAll()
 		{
-
+			DoRegistration();
+			PostRegistration();
 		}
+
+		protected virtual void DoRegistration()
+        {
+
+        }
+
+		protected virtual void PostRegistration()
+        {
+
+        }
 
 		protected virtual void Register(T obj)
 		{

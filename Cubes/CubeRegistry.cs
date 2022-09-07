@@ -10,7 +10,11 @@ namespace ViMG.Cubes
 	{
 		public readonly Cube Air = new CubeAir();
 
-		public override void RegisterAll()
+		//flags:
+		//sparse arrays where flag[cubeid] is the value of the flag, with the intention of low memory size and fast lookups.
+		public bool[] noAo;
+
+		protected override void DoRegistration()
 		{
 			Register(new CubeDirt());
 			Register(new CubeGrass());
@@ -31,9 +35,21 @@ namespace ViMG.Cubes
 			Register(new CubeChest("wood", 3, 3));
 		}
 
-		protected override void Register(Cube obj)
+        protected override void PostRegistration()
+        {
+			noAo = new bool[Count + 1];
+			noAo[0] = true;
+
+			for (int i = 1; i <= Count; i++)
+            {
+				Get(i).SetId((ushort)(i));
+			}
+
+			base.PostRegistration();
+        }
+
+        protected override void Register(Cube obj)
 		{
-			obj.SetId((ushort)(Count + 1));
 			base.Register(obj);
 		}
 	}

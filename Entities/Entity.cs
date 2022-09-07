@@ -39,7 +39,7 @@ namespace ViMG.Entities
 
 		}
 
-		public virtual void Draw(GraphicsDevice device)
+		public virtual void Draw(GraphicsDevice device, Effect effect)
 		{
 
 		}

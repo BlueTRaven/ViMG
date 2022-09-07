@@ -387,7 +387,7 @@ namespace ViMG
 						var trackingEntity = chunk.GetWorld().EntityManager.GetEntityTrackingPosition(position.InCubeSpace(chunk));
 
 						if (trackingEntity.HasValue())
-							trackingEntity.Get().TrackingCubeDestroyed();
+							trackingEntity.Get().TrackingCubeDestroyed(chunk.GetWorld(), chunk.GetChunkManager());
 					}
 				}
 

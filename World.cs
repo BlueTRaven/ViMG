@@ -23,7 +23,7 @@ namespace ViMG
 		public string LoadedFolderName;
 
 		public const float GRAVITY = -9.8f;
-		public const float DAY_CYCLE_TIME = 10f;//60f * 10f;
+		public const float DAY_CYCLE_TIME = 60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -51,6 +51,7 @@ namespace ViMG
 		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
+		public LightManager LightManager;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -95,6 +96,8 @@ namespace ViMG
 
 			ProjectileManager = new ProjectileManager(device);
 			EntityManager = new EntityManager(this);
+			LightManager = new LightManager(device);
+			LightManager.UpdateDatas(Main.CubeLitEffect);
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -543,24 +546,13 @@ namespace ViMG
 			}
 
 			ProjectileManager.Draw(device, effect);
-			EntityManager.Draw(device);
+			EntityManager.Draw(device, Main.CubeLitEffect);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
 
 			//player.Draw(device);
 			player.DrawDebug(device);
-
-			/*float a1 = 360 * ((alive % 4f) / 4f);
-
-			Matrix camera = //Matrix.CreateTranslation(-lightPos) * Matrix.CreateRotationX(MathHelper.ToRadians(-45));
-					Matrix.CreateTranslation(new Vector3(0, 1000, -1000)) *
-					Matrix.CreateRotationX(MathHelper.ToRadians(a1)) *
-					Matrix.CreateTranslation(playerStartPos);
-			DrawWireframe(device, camera, Color.White);*/
-
-			//device.RasterizerState = Main.wireframeRS;
-			//mesh.Draw(device, Main.BasicEffect, Vector3.Zero, Vector3.Zero, Vector3.One);
 		}
 
 		public void DrawShadowmap(GraphicsDevice device, Effect effect)
@@ -728,8 +720,8 @@ namespace ViMG
 
 					foreach (ItemInstance item in items)
 					{
-						EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
-						ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+						EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+						ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 						EntityManager.Add(ent);
 					}
 
@@ -749,8 +741,8 @@ namespace ViMG
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
-							ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+							EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
 					}
@@ -769,8 +761,8 @@ namespace ViMG
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace(null), item);
-							ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+							EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
 					} 
@@ -887,15 +879,17 @@ namespace ViMG
 		{
 			RaycastResult result = new RaycastResult();
 
+			const float ONE_CUBE = Cube.CUBE_SCALE;
+
 			result.start = start;
 			result.end = end;
 
-			float x1 = start.X;
-			float y1 = start.Y;
-			float z1 = start.Z;
-			float x2 = end.X;
-			float y2 = end.Y;
-			float z2 = end.Z;
+			float x1 = start.X / ONE_CUBE;
+			float y1 = start.Y / ONE_CUBE;
+			float z1 = start.Z / ONE_CUBE;
+			float x2 = end.X / ONE_CUBE;
+			float y2 = end.Y / ONE_CUBE;
+			float z2 = end.Z / ONE_CUBE;
 
 			int i = (int)x1;
 			int j = (int)y1;
@@ -913,14 +907,14 @@ namespace ViMG
 			float deltaty = 1.0f / Math.Abs(y2 - y1);
 			float deltatz = 1.0f / Math.Abs(z2 - z1);
 
-			float minx = (int)x1, maxx = minx + 1.0f;
+			float minx = (int)x1, maxx = minx + 1;
 			float tx = ((x1 > x2) ? (x1 - minx) : (maxx - x1)) * deltatx;
-			float miny = (int)y1, maxy = miny + 1.0f;
+			float miny = (int)y1, maxy = miny + 1;
 			float ty = ((y1 > y2) ? (y1 - miny) : (maxy - y1)) * deltaty;
-			float minz = (int)z1, maxz = minz + 1.0f;
+			float minz = (int)z1, maxz = minz + 1;
 			float tz = ((z1 > z2) ? (z1 - minz) : (maxz - z1)) * deltatz;
 
-			Vector3 hitPos = new Vector3(x1, y1, z1);
+			Vector3 hitPos = new Vector3(x1 * ONE_CUBE, y1 * ONE_CUBE, z1 * ONE_CUBE);
 
 			while (true)
 			{
@@ -941,8 +935,8 @@ namespace ViMG
 					tx += deltatx;
 					i += di;
 
-					if (di == 1) hitPos.X++;
-					if (di == -1) hitPos.X--;
+					if (di == 1) hitPos.X += ONE_CUBE;
+					if (di == -1) hitPos.X -= ONE_CUBE;
 
 					result.normal = new Vector3(-di, 0, 0);
 				}
@@ -956,8 +950,8 @@ namespace ViMG
 					ty += deltaty;
 					j += dj;
 
-					if (dj == 1) hitPos.Y++;
-					if (dj == -1) hitPos.Y--;
+					if (dj == 1) hitPos.Y += ONE_CUBE;
+					if (dj == -1) hitPos.Y -= ONE_CUBE;
 
 					result.normal = new Vector3(0, -dj, 0);
 				}
@@ -971,8 +965,8 @@ namespace ViMG
 					tz += deltatz;
 					k += dk;
 
-					if (dk == 1) hitPos.Z++;
-					if (dk == -1) hitPos.Z--;
+					if (dk == 1) hitPos.Z += ONE_CUBE;
+					if (dk == -1) hitPos.Z -= ONE_CUBE;
 
 					result.normal = new Vector3(0, 0, -dk);
 				}

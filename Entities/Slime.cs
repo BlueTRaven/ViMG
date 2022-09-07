@@ -195,12 +195,12 @@ namespace ViMG.Entities
 			hitbox = -1;
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
 			if (mesh == null)
 				MakeMeshes(device);
 
-			mesh.Draw(device, Main.CubeLitEffect, 
+			mesh.Draw(device, effect, 
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),

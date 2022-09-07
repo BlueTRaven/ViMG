@@ -18,7 +18,7 @@ namespace ViMG.Entities
 			inventory = new Inventory(4);
 		}
 
-		public void TrackingCubeDestroyed()
+		public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
 			world.EntityManager.Remove(this);
 		}

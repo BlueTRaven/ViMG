@@ -31,11 +31,11 @@ namespace ViMG.Entities
 			return false;
 		}
 
-		public void TrackingCubeDestroyed()
+		public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
 			world.EntityManager.Remove(this);
 			if (light != -1)
-				Main.LightManager.KillLight(light);
+				world.LightManager.KillLight(light);
 		}
 
 		public override void Update(double deltaTime)
@@ -48,7 +48,7 @@ namespace ViMG.Entities
 			{
 				if (light != -1)
 				{
-					Main.LightManager.KillLight(light);
+					world.LightManager.KillLight(light);
 					light = -1;
 				}
 			}
@@ -56,14 +56,14 @@ namespace ViMG.Entities
 			{
 				if (light == -1)
 				{
-					light = Main.LightManager.MakeLight(Position, 0, radius, Color.Red);
+					light = world.LightManager.MakeLight(Position, 0, radius, Color.Red);
 				}
 			}
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			base.Draw(device);
+			base.Draw(device, effect);
 
 			if (mesh == null)
 				MakeMesh(device);

@@ -93,6 +93,13 @@ namespace ViMG
 							int sideA = chunk.GetData().GetRawOrAdjacent(nrm + t, world);
 							int sideB = chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
 
+							if (corner > 0 && Main.Registry.CubeRegistry.noAo[corner])
+								corner = 0;
+							if (sideA > 0 && Main.Registry.CubeRegistry.noAo[sideA])
+								sideA = 0;
+							if (sideB > 0 && Main.Registry.CubeRegistry.noAo[sideB])
+								sideB = 0;
+
 							if (top > 0)
 							{
 								//nothing

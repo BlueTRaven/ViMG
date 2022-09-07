@@ -53,7 +53,7 @@ namespace ViMG.Entities
 			{
 				if (light != -1)
 				{
-					Main.LightManager.KillLight(light);
+					world.LightManager.KillLight(light);
 					light = -1;
 				}
 			}
@@ -61,7 +61,7 @@ namespace ViMG.Entities
 			{
 				if (light == -1)
 				{
-					light = Main.LightManager.MakeLight(Position, radius - fade, radius, color);
+					light = world.LightManager.MakeLight(Position, radius - fade, radius, color);
 				}
 			}
 		}
@@ -71,12 +71,12 @@ namespace ViMG.Entities
 			base.OnDelete();
 
 			if (light != -1)
-				Main.LightManager.KillLight(light);
+				world.LightManager.KillLight(light);
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			base.Draw(device);
+			base.Draw(device, effect);
 
 			if (mesh == null)
 				MakeMesh(device);
@@ -153,7 +153,7 @@ namespace ViMG.Entities
 			return true;
 		}
 
-		public void TrackingCubeDestroyed()
+		public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
 			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
 			world.EntityManager.Remove(this);

@@ -10,6 +10,6 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player);
 
-		public void TrackingCubeDestroyed();
+		public void TrackingCubeDestroyed(World world, ChunkManager cm);
 	}
 }

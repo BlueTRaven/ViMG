@@ -12,13 +12,13 @@ namespace ViMG.Entities
 	public class EntityItem : Entity
 	{
 		public Vector3 Velocity;
-		public Vector3 MaxVelocity = new Vector3(64, 340, 64);
+		public Vector3 MaxVelocity = new Vector3(10, 15, 10) * Cube.CUBE_SCALE;
 		
 		public readonly ItemInstance Item;
 
 		private float sineTimer;
 
-		private Rectangle3D bounds = new Rectangle3D(-new Vector3(10), new Vector3(20));
+		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE / 2f));
 		public Rectangle3D Bounds => bounds.Offset(Position);
 
 		private float noPickupTimer;
@@ -39,7 +39,7 @@ namespace ViMG.Entities
 		{
 			noPickupTimer -= (float)deltaTime;
 
-			Velocity.Y += World.GRAVITY;
+			Velocity.Y += World.GRAVITY * Cube.CUBE_SCALE;
 
 			if (Velocity.Y < -MaxVelocity.Y)
 				Velocity.Y = -MaxVelocity.Y;
@@ -54,7 +54,7 @@ namespace ViMG.Entities
 
 		private void UpdateCollision(double deltaTime)
 		{
-			if (world.GetChunkManager().GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+			//if (world.GetChunkManager().GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
 			{
 				Position += Velocity * (float)deltaTime;
 			}
@@ -76,7 +76,7 @@ namespace ViMG.Entities
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							if (CollisionHelper.CheckCollision(cubeBounds, Position, 6, out Vector3 change))
+							if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
 							{
 								Position += change;
 
@@ -99,14 +99,14 @@ namespace ViMG.Entities
 		{
 			Vector3 dir = position - Position;
 			dir.Normalize();
-			dir *= 4;
+			dir *= Cube.CUBE_SCALE / 4f;
 
 			Velocity.X += dir.X;
 			Velocity.Y += dir.Y * 4;
 			Velocity.Z += dir.Z;
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
 			const float bobTime = 2f;
 			const float spinTime = 4.5f;
@@ -121,7 +121,7 @@ namespace ViMG.Entities
 			Item.item.Draw(device, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 				Matrix.CreateScale(0.5f) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
-				Matrix.CreateTranslation(new Vector3(0, 5 * bobPercent, 0)) *
+				Matrix.CreateTranslation(new Vector3(0, (Cube.CUBE_SCALE / 4f) * bobPercent, 0)) *
 				//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
 				Matrix.CreateTranslation(Position));
 		}

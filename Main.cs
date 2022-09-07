@@ -22,7 +22,7 @@ namespace ViMG
 
 		private const float FOV_DEGREES = 90f;
 		public const float NEAR = 0.005f;
-		public const float FAR = 6 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE + (Cubes.Cube.CUBE_SCALE * 64);
+		public const float FAR = 12 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE;
 
 		public static BasicEffect BasicEffect;
 		public static Effect VertexPositionColorDebugEffect;
@@ -63,7 +63,6 @@ namespace ViMG
 		
 		public static WorldViewProjection WVP;
 		public static FogManager FogManager;
-		public static LightManager LightManager;
 		public static SessionInformation SessionInformation;
 
 		public const int FIXED_FPS = 60;
@@ -217,7 +216,6 @@ namespace ViMG
 			CubeLitEffect = assetsManager.GetAsset<Effect>("cube_lit");
 			CubeUnlitEffect = assetsManager.GetAsset<Effect>("cube_unlit");
 			FogManager = new FogManager(CubeLitEffect, CubeUnlitEffect);
-			LightManager = new LightManager();
 
 			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
 			CubeLitEffect.Parameters["AmbientStrength"].SetValue(1f);
@@ -236,7 +234,6 @@ namespace ViMG
 			VertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
 
 			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-			LightManager.SetToEffect(CubeLitEffect);
 
 			ui = new UIMainMenu();
 		}

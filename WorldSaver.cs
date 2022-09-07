@@ -515,7 +515,7 @@ namespace ViMG
 					int chunkY = (i / chunkManager.sizeInChunks) % chunkManager.sizeInChunks;
 					int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
 
-					Chunk chunk = new Chunk(chunkManager.ChunkDatas, new ChunkPosition(chunkX, chunkY, chunkZ));
+					Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
 					chunkManager.SetChunk(chunk);
 
 					for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
@@ -543,7 +543,7 @@ namespace ViMG
 			int chunkY = (i / chunkManager.sizeInChunks) % chunkManager.sizeInChunks;
 			int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
 
-			Chunk chunk = new Chunk(chunkManager.ChunkDatas, new ChunkPosition(chunkX, chunkY, chunkZ));
+			Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
 			chunkManager.SetChunk(chunk);
 			long left = fs.Length - fs.Position;
 

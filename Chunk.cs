@@ -24,18 +24,19 @@ namespace ViMG
 		public bool Initialized => initialized;
 
 		private World world;
+		private ChunkManager manager;
 
 		private static SimpleMesh<VertexPositionColor, int> mesh;
 
 		public Rectangle3D Bounds => new Rectangle3D(Position.InWorldSpace(), new Vector3(CHUNK_SIZE * Cube.CUBE_SCALE));
 
-		public Chunk(GenericPool<ChunkData> chunkDatas, int x, int y, int z) : this(chunkDatas, new ChunkPosition(x, y, z))
+		public Chunk(ChunkManager cm, int x, int y, int z) : this(cm, new ChunkPosition(x, y, z))
 		{
 		}
 
-		public Chunk(GenericPool<ChunkData> chunkDatas, ChunkPosition position)
+		public Chunk(ChunkManager cm, ChunkPosition position)
 		{
-			data = chunkDatas.Get();
+			data = cm.ChunkDatas.Get();
 			data.SetChunk(this);
 			data.GenStep = ChunkData.GenerationStep.Broad;
 
@@ -44,7 +45,7 @@ namespace ViMG
 
 		~Chunk()
 		{
-			world.GetChunkManager().ChunkDatas.Return(data);
+			manager.ChunkDatas.Return(data);
 		}
 
 		public void Initialize(World world)
@@ -148,5 +149,10 @@ namespace ViMG
 			var mvp = Transform.FromTRS(new Vector3(position.X, position.Y, position.Z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One) * Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 			mesh.Draw(device, Main.VertexPositionColorDebugEffect, mvp);
 		}
-	}
+
+        public ChunkManager GetChunkManager()
+        {
+			return manager;
+        }
+    }
 }

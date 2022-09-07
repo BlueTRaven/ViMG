@@ -245,6 +245,8 @@ namespace ViMG
 				}
 			}
 
+			world.EntityManager.Draw(device, Main.assetsManager.GetAsset<Effect>("depth"));
+
 			world.DrawShadowmap(device, Main.assetsManager.GetAsset<Effect>("depth"));
 		}
 

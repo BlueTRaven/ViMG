@@ -28,7 +28,7 @@ namespace ViMG
 			public bool genQueued;
 			public bool meshQueued;
 
-			public ManagedChunk(GenericPool<ChunkData> chunkDatas, Chunk defaultChunk, int x, int y, int z)
+			public ManagedChunk(Chunk defaultChunk, int x, int y, int z)
 			{
 				chunk = defaultChunk;
 				//chunk = new Chunk(chunkDatas, x, y, z);
@@ -83,8 +83,8 @@ namespace ViMG
 			//generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
 
-			dataBus = new ChunkGenerationThreadDataBus(this);
-			genThread = new ChunkGenerationThread(generator, dataBus);
+			//dataBus = new ChunkGenerationThreadDataBus(this);
+			//genThread = new ChunkGenerationThread(generator, dataBus);
 			this.sizeInChunks = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
 
@@ -96,7 +96,7 @@ namespace ViMG
 				int y = (i / sizeInChunks) % sizeInChunks;
 				int z = i / (sizeInChunks * sizeInChunks);
 
-				chunks[i] = new ManagedChunk(ChunkDatas, generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z)), x, y, z);
+				chunks[i] = new ManagedChunk(generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
 			}
 
 			/*for (int x = 0; x < sizeInChunks; x++)
@@ -354,7 +354,7 @@ namespace ViMG
 
 		public void GenerateChunkBroad(ChunkPosition position)
 		{
-			Chunk chunk = generator.MakeChunk(ChunkDatas, position);
+			Chunk chunk = generator.MakeChunk(this, position);
 			generator.GenerateChunkBroad(chunk);
 
 			chunks[PosToIndex(position)].chunk = chunk;

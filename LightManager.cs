@@ -60,8 +60,16 @@ namespace ViMG
 			}
 		}
 
+		private RenderTargetCube[] lightsCubemaps = new RenderTargetCube[MAX_LIGHTS];
+
 		private Light[] lights = new Light[MAX_LIGHTS];
 		private Data[] datas = new Data[MAX_LIGHTS];
+
+		public LightManager(GraphicsDevice device)
+        {
+			for (int i = 0; i < MAX_LIGHTS; i++)
+				lightsCubemaps[i] = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24);
+        }
 
 		public int MakeLight(Vector3 position, float start, float end, Color color)
 		{
@@ -88,7 +96,7 @@ namespace ViMG
 			}
 		}
 
-		public void SetToEffect(Effect effect)
+		public void UpdateDatas(Effect effect)
 		{
 			if (structuredBuffer == null)
 				structuredBuffer = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS, BufferUsage.WriteOnly, ShaderAccess.Read);
@@ -107,5 +115,10 @@ namespace ViMG
 				effect.Parameters["Lights"].SetValue(structuredBuffer);
 			}
 		}
+
+		public void DrawShadowmap(GraphicsDevice device, World world)
+        {
+
+        }
 	}
 }

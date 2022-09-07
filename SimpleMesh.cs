@@ -121,6 +121,12 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
+			if (effect.Name == "Effects/depth")
+            {
+				DrawDepth(device, effect, transform);
+				return;
+            }
+
 			//bandaid fix. I guess monogame doesn't correctly flush textures, so I do it manually here.
 			//TODO optimize this
 			for (int i = 0; i < 16; i++)

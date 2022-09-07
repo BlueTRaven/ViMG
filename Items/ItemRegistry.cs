@@ -8,7 +8,7 @@ namespace ViMG.Items
 {
 	public class ItemRegistry : ObjRegistry<Item>
 	{
-		public override void RegisterAll()
+		protected override void DoRegistration()
 		{
 			Register(new ItemSwordBase());
 			Register(new ItemPickaxeBase());

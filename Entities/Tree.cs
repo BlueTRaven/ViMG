@@ -73,9 +73,13 @@ namespace ViMG.Entities
 			}
 		}
 
-		public override void Draw(GraphicsDevice device)
+		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			base.Draw(device);
+			//Don't draw in depth buffer.
+			if (effect.Name == "Effects/depth")
+				return;
+
+			base.Draw(device, effect);
 
 			if (meshTrunk == null)
 				MakeMesh(device);
@@ -85,19 +89,19 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.wireframeRS;
 
-			meshTrunk.Draw(device, Main.CubeLitEffect, 
+			meshTrunk.Draw(device, effect, 
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 				Matrix.CreateTranslation(Position));
 
 			for (int i = 0; i < size; i++)
 			{
-				meshSegmentB.Draw(device, Main.CubeLitEffect, 
+				meshSegmentB.Draw(device, effect, 
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)));
 			}
 			
 			if (size == baseSize)
-				meshTreeTop.Draw(device, Main.CubeLitEffect, 
+				meshTreeTop.Draw(device, effect, 
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)));
 		}
@@ -466,7 +470,7 @@ namespace ViMG.Entities
 
 			basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 
-			Position = basePosition.InWorldSpace(null) - new Vector3(Cube.CUBE_SCALE + (Cube.CUBE_SCALE / 4), 0, (Cube.CUBE_SCALE / 4));
+			Position = basePosition.InWorldSpace(null) - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
 			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
 		}
 	}

@@ -28,9 +28,9 @@ namespace ViMG.Generation
 			
 		}
 
-		public Chunk MakeChunk(GenericPool<ChunkData> chunkDatas, ChunkPosition position)
+		public Chunk MakeChunk(ChunkManager cm, ChunkPosition position)
 		{
-			return new Chunk(chunkDatas, position);
+			return new Chunk(cm, position);
 		}
 
 		public abstract Vector3 GetPlayerPosition(World world, ChunkManager chunks);

@@ -144,12 +144,12 @@ namespace ViMG.Entities
 			else return new Optional<ICubeTracker>();
 		}
 
-		public void Draw(GraphicsDevice device)
+		public void Draw(GraphicsDevice device, Effect effect)
 		{
 			foreach (Entity entity in entities)
 			{
 				if (entity.AlwaysRender || Main.camera.FrustumContains(entity.Position))
-					entity.Draw(device);
+					entity.Draw(device, effect);
 			}
 		}
 	}

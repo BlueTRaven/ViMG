@@ -40,7 +40,7 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-		public void TrackingCubeDestroyed()
+		public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
 			world.EntityManager.Remove(this);
 		}

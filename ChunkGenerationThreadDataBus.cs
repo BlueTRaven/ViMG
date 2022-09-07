@@ -8,6 +8,7 @@ using ViMG.Generation;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class ChunkGenerationThreadDataBus
 	{
 		public class ThreadedChunk
@@ -35,13 +36,14 @@ namespace ViMG
 			accessSem = new SemaphoreSlim(1);
 		}
 
+		[Obsolete]
 		public bool AddChunkToGenerate(ChunkPosition position, ChunkGenerator generator, GenericPool<ChunkData> chunkDatas)
 		{
 			if (accessSem.Wait(0))
 			{
 				if (!chunks.ContainsKey(position) || chunks[position].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 				{
-					Chunk chunk = generator.MakeChunk(chunkDatas, position);
+					Chunk chunk = generator.MakeChunk(null, position);
 					//accessMut.WaitOne();
 					chunksToGenerateQueue.Add(new ThreadedChunk()
 					{
@@ -153,7 +155,7 @@ namespace ViMG
 			{
 				ThreadedChunk chunk = new ThreadedChunk()
 				{
-					chunk = generator.MakeChunk(manager.ChunkDatas, position),
+					chunk = generator.MakeChunk(manager, position),
 					syncable = false
 				};
 
