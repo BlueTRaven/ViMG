@@ -238,7 +238,7 @@ namespace ViMG
 
 		public void LoadWorld(string folderName)
 		{
-			ChunkManager.Initialize(this);
+			//ChunkManager.Initialize(this);
 
 			int x = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int z = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
@@ -445,7 +445,8 @@ namespace ViMG
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-			directionalLight.DrawShadowmap(this, device);
+			directionalLight.DrawShadowmap(device, this);
+			LightManager.DrawShadowmap(device, this);
 
 			//Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(directionalLight.GetShadowmapBuffer());
 			Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());

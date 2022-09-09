@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Generation;
 
@@ -14,6 +15,24 @@ namespace ViMG
 {
 	public class ChunkManager
 	{
+		private readonly struct BroadChunkTaskState
+		{
+			public readonly int chunkStart;
+			public readonly int chunkEnd;
+			public readonly int totalChunks;
+			public readonly ManagedChunk[] chunks;
+			public readonly ChunkGenerator generator;
+
+			public BroadChunkTaskState(int chunkStart, int chunkEnd, int totalChunks, ManagedChunk[] chunks, ChunkGenerator generator)
+            {
+                this.chunkStart = chunkStart;
+                this.chunkEnd = chunkEnd;
+                this.totalChunks = totalChunks;
+                this.chunks = chunks;
+				this.generator = generator;
+            }
+		};
+
 		private struct ManagedChunk
 		{
 			public Chunk chunk;
@@ -113,7 +132,7 @@ namespace ViMG
 
 		public void Initialize(World world)
 		{
-			generator.Initialize(world);
+			//generator.Initialize(world);
 			//genThread.Start();
 		}
 
@@ -122,37 +141,53 @@ namespace ViMG
 			int num = 0;
 			int total = sizeInChunks * sizeInChunks * sizeInChunks;
 
-			for (int i = 0; i < total; i++)
+			Stopwatch totalWatch = Stopwatch.StartNew();
+
+			generator.Initialize(world);
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			List<Task> broadPhaseTasks = new List<Task>();
+
+			const int split = 8;
+
+			for (int i = 0; i < total; i += split) 
 			{
-				int x = i % sizeInChunks;
-				int y = (i / sizeInChunks) % sizeInChunks;
-				int z = i / (sizeInChunks * sizeInChunks);
+				int chunkStart = i;
+				int chunkEnd = i + split;
 
-				//chunks[i].chunk = generator.MakeChunk(ChunkDatas, new ChunkPosition(x, y, z));
-				generator.GenerateChunkBroad(chunks[i].chunk);
+				BroadChunkTaskState state = new BroadChunkTaskState(chunkStart, chunkEnd, total, chunks, generator);
 
-				num++;
+				Task task = new Task(GenerateChunkDetailTaskFn, state);
 
-				if (num % sizeInChunks * sizeInChunks == 0)
-					Console.WriteLine("Broad: " + num + " / " + total);
+				task.Start();
+				broadPhaseTasks.Add(task);
+			}
+
+			broadPhaseTasks.ForEach(x => x.Wait());
+
+			watch.Stop();
+			Console.WriteLine("Finished Broad Phase. Generated {0} total chunks in {1} seconds.", total, watch.Elapsed.Seconds);
+
+			if (Main.DO_DETAIL)
+			{
+				num = 0;
+				for (int i = 0; i < total; i++)
+				{
+					int x = i % sizeInChunks;
+					int y = (i / sizeInChunks) % sizeInChunks;
+					int z = i / (sizeInChunks * sizeInChunks);
+
+					generator.GenerateChunkDetail(this, chunks[i].chunk, new ChunkPosition(x, y, z));
+
+					num++;
+
+					if (num % sizeInChunks * sizeInChunks == 0)
+						Console.WriteLine("Detail: " + num + " / " + total);
+				}
 			}
 
 			num = 0;
-
-			for (int i = 0; i < total; i++)
-			{
-				int x = i % sizeInChunks;
-				int y = (i / sizeInChunks) % sizeInChunks;
-				int z = i / (sizeInChunks * sizeInChunks);
-
-				generator.GenerateChunkDetail(this, chunks[i].chunk, new ChunkPosition(x, y, z));
-
-				num++;
-
-				if (num % sizeInChunks * sizeInChunks == 0)
-					Console.WriteLine("Detail: " + num + " / " + total);
-			}
-
 			for (int i = 0; i < total; i++)
 			{
 				int x = i % sizeInChunks;
@@ -170,6 +205,27 @@ namespace ViMG
 			}
 
 			chunksToMeshQueue.Sort();
+
+			totalWatch.Stop();
+
+			 Console.WriteLine("Finished. Generated {0} total chunks in {1} seconds.", total, totalWatch.Elapsed.Seconds);
+		}
+
+		private static void GenerateChunkDetailTaskFn(object obj)
+		{
+			BroadChunkTaskState state = (BroadChunkTaskState)obj;
+			int split = state.chunkEnd - state.chunkStart;
+
+			for (int j = state.chunkStart; j < state.chunkEnd; j++)
+			{
+				state.generator.GenerateChunkBroad(state.chunks[j].chunk);
+
+				if (!Main.DO_DETAIL)
+					state.chunks[j].chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
+				else state.chunks[j].chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
+			}
+
+			Console.WriteLine("Broad task {0}/{1} finished.", state.chunkStart / split, state.totalChunks / split);
 		}
 
 		public Vector3 GetPlayerSpawnPos(World world)

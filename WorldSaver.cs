@@ -154,7 +154,11 @@ namespace ViMG
 
 		public string[] GetWorldSaveDirectories()
         {
-			string[] strings = Directory.GetDirectories(SAVE_FOLDER); ;
+			string[] strings;
+
+			if (Directory.Exists(SAVE_FOLDER))
+				strings = Directory.GetDirectories(SAVE_FOLDER);
+			else strings = Array.Empty<string>();
 			
 			for (int i = 0; i < strings.Length; i++)
             {

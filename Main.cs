@@ -82,6 +82,7 @@ namespace ViMG
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
+		public const bool DO_DETAIL = false;
 
 		public static bool Exit = false;
 
@@ -224,6 +225,8 @@ namespace ViMG
 			CubeLitEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
 			CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 			CubeLitEffect.Parameters["EnableFog"].SetValue(false);
+
+			CubeLitEffect.Parameters["EnableShadows"].SetValue(ENABLE_SHADOWS);
 			//CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 
 			VertexPositionColorDebugEffect = assetsManager.GetAsset<Effect>("debug_vpc");

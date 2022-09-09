@@ -87,6 +87,8 @@ namespace ViMG
 			device.DepthStencilState = Main.genericDSS;
 			device.RasterizerState = rs;
 			device.SamplerStates[3] = Main.shadowBorderClampSS;
+			device.SamplerStates[4] = Main.shadowBorderClampSS;
+			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
 		public void UpdateCameras(Vector3 direction, Color color)
@@ -102,19 +104,14 @@ namespace ViMG
 			camera.Update(direction);
         }
 
-        public void DrawShadowmap(World world, GraphicsDevice device)
+        public void DrawShadowmap(GraphicsDevice device, World world)
 		{
 			if (!Main.ENABLE_SHADOWS)
 			{
-				Main.CubeLitEffect.Parameters["EnableShadows"].SetValue(false);
 				return;
 			}
-			else
-			{
-				Main.CubeLitEffect.Parameters["EnableShadows"].SetValue(true);
-				Main.CubeLitEffect.Parameters["EnablePCF"].SetValue(Main.ENABLE_PCF);
-				Main.CubeLitEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
-			}
+
+			Main.CubeLitEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 
 			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
 			Matrix texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
@@ -224,7 +221,7 @@ namespace ViMG
 			{
 				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
 				{
-					for (int z = -world.DrawDistanceHoriz; z < world.DrawDistanceHoriz; z++)
+					for (int z = -world.DrawDistanceHoriz; z <= world.DrawDistanceHoriz; z++)
 					{
 						ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(world.player.Position);
 						chunkPos.X += x;

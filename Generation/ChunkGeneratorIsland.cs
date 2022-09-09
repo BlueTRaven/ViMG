@@ -7,14 +7,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace ViMG.Generation
 {
     public class ChunkGeneratorIsland : ChunkGenerator
     {
-		private delegate float EaseFunction(float scale);
+        private delegate float EaseFunction(float scale);
 
-		private float[,] presetNoiseColors;
+		private float[,] presetHeightmap;
 
 		private int holeLocationX;
 		private int holeLocationY;
@@ -28,28 +30,29 @@ namespace ViMG.Generation
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
+		}
+
+		public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			holeLocationX = random.Next(192, 320);
+			holeLocationY = random.Next(192, 320);
+
 			Texture2D tex = Main.assetsManager.GetAsset<Texture2D>("island_preset_noise");
 			Color[] colors = new Color[tex.Width * tex.Height];
 			tex.GetData(colors);
 
-			presetNoiseColors = new float[tex.Width, tex.Height];
+			presetHeightmap = new float[tex.Width, tex.Height];
 
 			for (int i = 0; i < tex.Width * tex.Height; i++)
 			{
 				int x = i % tex.Width;
 				int y = i / tex.Height;
 
-				presetNoiseColors[x, y] = 1 - ((float)colors[i].R / 255f);
+				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
-		}
-
-        public override void Initialize(World world)
-        {
-            base.Initialize(world);
-
-			holeLocationX = random.Next(192, 320);
-			holeLocationY = random.Next(192, 320);
-		}
+        }
 
         public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
@@ -208,7 +211,7 @@ namespace ViMG.Generation
 				{
 					Point cubePos = new Point(x + chunk.Position.X * Chunk.CHUNK_SIZE, z + chunk.Position.Z * Chunk.CHUNK_SIZE);
 
-					heightMap[x, z] = (int)(((float)presetNoiseColors[cubePos.X, cubePos.Y] * ISLAND_RANGE) + SEA_FLOOR) +
+					heightMap[x, z] = (int)(((float)presetHeightmap[cubePos.X, cubePos.Y] * ISLAND_RANGE) + SEA_FLOOR) +
 						(int)(noise.GetNoise(x + chunk.Position.X * Chunk.CHUNK_SIZE, z + chunk.Position.Z * Chunk.CHUNK_SIZE) * 4);
 				}
 			}
@@ -270,7 +273,7 @@ namespace ViMG.Generation
 
 			CubePosition chunkSpacePosition = cubeSpacePos.InChunkSpace(chunk);
 
-			int offset = random.Next();
+			//int offset = random.Next();
 
 			float noise3d1 = ((noise.GetNoise(cubeSpacePos.X, cubeSpacePos.Y, cubeSpacePos.Z) + 1) / 2);
 

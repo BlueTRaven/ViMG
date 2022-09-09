@@ -3,6 +3,7 @@
 #include "ACES.fxh"
 
 #define CASCADE_COUNT 16
+#define MAX_LIGHTS 8
 
 DECLARE_TEXTURE(Texture, 0);
 DECLARE_TEXTURE(TextureHeightFogMapDay, 1);
@@ -10,6 +11,9 @@ DECLARE_TEXTURE(TextureHeightFogMapNight, 2);
 DECLARE_TEXTURE(TextureLightDepth, 3);
 Texture2DArray<float4> TexturesLightDepth : register(t5); \
 sampler TexturesLightDepthSampler : register(s5);
+
+TextureCube<float> Test : register(t6);
+//TextureCube<float> TexturesPointLights[MAX_LIGHTS] : register(t6);
 
 float4x4 World;
 float4x4 View;
@@ -224,13 +228,25 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	fogFactor = clamp(fogFactor, 0, 1);
 	
 	float3 pointLightsColor = float3(0, 0, 0);
-	for (int i = 0; i < 16; i++)
+	int i = 0;
+	//[unroll]
+	//for (int i = 0; i < MAX_LIGHTS; i++)
 	{
-		float distance = length(Lights[i].Position - input.PositionWS);
-		
-		float lightFactor = 1 - ((distance - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
-		lightFactor = clamp(lightFactor, 0, 1);
-		pointLightsColor += Lights[i].Color * lightFactor;
+		float3 dir = input.PositionWS - Lights[i].Position;
+		//dir.y *= -1;
+
+		float sampledDepth = 1 - Test.Sample(TexturesLightDepthSampler, dir).r;
+		sampledDepth *= Lights[i].End;
+
+		float currentDepth = length(dir);
+
+		float lightShadow = currentDepth < sampledDepth ? 1.0 : 0.0;
+		//float distance = length(Lights[i].Position - input.PositionWS);
+
+		float lightFactor = lightShadow;//(1 - (currentDepth - Lights[i].Start) / (Lights[i].End - Lights[i].Start)) * lightShadow;
+		//lightFactor = clamp(lightFactor, 0, 1);
+
+		pointLightsColor = lightFactor;//Lights[i].Color * lightFactor;
 
 		//pointLightsColor = clamp(pointLightsColor, float3(0, 0, 0), float3(1, 1, 1));
 	}
