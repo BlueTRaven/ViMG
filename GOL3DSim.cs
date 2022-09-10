@@ -135,9 +135,14 @@ namespace ViMG
 			return sim[x][y][z];
 		}
 
+		public bool[][][] GetData()
+        {
+			return sim;
+        }
+
 		private void Set(bool[][][] sim, int x, int y, int z, bool value)
 		{
-			int index = x + height * (y + width * z);
+			//int index = x + height * (y + width * z);
 
 			sim[x][y][z] = value;
 		}

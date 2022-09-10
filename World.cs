@@ -446,7 +446,7 @@ namespace ViMG
 			Stopwatch drawTime = Stopwatch.StartNew();
 
 			directionalLight.DrawShadowmap(device, this);
-			LightManager.DrawShadowmap(device, this);
+			//LightManager.DrawShadowmap(device, this);
 
 			//Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(directionalLight.GetShadowmapBuffer());
 			Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());

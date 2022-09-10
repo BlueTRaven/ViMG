@@ -145,7 +145,7 @@ namespace ViMG
 
 			generator.Initialize(world);
 
-			Stopwatch watch = Stopwatch.StartNew();
+			Stopwatch broadWatch = Stopwatch.StartNew();
 
 			List<Task> broadPhaseTasks = new List<Task>();
 
@@ -164,10 +164,15 @@ namespace ViMG
 				broadPhaseTasks.Add(task);
 			}
 
-			broadPhaseTasks.ForEach(x => x.Wait());
+			broadPhaseTasks.ForEach(x => {
+				x.Wait();
+			});
 
-			watch.Stop();
-			Console.WriteLine("Finished Broad Phase. Generated {0} total chunks in {1} seconds.", total, watch.Elapsed.Seconds);
+			broadPhaseTasks = null;
+
+			broadWatch.Stop();
+			Console.WriteLine("Finished Broad Phase. Generated {0} total chunks in {1} seconds. ({2} seconds elapsed since start.)", 
+				total, broadWatch.Elapsed.Seconds, totalWatch.Elapsed.TotalSeconds);
 
 			if (Main.DO_DETAIL)
 			{
@@ -187,6 +192,8 @@ namespace ViMG
 				}
 			}
 
+			Stopwatch detailWatch = Stopwatch.StartNew();
+
 			num = 0;
 			for (int i = 0; i < total; i++)
 			{
@@ -197,18 +204,23 @@ namespace ViMG
 				chunks[i].chunk.Initialize(world);
 				chunks[i].chunk.PostChunkGen(world);
 
-				MarkDirty(new ChunkPosition(x, y, z), false);
+				//MarkDirty(new ChunkPosition(x, y, z), false);
 				num++;
 
 				if (num % sizeInChunks * sizeInChunks == 0)
 					Console.WriteLine("Init: " + num + " / " + total);
 			}
 
+			detailWatch.Stop();
+
+			Console.WriteLine("Finished Detail Phase. Generated {0} total chunks in {1} seconds. ({2} seconds elapsed since start.)", 
+				total, detailWatch.Elapsed.Seconds, totalWatch.Elapsed.TotalSeconds);
+
 			chunksToMeshQueue.Sort();
 
 			totalWatch.Stop();
 
-			 Console.WriteLine("Finished. Generated {0} total chunks in {1} seconds.", total, totalWatch.Elapsed.Seconds);
+			Console.WriteLine("Finished. Generated {0} total chunks in {1} seconds.", total, totalWatch.Elapsed.TotalSeconds);
 		}
 
 		private static void GenerateChunkDetailTaskFn(object obj)
@@ -512,7 +524,11 @@ namespace ViMG
 		{
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-			return chunks[PosToIndex(chunkPos)].chunk;
+			int ind = PosToIndex(chunkPos);
+
+			if (ind < 0 || ind >= chunks.Length)
+				return null;
+			else return chunks[ind].chunk;
 		}
 
 		public Chunk GetChunk(int x, int y, int z)

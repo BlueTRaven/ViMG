@@ -5,18 +5,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using ViMG.Cubes;
 
 namespace ViMG.Generation
 {
 	public abstract class ChunkGenerator
 	{
+		protected static ushort[] BlacklistAir = new ushort[1] { 0 };
 		protected FastNoise noise;
-		protected Random random;
+		private Random random;
+		private Random threadRandom;
 
+		protected readonly int seed;
 		public ChunkGenerator(int seed = 1337)
 		{
+			this.seed = seed;
+
 			random = new Random(seed);
+			threadRandom = new Random(seed - 256);
+
 			noise = new FastNoise(seed);
 			noise.SetNoiseType(FastNoise.NoiseType.Simplex);
 			noise.SetFrequency(1f / (float)Chunk.CHUNK_SIZE);
@@ -27,6 +35,13 @@ namespace ViMG.Generation
 		{
 			
 		}
+
+		protected Random GetRandom()
+        {
+			if (Thread.CurrentThread == Main.MainThread)
+				return random;
+			else return threadRandom;
+        }
 
 		public Chunk MakeChunk(ChunkManager cm, ChunkPosition position)
 		{

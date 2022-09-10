@@ -32,5 +32,12 @@ namespace ViMG
             this.y = y;
             this.z = z;
         }
+
+        public ValuePoint3D(Point3D point)
+        {
+            this.x = point.x;
+            this.y = point.y;
+            this.z = point.z;
+        }
     }
 }

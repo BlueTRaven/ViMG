@@ -39,7 +39,6 @@ namespace ViMG
 
 		public static SimpleMesh<TVert, TIndex> Empty { get; private set; }
 
-
 		static SimpleMesh()
 		{
 			Empty = new SimpleMesh<TVert, TIndex>();

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ViMG
 {
-	public struct Optional<T> where T : class
+	public ref struct Optional<T> where T : class
 	{
 		public Optional(T obj)
 		{
@@ -33,7 +33,7 @@ namespace ViMG
 		}
 	}
 
-	public struct OptionalValue<T> where T : struct
+	public ref struct OptionalValue<T> where T : struct
 	{
 		public OptionalValue(T obj)
 		{

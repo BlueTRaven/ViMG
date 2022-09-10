@@ -14,6 +14,7 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorIsland : ChunkGenerator
     {
+		private static ushort[] BlacklistOre = new ushort[] { 0, Main.Registry.CubeRegistry.Get("stone").Id };
         private delegate float EaseFunction(float scale);
 
 		private float[,] presetHeightmap;
@@ -28,6 +29,13 @@ namespace ViMG.Generation
 		private const int ISLAND_TOP = SEA_FLOOR + 64;
 		private const int ISLAND_RANGE = ISLAND_TOP - SEA_FLOOR;
 
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3D;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreIron;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreGlow;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreTin;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreCopper;
+
+
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
 		}
@@ -36,8 +44,8 @@ namespace ViMG.Generation
         {
             base.Initialize(world);
 
-			holeLocationX = random.Next(192, 320);
-			holeLocationY = random.Next(192, 320);
+			holeLocationX = GetRandom().Next(192, 320);
+			holeLocationY = GetRandom().Next(192, 320);
 
 			Texture2D tex = Main.assetsManager.GetAsset<Texture2D>("island_preset_noise");
 			Color[] colors = new Color[tex.Width * tex.Height];
@@ -52,7 +60,35 @@ namespace ViMG.Generation
 
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
-        }
+
+			structureBatchesGOL3D = new StructureGeneratorGOL3D(seed, null).Generate(56, 8);
+			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
+				3, 6, seed, null).Generate(18, 3);
+			structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
+				4, 12, seed, null).Generate(18, 3);
+			structureBatchesOreTin = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_tin").Id,
+				2, 5, seed, null).Generate(18, 3);
+			structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
+				2, 5, seed, null).Generate(18, 3);
+
+			/*Main.Registry.CubeRegistry.Get("ore_iron");
+		Cube oreGlow = Main.Registry.CubeRegistry.Get("ore_glowdust");
+		Cube oreTin = Main.Registry.CubeRegistry.Get("ore_tin");
+		Cube oreCopper = Main.Registry.CubeRegistry.Get("ore_copper");*/
+			/*GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, Easings.EaseLinear,
+							oreIron, stone);
+
+			GenerateOreDetail(manager, chunk, pos, 4, 12, sample - 16, 0, 1f / 800f, Easings.EaseLinear,
+				oreGlow, stone);
+
+			GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 16, 96, 1f / 1024f, Easings.EaseLinear,
+				oreTin, stone);
+
+			GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 24, 48, 1f / 1024f, Easings.EaseLinear,
+				oreCopper, stone);*/
+
+			//Structure test = structureBatchesOreIron.Get(3);
+		}
 
         public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
@@ -97,8 +133,15 @@ namespace ViMG.Generation
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
 		}
 
+		private static int numBigCavesGenerated = 0;
+
         public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
         {
+			Cube stone = Main.Registry.CubeRegistry.Get("stone");
+			Cube oreIron = Main.Registry.CubeRegistry.Get("ore_iron");
+			Cube oreGlow = Main.Registry.CubeRegistry.Get("ore_glowdust");
+			Cube oreTin = Main.Registry.CubeRegistry.Get("ore_tin");
+			Cube oreCopper = Main.Registry.CubeRegistry.Get("ore_copper");
 			int[,] heightMap = GenerateHeight(chunk);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -112,9 +155,9 @@ namespace ViMG.Generation
 
 						int sample = heightMap[x, z];
 
-						if (pos.Y == sample + 1 && pos.Y > SEA_LEVEL && random.Next(0, 256) == 0)
+						if (pos.Y == sample + 1 && pos.Y > SEA_LEVEL && GetRandom().Next(0, 256) == 0)
 						{
-							int num = random.Next(3, 12);
+							int num = GetRandom().Next(3, 12);
 							for (int i = 0; i < num; i++)
 							{
 								var posOffset = pos;
@@ -126,14 +169,20 @@ namespace ViMG.Generation
 
 						if (pos.Y < sample - 64)
 						{
-							if (random.NextDouble() < 1.0 / 400000.0)
+							double shouldDoBigCave = GetRandom().NextDouble();
+							if (shouldDoBigCave < 1.0 / 400000.0)
 							{
-								int caveW = random.Next(16, 64);
-								int caveH = random.Next(16, 64);
-								int caveZ = random.Next(16, 64);
+								numBigCavesGenerated++;
 
-								GOL3DSim sim = new GOL3DSim(random, caveW, caveH, caveZ, 15, 0.4f, 13, 10);
+								/*int caveW = GetRandom().Next(16, 64);
+								int caveH = GetRandom().Next(16, 64);
+								int caveZ = GetRandom().Next(16, 64);*/
 
+								Structure structure = structureBatchesGOL3D.Get(GetRandom().Next(0, structureBatchesGOL3D.num));
+
+								PlaceStructure(manager, chunk, structure, pos, BlacklistAir);// Span<int>.Empty);
+
+								/*GOL3DSim sim = new GOL3DSim(GetRandom(), caveW, caveH, caveZ, 15, 0.4f, 13, 10);
 								sim.DoSim();
 
 								List<CubePosition> altarSpawnPositions = new List<CubePosition>();
@@ -154,14 +203,14 @@ namespace ViMG.Generation
 											{
 												if (sy + 1 < caveH && !sim.Get(sx, sy + 1, sz))
 												{
-													if (random.NextDouble() < 0.25)
+													if (GetRandom().NextDouble() < 0.25)
 													{
 														SetCubeOrAdjacent(manager, chunk, gol3dPos, Main.Registry.CubeRegistry.Get("altar_brick").Id);
 													}
 
 													if ((noise.GetSimplex(gol3dPos.X, gol3dPos.Y, gol3dPos.Z) + 1) / 2f < 0.25f)
 													{
-														if (random.NextDouble() < 0.0125)
+														if (GetRandom().NextDouble() < 0.0125)
 														{
 															gol3dPos.Y += 1;
 															altarSpawnPositions.Add(gol3dPos);
@@ -177,21 +226,40 @@ namespace ViMG.Generation
 								foreach (CubePosition altarSpawnPosition in altarSpawnPositions)
 								{
 									SetCubeOrAdjacent(manager, chunk, altarSpawnPosition, Main.Registry.CubeRegistry.Get("ancient_altar").Id);
-								}
+								}*/
 							}
 						}
 
-						GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, Easings.EaseLinear,
-							Main.Registry.CubeRegistry.Get("ore_iron"), Main.Registry.CubeRegistry.Get("stone"));
+						if (pos.Y < sample - 64)
+                        {
+							bool doIron = GetRandom().NextFloat() < 1f / 1024f;
+							bool doGlow = GetRandom().NextFloat() < 1f / 800f;
+							bool doTin = GetRandom().NextFloat() < 1f / 1024f;
+							bool doCopper = GetRandom().NextFloat() < 1f / 1024f;
+							if (doIron) 
+								PlaceStructure(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos, BlacklistOre);
+
+							if (doGlow)
+								PlaceStructure(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, BlacklistOre);
+
+							if (doTin)
+								PlaceStructure(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos, BlacklistOre);
+
+							if (doCopper)
+								PlaceStructure(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos, BlacklistOre);
+						}
+
+						/*GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, Easings.EaseLinear,
+							oreIron, stone);
 
 						GenerateOreDetail(manager, chunk, pos, 4, 12, sample - 16, 0, 1f / 800f, Easings.EaseLinear,
-							Main.Registry.CubeRegistry.Get("ore_glowdust"), Main.Registry.CubeRegistry.Get("stone"));
+							oreGlow, stone);
 
 						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 16, 96, 1f / 1024f, Easings.EaseLinear,
-							Main.Registry.CubeRegistry.Get("ore_tin"), Main.Registry.CubeRegistry.Get("stone"));
+							oreTin, stone);
 
 						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 24, 48, 1f / 1024f, Easings.EaseLinear,
-							Main.Registry.CubeRegistry.Get("ore_copper"), Main.Registry.CubeRegistry.Get("stone"));
+							oreCopper, stone);*/
 					}
 				}
 			}
@@ -200,6 +268,41 @@ namespace ViMG.Generation
 
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 		}
+
+		private void PlaceStructure(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos, Span<ushort> overwriteBlacklist)
+        {
+			for (int x = 0; x < structure.size.x; x++)
+            {
+				for (int y = 0; y < structure.size.y; y++)
+                {
+					for (int z = 0; z < structure.size.z; z++)
+                    {
+						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.x, structure.size.y, structure.size.z), out int i);
+						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
+
+						if (!overwriteBlacklist.IsEmpty)
+						{
+							int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+
+							bool canOverwrite = true;
+							for (int j = 0; j < overwriteBlacklist.Length; j++)
+							{
+								if (overwriteBlacklist[j] == overwritingId)
+									canOverwrite = false;
+							}
+
+							if (canOverwrite)
+								SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
+						}
+						else
+						{
+							//No restrictions on overwriting, so this is slightly faster than checking.
+							SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
+						}
+					}
+				}
+			}
+        }
 
 		private int[,] GenerateHeight(Chunk chunk)
 		{
@@ -252,7 +355,7 @@ namespace ViMG.Generation
 					}
 					else
 					{
-						if (random.NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
+						if (GetRandom().NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
 							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
 						return 1;
 					}
@@ -319,25 +422,24 @@ namespace ViMG.Generation
 
 				float realChance = easeChance * chance;
 
-				bool shouldSpawn = random.NextFloat(0, 1) < realChance;
+				bool shouldSpawn = GetRandom().NextFloat(0, 1) < realChance;
 
 				if (!shouldSpawn)
 					return;
 
-				int size = random.Next(minSize, maxSize);
+				int size = GetRandom().Next(minSize, maxSize);
 
 				CubePosition nextPos = startPos;
 				Chunk nextChunk = chunk;
-				int lastDirection = 0;
 
-				while (size > 0 && chunk.GetData().GetCube(nextPos.InChunkSpace(nextChunk)).GetOrDefault(Main.Registry.CubeRegistry.Air) == mediumCube)
+				while (nextChunk != null && size > 0 && chunk.GetData().GetCube(nextPos.InChunkSpace(nextChunk))
+					.GetOrDefault(Main.Registry.CubeRegistry.Air) == mediumCube)
 				{
 					SetCubeOrAdjacent(manager, chunk, nextPos, ore.Id);
-					nextChunk = manager.GetChunk(nextPos);
 
-					lastDirection = random.Next(0, 6);
+					int nextDirection = GetRandom().Next(0, 6);
 
-					switch (lastDirection)
+					switch (nextDirection)
 					{
 						case 0:
 							nextPos = nextPos + new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
@@ -358,6 +460,8 @@ namespace ViMG.Generation
 							nextPos = nextPos - new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
 							break;
 					}
+
+					nextChunk = manager.GetChunk(nextPos);
 
 					size--;
 				}
