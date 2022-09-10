@@ -14,9 +14,6 @@ namespace ViMG
 {
     public class Main : Game
     {
-		public static Point WindowResolution = new Point(800, 480);
-		public static float AspectRatio => (float)WindowResolution.X / (float)WindowResolution.Y;
-
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
 
@@ -99,8 +96,8 @@ namespace ViMG
 				GraphicsProfile = GraphicsProfile.HiDef,
 				//PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8,
 				SynchronizeWithVerticalRetrace = false,
-				PreferredBackBufferWidth = WindowResolution.X,
-				PreferredBackBufferHeight = WindowResolution.Y,
+				PreferredBackBufferWidth = Options.CurrentWindowResolution.X,
+				PreferredBackBufferHeight = Options.CurrentWindowResolution.Y,
 			};
 
             Content.RootDirectory = "Content";
@@ -184,7 +181,7 @@ namespace ViMG
 			GraphicsDevice.DepthStencilState = genericDSS;
 			GraphicsDevice.RasterizerState = genericRS;
 
-			Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
+			Options.CenterMouse();
 
 			DrawHelper.LoadContent(GraphicsDevice);
 
@@ -192,9 +189,10 @@ namespace ViMG
 
 			base.Initialize();
 
-			//DepthTarget = new RenderTarget2D(GraphicsDevice, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
-			WorldTarget = new RenderTarget2D(GraphicsDevice, WindowResolution.X, WindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
-			//GraphicsDevice.SetRenderTarget(WorldTarget);
+			Window.ClientSizeChanged += WindowResolutionChanged;
+			Window.AllowUserResizing = true;
+
+			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
 			Registry = new RegistryService();
 			Registry.Register();
@@ -209,7 +207,15 @@ namespace ViMG
 			//world.LoadWorld("flat01");
 		}
 
-        protected override void LoadContent()
+		private void WindowResolutionChanged(object? sender, EventArgs args)
+        {
+			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, 
+				false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			camera.MarkDirty();
+		}
+
+		protected override void LoadContent()
         {
 			batch = new SpriteBatch(GraphicsDevice);
 			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
@@ -219,10 +225,10 @@ namespace ViMG
 			FogManager = new FogManager(CubeLitEffect, CubeUnlitEffect);
 
 			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
-			CubeLitEffect.Parameters["AmbientStrength"].SetValue(1f);
+			CubeLitEffect.Parameters["AmbientStrength"].SetValue(0f);
+			CubeLitEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
 			CubeLitEffect.Parameters["SpecularStrength"].SetValue(1f);
 			CubeLitEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
 			CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 			CubeLitEffect.Parameters["EnableFog"].SetValue(false);
 
@@ -274,13 +280,13 @@ namespace ViMG
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;
-				Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
+				Options.CenterMouse();
 			}
 
 			if (!paused || inputManager.JustPressed(Keys.O))
 			{
 				if (inputManager.JustPressed(Keys.O))
-					Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
+					Options.CenterMouse();
 
 				if (WorldLoaded)
 					world.Update(deltaTime);
@@ -291,7 +297,7 @@ namespace ViMG
 			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
 
 			if (IsActive && !paused && !MouseControl)
-				Mouse.SetPosition(WindowResolution.X / 2, WindowResolution.Y / 2);
+				Options.CenterMouse();
 		}
 		
         protected override void Draw(GameTime gameTime)
@@ -321,7 +327,8 @@ namespace ViMG
 				world.DrawUI(batch);
 			else ui.Draw(batch);
 
-			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(WindowResolution.X / 2 - 8, WindowResolution.Y / 2 - 8), null, Color.White);
+			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8, 
+				Options.CurrentWindowResolution.Y / 2 - 8), null, Color.White);
 
 			batch.End();
 
@@ -332,19 +339,20 @@ namespace ViMG
 				TextHelper.FontInfo font = new TextHelper.FontInfo(assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
 				TextHelper.DrawText(batch, font,
-					frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 				TextHelper.DrawText(batch, font,
 					"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
-					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(camera.Position).ToString(), Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(camera.Position).ToString(), Color.White, 
+					new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds."
 					+ "\nChunk Queue: " + ChunkManager.QueueGenerate + "/" + ChunkManager.QueueMesh;
 
 				TextHelper.DrawText(batch, font, queueStr,
-					Color.White, new Rectangle(0, 0, WindowResolution.X, WindowResolution.Y),
-					Enums.Alignment.TopLeft, WindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 			}
 
 

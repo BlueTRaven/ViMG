@@ -51,7 +51,7 @@ namespace ViMG.Items
 			return false;
 		}
 
-		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
+		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, transform);
 

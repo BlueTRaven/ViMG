@@ -185,7 +185,7 @@ namespace ViMG
 
             var chunks = chunkManager.GetChunks();
 
-			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, (int)ONE_CHUNK_SIZE * chunks.Length))
+			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, (int)ONE_CHUNK_SIZE))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
 

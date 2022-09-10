@@ -14,7 +14,7 @@ namespace ViMG.Entities
 		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
 		public Vector3 Velocity;
 
-		public Vector3 MaxVelocity = new Vector3(64, 340, 64);
+		public Vector3 MaxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
 
 		private static SimpleMesh<VertexPositionColor, int> meshDebugCube;
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
@@ -76,14 +76,14 @@ namespace ViMG.Entities
 								jumpDir.Normalize();
 							}
 
-							Velocity = new Vector3(jumpDir.X * 32, MaxVelocity.Y * 0.75f, jumpDir.Y * 32);
+							Velocity = new Vector3(jumpDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
 
 							numJumps--;
 						}
 						else
 						{
 							Vector2 playerDir = Vector2.Normalize(new Vector2(world.player.Position.X, world.player.Position.Z) - new Vector2(Position.X, Position.Z));
-							Velocity = new Vector3(playerDir.X * 32, MaxVelocity.Y * 0.75f, playerDir.Y * 32);
+							Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
 						}
 					
 						onGround = false;

@@ -71,7 +71,7 @@ namespace ViMG.Items
 
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{
-			Draw(device, item, player.GetHeldMatrix());
+			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix());
 		}
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
@@ -79,7 +79,7 @@ namespace ViMG.Items
 			batch.Draw(Texture, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 
-		public virtual void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
+		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			if (mesh == null)
 				MakeMesh(device);

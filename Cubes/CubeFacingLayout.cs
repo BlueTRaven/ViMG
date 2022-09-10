@@ -34,6 +34,16 @@ namespace ViMG.Cubes
 			this.Bottom = bottom;
 		}
 
+		public CubeFacingLayout(RectangleF sides, RectangleF topBottom)
+        {
+			this.Front = sides;
+			this.Back = sides;
+			this.Left = sides;
+			this.Right = sides;
+			this.Top = topBottom;
+			this.Bottom = topBottom;
+		}
+
 		public CubeFacingLayout(RectangleF allSides)
 		{
 			Front = allSides;

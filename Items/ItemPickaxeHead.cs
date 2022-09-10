@@ -52,10 +52,10 @@ namespace ViMG.Items
 			return ref stats;
 		}
 
-		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
+		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			Main.CubeLitEffect.Parameters["TintColor"].SetValue(color.ToVector3());
-			base.Draw(device, item, transform);
+			base.DrawInWorld(device, world, item, transform);
 			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 		}
 

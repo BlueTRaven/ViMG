@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.AssetHandlers;
+using ViMG.Generation;
 
 namespace ViMG
 {
@@ -24,6 +26,7 @@ namespace ViMG
 			assetTypes.Add(typeof(Model), new AssetHandlerModel(content, this));
 			assetTypes.Add(typeof(Effect), new AssetHandlerEffect(content, this));
 			assetTypes.Add(typeof(NineSlice), new AssetHandlerNineSlice(content, this));
+			assetTypes.Add(typeof(Structure), new AssetHandlerStructure(content, this));
 		}
 
 		public override void LoadContent(string fulldirectoryname)

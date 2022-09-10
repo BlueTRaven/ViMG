@@ -34,15 +34,16 @@ namespace ViMG.Generation
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreGlow;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreTin;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreCopper;
-
+		private Structure ellipsoidAtBottomOfHole;
+		private Structure obelisk;
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
 		}
 
 		public override void Initialize(World world)
-        {
-            base.Initialize(world);
+		{
+			base.Initialize(world);
 
 			holeLocationX = GetRandom().Next(192, 320);
 			holeLocationY = GetRandom().Next(192, 320);
@@ -71,26 +72,31 @@ namespace ViMG.Generation
 			structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
 				2, 5, seed, null).Generate(18, 3);
 
-			/*Main.Registry.CubeRegistry.Get("ore_iron");
-		Cube oreGlow = Main.Registry.CubeRegistry.Get("ore_glowdust");
-		Cube oreTin = Main.Registry.CubeRegistry.Get("ore_tin");
-		Cube oreCopper = Main.Registry.CubeRegistry.Get("ore_copper");*/
-			/*GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, Easings.EaseLinear,
-							oreIron, stone);
+			ushort[] sd = new ushort[64 * 16 * 64];
 
-			GenerateOreDetail(manager, chunk, pos, 4, 12, sample - 16, 0, 1f / 800f, Easings.EaseLinear,
-				oreGlow, stone);
+			ushort stone = Main.Registry.CubeRegistry.Get("stone").Id;
 
-			GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 16, 96, 1f / 1024f, Easings.EaseLinear,
-				oreTin, stone);
+			for (int i = 0; i < sd.Length; i++)
+				sd[i] = stone;
 
-			GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 24, 48, 1f / 1024f, Easings.EaseLinear,
-				oreCopper, stone);*/
+			ValuePoint3D center = new ValuePoint3D(32, 8, 32);
+			for (int i = 0; i < sd.Length; i++)
+			{
+				Util.OneDToThreeD(i, new ValuePoint3D(64, 16, 64), out ValuePoint3D pos);
 
-			//Structure test = structureBatchesOreIron.Get(3);
+				float dist = new Vector3((pos.x - center.x) / 4, pos.y - center.y, (pos.z - center.z) / 4).Length();
+
+				if (dist < 8)
+                {
+					sd[i] = 0;
+                }
+			}
+
+			ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
+			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
 		}
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
 			int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
 			int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
@@ -137,11 +143,6 @@ namespace ViMG.Generation
 
         public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
         {
-			Cube stone = Main.Registry.CubeRegistry.Get("stone");
-			Cube oreIron = Main.Registry.CubeRegistry.Get("ore_iron");
-			Cube oreGlow = Main.Registry.CubeRegistry.Get("ore_glowdust");
-			Cube oreTin = Main.Registry.CubeRegistry.Get("ore_tin");
-			Cube oreCopper = Main.Registry.CubeRegistry.Get("ore_copper");
 			int[,] heightMap = GenerateHeight(chunk);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -180,53 +181,7 @@ namespace ViMG.Generation
 
 								Structure structure = structureBatchesGOL3D.Get(GetRandom().Next(0, structureBatchesGOL3D.num));
 
-								PlaceStructure(manager, chunk, structure, pos, BlacklistAir);// Span<int>.Empty);
-
-								/*GOL3DSim sim = new GOL3DSim(GetRandom(), caveW, caveH, caveZ, 15, 0.4f, 13, 10);
-								sim.DoSim();
-
-								List<CubePosition> altarSpawnPositions = new List<CubePosition>();
-
-								for (int sx = 0; sx < caveW; sx++)
-								{
-									for (int sy = 0; sy < caveH; sy++)
-									{
-										for (int sz = 0; sz < caveZ; sz++)
-										{
-											CubePosition gol3dPos = pos + new CubePosition(sx, sy, sz, CubePosition.CoordinateSpace.CubeSpace);
-
-											if (!sim.Get(sx, sy, sz))
-											{
-												SetCubeOrAdjacent(manager, chunk, gol3dPos, 0);
-											}
-											else
-											{
-												if (sy + 1 < caveH && !sim.Get(sx, sy + 1, sz))
-												{
-													if (GetRandom().NextDouble() < 0.25)
-													{
-														SetCubeOrAdjacent(manager, chunk, gol3dPos, Main.Registry.CubeRegistry.Get("altar_brick").Id);
-													}
-
-													if ((noise.GetSimplex(gol3dPos.X, gol3dPos.Y, gol3dPos.Z) + 1) / 2f < 0.25f)
-													{
-														if (GetRandom().NextDouble() < 0.0125)
-														{
-															gol3dPos.Y += 1;
-															altarSpawnPositions.Add(gol3dPos);
-														}
-														SetCubeOrAdjacent(manager, chunk, gol3dPos, Main.Registry.CubeRegistry.Get("altar_brick").Id);
-													}
-												}
-											}
-										}
-									}
-								}
-
-								foreach (CubePosition altarSpawnPosition in altarSpawnPositions)
-								{
-									SetCubeOrAdjacent(manager, chunk, altarSpawnPosition, Main.Registry.CubeRegistry.Get("ancient_altar").Id);
-								}*/
+								PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
 							}
 						}
 
@@ -237,29 +192,21 @@ namespace ViMG.Generation
 							bool doTin = GetRandom().NextFloat() < 1f / 1024f;
 							bool doCopper = GetRandom().NextFloat() < 1f / 1024f;
 							if (doIron) 
-								PlaceStructure(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos, BlacklistOre);
+								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos, 
+									BlacklistOre, Span<ushort>.Empty);
 
 							if (doGlow)
-								PlaceStructure(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, BlacklistOre);
+								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, 
+									BlacklistOre, Span<ushort>.Empty);
 
 							if (doTin)
-								PlaceStructure(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos, BlacklistOre);
+								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos, 
+									BlacklistOre, Span<ushort>.Empty);
 
 							if (doCopper)
-								PlaceStructure(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos, BlacklistOre);
+								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos, 
+									BlacklistOre, Span<ushort>.Empty);
 						}
-
-						/*GenerateOreDetail(manager, chunk, pos, 3, 6, sample - 64, 0, 1f / 1024f, Easings.EaseLinear,
-							oreIron, stone);
-
-						GenerateOreDetail(manager, chunk, pos, 4, 12, sample - 16, 0, 1f / 800f, Easings.EaseLinear,
-							oreGlow, stone);
-
-						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 16, 96, 1f / 1024f, Easings.EaseLinear,
-							oreTin, stone);
-
-						GenerateOreDetail(manager, chunk, pos, 2, 5, sample - 24, 48, 1f / 1024f, Easings.EaseLinear,
-							oreCopper, stone);*/
 					}
 				}
 			}
@@ -269,8 +216,48 @@ namespace ViMG.Generation
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 		}
 
-		private void PlaceStructure(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos, Span<ushort> overwriteBlacklist)
+        public override void PostGenerateDetail(ChunkManager manager)
         {
+            base.PostGenerateDetail(manager);
+
+			PlaceStructureWithBlacklist(manager, null, ellipsoidAtBottomOfHole, 
+				new CubePosition(holeLocationX - 32, 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
+				BlacklistAir, Span<ushort>.Empty);
+
+			while (true)
+			{
+				Vector2 pos = new Vector2(holeLocationX, holeLocationY);
+				Vector2 offset = GetRandom().NextAngle() * (holeRadius + 16);
+
+				var solidPos = manager.GetFirstSolidDown(new Vector3(pos.X + offset.X, 512, pos.Y + offset.Y) * Cube.CUBE_SCALE);
+
+				if (solidPos.HasValue())
+				{
+					PlaceStructureWithBlacklist(manager, null, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
+						Span<ushort>.Empty, BlacklistAir);
+					break;
+				}
+			}
+        }
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="manager"></param>
+		/// <param name="baseChunk"></param>
+		/// <param name="structure"></param>
+		/// <param name="pos"></param>
+		/// <param name="overwriteWorldBlacklist">Structure cubes will not overwrite cubes of this type in the world.</param>
+		/// <param name="dontwriteStructureBlacklist">If the structure encounters a cube of this type when placing, it will not place it.
+		/// For instance, if your structure is padded by air, you might not want to overwrite the world with that.</param>
+        private void PlaceStructureWithBlacklist(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos, 
+			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist)
+        {
+			Chunk realBaseChunk = baseChunk;
+
+			if (baseChunk == null)
+				realBaseChunk = manager.GetChunk(pos);
+
 			for (int x = 0; x < structure.size.x; x++)
             {
 				for (int y = 0; y < structure.size.y; y++)
@@ -280,25 +267,31 @@ namespace ViMG.Generation
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.x, structure.size.y, structure.size.z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-						if (!overwriteBlacklist.IsEmpty)
+						bool canWrite = true;
+						//Allow structure cube to be overwritten (rather, not written) by world.
+						if (!dontwriteStructureBlacklist.IsEmpty)
+                        {
+							for (int j = 0; j < dontwriteStructureBlacklist.Length; j++)
+                            {
+								if (structure.data[i] == dontwriteStructureBlacklist[j])
+									canWrite = false;
+                            }
+                        }
+
+						//Allow world cube to be overwritten by structure
+						if (!overwriteWorldBlacklist.IsEmpty)
 						{
 							int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
-							bool canOverwrite = true;
-							for (int j = 0; j < overwriteBlacklist.Length; j++)
+							for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 							{
-								if (overwriteBlacklist[j] == overwritingId)
-									canOverwrite = false;
+								if (overwriteWorldBlacklist[j] == overwritingId)
+									canWrite = false;
 							}
+						}
 
-							if (canOverwrite)
-								SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
-						}
-						else
-						{
-							//No restrictions on overwriting, so this is slightly faster than checking.
-							SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
-						}
+						if (canWrite)
+							SetCubeOrAdjacent(manager, realBaseChunk, realPos, structure.data[i]);
 					}
 				}
 			}
@@ -330,7 +323,7 @@ namespace ViMG.Generation
 			if (Hole(cubeSpacePos, chunkSpacePos, heightMap))
 			{
 				if (cubeSpacePos.Y < 48)
-					return 2;
+					return 3;
 				else return 0;
 			}
 
@@ -340,7 +333,7 @@ namespace ViMG.Generation
 			{
 				if (cubeSpacePos.Y == sample && cubeSpacePos.Y >= SEA_LEVEL)
 				{
-					return 2;
+					return Main.Registry.CubeRegistry.Get("grass").Id;
 				}
 				else
 				{
@@ -357,7 +350,7 @@ namespace ViMG.Generation
 					{
 						if (GetRandom().NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
 							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
-						return 1;
+						return Main.Registry.CubeRegistry.Get("dirt").Id;
 					}
 				}
 			}
@@ -365,7 +358,7 @@ namespace ViMG.Generation
 			{
 				//water if below sea level, air otherwise
 				if (cubeSpacePos.Y < SEA_LEVEL)
-					return 4;
+					return Main.Registry.CubeRegistry.Get("water").Id;
 				else return 0;
 			}
 		}
@@ -409,63 +402,6 @@ namespace ViMG.Generation
 			}
 
 			return false;
-		}
-
-		private void GenerateOreDetail(ChunkManager manager, Chunk chunk, CubePosition startPos, int minSize, int maxSize, int minDepth, int maxDepth, float chance,
-			EaseFunction spawnEaseFunction, Cube ore, Cube mediumCube)
-		{
-			if (startPos.Y >= maxDepth && startPos.Y < minDepth)
-			{
-				float easeScale = (float)(startPos.Y - minDepth) / (float)(maxDepth - minDepth);
-
-				float easeChance = spawnEaseFunction(easeScale);
-
-				float realChance = easeChance * chance;
-
-				bool shouldSpawn = GetRandom().NextFloat(0, 1) < realChance;
-
-				if (!shouldSpawn)
-					return;
-
-				int size = GetRandom().Next(minSize, maxSize);
-
-				CubePosition nextPos = startPos;
-				Chunk nextChunk = chunk;
-
-				while (nextChunk != null && size > 0 && chunk.GetData().GetCube(nextPos.InChunkSpace(nextChunk))
-					.GetOrDefault(Main.Registry.CubeRegistry.Air) == mediumCube)
-				{
-					SetCubeOrAdjacent(manager, chunk, nextPos, ore.Id);
-
-					int nextDirection = GetRandom().Next(0, 6);
-
-					switch (nextDirection)
-					{
-						case 0:
-							nextPos = nextPos + new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-						case 1:
-							nextPos = nextPos - new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-						case 2:
-							nextPos = nextPos + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-						case 3:
-							nextPos = nextPos - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-						case 4:
-							nextPos = nextPos + new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-						case 5:
-							nextPos = nextPos - new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.CubeSpace);
-							break;
-					}
-
-					nextChunk = manager.GetChunk(nextPos);
-
-					size--;
-				}
-			}
 		}
 	}
 }

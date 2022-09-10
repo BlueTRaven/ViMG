@@ -20,15 +20,15 @@ namespace ViMG.Items
 			return metaBaseItem as T;
 		}
 
-		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
+		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			var meta = Get(item);
 
 			if (meta != null)
 			{
-				base.Draw(device, item, transform);
+				base.DrawInWorld(device, world, item, transform);
 
-				meta.Draw(device, item, transform);
+				meta.DrawInWorld(device, world, item, transform);
 			}
 			else
 			{

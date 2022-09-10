@@ -23,7 +23,7 @@ namespace ViMG
 		public string LoadedFolderName;
 
 		public const float GRAVITY = -9.8f;
-		public const float DAY_CYCLE_TIME = 60f * 10f;
+		public const float DAY_CYCLE_TIME = 10f;//60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -412,10 +412,11 @@ namespace ViMG
                 float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 				directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White);
-            }
+					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
+				Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
+			}
 
-            if (Main.inputManager.IsHeld(Keys.F1))
+			if (Main.inputManager.IsHeld(Keys.F1))
 			{
 				if (Main.inputManager.JustPressed(Keys.OemOpenBrackets))
 					currentCascadeDebug = currentCascadeDebug - 1 < 0 ? directionalLight.cameras.Length - 1 : currentCascadeDebug - 1;
@@ -486,7 +487,7 @@ namespace ViMG
 			}
 			else
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
-			Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
+			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
 			foreach (ChunkPosition pos in chunkDrawPositions)
 			{
@@ -642,11 +643,48 @@ namespace ViMG
 			alive += time;
         }
 
-		private float GetTimeOfDay()
+		private float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1)
 		{
-			const float endOfDay = DAY_CYCLE_TIME;
+			//values here are in % of day cycle time;
+			//dawn starts at the last 8% of the total cycle
+			const float DAWN_START = 0.92f;
+			//dawn ends after 16% of the total cycle (8% of the day cycle)
+			const float DAWN_END = 0.16f;
 
-			float timeOfDay = alive % endOfDay;
+			//Dusk starts at the last 8% of the day cycle.
+			const float DUSK_START = 0.42f;
+			//dusk ends after 16% of the night cycle.
+			const float DUSK_END = 0.66f;
+
+			float dawnStart = 1 - ((1 - DAWN_START) * dawnStartOffsetScale);
+			float dawnEnd = DAWN_END * dawnEndOffsetScale;
+			float duskStart = 0.5f - ((1 - DUSK_START - 0.5f) * duskStartOffsetScale);
+			float duskEnd = ((DUSK_END - 0.5f) * duskEndOffsetScale) + 0.5f;
+
+			float timeOfDayPercent = (alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+
+			//Night time
+			if (timeOfDayPercent > duskEnd && timeOfDayPercent <= dawnStart)
+				return 1;
+            else if (timeOfDayPercent > duskStart && timeOfDayPercent <= duskEnd)
+					return (timeOfDayPercent - duskStart) / (duskEnd - duskStart);
+			else if ((timeOfDayPercent > dawnStart && timeOfDayPercent <= 1) || (timeOfDayPercent >= 0 && timeOfDayPercent <= dawnEnd))
+            {
+				float percent = 0;
+				if (timeOfDayPercent > dawnStart)
+					percent = (timeOfDayPercent - dawnStart) / ((timeOfDayPercent + dawnEnd) - dawnStart);
+				else if (timeOfDayPercent <= dawnEnd)
+					percent = (timeOfDayPercent + (1 - dawnStart)) / dawnEnd;
+
+				percent = MathHelper.Clamp(percent, 0, 1);
+
+				return 1 - percent;
+			}
+
+			return 0;
+			
+			//const float endOfDay = DAY_CYCLE_TIME;
+			/*float timeOfDay = alive % endOfDay;
 
 			float startOffset = endOfDay * 0.08f;
 			float dawnStart = endOfDay - startOffset;
@@ -674,7 +712,7 @@ namespace ViMG
 				return 1 - percent;
 			}
 
-			return 0;
+			return 0;*/
 		}
 
 		public bool IsNight()
@@ -682,7 +720,7 @@ namespace ViMG
 			return (alive % DAY_CYCLE_TIME) > DAY_CYCLE_TIME / 2f;
         }
 
-		public float GetNightPercent()
+		public float GetTimeOfNight()
         {
 			float timeOfDay = alive % DAY_CYCLE_TIME;
 

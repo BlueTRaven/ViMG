@@ -18,6 +18,37 @@ namespace ViMG.Generation
             this.size = size;
             this.data = data;
         }
+
+        public void Serialize(List<byte> bytes)
+        {
+            SaveHelper.SaveInt32(bytes, size.x);
+            SaveHelper.SaveInt32(bytes, size.y);
+            SaveHelper.SaveInt32(bytes, size.z);
+
+            SaveHelper.SaveInt32(bytes, data.Length);
+            for (int i = 0; i < data.Length; i++)
+                SaveHelper.SaveUInt16(bytes, data[i]);
+        }
+
+        public static Structure Deserialize(byte[] bytes)
+        {
+            int index = 0;
+
+            int x = SaveHelper.LoadInt32(bytes, ref index);
+            int y = SaveHelper.LoadInt32(bytes, ref index);
+            int z = SaveHelper.LoadInt32(bytes, ref index);
+
+            Point3D size = new Point3D(x, y, z);
+
+            int dataSize = SaveHelper.LoadInt32(bytes, ref index);
+            ushort[] data = new ushort[dataSize];
+            for (int i = 0; i < dataSize; i++)
+            {
+                data[i] = SaveHelper.LoadUInt16(bytes, ref index);
+            }
+
+            return new Structure(size, data);
+        }
     }
 
     //The idea here is we pregenerate a bunch of Structures, for instance, GOL3DSims, using multithreading. These operate on their own arrays

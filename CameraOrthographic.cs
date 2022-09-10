@@ -9,8 +9,6 @@ namespace ViMG
 {
     public class CameraOrthographic : Camera
     {
-		private Matrix projectionMatrix;
-
 		private float left, right, top, bottom;
 
 		public CameraOrthographic(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float left, float right, float top, float bottom, float near, float far) : 

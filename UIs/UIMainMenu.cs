@@ -40,7 +40,7 @@ namespace ViMG.UIs
         {
             UI.Start();
 
-            UI.StartParent(new Vector2(Main.WindowResolution.X / 2 - 64, Main.WindowResolution.Y / 2 - 128));
+            UI.StartParent(new Vector2(Options.CurrentWindowResolution.X / 2 - 64, Options.CurrentWindowResolution.Y / 2 - 128));
 
             if (Main.inputManager.JustReleased(A1r.Input.MouseInput.LeftButton))
                 clicked = false;

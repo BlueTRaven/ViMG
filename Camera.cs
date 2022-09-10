@@ -45,6 +45,7 @@ namespace ViMG
 		protected bool viewDirty;
 		protected Matrix viewMatrix;
 		protected bool projectionDirty;
+		protected Matrix projectionMatrix;
 
 		public Vector3 Forward
 		{
@@ -206,5 +207,12 @@ namespace ViMG
 
 			return frustum.Contains(position) == ContainmentType.Contains || frustum.Contains(position) == ContainmentType.Intersects;
 		}
+
+		public void MarkDirty()
+        {
+			viewDirty = true;
+			projectionDirty = true;
+			frustumDirty = true;
+        }
 	}
 }

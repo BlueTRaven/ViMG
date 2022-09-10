@@ -15,12 +15,12 @@ namespace ViMG.Items
 		private static SimpleMesh<VertexPositionTexture, int> depthMesh;
 		public ItemDebugDepthTarget() : base("debug_depth_target", null, new BrUtility.RectangleF(0, 0, 0, 0))
 		{
-			name = "SHADOW DEPTH RENDERER";
+			name = "DEBUG SHADOW DEPTH RENDERER";
 			description = "Renders the depth buffer into your very hands.\n" +
 				"Shadows are " + (Main.ENABLE_SHADOWS ? "enabled" : "disabled") + ".";
 		}
 
-		public override void Draw(GraphicsDevice device, ItemInstance item, Matrix transform)
+		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, item, transform);
 

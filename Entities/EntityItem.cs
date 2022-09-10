@@ -118,7 +118,7 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.noCullRS;
 
-			Item.item.Draw(device, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+			Item.item.DrawInWorld(device, world, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 				Matrix.CreateScale(0.5f) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
 				Matrix.CreateTranslation(new Vector3(0, (Cube.CUBE_SCALE / 4f) * bobPercent, 0)) *

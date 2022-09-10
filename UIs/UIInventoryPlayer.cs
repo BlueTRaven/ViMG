@@ -24,6 +24,8 @@ namespace ViMG.UIs
 		private bool craftInventoryUpdated;
 		private Recipe currentRecipe;
 
+		private int DEBUGItemListScrollRow = 0;
+
 		public UIInventoryPlayer(Player player, Inventory playerInventory, Inventory craftInventory)
 		{
 			this.player = player;
@@ -168,11 +170,12 @@ namespace ViMG.UIs
 					UI.StartParent(new Vector2(MARGIN, 256));
 
 					var allItems = Main.Registry.ItemRegistry.GetIterable();
-					for (int i = 0; i < allItems.Count; i++)
+
+					for (int i = DEBUGItemListScrollRow * 8; i < allItems.Count; i++)
 					{
 						int x = i % 8;
 						int y = i / 8;
-						RectangleF b = new RectangleF(x * SIZE, y * SIZE, SIZE, SIZE);
+						RectangleF b = new RectangleF(x * SIZE, (y - DEBUGItemListScrollRow) * SIZE , SIZE, SIZE);
 
 						var cheatSlot = UI.MakeItemSlot(UI.MakeButton(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
@@ -185,6 +188,21 @@ namespace ViMG.UIs
 						else if (cheatSlot.button.clickRight)
 						{
 							inventory.Add(new ItemInstance(allItems[i], 1, 1));
+						}
+
+						if (cheatSlot.button.hovered)
+                        {
+							int scroll = -Main.inputManager.GetMouseScroll();
+
+							int maxScroll = (int)Math.Ceiling((double)allItems.Count / 8.0) - 7;	//7 is the maximum number of rows on screen at a time.
+
+							if (scroll != 0)
+                            {
+								DEBUGItemListScrollRow += scroll;
+
+								DEBUGItemListScrollRow = Math.Clamp(DEBUGItemListScrollRow, 0, maxScroll);
+                            }
+
 						}
 					}
 

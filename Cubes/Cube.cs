@@ -35,7 +35,7 @@ namespace ViMG.Cubes
 			}
 		}
 
-		public struct CubeVisualInstance
+        public struct CubeVisualInstance
 		{
 			public enum Face : byte
 			{

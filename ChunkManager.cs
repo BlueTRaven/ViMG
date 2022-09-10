@@ -190,6 +190,8 @@ namespace ViMG
 					if (num % sizeInChunks * sizeInChunks == 0)
 						Console.WriteLine("Detail: " + num + " / " + total);
 				}
+
+				generator.PostGenerateDetail(this);
 			}
 
 			Stopwatch detailWatch = Stopwatch.StartNew();
@@ -647,7 +649,21 @@ namespace ViMG
 		{
 			return chunks[PosToIndex(position)].transform;
 		}
-#endregion
+
+		public OptionalValue<CubePosition> GetFirstSolidDown(Vector3 start)
+		{
+			CubePosition startPos = CubePosition.FromWorldSpace(start);
+
+			for (int y = 0; y < sizeInCubes; y++)
+			{
+				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
+				if (IsInWorldBounds(pos) && GetRaw(pos) != 0)
+					return new OptionalValue<CubePosition>(pos);
+			}
+
+			return new OptionalValue<CubePosition>();
+		}
+		#endregion
 
 		public void UnloadMesh(ChunkPosition position)
 		{

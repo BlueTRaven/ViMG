@@ -38,6 +38,15 @@ namespace ViMG
 			data.Add(fourth);
 		}
 
+		public static void SaveUInt16(List<byte> data, int i)
+        {
+			byte first = (byte)(i & 0b11111111);
+			byte second = (byte)((i & (0b11111111 << 8)) >> 8);
+
+			data.Add(first);
+			data.Add(second);
+		}
+
 		public static void SaveUInt64(List<byte> data, ulong i)
         {
 			SaveInt32(data, (int)(i & (ulong)(4294967295)));
@@ -135,6 +144,14 @@ namespace ViMG
 			int fourth = data[index++] << 24;
 
 			return first | second | third | fourth;
+		}
+
+		public static ushort LoadUInt16(byte[] data, ref int index)
+        {
+			int first = data[index++];
+			int second = data[index++] << 8;
+
+			return (ushort)(first | second);
 		}
 
 		public static ulong LoadUInt64(byte[] data, ref int index)

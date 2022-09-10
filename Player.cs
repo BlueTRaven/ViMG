@@ -67,8 +67,14 @@ namespace ViMG
 		private const float ATTACK_TIME = 0.5f;
 
 		private World.RaycastResult lookAtResult;
-		private CubePosition lookAtPos;
-		private CubePosition placeAtPos;
+		//Is currently looking at a cube or not
+		public bool IsLooking;
+		//position that the player is currently looking at (if any), in cube space.
+		//Will be the position of the last looked at object if nothing is currently looked at.
+		public CubePosition LookAtPos;
+		//likewise, this is the position the player will place a cube if they right clicked the LookAtPos
+		//with a cube item in hand.
+		public CubePosition PlaceAtPos;	
 		private float lookAtColSine;
 		private const float lookAtColTimeMax = 0.5f;
 		private float alive = lookAtColTimeMax;
@@ -95,7 +101,7 @@ namespace ViMG
 			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
 
 			//state = State.Noclip;
-			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+			Options.CenterMouse();
 			originalMS = Mouse.GetState();
 
 			craftInventory = new Inventory(8);
@@ -284,12 +290,14 @@ namespace ViMG
 				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
+			IsLooking = false;
 			if (lookAtResult.hasHit)
 			{
 				if (world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 				{
-					this.lookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
-					this.placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
+					IsLooking = true;
+					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
+					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 				}
 			}
 
@@ -396,7 +404,7 @@ namespace ViMG
 
 						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
 						{
-							var tracker = world.EntityManager.GetEntityTrackingPosition(lookAtPos);
+							var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
 							if (tracker.HasValue() && tracker.Get().OnInteract(this))
 								PerformAction();
 							else if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.RightClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
@@ -649,7 +657,7 @@ namespace ViMG
 			Main.DrawCursor = true;
 			Main.MouseControl = true;
 
-			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+			Options.CenterMouse();
 		}
 
 		public void CloseUI()
@@ -661,7 +669,7 @@ namespace ViMG
 			Main.DrawCursor = false;
 			Main.MouseControl = false;
 
-			Mouse.SetPosition(Main.WindowResolution.X / 2, Main.WindowResolution.Y / 2);
+			Options.CenterMouse();
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)
@@ -694,7 +702,7 @@ namespace ViMG
 					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 					Matrix.CreateScale(1.126f) *
 					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) * 
-					Matrix.CreateTranslation(lookAtPos.InWorldSpace(null)));
+					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)));
 				//Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
 
 				device.DepthStencilState = Main.genericDSS;

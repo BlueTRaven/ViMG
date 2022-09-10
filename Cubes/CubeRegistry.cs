@@ -33,6 +33,9 @@ namespace ViMG.Cubes
 			Register(new CubeBrittleBone());
 			Register(new CubeSand());
 			Register(new CubeChest("wood", 3, 3));
+			Register(new CubeObelisk());
+			Register(new CubeBundledWood());
+			Register(new CubeWood());
 		}
 
         protected override void PostRegistration()

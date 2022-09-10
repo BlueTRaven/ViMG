@@ -82,6 +82,9 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/fira_mono.spritefont
 
+#begin Structures/obelisk.struct
+/copy:Structures/obelisk.struct
+
 #begin Textures/axes.png
 /importer:TextureImporter
 /processor:TextureProcessor
