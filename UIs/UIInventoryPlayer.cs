@@ -233,15 +233,17 @@ namespace ViMG.UIs
 			// Null is the equivalent of the "inventory" catalyst
 			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.PlayerInventoryCatalyst);
 
+			Recipe rr = null;
+
 			for (int i = 0; i < recipes.Count; i++)
 			{
 				Recipe recipe = recipes[i];
 
-				if (recipe.Matches(inventory))
-					return recipe;
+				if (recipe.Matches(inventory) && (rr == null || recipe.Weight > rr.Weight))
+					rr = recipe;
 			}
 
-			return null;
+			return rr;
 		}
 
 		private void CraftItem(Recipe recipe)

@@ -11,6 +11,7 @@ namespace ViMG.Entities
 		public Vector3 Position;
 		public World world;
 
+		public bool Dead = false;
 		public bool AlwaysRender;
 		public bool Active = true;				//An entity is INACTIVE when the chunk that contains it unloads.
 		public bool CanBecomeInactive = true;	//Certain entity types (bosses, etc) may wish to never become inactive.
@@ -36,7 +37,7 @@ namespace ViMG.Entities
 
 		public virtual void OnDelete()
 		{
-
+			Dead = true;
 		}
 
 		public virtual void Draw(GraphicsDevice device, Effect effect)

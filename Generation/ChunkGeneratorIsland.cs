@@ -128,8 +128,6 @@ namespace ViMG.Generation
 
 						ushort id = GenerateCubeBroad(chunk, pos, heightMap);
 
-						if (id == 9)
-							Console.WriteLine("???");
 						cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 						//SetCube(chunk, pos, id);
 					}
@@ -164,7 +162,7 @@ namespace ViMG.Generation
 								var posOffset = pos;
 								posOffset.Y += i;
 
-								SetCubeOrAdjacent(manager, chunk, posOffset, 6);
+								SetCubeOrAdjacent(manager, chunk, posOffset, 6);	//Tree
 							}
 						}
 

@@ -35,11 +35,11 @@ namespace ViMG
 		public Vector3 Velocity;
 
 		private float moveSpeed = 8;
-		public Vector3 MaxVelocity = new Vector3(64, 340, 64);
-		public Vector3 MaxVelocityRunning = new Vector3(128, 340, 128);
+		public Vector3 MaxVelocity = new Vector3(3.2f, 17, 3.2f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocityRunning = new Vector3(6.4f, 17, 6.4f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
 
-		public float jumpVelocity = 256;
+		public float jumpVelocity = 12.8f * Cube.CUBE_SCALE;
 
 		private MouseState currentMS;
 		private MouseState originalMS;
@@ -79,9 +79,9 @@ namespace ViMG
 		private const float lookAtColTimeMax = 0.5f;
 		private float alive = lookAtColTimeMax;
 
-		private const float PULL_RADIUS = 65;
-		private const float NEUTRAL_RADIUS = 50;
-		private const float PUSH_RADIUS = 35;
+		private const float PULL_RADIUS = 3.25f * Cube.CUBE_SCALE;
+		private const float NEUTRAL_RADIUS = 2.5f * Cube.CUBE_SCALE;
+		private const float PUSH_RADIUS = 1.75f * Cube.CUBE_SCALE;
 		private Vector3 attackStateTargetPos;
 
 		private SimpleMesh<VertexPositionColor, int> lookAtMesh;
@@ -165,7 +165,7 @@ namespace ViMG
 				Vector3 dir = attackStateTargetPos - Position;
 				if (dir.Length() < PUSH_RADIUS)
 				{
-					Position -= Vector3.Normalize(dir) * Math.Min(dir.Length(), 128);
+					Position -= Vector3.Normalize(dir) * Math.Min(dir.Length(), 6.4f * Cube.CUBE_SCALE);
 				}
 
 				if (attackStateTimer <= 0)
@@ -353,8 +353,6 @@ namespace ViMG
 					if (running)
 						actualMaxVel = MaxVelocityRunning;
 
-					actualMaxVel = actualMaxVel / 20f * Cube.CUBE_SCALE;
-
 					if (Main.inputManager.IsPressed(Keys.W))
 					{
 						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed / 20f * Cube.CUBE_SCALE;
@@ -377,7 +375,7 @@ namespace ViMG
 					}
 					if (onGround && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = jumpVelocity / 20f * Cube.CUBE_SCALE;
+						Velocity.Y = jumpVelocity;
 						onGround = false;
 					}
 
@@ -436,17 +434,18 @@ namespace ViMG
 
 				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
-				if (Velocity.Y > 64 / 20 * Cube.CUBE_SCALE && Main.inputManager.JustReleased(Keys.Space))
-					Velocity.Y = 64 / 20 * Cube.CUBE_SCALE;
+				if (Velocity.Y > 3.2f * Cube.CUBE_SCALE && Main.inputManager.JustReleased(Keys.Space))
+					Velocity.Y = 3.2f * Cube.CUBE_SCALE;
 
-				Velocity.Y += World.GRAVITY / 20 * Cube.CUBE_SCALE;
+				Velocity.Y += World.GRAVITY;
 				if (Velocity.Y > actualMaxVel.Y)
 					Velocity.Y = actualMaxVel.Y;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				world.EntityManager.Add(new Sapling(CubePosition.FromWorldSpace(Position)));
 				//world.EntityManager.Add(new Skeleton(Position));
 
 				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
@@ -587,9 +586,9 @@ namespace ViMG
 			//Velocity.X = -Main.camera.Forward.X * 512f;
 
 			if (onGround)
-				Velocity.Y = -Main.camera.Forward.Y * 64f;
-			else if (Velocity.Y > 20)
-				Velocity.Y = 20;
+				Velocity.Y = -Main.camera.Forward.Y * 3.2f * Cube.CUBE_SCALE;
+			else if (Velocity.Y > Cube.CUBE_SCALE)
+				Velocity.Y = Cube.CUBE_SCALE;
 
 			//Velocity.Z = -Main.camera.Forward.Z * 512f;
 
@@ -604,7 +603,7 @@ namespace ViMG
 					continue;
 
 				Vector3 dir = hitbox.bounds.Center - Position;
-				if (dir.Length() < PULL_RADIUS + 20)
+				if (dir.Length() < PULL_RADIUS + Cube.CUBE_SCALE)
 				{
 					float dot = Vector3.Dot(-Main.camera.Forward, Vector3.Normalize(dir));
 
@@ -635,7 +634,7 @@ namespace ViMG
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 
-			damageDir = -Main.camera.Forward * (hitboxSize + 10f);
+			damageDir = -Main.camera.Forward * (hitboxSize + 0.5f * Cube.CUBE_SCALE);
 
 			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;

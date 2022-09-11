@@ -15,6 +15,7 @@ using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Generation;
 using ViMG.Items;
+using ViMG.Spawners;
 
 namespace ViMG
 {
@@ -22,8 +23,8 @@ namespace ViMG
 	{
 		public string LoadedFolderName;
 
-		public const float GRAVITY = -9.8f;
-		public const float DAY_CYCLE_TIME = 10f;//60f * 10f;
+		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
+		public const float DAY_CYCLE_TIME = 60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -52,6 +53,7 @@ namespace ViMG
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
 		public LightManager LightManager;
+		public List<PassiveSpawner> Spawners = new List<PassiveSpawner>();
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -98,6 +100,7 @@ namespace ViMG
 			EntityManager = new EntityManager(this);
 			LightManager = new LightManager(device);
 			LightManager.UpdateDatas(Main.CubeLitEffect);
+			Spawners.Add(new PSSlime());
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -363,6 +366,7 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
+			Spawners.ForEach(x => x.Update(deltaTime, this));
 			/*var slimes = EntityManager.GetAll<Slime>();
 
 			if ((slimes == null || slimes.Count < 32) && Main.random.Next(0, 32) == 0)

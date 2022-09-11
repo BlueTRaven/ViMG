@@ -8,7 +8,8 @@ namespace ViMG.Recipes
 {
 	public class RecipeLayout : Recipe
 	{
-		public RecipeLayout(IRecipeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs)
+		//Note that layout recipes are weighted higher than fuzzy recipes; layouts should always match over fuzzy.
+		public RecipeLayout(IRecipeCatalyst catalyst, ItemInstance[] layout, ItemInstance[] outputs) : base(catalyst, layout, outputs, 30)
 		{
 		}
 

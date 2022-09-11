@@ -47,7 +47,7 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			noticeHandler = new NoticeHandler<Player>(this, 128, false);
+			noticeHandler = new NoticeHandler<Player>(this, 6.4f * Cube.CUBE_SCALE, false);
 		}
 
 		public override void Update(double deltaTime)
@@ -188,8 +188,11 @@ namespace ViMG.Entities
 
 		public override void OnDelete()
 		{
+			base.OnDelete();
+
 			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
-			ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 128, Main.random.NextFloat(-100, 100));
+			ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE), 
+				6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
 			world.EntityManager.Add(ent);
 			world.HitboxManager.Remove(hitbox);
 			hitbox = -1;
@@ -311,7 +314,7 @@ namespace ViMG.Entities
 				{
 					Vector3 direction = Vector3.Normalize(other.direction);
 
-					Velocity = new Vector3(direction.X * 64, 128, direction.Z * 64);
+					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
 
 					health -= other.damage;
 

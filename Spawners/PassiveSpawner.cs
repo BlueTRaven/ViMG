@@ -13,25 +13,29 @@ namespace ViMG.Spawners
         private readonly float checkTime;
         private float checkTimer;
 
-        public PassiveSpawner(float checkTime)
+        public PassiveSpawner(float checkTime, float spawnChance)
         {
             this.checkTime = checkTime;
             this.checkTimer = checkTime;
+
+            this.spawnChance = spawnChance;
         }
 
-        public void Update(GameTime gt)
+        public virtual void Update(double deltaTime, World world)
         {
-            checkTimer -= (float)gt.ElapsedGameTime.TotalSeconds;
+            checkTimer -= (float)deltaTime;
 
             if (checkTimer <= 0)
             {
                 checkTimer = checkTime;
-                Spawn();
+
+                if (Main.random.NextDouble() < spawnChance)
+                    Spawn(world);
             }
         }
 
-        protected abstract void Spawn();
+        protected abstract void Spawn(World world);
 
-        public abstract bool CanAreaSpawn(ChunkManager manager, Chunk chunk, ChunkPosition position);
+        public abstract bool CanAreaSpawn(ChunkManager manager, Chunk chunk, CubePosition position);
     }
 }
