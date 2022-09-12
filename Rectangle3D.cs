@@ -21,6 +21,8 @@ namespace ViMG
 		public float Front => Position.Z;
 		public float Back => Position.Z + Size.Z;
 
+		public Rectangle3D InnerBounds => new Rectangle3D(Vector3.Zero, Size);
+
 		public Vector3 Center => Position + (Size / 2f);
 
 		public Rectangle3D(Vector3 position, Vector3 size)
@@ -44,6 +46,15 @@ namespace ViMG
 			return rect.Left > Right && Left > rect.Right &&
 				   rect.Top > Bottom && Top > rect.Bottom &&
 				   rect.Front < Back && Front < rect.Back;
+		}
+
+		public Vector3 Clamp(Vector3 vec)
+        {
+			vec.X = MathHelper.Clamp(vec.X, Right, Left);
+			vec.Y = MathHelper.Clamp(vec.Y, Bottom, Top);
+			vec.Z = MathHelper.Clamp(vec.Z, Front, Back);
+
+			return vec;
 		}
 	}
 }

@@ -12,50 +12,55 @@ namespace ViMG.Spawners
     public class PSSlime : PassiveSpawner
     {
         private List<Slime> slimes = new List<Slime>();
-        private List<Slime> toRemove = new List<Slime>();
 
-        public PSSlime() : base(0.5f, 1f / 32f)
+        public PSSlime(EntityManager entityManager) : base(0.5f, 1f,// / 32f, 
+            new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
+            entityManager.OnEntityAdded += OnEntityAdded;
+            entityManager.OnEntityRemoved += OnEntityRemoved;
+        }
+
+        //We rely on this callback for adding entities as we also want to add entities that are loaded.
+        //We could call something that finds all the Slimes in the world once the world has finished loading,
+        //but that assumes we're using the same "load the world all at once" style that we're doing.
+        private void OnEntityAdded(Entity entity)
+        {
+            if (entity is Slime s)
+                slimes.Add(s);
+        }
+
+        private void OnEntityRemoved(Entity entity)
+        {
+            if (entity is Slime s)
+                slimes.Remove(s);
         }
 
         public override bool CanAreaSpawn(ChunkManager manager, Chunk chunk, CubePosition position)
         {
-            return true;
+            Cube c = chunk.GetData().GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
+                return true;
+
+            return false;
         }
 
         public override void Update(double deltaTime, World world)
         {
             base.Update(deltaTime, world);
-
-            foreach (Slime slime in slimes)
-            {
-                if (slime.Dead)
-                    toRemove.Add(slime);
-            }
-
-            foreach (Slime slime in toRemove)
-            {
-                slimes.Remove(slime);
-            }
-
-            toRemove.Clear();
         }
 
-        protected override void Spawn(World world)
+        protected override void Spawn(World world, CubePosition position)
         {
             if (slimes.Count < 32)
             {
                 int minR = 112;
                 int maxR = world.sizeInCubes - 112;
-                var pos = world.ChunkManager.GetFirstSolidDown(new Vector3(Main.random.Next(minR, maxR), world.sizeInCubes, Main.random.Next(minR, maxR)) * Cube.CUBE_SCALE);
 
-                if (pos.HasValue() && CanAreaSpawn(world.GetChunkManager(), world.GetChunkManager().GetChunk(pos.Get()), pos.Get()))
-                {
-                    Slime slime = new Slime(pos.Get().InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
-                    slimes.Add(slime);
+                if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
+                    return;
 
-                    world.EntityManager.Add(slime);
-                }
+                Slime slime = new Slime(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
+                world.EntityManager.Add(slime);
             }
         }
     }

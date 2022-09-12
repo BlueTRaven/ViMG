@@ -282,6 +282,11 @@ namespace ViMG.Cubes
 			return mesh;
 		}
 
+		public virtual void MakeVerts(Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+        {
+			ChunkMesher.MakeCubeVerts(min, max, visual, cube, vertices, indices);
+        }
+
 		public Color GetTintColor()
 		{
 			return tintColor;

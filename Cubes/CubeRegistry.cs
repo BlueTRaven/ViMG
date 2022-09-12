@@ -37,6 +37,7 @@ namespace ViMG.Cubes
 			Register(new CubeBundledWood());
 			Register(new CubeWood());
 			Register(new CubeSapling());
+			Register(new CubeFibrousPlant());
 		}
 
         protected override void PostRegistration()

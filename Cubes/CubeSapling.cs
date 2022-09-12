@@ -17,12 +17,20 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.Invisible;
         }
 
+        public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+        {
+            base.PostChunkGen(chunkData, position);
+
+            Sapling sapling = new Sapling(position.InCubeSpace(chunkData.GetChunk()));
+            chunkData.GetChunk().GetWorld().EntityManager.Add(sapling);
+        }
+
         public override void OnPlayerPlaced(Player player, CubePosition position)
         {
             base.OnPlayerPlaced(player, position);
 
-            Sapling tree = new Sapling(position);
-            player.world.EntityManager.Add(tree);
+            Sapling sapling = new Sapling(position);
+            player.world.EntityManager.Add(sapling);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

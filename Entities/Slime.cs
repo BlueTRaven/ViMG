@@ -82,7 +82,7 @@ namespace ViMG.Entities
 						}
 						else
 						{
-							Vector2 playerDir = Vector2.Normalize(new Vector2(world.player.Position.X, world.player.Position.Z) - new Vector2(Position.X, Position.Z));
+							Vector2 playerDir = Vector2.Normalize(new Vector2(noticeHandler.Target.Position.X, noticeHandler.Target.Position.Z) - new Vector2(Position.X, Position.Z));
 							Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
 						}
 					
@@ -123,7 +123,11 @@ namespace ViMG.Entities
 
 			invulnTimer -= (float)deltaTime;
 
-			noticeHandler.Update();
+			noticeHandler.Update(deltaTime);
+
+			//Kill self if too far away
+			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
+				world.EntityManager.Remove(this);
 		}
 
 		private Vector2[] offsetsDown = new Vector2[4]
@@ -325,7 +329,7 @@ namespace ViMG.Entities
 
 					invulnTimer = 0.25f;
 
-					noticeHandler.OnTakeDamage();
+					noticeHandler.OnTakeDamage(other.owner as Player);
 				}
 			}
 		}

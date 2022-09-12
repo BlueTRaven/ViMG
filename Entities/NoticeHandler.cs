@@ -8,20 +8,26 @@ namespace ViMG.Entities
 	{
 		public bool Noticed;
 
-		private TDetect noticedEntity;
+		public TDetect Target;
 
 		private Entity entity;
 		private float detectRadius;
 		private bool requiresLineOfSight;
 
-		public NoticeHandler(Entity entity, float detectRadius, bool requiresLineOfSight)
+		private readonly float noticeFalloffTime;
+		private float noticeFalloffTimer;
+
+		public NoticeHandler(Entity entity, float detectRadius, bool requiresLineOfSight, float noticeFalloffTime = 20)
 		{
 			this.entity = entity;
 			this.detectRadius = detectRadius;
 			this.requiresLineOfSight = requiresLineOfSight;
+
+			this.noticeFalloffTime = noticeFalloffTime;
+			noticeFalloffTimer = noticeFalloffTime;
 		}
 
-		public void Update()
+		public void Update(double deltaTime)
 		{
 			var detectables = entity.world.EntityManager.GetAll<TDetect>();
 
@@ -29,20 +35,40 @@ namespace ViMG.Entities
 			{
 				if ((ent.Position - entity.Position).Length() < detectRadius)
 				{
-					noticedEntity = ent as TDetect;
+					Target = ent as TDetect;
 					Noticed = true;
+
+					noticeFalloffTimer = noticeFalloffTime;
+				}
+			}
+
+			if (Noticed)
+			{
+				noticeFalloffTimer -= (float)deltaTime;
+
+				if (noticeFalloffTimer <= 0)
+				{
+					Noticed = false;
+					Target = null;
+
+					noticeFalloffTimer = noticeFalloffTime;
 				}
 			}
 		}
 
 		public TDetect GetNoticedEntity()
 		{
-			return noticedEntity;
+			return Target;
 		}
 
-		public void OnTakeDamage()
+		public void OnTakeDamage(Entity entity)
 		{
-			Noticed = true;
+			if (entity.GetType() == typeof(TDetect))
+			{
+				Noticed = true;
+				Target = entity as TDetect;
+				noticeFalloffTimer = noticeFalloffTime;
+			}
 		}
 	}
 }

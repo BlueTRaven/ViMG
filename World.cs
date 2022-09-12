@@ -100,7 +100,7 @@ namespace ViMG
 			EntityManager = new EntityManager(this);
 			LightManager = new LightManager(device);
 			LightManager.UpdateDatas(Main.CubeLitEffect);
-			Spawners.Add(new PSSlime());
+			Spawners.Add(new PSSlime(EntityManager));
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));

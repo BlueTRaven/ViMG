@@ -36,6 +36,7 @@ namespace ViMG.Generation
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreCopper;
 		private Structure ellipsoidAtBottomOfHole;
 		private Structure obelisk;
+		private Structure house;
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
@@ -94,6 +95,7 @@ namespace ViMG.Generation
 
 			ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
 			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
+			house = Main.assetsManager.GetAsset<Structure>("house");
 		}
 
 		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
@@ -154,15 +156,31 @@ namespace ViMG.Generation
 
 						int sample = heightMap[x, z];
 
-						if (pos.Y == sample + 1 && pos.Y > SEA_LEVEL && GetRandom().Next(0, 256) == 0)
+						if (pos.Y == sample + 1 && pos.Y > SEA_LEVEL)
 						{
-							int num = GetRandom().Next(3, 12);
-							for (int i = 0; i < num; i++)
-							{
-								var posOffset = pos;
-								posOffset.Y += i;
+							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk);
 
-								SetCubeOrAdjacent(manager, chunk, posOffset, 6);	//Tree
+							if (chunk.GetData().GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
+							{
+								if (GetRandom().Next(0, 256) == 0)
+								{
+									int num = GetRandom().Next(3, 12);
+									for (int i = 0; i < num; i++)
+									{
+										var posOffset = pos;
+										posOffset.Y += i;
+
+										SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
+									}
+								}
+								else if (GetRandom().Next(0, 256) == 0)
+								{
+									SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+								}
+								else if (GetRandom().Next(0, 256) == 0)
+								{
+									SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+								}
 							}
 						}
 
@@ -218,16 +236,17 @@ namespace ViMG.Generation
         {
             base.PostGenerateDetail(manager);
 
+			Vector2 holePos = new Vector2(holeLocationX, holeLocationY);
+
 			PlaceStructureWithBlacklist(manager, null, ellipsoidAtBottomOfHole, 
 				new CubePosition(holeLocationX - 32, 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
 				BlacklistAir, Span<ushort>.Empty);
 
 			while (true)
 			{
-				Vector2 pos = new Vector2(holeLocationX, holeLocationY);
 				Vector2 offset = GetRandom().NextAngle() * (holeRadius + 16);
 
-				var solidPos = manager.GetFirstSolidDown(new Vector3(pos.X + offset.X, 512, pos.Y + offset.Y) * Cube.CUBE_SCALE);
+				var solidPos = manager.GetFirstSolidDown(new Vector3(holePos.X + offset.X, 512, holePos.Y + offset.Y) * Cube.CUBE_SCALE);
 
 				if (solidPos.HasValue())
 				{
@@ -236,7 +255,25 @@ namespace ViMG.Generation
 					break;
 				}
 			}
-        }
+
+			{
+				//Start at the center of the world (in cube space).
+				//Get the angle from the center to the hole position, then rotate it by a random amount
+				//All of this basically just to avoid putting the house anywhere near the hole.
+				Vector2 housePos = new Vector2(512, 512) / 2;
+				Angle ang = Angle.FromVector2(housePos - holePos);
+				ang += Angle.FromDegrees(GetRandom().Next(45, 360 - 45));
+
+				housePos += ang.Vector * (GetRandom().NextFloat(64, 196) * Cube.CUBE_SCALE);
+				var solidPos = manager.GetFirstSolidDown(new Vector3(housePos.X, 512, housePos.Y) * Cube.CUBE_SCALE);
+
+				if (solidPos.HasValue())
+				{
+					PlaceStructureWithBlacklist(manager, null, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
+						Span<ushort>.Empty, BlacklistAir);
+				}
+			}
+		}
 
 		/// <summary>
 		/// 

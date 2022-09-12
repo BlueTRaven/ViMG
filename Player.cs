@@ -336,6 +336,26 @@ namespace ViMG
 					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.D))
 					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed;
+
+				if (currentUI == uiPlayer && !uiPlayer.Opened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+						Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+						Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+				{
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+					{
+						if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.LeftClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+					{
+						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
+						if (tracker.HasValue() && tracker.Get().OnInteract(this))
+							PerformAction();
+						else if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.RightClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+				}
 			}
 			else
 			{
@@ -391,8 +411,8 @@ namespace ViMG
 					Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
 					if (currentUI == uiPlayer && !uiPlayer.Opened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+						Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+						Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
 					{
 						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
 						{
@@ -444,8 +464,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Add(new Sapling(CubePosition.FromWorldSpace(Position)));
+				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				//world.EntityManager.Add(new Sapling(CubePosition.FromWorldSpace(Position)));
 				//world.EntityManager.Add(new Skeleton(Position));
 
 				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
@@ -510,7 +530,8 @@ namespace ViMG
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
+						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && cube.Collision == Cube.CollisionValue.Collidable)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -578,7 +599,7 @@ namespace ViMG
 
 		public void PerformAction()
 		{
-			useTimer = ATTACK_TIME;
+			useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
 		}
 
 		public void PerformAttack(float cooldownTimer)

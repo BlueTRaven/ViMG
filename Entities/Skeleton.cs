@@ -52,7 +52,7 @@ namespace ViMG.Entities
 
 			Velocity.Y += World.GRAVITY;
 
-			noticeHandler.Update();
+			noticeHandler.Update(deltaTime);
 
 			if (invulnTimer <= 0)
 			{

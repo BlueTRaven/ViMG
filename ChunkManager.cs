@@ -663,6 +663,21 @@ namespace ViMG
 
 			return new OptionalValue<CubePosition>();
 		}
+
+		public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start)
+		{
+			for (int y = 0; y < sizeInCubes; y++)
+			{
+				CubePosition pos = new CubePosition(start.X, start.Y - y, start.Z);
+
+				//Null check here is the same as doing out of bounds check.
+				Cube cubeAtPos = GetCube(pos).Get();
+				if (cubeAtPos != null && (cubeAtPos.Solid && cubeAtPos.Collision == Cube.CollisionValue.Collidable))
+					return new OptionalValue<CubePosition>(pos);
+			}
+
+			return new OptionalValue<CubePosition>();
+		}
 		#endregion
 
 		public void UnloadMesh(ChunkPosition position)

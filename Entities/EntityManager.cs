@@ -8,6 +8,9 @@ namespace ViMG.Entities
 {
 	public class EntityManager
 	{
+		public event Action<Entity> OnEntityAdded;
+		public event Action<Entity> OnEntityRemoved;
+
 		private bool iterating;
 
 		private ulong lastEntityId;
@@ -84,6 +87,8 @@ namespace ViMG.Entities
 			else entity.SetId((ulong)id);
 
 			entity.Initialize(world);
+
+			OnEntityAdded?.Invoke(entity);
 		}
 
 		public void Remove(Entity entity)
@@ -119,6 +124,8 @@ namespace ViMG.Entities
 
 				if (entity is ICubeTracker tracker && cubeTrackers.ContainsKey(tracker.TrackedPosition))
 					cubeTrackers.Remove(tracker.TrackedPosition);
+
+				OnEntityRemoved?.Invoke(entity);
 			}
 
 			toDeleteLater.Clear();

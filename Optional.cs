@@ -20,9 +20,7 @@ namespace ViMG
 
 		public T Get()
 		{
-			if (obj == null)
-				throw new NullReferenceException();
-			else return obj;
+			return obj;
 		}
 
 		public T GetOrDefault(T def)

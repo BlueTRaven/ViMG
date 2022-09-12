@@ -48,7 +48,7 @@ namespace ViMG
 						int oldCount = vertices.Count;
 
 						bool ok = false;
-						MakeCubeVerts(n + pos.InWorldSpace(out ok), f + pos.InWorldSpace(out ok), visual, cube, vertices, indices);
+						cube.MakeVerts(pos.InWorldSpace(out ok), n + pos.InWorldSpace(out ok), f + pos.InWorldSpace(out ok), visual, cube, vertices, indices);
 
 						int count = vertices.Count - oldCount;
 
