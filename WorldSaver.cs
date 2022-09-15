@@ -596,6 +596,9 @@ namespace ViMG
 
 		private void SaveSession()
 		{
+			if (!Directory.Exists(SAVE_FOLDER))
+				Directory.CreateDirectory(SAVE_FOLDER);
+
 			if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION))
 				File.Create(SAVE_FOLDER + FILE_NAME_SESSION);
 

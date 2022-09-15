@@ -697,7 +697,6 @@ namespace ViMG
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
 			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
-			world.LightManager.UpdateDatas(Main.CubeLitEffect);
 
 			if (inventory.Get(uiPlayer.HighlightIndex).item != null)
 			{

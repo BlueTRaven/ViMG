@@ -13,8 +13,8 @@ namespace ViMG
 {
 	public class SimpleMesh<TVert, TIndex> where TVert : struct, IVertexType where TIndex : struct
 	{
-		private VertexBuffer vbo;
-		private IndexBuffer ibo;
+		public VertexBuffer VBO;
+		public IndexBuffer IBO;
 
 		private string name;
 		public string Name 
@@ -23,18 +23,18 @@ namespace ViMG
 			set
             {
 				name = value;
-				vbo.Name = name + " vbo";
-				ibo.Name = name + " ibo";
+				VBO.Name = name + " vbo";
+				IBO.Name = name + " ibo";
             }
 		}
 		//private int vertexCount;
-		public int VertexCount => vbo.VertexCount;
+		public int VertexCount => VBO.VertexCount;
 		//private int indexCount;
-		public int IndexCount => ibo.IndexCount;
+		public int IndexCount => IBO.IndexCount;
 
 		public Texture2D texture;
 
-		public bool IsEmpty => vbo == null || vbo.VertexCount == 0;
+		public bool IsEmpty => VBO == null || VBO.VertexCount == 0;
 		public bool Uploaded => !IsEmpty;
 
 		public static SimpleMesh<TVert, TIndex> Empty { get; private set; }
@@ -58,11 +58,11 @@ namespace ViMG
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			vbo = new VertexBuffer(device, typeof(TVert), vertices.Count, BufferUsage.WriteOnly);
-			vbo.SetData(vertices.ToArray());
+			VBO = new VertexBuffer(device, typeof(TVert), vertices.Count, BufferUsage.WriteOnly);
+			VBO.SetData(vertices.ToArray());
 
-			ibo = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
-			ibo.SetData(indices.ToArray());
+			IBO = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
+			IBO.SetData(indices.ToArray());
 
 			//vertexCount = vertices.Count;
 			//indexCount = indices.Count;
@@ -91,8 +91,8 @@ namespace ViMG
 			if (IsEmpty)
 				return false;
 
-			device.SetVertexBuffer(vbo);
-			device.Indices = ibo;
+			device.SetVertexBuffer(VBO);
+			device.Indices = IBO;
 
 			return true;
 		}

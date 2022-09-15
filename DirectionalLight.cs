@@ -69,7 +69,6 @@ namespace ViMG
 
 			target = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
-			Main.CubeLitEffect.Parameters["NumCascades"].SetValue(num);
 			//Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
 			//Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
 			(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
@@ -110,8 +109,6 @@ namespace ViMG
 			{
 				return;
 			}
-
-			Main.CubeLitEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
 
 			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
 			Matrix texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
@@ -162,16 +159,26 @@ namespace ViMG
 
 			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
 			Main.WVP.SetView(Main.camera.GetViewMatrix());
+		}
 
-			Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
-			Main.CubeLitEffect.Parameters["LightViewProjection"].SetValue(globalShadowMatrix);
-			Main.CubeLitEffect.Parameters["LightPos"].SetValue(camera.Position);
-			Main.CubeLitEffect.Parameters["LightDirection"].SetValue(lightDirection);
-			Main.CubeLitEffect.Parameters["LightViewProjections"].SetValue(lightViewProjections);
-			Main.CubeLitEffect.Parameters["LightColor"].SetValue(lightColor);
-			Main.CubeLitEffect.Parameters["CascadeOffsets"].SetValue(cascadeOffsets);
-			Main.CubeLitEffect.Parameters["CascadeScales"].SetValue(cascadeScales);
-			//Main.CubeEffect.Parameters["LightDirections"].SetValue(lightDirections);
+		public void Bind(Effect effect)
+		{
+			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
+
+			effect.Parameters["NumCascades"].SetValue(farPlanes.Length);
+			effect.Parameters["LightResolution"].SetValue(new Vector2(1024));
+
+			effect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
+			effect.Parameters["LightViewProjection"].SetValue(globalShadowMatrix);
+			//effect.Parameters["LightPos"].SetValue(camera.Position);
+			effect.Parameters["LightDirection"].SetValue(lightDirection);
+			//effect.Parameters["LightViewProjections"].SetValue(lightViewProjections);
+			effect.Parameters["LightColor"].SetValue(lightColor);
+			effect.Parameters["CascadeOffsets"].SetValue(cascadeOffsets);
+			effect.Parameters["CascadeScales"].SetValue(cascadeScales);
+			//effect.Parameters["LightDirections"].SetValue(lightDirections);
+
+			effect.Parameters["LightDepthTextures"].SetValue(GetShadowmapBuffers());
 		}
 
 		private Vector3[] corners = new Vector3[8];

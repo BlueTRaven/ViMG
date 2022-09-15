@@ -8,7 +8,7 @@ namespace ViMG
 {
 	public class LightManager
 	{
-		private const int MAX_LIGHTS = 8;
+		private const int MAX_LIGHTS = 128;
 
 		private StructuredBuffer structuredBuffer;
 		private int version;
@@ -16,14 +16,14 @@ namespace ViMG
 
 		public readonly struct Data
 		{
+			public readonly Vector4 color;
 			public readonly Vector3 position;
 			public readonly float start;
-			public readonly Vector3 color;
 			public readonly float end;
 
 			//public readonly Matrix[] lightViewProjections;
 
-			public Data(Vector3 position, float start, float end, Vector3 color)
+			public Data(Vector3 position, float start, float end, Vector4 color)
 			{
 				this.position = position;
 				this.start = start;
@@ -33,21 +33,21 @@ namespace ViMG
 				//lightViewProjections = null;
 			}
 
-			public Data(Light light)
+			public Data(Light light, float intensity = 1)
 			{
 				if (!light.active)
 				{
 					this.position = Vector3.Zero;
 					this.start = 0;
 					this.end = 0;
-					this.color = Color.Transparent.ToVector3();
+					this.color = Color.Transparent.ToVector4();
 				}
 				else
 				{
 					this.position = light.position;
 					this.start = light.start;
 					this.end = light.end;
-					this.color = light.color.ToVector3();
+					this.color = light.color.ToVector4();
 				}
 			}
 		}
@@ -126,8 +126,9 @@ namespace ViMG
 
 				structuredBuffer.SetData(datas);
 
-				effect.Parameters["Lights"].SetValue(structuredBuffer);
 			}
+
+			effect.Parameters["Lights"].SetValue(structuredBuffer);
 		}
 
 		private Matrix[] views = new Matrix[6];

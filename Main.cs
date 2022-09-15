@@ -9,11 +9,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using ViMG.UIs;
+using ViMG.Rendering;
 
 namespace ViMG
 {
     public class Main : Game
     {
+		public static event Action<Point> WindowResizedEvent;
+
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
 
@@ -69,6 +72,8 @@ namespace ViMG
 
 		public static RenderTarget2D DepthTarget;
 		public static RenderTarget2D WorldTarget;
+
+		public static RendererDeferred Renderer;
 
 		public static Thread MainThread;
 
@@ -204,7 +209,8 @@ namespace ViMG
 			Main.MouseControl = false;
 			Main.DrawCursor = false;
 #endif
-			//world.LoadWorld("flat01");
+
+			Renderer = new RendererDeferred(GraphicsDevice);
 		}
 
 		private void WindowResolutionChanged(object? sender, EventArgs args)
@@ -213,6 +219,8 @@ namespace ViMG
 			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, 
 				false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			camera.MarkDirty();
+
+			WindowResizedEvent?.Invoke(Options.CurrentWindowResolution);
 		}
 
 		protected override void LoadContent()
@@ -292,6 +300,8 @@ namespace ViMG
 					world.Update(deltaTime);
 			}
 
+			Renderer.Update();
+
 			CubeLitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
 			CubeUnlitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
 			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
@@ -305,6 +315,8 @@ namespace ViMG
 			if (NO_RENDER)
 				return;
 
+			Renderer.FrameStart();
+
 			GraphicsDevice.Clear(Color.White);
 
 			Matrix view = camera.GetViewMatrix();
@@ -315,13 +327,18 @@ namespace ViMG
 			BasicEffect.View = view;
 
 			if (WorldLoaded)
+			{
 				world.Draw(GraphicsDevice, CubeLitEffect);
+			}
+
+			Renderer.Draw(batch);
 
 			GraphicsDevice.SetRenderTarget(null);
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-			batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+			batch.Draw(Renderer.GetOutput().RenderTarget as RenderTarget2D, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+			//batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
 
 			if (WorldLoaded)
 				world.DrawUI(batch);
@@ -353,6 +370,10 @@ namespace ViMG
 				TextHelper.DrawText(batch, font, queueStr,
 					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+
+				TextHelper.DrawText(batch, font, "GBuffer: " + Renderer.GetOutputString(),
+					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 			}
 
 

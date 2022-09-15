@@ -21,6 +21,7 @@ struct VSOutputCube
 	float3 Normal : TEXCOORD3;
 	float AO : TEXCOORD4;
 	float DepthVS : DEPTHVS;
+	float2 Depth : TEXCOORD5;
 	//float4 PositionLS : TEXCOORD5;
 };
 

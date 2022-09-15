@@ -57,7 +57,7 @@ namespace ViMG
 
 		public Color SkyColor = new Color(94, 107, 154);
 
-		private List<ChunkPosition> chunkDrawPositions = new List<ChunkPosition>();
+		public List<ChunkPosition> CulledChunkDrawPositions = new List<ChunkPosition>();
 		private bool chunkDrawPositionsDirty = true;
 		private ChunkPosition oldChunkPosition;
 		private Vector3 oldCameraRotation;
@@ -324,9 +324,13 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.Escape))
 			{
+				Main.Exit = true;
+			}
+
+			if (Main.inputManager.JustPressed(Keys.T))
+            {
 				//TODO open pause GUI. This maybe should be done in Main.cs instead?
 				saver.Save(LoadedFolderName);
-				Main.Exit = true;
 			}
 
 			ChunkManager.ProcessChunkQueue(this, 0);
@@ -367,24 +371,12 @@ namespace ViMG
 			miningUpdate.Clear();
 
 			Spawners.ForEach(x => x.Update(deltaTime, this));
-			/*var slimes = EntityManager.GetAll<Slime>();
-
-			if ((slimes == null || slimes.Count < 32) && Main.random.Next(0, 32) == 0)
-			{
-				CubePosition pos = GetFirstSolidDown(new Vector3(Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE), sizeInCubes * Cube.CUBE_SCALE, Main.random.Next(0, sizeInCubes * Cube.CUBE_SCALE)));
-
-				if (ChunkManager.IsInWorldBounds(pos))
-				{
-					EntityManager.Add(new Slime(pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
-					//slimes.Add(new Slime(this, pos.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0)));
-				}
-			}*/
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
 			if (chunkDrawPositionsDirty || camPos != oldChunkPosition || (oldCameraRotation - Main.camera.Rotation).Length() > MathHelper.ToRadians(1))
 			{
-				chunkDrawPositions.Clear();
+				CulledChunkDrawPositions.Clear();
 
 				for (int x = Math.Max(0, camPos.X - DrawDistanceHoriz); x <= Math.Min(sizeInChunks, camPos.X + DrawDistanceHoriz); x++)
 				{
@@ -399,7 +391,7 @@ namespace ViMG
 							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
 								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
 							{
-								chunkDrawPositions.Add(chunkPos);
+								CulledChunkDrawPositions.Add(chunkPos);
 							}
 						}
 					}
@@ -437,7 +429,7 @@ namespace ViMG
 		//Gets a list of all chunks that should be rendered by the main camera.
 		public List<ChunkPosition> GetChunkDrawPositions()
         {
-			return chunkDrawPositions;
+			return CulledChunkDrawPositions;
         }
 
 		public static int NumChunksDrawn;
@@ -451,10 +443,11 @@ namespace ViMG
 			Stopwatch drawTime = Stopwatch.StartNew();
 
 			directionalLight.DrawShadowmap(device, this);
+			directionalLight.Bind(Main.CubeLitEffect);
+			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 			//LightManager.DrawShadowmap(device, this);
 
-			//Main.CubeEffect.Parameters["TextureLightDepth"].SetValue(directionalLight.GetShadowmapBuffer());
-			Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
+			//Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
 
 			device.SetRenderTarget(Main.WorldTarget);
 			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);
@@ -493,13 +486,17 @@ namespace ViMG
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
 			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
-			foreach (ChunkPosition pos in chunkDrawPositions)
+			foreach (ChunkPosition pos in CulledChunkDrawPositions)
 			{
 				ChunkMesh mesh = ChunkManager.GetMesh(pos);
 				Matrix transform = ChunkManager.GetTransform(pos);
 
 				if (mesh != null)
 				{
+					Main.Renderer.Draws.Add(new Rendering.RendererDeferred.DeferredDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+						DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+						transform, Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+
 					mesh.Draw(device, effect, transform);
 					NumChunksDrawn++;
 				}
@@ -512,6 +509,7 @@ namespace ViMG
 					device.DepthStencilState = Main.genericDSS;
 				}
 			}
+
 			if (drawSkybox)
 			{
 				meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
@@ -550,6 +548,9 @@ namespace ViMG
 					effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);
 				}
 			}
+
+			LightManager.UpdateDatas(Main.CubeLitEffect);
+			LightManager.UpdateDatas(Main.Renderer.EffectDeferred);
 
 			ProjectileManager.Draw(device, effect);
 			EntityManager.Draw(device, Main.CubeLitEffect);
