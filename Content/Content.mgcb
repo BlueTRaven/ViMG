@@ -55,6 +55,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/deferred_lightaccum_csmlight.fx
 
+#begin Effects/deferred_lightaccum_pointlight.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/deferred_lightaccum_pointlight.fx
+
 #begin Effects/deferred.fx
 /importer:EffectImporter
 /processor:EffectProcessor

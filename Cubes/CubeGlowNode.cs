@@ -22,6 +22,7 @@ namespace ViMG.Cubes
 			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, Color.White));
 			player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, 
 				new Color(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE, new Color(Color.Red, 100)));
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

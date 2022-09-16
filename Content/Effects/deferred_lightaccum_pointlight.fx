@@ -1,17 +1,16 @@
 ﻿#include "platform_defines.fxh"
-#include "vertex_structs.fxh"
 #include "ACES.fxh"
 
 #define MAX_LIGHTS 128
 
 sampler Sampler : register(s0);
 
-Texture2D Diffuse			: register(t0);
-Texture2D LightAccumulation : register(t1);
-Texture2D Depth				: register(t2);
-Texture2D Position			: register(t3);
-Texture2D Normal			: register(t4);
-Texture2D AO				: register(t5);
+Texture2D Position			: register(t0);
+Texture2D Depth				: register(t1);
+Texture2D Normal			: register(t2);
+Texture2D Diffuse			: register(t3);
+
+float3 CameraPosition;
 
 struct Light
 {
@@ -47,20 +46,19 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 float4 MainPS(VertexShaderOutput input) : SV_TARGET
 {
-	float3 diffuse = Diffuse.Sample(Sampler, input.TexCoord).rgb;
-	float3 lightAccumulation = LightAccumulation.Sample(Sampler, input.TexCoord).rgb;
+	//float3 lightAccumulation = LightAccumulation.Sample(Sampler, input.TexCoord).rgb;
 	float3 normal = Normal.Sample(Sampler, input.TexCoord).rgb;
+	float depth = Depth.Sample(Sampler, input.TexCoord).r;
 	float3 position = Position.Sample(Sampler, input.TexCoord).rgb;
-	float specular = Diffuse.Sample(Sampler, input.TexCoord).a;
-	float ao = AO.Sample(Sampler, input.TexCoord).r;
+	//float specular = Diffuse.Sample(Sampler, input.TexCoord).a;
 
-	/*float3 pointLightsColor = float3(0, 0, 0);
-	
+	float3 pointLightsColor = 0;
+
 	[unroll]
 	for (int i = 0; i < MAX_LIGHTS; i++)
 	{
 		float intensity = Lights[i].Color.a;
-		if (intensity > 0) 
+		if (intensity > 0)
 		{
 			float3 dir = Lights[i].Position - position;
 
@@ -68,15 +66,17 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 			float scaleByDistance = 1 - saturate((length(dir) - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
 
-			pointLightsColor += Lights[i].Color.rgb * scaleByDistance * normMult * intensity;
+			float3 halfwayDir = normalize(normalize(dir) + CameraPosition);
+			float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+			float3 lightSpec = Lights[i].Color.rgb * spec * scaleByDistance * intensity;
+
+			float3 lightDiffuse = Lights[i].Color.rgb * scaleByDistance * normMult * intensity;
+
+			pointLightsColor += lightDiffuse + lightSpec;
 		}
-	}*/
+	}
 
-	float3 hdrColor = (lightAccumulation * (diffuse + specular)) * ao;
-
-	float3 ldrColor = ACESFitted(hdrColor);
-
-	return float4(ldrColor, 1);
+	return float4(pointLightsColor, 1);
 }
 
 technique BasicColorDrawing

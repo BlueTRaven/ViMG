@@ -37,6 +37,10 @@ namespace ViMG.Spawners
 
         public override bool CanAreaSpawn(ChunkManager manager, Chunk chunk, CubePosition position)
         {
+            //Don't spawn at night, and don't spawn when the player is looking at the given position.
+            if (chunk.GetWorld().IsNight() || Main.camera.FrustumContains(position.InWorldSpace(null)))
+                return false; 
+
             Cube c = chunk.GetData().GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
                 return true;

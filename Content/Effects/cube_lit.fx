@@ -393,6 +393,7 @@ float4 MainPS(VSOutputCube input) : SV_Target
 	//ambientColor = clamp(ambientColor, float3(0, 0, 0), float3(1, 1, 1));
 	
 	//diffuse
+	//This is pretty much just our light ndotl calculation
 	float diffDotToCam = max(dot(normalWS, LightDirection), 0.0);
 	float3 diffuseColor = diffDotToCam * LightColor;
 	
@@ -410,6 +411,11 @@ float4 MainPS(VSOutputCube input) : SV_Target
 		shadowColor = ShadowVisibility(input.PositionWS, input.DepthVS, ndotl, normalWS);
 	}
 
+	//This breaks down to:
+	//(point lights + ambient + (shadow * ndotl multiplier)) * diffuse * ao * tint
+	//To be more realistic, this should probably be:
+	//(point lights + ambient + shadow + specular) * diffuse * ao * tint
+	//And ndotl multiplier should be built into shadow.
 	float3 colorWithoutAlpha = (pointLightsColor + ambientColor + shadowColor * (diffuseColor + specularColor)) * (diffuseAlbedo.rgb * input.AO) * TintColor;
 	
 	const float exposure = 0.7;

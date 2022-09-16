@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -92,18 +93,33 @@ namespace ViMG.Entities
 			meshTrunk.Draw(device, effect, 
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 				Matrix.CreateTranslation(Position));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(meshTrunk.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
+				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
+				Matrix.CreateTranslation(Position),
+				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 96 - 16, 80, 16)));
 
 			for (int i = 0; i < size; i++)
 			{
 				meshSegmentB.Draw(device, effect, 
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)));
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(meshSegmentB.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
+					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
+					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)),
+					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 48, 80, 32)));
 			}
-			
+
 			if (size == baseSize)
-				meshTreeTop.Draw(device, effect, 
-					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
+			{
+				meshTreeTop.Draw(device, effect,
+					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)));
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(meshTreeTop.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
+					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
+					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)),
+					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 0, 80, 96)));
+			}
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

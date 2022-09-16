@@ -27,6 +27,8 @@ namespace ViMG.Entities
 		private int hitbox = -1;
 
 		private float invulnTimer;
+		private float despawnTimer;
+		private const float DESPAWN_TIME = 10f;
 
 		private int health;
 		private int maxHealth = 4;
@@ -72,8 +74,18 @@ namespace ViMG.Entities
 							{
 								numJumps = Main.random.Next(1, 6);
 
-								jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
-								jumpDir.Normalize();
+								if (world.IsNight())
+								{
+									//During the night time, jump away from the player, regardless of whether or not they're noticed
+									jumpDir = Position - world.player.Position;
+									jumpDir.Normalize();
+								}
+								else
+								{
+									//During the day time, jump in random directions
+									jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+									jumpDir.Normalize();
+								}
 							}
 
 							Velocity = new Vector3(jumpDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
@@ -88,6 +100,22 @@ namespace ViMG.Entities
 					
 						onGround = false;
 					}
+
+					//At night, despawn 
+					if (world.IsNight()) 
+					{
+						float distance = (Position - world.player.Position).Length();
+
+						if (distance > Cube.CUBE_SCALE * 24)
+						{
+							despawnTimer -= (float)deltaTime;
+
+							if (!noticeHandler.Noticed && despawnTimer <= 0)
+								world.EntityManager.Remove(this);
+						}
+						else despawnTimer = DESPAWN_TIME;
+					}
+					else despawnTimer = DESPAWN_TIME;
 				}
 
 				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
@@ -219,6 +247,20 @@ namespace ViMG.Entities
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position));
+
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateTranslation(Position),
+				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), noticeHandler.Noticed ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16)));
+
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(DrawHelper.WhitePixel, DrawHelper.BlackPixel, meshHealthbar.texture, meshHealthbar.VBO, meshHealthbar.IBO,
+				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
+				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
+				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateTranslation(Position),
+				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
 		}
 
 		private static void MakeMeshes(GraphicsDevice device)

@@ -81,14 +81,19 @@ namespace ViMG.Rendering
 
         public Effect EffectGBuffer;
         public Effect EffectLightAccumCSM;
+        public Effect EffectLightAccumPointLight;
         public Effect EffectDeferred;
 
         private BasicEffect EffectCopy;
+        private SamplerState shadowBorderClampSS;
+        private BlendState noAlphaBlendBS;
+        private BlendState normalBS;
+        private BlendState additiveBS;
 
         private VertexBuffer VBO;
         private IndexBuffer IBO;
 
-        public List<DeferredDraw> Draws = new List<DeferredDraw>();
+        public List<DeferredDraw> DrawsPassGBuffer = new List<DeferredDraw>();
 
         public RendererDeferred(GraphicsDevice device)
         {
@@ -98,6 +103,20 @@ namespace ViMG.Rendering
             EffectCopy.FogEnabled = false;
             EffectCopy.LightingEnabled = false;
 
+            shadowBorderClampSS = new SamplerState()
+            {
+                AddressU = TextureAddressMode.Border,
+                AddressV = TextureAddressMode.Border,
+                BorderColor = Color.Black,
+                Filter = TextureFilter.Point,
+                MaxMipLevel = 0,
+                MaxAnisotropy = 0,
+            };
+
+            noAlphaBlendBS = BlendState.Opaque;
+            normalBS = BlendState.AlphaBlend;
+            additiveBS = BlendState.Additive;
+
             this.device = device;
 
             ConstructRTs(Options.CurrentWindowResolution);
@@ -105,6 +124,7 @@ namespace ViMG.Rendering
             EffectGBuffer = Main.assetsManager.GetAsset<Effect>("deferred_gbuffer");
             EffectDeferred = Main.assetsManager.GetAsset<Effect>("deferred");
             EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
+            EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
@@ -134,7 +154,7 @@ namespace ViMG.Rendering
 
         public void FrameStart()
         {
-            Draws.Clear();
+            DrawsPassGBuffer.Clear();
         }
 
         private void ConstructRTs(Point rez)
@@ -177,6 +197,7 @@ namespace ViMG.Rendering
         public void SetPipelineState()
         {
             device.RasterizerState = Main.genericRS;
+            device.BlendState = noAlphaBlendBS;
         }
 
         public void Update()
@@ -200,12 +221,13 @@ namespace ViMG.Rendering
         {
             SetPipelineState();
 
-            if (Draws.Count > 0)
+            if (DrawsPassGBuffer.Count > 0)
             {
+
                 device.SetRenderTargets(targets);
                 device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
 
-                foreach (DeferredDraw draw in Draws)
+                foreach (DeferredDraw draw in DrawsPassGBuffer)
                 {
                     if (draw.VBO != null && draw.IBO != null)
                     {
@@ -218,6 +240,16 @@ namespace ViMG.Rendering
 
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
+                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
+
+                        if (draw.UseSourceRect)
+                        {
+                            EffectGBuffer.Parameters["UseSourceRect"].SetValue(true);
+                            EffectGBuffer.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
+                            EffectGBuffer.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                            EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+                        }
+                        else EffectGBuffer.Parameters["UseSourceRect"].SetValue(false);
 
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
@@ -231,42 +263,47 @@ namespace ViMG.Rendering
             device.SetVertexBuffer(VBO);
             device.Indices = IBO;
 
-            device.SetRenderTarget(work);
-            device.Clear(ClearOptions.Target, Color.Black, 0, 0);
+            device.SetRenderTarget(lightAccum);
 
-            EffectLightAccumCSM.Parameters["LightAccumulation"].SetValue(lightAccum);
             EffectLightAccumCSM.Parameters["Position"].SetValue(position);
             EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
             EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
+            EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+            device.SamplerStates[1] = shadowBorderClampSS;
+            device.BlendState = additiveBS;
 
-            foreach (var pass in EffectLightAccumCSM.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IBO.IndexCount / 3);
-            }
+            DrawFullscreenQuad(EffectLightAccumCSM);
 
             //Now copy work back to lightAccum
             device.SetRenderTarget(lightAccum);
-            device.Clear(ClearOptions.Target, Color.Black, 0, 0);
 
-            EffectCopy.Texture = work;
+            EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
+            //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
+            EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
+            //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
+            EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
 
-            foreach (var pass in EffectCopy.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IBO.IndexCount / 3);
-            }
+            DrawFullscreenQuad(EffectLightAccumPointLight);
+
+            //TODO transparent pass
 
             device.SetRenderTarget(output);
             device.Clear(ClearOptions.Target, Color.Black, 0, 0);
+            device.BlendState = noAlphaBlendBS;
 
             EffectDeferred.Parameters["Diffuse"].SetValue(diffuse);
             //EffectDeferred.Parameters["Depth"].SetValue(depth);
-            EffectDeferred.Parameters["Position"].SetValue(position);
-            EffectDeferred.Parameters["Normal"].SetValue(normal);
+            //EffectDeferred.Parameters["Position"].SetValue(position);
+            EffectDeferred.Parameters["LightAccumulation"].SetValue(lightAccum);
+            //EffectDeferred.Parameters["Normal"].SetValue(normal);
             EffectDeferred.Parameters["AO"].SetValue(ao);
 
-            foreach (var pass in EffectDeferred.CurrentTechnique.Passes)
+            DrawFullscreenQuad(EffectDeferred);
+        }
+
+        private void DrawFullscreenQuad(Effect effect)
+        {
+            foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IBO.IndexCount / 3);

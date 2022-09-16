@@ -410,6 +410,7 @@ namespace ViMG
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
 				Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
+				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
 			}
 
 			if (Main.inputManager.IsHeld(Keys.F1))
@@ -493,8 +494,8 @@ namespace ViMG
 
 				if (mesh != null)
 				{
-					Main.Renderer.Draws.Add(new Rendering.RendererDeferred.DeferredDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-						DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						transform, Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
 
 					mesh.Draw(device, effect, transform);
@@ -550,7 +551,8 @@ namespace ViMG
 			}
 
 			LightManager.UpdateDatas(Main.CubeLitEffect);
-			LightManager.UpdateDatas(Main.Renderer.EffectDeferred);
+			//LightManager.UpdateDatas(Main.Renderer.EffectDeferred);
+			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
 
 			ProjectileManager.Draw(device, effect);
 			EntityManager.Draw(device, Main.CubeLitEffect);

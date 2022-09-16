@@ -7,14 +7,13 @@
 
 sampler Sampler : register(s0);
 
-Texture2D LightAccumulation : register(t0);
-Texture2D Position			: register(t1);
-Texture2D Depth				: register(t2);
-Texture2D Normal			: register(t3);
+Texture2D Position			: register(t0);
+Texture2D Depth				: register(t1);
+Texture2D Normal			: register(t2);
 
 sampler LightDepthSampler : register(s1);
 
-Texture2DArray LightDepthTextures : register(t4);
+Texture2DArray LightDepthTextures : register(t3);
 
 uint NumCascades;
 float CascadePlaneDistances[CASCADE_COUNT];
@@ -24,6 +23,8 @@ float4x4 LightViewProjection;
 float3 LightDirection;
 float3 LightColor;
 float2 LightResolution;
+
+float3 CameraPosition;
 
 struct VertexShaderInput
 {
@@ -48,7 +49,7 @@ float SampleShadowmap(float2 baseUV, float u, float v, float2 inv, int layer, fl
 	return shadow;
 }
 
-float Sameple2x2(float3 shadowPosition, float lightDepth, uint cascade)
+float Sample2x2(float3 shadowPosition, uint cascade, float lightDepth)
 {
 	float sampledDepth = LightDepthTextures.Sample(LightDepthSampler, float3(shadowPosition.xy, cascade)).r; //SAMPLE_TEXTURE(LightDepthTextures, float3(shadowPosition.xy, cascade)).r;
 
@@ -216,7 +217,7 @@ float3 SampleShadowmapCascade(float3 shadowPosition, uint cascade)
 
 	lightDepth -= bias;
 
-	return Sample7x7(shadowPosition, cascade, lightDepth);
+	return Sample2x2(shadowPosition, cascade, lightDepth);
 }
 
 float3 GetShadowPosOffset(float nDotL, float3 normal)
@@ -285,7 +286,6 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 float4 MainPS(VertexShaderOutput input) : SV_TARGET
 {
-	float3 lightAccumulation = LightAccumulation.Sample(Sampler, input.TexCoord).rgb;
 	float3 normal = Normal.Sample(Sampler, input.TexCoord).rgb;
 	float depth = Depth.Sample(Sampler, input.TexCoord).r;
 	float3 position = Position.Sample(Sampler, input.TexCoord).rgb;
@@ -293,7 +293,13 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	float ndotl = saturate(dot(normal, LightDirection));
 	float3 shadowColor = ShadowVisibility(position, depth, ndotl, normal);
 
-	return float4(lightAccumulation * shadowColor, 1);
+	float3 halfwayDir = normalize(LightDirection + CameraPosition);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+	float3 lightSpec = LightColor * spec;
+
+	float3 lightDiffuse = LightColor * ndotl * shadowColor;
+
+	return float4(lightDiffuse + lightSpec, 1);
 }
 
 technique BasicColorDrawing
