@@ -64,11 +64,11 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	PSOutputGBuffer output = (PSOutputGBuffer)0;
 	float3 ambient = albedoSample.rgb * AmbientStrength;
-	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb;
+	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb * input.Color.rgb;
 
 	float depth = input.DepthVS;
 
-	output.Diffuse.rgb = albedoSample.rgb;
+	output.Diffuse.rgb = albedoSample.rgb * input.Color.rgb;
 	output.Diffuse.a = Specular.Sample(Sampler, input.TexCoord).r;
 
 	output.LightAccumulation = float4(ambient + emissive, 1);

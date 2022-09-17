@@ -133,6 +133,17 @@ namespace ViMG
 
 		private Matrix[] views = new Matrix[6];
 
+		public void Draw(GraphicsDevice device)
+        {
+			for (int i = 0; i < MAX_LIGHTS; i++)
+            {
+				Light light = lights[i];
+
+				if (light.active)
+					Main.Renderer.DrawsPointLightVolumePass.Add(new Rendering.RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
+            }
+        }
+
 		public void DrawShadowmap(GraphicsDevice device, World world)
 		{
 			if (!Main.ENABLE_SHADOWS)

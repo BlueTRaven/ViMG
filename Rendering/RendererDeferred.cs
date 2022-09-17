@@ -11,7 +11,21 @@ namespace ViMG.Rendering
 {
     public class RendererDeferred
     {
-        public struct DeferredDraw
+        public struct PointLightVolumeDraw
+        {
+            public int LightIndex;
+            public Vector3 LightPosition;
+            public float LightScale;  //In other words, its End value
+            
+            public PointLightVolumeDraw(int index, Vector3 position, float scale)
+            {
+                this.LightIndex = index;
+                this.LightPosition = position;
+                this.LightScale = scale;
+            }
+        }
+
+        public struct GBufferDraw
         {
             public Texture2D Diffuse;
             public Texture2D Specular;
@@ -30,7 +44,7 @@ namespace ViMG.Rendering
             public Vector2 SourceRectFarPos;
             public Vector2 TextureSize;
 
-            public DeferredDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, Matrix view, Matrix projection, RectangleF? sourceRect)
+            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, Matrix view, Matrix projection, RectangleF? sourceRect)
             {
                 this.Diffuse = diffuse;
                 this.Specular = specular;
@@ -89,11 +103,18 @@ namespace ViMG.Rendering
         private BlendState noAlphaBlendBS;
         private BlendState normalBS;
         private BlendState additiveBS;
+        private RasterizerState cullCWRS;
+        private RasterizerState cullCCWRS;
 
-        private VertexBuffer VBO;
-        private IndexBuffer IBO;
+        private VertexBuffer vboQuad;
+        private IndexBuffer iboQuad;
+        private VertexBuffer vboUVSphere;
+        private IndexBuffer iboUVSphere;
 
-        public List<DeferredDraw> DrawsPassGBuffer = new List<DeferredDraw>();
+        public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
+        public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
+
+        public static int NumPointLightsRendered;
 
         public RendererDeferred(GraphicsDevice device)
         {
@@ -102,6 +123,16 @@ namespace ViMG.Rendering
             EffectCopy.VertexColorEnabled = false;
             EffectCopy.FogEnabled = false;
             EffectCopy.LightingEnabled = false;
+
+            cullCCWRS = new RasterizerState()
+            {
+                CullMode = CullMode.CullCounterClockwiseFace,
+            };
+
+            cullCWRS = new RasterizerState()
+            {
+                CullMode = CullMode.CullClockwiseFace,
+            };
 
             shadowBorderClampSS = new SamplerState()
             {
@@ -145,16 +176,21 @@ namespace ViMG.Rendering
                 2, 3, 0,
             };
 
-            VBO = new VertexBuffer(device, typeof(VertexPositionTexture), vpt.Length, BufferUsage.WriteOnly);
-            VBO.SetData(vpt);
+            vboQuad = new VertexBuffer(device, typeof(VertexPositionTexture), vpt.Length, BufferUsage.WriteOnly);
+            vboQuad.SetData(vpt);
 
-            IBO = new IndexBuffer(device, typeof(uint), 6, BufferUsage.WriteOnly);
-            IBO.SetData(indices);
+            iboQuad = new IndexBuffer(device, typeof(uint), 6, BufferUsage.WriteOnly);
+            iboQuad.SetData(indices);
+
+            (vboUVSphere, iboUVSphere) = DrawHelper3D.MakeUVSphere(device, 1);
         }
 
         public void FrameStart()
         {
             DrawsPassGBuffer.Clear();
+            DrawsPointLightVolumePass.Clear();
+
+            NumPointLightsRendered = 0;
         }
 
         private void ConstructRTs(Point rez)
@@ -168,8 +204,6 @@ namespace ViMG.Rendering
             diffuse.Name = "Diffuse";
             lightAccum = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             lightAccum.Name = "Light Accumulation";
-            work = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            work.Name = "Work";
             depth = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             depth.Name = "Depth";
             position = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
@@ -223,11 +257,11 @@ namespace ViMG.Rendering
 
             if (DrawsPassGBuffer.Count > 0)
             {
-
                 device.SetRenderTargets(targets);
                 device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
+                //device.RasterizerState = Main.noCullRS;
 
-                foreach (DeferredDraw draw in DrawsPassGBuffer)
+                foreach (GBufferDraw draw in DrawsPassGBuffer)
                 {
                     if (draw.VBO != null && draw.IBO != null)
                     {
@@ -258,10 +292,12 @@ namespace ViMG.Rendering
                         }
                     }
                 }
+
+                //device.RasterizerState = Main.genericRS;
             }
 
-            device.SetVertexBuffer(VBO);
-            device.Indices = IBO;
+            device.SetVertexBuffer(vboQuad);
+            device.Indices = iboQuad;
 
             device.SetRenderTarget(lightAccum);
 
@@ -274,16 +310,49 @@ namespace ViMG.Rendering
 
             DrawFullscreenQuad(EffectLightAccumCSM);
 
-            //Now copy work back to lightAccum
-            device.SetRenderTarget(lightAccum);
+            if (DrawsPointLightVolumePass.Count > 0)
+            {
+                device.SetRenderTarget(lightAccum);
+                device.RasterizerState = cullCWRS;
+                device.SamplerStates[1] = shadowBorderClampSS;
+                device.BlendState = additiveBS;
 
-            EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
-            //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
-            EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
-            //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-            EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
+                //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
+                EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
+                //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
 
-            DrawFullscreenQuad(EffectLightAccumPointLight);
+                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+
+                foreach (PointLightVolumeDraw draw in DrawsPointLightVolumePass)
+                {
+                    EffectLightAccumPointLight.Parameters["WorldViewProjection"].SetValue(
+                        Matrix.CreateScale(draw.LightScale) * 
+                        Matrix.CreateTranslation(draw.LightPosition) *
+                        viewProj);
+
+                    EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
+
+                    device.SetVertexBuffer(vboUVSphere);
+                    device.Indices = iboUVSphere;
+
+                    foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                        //device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.)
+                    }
+
+                    NumPointLightsRendered++;
+                }
+
+                device.RasterizerState = cullCCWRS;
+
+                device.SetVertexBuffer(vboQuad);
+                device.Indices = iboQuad;
+                //DrawFullscreenQuad(EffectLightAccumPointLight);
+            }
 
             //TODO transparent pass
 
@@ -306,7 +375,7 @@ namespace ViMG.Rendering
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IBO.IndexCount / 3);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboQuad.IndexCount / 3);
             }
         }
 

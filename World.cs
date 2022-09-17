@@ -38,6 +38,7 @@ namespace ViMG
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMiningCube;
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshSun;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshUVSphere;
 
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMaxDrawDistBottom;
 		private static bool meshesLoaded;
@@ -159,10 +160,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(1, 0), new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -172,10 +173,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, new Vector2(1, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, new Vector2(0, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(0, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(1, 0), new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -185,10 +186,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -198,10 +199,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, new Vector2(1, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, new Vector2(0, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(0, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(1, 0), new Vector3(1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -211,10 +212,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, Vector2.Zero, new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
 
 			meshMaxDrawDistBottom = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
@@ -235,6 +236,8 @@ namespace ViMG
 			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
 
 			meshSun = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, sunVertices, sunIndices);
+
+			meshUVSphere = DrawHelper3D.MakeUVSphere(device, 1);
 
 			meshesLoaded = true;
 		}
@@ -446,6 +449,8 @@ namespace ViMG
 			directionalLight.DrawShadowmap(device, this);
 			directionalLight.Bind(Main.CubeLitEffect);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
+
+			LightManager.Draw(device);
 			//LightManager.DrawShadowmap(device, this);
 
 			//Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
@@ -487,6 +492,10 @@ namespace ViMG
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
 			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel, DrawHelper.BlackPixel, DrawHelper.WhitePixel, 
+				meshUVSphere.VBO, meshUVSphere.IBO,
+				Matrix.CreateScale(Cube.CUBE_SCALE / 2f) * Matrix.CreateTranslation(playerStartPos), 
+				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null)); 
 			foreach (ChunkPosition pos in CulledChunkDrawPositions)
 			{
 				ChunkMesh mesh = ChunkManager.GetMesh(pos);
@@ -494,7 +503,7 @@ namespace ViMG
 
 				if (mesh != null)
 				{
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.DeferredDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						transform, Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
 
@@ -513,12 +522,25 @@ namespace ViMG
 
 			if (drawSkybox)
 			{
+				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
+
 				meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
+					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
+					Matrix.CreateTranslation(camChunkPosWS), Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
+					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
+					Matrix.CreateTranslation(player.Position), 
+					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
 
 				Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 				Main.FogManager.Disable();
 
-				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 				meshSun.Draw(device, Main.CubeLitEffect,
 					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *

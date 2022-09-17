@@ -54,24 +54,6 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	float specular = Diffuse.Sample(Sampler, input.TexCoord).a;
 	float ao = AO.Sample(Sampler, input.TexCoord).r;
 
-	/*float3 pointLightsColor = float3(0, 0, 0);
-	
-	[unroll]
-	for (int i = 0; i < MAX_LIGHTS; i++)
-	{
-		float intensity = Lights[i].Color.a;
-		if (intensity > 0) 
-		{
-			float3 dir = Lights[i].Position - position;
-
-			float normMult = max(dot(normal, normalize(dir)), 0.0);
-
-			float scaleByDistance = 1 - saturate((length(dir) - Lights[i].Start) / (Lights[i].End - Lights[i].Start));
-
-			pointLightsColor += Lights[i].Color.rgb * scaleByDistance * normMult * intensity;
-		}
-	}*/
-
 	float3 hdrColor = (lightAccumulation * (diffuse + specular)) * ao;
 
 	float3 ldrColor = ACESFitted(hdrColor);

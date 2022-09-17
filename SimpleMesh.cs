@@ -88,6 +88,9 @@ namespace ViMG
 
 		public bool Use(GraphicsDevice device)
 		{
+			//Disables Forward renderer
+			return false;
+
 			if (IsEmpty)
 				return false;
 

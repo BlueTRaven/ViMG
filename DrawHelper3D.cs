@@ -9,6 +9,99 @@ namespace ViMG
 {
 	public static class DrawHelper3D
 	{
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius)
+        {
+			VertexBuffer vbo;
+			IndexBuffer ibo;
+
+			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<uint> indices = new List<uint>();
+
+			//https://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
+			int stacks = 16;
+			int slices = 16;
+
+			for (int t = 0; t < stacks; t++)
+			{
+				float theta1 = ((float)(t) / stacks) * MathF.PI;
+				float theta2 = ((float)(t + 1) / stacks) * MathF.PI;
+
+				for (int p = 0; p < slices; p++) // slices are ORANGE SLICES so the count azimuth
+				{
+					float phi1 = ((float)(p) / slices) * 2 * MathF.PI; // azimuth goes around 0 .. 2*PI
+					float phi2 = ((float)(p + 1) / slices) * 2 * MathF.PI;
+
+					Vector3 vert1 = FromSphericalCoordinates(radius, phi1, theta1);
+					Vector3 vert2 = FromSphericalCoordinates(radius, phi2, theta1);
+					Vector3 vert3 = FromSphericalCoordinates(radius, phi2, theta2);
+					Vector3 vert4 = FromSphericalCoordinates(radius, phi1, theta2);
+
+					uint indicesStart = (uint)vertices.Count;
+
+					if (t == 0)
+                    {
+						indices.Add(indicesStart + 0);
+						indices.Add(indicesStart + 1);
+						indices.Add(indicesStart + 2);
+
+						Vector3 dir = Vector3.Cross(vert3 - vert1, vert4 - vert1);
+						Vector3 norm = Vector3.Normalize(dir);
+
+						vertices.Add(new VertexPositionColorTextureNormal(vert1, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert3, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert4, Color.White, Vector2.Zero, norm));
+					}
+					else if (t + 1 == stacks)
+                    {
+						indices.Add(indicesStart + 0);
+						indices.Add(indicesStart + 1);
+						indices.Add(indicesStart + 2);
+
+						Vector3 dir = Vector3.Cross(vert1 - vert3, vert2 - vert3);
+						Vector3 norm = Vector3.Normalize(dir);
+
+						vertices.Add(new VertexPositionColorTextureNormal(vert3, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert1, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert2, Color.White, Vector2.Zero, norm));
+					}
+                    else
+                    {
+						indices.Add(indicesStart + 0);
+						indices.Add(indicesStart + 1);
+						indices.Add(indicesStart + 3);
+						indices.Add(indicesStart + 1);
+						indices.Add(indicesStart + 2);
+						indices.Add(indicesStart + 3);
+
+						Vector3 dir = Vector3.Cross(vert2 - vert1, vert4 - vert1);
+						Vector3 norm = Vector3.Normalize(dir);
+
+						vertices.Add(new VertexPositionColorTextureNormal(vert1, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert2, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert3, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexPositionColorTextureNormal(vert4, Color.White, Vector2.Zero, norm));
+					}
+				}
+			}
+
+			vbo = new VertexBuffer(device, typeof(VertexPositionColorTextureNormal), vertices.Count, BufferUsage.WriteOnly);
+			ibo = new IndexBuffer(device, typeof(uint), indices.Count, BufferUsage.WriteOnly);
+
+			vbo.SetData(vertices.ToArray());
+			ibo.SetData(indices.ToArray());
+
+			return (vbo, ibo);
+        }
+
+		private static Vector3 FromSphericalCoordinates(float r, float theta, float phi)
+        {
+			float x = r * MathF.Sin(phi) * MathF.Cos(theta);
+			float y = r * MathF.Sin(phi) * MathF.Sin(theta);
+			float z = r * MathF.Cos(phi);
+
+			return new Vector3(x, y, z);
+		}
+
 		private static SimpleMesh<VertexPositionTexture, int> axesMesh;
 		public static void DrawAxesImmediate(GraphicsDevice device, Vector3 position)
 		{
