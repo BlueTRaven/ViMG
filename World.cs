@@ -492,10 +492,6 @@ namespace ViMG
 				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
 			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel, DrawHelper.BlackPixel, DrawHelper.WhitePixel, 
-				meshUVSphere.VBO, meshUVSphere.IBO,
-				Matrix.CreateScale(Cube.CUBE_SCALE / 2f) * Matrix.CreateTranslation(playerStartPos), 
-				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null)); 
 			foreach (ChunkPosition pos in CulledChunkDrawPositions)
 			{
 				ChunkMesh mesh = ChunkManager.GetMesh(pos);
@@ -505,9 +501,8 @@ namespace ViMG
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
-						transform, Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+						transform, null));
 
-					mesh.Draw(device, effect, transform);
 					NumChunksDrawn++;
 				}
 
@@ -528,15 +523,14 @@ namespace ViMG
 
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
-					Matrix.CreateTranslation(camChunkPosWS), Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+					Matrix.CreateTranslation(camChunkPosWS), null));
 
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
 					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-					Matrix.CreateTranslation(player.Position), 
-					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+					Matrix.CreateTranslation(player.Position), null));
 
 				Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 				Main.FogManager.Disable();

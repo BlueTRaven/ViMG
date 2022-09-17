@@ -95,8 +95,7 @@ namespace ViMG.Entities
 				Matrix.CreateTranslation(Position));
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshTrunk.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-				Matrix.CreateTranslation(Position),
-				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 96 - 16, 80, 16)));
+				Matrix.CreateTranslation(Position), new RectangleF(0, 96 - 16, 80, 16)));
 
 			for (int i = 0; i < size; i++)
 			{
@@ -105,8 +104,7 @@ namespace ViMG.Entities
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)));
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshSegmentB.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)),
-					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 48, 80, 32)));
+					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)), new RectangleF(0, 48, 80, 32)));
 			}
 
 			if (size == baseSize)
@@ -117,8 +115,7 @@ namespace ViMG.Entities
 
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshTreeTop.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)),
-					Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), new RectangleF(0, 0, 80, 96)));
+					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
 			}
 		}
 

@@ -35,16 +35,14 @@ namespace ViMG.Rendering
             public IndexBuffer IBO;
 
             public Matrix World;
-            public Matrix View;
             public Matrix WorldNormal;
-            public Matrix ViewProjection;
 
             public bool UseSourceRect;
             public Vector2 SourceRectPos;
             public Vector2 SourceRectFarPos;
             public Vector2 TextureSize;
 
-            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, Matrix view, Matrix projection, RectangleF? sourceRect)
+            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect)
             {
                 this.Diffuse = diffuse;
                 this.Specular = specular;
@@ -53,8 +51,6 @@ namespace ViMG.Rendering
                 this.IBO = IBO;
                 this.World = world;
                 this.WorldNormal = Matrix.Transpose(Matrix.Invert(world));
-                this.View = view;
-                this.ViewProjection = view * projection;
 
                 if (sourceRect != null)
                 {
@@ -261,6 +257,10 @@ namespace ViMG.Rendering
                 device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
                 //device.RasterizerState = Main.noCullRS;
 
+                Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+                EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
+                EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
+
                 foreach (GBufferDraw draw in DrawsPassGBuffer)
                 {
                     if (draw.VBO != null && draw.IBO != null)
@@ -270,7 +270,6 @@ namespace ViMG.Rendering
 
                         EffectGBuffer.Parameters["World"].SetValue(draw.World);
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
-                        EffectGBuffer.Parameters["ViewProjection"].SetValue(draw.ViewProjection);
 
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);

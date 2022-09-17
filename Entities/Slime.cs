@@ -252,15 +252,14 @@ namespace ViMG.Entities
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),
-				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), noticeHandler.Noticed ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16)));
+				noticeHandler.Noticed ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16)));
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshHealthbar.texture, DrawHelper.BlackPixel, meshHealthbar.texture, meshHealthbar.VBO, meshHealthbar.IBO,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position),
-				Main.camera.GetViewMatrix(), Main.camera.GetProjectionMatrix(), null));
+				Matrix.CreateTranslation(Position), null));
 		}
 
 		private static void MakeMeshes(GraphicsDevice device)
