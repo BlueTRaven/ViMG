@@ -39,7 +39,7 @@ namespace ViMG.Entities
 		{
 			noPickupTimer -= (float)deltaTime;
 
-			Velocity.Y += World.GRAVITY * Cube.CUBE_SCALE;
+			Velocity.Y += World.GRAVITY;
 
 			if (Velocity.Y < -MaxVelocity.Y)
 				Velocity.Y = -MaxVelocity.Y;

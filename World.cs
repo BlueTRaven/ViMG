@@ -519,8 +519,6 @@ namespace ViMG
 			{
 				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 
-				meshMaxDrawDistBottom.Draw(device, Main.CubeUnlitEffect, camChunkPosWS, Vector3.Zero, Vector3.One);
-
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
 					Matrix.CreateTranslation(camChunkPosWS), null));
@@ -532,16 +530,10 @@ namespace ViMG
 					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
 					Matrix.CreateTranslation(player.Position), null));
 
-				Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+				/*Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 				Main.FogManager.Disable();
 
-				meshSun.Draw(device, Main.CubeLitEffect,
-					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
-					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-					Matrix.CreateTranslation(player.Position));
-
-				Main.FogManager.Enable();
+				Main.FogManager.Enable();*/
 			}
 
 			foreach (var mined in miningCubes)
@@ -556,13 +548,19 @@ namespace ViMG
 
 					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
-					effect.Parameters["TexCoordOffset"].SetValue(new Vector2(stepped, 0));
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshMiningCube.texture,
+						DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMiningCube.VBO, meshMiningCube.IBO,
+						//Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+						//Matrix.CreateScale(1.125f) *
+						//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
+					/*effect.Parameters["TexCoordOffset"].SetValue(new Vector2(stepped, 0));
 					meshMiningCube.Draw(device, effect,
 						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateScale(1.125f) *
 						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)));
-					effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);
+					effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);*/
 				}
 			}
 

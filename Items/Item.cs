@@ -33,7 +33,7 @@ namespace ViMG.Items
 
 		public int Id = -1;
 
-		protected static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		protected static SimpleMesh<VertexPositionColorTextureNormal, int> meshItemQuadInWorld;
 
 		public Item(string identifier, Texture2D texture, RectangleF sourceRect)
 		{
@@ -81,10 +81,13 @@ namespace ViMG.Items
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (mesh == null)
+			if (meshItemQuadInWorld == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect));
+
+			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}
 
 		private static void MakeMesh(GraphicsDevice device)
@@ -131,7 +134,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
+			meshItemQuadInWorld = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
 		}
 	}
 }

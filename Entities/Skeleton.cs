@@ -152,10 +152,11 @@ namespace ViMG.Entities
 
 			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
 
-			mesh.Draw(device, effect,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture,
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position));
+				Matrix.CreateTranslation(Position), null));
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

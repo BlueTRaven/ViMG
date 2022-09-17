@@ -25,6 +25,7 @@ namespace ViMG.Entities
 
 		public struct ProjectileStats
 		{
+			public IHitboxOwner owner;
 			public int group;
 			public int damage;
 			public float collisionRadius;
@@ -32,8 +33,9 @@ namespace ViMG.Entities
 			public bool gravity;
 			public bool dieOnCollision;
 
-			public ProjectileStats(int group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
+			public ProjectileStats(IHitboxOwner owner, int group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
 			{
+				this.owner = owner;
 				this.group = group;
 				this.damage = damage;
 				this.collisionRadius = collisionRadius;
@@ -119,7 +121,7 @@ namespace ViMG.Entities
 
 				if (projectiles[i].hitbox == -1)
 				{
-					projectiles[i].hitbox = world.HitboxManager.Add(this, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
+					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].stats.owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
 				}
 
 				projectiles[i].timeLeft -= (float)deltaTime;
@@ -199,12 +201,13 @@ namespace ViMG.Entities
 			{
 				if (projectiles[i].active)
 				{
-					mesh.Draw(device, effect,
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(projectiles[i].visStats.texture,
+						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						Matrix.CreateScale(projectiles[i].visStats.scale) *
 						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
 						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 						Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.texture, projectiles[i].visStats.sourceRect);
+						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
 				}
 			}
 		}

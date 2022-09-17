@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -58,7 +59,8 @@ namespace ViMG.Items
 			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 			var mesh = cube.GetMesh(device);
 
-			mesh.Draw(device, Main.CubeLitEffect, transform);
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+				mesh.VBO, mesh.IBO, transform, null));
 		}
 	}
 }

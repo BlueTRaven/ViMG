@@ -32,9 +32,12 @@ namespace ViMG.Items
 			}
 			else
 			{
-				if (mesh != null)
+				//If no valid meta, draw an error texture.
+				if (meshItemQuadInWorld != null)
 				{
-					mesh.Draw(device, Main.CubeLitEffect, transform, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16));
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("swrod"), 
+						DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+						meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, new RectangleF(112, 112, 16, 16)));
 				}
 			}
 		}

@@ -13,6 +13,7 @@ namespace ViMG.Cubes
 		public CubeGlowNode() : base("glow_node", RectangleF.Empty, Color.White, 1)
 		{
 			Transparency = TransparencyValue.Invisible;
+			Collision = CollisionValue.None;
 		}
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)

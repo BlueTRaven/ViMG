@@ -8,6 +8,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
+	//TODO serializable
 	public class AncientAltar : Entity, ICubeTracker
 	{
 		private readonly float radius;
@@ -68,11 +69,12 @@ namespace ViMG.Entities
 			if (mesh == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeLitEffect, Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
-				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), null, new RectangleF(112, 16, 16, 16));
-
-			mesh.Draw(device, Main.CubeLitEffect, Matrix.CreateRotationY(-MathHelper.ToRadians(45f)) *
-				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), null, new RectangleF(112, 16, 16, 16));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
+				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
+				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

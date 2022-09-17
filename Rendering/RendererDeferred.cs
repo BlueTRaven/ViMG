@@ -42,7 +42,9 @@ namespace ViMG.Rendering
             public Vector2 SourceRectFarPos;
             public Vector2 TextureSize;
 
-            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect)
+            public Vector3 TintColor;
+
+            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect = null, Vector3? tintColor = null)
             {
                 this.Diffuse = diffuse;
                 this.Specular = specular;
@@ -51,6 +53,7 @@ namespace ViMG.Rendering
                 this.IBO = IBO;
                 this.World = world;
                 this.WorldNormal = Matrix.Transpose(Matrix.Invert(world));
+                this.TintColor = tintColor.GetValueOrDefault(Color.White.ToVector3());
 
                 if (sourceRect != null)
                 {
@@ -274,6 +277,8 @@ namespace ViMG.Rendering
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
                         EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
+
+                        EffectGBuffer.Parameters["TintColor"].SetValue(draw.TintColor);
 
                         if (draw.UseSourceRect)
                         {

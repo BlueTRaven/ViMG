@@ -98,9 +98,10 @@ namespace ViMG.Entities
 			if (xMesh == null)
 				MakeMesh(device);
 
-			xMesh.Draw(device, effect,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(xMesh.texture,
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, xMesh.VBO, xMesh.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-				Matrix.CreateTranslation(Position), null, GetSourceRect());
+				Matrix.CreateTranslation(Position), GetSourceRect()));
 		}
 
 		private RectangleF GetSourceRect()

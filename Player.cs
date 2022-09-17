@@ -482,7 +482,7 @@ namespace ViMG
 			{
 				EntityItem ent = new EntityItem(Position, new ItemInstance(inventory.Get(index), num));
 				world.EntityManager.Add(ent);
-				ent.Velocity = -Main.camera.Forward * 100;
+				ent.Velocity = -Main.camera.Forward * Cube.CUBE_SCALE * 5;
 
 				inventory.Remove(index, num);
 			}
@@ -777,7 +777,7 @@ namespace ViMG
 				{
 					Vector3 direction = Vector3.Normalize(Bounds.Center - other.bounds.Center);
 
-					Velocity = new Vector3(direction.X * 128, 128, direction.Z * 128);
+					Velocity = new Vector3(direction.X * 6.4f, 6.4f, direction.Z * 6.4f);
 
 					state = State.Hurt;
 

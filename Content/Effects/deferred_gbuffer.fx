@@ -21,6 +21,8 @@ float2 TexCoordOffset;
 float AmbientStrength;
 float SpecularPower;
 
+float3 TintColor;
+
 struct PSOutputGBuffer
 {
 	float4 Diffuse				: COLOR0;			//color/albedo rgb; Specular a
@@ -38,7 +40,7 @@ VSOutputCube MainVS(in VSInputCube input)
 	output.PositionWS = mul(input.Position, World).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
 	output.PositionSS = mul(float4(output.PositionWS, 1), View).xyz;
-	output.Color = input.Color;
+	output.Color = input.Color * float4(TintColor, 1);
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
 	output.AO = input.AO;
 	output.Depth = output.Position.zw;
@@ -73,7 +75,7 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	output.LightAccumulation = float4(ambient + emissive, 1);
 
-	output.Depth = float4(depth, depth, depth, 1.0);// float4(input.DepthVS, input.DepthVS, input.DepthVS, 1);
+	output.Depth = float4(depth, depth, depth, 1.0);
 	output.Position = float4(input.PositionWS, 1);
 	output.Normal = float4(normalize(input.Normal), 1);		
 	output.AO = float4(input.AO, input.AO, input.AO, 1);

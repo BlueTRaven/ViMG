@@ -81,10 +81,10 @@ namespace ViMG.Entities
 			if (mesh == null)
 				MakeMesh(device);
 
-			mesh.Draw(device, Main.CubeLitEffect,
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
+				mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position));
+				Matrix.CreateTranslation(Position), null));
 		}
 
 		private void MakeMesh(GraphicsDevice device)
@@ -146,7 +146,7 @@ namespace ViMG.Entities
 			foreach (ItemInstance item in items)
 			{
 				EntityItem ent = new EntityItem(Position, item);
-				ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 32, Main.random.NextFloat(-100, 100));
+				ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
 				world.EntityManager.Add(ent);
 			}
 

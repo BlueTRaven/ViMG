@@ -28,11 +28,13 @@ namespace ViMG.Items
 		{
 			if (inventory.Find(Main.Registry.ItemRegistry.Get("arrow"), out int ammoIndex).valid)
 			{
-				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 48, 16, 16), 20);
-				var stats = new ProjectileManager.ProjectileStats(Player.GROUP_PLAYER_DEAL_SOURCE, this.stats.damage, 4, 4, true, true);
+				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 48, 16, 16), Cube.CUBE_SCALE);
+				var stats = new ProjectileManager.ProjectileStats(player, Player.GROUP_PLAYER_DEAL_SOURCE, this.stats.damage, 
+					Cube.CUBE_SCALE / 5f, Cube.CUBE_SCALE / 5f, true, true);
 
-				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player.Position, Vector3.Normalize(facing) * 500, 200, visStats, stats),
-					new Rectangle3D(new Vector3(-2), new Vector3(4)));
+				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player.Position, 
+					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, visStats, stats),
+					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{
 					itemCooldownTime = this.stats.cooldownTime;
@@ -62,14 +64,13 @@ namespace ViMG.Items
 
 		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (mesh == null)
+			if (meshItemQuadInWorld == null)
 				MakeMesh(device);
 
-			Main.CubeLitEffect.Parameters["TintColor"].SetValue(color.ToVector3());
-			base.DrawInWorld(device, world, item, transform);
-			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-
-			mesh.Draw(device, Main.CubeLitEffect, transform, null, new RectangleF(112, 64, 16, 16));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture,
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture,
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, new RectangleF(112, 64, 16, 16)));
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
@@ -124,7 +125,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("swrod"));
+			meshItemQuadInWorld = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("swrod"));
 		}
 	}
 }
