@@ -49,6 +49,7 @@ namespace ViMG.Items
 			Register(new ItemInfusedBone());
 			Register(new ItemDebugStructureCopier());
 			Register(new ItemString());
+			Register(new ItemLantern());
 			RegisterItemCubes();
 		}
 

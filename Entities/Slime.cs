@@ -18,7 +18,6 @@ namespace ViMG.Entities
 
 		private static SimpleMesh<VertexPositionColor, int> meshDebugCube;
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshHealthbar;
 
 		private bool onGround;
 
@@ -35,6 +34,10 @@ namespace ViMG.Entities
 
 		private Vector3 jumpDir;
 		private int numJumps;
+		private float jumpTimer;
+		private float jumpTime;
+
+		private float alive;
 
 		private NoticeHandler<Player> noticeHandler;
 
@@ -49,11 +52,13 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			noticeHandler = new NoticeHandler<Player>(this, 6.4f * Cube.CUBE_SCALE, false);
+			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 		}
 
 		public override void Update(double deltaTime)
 		{
+			alive += (float)deltaTime;
+
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
 			else world.HitboxManager.Update(hitbox, Bounds);
@@ -66,13 +71,20 @@ namespace ViMG.Entities
 			{
 				if (onGround)
 				{
-					if (Main.random.Next(0, 64) == 0)
+					jumpTimer -= (float)deltaTime;
+
+					if (jumpTimer <= 0)
 					{
+						jumpTime = Main.random.NextFloat(0.25f, 3);
+						jumpTimer = jumpTime;
+
 						if (!noticeHandler.Noticed)
 						{
 							if (numJumps == 0)
 							{
 								numJumps = Main.random.Next(1, 6);
+								jumpTime = Main.random.NextFloat(2, 6);
+								jumpTimer = jumpTime;
 
 								if (world.IsNight())
 								{
@@ -235,18 +247,23 @@ namespace ViMG.Entities
 			if (mesh == null)
 				MakeMeshes(device);
 
+			int ysrc = 0;
+
+			const float minInterval = 0.65f;
+			const float maxInterval = 0.85f;
+
+			float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
+			
+			if (onGround && (alive % interval) / interval < 0.5f)
+				ysrc = 16;
+
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),
-				noticeHandler.Noticed ? new RectangleF(16, 0, 16, 16) : new RectangleF(0, 0, 16, 16)));
+				noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16)));
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshHealthbar.texture, DrawHelper.BlackPixel, meshHealthbar.texture, meshHealthbar.VBO, meshHealthbar.IBO,
-				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
-				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), null));
+			DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
 		}
 
 		private static void MakeMeshes(GraphicsDevice device)
@@ -297,45 +314,6 @@ namespace ViMG.Entities
 			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("slime"));
-
-			min = Vector3.Zero;
-			max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-
-			a = new Vector3(max.X, min.Y, max.Z);
-			b = new Vector3(min.X, min.Y, max.Z);
-			c = new Vector3(min.X, max.Y, max.Z);
-			d = new Vector3(max.X, max.Y, max.Z);
-
-			vertices = new List<VertexPositionColorTextureNormal>();
-			indices = new List<int>();
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Red, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Red, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Red, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Red, dtx, new Vector3(0, 0, 1)));
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Red, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Red, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Red, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Red, ctx, new Vector3(0, 0, -1)));
-
-			meshHealthbar = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
 		}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

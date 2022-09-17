@@ -4,11 +4,74 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Cubes;
 
 namespace ViMG
 {
 	public static class DrawHelper3D
 	{
+		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshHealthbar;
+
+		private static void MakeMeshHealthbar(GraphicsDevice device)
+        {
+			Vector2 atx = new Vector2(0, 1);
+			Vector2 btx = new Vector2(1, 1);
+			Vector2 ctx = new Vector2(1, 0);
+			Vector2 dtx = new Vector2(0, 0);
+
+			Vector3 min = Vector3.Zero;
+			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
+
+			Vector3 a = new Vector3(max.X, min.Y, max.Z);
+			Vector3 b = new Vector3(min.X, min.Y, max.Z);
+			Vector3 c = new Vector3(min.X, max.Y, max.Z);
+			Vector3 d = new Vector3(max.X, max.Y, max.Z);
+
+			var vertices = new List<VertexPositionColorTextureNormal>();
+			var indices = new List<int>();
+
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Red, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Red, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Red, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Red, dtx, new Vector3(0, 0, 1)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Red, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Red, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Red, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Red, ctx, new Vector3(0, 0, -1)));
+
+			meshHealthbar = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
+		}
+
+		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
+        {
+			if (meshHealthbar == null)
+				MakeMeshHealthbar(device);
+
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshHealthbar.texture, DrawHelper.BlackPixel, meshHealthbar.texture, meshHealthbar.VBO, meshHealthbar.IBO,
+				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
+				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
+				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateTranslation(position), null));
+		}
+
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius)
         {
 			VertexBuffer vbo;

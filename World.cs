@@ -415,19 +415,6 @@ namespace ViMG
 				Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
 				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
 			}
-
-			if (Main.inputManager.IsHeld(Keys.F1))
-			{
-				if (Main.inputManager.JustPressed(Keys.OemOpenBrackets))
-					currentCascadeDebug = currentCascadeDebug - 1 < 0 ? directionalLight.cameras.Length - 1 : currentCascadeDebug - 1;
-				if (Main.inputManager.JustPressed(Keys.OemCloseBrackets))
-					currentCascadeDebug = (currentCascadeDebug + 1) % directionalLight.cameras.Length;
-
-				Main.debugCamera.Position = directionalLight.cameras[currentCascadeDebug].Position;
-				Main.debugCamera.Rotation = directionalLight.cameras[currentCascadeDebug].Rotation;
-				//directionalLight.camera.Position = Main.camera.Position;
-				//directionalLight.camera.Rotation = Main.camera.Rotation;
-			}
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
@@ -464,14 +451,6 @@ namespace ViMG
 			device.SamplerStates[2] = Main.clampSS;
 
 			bool drawSkybox = true;
-			if (Main.inputManager.IsHeld(Keys.F1))
-			{
-				Main.WVP.SetProjection(directionalLight.cameras[currentCascadeDebug].GetProjectionMatrix());
-				Main.WVP.SetView(directionalLight.cameras[currentCascadeDebug].GetViewMatrix());
-				directionalLight.SetPipelineState(device);
-
-				drawSkybox = false;
-			}
 
 			float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
 			Vector3 camChunkPosWS = Main.camera.Position;

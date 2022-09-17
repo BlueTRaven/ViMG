@@ -243,6 +243,7 @@ namespace ViMG
 				else CloseUI();
 			}
 
+			int oldHighlight = uiPlayer.HighlightIndex;
 			if (Main.inputManager.JustPressed(Keys.D1))
 			{
 				uiPlayer.HighlightIndex = 0;
@@ -282,6 +283,20 @@ namespace ViMG
 			{
 				uiPlayer.HighlightIndex = 7;
 			}
+
+			if (oldHighlight != uiPlayer.HighlightIndex)
+            {
+				if (inventory.Get(oldHighlight).valid)
+				{
+					inventory.Get(oldHighlight).item.EndHold(this, inventory, uiPlayer.HighlightIndex);
+
+					if (inventory.Get(uiPlayer.HighlightIndex).valid)
+						inventory.Get(oldHighlight).item.StartHold(this, inventory, uiPlayer.HighlightIndex);
+				}
+			}
+
+			if (inventory.Get(uiPlayer.HighlightIndex).valid)
+				inventory.Get(uiPlayer.HighlightIndex).item.Hold(this, inventory, uiPlayer.HighlightIndex);
 
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
@@ -464,7 +479,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				world.EntityManager.Add(new SlimeBig(Position));
 				//world.EntityManager.Add(new Sapling(CubePosition.FromWorldSpace(Position)));
 				//world.EntityManager.Add(new Skeleton(Position));
 
@@ -480,11 +496,15 @@ namespace ViMG
 		{
 			if (inventory.Get(uiPlayer.HighlightIndex).valid)
 			{
-				EntityItem ent = new EntityItem(Position, new ItemInstance(inventory.Get(index), num));
+				ItemInstance thrownInstance = new ItemInstance(inventory.Get(index), num);
+				EntityItem ent = new EntityItem(Position, thrownInstance);
 				world.EntityManager.Add(ent);
 				ent.Velocity = -Main.camera.Forward * Cube.CUBE_SCALE * 5;
 
 				inventory.Remove(index, num);
+
+				if (!inventory.Get(index).valid || inventory.Get(index).num == 0)
+					thrownInstance.item.EndHold(this, inventory, index);
 			}
 		}
 
@@ -507,8 +527,11 @@ namespace ViMG
 
 					if (item.CanBePickedUp && dir.Length() < pickupRadius)
 					{
-						if (inventory.Add(item.Item))
+						if (inventory.Add(item.Item, out int index))
+						{
 							world.EntityManager.Remove(ent);
+							item.Item.item.StartHold(this, inventory, index);
+						}
 					}
 					else if (item.CanBePickedUp && dir.Length() < suckRadius)
 					{

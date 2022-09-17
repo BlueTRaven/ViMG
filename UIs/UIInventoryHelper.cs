@@ -80,6 +80,7 @@ namespace ViMG.UIs
 					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
 									inventory.Get(i));
+					var oldItem = inventory.Get(i);
 
 					var output = HandleItemSlot(player, inventory, i, itemslot, ref held, new UIInventoryHelper.WhiteListNone());
 
@@ -127,7 +128,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.clickLeft)
 			{
-				if (Main.inputManager.IsHeld(Microsoft.Xna.Framework.Input.Keys.LeftShift) && itemSlot.item.valid)
+				if (Main.inputManager.IsHeld(Keys.LeftShift) && itemSlot.item.valid)
 				{
 					output = ItemSlotClickOutput.NeedsSwapInventory;
 				}
@@ -138,6 +139,8 @@ namespace ViMG.UIs
 					inventory.Remove(index, held.num);
 
 					output = ItemSlotClickOutput.PickupFromSlot;
+
+					held.item.StartHold(player, inventory, -1);
 				}
 				else if (held.valid && itemSlot.item.valid)
 				{
@@ -161,6 +164,9 @@ namespace ViMG.UIs
 						inventory.Set(oldHeld, index);
 
 						output = ItemSlotClickOutput.Swap;
+
+						oldHeld.item.EndHold(player, inventory, -1);
+						held.item.StartHold(player, inventory, -1);
 					}
 				}
 				else if (held.valid && !itemSlot.item.valid)
@@ -169,6 +175,8 @@ namespace ViMG.UIs
 
 					if (!whiteList.Matches(held.item))
 						return ItemSlotClickOutput.None;
+
+					held.item.EndHold(player, inventory, index);
 
 					inventory.Set(held, index);
 					held = new ItemInstance();

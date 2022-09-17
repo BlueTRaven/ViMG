@@ -69,6 +69,12 @@ namespace ViMG.Items
 			return false;
 		}
 
+		public virtual void StartHold(Player player, Inventory inventory, int index) { }
+
+		public virtual void EndHold(Player player, Inventory inventory, int newIndex) { }
+
+		public virtual void Hold(Player player, Inventory inventory, int index) { }
+
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{
 			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix());

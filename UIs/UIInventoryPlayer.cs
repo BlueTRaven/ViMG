@@ -33,6 +33,8 @@ namespace ViMG.UIs
 			this.inventory = playerInventory;
 
 			this.craftInventory = craftInventory;
+
+			playerInventory.Get(HighlightIndex).item.StartHold(player, playerInventory, HighlightIndex);
 		}
 
 		public override void Update()
@@ -43,7 +45,16 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
+			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
 			UIInventoryHelper.DoPlayerInventory(player, inventory, ref held, (Opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, SIZE, PADDING);
+
+			if (preHighlightedHotbar.valid && preHighlightedHotbar.item != inventory.Get(HighlightIndex).item)
+            {
+				preHighlightedHotbar.item.StartHold(player, inventory, HighlightIndex);
+
+				if (inventory.Get(HighlightIndex).valid)
+					inventory.Get(HighlightIndex).item.StartHold(player, inventory, HighlightIndex);
+            }
 
 			UI.EndParent();
 

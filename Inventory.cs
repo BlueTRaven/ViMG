@@ -31,7 +31,7 @@ namespace ViMG
 			return false;
 		}
 
-		public bool Add(ItemInstance item)
+		public bool Add(ItemInstance item, out int placedIndex)
 		{
 			for (int i = 0; i < numSlots; i++)
 			{
@@ -39,6 +39,7 @@ namespace ViMG
 				if (items[i].item == item.item && items[i].damage == item.damage)
 				{
 					items[i] = new ItemInstance(items[i], items[i].num + item.num);
+					placedIndex = i;
 					return true;
 				}
 			}
@@ -50,12 +51,19 @@ namespace ViMG
 				if (!items[i].valid)
 				{
 					items[i] = item;
+					placedIndex = i;
 					return true;
 				}
 			}
 
+			placedIndex = -1;
 			return false;
 		}
+
+		public bool Add(ItemInstance item)
+        {
+			return Add(item, out _);
+        }
 
 		public void Set(ItemInstance item, int index)
 		{
