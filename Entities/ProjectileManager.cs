@@ -15,11 +15,30 @@ namespace ViMG.Entities
 			public RectangleF sourceRect;
 			public Texture2D texture;
 
+			public bool hasLight;
+			public Vector4 lightColor;
+			public Vector2 lightExtents;
+
 			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale)
 			{
 				this.texture = texture;
 				this.sourceRect = sourceRect;
 				this.scale = scale;
+
+				this.hasLight = false;
+				this.lightColor = Vector4.Zero;
+				this.lightExtents = Vector2.Zero;
+			}
+
+			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale, Vector4 lightColor, Vector2 lightExtents)
+			{
+				this.texture = texture;
+				this.sourceRect = sourceRect;
+				this.scale = scale;
+
+				this.hasLight = true;
+				this.lightColor = lightColor;
+				this.lightExtents = lightExtents;
 			}
 		}
 
@@ -58,6 +77,7 @@ namespace ViMG.Entities
 
 			public Rectangle3D bounds;
 			public int hitbox;
+			public int light;
 
 			public Projectile(Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
 			{
@@ -71,6 +91,7 @@ namespace ViMG.Entities
 
 				bounds = new Rectangle3D();
 				hitbox = -1;
+				light = -1;
 			}
 		}
 
@@ -124,14 +145,19 @@ namespace ViMG.Entities
 					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].stats.owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
 				}
 
+				if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
+                {
+					projectiles[i].light = world.LightManager.Add(projectiles[i].position, 
+						projectiles[i].visStats.lightExtents.X, 
+						projectiles[i].visStats.lightExtents.Y, 
+						new Color(projectiles[i].visStats.lightColor));
+                }
+
 				projectiles[i].timeLeft -= (float)deltaTime;
 
 				if (projectiles[i].timeLeft <= 0)
 				{
-					if (projectiles[i].hitbox != -1)
-						world.HitboxManager.Remove(projectiles[i].hitbox);
-
-					projectiles[i] = new Projectile();
+					Kill(world, i);
 				}
 
 				if (projectiles[i].stats.gravity)
@@ -144,7 +170,13 @@ namespace ViMG.Entities
 
 				projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
 
-				world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+				if (projectiles[i].hitbox != -1)
+					world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+				
+				if (projectiles[i].light != -1)
+					world.LightManager.Update(projectiles[i].light, projectiles[i].position, 
+						projectiles[i].visStats.lightExtents.X, projectiles[i].visStats.lightExtents.Y, 
+						new Color(projectiles[i].visStats.lightColor));
 
 				for (int x = -1; x <= 1; x++)
 				{
@@ -152,47 +184,35 @@ namespace ViMG.Entities
 					{
 						for (int z = -1; z <= 1; z++)
 						{
-							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) + 
+								new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
 							if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
 							{
-								if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position, projectiles[i].stats.collisionRadius, out Vector3 change))
+								if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position, 
+									projectiles[i].stats.collisionRadius, out Vector3 change))
 								{
 									if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
 									{
-										if (projectiles[i].hitbox != -1)
-											world.HitboxManager.Remove(projectiles[i].hitbox);
-
-										projectiles[i] = new Projectile();
+										Kill(world, i);
 									}	
 								}
 							}
 						}
 					}
 				}
-
-				/*var result = world.Raycast(projectiles[i].position, projectiles[i].position + projectiles[i].velocity, (Vector3 pos) =>
-				{
-					return world.GetChunkManager().GetRaw(pos) != 0;
-				});
-
-				if (!result.hasHit)
-				{
-					projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
-
-					world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
-				}
-				else
-				{
-					if (projectiles[i].stats.dieOnCollision)
-					{
-						if (projectiles[i].hitbox != -1)
-							world.HitboxManager.Remove(projectiles[i].hitbox);
-
-						projectiles[i] = new Projectile();
-					}
-				}*/
 			}
+		}
+
+		private void Kill(World world, int index)
+        {
+			if (projectiles[index].hitbox != -1)
+				world.HitboxManager.Remove(projectiles[index].hitbox);
+
+			if (projectiles[index].light != -1)
+				world.LightManager.Remove(projectiles[index].light);
+
+			projectiles[index] = new Projectile();
 		}
 
 		public void Draw(GraphicsDevice device, Effect effect)
@@ -202,7 +222,7 @@ namespace ViMG.Entities
 				if (projectiles[i].active)
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(projectiles[i].visStats.texture,
-						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+						DrawHelper.BlackPixel, projectiles[i].visStats.hasLight ? DrawHelper.WhitePixel : DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						Matrix.CreateScale(projectiles[i].visStats.scale) *
 						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
 						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *

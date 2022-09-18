@@ -87,6 +87,9 @@ namespace ViMG
 
 		public World(GraphicsDevice device, int worldSize)
 		{
+			//TEMP start in night time
+			alive = DAY_CYCLE_TIME * 0.65f;
+
 			this.sizeInCubes = worldSize;
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
@@ -102,6 +105,8 @@ namespace ViMG
 			LightManager = new LightManager(device);
 			LightManager.UpdateDatas(Main.CubeLitEffect);
 			Spawners.Add(new PSSlime(EntityManager));
+			Spawners.Add(new PSSKeleton(EntityManager));
+			Spawners.Add(new PSImp(EntityManager));
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));

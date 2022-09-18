@@ -166,6 +166,12 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(entity);
 		}
 
+		public void OnDelete()
+        {
+			if (hitbox != -1)
+				world.HitboxManager.Remove(hitbox);
+        }
+
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
 			if (invulnTimer <= 0)

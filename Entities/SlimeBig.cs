@@ -49,7 +49,14 @@ namespace ViMG.Entities
 			UpdateCollision();
         }
 
-		private Vector2[] offsetsDown = new Vector2[4]
+        public override void OnDelete()
+        {
+            base.OnDelete();
+
+			ai.OnDelete();
+        }
+
+        private Vector2[] offsetsDown = new Vector2[4]
 		{
 			new Vector2(-1) * Cube.CUBE_SCALE,
 			new Vector2(-1, 1) * Cube.CUBE_SCALE,

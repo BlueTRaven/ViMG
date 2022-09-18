@@ -53,7 +53,7 @@ namespace ViMG.Entities
 			{
 				if (light != -1)
 				{
-					world.LightManager.KillLight(light);
+					world.LightManager.Remove(light);
 					light = -1;
 				}
 			}
@@ -61,7 +61,7 @@ namespace ViMG.Entities
 			{
 				if (light == -1)
 				{
-					light = world.LightManager.MakeLight(Position, radius - fade, radius, color);
+					light = world.LightManager.Add(Position, radius - fade, radius, color);
 				}
 			}
 		}
@@ -71,7 +71,7 @@ namespace ViMG.Entities
 			base.OnDelete();
 
 			if (light != -1)
-				world.LightManager.KillLight(light);
+				world.LightManager.Remove(light);
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)

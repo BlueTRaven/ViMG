@@ -28,7 +28,7 @@ namespace ViMG.Items
 		{
 			if (inventory.Find(Main.Registry.ItemRegistry.Get("arrow"), out int ammoIndex).valid)
 			{
-				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 48, 16, 16), Cube.CUBE_SCALE);
+				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 				var stats = new ProjectileManager.ProjectileStats(player, Player.GROUP_PLAYER_DEAL_SOURCE, this.stats.damage, 
 					Cube.CUBE_SCALE / 5f, Cube.CUBE_SCALE / 5f, true, true);
 

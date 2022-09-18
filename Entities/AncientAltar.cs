@@ -36,7 +36,7 @@ namespace ViMG.Entities
 		{
 			world.EntityManager.Remove(this);
 			if (light != -1)
-				world.LightManager.KillLight(light);
+				world.LightManager.Remove(light);
 		}
 
 		public override void Update(double deltaTime)
@@ -49,7 +49,7 @@ namespace ViMG.Entities
 			{
 				if (light != -1)
 				{
-					world.LightManager.KillLight(light);
+					world.LightManager.Remove(light);
 					light = -1;
 				}
 			}
@@ -57,7 +57,7 @@ namespace ViMG.Entities
 			{
 				if (light == -1)
 				{
-					light = world.LightManager.MakeLight(Position, 0, radius, Color.Red);
+					light = world.LightManager.Add(Position, 0, radius, Color.Red);
 				}
 			}
 		}

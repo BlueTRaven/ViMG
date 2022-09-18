@@ -85,7 +85,7 @@ namespace ViMG
 				lightsCubemaps[i] = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24);
 		}
 
-		public int MakeLight(Vector3 position, float start, float end, Color color)
+		public int Add(Vector3 position, float start, float end, Color color)
 		{
 			for (int i = 0; i < MAX_LIGHTS; i++)
 			{
@@ -101,7 +101,15 @@ namespace ViMG
 			return -1;
 		}
 
-		public void KillLight(int index)
+		public void Update(int index, Vector3 position, float start, float end, Color color)
+        {
+			if (lights[index].active)
+            {
+				lights[index] = new Light(position, start, end, color, index);
+            }
+        }
+
+		public void Remove(int index)
 		{
 			if (lights[index].active)
 			{

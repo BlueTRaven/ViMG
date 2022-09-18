@@ -480,9 +480,7 @@ namespace ViMG
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
 				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Add(new SlimeBig(Position));
-				//world.EntityManager.Add(new Sapling(CubePosition.FromWorldSpace(Position)));
-				//world.EntityManager.Add(new Skeleton(Position));
+				world.EntityManager.Add(new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 
 				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
 				/*using (FileStream fs = new FileStream("./depth.png", FileMode.OpenOrCreate))

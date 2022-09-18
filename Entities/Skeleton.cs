@@ -10,11 +10,20 @@ namespace ViMG.Entities
 {
 	public class Skeleton : Entity, IHitboxOwner
 	{
+		private enum State
+        {
+			Active,
+			LyingInPile,
+			LyingInPileKillable
+        }
+
 		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+
+		private State state;
 
 		private NoticeHandler<Player> noticeHandler;
 
-		public Vector3 MaxVelocity = new Vector3(64, 340, 64);
+		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
 
 		private int health;
@@ -27,6 +36,16 @@ namespace ViMG.Entities
 		private int hitbox = -1;
 
 		private float invulnTimer;
+		private float resurrectTimer;
+		private float alive;
+
+		private float idleTimer;
+		private float idleMoveTimer;
+		private int idleMovements;
+		private Vector2 idleDirection;
+		private Vector2 idleHome;
+
+		private CubePosition trackBoneBlockPosition;
 
 		public Skeleton(Vector3 position)
 		{
@@ -37,12 +56,18 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			noticeHandler = new NoticeHandler<Player>(this, 128, false);
+			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+
+			health = maxHealth;
 		}
 
-		public override void Update(double deltaTime)
+        public override void Update(double deltaTime)
 		{
 			base.Update(deltaTime);
+
+			alive += (float)deltaTime;
+
+			invulnTimer -= (float)deltaTime;
 
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, Slime.GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
@@ -54,14 +79,110 @@ namespace ViMG.Entities
 
 			noticeHandler.Update(deltaTime);
 
-			if (invulnTimer <= 0)
+			if (!world.IsNight())
 			{
-				if (noticeHandler.Noticed)
+				//every 3ish seconds try to damage
+				if (invulnTimer <= 0 && (alive % 3.1f) < 0.1f)
 				{
-					Vector3 dir = Vector3.Normalize(noticeHandler.GetNoticedEntity().Position - Position) * 100f;
+					invulnTimer = 0.25f;
+					health -= 1;
 
-					Velocity.X = dir.X;
-					Velocity.Z = dir.Z;
+					if (health <= 0)
+					{
+						health = 0;
+						if (SearchForNearbyBoneBlocks())
+						{
+							state = State.LyingInPile;
+							resurrectTimer = 20;
+						}
+
+						if (state == State.Active || state == State.LyingInPileKillable)
+							world.EntityManager.Remove(this);
+					}
+				}
+			}
+
+			if (invulnTimer <= 0 && onGround)
+			{
+				if (state == State.Active)
+				{
+					if (noticeHandler.Noticed)
+					{
+						idleMovements = 0;
+
+						Vector3 dir = Vector3.Normalize(noticeHandler.GetNoticedEntity().Position - Position) * Cube.CUBE_SCALE;
+
+						Velocity.X += dir.X;
+						Velocity.Z += dir.Z;
+					}
+					else
+					{
+						idleTimer -= (float)deltaTime;
+
+						if (idleTimer <= 0)
+							idleMoveTimer -= (float)deltaTime;
+
+						if (idleMovements == 0 && idleTimer <= 0 && idleMoveTimer <= 0)
+						{
+							idleHome = new Vector2(Position.X, Position.Z);
+
+							idleTimer = Main.random.NextFloat(4f, 12f);
+							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+							idleMovements = Main.random.Next(2, 6);
+
+							idleDirection = Main.random.NextAngle();
+						}
+						else
+						{
+							float distFromIdleHome = (new Vector2(Position.X, Position.Z) - idleHome).Length();
+
+							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
+								idleDirection = -idleDirection;
+
+							if (idleTimer <= 0 && idleMoveTimer <= 0)
+							{
+								idleMovements--;
+								idleDirection = Main.random.NextAngle();
+								idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+							}
+						}
+
+						if (idleTimer <= 0)
+						{
+							Velocity.X += idleDirection.X;
+							Velocity.Z += idleDirection.Y;
+						}
+						else
+						{
+							Velocity.X *= 0.85f;
+							Velocity.Z *= 0.85f;
+						}
+					}
+				}
+				else
+				{
+					resurrectTimer -= (float)deltaTime;
+
+					if (resurrectTimer <= 0)
+					{
+						state = State.Active;
+						health = 3;
+						maxHealth = 8;
+					}
+
+					if (state == State.LyingInPile)
+                    {
+						if ((trackBoneBlockPosition.InWorldSpace(null) - Position).Length() > Cube.CUBE_SCALE * 4.5f)
+						{
+							state = State.LyingInPileKillable;
+							resurrectTimer += 4;    //additional 4 seconds if we kill the block.
+							health = 4;
+							maxHealth = 4;
+						}
+					}
+
+					Velocity.X *= 0.85f;
+					Velocity.Z *= 0.85f;
 				}
 
 				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
@@ -79,20 +200,15 @@ namespace ViMG.Entities
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 
-			if (onGround)
-			{
-				Vector2 velocitySlowed = new Vector2(Velocity.X, Velocity.Z);
-				if (velocitySlowed.Length() > 0)
-				{
-					velocitySlowed = Vector2.Normalize(velocitySlowed) * velocitySlowed.Length() * 0.85f;
-				}
-
-				Velocity = new Vector3(velocitySlowed.X, Velocity.Y, velocitySlowed.Y);
-			}
+			//if (!onGround) Velocity = new Vector3(Velocity.X * 0.95f, Velocity.Y, Velocity.Z * 0.95f);
 
 			Position += Velocity * (float)deltaTime;
 
+			onGround = false;
 			UpdateCollision();
+
+			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
+				world.EntityManager.Remove(this);
 		}
 
 		private void UpdateCollision()
@@ -132,6 +248,20 @@ namespace ViMG.Entities
 					}
 				}
 			}
+
+			foreach (Skeleton skeleton in world.EntityManager.GetAll<Skeleton>())
+            {
+				if (skeleton != this)
+                {
+					Vector2 distXZ = new Vector2(Position.X, Position.Z) - new Vector2(skeleton.Position.X, skeleton.Position.Z);
+
+					if (distXZ.Length() < Cube.CUBE_SCALE)
+                    {
+						Position += new Vector3(distXZ.X, 0, distXZ.Y);
+						//skeleton.Position -= new Vector3(distXZ.X, 0, distXZ.Y);
+					}
+                }
+            }
 		}
 
 		public override void OnDelete()
@@ -152,11 +282,37 @@ namespace ViMG.Entities
 
 			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
 
+			RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
+
+			if (state != State.Active)
+				sourceRect = new RectangleF(16, 0, 16, 32);
+
+			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+
+			Vector3 vibratePos = Vector3.Zero;
+
+			if (state != State.Active && resurrectTimer <= 4 && (resurrectTimer % (4f / 60f)) / (4f / 60f) < 0.25f)
+			{
+				if (resurrectTimer <= 1)
+                {
+					vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f), 0,
+						Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f));
+				}
+                else
+                {
+					vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f), 0,
+						Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f));
+                }
+            }
+
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture,
 				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), null));
+				Matrix.CreateTranslation(vibratePos) *
+				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+
+			DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
 		}
 
 		private static void MakeMesh(GraphicsDevice device)
@@ -208,7 +364,79 @@ namespace ViMG.Entities
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
-			//throw new NotImplementedException();
+			if (invulnTimer <= 0)
+			{
+				if (other.group == Player.GROUP_PLAYER_DEAL_SOURCE)
+				{
+					Vector3 direction = Vector3.Normalize(other.direction);
+
+					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
+
+					health -= other.damage;
+
+					if (health <= 0)
+					{
+						health = 0;
+						if (SearchForNearbyBoneBlocks())
+						{
+							state = State.LyingInPile;
+							resurrectTimer = 20;
+						}
+
+						if (state == State.Active || state == State.LyingInPileKillable)
+							world.EntityManager.Remove(this);
+					}
+
+					invulnTimer = 0.25f;
+
+					noticeHandler.OnTakeDamage(other.owner as Player);
+				}
+			}
 		}
+
+		public override void OnCubeUpdated(ChunkData updatingParent, CubePosition updating, int updatedId)
+		{
+			if (state == State.LyingInPile)
+            {
+				if (updating == trackBoneBlockPosition)
+				{
+					if (updatedId != Main.Registry.CubeRegistry.Get("brittle_bone_block").Id)
+					{
+						state = State.LyingInPileKillable;
+						resurrectTimer += 4;	//additional 4 seconds if we kill the block.
+						health = 4;
+						maxHealth = 4;
+					}
+				}
+            }
+			base.OnCubeUpdated(updatingParent, updating, updatedId);
+		}
+
+		private bool SearchForNearbyBoneBlocks()
+        {
+			Cube boneBlock = Main.Registry.CubeRegistry.Get("brittle_bone_block");
+
+			const int searchRadius = 4;
+
+			for (int x = -searchRadius; x <= searchRadius; x++)
+            {
+				for (int y = -searchRadius; y <= searchRadius; y++)
+                {
+					for (int z = -searchRadius; z <= searchRadius; z++)
+                    {
+						CubePosition checkPos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+
+						if (world.ChunkManager.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
+                        {
+							trackBoneBlockPosition = checkPos;
+
+							return true;
+                        }
+                    }
+				}					
+			}
+
+			return false;
+        }
 	}
 }

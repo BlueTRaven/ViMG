@@ -9,12 +9,11 @@ using ViMG.Entities;
 
 namespace ViMG.Spawners
 {
-    public class PSSlime : PassiveSpawner
+    public class PSSKeleton : PassiveSpawner
     {
-        private List<Slime> slimes = new List<Slime>();
-        private List<SlimeBig> bigSlimes = new List<SlimeBig>();
+        private List<Skeleton> skeletons = new List<Skeleton>();
 
-        public PSSlime(EntityManager entityManager) : base(0.5f, 1f,// / 32f, 
+        public PSSKeleton(EntityManager entityManager) : base(0.5f, 1f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
@@ -26,45 +25,36 @@ namespace ViMG.Spawners
         //but that assumes we're using the same "load the world all at once" style that we're doing.
         private void OnEntityAdded(Entity entity)
         {
-            if (entity is Slime s)
-                slimes.Add(s);
-
-            if (entity is SlimeBig sb)
-                bigSlimes.Add(sb);
+            if (entity is Skeleton s)
+                skeletons.Add(s);
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            if (entity is Slime s)
-                slimes.Remove(s);
-            if (entity is SlimeBig sb)
-                bigSlimes.Remove(sb);
+            if (entity is Skeleton s)
+                skeletons.Remove(s);
         }
 
         public override bool CanAreaSpawn(ChunkManager manager, Chunk chunk, CubePosition position)
         {
-            //Don't spawn at night, and don't spawn when the player is looking at the given position.
-            if (chunk.GetWorld().IsNight() || Main.camera.FrustumContains(position.InWorldSpace(null)))
+            //Don't spawn during the day, and don't spawn when the player is looking at the given position.
+            if (!chunk.GetWorld().IsNight() || Main.camera.FrustumContains(position.InWorldSpace(null)))
                 return false;
 
             if (position.Y < 181)
                 return false;
 
             Cube c = chunk.GetData().GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
+            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass") || 
+                c == Main.Registry.CubeRegistry.Get("stone"))
                 return true;
 
             return false;
         }
 
-        public override void Update(double deltaTime, World world)
-        {
-            base.Update(deltaTime, world);
-        }
-
         protected override void Spawn(World world, CubePosition position)
         {
-            /*if (bigSlimes.Count < 4 && Main.random.Next(0, 4) == 0)
+            if (skeletons.Count < 32)
             {
                 int minR = 112;
                 int maxR = world.sizeInCubes - 112;
@@ -72,20 +62,7 @@ namespace ViMG.Spawners
                 if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
                     return;
 
-                SlimeBig bigSlime = new SlimeBig(position.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 2, 0));
-                world.EntityManager.Add(bigSlime);
-                return;
-            }*/
-
-            if (slimes.Count < 32)
-            {
-                int minR = 112;
-                int maxR = world.sizeInCubes - 112;
-
-                if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
-                    return;
-
-                Slime slime = new Slime(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
+                Skeleton slime = new Skeleton(position.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(slime);
             }
         }

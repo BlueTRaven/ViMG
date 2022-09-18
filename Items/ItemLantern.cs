@@ -24,11 +24,11 @@ namespace ViMG.Items
 
             if (light != -1)
             {
-                player.GetWorld().LightManager.KillLight(light);
+                player.GetWorld().LightManager.Remove(light);
                 light = -1;
             }
 
-            light = player.GetWorld().LightManager.MakeLight(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.Orange);
+            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.Orange);
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)
@@ -37,7 +37,7 @@ namespace ViMG.Items
 
             if (light != -1)
             {
-                player.GetWorld().LightManager.KillLight(light);
+                player.GetWorld().LightManager.Remove(light);
                 light = -1;
             }
         }
