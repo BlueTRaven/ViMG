@@ -24,7 +24,7 @@ namespace ViMG
 		public string LoadedFolderName;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
-		public const float DAY_CYCLE_TIME = 60f * 10f;
+		public const float DAY_CYCLE_TIME = 5f;//60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -88,7 +88,7 @@ namespace ViMG
 		public World(GraphicsDevice device, int worldSize)
 		{
 			//TEMP start in night time
-			alive = DAY_CYCLE_TIME * 0.65f;
+			//alive = DAY_CYCLE_TIME * 0.65f;
 
 			this.sizeInCubes = worldSize;
 
@@ -217,8 +217,8 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 1), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 1), new Vector3(0, -1, 0)));
 			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
 			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
 
@@ -503,9 +503,28 @@ namespace ViMG
 			{
 				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
+				float alphaDay = 1 - GetTimeOfDay();
+				float alphaNight = GetTimeOfNight();
+
+				if (alphaDay > 0)
+				{
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
+						Matrix.CreateTranslation(camChunkPosWS),
+						Main.assetsManager.GetAsset<Texture2D>("skybox_day"),
+						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
+				}
+
+				//if (alphaNight > 0)
+                //{
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
+						//Matrix.CreateScale(1.001f) *
+						Matrix.CreateTranslation(camChunkPosWS),
+						Main.assetsManager.GetAsset<Texture2D>("skybox_night"),
+						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaNight));
+				//}
+				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
-					Matrix.CreateTranslation(camChunkPosWS), null));
+					Matrix.CreateTranslation(camChunkPosWS), null));*/
 
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
@@ -679,7 +698,7 @@ namespace ViMG
 				if (timeOfDayPercent > dawnStart)
 					percent = (timeOfDayPercent - dawnStart) / ((timeOfDayPercent + dawnEnd) - dawnStart);
 				else if (timeOfDayPercent <= dawnEnd)
-					percent = (timeOfDayPercent + (1 - dawnStart)) / dawnEnd;
+					percent = (timeOfDayPercent + (1 - dawnStart)) / (dawnEnd + (1 - dawnStart));
 
 				percent = MathHelper.Clamp(percent, 0, 1);
 
@@ -687,38 +706,12 @@ namespace ViMG
 			}
 
 			return 0;
-			
-			//const float endOfDay = DAY_CYCLE_TIME;
-			/*float timeOfDay = alive % endOfDay;
-
-			float startOffset = endOfDay * 0.08f;
-			float dawnStart = endOfDay - startOffset;
-			float dawnEnd = endOfDay * 0.16f;
-
-			float duskStart = (endOfDay / 2) - (endOfDay * 0.08f);
-			float duskEnd = (endOfDay / 2) + (endOfDay * 0.16f);
-
-			if (timeOfDay > duskEnd && timeOfDay <= dawnStart)
-				return 1;
-			else if (timeOfDay > duskStart && timeOfDay <= duskEnd)
-			{
-				return (timeOfDay - duskStart) / (duskEnd - duskStart);
-			}
-			else if ((timeOfDay > dawnStart && timeOfDay <= endOfDay) || (timeOfDay >= 0 && timeOfDay <= dawnEnd))
-			{
-				float percent = 0;
-				if (timeOfDay > dawnStart)
-					percent = (timeOfDay - dawnStart) / ((timeOfDay + dawnEnd) - dawnStart);
-				else if (timeOfDay <= dawnEnd)
-					percent = (timeOfDay - (-startOffset)) / dawnEnd;
-
-				percent = MathHelper.Clamp(percent, 0, 1);
-
-				return 1 - percent;
-			}
-
-			return 0;*/
 		}
+
+		public bool IsDay()
+        {
+			return (alive % DAY_CYCLE_TIME) <= DAY_CYCLE_TIME / 2f;
+        }
 
 		public bool IsNight()
         {
@@ -735,7 +728,24 @@ namespace ViMG
             {
 				float nightTime = timeOfDay - (DAY_CYCLE_TIME / 2f);
 
-				return nightTime / (DAY_CYCLE_TIME / 2f);
+				float midnightTime = DAY_CYCLE_TIME * 0.25f;
+
+				if (nightTime < midnightTime)
+                {
+					const float START = DAY_CYCLE_TIME / 2f;
+					const float END = DAY_CYCLE_TIME * 0.75f;
+
+					return (timeOfDay - START) / (END - START);
+				}
+                else
+                {
+					const float START = DAY_CYCLE_TIME * 0.75f;
+					const float END = DAY_CYCLE_TIME;
+
+					return 1 - ((timeOfDay - START) / (END - START));
+                }
+
+				//return nightTime / (DAY_CYCLE_TIME / 2f);
             }
         }
 

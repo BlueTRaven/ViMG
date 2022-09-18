@@ -74,6 +74,52 @@ namespace ViMG.Rendering
             }
         }
 
+        public struct TransparentDraw
+        {
+            public int SortValue;
+            public Matrix Transform;
+            public Texture2D Texture;
+            public VertexBuffer VBO;
+            public IndexBuffer IBO;
+
+            public bool UseSourceRect;
+            public Vector2 SourceRectPos;
+            public Vector2 SourceRectFarPos;
+            public Vector2 TextureSize;
+
+            public Vector4 TintColor;
+
+            public TransparentDraw(int sortValue, Matrix transform, Texture2D texture, VertexBuffer vbo, IndexBuffer ibo, RectangleF? sourceRect, Color? tintColor = null)
+            {
+                this.SortValue = sortValue;
+                this.Transform = transform;
+                this.Texture = texture;
+                this.VBO = vbo;
+                this.IBO = ibo;
+
+                if (sourceRect != null)
+                {
+                    RectangleF rect = sourceRect.Value;
+
+                    UseSourceRect = true;
+                    SourceRectPos = rect.Position;
+                    SourceRectFarPos = rect.FarPosition;
+                }
+                else
+                {
+                    UseSourceRect = false;
+                    SourceRectPos = new Vector2();
+                    SourceRectFarPos = new Vector2();
+                }
+
+                if (tintColor == null)
+                    TintColor = Color.White.ToVector4();
+                else TintColor = tintColor.Value.ToVector4();
+
+                TextureSize = new Vector2(texture.Width, texture.Height);
+            }
+        }
+
         private readonly GraphicsDevice device;
 
         private RenderTarget2D diffuse;       //RGB albedo data; A specular data
@@ -96,6 +142,7 @@ namespace ViMG.Rendering
         public Effect EffectLightAccumCSM;
         public Effect EffectLightAccumPointLight;
         public Effect EffectDeferred;
+        public Effect EffectTransparent;
 
         private BasicEffect EffectCopy;
         private SamplerState shadowBorderClampSS;
@@ -104,6 +151,8 @@ namespace ViMG.Rendering
         private BlendState additiveBS;
         private RasterizerState cullCWRS;
         private RasterizerState cullCCWRS;
+        private DepthStencilState depthReadNoWriteDSS;
+        private DepthStencilState noDepthReadWriteDSS;
 
         private VertexBuffer vboQuad;
         private IndexBuffer iboQuad;
@@ -112,6 +161,7 @@ namespace ViMG.Rendering
 
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
+        public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
 
         public static int NumPointLightsRendered;
 
@@ -147,6 +197,9 @@ namespace ViMG.Rendering
             normalBS = BlendState.AlphaBlend;
             additiveBS = BlendState.Additive;
 
+            depthReadNoWriteDSS = DepthStencilState.DepthRead;
+            noDepthReadWriteDSS = DepthStencilState.None;
+
             this.device = device;
 
             ConstructRTs(Options.CurrentWindowResolution);
@@ -155,6 +208,7 @@ namespace ViMG.Rendering
             EffectDeferred = Main.assetsManager.GetAsset<Effect>("deferred");
             EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
             EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
+            EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
@@ -188,6 +242,7 @@ namespace ViMG.Rendering
         {
             DrawsPassGBuffer.Clear();
             DrawsPointLightVolumePass.Clear();
+            DrawsTransparentPass.Clear();
 
             NumPointLightsRendered = 0;
         }
@@ -372,6 +427,51 @@ namespace ViMG.Rendering
             EffectDeferred.Parameters["AO"].SetValue(ao);
 
             DrawFullscreenQuad(EffectDeferred);
+
+            //We want to reuse the diffuse target and its depth buffer, so copy the output data back to diffuse
+            device.SetRenderTarget(diffuse);
+            device.Clear(ClearOptions.Target, Color.Black, 0, 0);
+            device.DepthStencilState = noDepthReadWriteDSS; //disable reading and writing the depth buffer.
+            EffectCopy.Texture = output;
+            DrawFullscreenQuad(EffectCopy);
+
+            device.DepthStencilState = depthReadNoWriteDSS;
+            device.BlendState = BlendState.AlphaBlend;
+
+            //TODO: use a custom shader for this?
+            //TODO sorting should be done in update, not draw
+            DrawsTransparentPass = DrawsTransparentPass.OrderBy(x => x.SortValue).ToList();
+
+            EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+
+            foreach (TransparentDraw draw in DrawsTransparentPass)
+            {
+                device.SetVertexBuffer(draw.VBO);
+                device.Indices = draw.IBO;
+
+                EffectTransparent.Parameters["Diffuse"].SetValue(draw.Texture);
+                EffectTransparent.Parameters["World"].SetValue(draw.Transform);
+                EffectTransparent.Parameters["TintColor"].SetValue(draw.TintColor);
+
+                if (draw.UseSourceRect)
+                {
+                    EffectTransparent.Parameters["UseSourceRect"].SetValue(true);
+                    EffectTransparent.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
+                    EffectTransparent.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                    EffectTransparent.Parameters["TextureSize"].SetValue(draw.TextureSize);
+                }
+                else EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
+
+                foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                }
+            }
+
+            EffectCopy.View = Matrix.Identity;
+            EffectCopy.Projection = Matrix.Identity;
+            EffectCopy.World = Matrix.Identity;
         }
 
         private void DrawFullscreenQuad(Effect effect)
@@ -393,7 +493,7 @@ namespace ViMG.Rendering
         public RenderTargetBinding GetOutput()
         {
             if (currentOutput == -1)
-                return output;
+                return diffuse;
             else return targets[currentOutput];
         }
     }
