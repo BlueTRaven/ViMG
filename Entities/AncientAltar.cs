@@ -9,15 +9,22 @@ using ViMG.Cubes;
 namespace ViMG.Entities
 {
 	//TODO serializable
+	[Serializable]
+	[EntityMeta(0, 0)]
 	public class AncientAltar : Entity, ICubeTracker
 	{
-		private readonly float radius;
+		private static SimpleMesh<VertexCube, int> mesh;
+
+		private float radius;
 
 		public CubePosition TrackedPosition { get; private set; }
 
 		private int light = -1;
 
-		private static SimpleMesh<VertexCube, int> mesh;
+		public AncientAltar()
+        {
+
+        }
 
 		public AncientAltar(CubePosition position, float radius)
 		{
@@ -25,7 +32,6 @@ namespace ViMG.Entities
 			this.radius = radius;
 			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 		}
-
 
 		public bool OnInteract(Player player)
 		{
@@ -75,6 +81,26 @@ namespace ViMG.Entities
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
 				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));
+		}
+
+		public override void OnSave(List<byte> saveBytes)
+		{
+			base.OnSave(saveBytes);
+
+			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+			SaveHelper.SaveFloat32(saveBytes, radius);
+		}
+
+		public override void OnLoad(byte[] loadBytes, in int version)
+		{
+			base.OnLoad(loadBytes, version);
+
+			int index = 0;
+
+			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+
+			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

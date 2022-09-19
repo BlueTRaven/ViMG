@@ -67,6 +67,7 @@ namespace ViMG.Entities
 			int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			Position = TrackedPosition.InWorldSpace(null);
 
 			inventory = Inventory.Load(loadBytes, ref index);
 		}

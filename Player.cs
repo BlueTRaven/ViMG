@@ -119,14 +119,14 @@ namespace ViMG
 		//Creates a new player from a dead player.
 		public Player(Player deadPlayer)
         {
+			invulnTimer = 6f;	//6 seconds of invuln after respawning
+
 			inventory = deadPlayer.GetInventory();
 			SpawnPosition = deadPlayer.SpawnPosition;
 			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
 
 			AlwaysRender = true;
-			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
 
-			//state = State.Noclip;
 			Options.CenterMouse();
 			originalMS = Mouse.GetState();
 			Rotation = Main.camera.Rotation;

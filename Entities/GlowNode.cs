@@ -10,6 +10,7 @@ using ViMG.Items;
 namespace ViMG.Entities
 {
 	[Serializable]
+	[EntityMeta(0, 0)]
 	public class GlowNode : Entity, ICubeTracker
 	{
 		private float radius;

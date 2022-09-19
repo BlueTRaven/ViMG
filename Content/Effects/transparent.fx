@@ -9,6 +9,7 @@ float4x4 World;
 float4x4 ViewProjection;
 
 float4 TintColor;
+float AmbientStrength;
 
 bool UseSourceRect;
 float2 SourceRectPos;
@@ -44,7 +45,7 @@ VSOutputCube MainVS(in VSInputCube input)
 float4 MainPS(VSOutputCube input) : SV_TARGET
 {
 	float4 diffuse = Diffuse.Sample(Sampler, input.TexCoord);
-	return diffuse * input.Color;
+	return float4(diffuse.rgb * AmbientStrength, diffuse.a) * input.Color;
 }
 
 technique BasicColorDrawing

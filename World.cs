@@ -445,8 +445,11 @@ namespace ViMG
 				directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
-				Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
-				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
+
+				float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
+				//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
+				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+				Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 			}
 
 			if (Main.inputManager.JustPressed(Keys.F1))
