@@ -237,7 +237,7 @@ namespace ViMG
 
 						if (world.ChunkManager.IsInWorldBounds(chunkPos))
 						{
-							ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos);
+							ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, 0);
 							Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 							if (mesh != null)

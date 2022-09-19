@@ -296,6 +296,16 @@ namespace ViMG.UIs
 			{
 				UIInventoryHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 			}
+
+			const float HEALTHBAR_PADDING = 16;
+			const float HEALTHBAR_MAX = 128;
+
+			const float HEALTHBAR_HEIGHT = 16;
+
+			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - HEALTHBAR_MAX, HEALTHBAR_PADDING);
+			Vector2 healthWidthScale = new Vector2((float)player.health / (float)player.maxHealth * HEALTHBAR_MAX, HEALTHBAR_HEIGHT);
+			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(HEALTHBAR_MAX, HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
+			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Red, 0, Vector2.Zero, healthWidthScale, SpriteEffects.None, 0.1f);
 		}
 	}
 }

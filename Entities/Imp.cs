@@ -12,9 +12,10 @@ namespace ViMG.Entities
 {
     public class Imp : Entity, IHitboxOwner
     {
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		private static SimpleMesh<VertexCube, int> mesh;
 
 		private bool onGround;
+		private bool shouldJump;
 
 		private NoticeHandler<Player> noticeHandler;
 
@@ -87,6 +88,12 @@ namespace ViMG.Entities
 
 			if (invulnTimer <= 0 && onGround)
 			{
+				if (shouldJump)
+				{
+					Velocity.Y = Cube.CUBE_SCALE * 10;
+					shouldJump = false;
+				}
+
 				if (noticeHandler.Noticed)
 				{
 					Vector3 distance = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - Position;
@@ -199,6 +206,7 @@ namespace ViMG.Entities
 
 			Position += Velocity * (float)deltaTime;
 
+			shouldJump = false;
 			onGround = false;
 			UpdateCollision();
 
@@ -206,7 +214,15 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-		private void UpdateCollision()
+        public override void OnDelete()
+        {
+            base.OnDelete();
+
+			if (hitbox != -1)
+				world.HitboxManager.Remove(hitbox);
+        }
+
+        private void UpdateCollision()
 		{
 			const int checkSize = 1;
 
@@ -222,10 +238,12 @@ namespace ViMG.Entities
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							Vector3 checkPos = Position + new Vector3(0, 8, 0);
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8, out Vector3 change))
+							Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+							Vector3 checkPos = Position + offset;
+
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
 							{
-								Position = (checkPos - new Vector3(0, 8, 0)) + change;
+								Position = (checkPos - offset) + change;
 
 								if (change.Y > 0)
 								{
@@ -241,6 +259,22 @@ namespace ViMG.Entities
 							}
 						}
 					}
+				}
+			}
+
+			if (onGround)
+			{
+				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
+					(Vector3 pos) =>
+					{
+						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+						return cube.Collision != Cube.CollisionValue.None;
+					});
+
+				if (ray.hasHit)
+				{
+					shouldJump = true;
 				}
 			}
 
@@ -316,7 +350,7 @@ namespace ViMG.Entities
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
@@ -332,10 +366,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -345,12 +379,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("imp"));
+			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("imp"));
 		}
 	}
 }

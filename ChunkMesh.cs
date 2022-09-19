@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ViMG
 {
-	public class ChunkMesh : SimpleMesh<VertexPositionColorTextureNormal, int>
+	public class ChunkMesh : SimpleMesh<VertexCube, int>
 	{
 		public new static ChunkMesh Empty { get; private set; }
 
@@ -20,15 +20,15 @@ namespace ViMG
 
 		}
 
-		public ChunkMesh(GraphicsDevice device, List<VertexPositionColorTextureNormal> vertices, List<int> indices) : base(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"))
+		public ChunkMesh(GraphicsDevice device, List<VertexCube> vertices, List<int> indices) : base(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"))
 		{
 		}
 
-		protected override void UploadLater(List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+		protected override void UploadLater(List<VertexCube> vertices, List<int> indices)
 		{
 			base.UploadLater(vertices, indices);
 
-			Main.DelayedUploaderChunkMesh.meshesToUploadLater.Enqueue(new DelayedUploader<VertexPositionColorTextureNormal, int>.ToUploadLater(this, vertices, indices));
+			Main.DelayedUploaderChunkMesh.meshesToUploadLater.Enqueue(new DelayedUploader<VertexCube, int>.ToUploadLater(this, vertices, indices));
 		}
 	}
 }

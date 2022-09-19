@@ -12,10 +12,10 @@ namespace ViMG.Entities
 	[EntityMeta(0, 0)]
 	public class Tree : Entity
 	{
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshTrunk;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshSegmentA;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshSegmentB;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshTreeTop;
+		private static SimpleMesh<VertexCube, int> meshTrunk;
+		private static SimpleMesh<VertexCube, int> meshSegmentA;
+		private static SimpleMesh<VertexCube, int> meshSegmentB;
+		private static SimpleMesh<VertexCube, int> meshTreeTop;
 
 		private int baseSize;
 		private int size;
@@ -137,7 +137,7 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
@@ -154,10 +154,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -167,10 +167,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -180,10 +180,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -193,12 +193,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshTrunk = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshTrunk = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshSegmentA(GraphicsDevice device)
@@ -221,7 +221,7 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 80f) * 16f);
@@ -238,10 +238,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -251,10 +251,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -264,10 +264,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -277,12 +277,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshSegmentA = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshSegmentA = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshSegmentB(GraphicsDevice device)
@@ -305,7 +305,7 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
@@ -322,10 +322,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -335,10 +335,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -348,10 +348,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -361,12 +361,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshSegmentB = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshSegmentB = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshTreeTop(GraphicsDevice device)
@@ -389,7 +389,7 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
@@ -406,10 +406,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -419,10 +419,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -432,10 +432,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -445,12 +445,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(f, Color.White, btx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(e, Color.White, atx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(h, Color.White, dtx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(g, Color.White, ctx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshTreeTop = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshTreeTop = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		public override void OnSave(List<byte> saveBytes)

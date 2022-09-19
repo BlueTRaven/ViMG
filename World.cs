@@ -24,7 +24,7 @@ namespace ViMG
 		public string LoadedFolderName;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
-		public const float DAY_CYCLE_TIME = 5f;//60f * 10f;
+		public const float DAY_CYCLE_TIME = 60f * 10f;
 
 		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
@@ -36,15 +36,15 @@ namespace ViMG
 
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMiningCube;
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshSun;
+		private static SimpleMesh<VertexCube, int> meshMiningCube;
+		private static SimpleMesh<VertexCube, int> meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshUVSphere;
 
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> meshMaxDrawDistBottom;
+		private static SimpleMesh<VertexCube, int> meshMaxDrawDistBottom;
 		private static bool meshesLoaded;
 
 		public Player player;
-		private Vector3 playerStartPos;
+		//private Vector3 playerSpawnPos;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
 		public int DrawDistanceVert = 6;
@@ -85,12 +85,17 @@ namespace ViMG
 		public DirectionalLight directionalLight;
 		private int currentCascadeDebug;
 
+		private float[] heightMap;
+		private Texture2D heightMapTexture;
+
 		public World(GraphicsDevice device, int worldSize)
 		{
 			//TEMP start in night time
 			//alive = DAY_CYCLE_TIME * 0.65f;
 
 			this.sizeInCubes = worldSize;
+
+			heightMap = new float[sizeInCubes * sizeInCubes];
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
 
@@ -131,7 +136,7 @@ namespace ViMG
 			Vector3 c = new Vector3(max.X, min.Y, max.Z);
 			Vector3 d = new Vector3(min.X, min.Y, max.Z);
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			indices.Add(0);
@@ -141,10 +146,10 @@ namespace ViMG
 			indices.Add(2);
 			indices.Add(3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(a, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(b, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(c, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(d, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
 
 			max.Y = DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
@@ -165,10 +170,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(1, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(1, 0), new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -178,10 +183,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, new Vector2(1, 1), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_n, Color.White, new Vector2(0, 1), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(0, 0), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(1, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(1, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(1, 0), new Vector3(-1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -191,10 +196,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_t_f, Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -204,10 +209,10 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_n, Color.White, new Vector2(1, 1), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_t_f, Color.White, new Vector2(0, 1), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(0, 0), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(1, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(1, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(0, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(0, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(1, 0, 0)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -217,14 +222,14 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_f, Color.White, new Vector2(1, 1), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_f, Color.White, new Vector2(0, 1), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexPositionColorTextureNormal(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 1), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 1), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
 
-			meshMaxDrawDistBottom = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, DrawHelper.WhitePixel);
+			meshMaxDrawDistBottom = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
-			List<VertexPositionColorTextureNormal> sunVertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> sunVertices = new List<VertexCube>();
 			List<int> sunIndices = new List<int>();
 
 			sunIndices.Add(0);
@@ -235,12 +240,12 @@ namespace ViMG
 			sunIndices.Add(3);
 
 			const float SUN_VERT_DIST = Cube.CUBE_SCALE * 4;
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexPositionColorTextureNormal(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
 
-			meshSun = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, sunVertices, sunIndices);
+			meshSun = new SimpleMesh<VertexCube, int>(device, sunVertices, sunIndices);
 
 			meshUVSphere = DrawHelper3D.MakeUVSphere(device, 1);
 
@@ -251,12 +256,12 @@ namespace ViMG
 		{
 			//ChunkManager.Initialize(this);
 
-			int x = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
-			int z = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
+			int spawnX = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
+			int spawnZ = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 
 			CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE, sizeInCubes * Cube.CUBE_SCALE / 2f));
-			playerPos.X = x;
-			playerPos.Z = z;
+			playerPos.X = spawnX;
+			playerPos.Z = spawnZ;
 			playerPos.Y = sizeInCubes;
 
 			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
@@ -275,12 +280,14 @@ namespace ViMG
 				player.FirstCreated();
 
 				player.Position = ChunkManager.GetPlayerSpawnPos(this);
-				playerStartPos = player.Position;
+				player.SpawnPosition = CubePosition.FromWorldSpace(player.Position);
 			}
 			else
 			{
 				WorldSaver.LoadError error = saver.Load(this, folderName);
 				//error = saver2.Load(this, "flat01");
+
+				Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 
 				if (error == WorldSaver.LoadError.InvalidVersion)
 					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
@@ -292,15 +299,36 @@ namespace ViMG
 					player = new Player();
 					EntityManager.Add(player);
 					player.FirstCreated();
-				}
 
-				playerStartPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
+				}
 			}
 
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 
+			/*for (int x = 0; x < sizeInCubes; x++)
+            {
+				for (int z = 0; z < sizeInCubes; z++)
+                {
+					int firstY = 0;
+					for (int y = sizeInCubes; y >= 0; y--)
+                    {
+						Cube cube = ChunkManager.GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						if (cube.Solid || (cube.Transparency != Cube.TransparencyValue.Invisible && cube.Transparency != Cube.TransparencyValue.Transparent && cube.Transparency != Cube.TransparencyValue.TransparentOccludesSiblings))
+                        {
+							firstY = y;
+							break;
+                        }
+                    }
+
+					int i = z * sizeInCubes + x;
+
+					heightMap[i] = (float)firstY / (float)sizeInCubes;//(float)ChunkManager.GetFirstSolidDown(new CubePosition(x, sizeInCubes, z)).GetOrDefault(new CubePosition()).Y / (float)sizeInCubes;
+                }
+			}*/
+
 			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8);
-			ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
+			//ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
 
 			LoadedFolderName = folderName;
 			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
@@ -420,6 +448,27 @@ namespace ViMG
 				Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
 				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f));
 			}
+
+			if (Main.inputManager.JustPressed(Keys.F1))
+			{
+				if (!File.Exists("./HEIGHTMAP_OUT.png"))
+					File.Create("./HEIGHTMAP_OUT.png");
+
+				//Some dumbass shit to wait for the file to be created.
+				while (true)
+				{
+					try
+					{
+						using (FileStream fs = new FileStream("./HEIGHTMAP_OUT.png", FileMode.Truncate))
+						{
+							heightMapTexture.SaveAsPng(fs, sizeInCubes, sizeInCubes);
+						}
+
+						break;
+					}
+					catch { }
+				}
+			}
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
@@ -433,6 +482,12 @@ namespace ViMG
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
+			if (heightMapTexture == null)
+            {
+				heightMapTexture = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
+				heightMapTexture.SetData<float>(heightMap);
+			}
+
 			NumChunksDrawn = 0;
 			ChunkDrawTime = 0;
 
@@ -478,17 +533,30 @@ namespace ViMG
 
 			foreach (ChunkPosition pos in CulledChunkDrawPositions)
 			{
-				ChunkMesh mesh = ChunkManager.GetMesh(pos);
 				Matrix transform = ChunkManager.GetTransform(pos);
 
-				if (mesh != null)
+				ChunkMesh mesh = ChunkManager.GetMesh(pos, 0);
+				if (mesh != null && mesh != ChunkMesh.Empty)
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						transform, null));
-
-					NumChunksDrawn++;
 				}
+
+				mesh = ChunkManager.GetMesh(pos, 1);
+				if (mesh != null && mesh != ChunkMesh.Empty)
+                {
+					Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+					Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+
+					Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+					//Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
+
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
+						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), mesh.VBO, mesh.IBO, null, null));
+				}
+
+				NumChunksDrawn++;
 
 				if (Main.Debug && Main.DebugChunks)
 				{
@@ -508,7 +576,7 @@ namespace ViMG
 
 				if (alphaDay > 0)
 				{
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
 						Matrix.CreateTranslation(camChunkPosWS),
 						Main.assetsManager.GetAsset<Texture2D>("skybox_day"),
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
@@ -516,7 +584,7 @@ namespace ViMG
 
 				//if (alphaNight > 0)
                 //{
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						//Matrix.CreateScale(1.001f) *
 						Matrix.CreateTranslation(camChunkPosWS),
 						Main.assetsManager.GetAsset<Texture2D>("skybox_night"),
@@ -657,7 +725,12 @@ namespace ViMG
 			}
 		}
 
-		public void SetTimeOfDay(float time)
+		public float GetTime()
+        {
+			return alive;
+        }
+
+		public void SetTime(float time)
 		{
 			alive = time;
 		}
@@ -779,6 +852,8 @@ namespace ViMG
 						EntityManager.Add(ent);
 					}
 
+					cube.OnMined(player, position);
+
 					return;
 				}
 
@@ -799,6 +874,8 @@ namespace ViMG
 							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
+
+						cube.OnMined(player, position);
 					}
 					else miningCubes[position] = mined;
 				}
@@ -819,6 +896,8 @@ namespace ViMG
 							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
+
+						cube.OnMined(player, position);
 					} 
 				}
 			}
@@ -931,6 +1010,9 @@ namespace ViMG
 
 		public RaycastResult Raycast(Vector3 start, Vector3 end, Func<Vector3, bool> callback)
 		{
+			if (float.IsNaN(end.X) || float.IsNaN(end.Y) || float.IsNaN(end.Z))
+				return new RaycastResult();
+
 			RaycastResult result = new RaycastResult();
 
 			const float ONE_CUBE = Cube.CUBE_SCALE;
@@ -1031,6 +1113,9 @@ namespace ViMG
 
 		public RaycastResult RaycastVector(Vector3 start, Vector3 direction, float distance, Func<Vector3, bool> callback)
 		{
+			if (float.IsNaN(direction.X) || float.IsNaN(direction.Y) || float.IsNaN(direction.Z))
+				return new RaycastResult();
+
 			return Raycast(start, start + Vector3.Normalize(direction) * distance, callback);
 		}
 	}

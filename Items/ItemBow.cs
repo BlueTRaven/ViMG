@@ -91,7 +91,7 @@ namespace ViMG.Items
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
@@ -107,10 +107,10 @@ namespace ViMG.Items
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -120,12 +120,12 @@ namespace ViMG.Items
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			meshItemQuadInWorld = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("swrod"));
+			meshItemQuadInWorld = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("swrod"));
 		}
 	}
 }

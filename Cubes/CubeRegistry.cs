@@ -38,6 +38,8 @@ namespace ViMG.Cubes
 			Register(new CubeWood());
 			Register(new CubeSapling());
 			Register(new CubeFibrousPlant());
+			Register(new CubeGlass());
+			Register(new CubeFlame());
 		}
 
         protected override void PostRegistration()

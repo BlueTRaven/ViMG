@@ -17,7 +17,7 @@ namespace ViMG.Entities
 			LyingInPileKillable
         }
 
-		private static SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		private static SimpleMesh<VertexCube, int> mesh;
 
 		private State state;
 
@@ -30,6 +30,7 @@ namespace ViMG.Entities
 		private int maxHealth = 8;
 
 		private bool onGround;
+		private bool shouldJump;
 
 		private Rectangle3D Bounds => new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 			new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 0.70f));
@@ -61,7 +62,20 @@ namespace ViMG.Entities
 			health = maxHealth;
 		}
 
-        public override void Update(double deltaTime)
+		public override void OnDelete()
+		{
+			base.OnDelete();
+
+			if (hitbox != -1)
+				world.HitboxManager.Remove(hitbox);
+
+			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
+			ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f, 
+				Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
+			world.EntityManager.Add(ent);
+		}
+
+		public override void Update(double deltaTime)
 		{
 			base.Update(deltaTime);
 
@@ -104,6 +118,12 @@ namespace ViMG.Entities
 
 			if (invulnTimer <= 0 && onGround)
 			{
+				if (shouldJump)
+                {
+					Velocity.Y = Cube.CUBE_SCALE * 10;
+					shouldJump = false;
+                }
+
 				if (state == State.Active)
 				{
 					if (noticeHandler.Noticed)
@@ -205,6 +225,7 @@ namespace ViMG.Entities
 			Position += Velocity * (float)deltaTime;
 
 			onGround = false;
+			shouldJump = false;
 			UpdateCollision();
 
 			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
@@ -223,14 +244,17 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						if (world.GetChunkManager().IsInWorldBounds(pos) && 
+							world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							Vector3 checkPos = Position + new Vector3(0, 8, 0);
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8, out Vector3 change))
+							Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+							Vector3 checkPos = Position + offset;
+
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
 							{
-								Position = (checkPos - new Vector3(0, 8, 0)) + change;
+								Position = (checkPos - offset) + change;
 
 								if (change.Y > 0)
 								{
@@ -249,6 +273,22 @@ namespace ViMG.Entities
 				}
 			}
 
+			if (onGround)
+			{
+				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
+					(Vector3 pos) =>
+					{
+						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+						return cube.Collision != Cube.CollisionValue.None;
+					});
+
+				if (ray.hasHit)
+				{
+					shouldJump = true;
+				}
+			}
+
 			foreach (Skeleton skeleton in world.EntityManager.GetAll<Skeleton>())
             {
 				if (skeleton != this)
@@ -256,21 +296,13 @@ namespace ViMG.Entities
 					Vector2 distXZ = new Vector2(Position.X, Position.Z) - new Vector2(skeleton.Position.X, skeleton.Position.Z);
 
 					if (distXZ.Length() < Cube.CUBE_SCALE)
-                    {
-						Position += new Vector3(distXZ.X, 0, distXZ.Y);
-						//skeleton.Position -= new Vector3(distXZ.X, 0, distXZ.Y);
-					}
-                }
-            }
-		}
+					{
+						Vector2 correctPos = new Vector2(skeleton.Position.X, skeleton.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
 
-		public override void OnDelete()
-		{
-			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
-			ent.Velocity = new Vector3(Main.random.NextFloat(-100, 100), 128, Main.random.NextFloat(-100, 100));
-			world.EntityManager.Add(ent);
-			world.HitboxManager.Remove(hitbox);
-			hitbox = -1;
+						Position = new Vector3(correctPos.X, Position.Y, correctPos.Y);
+					}
+				}
+            }
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)
@@ -325,7 +357,7 @@ namespace ViMG.Entities
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
@@ -341,10 +373,10 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -354,12 +386,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
+			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
 		}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

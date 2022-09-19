@@ -9,6 +9,9 @@ struct VSInputCube
 	float2 TexCoord : TEXCOORD0;
 	float3 Normal : NORMAL0;
 	float AO : TEXCOORD1;
+
+	float AnimFrameTime : TEXCOORD2;
+	float NumAnimFrames : TEXCOORD3;
 };
 
 struct VSOutputCube

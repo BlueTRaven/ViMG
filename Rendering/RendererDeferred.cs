@@ -165,6 +165,8 @@ namespace ViMG.Rendering
 
         public static int NumPointLightsRendered;
 
+        private float alive;
+
         public RendererDeferred(GraphicsDevice device)
         {
             EffectCopy = new BasicEffect(device);
@@ -288,8 +290,12 @@ namespace ViMG.Rendering
             device.BlendState = noAlphaBlendBS;
         }
 
-        public void Update()
+        public void Update(double deltaTime)
         {
+            alive += (float)deltaTime;
+
+            EffectGBuffer.Parameters["Time"].SetValue(alive);
+
             if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemOpenBrackets))
             {
                 currentOutput--;
@@ -440,7 +446,7 @@ namespace ViMG.Rendering
 
             //TODO: use a custom shader for this?
             //TODO sorting should be done in update, not draw
-            DrawsTransparentPass = DrawsTransparentPass.OrderBy(x => x.SortValue).ToList();
+            DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
             EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
 

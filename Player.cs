@@ -14,7 +14,7 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[Serializable]
-	[EntityMeta(2, 0)]
+	[EntityMeta(4, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
@@ -29,6 +29,9 @@ namespace ViMG
 			Attack,
 			Hurt,
 		}
+
+		public CubePosition SpawnPosition;
+		private float loadedTimeOfDay = -1;
 
 		public Vector3 Rotation;
 
@@ -85,7 +88,7 @@ namespace ViMG
 		private Vector3 attackStateTargetPos;
 
 		private SimpleMesh<VertexPositionColor, int> lookAtMesh;
-		private SimpleMesh<VertexPositionColorTextureNormal, int> itemMesh;
+		private SimpleMesh<VertexCube, int> itemMesh;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -94,6 +97,9 @@ namespace ViMG
 		private Inventory craftInventory;
 		private UIInventory currentUI;
 		private UIInventoryPlayer uiPlayer;
+
+		public int health;
+		public int maxHealth = 20;
 		
 		public Player()
 		{
@@ -103,8 +109,34 @@ namespace ViMG
 			//state = State.Noclip;
 			Options.CenterMouse();
 			originalMS = Mouse.GetState();
+			Rotation = Main.camera.Rotation;
 
 			craftInventory = new Inventory(8);
+
+			health = maxHealth;
+		}
+
+		//Creates a new player from a dead player.
+		public Player(Player deadPlayer)
+        {
+			inventory = deadPlayer.GetInventory();
+			SpawnPosition = deadPlayer.SpawnPosition;
+			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
+
+			AlwaysRender = true;
+			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
+
+			//state = State.Noclip;
+			Options.CenterMouse();
+			originalMS = Mouse.GetState();
+			Rotation = Main.camera.Rotation;
+
+			craftInventory = new Inventory(8);
+
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			currentUI = uiPlayer;
+
+			health = maxHealth / 4;
 		}
 
 		public void FirstCreated()
@@ -118,7 +150,50 @@ namespace ViMG
 			inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
 		}
 
-		public override void Update(double deltaTime)
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			//If we loaded the time of day, set the world's time of day to it.
+			if (loadedTimeOfDay > 0)
+			{
+				world.SetTime(loadedTimeOfDay);
+				loadedTimeOfDay = -1;
+			}
+
+			//SpawnPosition got corrupted or something or is a version that doesn't have it
+			if (SpawnPosition == new CubePosition())
+			{
+				SpawnPosition = world.ChunkManager.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
+			}
+		}
+
+        public override void OnDelete()
+        {
+            base.OnDelete();
+
+			for (int i = 0; i < craftInventory.NumSlots; i++)
+			{
+				if (craftInventory.Get(i).valid)
+				{
+					EntityItem ent = new EntityItem(Position, craftInventory.Get(i));
+					ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+						6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
+					world.EntityManager.Add(ent);
+				}
+			}
+
+			if (hitbox != -1)
+				world.HitboxManager.Remove(hitbox);
+			hitbox = -1;
+
+			//TODO death screen and stuff
+			Player p = new Player(this);
+			world.EntityManager.Add(p);
+			world.player = p;
+		}
+
+        public override void Update(double deltaTime)
 		{
 			//world.ChunkLoadManager.UpdateLoadTarget(Position);
 
@@ -480,13 +555,8 @@ namespace ViMG
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
 				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Add(new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
-
-				//OpenUI(new UIRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1)));
-				/*using (FileStream fs = new FileStream("./depth.png", FileMode.OpenOrCreate))
-				{
-					Main.DepthTarget.SaveAsPng(fs, Main.DepthTarget.Width, Main.DepthTarget.Height);
-				}*/
+				world.EntityManager.Remove(this);	//kill player
+				//world.EntityManager.Add(new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 
@@ -721,9 +791,7 @@ namespace ViMG
 
 			if (inventory.Get(uiPlayer.HighlightIndex).item != null)
 			{
-				device.DepthStencilState = Main.nodepthDSS;
 				inventory.Get(uiPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(uiPlayer.HighlightIndex), this, -Main.camera.Forward);
-				device.DepthStencilState = Main.genericDSS;
 			}
 
 			if (lookAtMesh == null)
@@ -802,6 +870,13 @@ namespace ViMG
 
 					state = State.Hurt;
 
+					health -= other.damage;
+
+					if (health <= 0)
+                    {
+						world.EntityManager.Remove(this);
+                    }
+
 					inputLockupTimer = 0.25f;
 					invulnTimer = 4;
 				}
@@ -815,7 +890,13 @@ namespace ViMG
 			SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
 			SaveHelper.SaveVector3(saveBytes, Main.camera.Rotation);
 
+			SaveHelper.SaveInt32(saveBytes, health);
+			SaveHelper.SaveInt32(saveBytes, maxHealth);
+
 			inventory.Save(saveBytes);
+
+			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
+			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -827,11 +908,24 @@ namespace ViMG
 			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0);
 
 			Main.camera.Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
+			Rotation = Main.camera.Rotation;
+
+			if (version == 4)
+            {
+				health = SaveHelper.LoadInt32(loadBytes, ref index);
+				maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+			}
 
 			inventory = Inventory.Load(loadBytes, ref index);
 
 			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
 			currentUI = uiPlayer;
+
+			if (version == 4)
+            {
+                loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
+                SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+            }
 		}
 	}
 }

@@ -15,6 +15,8 @@ namespace ViMG
 {
 	public class ChunkManager
 	{
+		public const int NUM_CHUNK_MESH_PASSES = 2;
+
 		private readonly struct BroadChunkTaskState
 		{
 			public readonly int chunkStart;
@@ -36,7 +38,11 @@ namespace ViMG
 		private struct ManagedChunk
 		{
 			public Chunk chunk;
-			public ChunkMesh mesh;
+			//public ChunkMesh mesh;
+			public ChunkMesh[] meshes;
+			//0: general geometry pass
+			//1: transparents pass
+			//2: fluid pass?
 			public Matrix transform;
 
 			//public GenerationStep genStep;
@@ -51,7 +57,8 @@ namespace ViMG
 			{
 				chunk = defaultChunk;
 				//chunk = new Chunk(chunkDatas, x, y, z);
-				mesh = null;
+				//mesh = null;
+				meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
 
 				transform = Matrix.Identity;
 
@@ -451,7 +458,10 @@ namespace ViMG
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			chunks[PosToIndex(pos)].mesh = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, true);
+			//First one must have forceUpdate = true,
+			//but all subsequent mesh generations should be false.
+			chunks[PosToIndex(pos)].meshes[0] = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, Cube.RenderPass.Opaque, true);
+			chunks[PosToIndex(pos)].meshes[1] = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, Cube.RenderPass.Transparent, false);
 			chunks[PosToIndex(pos)].meshDirty = false;
 			chunks[PosToIndex(pos)].meshQueued = false;
 
@@ -543,14 +553,14 @@ namespace ViMG
 			return chunks[PosToIndex(position)].chunk;
 		}
 
-		public ChunkMesh GetMesh(ChunkPosition position)
+		public ChunkMesh GetMesh(ChunkPosition position, int pass)
 		{
-			return chunks[PosToIndex(position)].mesh;
+			return chunks[PosToIndex(position)].meshes[pass];
 		}
 
-		public ChunkMesh GetMesh(int x, int y, int z)
+		public ChunkMesh GetMesh(int x, int y, int z, int pass)
 		{
-			return chunks[PosToIndex(new ChunkPosition(x, y, z))].mesh;
+			return chunks[PosToIndex(new ChunkPosition(x, y, z))].meshes[pass];
 		}
 
 		public bool IsInWorldBounds(Vector3 position)
@@ -682,29 +692,67 @@ namespace ViMG
 
 		public void UnloadMesh(ChunkPosition position)
 		{
-			chunks[PosToIndex(position)].mesh = null;
+			ref ManagedChunk c = ref chunks[PosToIndex(position)];
+
+			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
+            {
+				if (c.meshes[i] != null && c.meshes[i] != ChunkMesh.Empty)
+				{
+					c.meshes[i].VBO.Dispose();
+					c.meshes[i].IBO.Dispose();
+
+					c.meshes[i] = null;
+				}
+			}
 		}
 
 		public void UnloadAllMeshes()
 		{
 			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
 			{
-				chunks[i].mesh = null;
+				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
+                {
+					if (chunks[i].meshes[j] != null && chunks[i].meshes[j] != ChunkMesh.Empty)
+					{
+						chunks[i].meshes[j].VBO.Dispose();
+						chunks[i].meshes[j].IBO.Dispose();
+
+						chunks[i].meshes[j] = null;
+					}
+				}
 			}
 		}
 
 		public void Unload(ChunkPosition position)
 		{
-			chunks[PosToIndex(position)].mesh = null;
-			chunks[PosToIndex(position)].chunk.SetData(null);
+			ref ManagedChunk c = ref chunks[PosToIndex(position)];
+
+			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
+			{
+				c.meshes[i].VBO.Dispose();
+				c.meshes[i].IBO.Dispose();
+
+				c.meshes[i] = null;
+			}
+
+			c.chunk.SetData(null);
 		}
 
 		public void UnloadAll()
 		{
 			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
 			{
-				chunks[i].mesh = null;
-				chunks[i].chunk.SetData(null);
+				ref ManagedChunk c = ref chunks[i];
+
+				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
+				{
+					c.meshes[j].VBO.Dispose();
+					c.meshes[j].IBO.Dispose();
+
+					c.meshes[j] = null;
+				}
+
+				c.chunk.SetData(null);
 			}
 		}
 

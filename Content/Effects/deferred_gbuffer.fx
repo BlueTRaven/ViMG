@@ -23,6 +23,8 @@ float SpecularPower;
 
 float3 TintColor;
 
+float Time;
+
 struct PSOutputGBuffer
 {
 	float4 Diffuse				: COLOR0;			//color/albedo rgb; Specular a
@@ -54,6 +56,26 @@ VSOutputCube MainVS(in VSInputCube input)
 		output.TexCoord = xy + (wh * input.TexCoord);
 	}
 	else output.TexCoord = input.TexCoord + TexCoordOffset;
+
+	//bool HasAnimation: whether or not the vertex has a texcoord animation.
+	//float AnimationFrameTime: how long each frame of the animation lasts.
+	//uint NumAnimFrames: the number of frames the animation has.
+	//Animation will be offset in the X axis by the size of the source rectangle.
+	//Sample flame animation: 
+	//SourceRectPos: 192, 16
+	//HasAnimation: true
+	//AnimFrameTime: 0.25
+	//NumAnimFrames: 3
+	if (input.AnimFrameTime > 0)
+	{
+		float totalFrameTime = input.AnimFrameTime * input.NumAnimFrames;
+
+		uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFrames;
+
+		float2 wh = 16.0 / 1024.0;
+
+		output.TexCoord.x += wh.x * frame;
+	}
 
 	return output;
 }

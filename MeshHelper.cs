@@ -22,19 +22,19 @@ namespace ViMG
 			ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK
 		}
 
-		public static SimpleMesh<VertexPositionColorTextureNormal, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
+		public static SimpleMesh<VertexCube, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
 		{
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			MakeCubeVertsVertexPositionColorTextureNormal(min, max, faces, color, vertices, indices);
 
 			if (texture == null)
-				return new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
-			else return new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, texture);
+				return new SimpleMesh<VertexCube, int>(device, vertices, indices);
+			else return new SimpleMesh<VertexCube, int>(device, vertices, indices, texture);
 		}
 
-		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexCube> vertices, List<int> indices)
 		{
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -64,7 +64,7 @@ namespace ViMG
 				MakeQuadVertsVertexPositionColorTextureNormal(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices);
 		}
 
-		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexPositionColorTextureNormal> vertices, List<int> indices, int textureX = -1, int textureY = -1, int textureWidth = -1, int textureHeight = -1)
+		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, int textureX = -1, int textureY = -1, int textureWidth = -1, int textureHeight = -1)
 		{
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -76,17 +76,17 @@ namespace ViMG
 
 			if (textureX == -1)
 			{
-				vertices.Add(new VertexPositionColorTextureNormal(a, color, new Vector2(0, 0), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(b, color, new Vector2(1, 0), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(c, color, new Vector2(1, 1), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(d, color, new Vector2(0, 1), normal));
+				vertices.Add(new VertexCube(a, color, new Vector2(0, 0), normal));
+				vertices.Add(new VertexCube(b, color, new Vector2(1, 0), normal));
+				vertices.Add(new VertexCube(c, color, new Vector2(1, 1), normal));
+				vertices.Add(new VertexCube(d, color, new Vector2(0, 1), normal));
 			}
 			else
 			{
-				vertices.Add(new VertexPositionColorTextureNormal(a, color, new Vector2(0, 0), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(b, color, new Vector2(1, 0), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(c, color, new Vector2(1, 1), normal));
-				vertices.Add(new VertexPositionColorTextureNormal(d, color, new Vector2(0, 1), normal));
+				vertices.Add(new VertexCube(a, color, new Vector2(0, 0), normal));
+				vertices.Add(new VertexCube(b, color, new Vector2(1, 0), normal));
+				vertices.Add(new VertexCube(c, color, new Vector2(1, 1), normal));
+				vertices.Add(new VertexCube(d, color, new Vector2(0, 1), normal));
 			}
 		}
 

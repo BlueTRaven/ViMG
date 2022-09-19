@@ -39,7 +39,7 @@ namespace ViMG
 		public static ViMGAssetsManager assetsManager;
 		public static RegistryService Registry;
 
-		public static DelayedUploader<VertexPositionColorTextureNormal, int> DelayedUploaderChunkMesh = new DelayedUploader<VertexPositionColorTextureNormal, int>();
+		public static DelayedUploader<VertexCube, int> DelayedUploaderChunkMesh = new DelayedUploader<VertexCube, int>();
 
 		public static FrameCounter frameCounter;
 
@@ -300,7 +300,7 @@ namespace ViMG
 					world.Update(deltaTime);
 			}
 
-			Renderer.Update();
+			Renderer.Update(deltaTime);
 
 			CubeLitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
 			CubeUnlitEffect.Parameters["CameraPos"].SetValue(-camera.Position);

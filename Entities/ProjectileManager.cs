@@ -97,7 +97,7 @@ namespace ViMG.Entities
 
 		private Projectile[] projectiles = new Projectile[1024];
 
-		private SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		private SimpleMesh<VertexCube, int> mesh;
 
 		public ProjectileManager(GraphicsDevice device)
 		{
@@ -114,7 +114,7 @@ namespace ViMG.Entities
 			Vector2 ctx = new Vector2(1, 0);
 			Vector2 dtx = new Vector2(0, 0);
 
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			int offset = vertices.Count;
@@ -125,12 +125,12 @@ namespace ViMG.Entities
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(c, Color.White, ctx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexPositionColorTextureNormal(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices);
+			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
 		}
 
 		public void Update(World world, double deltaTime)

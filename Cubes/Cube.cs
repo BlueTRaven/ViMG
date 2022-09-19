@@ -13,6 +13,22 @@ namespace ViMG.Cubes
 {
 	public class Cube : IRegisterable
 	{
+		public struct CubeAnimation
+        {
+			public float FrameTime;
+			public int NumFrames;
+
+			public readonly bool Valid;
+
+			public CubeAnimation(float frameTime, int numFrames)
+            {
+				this.FrameTime = frameTime;
+				this.NumFrames = numFrames;
+
+				Valid = true;
+            }
+        }
+
 		public struct CubeInstance
 		{
 			public Chunk chunk;
@@ -141,6 +157,13 @@ namespace ViMG.Cubes
 			5,  //32 - back
 		};
 
+		public enum RenderPass
+        {
+			Opaque,
+			Transparent,
+			Fluid
+        }
+
 		public enum TransparencyValue
 		{
 			Opaque,
@@ -162,7 +185,7 @@ namespace ViMG.Cubes
 		private readonly RectangleF sourceRect;
 		private readonly Color tintColor;
 
-		public SimpleMesh<VertexPositionColorTextureNormal, int> mesh;
+		public SimpleMesh<VertexCube, int> mesh;
 
 		public int MineProgressRequirement;
 		public bool Solid = true;
@@ -202,12 +225,12 @@ namespace ViMG.Cubes
 			Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
 
-		public RectangleF GetSourceRect()
+		public virtual RectangleF GetSourceRect(RenderPass pass)
 		{
 			return sourceRect;
 		}
 
-		public RectangleF GetSourceRect(MeshHelper.CubeFace face)
+		public virtual RectangleF GetSourceRect(RenderPass pass, MeshHelper.CubeFace face)
 		{
 			if (cubeFaceLookup[(int)face] != -1)
 			{
@@ -237,6 +260,11 @@ namespace ViMG.Cubes
 			return RectangleF.Empty;
 		}
 
+		public virtual CubeAnimation GetAnimation()
+        {
+			return new CubeAnimation();
+        }
+
 		public virtual void GetDrops(List<ItemInstance> itemsToDrop)
 		{
 
@@ -251,6 +279,11 @@ namespace ViMG.Cubes
 		{
 			return true;
 		}
+
+		public virtual void OnMined(Player player, CubePosition position)
+        {
+
+        }
 
 		public virtual void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
 		{
@@ -267,24 +300,36 @@ namespace ViMG.Cubes
 
 		}
 
-		public SimpleMesh<VertexPositionColorTextureNormal, int> GetMesh(GraphicsDevice device)
+		public SimpleMesh<VertexCube, int> GetMesh(GraphicsDevice device)
 		{
 			if (mesh == null)
 			{
-				List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.MakeCubeVerts(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
+				ChunkMesher.MakeCubeVerts(0, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
 
-				mesh = new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
 
 			return mesh;
 		}
 
-		public virtual void MakeVerts(Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexPositionColorTextureNormal> vertices, List<int> indices)
+		public virtual void MakeVerts(RenderPass pass, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {
-			ChunkMesher.MakeCubeVerts(min, max, visual, cube, vertices, indices);
+			if (Transparency == TransparencyValue.Invisible)
+				return;
+
+			//Opaque cubes only generate a mesh in the opaque pass.
+			if (Transparency == TransparencyValue.Opaque && pass == RenderPass.Transparent)
+				return;
+			//Transparent cubes may generate a mesh in both the opaque and the transparent pass.
+			//however, by default, assume we only want to generate in the opaque pass.
+			//Transparent cubes with both opaque and transparent components may override MakeVerts to generate.
+			if (Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings && pass == RenderPass.Transparent)
+				return;
+
+			ChunkMesher.MakeCubeVerts(pass, min, max, visual, cube, vertices, indices);
         }
 
 		public Color GetTintColor()
@@ -297,9 +342,9 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
 		}
 
-		public static SimpleMesh<VertexPositionColorTextureNormal, int> MakeCubeWithCorrectedTextureCoordinates(GraphicsDevice device, Color color, Texture2D texture)
+		public static SimpleMesh<VertexCube, int> MakeCubeWithCorrectedTextureCoordinates(GraphicsDevice device, Color color, Texture2D texture)
 		{
-			List<VertexPositionColorTextureNormal> vertices = new List<VertexPositionColorTextureNormal>();
+			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector3 min = Vector3.Zero;
@@ -326,10 +371,10 @@ namespace ViMG.Cubes
 
 			MakeQuad(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices, texture);
 
-			return new SimpleMesh<VertexPositionColorTextureNormal, int>(device, vertices, indices, texture);
+			return new SimpleMesh<VertexCube, int>(device, vertices, indices, texture);
 		}
 
-		private static void MakeQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexPositionColorTextureNormal> vertices, List<int> indices, Texture2D texture)
+		private static void MakeQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, Texture2D texture)
 		{
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -344,10 +389,10 @@ namespace ViMG.Cubes
 			float ymin = 0;
 			float ymax = 1f / ((float)texture.Height / 16f);
 
-			vertices.Add(new VertexPositionColorTextureNormal(a, color, new Vector2(xmin, ymin), normal));
-			vertices.Add(new VertexPositionColorTextureNormal(b, color, new Vector2(xmax, ymin), normal));
-			vertices.Add(new VertexPositionColorTextureNormal(c, color, new Vector2(xmax, ymax), normal));
-			vertices.Add(new VertexPositionColorTextureNormal(d, color, new Vector2(xmin, ymax), normal));
+			vertices.Add(new VertexCube(a, color, new Vector2(xmin, ymin), normal));
+			vertices.Add(new VertexCube(b, color, new Vector2(xmax, ymin), normal));
+			vertices.Add(new VertexCube(c, color, new Vector2(xmax, ymax), normal));
+			vertices.Add(new VertexCube(d, color, new Vector2(xmin, ymax), normal));
 		}
 	}
 }

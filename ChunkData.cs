@@ -106,6 +106,11 @@ namespace ViMG
 			return cubes;
 		}
 
+		public Cube.CubeVisualInstance[] GetAllVisuals()
+        {
+			return cubeVisualInstances;
+        }
+
 		public ushort GetRaw(CubePosition position)
 		{
 			if (IsDefault)
@@ -388,6 +393,7 @@ namespace ViMG
 
 						if (trackingEntity.HasValue())
 							trackingEntity.Get().TrackingCubeDestroyed(chunk.GetWorld(), chunk.GetChunkManager());
+						
 					}
 				}
 
