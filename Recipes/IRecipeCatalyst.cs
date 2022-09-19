@@ -10,7 +10,5 @@ namespace ViMG.Recipes
 		void RegisterRecipes(List<Recipe> recipes);
 
 		void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale);
-
-		//void DoCatalystUI();
 	}
 }

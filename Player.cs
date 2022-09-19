@@ -14,9 +14,38 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[Serializable]
-	[EntityMeta(4, 0)]
+	[EntityMeta(5, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
+		public struct AccumulatedStats
+        {
+			public int AdditionalHP;
+			public int Defense;
+			public float KnockbackResist;
+			public float Speed;			//Adds to xz max velocity
+			public float Acceleration;  //Adds to xz accel
+			public float JumpSpeed;
+			public int JumpNum;
+			public float InvulnTime;
+			public float UseSpeed;
+
+			public static AccumulatedStats operator +(AccumulatedStats a, AccumulatedStats b)
+            {
+				return new AccumulatedStats()
+				{
+					AdditionalHP = a.AdditionalHP + b.AdditionalHP,
+					Defense = a.Defense + b.Defense,
+					KnockbackResist = a.KnockbackResist + b.KnockbackResist,
+					Speed = a.Speed + b.Speed,         
+					Acceleration = a.Acceleration + b.Acceleration, 
+					JumpSpeed = a.JumpSpeed + b.JumpSpeed,
+					JumpNum = a.JumpNum + b.JumpNum,
+					InvulnTime = a.InvulnTime + b.InvulnTime,
+					UseSpeed = a.UseSpeed + b.UseSpeed,
+				};
+            }
+        }
+
 		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
 		public const int GROUP_PLAYER_DEAL_SOURCE = 2;
 
@@ -37,12 +66,12 @@ namespace ViMG
 
 		public Vector3 Velocity;
 
-		private float moveSpeed = 8;
+		private float moveSpeed = Cube.CUBE_SCALE * 0.4f;
 		public Vector3 MaxVelocity = new Vector3(3.2f, 17, 3.2f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocityRunning = new Vector3(6.4f, 17, 6.4f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
 
-		public float jumpVelocity = 12.8f * Cube.CUBE_SCALE;
+		public float jumpSpeed = 10f * Cube.CUBE_SCALE;
 
 		private MouseState currentMS;
 		private MouseState originalMS;
@@ -95,11 +124,13 @@ namespace ViMG
 
 		private Inventory inventory;
 		private Inventory craftInventory;
+		private Inventory accessoryInventory;
 		private UIInventory currentUI;
 		private UIInventoryPlayer uiPlayer;
 
 		public int health;
 		public int maxHealth = 20;
+		private AccumulatedStats stats;
 		
 		public Player()
 		{
@@ -111,6 +142,7 @@ namespace ViMG
 			originalMS = Mouse.GetState();
 			Rotation = Main.camera.Rotation;
 
+			accessoryInventory = new Inventory(3);  //TODO deadPlayer.GetAccessoryInventory(); - Get rid of this
 			craftInventory = new Inventory(8);
 
 			health = maxHealth;
@@ -122,6 +154,7 @@ namespace ViMG
 			invulnTimer = 6f;	//6 seconds of invuln after respawning
 
 			inventory = deadPlayer.GetInventory();
+			accessoryInventory = new Inventory(3);	//TODO deadPlayer.GetAccessoryInventory();
 			SpawnPosition = deadPlayer.SpawnPosition;
 			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
 
@@ -133,7 +166,7 @@ namespace ViMG
 
 			craftInventory = new Inventory(8);
 
-			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory, accessoryInventory);
 			currentUI = uiPlayer;
 
 			health = maxHealth / 4;
@@ -142,8 +175,9 @@ namespace ViMG
 		public void FirstCreated()
 		{
 			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
+			accessoryInventory = new Inventory(3);
 
-			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory, accessoryInventory);
 			currentUI = uiPlayer;
 
 			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
@@ -195,8 +229,6 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			//world.ChunkLoadManager.UpdateLoadTarget(Position);
-
 			if (Main.Debug)
 				state = State.Noclip;
 			else if (state == State.Noclip)
@@ -209,6 +241,8 @@ namespace ViMG
 				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, 0, -1, -1f);
 			else if (state != State.Noclip)
 				world.HitboxManager.Update(hurtbox, Bounds);
+
+			UpdateStats();
 
 			if (state == State.Noclip)
 			{
@@ -406,6 +440,23 @@ namespace ViMG
 			lookAtColSine = (float)(Math.Sin(2 * Math.PI * ((alive % lookAtColTimeMax) / lookAtColTimeMax)) + 1f) / 2f;
 		}
 
+		private void UpdateStats()
+		{
+			AccumulatedStats accumulatedStats = new AccumulatedStats();
+
+			for (int i = 0; i < accessoryInventory.NumSlots; i++)
+			{
+				ItemInstance item = accessoryInventory.Get(i);
+
+				if (item.valid)
+				{
+					item.item.AccumulateStats(this, accessoryInventory, i, ref accumulatedStats);
+				}
+			}
+
+			stats = accumulatedStats;
+		}
+
 		private void UpdateMovement(double deltaTime)
 		{
 			if (state == State.Noclip)
@@ -463,29 +514,33 @@ namespace ViMG
 					if (running)
 						actualMaxVel = MaxVelocityRunning;
 
+					actualMaxVel += new Vector3(stats.Speed, 0, stats.Speed);
+
+					float actualAcceleration = moveSpeed + stats.Acceleration;
+
 					if (Main.inputManager.IsPressed(Keys.W))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed / 20f * Cube.CUBE_SCALE;
+						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.S))
 					{
-						Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed / 20f * Cube.CUBE_SCALE;
+						Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.A))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.Right) * moveSpeed / 20f * Cube.CUBE_SCALE;
+						Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.D))
 					{
-						Velocity += Vector3.Normalize(Main.camera.Right) * moveSpeed / 20f * Cube.CUBE_SCALE;
+						Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (onGround && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = jumpVelocity;
+						Velocity.Y = jumpSpeed + stats.JumpSpeed;
 						onGround = false;
 					}
 
@@ -554,8 +609,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Remove(this);	//kill player
+				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
 				//world.EntityManager.Add(new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
@@ -870,7 +924,7 @@ namespace ViMG
 
 					state = State.Hurt;
 
-					health -= other.damage;
+					health -= DamageCalculation(other);
 
 					if (health <= 0)
                     {
@@ -882,6 +936,32 @@ namespace ViMG
 				}
 			}
 		}
+
+		private int DamageCalculation(HitboxManager.Hitbox hitbox)
+        {
+			float defenseCalc = (float)stats.Defense * 0.5f;
+
+			float damage = (float)hitbox.damage - defenseCalc;
+
+			if ((int)damage <= 0)
+			{
+				//If we have enough defense, negate damage entirely. Otherwise, max is 1.
+				//Player must have at least 10 defense before this negation can be applied.
+				if (stats.Defense > 10 && stats.Defense > hitbox.damage * 3)
+					damage = 0;
+				else damage = 1;
+			}
+
+			return (int)damage;
+        }
+
+		public void Heal(int amt)
+        {
+			health += amt;
+
+			if (health > maxHealth + stats.AdditionalHP)
+				health = maxHealth + stats.AdditionalHP;
+        }
 
 		public override void OnSave(List<byte> saveBytes)
 		{
@@ -918,7 +998,7 @@ namespace ViMG
 
 			inventory = Inventory.Load(loadBytes, ref index);
 
-			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory);
+			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory, accessoryInventory);
 			currentUI = uiPlayer;
 
 			if (version == 4)

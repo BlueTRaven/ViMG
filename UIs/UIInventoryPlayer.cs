@@ -14,8 +14,20 @@ namespace ViMG.UIs
 		private Player player;
 		private Inventory inventory;
 		private Inventory craftInventory;
+		private Inventory accessoryInventory;
 
-		public int HoverIndex;
+		private static string[] tagsLegs = new string[1] { "armor_legs" };
+		private static string[] tagsBody = new string[1] { "armor_body" };
+		private static string[] tagsHead = new string[1] { "armor_head" };
+
+		private static string[][] tagsAccessoriesBySlot = new string[3][]
+		{
+			tagsLegs,
+			tagsBody,
+			tagsHead,
+		};
+
+        public int HoverIndex;
 		public int HighlightIndex;
 		public bool Opened;
 
@@ -26,15 +38,15 @@ namespace ViMG.UIs
 
 		private int DEBUGItemListScrollRow = 0;
 
-		public UIInventoryPlayer(Player player, Inventory playerInventory, Inventory craftInventory)
+		public UIInventoryPlayer(Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory)
 		{
 			this.player = player;
 
 			this.inventory = playerInventory;
 
 			this.craftInventory = craftInventory;
-
-			playerInventory.Get(HighlightIndex).item.StartHold(player, playerInventory, HighlightIndex);
+            this.accessoryInventory = accessoryInventory;
+            playerInventory.Get(HighlightIndex).item.StartHold(player, playerInventory, HighlightIndex);
 		}
 
 		public override void Update()
@@ -173,6 +185,36 @@ namespace ViMG.UIs
 				}
 
 				UI.EndParent();
+
+				UI.EndParent();
+
+				UI.StartParent(new Vector2(MARGIN, 192));
+
+				for (int i = 0; i < 3; i++)
+				{
+					pos = new Vector2(i * SIZE, 0);
+					bounds = new RectangleF(pos, SIZE, SIZE);
+
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+									accessoryInventory.Get(i));
+
+					if (!accessoryInventory.Get(i).valid)
+						UI.MakeTexture(new RectangleF(SIZE * i, 0, 16, 16), 
+							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
+
+					var output = UIInventoryHelper.ItemSlotClickOutput.None;
+					if ((output = UIInventoryHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, ref held,
+						new UIInventoryHelper.WhitelistTag(tagsAccessoriesBySlot[i]))) != UIInventoryHelper.ItemSlotClickOutput.None)
+					{
+						if (output == UIInventoryHelper.ItemSlotClickOutput.NeedsSwapInventory)
+						{
+							UIInventoryHelper.SwapInventory(accessoryInventory, inventory, i);
+						}
+
+						craftInventoryUpdated = true;
+					}
+				}
 
 				UI.EndParent();
 

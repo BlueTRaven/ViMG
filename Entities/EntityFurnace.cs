@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
@@ -7,7 +8,7 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
 	[Serializable]
-	[EntityMeta(1, 0)]
+	[EntityMeta(2, 0)]
 	public class EntityFurnace : Entity, ICubeTracker
 	{
 		public CubePosition TrackedPosition 
@@ -17,15 +18,20 @@ namespace ViMG.Entities
 		}
 
 		private Inventory inventory;
+		public MeshHelper.CubeFace Facing;
+
+		private float craftTimer;
+		private int light = -1;
 
 		public EntityFurnace()
 		{
 
 		}
 
-		public EntityFurnace(CubePosition position)
+		public EntityFurnace(CubePosition position, MeshHelper.CubeFace facing)
 		{
 			this.TrackedPosition = position;
+			this.Facing = facing;
 
 			inventory = new Inventory(5);
 		}
@@ -38,25 +44,49 @@ namespace ViMG.Entities
 
 			if (!tracker.HasValue() || tracker.Get() != this)
 				world.EntityManager.Remove(this);
+
+			world.ChunkManager.MarkDirty(ChunkPosition.CubeChunk(TrackedPosition), true);
 		}
 
-		public void TrackingCubeDestroyed(World world, ChunkManager cm)
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+			craftTimer -= (float)deltaTime;
+
+			if (craftTimer <= 0 && light != -1)
+            {
+				world.LightManager.Remove(light);
+				light = -1;
+            }
+        }
+
+        public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
 			world.EntityManager.Remove(this);
 		}
 
 		public bool OnInteract(Player player)
 		{
-			player.OpenUI(new UIInventoryFurnace(player, player.GetInventory(), inventory));
+			player.OpenUI(new UIInventoryFurnace(player, player.GetInventory(), inventory, this));
 
 			return true;
 		}
+
+		public void OnCraft()
+        {
+			craftTimer = 3f;
+
+			if (light == -1)
+				light = world.LightManager.Add(Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.OrangeRed);
+        }
 
 		public override void OnSave(List<byte> saveBytes)
 		{
 			base.OnSave(saveBytes);
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+			SaveHelper.SaveInt32(saveBytes, (int)Facing);
 			inventory.Save(saveBytes);
 		}
 
@@ -69,6 +99,9 @@ namespace ViMG.Entities
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace(null);
 
+			//if (version == 2)
+				Facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
+			
 			inventory = Inventory.Load(loadBytes, ref index);
 		}
 	}

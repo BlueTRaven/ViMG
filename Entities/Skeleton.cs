@@ -84,7 +84,7 @@ namespace ViMG.Entities
 			invulnTimer -= (float)deltaTime;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, Slime.GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, Slime.GROUP_ENEMYHOSTILE_SOURCE, 4, 1f);
 			else world.HitboxManager.Update(hitbox, Bounds);
 
 			Vector3 actualMaxVel = MaxVelocity;

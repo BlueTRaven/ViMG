@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,14 @@ namespace ViMG.Items
 			name = "Health Potion 1";
 			description = "A health potion. It smells surprisingly nice.";
 		}
-	}
+
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        {
+			player.Heal(10);
+
+			inventory.Remove(index, 1);
+
+			return base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+        }
+    }
 }

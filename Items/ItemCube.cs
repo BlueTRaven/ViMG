@@ -13,7 +13,7 @@ namespace ViMG.Items
 		private ushort cubeId;
 
 		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
-			cube.GetSourceRect(Cube.RenderPass.Opaque, MeshHelper.CubeFace.FRONT))
+			cube.GetSourceRect(Cube.RenderPass.Opaque, null, new CubePosition(), MeshHelper.CubeFace.FRONT))
 		{
 			this.cubeId = cubeId;
 		}

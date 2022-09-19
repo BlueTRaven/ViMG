@@ -51,26 +51,11 @@ namespace ViMG
 
 						int oldCount = vertices.Count;
 
-						cube.MakeVerts(pass, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, cube, vertices, indices);
+						cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, cube, vertices, indices);
 
 						int count = vertices.Count - oldCount;
 
 						BakeAO(world, chunk, pos, oldCount, oldCount + count, vertices);
-
-						var anim = cube.GetAnimation();
-
-						if (anim.Valid)
-                        {
-							for (int i = oldCount; i < oldCount + count; i++)
-                            {
-								var vertex = vertices[i];
-
-								vertex.AnimFrameTime = anim.FrameTime;
-								vertex.NumAnimFrames = anim.NumFrames;
-
-								vertices[i] = vertex;
-                            }
-                        }
 					}
 				}
 			}
@@ -188,7 +173,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeCubeVerts(Cube.RenderPass pass, Vector3 min, Vector3 max, Cube.CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
+		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, Cube.CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
 		{
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -200,25 +185,25 @@ namespace ViMG
 			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
-				MakeQuadVerts(pass, l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1), MeshHelper.CubeFace.FRONT, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1), MeshHelper.CubeFace.FRONT, cube, vertices, indices);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
-				MakeQuadVerts(pass, r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0), MeshHelper.CubeFace.RIGHT, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0), MeshHelper.CubeFace.RIGHT, cube, vertices, indices);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
-				MakeQuadVerts(pass, r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1), MeshHelper.CubeFace.BACK, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1), MeshHelper.CubeFace.BACK, cube, vertices, indices);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
-				MakeQuadVerts(pass, l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0), MeshHelper.CubeFace.LEFT, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0), MeshHelper.CubeFace.LEFT, cube, vertices, indices);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
-				MakeQuadVerts(pass, l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, -1, 0), MeshHelper.CubeFace.DOWN, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, -1, 0), MeshHelper.CubeFace.DOWN, cube, vertices, indices);
 
 			if ((visual.GetFaces() & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
-				MakeQuadVerts(pass, r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
+				MakeQuadVerts(pass, world, cp, r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
 		}
 
-		public static void MakeQuadVerts(Cube.RenderPass pass, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, MeshHelper.CubeFace face, Cube cube, 
+		public static void MakeQuadVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, MeshHelper.CubeFace face, Cube cube, 
 			List<VertexCube> vertices, List<int> indices)
 		{
 			int offset = vertices.Count;
@@ -235,7 +220,7 @@ namespace ViMG
 			const float cubeSideWidth = 1f / textureWidth;
 			const float cubeSideHeight = 1f / textureHeight;
 
-			RectangleF sourceRect = cube.GetSourceRect(pass, face);
+			RectangleF sourceRect = cube.GetSourceRect(pass, world, cp, face);
 
 			Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
 			Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
@@ -244,6 +229,21 @@ namespace ViMG
 			vertices.Add(new VertexCube(b, cube.GetTintColor(), new Vector2(uvNear.X, uvFar.Y), normal));
 			vertices.Add(new VertexCube(c, cube.GetTintColor(), new Vector2(uvNear.X, uvNear.Y), normal));
 			vertices.Add(new VertexCube(d, cube.GetTintColor(), new Vector2(uvFar.X, uvNear.Y), normal));
+
+			var anim = cube.GetAnimation(face, pass, world, cp);
+
+			if (anim.Valid)
+			{
+				for (int i = offset; i < 4; i++)
+				{
+					var vertex = vertices[i];
+
+					vertex.AnimFrameTime = anim.FrameTime;
+					vertex.NumAnimFrames = anim.NumFrames;
+
+					vertices[i] = vertex;
+				}
+			}
 		}
 	}
 }

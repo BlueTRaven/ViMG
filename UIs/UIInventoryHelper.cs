@@ -66,7 +66,27 @@ namespace ViMG.UIs
 			}
 		}
 
-		public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, int rows = 4, int columns = 8, float size = 16, float padding = 8)
+        public readonly struct WhitelistTag : IWhiteList
+        {
+			private readonly string[] tags;
+			public WhitelistTag(string[] tags)
+            {
+				this.tags = tags;
+            }
+
+            public bool Matches(Item item)
+            {
+				foreach (string tag in tags)
+                {
+					if (item.Tags.Contains(tag))
+						return true;
+                }
+
+				return false;
+            }
+        }
+
+        public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, int rows = 4, int columns = 8, float size = 16, float padding = 8)
 		{
 			for (int y = 0; y < rows; y++)
 			{

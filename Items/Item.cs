@@ -27,6 +27,7 @@ namespace ViMG.Items
 		public readonly RectangleF SourceRect;
 
 		public string Identifier { get; private set; }
+		public HashSet<string> Tags = new HashSet<string>();
 
 		protected string name = "";
 		protected string description = "";
@@ -75,6 +76,11 @@ namespace ViMG.Items
 
 		public virtual void Hold(Player player, Inventory inventory, int index) { }
 
+		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats)
+        {
+
+        }
+
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{
 			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix());
@@ -96,7 +102,7 @@ namespace ViMG.Items
 			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}
 
-		private static void MakeMesh(GraphicsDevice device)
+		protected static void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
 			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);

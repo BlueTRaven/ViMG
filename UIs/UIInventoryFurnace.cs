@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -18,13 +19,17 @@ namespace ViMG.UIs
 		private bool furnaceInventoryUpdated;
 		private Recipe currentRecipe;
 
+		private EntityFurnace furnace;
+
 		private Items.ItemInstance held;
 
-		public UIInventoryFurnace(Player player, Inventory playerInventory, Inventory furnaceInventory)
+		public UIInventoryFurnace(Player player, Inventory playerInventory, Inventory furnaceInventory, EntityFurnace furnace)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
 			this.furnaceInventory = furnaceInventory;
+
+			this.furnace = furnace;
 		}
 
 		public override void Update()
@@ -202,6 +207,8 @@ namespace ViMG.UIs
 						int overflow = furnaceInventory.Get(i).num - numLeft;
 						furnaceInventory.Remove(index, numLeft);
 						furnaceInventoryUpdated = true;
+
+						furnace.OnCraft();
 
 						if (overflow < 0)
 							numLeft -= Math.Abs(overflow);

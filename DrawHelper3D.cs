@@ -10,7 +10,7 @@ namespace ViMG
 {
 	public static class DrawHelper3D
 	{
-		public static void MakeXMeshVerts(Cube.RenderPass pass, Cube cube, Vector3 pos, List<VertexCube> vertices, List<int> indices)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, Cube cube, World world, Vector3 pos, List<VertexCube> vertices, List<int> indices)
         {
 			int verticesStart = vertices.Count;
 
@@ -24,7 +24,7 @@ namespace ViMG
 			const float cubeSideHeight = 1f / textureHeight;
 
 			//face doesn't matter, any works
-			RectangleF sourceRect = cube.GetSourceRect(pass);
+			RectangleF sourceRect = cube.GetSourceRect(pass, world, CubePosition.FromWorldSpace(pos));
 
 			Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
 			Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
@@ -131,12 +131,12 @@ namespace ViMG
 
 			int verticesEnd = vertices.Count;
 
-			ApplyCubeAnim(cube, vertices, verticesStart, verticesEnd);
+			ApplyCubeAnim(pass, world, CubePosition.FromWorldSpace(pos), cube, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
 		}
 
-		public static void ApplyCubeAnim(Cube cube, List<VertexCube> vertices, int verticesStart, int verticesEnd)
+		public static void ApplyCubeAnim(Cube.RenderPass pass, World world, CubePosition pos, Cube cube, MeshHelper.CubeFace face, List<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
-			Cube.CubeAnimation anim = cube.GetAnimation();
+			Cube.CubeAnimation anim = cube.GetAnimation(face, pass, world, pos);
 			if (anim.Valid)
 			{
 				for (int i = verticesStart; i < verticesEnd; i++)

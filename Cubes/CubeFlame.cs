@@ -18,12 +18,12 @@ namespace ViMG.Cubes
             Collision = CollisionValue.None;
         }
 
-        public override void MakeVerts(RenderPass pass, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
+        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {
 			if (pass != RenderPass.Opaque)
 				return;
 
-            DrawHelper3D.MakeXMeshVerts(pass, cube, pos, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos, vertices, indices);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -33,7 +33,7 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
 
-        public override CubeAnimation GetAnimation()
+        public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
         {
             return new CubeAnimation(0.125f, 3);
         }

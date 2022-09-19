@@ -24,12 +24,12 @@ namespace ViMG.Cubes
             DropSelf(itemsToDrop);
         }
 
-        public override void MakeVerts(RenderPass pass, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
+        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {
 			if (pass != RenderPass.Opaque)
 				return;
 
-			DrawHelper3D.MakeXMeshVerts(pass, cube, pos, vertices, indices);
+			DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos, vertices, indices);
         }
     }
 }

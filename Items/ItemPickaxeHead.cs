@@ -54,9 +54,11 @@ namespace ViMG.Items
 
 		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			Main.CubeLitEffect.Parameters["TintColor"].SetValue(color.ToVector3());
-			base.DrawInWorld(device, world, item, transform);
-			Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
+			if (meshItemQuadInWorld == null)
+				MakeMesh(device);
+
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
