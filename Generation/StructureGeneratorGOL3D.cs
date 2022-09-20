@@ -29,9 +29,9 @@ namespace ViMG.Generation
 
             for (int i = 0; i < range; i++)
             {
-                int width = state.random.Next(16, 64);
-                int height = state.random.Next(16, 64);
-                int depth = state.random.Next(16, 64);
+                int width = state.random.Next(32, 70);
+                int height = state.random.Next(32, 70);
+                int depth = state.random.Next(32, 70);
 
                 GOL3DSim sim = new GOL3DSim(state.random, width, height, depth, 15, 0.4f, 13, 10);
                 sim.DoSim();
@@ -65,7 +65,7 @@ namespace ViMG.Generation
 
                                 double placeAltar = state.random.NextDouble();
                                 //If the brick was placed, maybe place an altar on the empty space above it
-                                if (placeAltar < 0.25)
+                                if (placeAltar < 1f / 80f)
                                 {
                                     Util.ThreeDToOneD(new ValuePoint3D(point.x, point.y + 1, point.z), new ValuePoint3D(width, height, depth), out int upOne);
                                     data[upOne] = altarCube.Id;

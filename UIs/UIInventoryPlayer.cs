@@ -46,7 +46,7 @@ namespace ViMG.UIs
 
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
-            playerInventory.Get(HighlightIndex).item.StartHold(player, playerInventory, HighlightIndex);
+            playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
 		}
 
 		public override void Update()

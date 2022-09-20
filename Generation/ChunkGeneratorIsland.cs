@@ -187,7 +187,7 @@ namespace ViMG.Generation
 						if (pos.Y < sample - 64)
 						{
 							double shouldDoBigCave = GetRandom().NextDouble();
-							if (shouldDoBigCave < 1.0 / 400000.0)
+							if (shouldDoBigCave < 1.0 / 200000.0)
 							{
 								numBigCavesGenerated++;
 
@@ -203,10 +203,10 @@ namespace ViMG.Generation
 
 						if (pos.Y < sample - 64)
                         {
-							bool doIron = GetRandom().NextFloat() < 1f / 1024f;
-							bool doGlow = GetRandom().NextFloat() < 1f / 800f;
-							bool doTin = GetRandom().NextFloat() < 1f / 1024f;
-							bool doCopper = GetRandom().NextFloat() < 1f / 1024f;
+							bool doIron = GetRandom().NextFloat() < 1f / 512f;
+							bool doGlow = GetRandom().NextFloat() < 1f / 400f;
+							bool doTin = GetRandom().NextFloat() < 1f / 512f;
+							bool doCopper = GetRandom().NextFloat() < 1f / 512f;
 							if (doIron) 
 								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos, 
 									BlacklistOre, Span<ushort>.Empty);

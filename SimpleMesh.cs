@@ -89,7 +89,7 @@ namespace ViMG
 		public bool Use(GraphicsDevice device)
 		{
 			//Disables Forward renderer
-			return false;
+			//return false;
 
 			if (IsEmpty)
 				return false;
@@ -123,11 +123,11 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
-			if (effect.Name == "Effects/depth")
+			/*if (effect.Name == "Effects/depth")
             {
 				DrawDepth(device, effect, transform);
 				return;
-            }
+            }*/
 
 			//bandaid fix. I guess monogame doesn't correctly flush textures, so I do it manually here.
 			//TODO optimize this
@@ -170,14 +170,16 @@ namespace ViMG
 			}
 		}
 
-		public virtual void DrawDepth(GraphicsDevice device, Effect effect, Matrix transform)
+		public virtual void DrawDepth(GraphicsDevice device, Effect effect, Matrix transform, Matrix viewProj)
         {
 			if (!Use(device))
 				return;
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			Matrix wvp = transform * viewProj;
+
+			effect.Parameters["WorldViewProjection"].SetValue(wvp);
 
 			foreach (var pass in effect.CurrentTechnique.Passes)
 			{

@@ -14,7 +14,7 @@ namespace ViMG.Spawners
         private List<Slime> slimes = new List<Slime>();
         private List<SlimeBig> bigSlimes = new List<SlimeBig>();
 
-        public PSSlime(EntityManager entityManager) : base(0.5f, 1f,// / 32f, 
+        public PSSlime(EntityManager entityManager) : base(0.5f, 1f / 5f, 
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;

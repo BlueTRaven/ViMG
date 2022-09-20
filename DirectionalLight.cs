@@ -129,7 +129,7 @@ namespace ViMG
 
 				DrawOneCamera(device, camera, world);
 
-				lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+				//lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
 				var shadowMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 				shadowMatrix = shadowMatrix * texScaleBias;
@@ -224,6 +224,8 @@ namespace ViMG
 			Main.WVP.SetProjection(camera.GetProjectionMatrix());
 			Main.WVP.SetView(camera.GetViewMatrix());
 
+			Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+
 			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
 			{
 				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
@@ -242,7 +244,7 @@ namespace ViMG
 
 							if (mesh != null)
 							{
-								mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), transform);
+								mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), transform, viewProj);
 							}
 						}
 					}

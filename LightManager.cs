@@ -176,14 +176,15 @@ namespace ViMG
 					views[4] = Matrix.CreateLookAt(light.position, light.position + new Vector3(0, 0, 1), new Vector3(0, 1, 0));
 					views[5] = Matrix.CreateLookAt(light.position, light.position + new Vector3(0, 0, -1), new Vector3(0, 1, 0));
 
-					Main.WVP.SetProjection(proj);
+					//Main.WVP.SetProjection(proj);
 
 					for (int j = 0; j < 6; j++)
 					{
 						device.SetRenderTarget(lightsCubemaps[i], (CubeMapFace)j);
 						device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
-						Main.WVP.SetView(views[j]);
+						//Main.WVP.SetView(views[j]);
+						Matrix viewProj = views[j] * proj;
 
 						//TODO: fit drawn chunks more accurately. Right now we're drawing tons of unseen stuff
 						const int drawDist = 1;
@@ -205,7 +206,7 @@ namespace ViMG
 
 										if (mesh != null)
 										{
-											mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), transform);
+											mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), transform, viewProj);
 										}
 									}
 								}
