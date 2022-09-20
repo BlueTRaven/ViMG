@@ -18,7 +18,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 	
 	output.Position = mul(input.Position, WorldViewProjection);
-	output.Depth = output.Position.zw;
+	output.Depth = mul(input.Position, WorldViewProjection).zw;
 
 	return output;
 }

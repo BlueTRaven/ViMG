@@ -17,17 +17,20 @@ namespace ViMG
 			{
 				position = value;
 				viewDirty = true;
+				viewDirtyThisFrame = true;
 				frustumDirty = true;
 			}
 		}
 		private Vector3 rotation;
-		public Vector3 Rotation {
+		public Vector3 Rotation 
+		{
 			get => rotation;
 			set
 			{
 				rotation = value;
 				viewDirty = true;
 				frustumDirty = true;
+				viewDirtyThisFrame = true;
 			}
 		}
 		private Vector3 scale;
@@ -39,13 +42,18 @@ namespace ViMG
 				scale = value;
 				viewDirty = true;
 				frustumDirty = true;
+				viewDirtyThisFrame = true;
 			}
 		}
 
+		private bool viewDirtyThisFrame;
 		protected bool viewDirty;
 		protected Matrix viewMatrix;
+		private bool projectionDirtyThisFrame;
 		protected bool projectionDirty;
 		protected Matrix projectionMatrix;
+
+		public bool IsDirty => viewDirtyThisFrame || projectionDirtyThisFrame;
 
 		public Vector3 Forward
 		{
@@ -112,11 +120,10 @@ namespace ViMG
 				near = value;
 				frustumDirty = true;
 				projectionDirty = true;
+				projectionDirtyThisFrame = true;
 			}
 		}
 		private float far;
-
-        private readonly bool rotationAsDirection;
 
         public float Far
 		{
@@ -126,13 +133,14 @@ namespace ViMG
 				far = value;
 				frustumDirty = true;
 				projectionDirty = true;
+				projectionDirtyThisFrame = true;
 			}
 		}
 
 		private bool frustumDirty;
 		private BoundingFrustum frustum;
 
-		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far, bool rotationAsDirection = false)
+		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far)
 		{
 			this.position = startPosition;
 			this.rotation = startRotation;
@@ -140,9 +148,14 @@ namespace ViMG
 
 			this.near = near;
 			this.far = far;
-            this.rotationAsDirection = rotationAsDirection;
             viewDirty = true;
 		}
+
+		public void FrameBegin()
+        {
+			this.viewDirtyThisFrame = false;
+			this.projectionDirtyThisFrame = false;
+        }
 
 		public Matrix GetViewMatrix()
         {
@@ -153,18 +166,11 @@ namespace ViMG
 		{
 			if (viewDirty)
 			{
-				if (!rotationAsDirection)
-				{
-					viewMatrix = Matrix.CreateTranslation(-Position) *
-						Matrix.CreateRotationZ(Rotation.Z) *
-						Matrix.CreateRotationY(Rotation.Y) *
-						Matrix.CreateRotationX(Rotation.X) *
-						Matrix.CreateScale(scale);
-				}
-                else
-                {
-					viewMatrix = Matrix.CreateLookAt(-Position, -Position + Rotation, new Vector3(0, 1, 0)) * Matrix.CreateScale(scale);
-                }
+				viewMatrix = Matrix.CreateTranslation(-Position) *
+					Matrix.CreateRotationZ(Rotation.Z) *
+					Matrix.CreateRotationY(Rotation.Y) *
+					Matrix.CreateRotationX(Rotation.X) *
+					Matrix.CreateScale(scale);
 				viewDirty = false;
 			}
 

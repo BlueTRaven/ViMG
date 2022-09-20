@@ -131,6 +131,9 @@ namespace ViMG
 		public int health;
 		public int maxHealth = 20;
 		private AccumulatedStats stats;
+
+		private bool hasMoved;
+		private bool hasRotated;
 		
 		public Player()
 		{
@@ -229,6 +232,9 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
+			hasMoved = false;
+			hasRotated = false;
+
 			if (Main.Debug)
 				state = State.Noclip;
 			else if (state == State.Noclip)
@@ -254,9 +260,9 @@ namespace ViMG
 
 				UpdateMovement(deltaTime);
 
+				UpdateCollision(deltaTime);
+				
 				Position += Velocity * (float)deltaTime;
-
-				UpdateCollision();
 			}
 			else if (state == State.Attack)
 			{
@@ -267,9 +273,9 @@ namespace ViMG
 
 				UpdateMovement(deltaTime);
 
-				Position += Velocity * (float)deltaTime;
+				UpdateCollision(deltaTime);
 
-				UpdateCollision();
+				Position += Velocity * (float)deltaTime;
 
 				Vector3 dir = attackStateTargetPos - Position;
 				if (dir.Length() < PUSH_RADIUS)
@@ -428,8 +434,6 @@ namespace ViMG
 			currentUI.Update();
 			UpdateMouse();
 
-			Main.camera.Position = Position;
-
 			hitboxTimer -= (float)deltaTime;
 
 			useTimer -= (float)deltaTime;
@@ -469,6 +473,8 @@ namespace ViMG
 				if (Main.inputManager.IsHeld(Keys.LeftShift))
 					moveSpeed = MAX_CAM_SPEED;
 
+				Vector3 oldPos = Position;
+
 				if (Main.inputManager.IsPressed(Keys.W))
 					Position -= Vector3.Normalize(Main.camera.Forward) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.S))
@@ -477,6 +483,9 @@ namespace ViMG
 					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.D))
 					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed;
+
+				if (Position != oldPos)
+					hasMoved = true;
 
 				if (currentUI == uiPlayer && !uiPlayer.Opened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
 						Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
@@ -588,23 +597,26 @@ namespace ViMG
 				{
 					if (velXY.Length() > 0)
 					{
-						float scalar = 0.85f;
+						float decel = Cube.CUBE_SCALE / 2f;
 
 						if (!onGround)
-							scalar = 0.95f;
+							decel = Cube.CUBE_SCALE / 8f;
 
-						velXY = Vector2.Normalize(velXY) * velXY.Length() * scalar;
+						velXY = Vector2.Normalize(velXY) * MathF.Max(velXY.Length() - decel, 0);
 					}
 				}
 
 				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
-				if (Velocity.Y > 3.2f * Cube.CUBE_SCALE && Main.inputManager.JustReleased(Keys.Space))
-					Velocity.Y = 3.2f * Cube.CUBE_SCALE;
+				if (Velocity.Length() > float.Epsilon)
+					hasMoved = true;
+
+				if (Velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
+					Velocity.Y = Cube.CUBE_SCALE * 3.2f;
 
 				Velocity.Y += World.GRAVITY;
-				if (Velocity.Y > actualMaxVel.Y)
-					Velocity.Y = actualMaxVel.Y;
+				if (Velocity.Y < -actualMaxVel.Y)
+					Velocity.Y = -actualMaxVel.Y;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.V))
@@ -663,7 +675,7 @@ namespace ViMG
 			}
 		}
 
-		private void UpdateCollision()
+		private void UpdateCollision(double deltaTime)
 		{
 			onGround = false;
 
@@ -680,34 +692,51 @@ namespace ViMG
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							float off = (Cube.CUBE_SCALE * 0.75f);
-							Vector3 checkPos = Position - new Vector3(0, Bounds.Size.Y - off, 0);
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
-							{
-								Position = checkPos + new Vector3(0, Bounds.Size.Y - off, 0) + change;
+							float off = Cube.CUBE_SCALE * 0.75f;
 
-								if (change.Y > 0)
+							for (int i = 0; i < 4; i++)
+							{
+								Vector3 segmentVelocity = (Velocity / 4f * i) * (float)deltaTime;
+
+								Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - off, 0) + segmentVelocity;
+								Vector3 upperCheckPos = Position + segmentVelocity;
+
+								bool collided = false;
+
+								if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, Cube.CUBE_SCALE * 0.4f, out Vector3 lowerChange))
 								{
-									Velocity.Y = 0;
-									onGround = true;
-								}
-								else if (change.Y < 0)
-									Velocity.Y = 0;
-								else if (change.X != 0)
-									Velocity.X = 0;
-								else if (change.Z != 0)
-									Velocity.Z = 0;
-							}
-							else if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change1))
-							{
-								Position += change1;
+									Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - off, 0) + lowerChange;
 
-								if (change1.Y != 0)
-									Velocity.Y = 0;
-								else if (change1.X != 0)
-									Velocity.X = 0;
-								else if (change1.Z != 0)
-									Velocity.Z = 0;
+									if (lowerChange.Y > 0 && Velocity.Y <= 0)
+									{
+										Velocity.Y = 0;
+										onGround = true;
+									}
+									else if (lowerChange.Y < 0)
+										Velocity.Y = 0;
+									else if (lowerChange.X != 0)
+										Velocity.X = 0;
+									else if (lowerChange.Z != 0)
+										Velocity.Z = 0;
+
+									collided = true;
+								}
+                                else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, Cube.CUBE_SCALE * 0.4f, out Vector3 upperChange))
+                                {
+                                    Position = upperCheckPos + upperChange;
+
+                                    if (upperChange.Y != 0)
+                                        Velocity.Y = 0;
+                                    else if (upperChange.X != 0)
+                                        Velocity.X = 0;
+                                    else if (upperChange.Z != 0)
+                                        Velocity.Z = 0;
+
+                                    collided = true;
+                                }
+
+                                if (collided)
+									break;
 							}
 						}
 					}
@@ -717,6 +746,9 @@ namespace ViMG
 
 		private void UpdateMouse()
 		{
+			if (hasMoved)
+				Main.camera.Position = Position;
+
 			if (uiPlayer.Opened || currentUI != uiPlayer)
 				return;
 
@@ -729,16 +761,23 @@ namespace ViMG
 				Vector3 camRotation = Rotation;
 
 				Vector2 delta = new Vector2(originalMS.X, originalMS.Y) - new Vector2(currentMS.X, currentMS.Y);
-				camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
-				camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
 
-				if (camRotation.X > MathHelper.ToRadians(89))
-					camRotation.X = MathHelper.ToRadians(89);
-				else if (camRotation.X < -MathHelper.ToRadians(89))
-					camRotation.X = -MathHelper.ToRadians(89);
+				if (delta.Length() > float.Epsilon)
+				{
+					hasRotated = true;
 
-				Rotation = camRotation;
-				Main.camera.Rotation = Rotation;
+					camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
+					camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
+
+					if (camRotation.X > MathHelper.ToRadians(89))
+						camRotation.X = MathHelper.ToRadians(89);
+					else if (camRotation.X < -MathHelper.ToRadians(89))
+						camRotation.X = -MathHelper.ToRadians(89);
+
+					Rotation = camRotation;
+
+					Main.camera.Rotation = Rotation;
+				}
 			}
 		}
 
@@ -898,13 +937,6 @@ namespace ViMG
 
 		public void DrawDebug(GraphicsDevice device)
 		{
-			if (state == State.Noclip)
-			{
-				//DrawHelper3D.DrawAxesImmediate(device, Position - Main.camera.Forward * 40);
-
-				//if (hitbox != -1 && world.HitboxManager.Get(hitbox).active)
-					//DrawHelper3D.DrawCubeImmediate(device, world.HitboxManager.Get(hitbox).bounds.Position, world.HitboxManager.Get(hitbox).bounds.Size, Color.Red);
-			}
 		}
 
 		public World GetWorld()

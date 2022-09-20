@@ -260,6 +260,8 @@ namespace ViMG
 			if (Exit)
 				Exit();
 
+			camera.FrameBegin();
+
 			WorldLoaded = world.LoadedFolderName != null;
 
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);

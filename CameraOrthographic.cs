@@ -21,13 +21,6 @@ namespace ViMG
 			projectionDirty = true;
 		}
 
-		public CameraOrthographic(Vector3 position, Vector3 direction, float near, float far, Matrix view, Matrix projection) : base(position, direction, Vector3.One, near, far, true)
-        {
-			this.viewMatrix = view;
-			this.projectionMatrix = projection;
-			viewDirty = false;
-        }
-
         protected override Matrix GetViewMatrixInternal()
         {
 

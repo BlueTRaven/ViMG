@@ -120,6 +120,7 @@ namespace ViMG
 
 			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
 				new float[] { 1f / 50f,  1f / 25f, 1f / 10f, 1f / 2f});
+			directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -410,7 +411,7 @@ namespace ViMG
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
-			if (chunkDrawPositionsDirty || camPos != oldChunkPosition || (oldCameraRotation - Main.camera.Rotation).Length() > MathHelper.ToRadians(1))
+			if (chunkDrawPositionsDirty || Main.camera.IsDirty)
 			{
 				CulledChunkDrawPositions.Clear();
 
@@ -439,38 +440,27 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-            //if (!IsNight())
-            {
-                float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-				directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
+			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
+			if (CubePosition.FromWorldSpace(player.Position).Y > 180) 
+			{
+				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
+				{
+					float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
+                    directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+                        Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
 
-				float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
-				//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
-				Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
-				Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+                    float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
+					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				}
 			}
 
 			if (Main.inputManager.JustPressed(Keys.F1))
 			{
-				if (!File.Exists("./HEIGHTMAP_OUT.png"))
-					File.Create("./HEIGHTMAP_OUT.png");
-
-				//Some dumbass shit to wait for the file to be created.
-				while (true)
-				{
-					try
-					{
-						using (FileStream fs = new FileStream("./HEIGHTMAP_OUT.png", FileMode.Truncate))
-						{
-							heightMapTexture.SaveAsPng(fs, sizeInCubes, sizeInCubes);
-						}
-
-						break;
-					}
-					catch { }
-				}
+				
 			}
 		}
 
@@ -497,7 +487,7 @@ namespace ViMG
 			Stopwatch drawTime = Stopwatch.StartNew();
 
 			directionalLight.DrawShadowmap(device, this);
-			directionalLight.Bind(Main.CubeLitEffect);
+			//directionalLight.Bind(Main.CubeLitEffect);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 
 			LightManager.Draw(device);
@@ -505,13 +495,13 @@ namespace ViMG
 
 			//Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
 
-			device.SetRenderTarget(Main.WorldTarget);
+			//device.SetRenderTarget(Main.WorldTarget);
 			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);
-			device.Clear(SkyColor);
+			//device.Clear(SkyColor);
 
-			device.DepthStencilState = Main.genericDSS;
-			device.RasterizerState = Main.genericRS;
-			device.SamplerStates[2] = Main.clampSS;
+			//device.DepthStencilState = Main.genericDSS;
+			//device.RasterizerState = Main.genericRS;
+			//device.SamplerStates[2] = Main.clampSS;
 
 			bool drawSkybox = true;
 
@@ -526,12 +516,12 @@ namespace ViMG
 			camChunkPosWS.Y -= dist;
 			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 
-			if (!player.InWater)
+			/*if (!player.InWater)
 			{
 				Main.FogManager.Set(Math.Max(0, dist - 20 * Cube.CUBE_SCALE), dist, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), GetTimeOfDay());
 			}
 			else
-				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);
+				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);*/
 			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
 			foreach (ChunkPosition pos in CulledChunkDrawPositions)
@@ -585,14 +575,15 @@ namespace ViMG
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
 				}
 
-				//if (alphaNight > 0)
-                //{
+				if (alphaDay < 1)
+				{
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						//Matrix.CreateScale(1.001f) *
 						Matrix.CreateTranslation(camChunkPosWS),
 						Main.assetsManager.GetAsset<Texture2D>("skybox_night"),
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaNight));
-				//}
+				}
+
 				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
 					Matrix.CreateTranslation(camChunkPosWS), null));*/
@@ -638,7 +629,7 @@ namespace ViMG
 				}
 			}
 
-			LightManager.UpdateDatas(Main.CubeLitEffect);
+			//LightManager.UpdateDatas(Main.CubeLitEffect);
 			//LightManager.UpdateDatas(Main.Renderer.EffectDeferred);
 			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
 
@@ -649,25 +640,11 @@ namespace ViMG
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
 
 			//player.Draw(device);
-			player.DrawDebug(device);
+			//player.DrawDebug(device);
 		}
 
 		public void DrawShadowmap(GraphicsDevice device, Effect effect)
         {
-			//Draw a mesh that should obscure our shadowmap once the sun falls below the horizon.
-			//This point is always at sea level.
-			//We could use any mesh for this, but the sun mesh is convenient for the moment. We might have to change this later.
-			//This mesh only needs to be the width/height of the directional light so there's no bleeding.
-			/*meshSun.Draw(device, Main.CubeEffect,
-				Matrix.CreateRotationY(MathHelper.ToRadians(180)) *
-				Matrix.CreateScale((1f / 80f) * directionalLight.width, (1f / 80f) * directionalLight.height, 1) *
-				Matrix.CreateTranslation(new Vector3(0, -directionalLight.height, SUN_LIGHT_DISTANCE + 50)) *
-				Matrix.CreateTranslation(player.Position.X, ChunkGeneratorIsland.SEA_LEVEL * Cube.CUBE_SCALE, player.Position.Z));
-
-			meshSun.Draw(device, Main.CubeEffect,
-				Matrix.CreateScale((1f / 80f) * directionalLight.width, (1f / 80f) * directionalLight.height, 1) *
-				Matrix.CreateTranslation(new Vector3(0, -directionalLight.height, -(SUN_LIGHT_DISTANCE + 50))) *
-				Matrix.CreateTranslation(player.Position.X, ChunkGeneratorIsland.SEA_LEVEL * Cube.CUBE_SCALE, player.Position.Z));*/
 		}
 
 		public void DrawUI(SpriteBatch batch)
@@ -675,33 +652,14 @@ namespace ViMG
 			player.DrawUI(batch);
 		}
 
-		public void DrawWireframeCube(GraphicsDevice device, Vector3 position, Color? color = null)
+		/*public void DrawWireframeCube(GraphicsDevice device, Vector3 position, Color? color = null)
 		{
-			device.RasterizerState = Main.wireframeRS;
-
-			/*if (color.HasValue)
-			{
-				Main.BasicEffect.DiffuseColor = color.Value.ToVector3();
-			}*/
 			meshWireframeCube.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position));
-			/*if (color.HasValue)
-			{
-				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
-			}*/
 		}
 
 		public void DrawWireframeUnscaled(GraphicsDevice device, Vector3 position, Vector3 scale, Color? color = null)
 		{
-			/*if (color.HasValue)
-			{
-				Main.BasicEffect.DiffuseColor = color.Value.ToVector3();
-			}*/
 			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position) * Matrix.CreateScale(scale));
-			//meshWireframeUnscaled.Draw(device, Main.VertexPositionColorDebugEffect, Matrix.CreateScale(scale) * Matrix.CreateTranslation(position));
-			/*if (color.HasValue)
-			{
-				Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
-			}*/
 		}
 
 		public void DrawWireframeUnscaled(GraphicsDevice device, Rectangle3D bounds, Color? color = null)
@@ -712,7 +670,7 @@ namespace ViMG
 		public void DrawWireframe(GraphicsDevice device, Matrix transform, Color? color = null)
         {
 			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), transform);
-		}
+		}*/
 
 		public ChunkManager GetChunkManager()
 		{

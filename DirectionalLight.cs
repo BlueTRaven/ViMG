@@ -33,6 +33,11 @@ namespace ViMG
 
 		private RasterizerState rs;
 
+		public Texture2D WorldheightMap;
+
+		private int version;
+		private int lastUpdatedVersion;
+
 		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] splitDistances)
         {
 			int num = splitDistances.Length + 1;
@@ -90,21 +95,28 @@ namespace ViMG
 			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
-		public void UpdateCameras(Vector3 direction, Color color)
+		public void UpdateCameras(Vector3 direction, Color color, float clampY = -1)
         {
-			this.lightDirection = direction;
+			this.lightDirection = Vector3.Normalize(direction);
 			this.lightColor = color.ToVector3();
 
 			for (int i = 0; i < cameras.Length; i++)
             {
-				cameras[i].Update(direction);
+				cameras[i].Update(Vector3.Normalize(direction), clampY - (0.001f * i));
             }
 
-			camera.Update(direction);
+			//camera.Update(Vector3.Normalize(direction), clampY);
+
+			version++;
         }
 
         public void DrawShadowmap(GraphicsDevice device, World world)
 		{
+			if (lastUpdatedVersion == version)
+				return;
+
+			lastUpdatedVersion = version;
+
 			if (!Main.ENABLE_SHADOWS)
 			{
 				return;
@@ -157,8 +169,8 @@ namespace ViMG
 				cascadeScales[i] = new Vector4(cascadeScale, 1.0f);
 			}
 
-			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
-			Main.WVP.SetView(Main.camera.GetViewMatrix());
+			//Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
+			//Main.WVP.SetView(Main.camera.GetViewMatrix());
 		}
 
 		public void Bind(Effect effect)
@@ -179,6 +191,7 @@ namespace ViMG
 			//effect.Parameters["LightDirections"].SetValue(lightDirections);
 
 			effect.Parameters["LightDepthTextures"].SetValue(GetShadowmapBuffers());
+			effect.Parameters["WorldheightMap"].SetValue(WorldheightMap);
 		}
 
 		private Vector3[] corners = new Vector3[8];
@@ -221,8 +234,8 @@ namespace ViMG
 
 		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, World world)
         {
-			Main.WVP.SetProjection(camera.GetProjectionMatrix());
-			Main.WVP.SetView(camera.GetViewMatrix());
+			//Main.WVP.SetProjection(camera.GetProjectionMatrix());
+			//Main.WVP.SetView(camera.GetViewMatrix());
 
 			Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 

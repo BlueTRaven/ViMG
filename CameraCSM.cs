@@ -21,14 +21,14 @@ namespace ViMG
         private Matrix ourProj;
 
         public CameraCSM(Camera mainCamera, float near, float far, float prevSplit, float split) 
-            : base(Vector3.Zero, Vector3.Zero, Vector3.One, near, far, false)
+            : base(Vector3.Zero, Vector3.Zero, Vector3.One, near, far)
         {
             this.mainCamera = mainCamera;
             this.prevSplit = prevSplit;
             this.split = split;
         }
 
-        public void Update(Vector3 direction)
+        public void Update(Vector3 direction, float clampY = -1)
         {
             CalculateFrustumCorners();
 

@@ -10,10 +10,11 @@ sampler Sampler : register(s0);
 Texture2D Position			: register(t0);
 Texture2D Depth				: register(t1);
 Texture2D Normal			: register(t2);
+Texture2D WorldheightMap	: register(t3);
 
 sampler LightDepthSampler : register(s1);
 
-Texture2DArray LightDepthTextures : register(t3);
+Texture2DArray LightDepthTextures : register(t4);
 
 uint NumCascades;
 float CascadePlaneDistances[CASCADE_COUNT];
@@ -297,9 +298,11 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
 	float3 lightSpec = LightColor * spec;
 
+	float worldHeight = WorldheightMap.Sample(Sampler, float2(0.5, 1 - (position.y / (512.0 * 0.1)))).r;
+
 	float3 lightDiffuse = LightColor * ndotl * shadowColor;
 
-	return float4(lightDiffuse + lightSpec, 1);
+	return float4((lightDiffuse + lightSpec) * worldHeight, 1);
 }
 
 technique BasicColorDrawing

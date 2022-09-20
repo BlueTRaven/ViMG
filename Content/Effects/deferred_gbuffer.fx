@@ -3,9 +3,11 @@
 
 sampler Sampler : register(s0);
 
-Texture2D Diffuse : register(t0);
-Texture2D Specular : register(t1);
-Texture2D Emissive : register(t2);
+Texture2D Diffuse			: register(t0);
+Texture2D Specular			: register(t1);
+Texture2D Emissive			: register(t2);
+
+Texture2D WorldheightMapAmb	: register(t3);
 
 float4x4 World;
 float4x4 View;
@@ -87,7 +89,9 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 		discard;
 
 	PSOutputGBuffer output = (PSOutputGBuffer)0;
-	float3 ambient = albedoSample.rgb * AmbientStrength;
+	
+	float ambientWorldheight = WorldheightMapAmb.Sample(Sampler, float2(0.5, 1 - (input.PositionWS.y / (512.0 * 0.1)))).r;
+	float3 ambient = albedoSample.rgb * AmbientStrength * ambientWorldheight;
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb * input.Color.rgb;
 
 	float depth = input.DepthVS;

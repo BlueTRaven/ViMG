@@ -129,8 +129,6 @@ namespace ViMG.Rendering
         private RenderTarget2D normal;      //RGB normal data; A unused
         private RenderTarget2D ao;          //R AO data
 
-        private RenderTarget2D work;
-
         private RenderTarget2D output;
 
         //SetRenderTargets uses params, which constructs an implicit array every time it's called,
@@ -288,6 +286,7 @@ namespace ViMG.Rendering
         {
             device.RasterizerState = Main.genericRS;
             device.BlendState = noAlphaBlendBS;
+            device.DepthStencilState = DepthStencilState.Default;
         }
 
         public void Update(double deltaTime)

@@ -293,6 +293,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/island_preset_noise.png
 
+#begin Textures/lava_worldheight_map.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/lava_worldheight_map.png
+
 #begin Textures/mine.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -376,6 +388,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/stone_01.png
+
+#begin Textures/sun_worldheight_map.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/sun_worldheight_map.png
 
 #begin Textures/swrod.png
 /importer:TextureImporter
