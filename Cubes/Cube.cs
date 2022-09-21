@@ -188,7 +188,10 @@ namespace ViMG.Cubes
 		public SimpleMesh<VertexCube, int> mesh;
 
 		public int MineProgressRequirement;
-		public bool Solid = true;
+		public bool Touchable = true;
+
+		//Touchable objects may be collidable, but we assume it's not solid in such a scenario since the player can't interact with it in any way.
+		public bool Solid => Collision == CollisionValue.Collidable && Touchable;
 
 		public TransparencyValue Transparency;
 		public CollisionValue Collision = CollisionValue.Collidable;
@@ -324,9 +327,10 @@ namespace ViMG.Cubes
 			if (Transparency == TransparencyValue.Opaque && pass == RenderPass.Transparent)
 				return;
 			//Transparent cubes may generate a mesh in both the opaque and the transparent pass.
-			//however, by default, assume we only want to generate in the opaque pass.
+			//however, by default, assume we only want to generate in the opaque pass. The overwhelming majority of cubes will use
+			//boolean alpha.
 			//Transparent cubes with both opaque and transparent components may override MakeVerts to generate.
-			if (Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings && pass == RenderPass.Transparent)
+			if ((Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings) && pass == RenderPass.Transparent)
 				return;
 
 			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, visual, cube, vertices, indices);

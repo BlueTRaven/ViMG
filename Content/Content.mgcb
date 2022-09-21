@@ -73,6 +73,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/depth.fx
 
+#begin Effects/hdr.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/hdr.fx
+
 #begin Effects/t.fx
 /importer:EffectImporter
 /processor:EffectProcessor

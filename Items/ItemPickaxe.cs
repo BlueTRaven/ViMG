@@ -31,7 +31,8 @@ namespace ViMG.Items
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+				return player.world.GetChunkManager().IsInWorldBounds(pos) && 
+					player.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			var metaItem = Get(inventory.Get(index));
@@ -146,7 +147,8 @@ namespace ViMG.Items
 
 							if (player.GetWorld().GetChunkManager().IsInWorldBounds(minePos))
 							{
-								player.GetWorld().MineCube(minePos);
+								if (player.world.GetChunkManager().GetCube(minePos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+									player.GetWorld().MineCube(minePos);
 							}
 						}
 					}

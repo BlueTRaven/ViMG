@@ -29,6 +29,12 @@ namespace ViMG
 		private ushort[] cubes;
 		private Cube.CubeVisualInstance[] cubeVisualInstances;
 
+		public int Density = -1; //Number of solid cubes in this chunk.
+		public int Sparsity => Chunk.NUM_CUBES_IN_CHUNK - Density;
+
+		public bool Empty => Density == 0;
+		public bool Filled => Density == Chunk.NUM_CUBES_IN_CHUNK;
+
 		private Chunk chunk;
 
 		public bool IsDefault;
@@ -348,6 +354,7 @@ namespace ViMG
 			if (IsDefault)
 				throw new Exception("Cannot update data in sentinel chunk data.");
 
+			//Notify adjacent cubes
 			for (int i = 0; i < 6; i++)
 			{
 				ref CubePosition offset = ref offsets[i];
@@ -371,6 +378,8 @@ namespace ViMG
 			}
 		}
 
+		private float[] uploadArr = new float[1];
+
 		public void SetCube(CubePosition position, ushort id, bool markDirty = true, bool killTrackedEntities = true)
 		{
 			if (IsDefault)
@@ -379,33 +388,88 @@ namespace ViMG
 			if (Thread.CurrentThread != Main.MainThread && chunk.Initialized)
 				throw new Exception("Cannot set chunk outside of main thread after initialization.");
 
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-			
+			CubePosition positionCubeSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk);
+			CubePosition positionChunkSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position.InChunkSpace(chunk) : position;
+
+			ref ushort currentId = ref cubes[positionChunkSpace.X + Chunk.CHUNK_SIZE * (positionChunkSpace.Y + Chunk.CHUNK_SIZE * positionChunkSpace.Z)];
 			if (markDirty)
 			{
 				// no entities will be tracking while chunk is not initialized - skip this step
 				if (chunk.Initialized && killTrackedEntities)
 				{
-					if (GetRaw(position) != id)
+					if (currentId != id)
 					{
-						var trackingEntity = chunk.GetWorld().EntityManager.GetEntityTrackingPosition(position.InCubeSpace(chunk));
+						var trackingEntity = chunk.GetWorld().EntityManager.GetEntityTrackingPosition(positionCubeSpace);
 
 						if (trackingEntity.HasValue())
 							trackingEntity.Get().TrackingCubeDestroyed(chunk.GetWorld(), chunk.GetChunkManager());
-						
 					}
 				}
 
-				CubeUpdate(position, id);
+				CubeUpdate(positionChunkSpace, id);
 			}
 
-			cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)] = id;
+			int sizeInCubes = chunk.GetChunkManager().sizeInCubes;
+			ref float height = ref chunk.GetChunkManager().HeightmapRaw[positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X];
+
+			if (positionCubeSpace.Y > height * sizeInCubes)
+			{
+				//If we're modifying a position above the height and our cube is opaque,
+				//We can safely overwrite it.
+				Cube cube = Main.Registry.CubeRegistry.Get(id);
+
+				if (cube != null)
+				{
+					if (cube.Transparency == Cube.TransparencyValue.Opaque)
+					{
+						height = (float)positionCubeSpace.Y / sizeInCubes;
+						chunk.GetChunkManager().Heightmap.SetData(0, new Rectangle(positionCubeSpace.X, positionCubeSpace.Z, 1, 1), 
+							chunk.GetChunkManager().HeightmapRaw, positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X, 1);
+						//chunk.GetChunkManager().Heightmap.SetData(chunk.GetChunkManager().HeightmapRaw);
+					}
+				}
+			}
+			else if (positionCubeSpace.Y == (int)MathF.Round(height * sizeInCubes, MidpointRounding.ToEven))
+            {
+				int wheight = (int)MathF.Round(height * sizeInCubes, MidpointRounding.ToEven);
+				//Otherwise, if we're modifying the cube at the current height, we need to look down (starting from the height) 
+				//until we find the next opaque cube.
+				//TODO this might look down instead of up
+				for (int i = (int)wheight; i >= 0; i--)
+				{
+					Cube newCube = chunk.GetChunkManager().GetCube(new CubePosition(positionCubeSpace.X, i, positionCubeSpace.Z))
+						.GetOrDefault(Main.Registry.CubeRegistry.Air);
+					if (newCube.Transparency == Cube.TransparencyValue.Opaque)
+						height = (float)i;
+
+					chunk.GetChunkManager().Heightmap.SetData(0, new Rectangle(positionCubeSpace.X, positionCubeSpace.Z, 1, 1),
+							chunk.GetChunkManager().HeightmapRaw, positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X, 1);
+				}
+			}
+
+			currentId = id;
 
 			if (markDirty)
 			{
-				MarkDirty(position);
-				MarkAdjacentsDirty(position);
+				MarkDirty(positionChunkSpace);
+				MarkAdjacentsDirty(positionChunkSpace);
+			}
+		}
+
+		public void SetDensity(ushort oldId, ushort newId)
+        {
+			Cube oldCube = Main.Registry.CubeRegistry.Get(oldId);
+			Cube newCube = Main.Registry.CubeRegistry.Get(newId);
+
+			bool oldNotSolid = oldCube == null || !oldCube.Solid;
+			bool newNotSolid = newCube == null || !newCube.Solid;
+
+			if (oldNotSolid != newNotSolid)
+			{
+				if (newNotSolid)
+					Density--;
+				else
+					Density++;
 			}
 		}
 

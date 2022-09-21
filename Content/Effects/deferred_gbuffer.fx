@@ -2,12 +2,14 @@
 #include "vertex_structs.fxh"
 
 sampler Sampler : register(s0);
+sampler BilinearSampler : register(s1);
 
 Texture2D Diffuse			: register(t0);
 Texture2D Specular			: register(t1);
 Texture2D Emissive			: register(t2);
 
 Texture2D WorldheightMapAmb	: register(t3);
+Texture2D Heightmap			: register(t4);
 
 float4x4 World;
 float4x4 View;
@@ -92,6 +94,9 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 	
 	float ambientWorldheight = WorldheightMapAmb.Sample(Sampler, float2(0.5, 1 - (input.PositionWS.y / (512.0 * 0.1)))).r;
 	float3 ambient = albedoSample.rgb * AmbientStrength * ambientWorldheight;
+	//Note: this is sampled with a normal sampler
+	//float heightmapHeight = Heightmap.Sample(Sampler, float2(input.PositionWS.xz / 0.1 / 512)).r * 512;
+
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb * input.Color.rgb;
 
 	float depth = input.DepthVS;

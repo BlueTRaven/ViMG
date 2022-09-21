@@ -129,7 +129,8 @@ namespace ViMG.Rendering
         private RenderTarget2D normal;      //RGB normal data; A unused
         private RenderTarget2D ao;          //R AO data
 
-        private RenderTarget2D output;
+        private RenderTarget2D preTransparencyOutput;
+        private RenderTarget2D ldrOutput;
 
         //SetRenderTargets uses params, which constructs an implicit array every time it's called,
         //which is an allocation every frame. Don't do that. Just allocate one to start with...
@@ -141,9 +142,11 @@ namespace ViMG.Rendering
         public Effect EffectLightAccumPointLight;
         public Effect EffectDeferred;
         public Effect EffectTransparent;
+        public Effect EffectHDR;
 
         private BasicEffect EffectCopy;
         private SamplerState shadowBorderClampSS;
+        private SamplerState bilinearClampSS;
         private BlendState noAlphaBlendBS;
         private BlendState normalBS;
         private BlendState additiveBS;
@@ -193,6 +196,8 @@ namespace ViMG.Rendering
                 MaxAnisotropy = 0,
             };
 
+            bilinearClampSS = SamplerState.LinearClamp;
+
             noAlphaBlendBS = BlendState.Opaque;
             normalBS = BlendState.AlphaBlend;
             additiveBS = BlendState.Additive;
@@ -209,6 +214,7 @@ namespace ViMG.Rendering
             EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
             EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
             EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
+            EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
@@ -254,12 +260,13 @@ namespace ViMG.Rendering
             position?.Dispose();
             normal?.Dispose();
 
-            diffuse = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+            diffuse = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
             diffuse.Name = "Diffuse";
             lightAccum = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             lightAccum.Name = "Light Accumulation";
             depth = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             depth.Name = "Depth";
+            //TODO get rid of; use inverse wvp + depth to calculate
             position = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             position.Name = "Position (World Space)";
             normal = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
@@ -279,7 +286,8 @@ namespace ViMG.Rendering
                 ao,
             };
 
-            output = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            preTransparencyOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ldrOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
 
         public void SetPipelineState()
@@ -323,6 +331,8 @@ namespace ViMG.Rendering
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
                 EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
+
+                device.SamplerStates[1] = bilinearClampSS;
 
                 foreach (GBufferDraw draw in DrawsPassGBuffer)
                 {
@@ -418,9 +428,7 @@ namespace ViMG.Rendering
                 //DrawFullscreenQuad(EffectLightAccumPointLight);
             }
 
-            //TODO transparent pass
-
-            device.SetRenderTarget(output);
+            device.SetRenderTarget(preTransparencyOutput);
             device.Clear(ClearOptions.Target, Color.Black, 0, 0);
             device.BlendState = noAlphaBlendBS;
 
@@ -437,13 +445,12 @@ namespace ViMG.Rendering
             device.SetRenderTarget(diffuse);
             device.Clear(ClearOptions.Target, Color.Black, 0, 0);
             device.DepthStencilState = noDepthReadWriteDSS; //disable reading and writing the depth buffer.
-            EffectCopy.Texture = output;
+            EffectCopy.Texture = preTransparencyOutput;
             DrawFullscreenQuad(EffectCopy);
 
             device.DepthStencilState = depthReadNoWriteDSS;
             device.BlendState = BlendState.AlphaBlend;
 
-            //TODO: use a custom shader for this?
             //TODO sorting should be done in update, not draw
             DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
@@ -474,6 +481,14 @@ namespace ViMG.Rendering
                 }
             }
 
+            device.SetRenderTarget(ldrOutput);
+            device.Clear(Color.Black);
+            EffectHDR.Parameters["Texture"].SetValue(diffuse);
+            //EffectHDR.Parameters["Exposure"].SetValue(...);
+            device.SetVertexBuffer(vboQuad);
+            device.Indices = iboQuad;
+            DrawFullscreenQuad(EffectHDR);
+
             EffectCopy.View = Matrix.Identity;
             EffectCopy.Projection = Matrix.Identity;
             EffectCopy.World = Matrix.Identity;
@@ -498,7 +513,7 @@ namespace ViMG.Rendering
         public RenderTargetBinding GetOutput()
         {
             if (currentOutput == -1)
-                return diffuse;
+                return ldrOutput;
             else return targets[currentOutput];
         }
     }

@@ -36,7 +36,7 @@ namespace ViMG.UIs
             saver = new WorldSaver(null, null, null);
         }
 
-        public void Update(World world)
+        public void Update(GraphicsDevice device, World world)
         {
             UI.Start();
 
@@ -62,7 +62,7 @@ namespace ViMG.UIs
                 {
                     if (Main.SessionInformation.LastLoadedSave != null)
                     {
-                        world.LoadWorld(Main.SessionInformation.LastLoadedSave);
+                        world.LoadWorld(device, Main.SessionInformation.LastLoadedSave);
                         Main.MouseControl = false;
                         Main.DrawCursor = false;
                     }
@@ -94,7 +94,7 @@ namespace ViMG.UIs
                             UI.MakeLabel("Load " + directories[i], fi, 128, new Vector2(0, ypos)),
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                         {
-                            world.LoadWorld(directories[i]);
+                            world.LoadWorld(device, directories[i]);
 
                             Main.MouseControl = false;
                             Main.DrawCursor = false;
@@ -107,7 +107,7 @@ namespace ViMG.UIs
                         UI.MakeLabel("Create New", fi, 128, new Vector2(0, fypos)),
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                     {
-                        world.LoadWorld("new" + directories.Length);
+                        world.LoadWorld(device, "new" + directories.Length);
 
                         Main.MouseControl = false;
                         Main.DrawCursor = false;

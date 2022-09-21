@@ -14,7 +14,7 @@ namespace ViMG.Entities
     [EntityMeta(0, 0)]
     public class Sapling : Entity, ICubeTracker
     {
-        private static SimpleMesh<VertexCube, int> xMesh;
+		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
 
         private float toGrowTimer;
 		private float toGrowTime;
@@ -95,13 +95,13 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-			if (xMesh == null)
+			if (mesh.vbo == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(xMesh.texture,
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, xMesh.VBO, xMesh.IBO,
-				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-				Matrix.CreateTranslation(Position), GetSourceRect()));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
+				Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.vbo, mesh.ibo,
+				Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), GetSourceRect()));
 		}
 
 		private RectangleF GetSourceRect()
@@ -114,85 +114,18 @@ namespace ViMG.Entities
 
         private void MakeMesh(GraphicsDevice device)
         {
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2, 0, -Cube.CUBE_SCALE / 2);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-			Vector3 e = new Vector3(min.X, min.Y, max.Z) + new Vector3(-max.X, 0, -max.Z);
-			Vector3 f = new Vector3(max.X, min.Y, max.Z) + new Vector3(-max.X, 0, -max.Z);
-			Vector3 g = new Vector3(max.X, max.Y, max.Z) + new Vector3(-max.X, 0, -max.Z);
-			Vector3 h = new Vector3(min.X, max.Y, max.Z) + new Vector3(-max.X, 0, -max.Z);
-
-			e = Vector3.Transform(e, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
-			f = Vector3.Transform(f, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
-			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
-			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
-
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-            Vector2 atx = new Vector2(1, 1);
-            Vector2 btx = new Vector2(0, 1);
-            Vector2 ctx = new Vector2(0, 0);
-			Vector2 dtx = new Vector2(1, 0);
+			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1));
 
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+			VertexBuffer VBO = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
+			IndexBuffer IBO = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
 
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			VBO.SetData(vertices.ToArray());
+			IBO.SetData(indices.ToArray());
 
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(f, Color.White, btx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(e, Color.White, atx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
-
-			xMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+			mesh = (VBO, IBO);
 		}
     }
 }

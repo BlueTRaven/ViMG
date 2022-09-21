@@ -40,6 +40,7 @@ namespace ViMG
 			data.SetChunk(this);
 			data.GenStep = ChunkData.GenerationStep.Broad;
 
+			this.manager = cm;
 			this.position = position;
 		}
 
@@ -58,22 +59,11 @@ namespace ViMG
 
 		public void PostChunkGen(World world)
 		{
-			/*for (int x = 0; x < CHUNK_SIZE; x++)
-			{
-				for (int y = 0; y < CHUNK_SIZE; y++)
-				{
-					for (int z = 0; z < CHUNK_SIZE; z++)
-					{
-						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-
-						GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkGen(GetData(), pos);
-					}
-				}
-			}*/
+			ushort[] cubes = GetData().GetAll();
 
 			for (int i = 0; i < NUM_CUBES_IN_CHUNK; i++)
 			{
-				int id = GetData().GetRaw(i);
+				ushort id = cubes[i];
 
 				if (id > 0)
 				{
@@ -82,10 +72,12 @@ namespace ViMG
 					int z = i / (CHUNK_SIZE * CHUNK_SIZE);
 
 					var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-					Main.Registry.CubeRegistry.Get(id).PostChunkGen(GetData(), pos);
-				}
+					Cube cube = Main.Registry.CubeRegistry.Get(id);
+					cube.PostChunkGen(GetData(), pos);
 
-				//GetData().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).PostChunkGen(GetData(), pos);
+					if (cube.Solid)
+						data.Density++;
+				}
 			}
 		}
 

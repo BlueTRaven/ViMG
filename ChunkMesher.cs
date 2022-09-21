@@ -29,6 +29,7 @@ namespace ViMG
 			ChunkData.ChunkUpdate = 0;
 
 			ChunkData data = chunk.GetData();
+			data.Density = -1;
 			ushort[] cubes = data.GetAll();
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -48,6 +49,7 @@ namespace ViMG
 							continue;
 
 						Cube cube = Main.Registry.CubeRegistry.Get(id);
+						data.SetDensity(0, cube.Id);
 
 						int oldCount = vertices.Count;
 
@@ -59,6 +61,9 @@ namespace ViMG
 					}
 				}
 			}
+
+			if (data.Density == -1)
+				data.Density = 0;
 
 			/*for (int i = 0; i < vertices.Count; i += 4)
 			{

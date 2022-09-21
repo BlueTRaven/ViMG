@@ -96,15 +96,20 @@ namespace ViMG
 		// Always meshed on the main thread, and before any others.
 		private List<ChunkPosition> priorityMeshChunks = new List<ChunkPosition>();
 
+		public float[] HeightmapRaw;
+		public Texture2D Heightmap;
+		public Texture2D HeightmapStrength;
+
 		public static int QueueGenerate = 0;
 		public static int QueueMesh = 0;
 		public static int TotalQueueGenerate = 0;
 		public static int TotalQueueMesh = 0;
-
 		//private Queue<ChunkMesh> unuploadedMeshes = new Queue<ChunkMesh>();
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
 		{
+			Heightmap = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
+
 			generator = new ChunkGeneratorIsland();
 			//generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
@@ -124,17 +129,6 @@ namespace ViMG
 
 				chunks[i] = new ManagedChunk(generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
 			}
-
-			/*for (int x = 0; x < sizeInChunks; x++)
-			{
-				for (int y = 0; y < sizeInChunks; y++)
-				{
-					for (int z = 0; z < sizeInChunks; z++)
-					{
-						chunks[x, y, z] = new ManagedChunk(ChunkDatas, defaultChunk, x, y, z);
-					}
-				}
-			}*/
 		}
 
 		public void Initialize(World world)
@@ -181,6 +175,8 @@ namespace ViMG
 			Console.WriteLine("Finished Broad Phase. Generated {0} total chunks in {1} seconds. ({2} seconds elapsed since start.)", 
 				total, broadWatch.Elapsed.Seconds, totalWatch.Elapsed.TotalSeconds);
 
+			Stopwatch detailWatch = Stopwatch.StartNew();
+
 			if (Main.DO_DETAIL)
 			{
 				num = 0;
@@ -199,9 +195,8 @@ namespace ViMG
 				}
 
 				generator.PostGenerateDetail(this);
+				GenerateHeightmap();
 			}
-
-			Stopwatch detailWatch = Stopwatch.StartNew();
 
 			num = 0;
 			for (int i = 0; i < total; i++)
@@ -230,6 +225,71 @@ namespace ViMG
 			totalWatch.Stop();
 
 			Console.WriteLine("Finished. Generated {0} total chunks in {1} seconds.", total, totalWatch.Elapsed.TotalSeconds);
+		}
+
+		private static Point[] sampleOffsets = new Point[]
+		{
+			new Point(-1, -1),
+			new Point(-1, 0),
+			new Point(-1, 1),
+			new Point(0, -1),
+			//new Point(0, 0),
+			new Point(1, -1),
+			new Point(1, 0),
+			new Point(1, 1),
+		};
+
+		public void GenerateHeightmap()
+        {
+			HeightmapRaw = new float[sizeInCubes * sizeInCubes];
+
+			for (int x = 0; x < sizeInCubes; x++)
+			{
+				for (int z = 0; z < sizeInCubes; z++)
+				{
+					int firstY = 0;
+					for (int y = sizeInCubes; y >= 0; y--)
+					{
+						Cube cube = GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						if (cube.Transparency == Cube.TransparencyValue.Opaque)
+						{
+							firstY = y;
+							break;
+						}
+					}
+
+					int i = z * sizeInCubes + x;
+
+					HeightmapRaw[i] = (float)firstY / (float)sizeInCubes;
+				}
+			}
+
+			/*float[] heightmapStrengths = new float[sizeInCubes * sizeInCubes];
+
+			for (int x = 0; x < sizeInCubes; x++)
+			{
+				for (int z = 0; z < sizeInCubes; z++)
+				{
+					int i = z * sizeInCubes + x;
+					float height = HeightmapRaw[i];
+					
+					float s = 0;
+
+					for (int so = 0; so < sampleOffsets.Length; so++)
+					{
+						int io = (z + sampleOffsets[so].X) * sizeInCubes + (x + sampleOffsets[so].Y);
+
+						if (io < 0 || io >= sizeInCubes * sizeInCubes)
+							continue;
+
+						HeightmapRaw[io]
+					}
+
+					HeightmapRaw[i] = (float)firstY / (float)sizeInCubes;
+				}
+			}*/
+
+			Heightmap.SetData(HeightmapRaw);
 		}
 
 		private static void GenerateChunkDetailTaskFn(object obj)
@@ -682,7 +742,7 @@ namespace ViMG
 
 				//Null check here is the same as doing out of bounds check.
 				Cube cubeAtPos = GetCube(pos).Get();
-				if (cubeAtPos != null && (cubeAtPos.Solid && cubeAtPos.Collision == Cube.CollisionValue.Collidable))
+				if (cubeAtPos != null && (cubeAtPos.Touchable && cubeAtPos.Collision == Cube.CollisionValue.Collidable))
 					return new OptionalValue<CubePosition>(pos);
 			}
 

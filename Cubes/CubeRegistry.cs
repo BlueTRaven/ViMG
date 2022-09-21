@@ -40,6 +40,7 @@ namespace ViMG.Cubes
 			Register(new CubeFibrousPlant());
 			Register(new CubeGlass());
 			Register(new CubeFlame());
+			Register(new CubeCaveCompass());
 		}
 
         protected override void PostRegistration()

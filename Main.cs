@@ -205,7 +205,7 @@ namespace ViMG
 			world = new World(GraphicsDevice, 512);
 
 #if DEBUG
-			world.LoadWorld(SessionInformation.LastLoadedSave);
+			world.LoadWorld(GraphicsDevice, SessionInformation.LastLoadedSave);
 			Main.MouseControl = false;
 			Main.DrawCursor = false;
 #endif
@@ -270,7 +270,7 @@ namespace ViMG
 
 			if (WorldLoaded)
 				world.UnfixedUpdate();
-			else ui.Update(world);
+			else ui.Update(GraphicsDevice, world);
 
 			time += gt.ElapsedGameTime.TotalSeconds;
 			while (time >= FIXED_STEP && !Exit)

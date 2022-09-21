@@ -85,8 +85,7 @@ namespace ViMG
 		public DirectionalLight directionalLight;
 		private int currentCascadeDebug;
 
-		private float[] heightMap;
-		private Texture2D heightMapTexture;
+		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
 		public World(GraphicsDevice device, int worldSize)
 		{
@@ -94,8 +93,6 @@ namespace ViMG
 			//alive = DAY_CYCLE_TIME * 0.65f;
 
 			this.sizeInCubes = worldSize;
-
-			heightMap = new float[sizeInCubes * sizeInCubes];
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
 
@@ -253,7 +250,7 @@ namespace ViMG
 			meshesLoaded = true;
 		}
 
-		public void LoadWorld(string folderName)
+		public void LoadWorld(GraphicsDevice device, string folderName)
 		{
 			//ChunkManager.Initialize(this);
 
@@ -285,7 +282,7 @@ namespace ViMG
 			}
 			else
 			{
-				WorldSaver.LoadError error = saver.Load(this, folderName);
+				WorldSaver.LoadError error = saver.Load(device, this, folderName);
 				//error = saver2.Load(this, "flat01");
 
 				Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
@@ -441,20 +438,31 @@ namespace ViMG
 			oldChunkPosition = camPos;
 
 			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-			if (CubePosition.FromWorldSpace(player.Position).Y > 180) 
+			if (CubePosition.FromWorldSpace(player.Position).Y > 140) 
 			{
 				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
 				{
+					Color color = Color.White * (1 - GetTimeOfDay());
+
+					if (GetDuskTime() > 0)
+                    {
+						duskColors[0] = color;  //so that we don't snap to the wrong color...
+						duskColors[^1] = color;
+						color = Utility.MultiLerp(GetDuskTime(), Color.Lerp, duskColors);
+                    }
+
 					float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
                     directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
                         Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), Color.White * (1 - GetTimeOfDay()));
+                        Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), color);
 
                     float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
-					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+					//Main.Renderer.EffectGBuffer.Parameters["Heightmap"].SetValue(ChunkManager.Heightmap);
+					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
 			}
 
@@ -475,12 +483,6 @@ namespace ViMG
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
-			if (heightMapTexture == null)
-            {
-				heightMapTexture = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
-				heightMapTexture.SetData<float>(heightMap);
-			}
-
 			NumChunksDrawn = 0;
 			ChunkDrawTime = 0;
 
@@ -742,6 +744,31 @@ namespace ViMG
 			return 0;
 		}
 
+		public float GetDawnTime()
+        {
+			//dawn starts at the last 8% of the total cycle
+			const float DAWN_START = 0.92f;
+			//dawn ends after 16% of the total cycle (8% of the day cycle)
+			const float DAWN_END = 0.16f;
+
+			return 0;
+		}
+
+		public float GetDuskTime()
+        {
+			//Dusk starts at the last 8% of the day cycle.
+			const float DUSK_START = 0.42f;
+			//dusk ends after 16% of the night cycle.
+			const float DUSK_END = 0.66f;
+
+			float timeOfDayPercent = (alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+
+			if (timeOfDayPercent > DUSK_START && timeOfDayPercent <= DUSK_END)
+				return (timeOfDayPercent - DUSK_START) / (DUSK_END - DUSK_START);
+
+			return 0;
+		}
+
 		public bool IsDay()
         {
 			return (alive % DAY_CYCLE_TIME) <= DAY_CYCLE_TIME / 2f;
@@ -933,7 +960,7 @@ namespace ViMG
 			return faces;
 		}
 
-		private CubePosition[] positions;
+		/*private CubePosition[] positions;
 		// Marks the cubes around a position dirty.
 		public void MarkCubesDirty(CubePosition position)
 		{
@@ -958,7 +985,7 @@ namespace ViMG
 
 				chunk.GetData().MarkDirty(pos);
 			}
-		}
+		}*/
 
 		public struct RaycastResult 
 		{

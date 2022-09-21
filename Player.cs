@@ -116,7 +116,7 @@ namespace ViMG
 		private const float PUSH_RADIUS = 1.75f * Cube.CUBE_SCALE;
 		private Vector3 attackStateTargetPos;
 
-		private SimpleMesh<VertexPositionColor, int> lookAtMesh;
+		private SimpleMesh<VertexCube, int> lookAtMesh;
 		private SimpleMesh<VertexCube, int> itemMesh;
 
 		public const int INVENTORY_ROWS = 4;
@@ -417,7 +417,7 @@ namespace ViMG
 			(Vector3 pos) =>
 			{
 				//return true;
-				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			IsLooking = false;
@@ -617,6 +617,8 @@ namespace ViMG
 				Velocity.Y += World.GRAVITY;
 				if (Velocity.Y < -actualMaxVel.Y)
 					Velocity.Y = -actualMaxVel.Y;
+				if (Velocity.Y > actualMaxVel.Y)
+					Velocity.Y = actualMaxVel.Y;
 			}
 
 			if (Main.inputManager.JustPressed(Keys.V))
@@ -889,13 +891,23 @@ namespace ViMG
 
 			if (lookAtMesh == null)
 			{
-				lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+				lookAtMesh = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+				//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				lookAtMesh.Name = "Look At Mesh";
 			}
 
 			if (lookAtResult.hasHit && world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 			{
-				device.DepthStencilState = Main.genericDSS;
+				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
+				Color color = Color.Lerp(Color.White, Color.Black, s);
+
+				Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
+					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+					Matrix.CreateScale(1.126f) *
+					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)), Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+					lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
+				/*device.DepthStencilState = Main.genericDSS;
 				device.RasterizerState = Main.wireframeRS;
 				
 				//Main.BasicEffect.DiffuseColor = Color.Lerp(Color.Transparent, Color.Red, lookAtColSine).ToVector3();
@@ -907,7 +919,7 @@ namespace ViMG
 				//Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
 
 				device.DepthStencilState = Main.genericDSS;
-				device.RasterizerState = Main.genericRS;
+				device.RasterizerState = Main.genericRS;*/
 			}
 		}
 

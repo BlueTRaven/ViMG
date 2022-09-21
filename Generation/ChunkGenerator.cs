@@ -57,7 +57,10 @@ namespace ViMG.Generation
 		// Main thread version
 		public abstract void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position);
 
-		public virtual void PostGenerateDetail(ChunkManager manager) { }
+		public virtual void PostGenerateDetail(ChunkManager manager) 
+		{
+			
+		}
 
 		[Obsolete]
 		public void GenerateChunkDetail(ChunkGenerationThreadDataBus dataBus, Chunk chunk, ChunkPosition position, HashSet<Chunk> cascadedChunks)

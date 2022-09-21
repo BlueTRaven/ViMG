@@ -56,9 +56,9 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 	float3 hdrColor = (lightAccumulation * (diffuse + specular)) * ao;
 
-	float3 ldrColor = ACESFitted(hdrColor);
+	//float3 ldrColor = ACESFitted(hdrColor);
 
-	return float4(ldrColor, 1);
+	return float4(hdrColor, 1);
 }
 
 technique BasicColorDrawing

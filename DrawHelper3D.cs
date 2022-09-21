@@ -134,6 +134,189 @@ namespace ViMG
 			ApplyCubeAnim(pass, world, CubePosition.FromWorldSpace(pos), cube, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
 		}
 
+		public static void MakeXMeshRaw(List<VertexCube> vertices, List<int> indices, Vector3 pos, RectangleF sourceRect)
+        {
+			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
+
+			Vector3 a = new Vector3(min.X, min.Y, min.Z);
+			Vector3 b = new Vector3(min.X, max.Y, min.Z);
+			Vector3 c = new Vector3(max.X, max.Y, min.Z);
+			Vector3 d = new Vector3(max.X, min.Y, min.Z);
+
+			Vector3 e = new Vector3(min.X, min.Y, max.Z);
+			Vector3 f = new Vector3(min.X, max.Y, max.Z);
+			Vector3 g = new Vector3(max.X, max.Y, max.Z);
+			Vector3 h = new Vector3(max.X, min.Y, max.Z);
+
+			Vector3 anrm = new Vector3(0.5f, 0, 0.5f);
+			Vector3 bnrm = new Vector3(0.5f, 0, 0.5f);
+			Vector3 cnrm = new Vector3(-0.5f, 0, 0.5f);
+			Vector3 dnrm = new Vector3(-0.5f, 0, 0.5f);
+
+			Vector3 enrm = new Vector3(-0.5f, 0, 0.5f);
+			Vector3 fnrm = new Vector3(-0.5f, 0, 0.5f);
+			Vector3 gnrm = new Vector3(0.5f, 0, 0.5f);
+			Vector3 hnrm = new Vector3(0.5f, 0, 0.5f);
+
+			int offset = vertices.Count;
+
+			vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), anrm));
+			vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), bnrm));
+			vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), cnrm));
+			vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), dnrm));
+														
+			vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), enrm));
+			vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y), fnrm));
+			vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), gnrm));
+			vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), hnrm));
+
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 6);
+			indices.Add(offset + 6);
+			indices.Add(offset + 7);
+			indices.Add(offset + 0);
+
+			indices.Add(offset + 4);
+			indices.Add(offset + 5);
+			indices.Add(offset + 2);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+			indices.Add(offset + 4);
+
+			offset = vertices.Count;
+
+			vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), -anrm));
+			vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), -bnrm));
+			vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), -cnrm));
+			vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -dnrm));
+
+			vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), -enrm));
+			vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y), -fnrm));
+			vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), -gnrm));
+			vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -hnrm));
+
+			indices.Add(offset + 6);
+			indices.Add(offset + 1);
+			indices.Add(offset + 0);
+			indices.Add(offset + 0);
+			indices.Add(offset + 7);
+			indices.Add(offset + 6);
+
+			indices.Add(offset + 2);
+			indices.Add(offset + 5);
+			indices.Add(offset + 4);
+			indices.Add(offset + 4);
+			indices.Add(offset + 3);
+			indices.Add(offset + 2);
+
+
+			//face doesn't matter, any works
+			/*Vector2 uvNear = new Vector2(sourceRect.x, sourceRect.y);
+			Vector2 uvFar = new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height);
+
+			Matrix rotFirstPlane = Matrix.CreateRotationY(MathHelper.ToRadians(0));
+			Matrix rotSecondPlane = Matrix.CreateRotationY(MathHelper.ToRadians(90 + 0));
+
+			Vector3 a = new Vector3(max.X, min.Y, min.Z);
+			Vector3 b = new Vector3(min.X, min.Y, min.Z);
+			Vector3 c = new Vector3(min.X, max.Y, min.Z);
+			Vector3 d = new Vector3(max.X, max.Y, min.Z);
+
+			Vector3 nrmFirstPlaneMin = new Vector3(0, 0, 1);
+			Vector3 nrmFirstPlaneMax = new Vector3(0, 0, -1);
+			Vector3 nrmSecondPlaneMin = new Vector3(-1, 0, 0);
+			Vector3 nrmSecondPlaneMax = new Vector3(1, 0, 0);
+
+			nrmFirstPlaneMin = Vector3.Transform(nrmFirstPlaneMin, rotFirstPlane);
+			nrmFirstPlaneMax = Vector3.Transform(nrmFirstPlaneMax, rotFirstPlane);
+			nrmSecondPlaneMin = Vector3.Transform(nrmSecondPlaneMin, rotSecondPlane);
+			nrmSecondPlaneMax = Vector3.Transform(nrmSecondPlaneMax, rotSecondPlane);
+
+			a = Vector3.Transform(a, rotFirstPlane);
+			b = Vector3.Transform(b, rotFirstPlane);
+			c = Vector3.Transform(c, rotFirstPlane);
+			d = Vector3.Transform(d, rotFirstPlane);
+
+			a += pos;
+			b += pos;
+			c += pos;
+			d += pos;
+
+			Vector3 e = new Vector3(min.X, min.Y, min.Z) + new Vector3(-max.X, 0, -max.Z);
+			Vector3 f = new Vector3(max.X, min.Y, min.Z) + new Vector3(-max.X, 0, -max.Z);
+			Vector3 g = new Vector3(max.X, max.Y, min.Z) + new Vector3(-max.X, 0, -max.Z);
+			Vector3 h = new Vector3(min.X, max.Y, min.Z) + new Vector3(-max.X, 0, -max.Z);
+
+			e = Vector3.Transform(e, rotSecondPlane);
+			f = Vector3.Transform(f, rotSecondPlane);
+			g = Vector3.Transform(g, rotSecondPlane);
+			h = Vector3.Transform(h, rotSecondPlane);
+
+			e += pos;
+			f += pos;
+			g += pos;
+			h += pos;
+
+			Vector2 atx = new Vector2(uvFar.X, uvFar.Y);
+			Vector2 btx = new Vector2(uvNear.X, uvFar.Y);
+			Vector2 ctx = new Vector2(uvNear.X, uvNear.Y);
+			Vector2 dtx = new Vector2(uvFar.X, uvNear.Y);
+
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(a, Color.White, atx, nrmFirstPlaneMin));
+			vertices.Add(new VertexCube(b, Color.White, btx, nrmFirstPlaneMin));
+			vertices.Add(new VertexCube(c, Color.White, ctx, nrmFirstPlaneMin));
+			vertices.Add(new VertexCube(d, Color.White, dtx, nrmFirstPlaneMin));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(b, Color.White, btx, nrmFirstPlaneMax));
+			vertices.Add(new VertexCube(a, Color.White, atx, nrmFirstPlaneMax));
+			vertices.Add(new VertexCube(d, Color.White, dtx, nrmFirstPlaneMax));
+			vertices.Add(new VertexCube(c, Color.White, ctx, nrmFirstPlaneMax));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(e, Color.White, atx, nrmSecondPlaneMin));
+			vertices.Add(new VertexCube(f, Color.White, btx, nrmSecondPlaneMin));
+			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMin));
+			vertices.Add(new VertexCube(h, Color.White, dtx, nrmSecondPlaneMin));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(f, Color.White, btx, nrmSecondPlaneMax));
+			vertices.Add(new VertexCube(e, Color.White, atx, nrmSecondPlaneMax));
+			vertices.Add(new VertexCube(h, Color.White, dtx, nrmSecondPlaneMax));
+			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
+		}
+
 		public static void ApplyCubeAnim(Cube.RenderPass pass, World world, CubePosition pos, Cube cube, MeshHelper.CubeFace face, List<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
 			Cube.CubeAnimation anim = cube.GetAnimation(face, pass, world, pos);
@@ -219,12 +402,22 @@ namespace ViMG
 			IndexBuffer ibo;
 
 			List<VertexCube> vertices = new List<VertexCube>();
-			List<uint> indices = new List<uint>();
+			List<int> indices = new List<int>();
 
+			MakeUVSphereRaw(vertices, indices, Vector3.Zero, RectangleF.Empty, radius, 16, 16);
+
+			vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
+			ibo = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
+
+			vbo.SetData(vertices.ToArray());
+			ibo.SetData(indices.ToArray());
+
+			return (vbo, ibo);
+        }
+
+		public static void MakeUVSphereRaw(List<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16)
+        {
 			//https://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
-			int stacks = 16;
-			int slices = 16;
-
 			for (int t = 0; t < stacks; t++)
 			{
 				float theta1 = ((float)(t) / stacks) * MathF.PI;
@@ -235,15 +428,25 @@ namespace ViMG
 					float phi1 = ((float)(p) / slices) * 2 * MathF.PI; // azimuth goes around 0 .. 2*PI
 					float phi2 = ((float)(p + 1) / slices) * 2 * MathF.PI;
 
-					Vector3 vert1 = FromSphericalCoordinates(radius, phi1, theta1);
-					Vector3 vert2 = FromSphericalCoordinates(radius, phi2, theta1);
-					Vector3 vert3 = FromSphericalCoordinates(radius, phi2, theta2);
-					Vector3 vert4 = FromSphericalCoordinates(radius, phi1, theta2);
+					Vector3 vert1 = FromSphericalCoordinates(radius, phi1, theta1) + position;
+					Vector3 vert2 = FromSphericalCoordinates(radius, phi2, theta1) + position;
+					Vector3 vert3 = FromSphericalCoordinates(radius, phi2, theta2) + position;
+					Vector3 vert4 = FromSphericalCoordinates(radius, phi1, theta2) + position;
 
-					uint indicesStart = (uint)vertices.Count;
+					Vector2 uv1 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
+					Vector2 uv2 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
+					Vector2 uv3 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
+					Vector2 uv4 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
+
+					uv1 += sourceRect.Position;
+					uv2 += sourceRect.Position;
+					uv3 += sourceRect.Position;
+					uv4 += sourceRect.Position;
+
+					int indicesStart = vertices.Count;
 
 					if (t == 0)
-                    {
+					{
 						indices.Add(indicesStart + 0);
 						indices.Add(indicesStart + 1);
 						indices.Add(indicesStart + 2);
@@ -251,12 +454,12 @@ namespace ViMG
 						Vector3 dir = Vector3.Cross(vert3 - vert1, vert4 - vert1);
 						Vector3 norm = Vector3.Normalize(dir);
 
-						vertices.Add(new VertexCube(vert1, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert3, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert4, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+						vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
 					}
 					else if (t + 1 == stacks)
-                    {
+					{
 						indices.Add(indicesStart + 0);
 						indices.Add(indicesStart + 1);
 						indices.Add(indicesStart + 2);
@@ -264,12 +467,12 @@ namespace ViMG
 						Vector3 dir = Vector3.Cross(vert1 - vert3, vert2 - vert3);
 						Vector3 norm = Vector3.Normalize(dir);
 
-						vertices.Add(new VertexCube(vert3, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert1, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert2, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+						vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
 					}
-                    else
-                    {
+					else
+					{
 						indices.Add(indicesStart + 0);
 						indices.Add(indicesStart + 1);
 						indices.Add(indicesStart + 3);
@@ -280,22 +483,14 @@ namespace ViMG
 						Vector3 dir = Vector3.Cross(vert2 - vert1, vert4 - vert1);
 						Vector3 norm = Vector3.Normalize(dir);
 
-						vertices.Add(new VertexCube(vert1, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert2, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert3, Color.White, Vector2.Zero, norm));
-						vertices.Add(new VertexCube(vert4, Color.White, Vector2.Zero, norm));
+						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+						vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
+						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+						vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
 					}
 				}
 			}
-
-			vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
-			ibo = new IndexBuffer(device, typeof(uint), indices.Count, BufferUsage.WriteOnly);
-
-			vbo.SetData(vertices.ToArray());
-			ibo.SetData(indices.ToArray());
-
-			return (vbo, ibo);
-        }
+		}
 
 		private static Vector3 FromSphericalCoordinates(float r, float theta, float phi)
         {

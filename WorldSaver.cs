@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,6 +29,7 @@ namespace ViMG
 		private const string SAVE_FOLDER = "./saves/";
 		public const string FILE_NAME_CHUNK = "world_chunks.vis";
 		public const string FILE_NAME_ENTITIES = "world_entities.vis";
+		public const string FILE_NAME_HEIGHTMAP = "world_heightmap.bin";
 		public const string FILE_NAME_SESSION = "session.ses";
 
 		private const long ONE_CHUNK_SIZE = (sizeof(ushort) * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
@@ -196,6 +198,36 @@ namespace ViMG
 				for (int i = 0; i < chunks.Length; i++)
 				{
 					SaveOneSpan(fs, chunks, i);
+				}
+			}
+
+			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP))
+			{
+				var f = File.Create(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP);
+				f.Close();
+			}
+
+			while (true)
+			{
+                try
+                {
+					//chunkManager.Heightmap.SetData(chunkManager.HeightmapRaw);
+					float[] floats = chunkManager.HeightmapRaw;
+					byte[] bytes = new byte[floats.Length * 4];
+					Buffer.BlockCopy(floats, 0, bytes, 0, bytes.Length);
+
+					File.WriteAllBytes(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, bytes);
+
+                    /*using (FileStream fsHeightmap = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, FileMode.Truncate, FileAccess.Write, FileShare.None))
+					{
+
+						//chunkManager.Heightmap.SaveAsPng(fsHeightmap, chunkManager.sizeInCubes, chunkManager.sizeInCubes);
+					}*/
+					break;
+				}
+				catch (Exception e) 
+				{
+
 				}
 			}
 
@@ -427,7 +459,7 @@ namespace ViMG
 			}
 		}
 
-		public LoadError Load(World world, string folderName)
+		public LoadError Load(GraphicsDevice device, World world, string folderName)
 		{
 			Console.WriteLine("Loading Save " + folderName + "...");
 
@@ -469,6 +501,33 @@ namespace ViMG
 				watch.Stop();
 
 				Console.WriteLine("Loaded all " + totalSize + " chunks in: " + watch.Elapsed.ToString());
+			}
+
+			if (chunkManager.HeightmapRaw == null)
+			{
+				if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP))
+				{
+					Console.WriteLine("Heightmap non-existant or invalid! Regenerating...");
+					chunkManager.GenerateHeightmap();
+				}
+                else
+                {
+					//chunkManager.Heightmap?.Dispose();
+
+					byte[] bytes = File.ReadAllBytes(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP);
+					float[] floats = new float[bytes.Length / 4];
+					Buffer.BlockCopy(bytes, 0, floats, 0, bytes.Length);
+
+					chunkManager.HeightmapRaw = floats;
+					chunkManager.Heightmap.SetData(floats);
+
+					/*using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, FileMode.Open, FileAccess.Read))
+					{
+						chunkManager.Heightmap = Texture2D.FromStream(device, fs);
+						chunkManager.HeightmapRaw = new float[chunkManager.sizeInCubes * chunkManager.sizeInCubes];
+						chunkManager.Heightmap.GetData(chunkManager.HeightmapRaw);
+					}*/
+                }
 			}
 
 			Console.WriteLine("Loaded Save " + folderName + ".");
@@ -520,19 +579,27 @@ namespace ViMG
 					int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
 
 					Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
+					ChunkData data = chunk.GetData();
 					chunkManager.SetChunk(chunk);
 
+					ushort[] cubes = chunk.GetData().GetAll();
 					for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
 					{
-						int cubeX = j % Chunk.CHUNK_SIZE;
+						/*int cubeX = j % Chunk.CHUNK_SIZE;
 						int cubeY = (j / Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
-						int cubeZ = j / (Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
+						int cubeZ = j / (Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);*/
 
-						chunk.GetData().SetCubeFast(j, reader.ReadUInt16());
+						ushort id = reader.ReadUInt16();
+
+						cubes[j] = id;
+
+						data.SetDensity(0, id);
+						
+						//chunk.GetData().SetCubeFast(j, reader.ReadUInt16());
 					}
 
 					chunk.Initialize(world);
-					chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
+					data.GenStep = ChunkData.GenerationStep.Done;
 					chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
 
 					if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
@@ -548,6 +615,7 @@ namespace ViMG
 			int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
 
 			Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
+			ChunkData data = chunk.GetData();
 			chunkManager.SetChunk(chunk);
 			long left = fs.Length - fs.Position;
 
@@ -569,11 +637,12 @@ namespace ViMG
 				id |= a << 0;
 
 				allCubes[j] = (ushort)id;
-				//chunk.GetData().SetCubeFast(j, (ushort)id);
+
+				data.SetDensity(0, (ushort)id);
 			}
 
 			chunk.Initialize(world);
-			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
+			data.GenStep = ChunkData.GenerationStep.Done;
 			//chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
 
 			if (entityDatas.ContainsKey(chunk.Position))
