@@ -16,8 +16,8 @@ namespace ViMG.Entities
 
 		public Vector3 MaxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
 
-		private static SimpleMesh<VertexPositionColor, int> meshDebugCube;
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		//private static SimpleMesh<VertexCube, int> mesh;
 
 		private bool onGround;
 
@@ -159,7 +159,7 @@ namespace ViMG.Entities
 			Position += Velocity * (float)deltaTime;
 
 			onGround = false;
-			UpdateCollision();
+			UpdateCollision(deltaTime);
 
 			invulnTimer -= (float)deltaTime;
 
@@ -186,46 +186,69 @@ namespace ViMG.Entities
 			new Vector3(0, 0, 1)
 		};
 
-		private void UpdateCollision()
+		private void UpdateCollision(double deltaTime)
 		{
-			const float height = Cube.CUBE_SCALE;
-			for (int i = 0; i < 4; i++)
+			const float RADIUS = Cube.CUBE_SCALE * 0.25f;
+
+			Vector3 realVelocity = Velocity * (float)deltaTime;
+
+			CubePosition near = CubePosition.FromWorldSpace(Bounds.Position + (realVelocity + realVelocity * RADIUS));
+			CubePosition far = CubePosition.FromWorldSpace(Bounds.FarPosition + (realVelocity + realVelocity * RADIUS));
+
+			if (far.X < near.X)
 			{
-				Vector3 startPos = new Vector3(Position.X + offsetsDown[i].X, Position.Y - height, Position.Z + offsetsDown[i].Y);
-				Vector3 dir = new Vector3(0, height, 0);
-				var resultDown = world.RaycastVector(startPos, dir, height, (Vector3 pos) =>
-				{
-					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0;
-				});
-
-				if (resultDown.hasHit)
-				{
-					CubePosition pos = CubePosition.FromWorldSpace(resultDown.hit);
-
-					Position.Y = pos.Y * Cube.CUBE_SCALE + Cube.CUBE_SCALE + height;
-					Velocity.Y = 0;
-					onGround = true;
-				}
+				var temp = far.X;
+				far.X = near.X;
+				near.X = temp;
 			}
 
-			const float sideWidth = 0.45f;
-
-			for (int i = 0; i < 4; i++)
+			if (far.Y < near.Y)
 			{
-				Vector3 startPos = new Vector3(Position.X, Position.Y - height + Cube.CUBE_SCALE * 0.5f, Position.Z);
-				ref Vector3 dir = ref directions[i];
-				var resultSideBot = world.RaycastVector(startPos, dir, Cube.CUBE_SCALE * sideWidth, (Vector3 pos) =>
+				var temp = far.Y;
+				far.Y = near.Y;
+				near.Y = temp;
+			}
+
+			if (far.Z < near.Z)
+			{
+				var temp = far.Z;
+				far.Z = near.Z;
+				near.Z = temp;
+			}
+
+			for (int x = near.X; x <= far.X; x++)
+			{
+				for (int y = near.Y; y <= far.Y; y++)
 				{
-					return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0;
-				});
+					for (int z = near.Z; z <= far.Z; z++)
+					{
+						CubePosition pos = new CubePosition(x, y, z);
 
-				if (resultSideBot.hasHit)
-				{
-					CubePosition pos = CubePosition.FromWorldSpace(resultSideBot.hit);
+						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						{
+							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-					Vector3 offset = resultSideBot.hit - directions[i] * Cube.CUBE_SCALE * sideWidth;
+							Vector3 offset = new Vector3(0, RADIUS, 0);
+							Vector3 checkPos = Position + offset;
 
-					Position = new Vector3(offset.X, Position.Y, offset.Z);
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, RADIUS, out Vector3 change))
+							{
+								Position = (checkPos - offset) + change;
+
+								if (change.Y > 0)
+								{
+									Velocity.Y = 0;
+									onGround = true;
+								}
+								else if (change.Y < 0)
+									Velocity.Y = 0;
+								else if (change.X != 0)
+									Velocity.X = 0;
+								else if (change.Z != 0)
+									Velocity.Z = 0;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -244,8 +267,9 @@ namespace ViMG.Entities
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			if (mesh == null)
-				MakeMeshes(device);
+			if (mesh.VBO == null)
+				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+			//MakeMeshes(device);
 
 			int ysrc = 0;
 
@@ -257,7 +281,8 @@ namespace ViMG.Entities
 			if (onGround && (alive % interval) / interval < 0.5f)
 				ysrc = 16;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("slime"), 
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),
@@ -268,9 +293,6 @@ namespace ViMG.Entities
 
 		private static void MakeMeshes(GraphicsDevice device)
 		{
-			meshDebugCube = MeshHelper.MakeCubeVertexPositionColor(device, -new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f), 
-				new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-
 			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
 			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
 
@@ -313,7 +335,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("slime"));
+			//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("slime"));
 		}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

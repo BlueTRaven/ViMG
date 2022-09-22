@@ -344,7 +344,7 @@ namespace ViMG
 			Vector2 dtx = new Vector2(0, 0);
 
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE / 4, 0);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);

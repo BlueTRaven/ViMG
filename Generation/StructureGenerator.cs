@@ -21,9 +21,9 @@ namespace ViMG.Generation
 
         public void Serialize(List<byte> bytes)
         {
-            SaveHelper.SaveInt32(bytes, size.x);
-            SaveHelper.SaveInt32(bytes, size.y);
-            SaveHelper.SaveInt32(bytes, size.z);
+            SaveHelper.SaveInt32(bytes, size.X);
+            SaveHelper.SaveInt32(bytes, size.Y);
+            SaveHelper.SaveInt32(bytes, size.Z);
 
             SaveHelper.SaveInt32(bytes, data.Length);
             for (int i = 0; i < data.Length; i++)

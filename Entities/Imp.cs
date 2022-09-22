@@ -12,7 +12,7 @@ namespace ViMG.Entities
 {
     public class Imp : Entity, IHitboxOwner
     {
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		private bool onGround;
 		private bool shouldJump;
@@ -324,8 +324,9 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh == null)
-				MakeMesh(device);
+			if (mesh.VBO == null)
+				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+				//MakeMesh(device);
 
 			RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
 
@@ -384,7 +385,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("imp"));
+			//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("imp"));
 		}
 	}
 }

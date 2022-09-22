@@ -51,21 +51,21 @@ namespace ViMG.Generation
 
                 for (int j = 0; j < num; j++)
                 {
-                    if (currentPoint.x < minX)
-                        minX = currentPoint.x;
-                    if (currentPoint.x > maxX)
-                        maxX = currentPoint.x;
-                    if (currentPoint.y < minY)
-                        minY = currentPoint.y;
-                    if (currentPoint.y > maxY)
-                        maxY = currentPoint.y;
-                    if (currentPoint.z < minZ)
-                        minZ = currentPoint.z;
-                    if (currentPoint.z > maxZ)
-                        maxZ = currentPoint.z;
+                    if (currentPoint.X < minX)
+                        minX = currentPoint.X;
+                    if (currentPoint.X > maxX)
+                        maxX = currentPoint.X;
+                    if (currentPoint.Y < minY)
+                        minY = currentPoint.Y;
+                    if (currentPoint.Y > maxY)
+                        maxY = currentPoint.Y;
+                    if (currentPoint.Z < minZ)
+                        minZ = currentPoint.Z;
+                    if (currentPoint.Z > maxZ)
+                        maxZ = currentPoint.Z;
 
                     points[j] = currentPoint;
-                    currentPoint = new Point3D(currentPoint.x + offset.x, currentPoint.y + offset.y, currentPoint.z + offset.z);
+                    currentPoint = new Point3D(currentPoint.X + offset.X, currentPoint.Y + offset.Y, currentPoint.Z + offset.Z);
 
                     offset = offsets[state.random.Next(0, 6)];
                 }
@@ -85,9 +85,9 @@ namespace ViMG.Generation
                 for (int j = 0; j < num; j++)
                 {
                     ref Point3D point = ref points[j];
-                    point.x += moveX;
-                    point.y += moveY;
-                    point.z += moveZ;
+                    point.X += moveX;
+                    point.Y += moveY;
+                    point.Z += moveZ;
                 }
 
                 minX += moveX;

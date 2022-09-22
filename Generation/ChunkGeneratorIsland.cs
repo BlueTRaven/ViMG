@@ -293,13 +293,13 @@ namespace ViMG.Generation
 			if (baseChunk == null)
 				realBaseChunk = manager.GetChunk(pos);
 
-			for (int x = 0; x < structure.size.x; x++)
+			for (int x = 0; x < structure.size.X; x++)
             {
-				for (int y = 0; y < structure.size.y; y++)
+				for (int y = 0; y < structure.size.Y; y++)
                 {
-					for (int z = 0; z < structure.size.z; z++)
+					for (int z = 0; z < structure.size.Z; z++)
                     {
-						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.x, structure.size.y, structure.size.z), out int i);
+						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
 						bool canWrite = true;

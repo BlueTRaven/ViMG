@@ -681,33 +681,61 @@ namespace ViMG
 		{
 			onGround = false;
 
-			for (int x = -2; x <= 2; x++)
+			const float RADIUS = Cube.CUBE_SCALE * 0.4f;
+
+			const float LOWER_OFFSET = Cube.CUBE_SCALE * 0.75f;
+
+			Vector3 realVelocity = Velocity * (float)deltaTime;
+
+			CubePosition near = CubePosition.FromWorldSpace(Bounds.Position + (realVelocity + realVelocity * RADIUS));
+			CubePosition far = CubePosition.FromWorldSpace(Bounds.FarPosition + (realVelocity + realVelocity * RADIUS));
+
+			if (far.X < near.X)
+            {
+				var temp = far.X;
+				far.X = near.X;
+				near.X = temp;
+            }
+
+			if (far.Y < near.Y)
 			{
-				for (int y = -2; y <= 2; y++)
+				var temp = far.Y;
+				far.Y = near.Y;
+				near.Y = temp;
+			}
+
+			if (far.Z < near.Z)
+			{
+				var temp = far.Z;
+				far.Z = near.Z;
+				near.Z = temp;
+			}
+
+			for (int x = near.X; x <= far.X; x++)
+			{
+				for (int y = near.Y; y <= far.Y; y++)
 				{
-					for (int z = -2; z <= 2; z++)
+					for (int z = near.Z; z <= far.Z; z++)
 					{
-						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
+						CubePosition pos = new CubePosition(x, y, z);
 
 						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && cube.Collision == Cube.CollisionValue.Collidable)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							float off = Cube.CUBE_SCALE * 0.75f;
-
 							for (int i = 0; i < 4; i++)
 							{
 								Vector3 segmentVelocity = (Velocity / 4f * i) * (float)deltaTime;
 
-								Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - off, 0) + segmentVelocity;
+								Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + segmentVelocity;
 								Vector3 upperCheckPos = Position + segmentVelocity;
 
 								bool collided = false;
 
-								if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, Cube.CUBE_SCALE * 0.4f, out Vector3 lowerChange))
+								if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
 								{
-									Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - off, 0) + lowerChange;
+									Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
 
 									if (lowerChange.Y > 0 && Velocity.Y <= 0)
 									{
@@ -723,7 +751,7 @@ namespace ViMG
 
 									collided = true;
 								}
-                                else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, Cube.CUBE_SCALE * 0.4f, out Vector3 upperChange))
+                                else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
                                 {
                                     Position = upperCheckPos + upperChange;
 
