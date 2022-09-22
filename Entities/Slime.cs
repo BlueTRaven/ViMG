@@ -170,22 +170,6 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-		private Vector2[] offsetsDown = new Vector2[4]
-		{
-			new Vector2(-0.325f) * Cube.CUBE_SCALE,
-			new Vector2(-0.325f, 0.325f) * Cube.CUBE_SCALE,
-			new Vector2(0.325f, -0.325f) * Cube.CUBE_SCALE,
-			new Vector2(0.325f) * Cube.CUBE_SCALE
-		};
-
-		private Vector3[] directions = new Vector3[4]
-		{
-			new Vector3(-1, 0, 0),
-			new Vector3(1, 0, 0),
-			new Vector3(0, 0, -1),
-			new Vector3(0, 0, 1)
-		};
-
 		private void UpdateCollision(double deltaTime)
 		{
 			const float RADIUS = Cube.CUBE_SCALE * 0.25f;
@@ -289,53 +273,6 @@ namespace ViMG.Entities
 				noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16)));
 
 			DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
-		}
-
-		private static void MakeMeshes(GraphicsDevice device)
-		{
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
-
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
-
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("slime"));
 		}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

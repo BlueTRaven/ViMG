@@ -623,8 +623,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				//world.EntityManager.Add(new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				world.EntityManager.Add(new Worm(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 
