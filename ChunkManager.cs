@@ -840,8 +840,8 @@ namespace ViMG
 				chunksToMeshAlreadyAdded.Add(position);
 			}
 
-			if (!modifiedChunks.Contains(position))
-				modifiedChunks.Add(position);
+			/*if (!modifiedChunks.Contains(position))
+				modifiedChunks.Add(position);*/
 		}
 
 		public void MarkDirty(int x, int y, int z, bool markModified)

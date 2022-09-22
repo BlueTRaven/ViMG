@@ -473,6 +473,11 @@ namespace ViMG
 			}
 		}
 
+		public void SetCubeFast(CubePosition positionInChunkSpace, ushort id)
+        {
+			SetCubeFast(positionInChunkSpace.X + Chunk.CHUNK_SIZE * (positionInChunkSpace.Y + Chunk.CHUNK_SIZE * positionInChunkSpace.Z), id);
+		}
+
 		public void SetCubeFast(int index, ushort id)
 		{
 			cubes[index] = id;

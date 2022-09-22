@@ -614,9 +614,11 @@ namespace ViMG
 			int chunkY = (i / chunkManager.sizeInChunks) % chunkManager.sizeInChunks;
 			int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
 
-			Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
+			Chunk chunk = chunkManager.GetChunk(new ChunkPosition(chunkX, chunkY, chunkZ));
 			ChunkData data = chunk.GetData();
-			chunkManager.SetChunk(chunk);
+			/*Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
+			ChunkData data = chunk.GetData();
+			chunkManager.SetChunk(chunk);*/
 			long left = fs.Length - fs.Position;
 
 			Span<byte> buffer = stackalloc byte[(int)Math.Min(ONE_CHUNK_SIZE, left)];

@@ -331,6 +331,7 @@ namespace ViMG.Rendering
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
                 EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
+                EffectGBuffer.Parameters["InvViewProjection"].SetValue(Matrix.Invert(viewProjection));
 
                 device.SamplerStates[1] = bilinearClampSS;
 
@@ -399,12 +400,15 @@ namespace ViMG.Rendering
 
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 
+                EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
+                //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetProjectionMatrix()));
+
                 foreach (PointLightVolumeDraw draw in DrawsPointLightVolumePass)
                 {
-                    EffectLightAccumPointLight.Parameters["WorldViewProjection"].SetValue(
+                    /*EffectLightAccumPointLight.Parameters["WorldViewProjection"].SetValue(
                         Matrix.CreateScale(draw.LightScale) * 
                         Matrix.CreateTranslation(draw.LightPosition) *
-                        viewProj);
+                        viewProj);*/
 
                     EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
 

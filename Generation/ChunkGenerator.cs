@@ -82,6 +82,9 @@ namespace ViMG.Generation
 		private Chunk cachedWorkingChunk;
 		private ushort[] cachedWorkingCubes;
 
+		private Chunk cachedAdjacentChunk;
+		private ushort[] cachedAdjacentCubes;
+
 		protected void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
 		{
 			if (!manager.IsInWorldBounds(pos))
@@ -95,26 +98,32 @@ namespace ViMG.Generation
 					cachedWorkingChunk = chunk;
 					cachedWorkingCubes = chunk.GetData().GetAll();
 				}
+
 				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
 					pos = pos.InChunkSpace(chunk);
 
 				cachedWorkingCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
-				//chunk.GetData().SetCube(pos, id, false);
 			}
 			else
 			{
 				//Make no attempt to cache in this case. We'll likely miss
 				ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos.InCubeSpace(chunk));
+				Chunk adjacent = manager.GetChunk(chunkPos);
 
-				var posInNewChunk = pos.InChunkSpace(manager.GetChunk(chunkPos));
+				if (cachedAdjacentChunk != adjacent)
+                {
+					cachedAdjacentChunk = adjacent;
+					cachedAdjacentCubes = adjacent.GetData().GetAll();
+                }
 
-				if (manager.GetChunk(chunkPos).GetData().GenStep == ChunkData.GenerationStep.Broad)
-					manager.GenerateChunkBroad(chunkPos);
+				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
+					pos = pos.InChunkSpace(adjacent);
 
-				manager.GetChunk(chunkPos).GetData().SetCube(posInNewChunk, id, false);
-				if (manager.GetChunk(chunkPos).Initialized)
-					 detailCascadedChunks.Add(manager.GetChunk(chunkPos));
-				manager.MarkDirty(chunkPos, false);
+				//This should never actually be called with the current way of doing things, but still...
+				if (adjacent.GetData().GenStep == ChunkData.GenerationStep.Broad)
+					GenerateChunkBroad(adjacent);
+
+				cachedAdjacentCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
 			}
 		}
 

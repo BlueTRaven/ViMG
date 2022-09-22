@@ -131,7 +131,6 @@ namespace ViMG.Generation
 						ushort id = GenerateCubeBroad(chunk, pos, heightMap);
 
 						cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
-						//SetCube(chunk, pos, id);
 					}
 				}
 			}
@@ -227,7 +226,7 @@ namespace ViMG.Generation
 				}
 			}
 
-			HandleCascaded();
+			//HandleCascaded();
 
 			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 		}

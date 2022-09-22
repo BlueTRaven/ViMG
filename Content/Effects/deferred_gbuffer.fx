@@ -15,6 +15,7 @@ float4x4 World;
 float4x4 View;
 float4x4 WorldNormal;
 float4x4 ViewProjection;
+float4x4 InvViewProjection;
 
 bool UseSourceRect;
 float2 SourceRectPos;
@@ -45,7 +46,7 @@ VSOutputCube MainVS(in VSInputCube input)
 
 	output.PositionWS = mul(input.Position, World).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
-	output.PositionSS = mul(float4(output.PositionWS, 1), View).xyz;
+	output.PositionSS = mul(float4(output.PositionWS, 1), ViewProjection).xyz;
 	output.Color = input.Color * float4(TintColor, 1);
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
 	output.AO = input.AO;
@@ -82,6 +83,18 @@ VSOutputCube MainVS(in VSInputCube input)
 	}
 
 	return output;
+}
+
+float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
+{
+	float4 position = float4(screenSpace.x * 2.0 - 1.0, (1 - screenSpace.y) * 2.0 - 1.0, depth, 1.0);
+	//position.y = 1 - position.y;
+
+	position = mul(position, InvViewProjection);
+
+	float3 positionVS = position.xyz / position.w;
+
+	return positionVS;
 }
 
 PSOutputGBuffer MainPS(VSOutputCube input)

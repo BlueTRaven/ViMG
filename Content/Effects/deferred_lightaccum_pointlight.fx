@@ -10,7 +10,8 @@ Texture2D Depth				: register(t1);
 Texture2D Normal			: register(t2);
 Texture2D Diffuse			: register(t3);
 
-float4x4 WorldViewProjection;
+float4x4 ViewProjection;
+float4x4 InvViewProjection;
 float3 CameraPosition;
 uint LightIndex;
 
@@ -41,13 +42,26 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
-	output.Position = mul(input.Position, WorldViewProjection);
+	float3 wpos = input.Position.xyz * Lights[LightIndex].End + Lights[LightIndex].Position;
+	output.Position = mul(float4(wpos, input.Position.w), ViewProjection);
 	//output.Position = input.Position;
-	output.PositionSS = mul(input.Position, WorldViewProjection);
+	output.PositionSS = output.Position;
 
 	output.InstanceID = input.InstanceID;
 
 	return output;
+}
+
+float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
+{
+	float4 position = float4(screenSpace.x * 2.0 - 1.0, (1 - screenSpace.y) * 2.0 - 1.0, depth, 1.0);
+	//position.y = 1 - position.y;
+
+	position = mul(position, InvViewProjection);
+
+	float3 positionVS = position.xyz / position.w;
+
+	return positionVS;
 }
 
 float4 MainPS(VertexShaderOutput input) : SV_TARGET
@@ -57,6 +71,8 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	
 	float3 normal = Normal.Sample(Sampler, texCoord).rgb;
 	float depth = Depth.Sample(Sampler, texCoord).r;
+	
+	//float3 position = ScreenSpaceToWorldSpace(texCoord, depth);
 	float3 position = Position.Sample(Sampler, texCoord).rgb;
 	//float specular = Diffuse.Sample(Sampler, texCoord).a;
 	 
