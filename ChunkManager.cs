@@ -74,11 +74,8 @@ namespace ViMG
 
 		private ChunkGenerator generator;
 		private ChunkMesher mesher;
-		private ChunkGenerationThread genThread;
-		private ChunkGenerationThreadDataBus dataBus;
 
 		private ManagedChunk[] chunks;
-		private HashSet<ChunkPosition> modifiedChunks = new HashSet<ChunkPosition>();
 
 		public GenericPool<ChunkData> ChunkDatas = new GenericPool<ChunkData>(() => new ChunkData());
 
@@ -87,24 +84,13 @@ namespace ViMG
 			return (int)(Main.camera.Position - x.InWorldSpace()).Length(); 
 		});
 		private HashSet<ChunkPosition> chunksToMeshAlreadyAdded = new HashSet<ChunkPosition>();
-		private PriorityQueue<ChunkPosition> chunksToGenerateQueue = new PriorityQueue<ChunkPosition>(true, (x) =>
-		{
-			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
-		});
-		private HashSet<ChunkPosition> chunksToGenerateAlreadyAdded = new HashSet<ChunkPosition>();
-
-		// Always meshed on the main thread, and before any others.
-		private List<ChunkPosition> priorityMeshChunks = new List<ChunkPosition>();
 
 		public float[] HeightmapRaw;
 		public Texture2D Heightmap;
 		public Texture2D HeightmapStrength;
 
-		public static int QueueGenerate = 0;
 		public static int QueueMesh = 0;
-		public static int TotalQueueGenerate = 0;
 		public static int TotalQueueMesh = 0;
-		//private Queue<ChunkMesh> unuploadedMeshes = new Queue<ChunkMesh>();
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
 		{
@@ -114,8 +100,6 @@ namespace ViMG
 			//generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
 
-			//dataBus = new ChunkGenerationThreadDataBus(this);
-			//genThread = new ChunkGenerationThread(generator, dataBus);
 			this.sizeInChunks = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
 
@@ -129,12 +113,6 @@ namespace ViMG
 
 				chunks[i] = new ManagedChunk(generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
 			}
-		}
-
-		public void Initialize(World world)
-		{
-			//generator.Initialize(world);
-			//genThread.Start();
 		}
 
 		public void GenerateWorld(World world)
@@ -298,14 +276,6 @@ namespace ViMG
 			ProcessChunkQueueSync(world, 1, 8);
 		}
 
-		public void WaitForFinishGenerate(World world)
-		{
-			while (dataBus.HasChunksToGenerate())
-			{
-				ProcessChunkQueueSync(world);
-			}
-		}
-
 		private int PosToIndex(ChunkPosition position)
 		{
 			return position.X + sizeInChunks * (position.Y + sizeInChunks * position.Z);
@@ -314,7 +284,6 @@ namespace ViMG
 		// Synchronously processess chunks in the queue.
 		public void ProcessChunkQueueSync(World world, int maxGen = -1, int maxMesh = -1)
 		{
-			QueueGenerate = chunksToGenerateQueue.Count;
 			QueueMesh = chunksToMeshQueue.Count;
 
 			if (chunksToMeshQueue.Count > 0)
@@ -411,32 +380,6 @@ namespace ViMG
 
 					num++;
 				}
-
-				//chunksToMesh = queue.ToList();
-				//chunksToMesh.Clear();
-			}
-
-			if (chunksToGenerateQueue.Count > 0)
-			{
-				int num = 0;
-				while (chunksToGenerateQueue.Count > 0 && (maxGen == -1 || num < maxGen))
-				{
-					var pos = chunksToGenerateQueue.Dequeue();
-
-					// This check is necessary for 'cascading' generation to work.
-					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
-						continue;	//we've already generated this chunk
-
-					Stopwatch watch = Stopwatch.StartNew();
-
-					GenerateChunk(world, pos);
-					watch.Stop();
-
-					Console.WriteLine("Generated chunk at " + pos.X + ", " + pos.Y + ", " + pos.Z + ". Took " + watch.Elapsed.TotalSeconds);
-
-
-					num++;
-				}
 			}
 		}
 
@@ -507,38 +450,7 @@ namespace ViMG
 			Console.WriteLine("Meshed chunk at " + pos.X + ", " + pos.Y + ", " + pos.Z + " with " + ChunkData.ChunkUpdate + " updates - took " + watch.Elapsed.TotalSeconds);
 		}
 
-		public void ProcessPriorityMeshChunks(World world)
-		{
-			if (priorityMeshChunks.Count > 0)
-			{
-				Queue<ChunkPosition> queue = new Queue<ChunkPosition>(priorityMeshChunks.Distinct());
-
-				while (queue.Count > 0)
-				{
-					var pos = queue.Dequeue();
-
-					if (chunks[PosToIndex(pos)].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
-					{
-						throw new Exception("Cannot mesh chunk before it has been generated. Did you try to mark a chunk dirty before it has been generated?");
-					}
-
-					MeshChunk(world, pos);
-				}
-
-				priorityMeshChunks.Clear();
-			}
-		}
-
 		#region Get Things
-		public HashSet<ChunkPosition> GetModifiedChunks()
-		{
-			return modifiedChunks;
-		}
-
-		public void ResetModifiedChunks()
-		{
-			modifiedChunks.Clear();
-		}
 
 		public bool IsChunkGenerated(CubePosition position)
 		{
