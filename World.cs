@@ -265,11 +265,17 @@ namespace ViMG
 			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
 			saver2 = new WorldSaver(ChunkManager2, null, Main.SessionInformation);
 
+			var io = new ChunkManagerIO(ChunkManager, "test"); 
+
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.GenerateWorld(this);
 				
 				saver.Save(folderName);
+				io.SerializeAll();
+				io.Save(folderName);
+
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, io);
 
 				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
 
@@ -279,35 +285,46 @@ namespace ViMG
 
 				player.Position = ChunkManager.GetPlayerSpawnPos(this);
 				player.SpawnPosition = CubePosition.FromWorldSpace(player.Position);
+
+				ChunkLoadManager.UnloadAll();
+				ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+				ChunkLoadManager.CheckAndLoadAroundTarget(this);
 			}
 			else
 			{
-				WorldSaver.LoadError error = saver.Load(device, this, folderName);
-				//error = saver2.Load(this, "flat01");
+				ChunkManagerIO.LoadError error = io.Load(folderName);//saver.Load(device, this, folderName);
 
-				Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
-
-				if (error == WorldSaver.LoadError.InvalidVersion)
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, io);
+				
+				if (error == ChunkManagerIO.LoadError.InvalidVersion)
 					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
 
 				if (EntityManager.GetAll<Player>().Count > 0)
+				{
 					player = EntityManager.GetAll<Player>().First() as Player;
+
+					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+					ChunkLoadManager.CheckAndLoadAroundTarget(this);
+				}
 				else
 				{
 					player = new Player();
 					EntityManager.Add(player);
 					player.FirstCreated();
 
+					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+					ChunkLoadManager.LoadColumn(this);
+
+					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
+					player.Position = playerSpawnPos;
 				}
 			}
 
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-
-			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, new ChunkManagerIO(ChunkManager, "test"));
 			//ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
 
-			EntityManager.Add(new EntityLeviathan());
+			//EntityManager.Add(new EntityLeviathan());
 			LoadedFolderName = folderName;
 			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 		}
@@ -348,7 +365,7 @@ namespace ViMG
 			}
 
 			ChunkManager.ProcessChunkQueue(this, 0);
-			ChunkLoadManager.Update(deltaTime);
+			ChunkLoadManager.Update(deltaTime, this);
 
 			ProjectileManager.Update(this, deltaTime);
 			EntityManager.Update(deltaTime);

@@ -67,7 +67,8 @@ namespace ViMG.Spawners
                 if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
                     CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
-                    if (CanAreaSpawn(world.GetChunkManager(), world.GetChunkManager().GetChunk(pos), pos))
+                    Chunk spawnChunk = world.GetChunkManager().GetChunk(pos);
+                    if (spawnChunk != null && CanAreaSpawn(world, world.GetChunkManager(), world.GetChunkManager().GetChunk(pos), pos))
                         Spawn(world, pos);
                 }
             }
@@ -75,6 +76,6 @@ namespace ViMG.Spawners
 
         protected abstract void Spawn(World world, CubePosition position);
 
-        public abstract bool CanAreaSpawn(ChunkManager manager, Chunk chunk, CubePosition position);
+        public abstract bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position);
     }
 }

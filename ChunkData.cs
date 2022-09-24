@@ -663,6 +663,8 @@ namespace ViMG
 				throw new Exception("Cannot return sentinel chunk data.");
 
 			chunk = null;
+			Density = 0;
+			Array.Fill<Cube.CubeVisualInstance>(cubeVisualInstances, Cube.CubeVisualInstance.CreateDirty());
 			Array.Fill<ushort>(cubes, 0);
 		}
 	}

@@ -94,6 +94,11 @@ namespace ViMG
 			//support unsetting data
 			if (data != null)
 				data.SetChunk(this);
+            else
+            {
+				//If data is null, we are no longer initialized.
+				initialized = false;
+            }
 
 			this.data = data;
 		}

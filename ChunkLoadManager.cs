@@ -22,13 +22,15 @@ namespace ViMG
 
 		private Vector3 loadTarget;
 
-		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO managerIO)
+		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO io)
 		{
 			this.saver = saver;
 			this.manager = manager;
 			this.radiusH = radiusH;
 			this.radiusV = radiusV;
 			this.unloadRadius = unloadRadius;
+
+			this.io = io;
 		}
 
 		public void Initialize(bool isFirstLoad)
@@ -39,18 +41,35 @@ namespace ViMG
 			}
 		}
 
-		public void Update(double deltaTime)
+		public void Update(double deltaTime, World world)
 		{
 			distanceUnloadCheckTimer -= (float)deltaTime;
 
 			if (distanceUnloadCheckTimer <= 0)
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
-				CheckAndLoadAroundTarget();
+				CheckAndLoadAroundTarget(world);
 			}
 		}
 
-		public void CheckAndLoadAroundTarget()
+		//Loads a 1x32x1 column. Usually used for when the player first spawns into the world, so as to guarantee a valid spawn position, if their spawn position does not yet exist.
+		public void LoadColumn(World world)
+        {
+			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
+
+			for (int y = 0; y < world.sizeInChunks; y++)
+            {
+				ChunkPosition pos = new ChunkPosition(baseChunkPos.X, y, baseChunkPos.Z);
+
+				if (manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
+                {
+					io.DeserializeChunk(world, pos);
+					loadedChunks.Add(pos);
+				}
+            }
+        }
+
+		public void CheckAndLoadAroundTarget(World world)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			
@@ -69,7 +88,8 @@ namespace ViMG
 
 						if (distH.Length() < radiusH && manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
 						{
-							manager.MarkDirty(pos, false);
+							io.DeserializeChunk(world, pos);
+							//manager.MarkDirty(pos, false);
 							//saver.LoadOne(pos);
 							loadedChunks.Add(pos);
 						}
@@ -83,6 +103,8 @@ namespace ViMG
 
 				float len = dist.Length();
 
+				//Chunk c = manager.GetChunk(pos);
+
 				if (len > unloadRadius)
 					unloadChunks.Add(pos);
 			}
@@ -93,7 +115,9 @@ namespace ViMG
 					throw new Exception("???");
 
 				//saver.SaveOne(pos);
-				manager.UnloadMesh(pos);
+				io.SerializeChunk(pos);
+				manager.Unload(pos);
+				//manager.UnloadMesh(pos);
 				loadedChunks.Remove(pos);
 			}
 
@@ -117,8 +141,8 @@ namespace ViMG
 		public void UnloadAll()
 		{
 			loadedChunks.Clear();
-			manager.UnloadAllMeshes();
-			//manager.UnloadAll();
+			//manager.UnloadAllMeshes();
+			manager.UnloadAll();
 		}
 	}
 }

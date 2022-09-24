@@ -320,7 +320,7 @@ namespace ViMG
 
 			//ProcessPriorityMeshChunks(world);
 
-			ProcessChunkQueueSync(world, 1, 1);
+			ProcessChunkQueueSync(world, 1, 8);
 		}
 
 		public void WaitForFinishGenerate(World world)
@@ -354,26 +354,28 @@ namespace ViMG
 
 					var c = chunks[PosToIndex(pos)];
 
-					if (!c.meshDirty)
+					if (!c.meshDirty || !c.chunk.Initialized)
 					{
-						// Already meshed, remove from list
+						//Already meshed.
+						//Alternatively, the chunk may have been unloaded.
+						//Remove from list.
 						continue;
 					}
 
 					if (c.chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 					{
 						// Requeue - try again later.
-						chunksToMeshQueue.Enqueue(pos);
+						//chunksToMeshQueue.Enqueue(pos);
 						num++;
 						continue;
 						//throw new Exception("Cannot mesh chunk before it has been generated. Did you try to mark a chunk dirty before it has been generated?");
 					}
 
-					if (pos.X - 1 >= 0)
+					/*if (pos.X - 1 >= 0)
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X - 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
@@ -383,7 +385,7 @@ namespace ViMG
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y - 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
@@ -393,7 +395,7 @@ namespace ViMG
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z - 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
@@ -403,7 +405,7 @@ namespace ViMG
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
@@ -413,7 +415,7 @@ namespace ViMG
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
@@ -423,11 +425,11 @@ namespace ViMG
 					{
 						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
 						{
-							chunksToMeshQueue.Enqueue(pos);
+							//chunksToMeshQueue.Enqueue(pos);
 							num++;
 							continue;
 						}
-					}
+					}*/
 
 					MeshChunk(world, pos);
 					chunksToMeshAlreadyAdded.Remove(pos);
@@ -598,7 +600,7 @@ namespace ViMG
 
 			int ind = PosToIndex(chunkPos);
 
-			if (ind < 0 || ind >= chunks.Length)
+			if (ind < 0 || ind >= chunks.Length || !chunks[ind].chunk.Initialized)
 				return null;
 			else return chunks[ind].chunk;
 		}
@@ -662,7 +664,12 @@ namespace ViMG
 			}
 
 			if (IsInWorldBounds(position))
-				return GetChunk(position).GetData().GetRaw(position);
+			{
+				Chunk c = GetChunk(position);
+				if (c == null)
+					return 0;
+				else return c.GetData().GetRaw(position);
+			}
 			else return 0;
 		}
 
@@ -789,10 +796,13 @@ namespace ViMG
 
 			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
 			{
-				c.meshes[i].VBO.Dispose();
-				c.meshes[i].IBO.Dispose();
+				if (c.meshes[i] != null && !c.meshes[i].IsEmpty)
+				{
+					c.meshes[i].VBO.Dispose();
+					c.meshes[i].IBO.Dispose();
 
-				c.meshes[i] = null;
+					c.meshes[i] = null;
+				}
 			}
 
 			c.chunk.SetData(null);
