@@ -264,31 +264,6 @@ namespace ViMG
 				}
 			}
 
-			/*float[] heightmapStrengths = new float[sizeInCubes * sizeInCubes];
-
-			for (int x = 0; x < sizeInCubes; x++)
-			{
-				for (int z = 0; z < sizeInCubes; z++)
-				{
-					int i = z * sizeInCubes + x;
-					float height = HeightmapRaw[i];
-					
-					float s = 0;
-
-					for (int so = 0; so < sampleOffsets.Length; so++)
-					{
-						int io = (z + sampleOffsets[so].X) * sizeInCubes + (x + sampleOffsets[so].Y);
-
-						if (io < 0 || io >= sizeInCubes * sizeInCubes)
-							continue;
-
-						HeightmapRaw[io]
-					}
-
-					HeightmapRaw[i] = (float)firstY / (float)sizeInCubes;
-				}
-			}*/
-
 			Heightmap.SetData(HeightmapRaw);
 		}
 

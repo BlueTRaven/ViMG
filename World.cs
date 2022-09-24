@@ -288,7 +288,7 @@ namespace ViMG
 
 				ChunkLoadManager.UnloadAll();
 				ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
-				ChunkLoadManager.CheckAndLoadAroundTarget(this);
+				ChunkLoadManager.LoadAroundTarget(this);
 			}
 			else
 			{
@@ -304,7 +304,7 @@ namespace ViMG
 					player = EntityManager.GetAll<Player>().First() as Player;
 
 					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
-					ChunkLoadManager.CheckAndLoadAroundTarget(this);
+					ChunkLoadManager.LoadAroundTarget(this);
 				}
 				else
 				{

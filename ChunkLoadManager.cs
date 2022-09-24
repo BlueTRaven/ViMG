@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility.Ported;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,6 +23,11 @@ namespace ViMG
 
 		private Vector3 loadTarget;
 
+		private PriorityQueue<ChunkPosition> queue = new PriorityQueue<ChunkPosition>(true, (x) =>
+		{
+			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
+		}); 
+		
 		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO io)
 		{
 			this.saver = saver;
@@ -43,16 +49,42 @@ namespace ViMG
 
 		public void Update(double deltaTime, World world)
 		{
+			ProcessLoadQueue(world);
+
 			distanceUnloadCheckTimer -= (float)deltaTime;
 
 			if (distanceUnloadCheckTimer <= 0)
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
-				CheckAndLoadAroundTarget(world);
+				LoadAroundTarget(world);
 			}
 		}
 
-		//Loads a 1x32x1 column. Usually used for when the player first spawns into the world, so as to guarantee a valid spawn position, if their spawn position does not yet exist.
+		public void ProcessLoadQueue(World world)
+        {
+			if (queue.Count > 30)
+            {
+				queue.Sort();
+            }
+
+			const int NUM_PER_FRAME = 1;
+
+			int currentNum = 0;
+
+			while (queue.Count > 0 && currentNum < NUM_PER_FRAME)
+            {
+				ChunkPosition queuedPosition = queue.Dequeue();
+
+				io.DeserializeChunk(world, queuedPosition);
+				loadedChunks.Add(queuedPosition);
+
+				currentNum++;
+			}
+		}
+
+		//Loads a 1x32x1 column. Usually used for when the player first spawns into the world, so as to guarantee a valid spawn position,
+		//if their spawn position does not yet exist.
+		//NOTE this IMMEDIATELY loads chunks without going through the queue. Can be slow.
 		public void LoadColumn(World world)
         {
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
@@ -69,7 +101,7 @@ namespace ViMG
             }
         }
 
-		public void CheckAndLoadAroundTarget(World world)
+		public void LoadAroundTarget(World world)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			
@@ -88,10 +120,7 @@ namespace ViMG
 
 						if (distH.Length() < radiusH && manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
 						{
-							io.DeserializeChunk(world, pos);
-							//manager.MarkDirty(pos, false);
-							//saver.LoadOne(pos);
-							loadedChunks.Add(pos);
+							queue.EnqueueWithoutSorting(pos);
 						}
 					}
 				}
