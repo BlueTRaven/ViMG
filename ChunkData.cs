@@ -391,7 +391,8 @@ namespace ViMG
 			CubePosition positionCubeSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk);
 			CubePosition positionChunkSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position.InChunkSpace(chunk) : position;
 
-			ref ushort currentId = ref cubes[positionChunkSpace.X + Chunk.CHUNK_SIZE * (positionChunkSpace.Y + Chunk.CHUNK_SIZE * positionChunkSpace.Z)];
+			int index = positionChunkSpace.X + Chunk.CHUNK_SIZE * (positionChunkSpace.Y + Chunk.CHUNK_SIZE * positionChunkSpace.Z);
+			ushort currentId = cubes[index];
 			if (markDirty)
 			{
 				// no entities will be tracking while chunk is not initialized - skip this step
@@ -409,7 +410,7 @@ namespace ViMG
 				CubeUpdate(positionChunkSpace, id);
 			}
 
-			int sizeInCubes = chunk.GetChunkManager().sizeInCubes;
+			/*int sizeInCubes = chunk.GetChunkManager().sizeInCubes;
 			ref float height = ref chunk.GetChunkManager().HeightmapRaw[positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X];
 
 			if (positionCubeSpace.Y > height * sizeInCubes)
@@ -445,9 +446,9 @@ namespace ViMG
 					chunk.GetChunkManager().Heightmap.SetData(0, new Rectangle(positionCubeSpace.X, positionCubeSpace.Z, 1, 1),
 							chunk.GetChunkManager().HeightmapRaw, positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X, 1);
 				}
-			}
+			}*/
 
-			currentId = id;
+			cubes[index] = id;
 
 			if (markDirty)
 			{

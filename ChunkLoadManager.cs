@@ -7,11 +7,18 @@ using System.Text;
 namespace ViMG
 {
 	public class ChunkLoadManager
-	{
-		private WorldSaver saver;
+    {
+		private enum LoadingState
+        {
+			Unloaded,
+			Loading,
+			Loaded
+        }
+
+        private WorldSaver saver;
 		private ChunkManager manager;
 		private ChunkManagerIO io;
-		private HashSet<ChunkPosition> loadedChunks = new HashSet<ChunkPosition>();
+		private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
 
 		private const float DISTANCE_UNLOAD_CHECK_TIME = 4;
@@ -75,8 +82,12 @@ namespace ViMG
             {
 				ChunkPosition queuedPosition = queue.Dequeue();
 
+				//Chunk has been told to unload before we got to it.
+				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+					continue;
+
 				io.DeserializeChunk(world, queuedPosition);
-				loadedChunks.Add(queuedPosition);
+				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				currentNum++;
 			}
@@ -93,10 +104,10 @@ namespace ViMG
             {
 				ChunkPosition pos = new ChunkPosition(baseChunkPos.X, y, baseChunkPos.Z);
 
-				if (manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
+				if (manager.IsInWorldBounds(pos) && (!loadedChunks.ContainsKey(pos) || loadedChunks[pos] == LoadingState.Unloaded))
                 {
 					io.DeserializeChunk(world, pos);
-					loadedChunks.Add(pos);
+					loadedChunks.Add(pos, LoadingState.Loaded);
 				}
             }
         }
@@ -114,19 +125,25 @@ namespace ViMG
 						var pos = baseChunkPos + new ChunkPosition(x, y, z);
 
 						Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
-						Vector3 dist = new Vector3(pos.X, pos.Y, pos.Z) - new Vector3(baseChunkPos.X, baseChunkPos.Y, baseChunkPos.Z);
-
-						//float len = dist.Length();
-
-						if (distH.Length() < radiusH && manager.IsInWorldBounds(pos) && !loadedChunks.Contains(pos))
+						
+						if (distH.Length() < radiusH && manager.IsInWorldBounds(pos))
 						{
-							queue.EnqueueWithoutSorting(pos);
+							if (!loadedChunks.ContainsKey(pos))
+							{ 
+								loadedChunks.Add(pos, LoadingState.Loading);
+								queue.EnqueueWithoutSorting(pos);
+							}
+							else if (loadedChunks[pos] == LoadingState.Unloaded)
+                            {
+								loadedChunks[pos] = LoadingState.Loading;
+								queue.EnqueueWithoutSorting(pos);
+							}
 						}
 					}
 				}
 			}
 
-			foreach (ChunkPosition pos in loadedChunks)
+			foreach (ChunkPosition pos in loadedChunks.Keys)
 			{
 				Vector2 dist = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
 
@@ -140,14 +157,13 @@ namespace ViMG
 
 			foreach (ChunkPosition pos in unloadChunks)
 			{
-				if (!loadedChunks.Contains(pos))
-					throw new Exception("???");
+				if (loadedChunks[pos] == LoadingState.Loaded)
+				{
+					io.SerializeChunk(pos);
+					manager.Unload(pos);
+				}
 
-				//saver.SaveOne(pos);
-				io.SerializeChunk(pos);
-				manager.Unload(pos);
-				//manager.UnloadMesh(pos);
-				loadedChunks.Remove(pos);
+				loadedChunks[pos] = LoadingState.Unloaded;
 			}
 
 			unloadChunks.Clear();
@@ -158,19 +174,9 @@ namespace ViMG
 			this.loadTarget = position;
 		}
 
-		public void ManualLoad(ChunkPosition position)
-		{
-			if (!loadedChunks.Contains(position))
-			{
-				loadedChunks.Add(position);
-				//saver.LoadOne(position);
-			}
-		}
-
 		public void UnloadAll()
 		{
 			loadedChunks.Clear();
-			//manager.UnloadAllMeshes();
 			manager.UnloadAll();
 		}
 	}
