@@ -4,6 +4,7 @@
 sampler Sampler : register(s0);
 
 Texture2D Diffuse : register(t0);
+Texture2D Emissive : register(t1);
 
 float4x4 World;
 float4x4 ViewProjection;
@@ -11,7 +12,7 @@ float4x4 ViewProjection;
 float4 TintColor;
 float AmbientStrength;
 
-Texture2D WorldheightMapAmb	: register(t1);
+Texture2D WorldheightMapAmb	: register(t2);
 
 bool UseSourceRect;
 float2 SourceRectPos;
@@ -49,7 +50,8 @@ float4 MainPS(VSOutputCube input) : SV_TARGET
 	float ambientWorldheight = WorldheightMapAmb.Sample(Sampler, float2(0.5, 1 - (input.PositionWS.y / (512.0 * 0.1)))).r;
 
 	float4 diffuse = Diffuse.Sample(Sampler, input.TexCoord);
-	return float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color;
+	float3 emissive = Emissive.Sample(Sampler, input.TexCoord);
+	return float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color + float4(emissive.rgb, 0);
 }
 
 technique BasicColorDrawing

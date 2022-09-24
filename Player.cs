@@ -55,6 +55,7 @@ namespace ViMG
 		{
 			Noclip,
 			Normal,
+			Swimming,
 			Attack,
 			Hurt,
 		}
@@ -69,6 +70,8 @@ namespace ViMG
 		private float moveSpeed = Cube.CUBE_SCALE * 0.4f;
 		public Vector3 MaxVelocity = new Vector3(3.2f, 17, 3.2f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocityRunning = new Vector3(6.4f, 17, 6.4f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocitySwimming = new Vector3(3.2f, 3.2f, 3.2f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocitySwimmingFast = new Vector3(6.4f, 6.4f, 6.4f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
 
 		public float jumpSpeed = 10f * Cube.CUBE_SCALE;
@@ -79,7 +82,8 @@ namespace ViMG
 		private State state;
 
 		private bool onGround;
-		public bool InWater;
+		private bool inWater;
+		private bool headUnderWater;
 
 		private Rectangle3D Bounds => new Rectangle3D(Position + new Vector3(-Cube.CUBE_SCALE * 0.85f / 2f, -Cube.CUBE_SCALE * 2f, -Cube.CUBE_SCALE * 0.85f / 2f),
 			new Vector3(Cube.CUBE_SCALE * 0.85f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.85f));
@@ -118,6 +122,7 @@ namespace ViMG
 
 		private SimpleMesh<VertexCube, int> lookAtMesh;
 		private SimpleMesh<VertexCube, int> itemMesh;
+		private (VertexBuffer VBO, IndexBuffer IBO) testMesh;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -258,8 +263,15 @@ namespace ViMG
 			{
 				invulnTimer -= (float)deltaTime;
 
-				UpdateMovement(deltaTime);
-
+				if (inWater)
+				{
+					UpdateMovementWater(deltaTime);
+				}
+				else
+				{
+					UpdateMovement(deltaTime);
+				}
+				
 				UpdateCollision(deltaTime);
 				
 				Position += Velocity * (float)deltaTime;
@@ -458,6 +470,113 @@ namespace ViMG
 			}
 
 			stats = accumulatedStats;
+		}
+
+		private void UpdateMovementWater(double deltaTime)
+		{
+			Vector3 actualMaxVel = MaxVelocitySwimming;
+
+			bool movementPressed = false;
+			bool jumpHeld = false;
+			bool swimmingFast = false;
+
+			if (inputLockupTimer <= 0 && !uiPlayer.Opened)
+			{
+				if (Main.inputManager.IsHeld(Keys.LeftShift))
+					swimmingFast = true;
+
+				if (swimmingFast)
+					actualMaxVel = MaxVelocitySwimmingFast;
+
+				actualMaxVel += new Vector3(stats.Speed, 0, stats.Speed);
+
+				float actualAcceleration = moveSpeed + stats.Acceleration;
+
+				if (Main.inputManager.IsPressed(Keys.W))
+				{
+					Velocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.S))
+				{
+					Velocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.A))
+				{
+					Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.D))
+				{
+					Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.Space))
+				{
+					Velocity.Y += moveSpeed;
+					movementPressed = true;
+					jumpHeld = true;
+				}
+
+				if (Velocity.Length() > actualMaxVel.Length())
+				{
+					Velocity.Normalize();
+					Velocity *= actualMaxVel.Length();
+				}
+
+				if (currentUI == uiPlayer && !uiPlayer.Opened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+				{
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+					{
+						if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.LeftClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+					{
+						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
+						if (tracker.HasValue() && tracker.Get().OnInteract(this))
+							PerformAction();
+						else if (inventory.Get(uiPlayer.HighlightIndex).item != null && inventory.Get(uiPlayer.HighlightIndex).item.RightClick(this, inventory, uiPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+				}
+
+				if (Main.inputManager.JustPressed(Keys.Q))
+				{
+					if (inventory.Get(uiPlayer.HighlightIndex).valid)
+					{
+						ThrowItem(inventory, uiPlayer.HighlightIndex, 1);
+					}
+				}
+			}
+
+			if (!movementPressed)
+			{
+				if (Velocity.Length() > 0)
+				{
+					float decel = Cube.CUBE_SCALE / 8f;
+
+					Velocity = Vector3.Normalize(Velocity) * MathF.Max(Velocity.Length() - decel, 0);
+				}
+			}
+
+			if (Velocity.Length() > float.Epsilon)
+				hasMoved = true;
+
+			if (Velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
+				Velocity.Y = Cube.CUBE_SCALE * 3.2f;
+
+			if (!jumpHeld)
+				Velocity.Y += World.GRAVITY;
+
+			if (Velocity.Y < -actualMaxVel.Y)
+				Velocity.Y = -actualMaxVel.Y;
+			if (Velocity.Y > actualMaxVel.Y)
+				Velocity.Y = actualMaxVel.Y;
 		}
 
 		private void UpdateMovement(double deltaTime)
@@ -678,7 +797,9 @@ namespace ViMG
 
 		private void UpdateCollision(double deltaTime)
 		{
+			inWater = false;
 			onGround = false;
+			headUnderWater = false;
 
 			const float RADIUS = Cube.CUBE_SCALE * 0.4f;
 
@@ -719,7 +840,8 @@ namespace ViMG
 						CubePosition pos = new CubePosition(x, y, z);
 
 						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && cube.Collision == Cube.CollisionValue.Collidable)
+						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && 
+							(cube.Collision == Cube.CollisionValue.Collidable || cube.Collision == Cube.CollisionValue.LiquidWater))
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -732,39 +854,57 @@ namespace ViMG
 
 								bool collided = false;
 
-								if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+								if (cube.Collision == Cube.CollisionValue.LiquidWater)
 								{
-									Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
-
-									if (lowerChange.Y > 0 && Velocity.Y <= 0)
+									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
 									{
-										Velocity.Y = 0;
-										onGround = true;
+										inWater = true;
+										collided = true;
 									}
-									else if (lowerChange.Y < 0)
-										Velocity.Y = 0;
-									else if (lowerChange.X != 0)
-										Velocity.X = 0;
-									else if (lowerChange.Z != 0)
-										Velocity.Z = 0;
 
-									collided = true;
+									if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+									{
+										inWater = true;
+										headUnderWater = true;
+										collided = true;
+									}
 								}
-                                else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-                                {
-                                    Position = upperCheckPos + upperChange;
+								else
+								{
+									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+									{
+										Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
 
-                                    if (upperChange.Y != 0)
-                                        Velocity.Y = 0;
-                                    else if (upperChange.X != 0)
-                                        Velocity.X = 0;
-                                    else if (upperChange.Z != 0)
-                                        Velocity.Z = 0;
+										if (lowerChange.Y > 0 && Velocity.Y <= 0)
+										{
+											Velocity.Y = 0;
+											onGround = true;
+										}
+										else if (lowerChange.Y < 0)
+											Velocity.Y = 0;
+										else if (lowerChange.X != 0)
+											Velocity.X = 0;
+										else if (lowerChange.Z != 0)
+											Velocity.Z = 0;
 
-                                    collided = true;
-                                }
+										collided = true;
+									}
+									else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+									{
+										Position = upperCheckPos + upperChange;
 
-                                if (collided)
+										if (upperChange.Y != 0)
+											Velocity.Y = 0;
+										else if (upperChange.X != 0)
+											Velocity.X = 0;
+										else if (upperChange.Z != 0)
+											Velocity.Z = 0;
+
+										collided = true;
+									}
+								}
+
+								if (collided)
 									break;
 							}
 						}
@@ -907,6 +1047,57 @@ namespace ViMG
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
+			/*if (testMesh.VBO == null)
+            {
+				List<VertexCube> sunVertices = new List<VertexCube>();
+				List<int> sunIndices = new List<int>();
+
+				sunIndices.Add(0);
+				sunIndices.Add(1);
+				sunIndices.Add(3);
+				sunIndices.Add(1);
+				sunIndices.Add(2);
+				sunIndices.Add(3);
+
+				sunIndices.Add(3);
+				sunIndices.Add(1);
+				sunIndices.Add(0);
+				sunIndices.Add(3);
+				sunIndices.Add(2);
+				sunIndices.Add(1);
+
+				const float SUN_VERT_DIST = Cube.CUBE_SCALE * 6;
+				sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, new Vector2(0, 1), new Vector3(0, 0, -1)));
+				sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, new Vector2(0, 0), new Vector3(0, 0, -1)));
+				sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, new Vector2(1, 0), new Vector3(0, 0, -1)));
+				sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, new Vector2(1, 1), new Vector3(0, 0, -1)));
+
+				testMesh = MeshHelper.MakeSimplerMesh(device, sunVertices, sunIndices);
+            }
+            else
+            {
+				float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
+				Vector2 worldCenter = new Vector2(worldRadius, worldRadius);
+				Vector2 dirWorldCenter = new Vector2(worldCenter.X - Position.X, worldCenter.Y - Position.Z);
+				float dist = dirWorldCenter.Length();
+
+				const float MIN_DIST = Cube.CUBE_SCALE * 180;
+				const float MAX_DIST = Cube.CUBE_SCALE * 224;
+
+				//TODO: if dist > 232, do the thing...
+
+				if (dist > Cube.CUBE_SCALE * 180)
+				{
+					Vector3 tpos = Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 32;
+
+					float alpha = (dist - MIN_DIST) / (MAX_DIST - MIN_DIST);
+
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)(Cube.CUBE_SCALE * 40),
+						Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos), 
+						Main.assetsManager.GetAsset<Texture2D>("leviathan"), DrawHelper.WhitePixel, testMesh.VBO, testMesh.IBO, new RectangleF(0, 0, 64, 64), Color.White * alpha));
+				}
+			}*/
+
 			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
 
 			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
@@ -932,7 +1123,8 @@ namespace ViMG
 					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 					Matrix.CreateScale(1.126f) *
 					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)), Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)), 
+					Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
 					lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
 				/*device.DepthStencilState = Main.genericDSS;
 				device.RasterizerState = Main.wireframeRS;
@@ -953,6 +1145,11 @@ namespace ViMG
 		public void DrawUI(SpriteBatch batch)
 		{
 			currentUI.Draw(batch);
+
+			if (headUnderWater)
+            {
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
+            }
 		}
 
 		public Inventory GetInventory()
@@ -1007,6 +1204,12 @@ namespace ViMG
 				}
 			}
 		}
+
+		public void Kill()
+        {
+			//health = 0;
+			world.EntityManager.Remove(this);
+        }
 
 		private int DamageCalculation(HitboxManager.Hitbox hitbox)
         {

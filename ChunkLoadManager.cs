@@ -9,6 +9,7 @@ namespace ViMG
 	{
 		private WorldSaver saver;
 		private ChunkManager manager;
+		private ChunkManagerIO io;
 		private HashSet<ChunkPosition> loadedChunks = new HashSet<ChunkPosition>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
 
@@ -21,7 +22,7 @@ namespace ViMG
 
 		private Vector3 loadTarget;
 
-		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius)
+		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO managerIO)
 		{
 			this.saver = saver;
 			this.manager = manager;

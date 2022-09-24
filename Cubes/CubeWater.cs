@@ -12,7 +12,7 @@ namespace ViMG.Cubes
 		{
 			Touchable = false;
 			Transparency = TransparencyValue.TransparentOccludesSiblings;
-			Collision = CollisionValue.None;
+			Collision = CollisionValue.LiquidWater;
 		}
 
         public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)

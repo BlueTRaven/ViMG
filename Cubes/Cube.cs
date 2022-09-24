@@ -175,7 +175,8 @@ namespace ViMG.Cubes
 		public enum CollisionValue 
 		{
 			None,
-			Collidable
+			Collidable,
+			LiquidWater
 		}
 
 		public ushort Id { get; private set; }

@@ -10,6 +10,19 @@ namespace ViMG
 {
 	public static class MeshHelper
 	{
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices) 
+			where TVertex : struct 
+			where TIndex : struct
+        {
+			VertexBuffer VBO = new VertexBuffer(device, typeof(TVertex), vertices.Count, BufferUsage.WriteOnly);
+			IndexBuffer IBO = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
+
+			VBO.SetData(vertices.ToArray());
+			IBO.SetData(indices.ToArray());
+
+			return (VBO, IBO);
+        }
+
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeEnemyQuad(GraphicsDevice device, float width, float height)
         {
 			Vector3 min = -new Vector3(width / 2f, 0, 0);

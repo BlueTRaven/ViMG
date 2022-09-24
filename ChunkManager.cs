@@ -812,6 +812,7 @@ namespace ViMG
 					c.meshes[j] = null;
 				}
 
+				ChunkDatas.Return(c.chunk.GetData());
 				c.chunk.SetData(null);
 			}
 		}

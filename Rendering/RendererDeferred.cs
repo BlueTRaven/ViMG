@@ -76,9 +76,10 @@ namespace ViMG.Rendering
 
         public struct TransparentDraw
         {
-            public int SortValue;
+            public float SortValue;
             public Matrix Transform;
-            public Texture2D Texture;
+            public Texture2D Diffuse;
+            public Texture2D Emissive;
             public VertexBuffer VBO;
             public IndexBuffer IBO;
 
@@ -89,11 +90,12 @@ namespace ViMG.Rendering
 
             public Vector4 TintColor;
 
-            public TransparentDraw(int sortValue, Matrix transform, Texture2D texture, VertexBuffer vbo, IndexBuffer ibo, RectangleF? sourceRect, Color? tintColor = null)
+            public TransparentDraw(float sortValue, Matrix transform, Texture2D diffuse, Texture2D emissive, VertexBuffer vbo, IndexBuffer ibo, RectangleF? sourceRect = null, Color? tintColor = null)
             {
                 this.SortValue = sortValue;
                 this.Transform = transform;
-                this.Texture = texture;
+                this.Diffuse = diffuse;
+                this.Emissive = emissive;
                 this.VBO = vbo;
                 this.IBO = ibo;
 
@@ -116,7 +118,7 @@ namespace ViMG.Rendering
                     TintColor = Color.White.ToVector4();
                 else TintColor = tintColor.Value.ToVector4();
 
-                TextureSize = new Vector2(texture.Width, texture.Height);
+                TextureSize = new Vector2(diffuse.Width, diffuse.Height);
             }
         }
 
@@ -465,7 +467,7 @@ namespace ViMG.Rendering
                 device.SetVertexBuffer(draw.VBO);
                 device.Indices = draw.IBO;
 
-                EffectTransparent.Parameters["Diffuse"].SetValue(draw.Texture);
+                EffectTransparent.Parameters["Diffuse"].SetValue(draw.Diffuse);
                 EffectTransparent.Parameters["World"].SetValue(draw.Transform);
                 EffectTransparent.Parameters["TintColor"].SetValue(draw.TintColor);
 

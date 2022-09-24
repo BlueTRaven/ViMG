@@ -304,30 +304,10 @@ namespace ViMG
 
 			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 
-			/*for (int x = 0; x < sizeInCubes; x++)
-            {
-				for (int z = 0; z < sizeInCubes; z++)
-                {
-					int firstY = 0;
-					for (int y = sizeInCubes; y >= 0; y--)
-                    {
-						Cube cube = ChunkManager.GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						if (cube.Solid || (cube.Transparency != Cube.TransparencyValue.Invisible && cube.Transparency != Cube.TransparencyValue.Transparent && cube.Transparency != Cube.TransparencyValue.TransparentOccludesSiblings))
-                        {
-							firstY = y;
-							break;
-                        }
-                    }
-
-					int i = z * sizeInCubes + x;
-
-					heightMap[i] = (float)firstY / (float)sizeInCubes;//(float)ChunkManager.GetFirstSolidDown(new CubePosition(x, sizeInCubes, z)).GetOrDefault(new CubePosition()).Y / (float)sizeInCubes;
-                }
-			}*/
-
-			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8);
+			ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, new ChunkManagerIO(ChunkManager, "test"));
 			//ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
 
+			EntityManager.Add(new EntityLeviathan());
 			LoadedFolderName = folderName;
 			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 		}
@@ -548,7 +528,7 @@ namespace ViMG
 					//Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), mesh.VBO, mesh.IBO, null, null));
+						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, null));
 				}
 
 				NumChunksDrawn++;
@@ -573,7 +553,7 @@ namespace ViMG
 				{
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
 						Matrix.CreateTranslation(camChunkPosWS),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_day"),
+						Main.assetsManager.GetAsset<Texture2D>("skybox_day"), DrawHelper.BlackPixel,
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
 				}
 
@@ -582,7 +562,7 @@ namespace ViMG
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						//Matrix.CreateScale(1.001f) *
 						Matrix.CreateTranslation(camChunkPosWS),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_night"),
+						Main.assetsManager.GetAsset<Texture2D>("skybox_night"), DrawHelper.BlackPixel,
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaNight));
 				}
 

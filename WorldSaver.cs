@@ -486,6 +486,7 @@ namespace ViMG
 						return LoadError.InvalidVersion;
 					else
 					{
+						//Discard the rest of the buffer.
 						int remainingBytes = (int)(HEADER_OFFSET - fs.Position);
 						br.Read(new byte[remainingBytes], 0, remainingBytes);
 					}
