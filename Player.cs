@@ -297,14 +297,13 @@ namespace ViMG
 					state = State.Normal;
 			}
 
-			Vector2 center = new Vector2(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
+			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
+			Vector2 center = new Vector2(worldRadius, worldRadius);
 			Vector2 distFromCenter = new Vector2(center.X - Position.X, center.Y - Position.Z);
 
-			if (distFromCenter.Length() > world.sizeInCubes * Cube.CUBE_SCALE / 2f)
+			if (distFromCenter.Length() > worldRadius)
 			{
-				distFromCenter = Vector2.Normalize(distFromCenter) * (world.sizeInCubes * Cube.CUBE_SCALE / 2f - 100f);
-				//distFromCenter.X *= -1;
-				//distFromCenter.Y *= -1;
+				distFromCenter = Vector2.Normalize(distFromCenter) * (worldRadius - (Cube.CUBE_SCALE * 5));
 
 				Position.X = center.X + distFromCenter.X;
 				Position.Z = center.Y + distFromCenter.Y;
