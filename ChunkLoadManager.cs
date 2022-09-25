@@ -163,7 +163,7 @@ namespace ViMG
 					manager.Unload(pos);
 				}
 
-				loadedChunks[pos] = LoadingState.Unloaded;
+				loadedChunks.Remove(pos);
 			}
 
 			unloadChunks.Clear();

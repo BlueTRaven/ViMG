@@ -281,6 +281,8 @@ namespace ViMG
 			return position.X + sizeInChunks * (position.Y + sizeInChunks * position.Z);
 		}
 
+		private Chunk[] cs = new Chunk[6];
+
 		// Synchronously processess chunks in the queue.
 		public void ProcessChunkQueueSync(World world, int maxGen = -1, int maxMesh = -1)
 		{
@@ -303,77 +305,93 @@ namespace ViMG
 						//Already meshed.
 						//Alternatively, the chunk may have been unloaded.
 						//Remove from list.
+						if (chunksToMeshAlreadyAdded.Contains(pos))
+							chunksToMeshAlreadyAdded.Remove(pos);
+
 						continue;
 					}
 
-					if (c.chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+					if (pos.X - 1 >= 0)
 					{
-						// Requeue - try again later.
-						//chunksToMeshQueue.Enqueue(pos);
-						num++;
-						continue;
-						//throw new Exception("Cannot mesh chunk before it has been generated. Did you try to mark a chunk dirty before it has been generated?");
-					}
-
-					/*if (pos.X - 1 >= 0)
-					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X - 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X - 1, pos.Y, pos.Z))].chunk;
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
+
+						cs[0] = adjacent;
 					}
 
 					if (pos.Y - 1 >= 0)
 					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y - 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y - 1, pos.Z))].chunk;
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
+
+						cs[1] = adjacent;
 					}
 
 					if (pos.Z - 1 >= 0)
 					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z - 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z - 1))].chunk;
+
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
+
+						cs[2] = adjacent;
 					}
 
-					if (pos.X + 1 < Chunk.CHUNK_SIZE)
+					if (pos.X + 1 < sizeInChunks)
 					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk;
+					
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
+
+						cs[3] = adjacent;
 					}
 
-					if (pos.Y + 1 < Chunk.CHUNK_SIZE)
+					if (pos.Y + 1 < sizeInChunks)
 					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk;
+						
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
+
+						cs[4] = adjacent;
 					}
 
-					if (pos.Z + 1 < Chunk.CHUNK_SIZE)
+					if (pos.Z + 1 < sizeInChunks)
 					{
-						if (chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk.GetData().GenStep != ChunkData.GenerationStep.Done)
+						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk;
+					
+						if (!adjacent.Initialized)
 						{
-							//chunksToMeshQueue.Enqueue(pos);
+							chunksToMeshQueue.EnqueueWithoutSorting(pos);
 							num++;
 							continue;
 						}
-					}*/
+
+						cs[5] = adjacent;
+					}
 
 					MeshChunk(world, pos);
 					chunksToMeshAlreadyAdded.Remove(pos);
@@ -691,7 +709,8 @@ namespace ViMG
 					c.meshes[i] = null;
 				}
 			}
-
+			
+			ChunkDatas.Return(c.chunk.GetData());
 			c.chunk.SetData(null);
 		}
 
@@ -737,9 +756,6 @@ namespace ViMG
 				chunksToMeshQueue.EnqueueWithoutSorting(position);
 				chunksToMeshAlreadyAdded.Add(position);
 			}
-
-			/*if (!modifiedChunks.Contains(position))
-				modifiedChunks.Add(position);*/
 		}
 
 		public void MarkDirty(int x, int y, int z, bool markModified)

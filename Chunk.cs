@@ -36,10 +36,6 @@ namespace ViMG
 
 		public Chunk(ChunkManager cm, ChunkPosition position)
 		{
-			data = cm.ChunkDatas.Get();
-			data.SetChunk(this);
-			data.GenStep = ChunkData.GenerationStep.Broad;
-
 			this.manager = cm;
 			this.position = position;
 		}

@@ -436,6 +436,7 @@ namespace ViMG
 			{
 				if (world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 				{
+					var c = world.GetChunkManager().GetCube(lookAtResult.hit);
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));

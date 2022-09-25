@@ -314,7 +314,7 @@ namespace ViMG
 
 			if (chunk.GetWorld().GetChunkManager().IsInWorldBounds(position))
 			{
-				Chunk offsetChunk = chunk.GetWorld().GetChunkManager().GetChunk(position.InCubeSpace(chunk));
+				Chunk offsetChunk = chunk.GetWorld().GetChunkManager().GetChunk(position);
 				offsetChunk.GetData().MarkDirty(position.InChunkSpace(offsetChunk));
 			}
 		}
@@ -495,110 +495,6 @@ namespace ViMG
 
 			MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-			/*for (int x = -1; x <= 1; x++)
-			{ 
-				for (int y = -1; y <= 1; y++)
-				{
-					for (int z = -1; z <= 1; z++)
-					{
-						if (x == 0 && y == 0 && z == 0)
-							continue;
-
-						MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
-
-						int ox = position.X + x;
-						int oy = position.Y + y;
-						int oz = position.Z + z;
-
-						int id = -1;
-
-						if (IsInChunkBounds(new CubePosition(ox, oy, oz)))
-							id = GetRaw(ox, oy, oz);
-
-						if (x != 0 && y == 0 && z == 0)
-						{
-							if (x < 0)
-								side = MeshHelper.CubeFace.LEFT;
-							else if (x > 0) side = MeshHelper.CubeFace.RIGHT;
-						
-							if (id <= 0)
-								faces |= side;
-						}
-
-						if (y != 0 && x == 0 && z == 0)
-						{
-							if (y < 0)
-								side = MeshHelper.CubeFace.DOWN;
-							else if (y > 0) side = MeshHelper.CubeFace.UP;
-
-							if (id <= 0)
-								faces |= side;
-						}
-
-						if (z != 0 && y == 0 && x == 0)
-						{
-							if (z < 0)
-								side = MeshHelper.CubeFace.FRONT;
-							else if (z > 0) side = MeshHelper.CubeFace.BACK;
-							
-							if (id <= 0)
-								faces |= side;
-						}
-					}
-				}
-			}*/
-
-			/*for (int i = -1; i <= 1; i++)
-			{
-				//if (i == 0)
-					//continue;
-
-				int x = position.X + i;
-
-				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
-
-				if (i < 0)
-					side = MeshHelper.CubeFace.LEFT;
-				else if (i > 0) side = MeshHelper.CubeFace.RIGHT;
-
-				if (x < 0 || x >= Chunk.CHUNK_SIZE)
-					faces |= side;
-				else if (GetRaw(x, position.Y, position.Z) == 0)
-					faces |= side;
-			}
-
-			for (int i = -1; i <= 1; i++)
-			{
-				int y = position.Y + i;
-
-				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
-
-				if (i < 0)
-					side = MeshHelper.CubeFace.DOWN;
-				else if (i > 0) side = MeshHelper.CubeFace.UP;
-
-				if (y < 0 || y >= Chunk.CHUNK_SIZE)
-					faces |= side;
-				else if (GetRaw(position.X, y, position.Z) == 0)
-					faces |= side;
-			}
-
-			for (int i = -1; i <= 1; i++)
-			{
-				int z = position.Z + i;
-
-				MeshHelper.CubeFace side = MeshHelper.CubeFace.NONE;
-
-				if (i < 0)
-					side = MeshHelper.CubeFace.FRONT;
-				else if (i > 0) side = MeshHelper.CubeFace.BACK;
-
-				if (z < 0 || z >= Chunk.CHUNK_SIZE)
-					faces |= side;
-				else if (GetRaw(position.X, position.Y, z) == 0)
-					faces |= side;
-			}*/
-
 			if (HasClearSide(position.X - 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X - 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
 				faces |= MeshHelper.CubeFace.LEFT;
 			if (HasClearSide(position.X + 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X + 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
@@ -619,6 +515,12 @@ namespace ViMG
 
 		private bool HasClearSide(int x, int y, int z, Cube currentCube, World world)
 		{
+			/*if (!IsInChunkBounds(x, y, z))
+			{
+				CubePosition cpos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk);
+				chunk.GetChunkManager().GetChunk(cpos).GetData().MarkOffsetChunkDirty(cpos);
+			}*/
+
 			Cube adjacentCube = GetCubeOrAdjacent(x, y, z, world).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent || adjacentCube.Transparency == Cube.TransparencyValue.Invisible)
