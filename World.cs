@@ -318,6 +318,8 @@ namespace ViMG
 					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
 					player.Position = playerSpawnPos;
+
+					Main.camera.Position = player.Position;
 				}
 			}
 
