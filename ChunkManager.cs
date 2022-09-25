@@ -137,6 +137,12 @@ namespace ViMG
 
 				BroadChunkTaskState state = new BroadChunkTaskState(chunkStart, chunkEnd, total, chunks, generator);
 
+				for (int j = chunkStart; j < chunkEnd; j++)
+                {
+					chunks[j].chunk.SetData(ChunkDatas.Get());
+					chunks[j].chunk.Initialize(world);
+                }
+
 				Task task = new Task(GenerateChunkDetailTaskFn, state);
 
 				task.Start();
@@ -173,7 +179,7 @@ namespace ViMG
 				}
 
 				generator.PostGenerateDetail(this);
-				GenerateHeightmap();
+				//GenerateHeightmap();
 			}
 
 			num = 0;
@@ -722,10 +728,13 @@ namespace ViMG
 
 				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
 				{
-					c.meshes[j].VBO.Dispose();
-					c.meshes[j].IBO.Dispose();
+					if (c.meshes[j] != null && !c.meshes[j].IsEmpty)
+					{
+						c.meshes[j].VBO.Dispose();
+						c.meshes[j].IBO.Dispose();
 
-					c.meshes[j] = null;
+						c.meshes[j] = null;
+					}
 				}
 
 				ChunkDatas.Return(c.chunk.GetData());

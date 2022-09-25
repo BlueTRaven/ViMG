@@ -66,6 +66,8 @@ namespace ViMG
             {
 				SerializeChunk(i);
             }
+
+			loaded = true;
         }
 
 		//Serializes a single chunk into the local byte stream. This does not save anything to disk! If you need to save, call Save!

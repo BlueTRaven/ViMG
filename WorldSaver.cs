@@ -207,7 +207,7 @@ namespace ViMG
 				f.Close();
 			}
 
-			while (true)
+			/*while (true)
 			{
                 try
                 {
@@ -218,18 +218,18 @@ namespace ViMG
 
 					File.WriteAllBytes(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, bytes);
 
-                    /*using (FileStream fsHeightmap = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, FileMode.Truncate, FileAccess.Write, FileShare.None))
+                    *//*using (FileStream fsHeightmap = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_HEIGHTMAP, FileMode.Truncate, FileAccess.Write, FileShare.None))
 					{
 
 						//chunkManager.Heightmap.SaveAsPng(fsHeightmap, chunkManager.sizeInCubes, chunkManager.sizeInCubes);
-					}*/
+					}*//*
 					break;
 				}
 				catch (Exception e) 
 				{
 
 				}
-			}
+			}*/
 
 			SaveEntities(folderName);
 
