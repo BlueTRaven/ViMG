@@ -38,10 +38,11 @@ namespace ViMG
 			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
 		}); 
 		
-		public ChunkLoadManager(WorldSaver saver, ChunkManager manager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO chunkIO, EntityManagerIO entIO)
+		public ChunkLoadManager(WorldSaver saver, ChunkManager chunkManager, EntityManager entityManager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
 			this.saver = saver;
-			this.chunkManager = manager;
+			this.chunkManager = chunkManager;
+			this.entityManager = entityManager;
 			this.radiusH = radiusH;
 			this.radiusV = radiusV;
 			this.unloadRadius = unloadRadius;
@@ -60,6 +61,29 @@ namespace ViMG
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
 				LoadAroundTarget(world);
+			}
+		}
+
+		public IEnumerable<ChunkPosition> GetLoadedChunks()
+        {
+			return loadedChunks.Keys;
+        }
+
+		//Loads the entirety of the loading queue at once.
+		//It's best practice to use this before saving, so as not to miss loading chunks!
+		public void FlushLoadQueue(World world)
+		{
+			while (queue.Count > 0)
+			{
+				ChunkPosition queuedPosition = queue.Dequeue();
+
+				//Chunk has been told to unload before we got to it.
+				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+					continue;
+
+				chunkIO.DeserializeChunk(world, queuedPosition);
+				entIO.Deserialize(queuedPosition);
+				loadedChunks[queuedPosition] = LoadingState.Loaded;
 			}
 		}
 
@@ -160,7 +184,7 @@ namespace ViMG
 					chunkIO.SerializeChunk(pos);
 					entIO.Serialize(pos);
 
-					//TODO: entityManager.Unload(pos);
+					entityManager.Unload(pos);
 					chunkManager.Unload(pos);
 				}
 

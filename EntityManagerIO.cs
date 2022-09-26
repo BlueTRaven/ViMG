@@ -56,6 +56,7 @@ namespace ViMG
 			public int size;
 			public int chksum;
 
+			public byte[] header;
 			public byte[] data;
 
 			public EntityData(Entity entity)
@@ -112,9 +113,10 @@ namespace ViMG
 
 				SaveHelper.SaveInt32(headerBlock, chksum);						//ck
 
-				SaveHelper.SaveBytesFlat(dataBlock, headerBlock);				//e-h
-				SaveHelper.SaveBytesFlat(dataBlock, entityDataBlockData);		//e
+				//SaveHelper.SaveBytesFlat(dataBlock, headerBlock);				//e-h
+				SaveHelper.SaveBytesFlat(dataBlock, entityDataBlockData);       //e
 
+				header = headerBlock.ToArray();
 				data = dataBlock.ToArray();
 			}
 		}
@@ -172,7 +174,8 @@ namespace ViMG
                     {
 						foreach (EntityData data in datas)
                         {
-							SaveHelper.SaveInt32(entitiesDataBlock, data.data.Length);	//e-s
+							SaveHelper.SaveInt32(entitiesDataBlock, data.header.Length + data.data.Length);  //e-s
+							SaveHelper.SaveBytesFlat(entitiesDataBlock, data.header);	//e-h
 							SaveHelper.SaveBytesFlat(entitiesDataBlock, data.data);		//e-e
 
 							serializableEntities++;
@@ -208,6 +211,14 @@ namespace ViMG
 			loaded = true;
         }
 
+		public void Serialize(IEnumerable<ChunkPosition> positions)
+        {
+			foreach (ChunkPosition pos in positions)
+            {
+				Serialize(pos);
+            }
+        }
+
 		public void Serialize(ChunkPosition pos)
 		{
 			//TODO: entitiesByChunk or something similar so we don't have to loop through all entities to determine whether or not they should be serialized.
@@ -241,7 +252,33 @@ namespace ViMG
 			}
 		}
 
-		public LoadError Load(string folderName)
+		//Sometimes we need to save and keep the world loaded. In this case, cached entities will be duplicates of
+		//entities that already exist. We typically unload cached entity datas when we deserialize them to prevent this,
+		//but since we still have to keep the world loaded in this scenario, we have to manually check and decache active entities.
+		public void DecacheCurrentlySerialized()
+		{
+			foreach (List<EntityData> datas in entityDatas.Values)
+			{
+				List<EntityData> datasToDecache = new List<EntityData>();
+
+				foreach (EntityData data in datas)
+				{
+					foreach (Entity e in manager.GetEntities())
+                    {
+						//entity is currently active; decache it
+						if (e.Id == data.id)
+							datasToDecache.Add(data);
+                    }
+				}
+
+				foreach (EntityData data in datasToDecache)
+                {
+					datas.Remove(data);
+                }
+			}
+		}
+
+        public LoadError Load(string folderName)
         {
 			//In case of failure, keep old lookups.
 			Dictionary<ChunkPosition, List<EntityLookup>> oldLookups = lookups;
@@ -293,9 +330,10 @@ namespace ViMG
 						int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
 						int entChksum = SaveHelper.LoadInt32(bytes, ref index);
 
-						byte[] entData = bytes[index..];
+						byte[] entHeader = bytes[..index];
+						byte[] entBody = bytes[index..];
 
-						if (entData.Length != entDataSize)
+						if (entBody.Length != entDataSize)
 						{
 							Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
 							continue;
@@ -303,7 +341,7 @@ namespace ViMG
 
 						int chksum = 0;
 						for (int d = 0; d < entDataSize; d++)
-							chksum += entData[d];
+							chksum += entBody[d];
 
 						if (entChksum != chksum)
 						{
@@ -327,7 +365,8 @@ namespace ViMG
 								chksum = chksum,
 								version = entVersion,
 
-								data = entData
+								header = entHeader,
+								data = entBody
 							});
 
 							numLoadedEntities++;

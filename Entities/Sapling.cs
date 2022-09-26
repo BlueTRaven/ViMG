@@ -28,6 +28,9 @@ namespace ViMG.Entities
 
         public Sapling(CubePosition position)
         {
+			if (position.Y == 0)
+				throw new Exception();
+
 			this.Position = position.InWorldSpace(null);
 			toGrowTimer = Main.random.Next(3, 60) * 60; //any amount of time between three minutes and an hour, in intervals of a minute.
 			toGrowTime = toGrowTimer;
@@ -68,6 +71,9 @@ namespace ViMG.Entities
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
 			SaveHelper.SaveFloat32(saveBytes, toGrowTime);
 			SaveHelper.SaveFloat32(saveBytes, toGrowTimer);
+
+			if (Position.Y == 0)
+				throw new Exception();
         }
 
         public override void OnLoad(byte[] loadBytes, in int version)
@@ -78,7 +84,10 @@ namespace ViMG.Entities
 			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace(null);
 			toGrowTime = SaveHelper.LoadFloat32(loadBytes, ref index);
 			toGrowTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
-        }
+
+			if (Position.Y == 0)
+				throw new Exception();
+		}
 
         public bool OnInteract(Player player)
         {

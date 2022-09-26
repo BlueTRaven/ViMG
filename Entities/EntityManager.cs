@@ -19,7 +19,7 @@ namespace ViMG.Entities
 		private Dictionary<Type, List<Entity>> entitiesByType = new Dictionary<Type, List<Entity>>();
 
 		private List<Entity> toAddLater = new List<Entity>();
-		private List<Entity> toDeleteLater = new List<Entity>();
+		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
 		private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
 
@@ -97,14 +97,61 @@ namespace ViMG.Entities
 			entity.OnDelete();
 		}
 
+		public void Unload(Entity entity)
+        {
+			toDeleteLater.Add(entity);
+        }
+
 		public void Unload(ChunkPosition pos)
         {
+			//TODO: better method of determining which entities are in this chunk for unloading
 
-        }
+			//queue all entities in chunk to be unloaded
+			foreach (Entity entity in entities)
+            {
+				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos && !toDeleteLater.Contains(entity))
+					Unload(entity);
+			}
+
+			//Now remove them, and whatever else was in the queue...
+			foreach (Entity entity in toDeleteLater)
+			{
+				ReallyRemove(entity);
+			}
+
+			toDeleteLater.Clear();
+
+			//...and toAddLater, since we don't want to unload the chunk, then spawn it.
+			for (int i = toAddLater.Count - 1; i >= 0; i--)
+            {
+				Entity entity = toAddLater[i];
+
+				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
+					toAddLater.RemoveAt(i);
+            }
+		}
 
 		public void UnloadAll()
 		{
+			//TODO: better method of determining which entities are in this chunk for unloading
 
+			//queue all entities to be unloaded
+			foreach (Entity entity in entities)
+			{
+				if (!toDeleteLater.Contains(entity))
+					Unload(entity);
+			}
+
+			//Now remove them, and whatever else was in the queue...
+			foreach (Entity entity in toDeleteLater)
+			{
+				ReallyRemove(entity);
+			}
+
+			toDeleteLater.Clear();
+
+			//also clear toAddLater so we don't end up adding some entities after
+			toAddLater.Clear();
 		}
 
 		public void Update(double deltaTime)
@@ -127,18 +174,23 @@ namespace ViMG.Entities
 
 			foreach (Entity entity in toDeleteLater)
 			{
-				entities.Remove(entity);
-
-				if (entitiesByType.ContainsKey(entity.GetType()))
-					entitiesByType[entity.GetType()].Remove(entity);
-
-				if (entity is ICubeTracker tracker && cubeTrackers.ContainsKey(tracker.TrackedPosition))
-					cubeTrackers.Remove(tracker.TrackedPosition);
-
-				OnEntityRemoved?.Invoke(entity);
+				ReallyRemove(entity);
 			}
 
 			toDeleteLater.Clear();
+		}
+
+		private void ReallyRemove(Entity entity)
+        {
+			entities.Remove(entity);
+
+			if (entitiesByType.ContainsKey(entity.GetType()))
+				entitiesByType[entity.GetType()].Remove(entity);
+
+			if (entity is ICubeTracker tracker && cubeTrackers.ContainsKey(tracker.TrackedPosition))
+				cubeTrackers.Remove(tracker.TrackedPosition);
+
+			OnEntityRemoved?.Invoke(entity);
 		}
 
 		private IReadOnlyList<Entity> emptyList = new List<Entity>();

@@ -272,28 +272,55 @@ namespace ViMG
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.GenerateWorld(this);
-				
+
+				Console.WriteLine("Saving Chunks...");
+				Stopwatch watch = Stopwatch.StartNew();
 				//saver.Save(folderName);
 				chunkIO.SerializeAll();
 				chunkIO.Save(folderName);
 
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, chunkIO, entIO);
+				watch.Stop();
+				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
 
-				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 
 				player = new Player();
 				EntityManager.Add(player);
 				player.FirstCreated();
 
-				player.Position = ChunkManager.GetPlayerSpawnPos(this);
-				player.SpawnPosition = CubePosition.FromWorldSpace(player.Position);
+				Vector3 playerSpawnPosition = ChunkManager.GetPlayerSpawnPos(this);
+				player.Position = playerSpawnPosition;
+				player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
+
+				Console.WriteLine("Saving Entities...");
+				watch = Stopwatch.StartNew();
 
 				entIO.SerializeAll(this);
 				entIO.Save(folderName);
 
+				watch.Stop();
+				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+
+				Console.WriteLine("Reloading...");
+				watch = Stopwatch.StartNew();
+
+				//This will unload everything, then reload only the things nearby.
 				ChunkLoadManager.UnloadAll();
-				ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+				ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
 				ChunkLoadManager.LoadAroundTarget(this);
+
+				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+
+				//This includes the player, so this.player needs to be set again. (Kinda awkward, I know.)
+				if (EntityManager.GetAll<Player>().Count > 0)
+				{
+					player = EntityManager.GetAll<Player>().First() as Player;
+
+					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+					ChunkLoadManager.LoadAroundTarget(this);
+
+					Main.camera.Position = player.Position;
+				}
 			}
 			else
 			{
@@ -305,7 +332,7 @@ namespace ViMG
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("Entity file could not be loaded. The current entity file version ({0}) is not supported.", entIO.Version);
 
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, chunkIO, entIO);
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 
 				entIO.DeserializePlayerChunk();
 
@@ -313,7 +340,7 @@ namespace ViMG
 				{
 					player = EntityManager.GetAll<Player>().First() as Player;
 
-					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
 
 					Main.camera.Position = player.Position;
@@ -376,9 +403,16 @@ namespace ViMG
 			if (Main.inputManager.JustPressed(Keys.T))
             {
 				//TODO open pause GUI. This maybe should be done in Main.cs instead?
-				//saver.Save(LoadedFolderName);
-				entIO.Serialize(ChunkPosition.WorldSpaceChunk(player.Position));
+				//Flush the load queue so we don't end up not saving chunks that are currently loading in.
+				//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
+				ChunkLoadManager.FlushLoadQueue(this);
+				//Serialize all the chunks that are currently loaded
+				entIO.Serialize(ChunkLoadManager.GetLoadedChunks());
+				//Save serialized data to disk
 				entIO.Save(LoadedFolderName);
+
+				//Deduplicate/decache serialized entity data
+				entIO.DecacheCurrentlySerialized();
 			}
 
 			ChunkManager.ProcessChunkQueue(this, 0);

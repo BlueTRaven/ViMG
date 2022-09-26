@@ -641,7 +641,7 @@ namespace ViMG
 				foreach (EntityData entData in entityDatas[chunk.Position])
                 {
 					Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entData.type).Unwrap() as Entity;
-					ent.OnLoad(entData.data, entData.version);
+					//ent.OnLoad(entData.data, entData.version);
 
 					entityManager.ForceAdd(ent, entData.id);
 				}
