@@ -76,7 +76,9 @@ namespace ViMG
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
 		private WorldSaver saver;
-		private WorldSaver saver2;
+
+		private ChunkManagerIO chunkIO;
+		private EntityManagerIO entIO;
 
 		public ChunkLoadManager ChunkLoadManager;
 		private ChunkLoadManager ChunkLoadManager2;
@@ -263,19 +265,19 @@ namespace ViMG
 			playerPos.Y = sizeInCubes;
 
 			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
-			saver2 = new WorldSaver(ChunkManager2, null, Main.SessionInformation);
 
-			var io = new ChunkManagerIO(ChunkManager, "test"); 
+			chunkIO = new ChunkManagerIO(ChunkManager, "test");
+			entIO = new EntityManagerIO(EntityManager);
 
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.GenerateWorld(this);
 				
-				saver.Save(folderName);
-				io.SerializeAll();
-				io.Save(folderName);
+				//saver.Save(folderName);
+				chunkIO.SerializeAll();
+				chunkIO.Save(folderName);
 
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, io);
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, chunkIO, entIO);
 
 				//chunkLoadManager = new ChunkLoadManager(saver, chunkManager, DrawDistanceHoriz, DrawDistanceVert, DrawRadius + 1);
 
@@ -286,18 +288,26 @@ namespace ViMG
 				player.Position = ChunkManager.GetPlayerSpawnPos(this);
 				player.SpawnPosition = CubePosition.FromWorldSpace(player.Position);
 
+				entIO.SerializeAll(this);
+				entIO.Save(folderName);
+
 				ChunkLoadManager.UnloadAll();
 				ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
 				ChunkLoadManager.LoadAroundTarget(this);
 			}
 			else
 			{
-				ChunkManagerIO.LoadError error = io.Load(folderName);//saver.Load(device, this, folderName);
+				WorldIO.LoadError error = chunkIO.Load(folderName);//saver.Load(device, this, folderName);
+				if (error == WorldIO.LoadError.InvalidVersion)
+					Console.WriteLine("Chunk file could not be loaded. The current chunk file version ({0}) is not supported.", chunkIO.Version);
 
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, io);
-				
-				if (error == ChunkManagerIO.LoadError.InvalidVersion)
-					Console.WriteLine("Save file could not be loaded. The save file is too low of a version.");
+				error = entIO.Load(folderName);//saver.Load(device, this, folderName);
+				if (error == WorldIO.LoadError.InvalidVersion)
+					Console.WriteLine("Entity file could not be loaded. The current entity file version ({0}) is not supported.", entIO.Version);
+
+				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, 6, 6, 8, chunkIO, entIO);
+
+				entIO.DeserializePlayerChunk();
 
 				if (EntityManager.GetAll<Player>().Count > 0)
 				{
@@ -305,9 +315,12 @@ namespace ViMG
 
 					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
 					ChunkLoadManager.LoadAroundTarget(this);
+
+					Main.camera.Position = player.Position;
 				}
 				else
 				{
+					//Player somehow has not been created?
 					player = new Player();
 					EntityManager.Add(player);
 					player.FirstCreated();
@@ -363,7 +376,9 @@ namespace ViMG
 			if (Main.inputManager.JustPressed(Keys.T))
             {
 				//TODO open pause GUI. This maybe should be done in Main.cs instead?
-				saver.Save(LoadedFolderName);
+				//saver.Save(LoadedFolderName);
+				entIO.Serialize(ChunkPosition.WorldSpaceChunk(player.Position));
+				entIO.Save(LoadedFolderName);
 			}
 
 			ChunkManager.ProcessChunkQueue(this, 0);

@@ -14,7 +14,9 @@ namespace ViMG
         public enum LoadError
         {
             Success,
-            InvalidVersion
+            InvalidVersion,
+            FileDoesntExist,
+            Other
         }
 
     }

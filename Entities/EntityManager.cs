@@ -97,6 +97,16 @@ namespace ViMG.Entities
 			entity.OnDelete();
 		}
 
+		public void Unload(ChunkPosition pos)
+        {
+
+        }
+
+		public void UnloadAll()
+		{
+
+		}
+
 		public void Update(double deltaTime)
 		{
 			foreach (Entity entity in toAddLater)
@@ -159,5 +169,5 @@ namespace ViMG.Entities
 					entity.Draw(device, effect);
 			}
 		}
-	}
+    }
 }

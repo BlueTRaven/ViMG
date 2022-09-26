@@ -19,6 +19,8 @@ namespace ViMG
 		private const int VERSION = 1;
 		private const int MIN_VERSION = 1;
 
+		public int Version;
+
 		private readonly ChunkManager manager;
 		private readonly string managerName;
 
@@ -101,9 +103,9 @@ namespace ViMG
 			{
 				using (BinaryReader br = new BinaryReader(fs, Encoding.ASCII, true))
 				{
-					int currentVersion = br.ReadInt32();
+					Version = br.ReadInt32();
 
-					if (currentVersion < MIN_VERSION)
+					if (Version < MIN_VERSION)
 						return LoadError.InvalidVersion;
 					else
 					{

@@ -14,18 +14,6 @@ namespace ViMG
 {
 	public class WorldSaver
 	{
-		//To Save:
-		//Check list of unsaved chunks. (This should be any chunk that has been modified.)
-		//Save them??
-
-		//To Save Entities:
-		//Save should give a list of all chunks being saved.
-		//Determine which entities live in these chunks
-		//Serialize them to bytes
-		//Write header
-		//Write all already saved entities
-		//Write newly saved entities
-
 		private const string SAVE_FOLDER = "./saves/";
 		public const string FILE_NAME_CHUNK = "world_chunks.vis";
 		public const string FILE_NAME_ENTITIES = "world_entities.vis";

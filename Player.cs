@@ -1265,22 +1265,16 @@ namespace ViMG
 			Main.camera.Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
 			Rotation = Main.camera.Rotation;
 
-			if (version == 4)
-            {
-				health = SaveHelper.LoadInt32(loadBytes, ref index);
-				maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
-			}
+			health = SaveHelper.LoadInt32(loadBytes, ref index);
+			maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			inventory = Inventory.Load(loadBytes, ref index);
 
 			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory, accessoryInventory);
 			currentUI = uiPlayer;
 
-			if (version == 4)
-            {
-                loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
-                SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-            }
+            loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
+            SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 		}
 	}
 }
