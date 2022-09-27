@@ -58,10 +58,10 @@ namespace ViMG.Items
 			//base.Draw(device, transform);
 
 			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-			var mesh = cube.GetMesh(device);
+			var mesh = cube.GetHeldMesh(device);
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-				mesh.VBO, mesh.IBO, transform, null));
+				mesh.VBO, mesh.IBO, transform, cube.GetHeldSourceRect(world)));
 		}
 	}
 }

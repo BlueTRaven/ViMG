@@ -1225,11 +1225,22 @@ namespace ViMG
 			if (useTimer <= 0)
 				percent = 0;
 
-			return Matrix.CreateTranslation(Vector3.Forward * Cube.CUBE_SCALE * 2 + Vector3.Down * Cube.CUBE_SCALE * 1.25f + Vector3.Right * Cube.CUBE_SCALE * 0.85f) *
+			Matrix mat =
+				Matrix.CreateTranslation(-Cube.CUBE_SCALE / 4f, -Cube.CUBE_SCALE / 4f, 0) *
+				Matrix.CreateScale(0.5f) *
+				Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
+				Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f + Main.camera.Right * Cube.CUBE_SCALE / 4f - Main.camera.Up * Cube.CUBE_SCALE / 6f);
+
+			return mat;
+
+			/*return Matrix.CreateTranslation(Vector3.Forward * Cube.CUBE_SCALE * 2 + Vector3.Down * Cube.CUBE_SCALE * 1.25f + Vector3.Right * Cube.CUBE_SCALE * 0.85f) *
 				Matrix.CreateRotationX(-Main.camera.Rotation.X - MathHelper.ToRadians(35) * percent) *
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y - MathHelper.ToRadians(35) * percent) *
 					Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-					Matrix.CreateTranslation(Position /*- Main.camera.Forward * Cube.CUBE_SCALE * 2 + Main.camera.Right * 8*/);
+					Matrix.CreateTranslation(Position);*/
 		}
 
 		public void DrawDebug(GraphicsDevice device)

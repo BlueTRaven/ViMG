@@ -105,7 +105,7 @@ namespace ViMG.Items
 		protected static void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, 0);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);

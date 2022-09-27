@@ -309,20 +309,26 @@ namespace ViMG.Cubes
 
 		}
 
-		public SimpleMesh<VertexCube, int> GetMesh(GraphicsDevice device)
+		public virtual SimpleMesh<VertexCube, int> GetHeldMesh(GraphicsDevice device)
 		{
 			if (mesh == null)
 			{
 				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(Cube.CUBE_SCALE), new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
+				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(CUBE_SCALE / 2f), 
+					new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
 
 				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
 
 			return mesh;
 		}
+
+		public virtual RectangleF GetHeldSourceRect(World world)
+        {
+			return new RectangleF(0, 0, 1024, 1024);
+        }
 
 		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {

@@ -131,7 +131,7 @@ namespace ViMG
 				MakeQuadVertsVertexPositionColorTextureNormal(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices);
 		}
 
-		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, int textureX = -1, int textureY = -1, int textureWidth = -1, int textureHeight = -1)
+		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, RectangleF? sourceRect = null, Point? textureSize = null)
 		{
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -141,7 +141,7 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			if (textureX == -1)
+			if (sourceRect == null)
 			{
 				vertices.Add(new VertexCube(a, color, new Vector2(0, 0), normal));
 				vertices.Add(new VertexCube(b, color, new Vector2(1, 0), normal));
@@ -150,10 +150,15 @@ namespace ViMG
 			}
 			else
 			{
-				vertices.Add(new VertexCube(a, color, new Vector2(0, 0), normal));
-				vertices.Add(new VertexCube(b, color, new Vector2(1, 0), normal));
-				vertices.Add(new VertexCube(c, color, new Vector2(1, 1), normal));
-				vertices.Add(new VertexCube(d, color, new Vector2(0, 1), normal));
+				float minX = sourceRect.Value.x / textureSize.Value.X;
+				float maxX = (sourceRect.Value.x + sourceRect.Value.width) / textureSize.Value.X;
+				float minY = sourceRect.Value.y / textureSize.Value.X;
+				float maxY = (sourceRect.Value.y + sourceRect.Value.height) / textureSize.Value.X;
+
+				vertices.Add(new VertexCube(a, color, new Vector2(minX, maxY), normal));
+				vertices.Add(new VertexCube(b, color, new Vector2(minX, minY), normal));
+				vertices.Add(new VertexCube(c, color, new Vector2(maxX, minY), normal));
+				vertices.Add(new VertexCube(d, color, new Vector2(maxX, maxY), normal));
 			}
 		}
 
