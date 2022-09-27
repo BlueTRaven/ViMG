@@ -32,7 +32,6 @@ namespace ViMG
 		public readonly int sizeInCubes;
 
 		public ChunkManager ChunkManager;
-		private ChunkManager ChunkManager2;	//Test to see if we can have 2 worlds loaded at once
 
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
@@ -585,7 +584,7 @@ namespace ViMG
 				if (mesh != null && mesh != ChunkMesh.Empty)
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+						DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive"), mesh.VBO, mesh.IBO,
 						transform, null));
 				}
 
@@ -599,7 +598,7 @@ namespace ViMG
 					//Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, null));
+						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive"), mesh.VBO, mesh.IBO, null, null));
 				}
 
 				NumChunksDrawn++;

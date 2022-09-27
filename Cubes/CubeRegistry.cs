@@ -41,6 +41,8 @@ namespace ViMG.Cubes
 			Register(new CubeGlass());
 			Register(new CubeFlame());
 			Register(new CubeCaveCompass());
+			Register(new CubeLavaCrystal());
+			Register(new CubeGeodeStone());
 		}
 
         protected override void PostRegistration()

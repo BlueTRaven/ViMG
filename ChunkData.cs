@@ -362,12 +362,23 @@ namespace ViMG
 
 				if (!IsInChunkBounds(newPos))
 				{
-					Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(newPos.InCubeSpace(chunk));
 					CubePosition adjPos = newPos.InCubeSpace(chunk);
+					Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
 
-					GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+					//If the chunk is null, then that means it's probably an unloaded chunk.
+					if (adjChunk == null)
+					{
+						//Try to load it.
+						chunk.GetWorld().ChunkLoadManager.LoadChunk(chunk.GetWorld(), ChunkPosition.CubeChunk(adjPos));
+						adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
+					}
 
-					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+					if (adjChunk != null)
+					{
+						GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+
+						chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+					}
 				}
 				else
 				{

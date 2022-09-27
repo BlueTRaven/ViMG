@@ -140,6 +140,9 @@
 #begin Structures/house.struct
 /copy:Structures/house.struct
 
+#begin Structures/lava_geode.struct
+/copy:Structures/lava_geode.struct
+
 #begin Structures/obelisk.struct
 /copy:Structures/obelisk.struct
 
@@ -178,6 +181,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/crosshair.png
+
+#begin Textures/cubes_textures_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/cubes_textures_emissive.png
 
 #begin Textures/cubes_textures.png
 /importer:TextureImporter
@@ -346,6 +361,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/projectiles.png
+
+#begin Textures/salamander.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/salamander.png
 
 #begin Textures/skeleton.png
 /importer:TextureImporter

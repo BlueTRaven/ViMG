@@ -70,8 +70,8 @@ namespace ViMG
 		private float moveSpeed = Cube.CUBE_SCALE * 0.4f;
 		public Vector3 MaxVelocity = new Vector3(3.2f, 17, 3.2f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocityRunning = new Vector3(6.4f, 17, 6.4f) * Cube.CUBE_SCALE;
-		public Vector3 MaxVelocitySwimming = new Vector3(3.2f, 3.2f, 3.2f) * Cube.CUBE_SCALE;
-		public Vector3 MaxVelocitySwimmingFast = new Vector3(6.4f, 6.4f, 6.4f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
 
 		public float jumpSpeed = 10f * Cube.CUBE_SCALE;
@@ -742,8 +742,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Add(new Worm(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 

@@ -134,6 +134,16 @@ namespace ViMG
             }
         }
 
+		public void LoadChunk(World world, ChunkPosition position)
+        {
+			if (chunkManager.IsInWorldBounds(position) && (!loadedChunks.ContainsKey(position) || loadedChunks[position] == LoadingState.Unloaded))
+			{
+				chunkIO.DeserializeChunk(world, position);
+				entIO.Deserialize(position);
+				loadedChunks.Add(position, LoadingState.Loaded);
+			}
+		}
+
 		public void LoadAroundTarget(World world)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);

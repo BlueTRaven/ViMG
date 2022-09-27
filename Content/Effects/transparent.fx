@@ -50,7 +50,7 @@ float4 MainPS(VSOutputCube input) : SV_TARGET
 	float ambientWorldheight = WorldheightMapAmb.Sample(Sampler, float2(0.5, 1 - (input.PositionWS.y / (512.0 * 0.1)))).r;
 
 	float4 diffuse = Diffuse.Sample(Sampler, input.TexCoord);
-	float3 emissive = Emissive.Sample(Sampler, input.TexCoord);
+	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb;
 	return float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color + float4(emissive.rgb, 0);
 }
 

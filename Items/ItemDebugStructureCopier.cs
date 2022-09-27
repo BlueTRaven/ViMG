@@ -25,7 +25,7 @@ namespace ViMG.Items
         private CubePosition first;
         private CubePosition second;
 
-        private SimpleMesh<VertexPositionColor, int> meshWireframeCube;
+        private SimpleMesh<VertexCube, int> meshWireframeCube;
 
         public ItemDebugStructureCopier() : base("DEBUGStructureCopier", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16))
         {
@@ -106,7 +106,7 @@ namespace ViMG.Items
             base.DrawInWorld(device, world, item, transform);
 
             if (meshWireframeCube == null)
-                meshWireframeCube = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+                meshWireframeCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 
             if (state != State.None)
             {
@@ -132,10 +132,9 @@ namespace ViMG.Items
                 }
                 else scale.Z -= Cube.CUBE_SCALE;
 
-                device.RasterizerState = Main.wireframeRS;
-                meshWireframeCube.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White,
-                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start));
-                device.RasterizerState = Main.genericRS;
+                Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
+                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start),
+                    DrawHelper.WhitePixel, DrawHelper.WhitePixel, meshWireframeCube.VBO, meshWireframeCube.IBO, tintColor: Color.White * 0.5f));
             }
         }
     }
