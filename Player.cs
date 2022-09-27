@@ -58,6 +58,7 @@ namespace ViMG
 			Swimming,
 			Attack,
 			Hurt,
+			Dead,
 		}
 
 		public CubePosition SpawnPosition;
@@ -107,6 +108,9 @@ namespace ViMG
 		private float useTimer;
 		private const float ATTACK_TIME = 0.5f;
 
+		private float deadTimer;
+		private const float DEAD_TIME = 3f;
+
 		private World.RaycastResult lookAtResult;
 		//Is currently looking at a cube or not
 		public bool IsLooking;
@@ -124,8 +128,6 @@ namespace ViMG
 		private Vector3 attackStateTargetPos;
 
 		private SimpleMesh<VertexCube, int> lookAtMesh;
-		private SimpleMesh<VertexCube, int> itemMesh;
-		private (VertexBuffer VBO, IndexBuffer IBO) testMesh;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -262,6 +264,13 @@ namespace ViMG
 			{
 				UpdateMovement(deltaTime);
 			}
+			else if (state == State.Dead)
+            {
+				deadTimer -= (float)deltaTime;
+
+				if (deadTimer <= 0)
+					KillWithoutAnimation();
+            }
 			else if (state == State.Normal)
 			{
 				invulnTimer -= (float)deltaTime;
@@ -1176,6 +1185,13 @@ namespace ViMG
 			{
 				currentUI.Draw(batch);
 
+				if (deadTimer > 0 && state == State.Dead)
+                {
+					float t = 1 - (deadTimer / DEAD_TIME);
+
+					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+				}
+
 				if (alive < 0.5f)
 				{
 					float t = 1 - (alive / 0.5f);
@@ -1247,10 +1263,15 @@ namespace ViMG
 
 		public void Kill()
         {
-			if (state == State.Noclip)
+			if (state == State.Noclip || state == State.Dead)
 				return;
 
-			//health = 0;
+			deadTimer = DEAD_TIME;
+			state = State.Dead;
+        }
+
+		public void KillWithoutAnimation()
+        {
 			world.EntityManager.Remove(this);
         }
 
@@ -1265,7 +1286,7 @@ namespace ViMG
 
 			if (health <= 0)
 			{
-				world.EntityManager.Remove(this);
+				Kill();
 			}
 		}
 
