@@ -29,7 +29,7 @@ namespace ViMG.Items
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
 			player.SpawnHitbox(Get(inventory.Get(index)).GetStats().damage, 1f);
-			player.PerformAttack(0.35f);
+			player.PerformAttack(Get(inventory.Get(index)).GetStats().cooldownTime);
 
 			return true;
 		}

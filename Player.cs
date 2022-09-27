@@ -989,7 +989,8 @@ namespace ViMG
 
 		public void PerformAction()
 		{
-			useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
+			useTimer = itemUseCooldownTimer;
+			//useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
 		}
 
 		public void PerformAttack(float cooldownTimer)

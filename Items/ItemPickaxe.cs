@@ -39,6 +39,8 @@ namespace ViMG.Items
 
 			if (metaItem != null && lookAtResult.hasHit)
 			{
+				itemCooldownTime = metaItem.GetStats().cooldownTime;
+
 				var lookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
 				Vector3 normal = lookAtResult.normal;

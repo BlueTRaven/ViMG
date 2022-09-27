@@ -60,13 +60,13 @@ namespace ViMG.Items
 
 		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
-			itemCooldownTime = 0.25f;
+			itemCooldownTime = 0.5f;
 			return false;
 		}
 
 		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
-			itemCooldownTime = 0.25f;
+			itemCooldownTime = 0.5f;
 			return false;
 		}
 
