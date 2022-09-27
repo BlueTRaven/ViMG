@@ -124,7 +124,7 @@ namespace ViMG
 		private void CreateMeshes(GraphicsDevice device)
         {
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-			meshMiningCube = Cube.MakeCubeWithCorrectedTextureCoordinates(device, Color.White, Main.assetsManager.GetAsset<Texture2D>("mine"));
+			meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
 
 			Vector3 min = Vector3.Zero;
 			Vector3 max = new Vector3(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE));
@@ -523,25 +523,27 @@ namespace ViMG
 			oldChunkPosition = camPos;
 
 			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-			if (CubePosition.FromWorldSpace(player.Position).Y > 140) 
+			if (CubePosition.FromWorldSpace(player.Position).Y > 140)
 			{
+				Main.Renderer.DoCSMLight = true;
+
 				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
 				{
 					Color color = Color.White * (1 - GetTimeOfDay());
 
 					if (GetDuskTime() > 0)
-                    {
+					{
 						duskColors[0] = color;  //so that we don't snap to the wrong color...
 						duskColors[^1] = color;
 						color = Utility.MultiLerp(GetDuskTime(), Color.Lerp, duskColors);
-                    }
+					}
 
 					float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-                    directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-                        Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), color);
+					directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), color);
 
-                    float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
+					float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
@@ -550,11 +552,7 @@ namespace ViMG
 					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
 			}
-
-			if (Main.inputManager.JustPressed(Keys.F1))
-			{
-				
-			}
+			else Main.Renderer.DoCSMLight = false;
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
@@ -680,19 +678,9 @@ namespace ViMG
 
 					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshMiningCube.texture,
-						DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMiningCube.VBO, meshMiningCube.IBO,
-						//Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-						//Matrix.CreateScale(1.125f) *
-						//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("mine"),
+						DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshMiningCube.VBO, meshMiningCube.IBO,
 						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
-					/*effect.Parameters["TexCoordOffset"].SetValue(new Vector2(stepped, 0));
-					meshMiningCube.Draw(device, effect,
-						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-						Matrix.CreateScale(1.125f) *
-						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)));
-					effect.Parameters["TexCoordOffset"].SetValue(Vector2.Zero);*/
 				}
 			}
 
@@ -724,26 +712,6 @@ namespace ViMG
 			player.DrawUI(batch);
 		}
 
-		/*public void DrawWireframeCube(GraphicsDevice device, Vector3 position, Color? color = null)
-		{
-			meshWireframeCube.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position));
-		}
-
-		public void DrawWireframeUnscaled(GraphicsDevice device, Vector3 position, Vector3 scale, Color? color = null)
-		{
-			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), Matrix.CreateTranslation(position) * Matrix.CreateScale(scale));
-		}
-
-		public void DrawWireframeUnscaled(GraphicsDevice device, Rectangle3D bounds, Color? color = null)
-		{
-			DrawWireframeUnscaled(device, bounds.Position, bounds.Size, color);
-		}
-
-		public void DrawWireframe(GraphicsDevice device, Matrix transform, Color? color = null)
-        {
-			meshWireframeUnscaled.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, color.GetValueOrDefault(Color.White), transform);
-		}*/
-
 		public ChunkManager GetChunkManager()
 		{
 			return ChunkManager;
@@ -758,7 +726,8 @@ namespace ViMG
 			}
 		}
 
-		public float GetTime()
+        #region Time
+        public float GetTime()
         {
 			return alive;
         }
@@ -879,8 +848,9 @@ namespace ViMG
 				//return nightTime / (DAY_CYCLE_TIME / 2f);
             }
         }
+        #endregion
 
-		public void MineCube(CubePosition position, bool instant = false)
+        public void MineCube(CubePosition position, bool instant = false)
 		{
 			Chunk chunk = ChunkManager.GetChunk(position);
 
@@ -1029,33 +999,6 @@ namespace ViMG
 
 			return faces;
 		}
-
-		/*private CubePosition[] positions;
-		// Marks the cubes around a position dirty.
-		public void MarkCubesDirty(CubePosition position)
-		{
-			if (positions == null)
-				positions = new CubePosition[6];
-
-			positions[0] = new CubePosition(position.X - 1, position.Y, position.Z);//left 
-			positions[1] = new CubePosition(position.X + 1, position.Y, position.Z);//right
-
-			positions[2] = new CubePosition(position.X, position.Y - 1, position.Z);//down
-			positions[3] = new CubePosition(position.X, position.Y + 1, position.Z);//up
-
-			positions[4] = new CubePosition(position.X, position.Y, position.Z - 1);//front
-			positions[5] = new CubePosition(position.X, position.Y, position.Z + 1);//back
-
-			for (int i = 0; i < 6; i++)
-			{
-				//avoid a copy with ref...
-				ref CubePosition pos = ref positions[i];
-
-				Chunk chunk = ChunkManager.GetChunk(pos);
-
-				chunk.GetData().MarkDirty(pos);
-			}
-		}*/
 
 		public struct RaycastResult 
 		{

@@ -1172,26 +1172,29 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-			currentUI.Draw(batch);
+			if (!Main.inputManager.IsHeld(Keys.F5))
+			{
+				currentUI.Draw(batch);
 
-			if (alive < 0.5f)
-            {
-				float t = 1 - (alive / 0.5f);
-				
-				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+				if (alive < 0.5f)
+				{
+					float t = 1 - (alive / 0.5f);
+
+					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+				}
+
+				if (damageAnimTimer >= 0)
+				{
+					float t = damageAnimTimer / DAMAGE_ANIM_TIME;
+
+					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
+				}
+
+				if (headUnderWater)
+				{
+					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
+				}
 			}
-
-			if (damageAnimTimer >= 0)
-            {
-				float t = damageAnimTimer / DAMAGE_ANIM_TIME;
-
-				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
-			}
-
-			if (headUnderWater)
-            {
-				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
-            }
 		}
 
 		public Inventory GetInventory()

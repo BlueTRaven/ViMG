@@ -131,7 +131,7 @@ namespace ViMG
 
 		public void DrawDebug(GraphicsDevice device)
 		{
-			device.RasterizerState = Main.wireframeRS;
+			/*device.RasterizerState = Main.wireframeRS;
 			device.DepthStencilState = Main.genericDSS;
 
 			if (mesh == null)
@@ -140,7 +140,7 @@ namespace ViMG
 			}
 
 			var mvp = Transform.FromTRS(new Vector3(position.X, position.Y, position.Z) * CHUNK_SIZE * Cube.CUBE_SCALE, Vector3.Zero, Vector3.One) * Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
-			mesh.Draw(device, Main.VertexPositionColorDebugEffect, mvp);
+			mesh.Draw(device, Main.VertexPositionColorDebugEffect, mvp);*/
 		}
 
         public ChunkManager GetChunkManager()

@@ -168,6 +168,7 @@ namespace ViMG.Rendering
 
         public static int NumPointLightsRendered;
 
+        public bool DoCSMLight = true;
         private float alive;
 
         public RendererDeferred(GraphicsDevice device)
@@ -378,14 +379,17 @@ namespace ViMG.Rendering
 
             device.SetRenderTarget(lightAccum);
 
-            EffectLightAccumCSM.Parameters["Position"].SetValue(position);
-            EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
-            EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
-            EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(Main.camera.Position);
-            device.SamplerStates[1] = shadowBorderClampSS;
-            device.BlendState = additiveBS;
+            if (DoCSMLight)
+            {
+                EffectLightAccumCSM.Parameters["Position"].SetValue(position);
+                EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
+                EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
+                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                device.SamplerStates[1] = shadowBorderClampSS;
+                device.BlendState = additiveBS;
 
-            DrawFullscreenQuad(EffectLightAccumCSM);
+                DrawFullscreenQuad(EffectLightAccumCSM);
+            }
 
             if (DrawsPointLightVolumePass.Count > 0)
             {

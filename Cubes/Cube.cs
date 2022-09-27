@@ -294,6 +294,11 @@ namespace ViMG.Cubes
 
 		}
 
+		public virtual void OnLoaded(World world, CubePosition position)
+        {
+
+        }
+
 		public virtual void OnPlayerPlaced(Player player, CubePosition position)
 		{
 

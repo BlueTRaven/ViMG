@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG
 {
@@ -178,9 +179,15 @@ namespace ViMG
 				id |= b << 8;
 				id |= a << 0;
 
-				allCubes[j] = (ushort)id;
+				Cube c = Main.Registry.CubeRegistry.Get(id);
 
-				//data.SetDensity(0, (ushort)id);
+				if (c != null)
+				{
+					Util.OneDToThreeD(j, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point);
+					c.OnLoaded(world, new CubePosition(point.x, point.y, point.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
+				}
+
+				allCubes[j] = (ushort)id;
 			}
 
 			chunk.Initialize(world);

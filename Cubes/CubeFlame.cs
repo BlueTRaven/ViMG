@@ -33,6 +33,13 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
 
+        public override void OnLoaded(World world, CubePosition position)
+        {
+            base.OnLoaded(world, position);
+
+            world.EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
+        }
+
         public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
         {
             return new CubeAnimation(0.125f, 3);
