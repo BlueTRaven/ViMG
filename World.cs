@@ -321,17 +321,15 @@ namespace ViMG
 				//This will unload everything, then reload only the things nearby.
 				ChunkLoadManager.UnloadAll();
 				ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
-				ChunkLoadManager.LoadAroundTarget(this);
+				ChunkLoadManager.LoadAroundTarget(this);	//enqueue to be loaded...
+				ChunkLoadManager.FlushLoadQueue(this);	//actually load.
 
-				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+                Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
 
 				//This includes the player, so this.player needs to be set again. (Kinda awkward, I know.)
 				if (EntityManager.GetAll<Player>().Count > 0)
 				{
 					player = EntityManager.GetAll<Player>().First() as Player;
-
-					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
-					ChunkLoadManager.LoadAroundTarget(this);
 
 					Main.camera.Position = player.Position;
 				}
