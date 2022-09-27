@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using BrUtility;
 
 namespace ViMG.Spawners
 {
@@ -52,12 +53,19 @@ namespace ViMG.Spawners
         {
             if (Main.random.NextDouble() < spawnChance)
             {
-                Vector3 v = new Vector3(1, 0, 0);
+                float radMin = 0;
+                float radMax = MathF.PI * 2;
+
+                if (Main.camera is CameraPerspective camera)
+                {
+                    radMin = MathHelper.ToRadians(camera.HalfFOV);
+                    radMax = MathHelper.ToRadians(360f - camera.HalfFOV);
+                }
+
+                Vector3 v = -Main.camera.Forward;
                 v = Vector3.Transform(v,
-                    Matrix.CreateRotationX((float)Main.random.NextDouble() * MathHelper.Pi * 2) *
-                    Matrix.CreateRotationY((float)Main.random.NextDouble() * MathHelper.Pi * 2) *
-                    Matrix.CreateRotationZ((float)Main.random.NextDouble() * MathHelper.Pi * 2));
-                v *= (float)Main.random.NextDouble() * (spawnRadiusMax - spawnRadiusMin) + spawnRadiusMin;
+                    Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
+                v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
                 v += world.player.Position;
 
                 //TODO clamping to bounds can cause min to no longer be taken into account.

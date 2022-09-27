@@ -229,12 +229,14 @@ namespace ViMG
 
 			foreach (Entity entity in entities)
 			{
-				if (entity.GetType().GetCustomAttribute<SerializableAttribute>() != null)
-				{
-					ChunkPosition entityPos = ChunkPosition.WorldSpaceChunk(entity.Position);
+				ChunkPosition entityPos = ChunkPosition.WorldSpaceChunk(entity.Position);
 
-					if (entityPos == pos)
+				if (entityPos == pos)
+				{
+					if (entity.GetType().GetCustomAttribute<SerializableAttribute>() != null)
+					{
 						entitiesToSerialize.Add(entity);
+					}
 				}
 			}
 

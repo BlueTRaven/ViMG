@@ -9,11 +9,12 @@ namespace ViMG
 {
     public class CameraPerspective : Camera
 	{
-		private float fovDegrees;
+		public readonly float FOVDegrees;
+		public float HalfFOV => FOVDegrees / 2f;
 
 		public CameraPerspective(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float fovDegrees, float near, float far) : base(startPosition, startRotation, startScale, near, far)
         {
-			this.fovDegrees = fovDegrees;
+			this.FOVDegrees = fovDegrees;
 			projectionDirty = true;
         }
 
@@ -21,7 +22,7 @@ namespace ViMG
 		{
 			if (projectionDirty)
 			{
-				projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(fovDegrees), 
+				projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOVDegrees), 
 					(float)Options.CurrentWindowResolution.X / (float)Options.CurrentWindowResolution.Y, Near, Far);
 				projectionDirty = false;
 			}

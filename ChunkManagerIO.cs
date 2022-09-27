@@ -64,29 +64,40 @@ namespace ViMG
 
 		public void SerializeAll()
         {
+			Chunk[] chunks = manager.GetChunks();
+
 			for (int i = 0; i < manager.sizeInChunks * manager.sizeInChunks * manager.sizeInChunks; i++)
             {
-				SerializeChunk(i);
+				SerializeChunk(chunks, i);
             }
 
 			loaded = true;
         }
 
+		public void Serialize(IEnumerable<ChunkPosition> positions)
+        {
+			Chunk[] chunks = manager.GetChunks();
+			foreach (ChunkPosition pos in positions)
+            {
+				SerializeChunk(chunks, pos);
+            }
+        }
+
 		//Serializes a single chunk into the local byte stream. This does not save anything to disk! If you need to save, call Save!
-		public void SerializeChunk(ChunkPosition pos)
+		public void SerializeChunk(Chunk[] chunks, ChunkPosition pos)
         {
 			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunks, manager.sizeInChunks, manager.sizeInChunks), out int i);
 
-			SerializeChunk(i);
+			SerializeChunk(chunks, i);
 		}
 
-		private void SerializeChunk(int i)
+		private void SerializeChunk(Chunk[] chunks, int i)
         {
 			int chunkOffset = (int)SIZEOF_CHUNK * i;
 
 			int offset = chunkOffset;
 
-			Span<ushort> chunkData = manager.GetChunks()[i].GetData().GetAll();
+			Span<ushort> chunkData = chunks[i].GetData().GetAll();
 			int len = chunkData.Length;
 
 			for (int j = 0; j < len; j++)

@@ -171,17 +171,17 @@ namespace ViMG
 
 				float len = dist.Length();
 
-				//Chunk c = manager.GetChunk(pos);
-
 				if (len > unloadRadius)
 					unloadChunks.Add(pos);
 			}
+
+			Chunk[] chunks = chunkManager.GetChunks();
 
 			foreach (ChunkPosition pos in unloadChunks)
 			{
 				if (loadedChunks[pos] == LoadingState.Loaded)
 				{
-					chunkIO.SerializeChunk(pos);
+					chunkIO.SerializeChunk(chunks, pos);
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);

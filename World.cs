@@ -407,8 +407,11 @@ namespace ViMG
 				//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
 				ChunkLoadManager.FlushLoadQueue(this);
 				//Serialize all the chunks that are currently loaded
+				chunkIO.Serialize(ChunkLoadManager.GetLoadedChunks());
 				entIO.Serialize(ChunkLoadManager.GetLoadedChunks());
+
 				//Save serialized data to disk
+				chunkIO.Save(LoadedFolderName);
 				entIO.Save(LoadedFolderName);
 
 				//Deduplicate/decache serialized entity data
