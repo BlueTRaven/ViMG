@@ -76,7 +76,7 @@ namespace ViMG.Items
 
 		public virtual void Hold(Player player, Inventory inventory, int index) { }
 
-		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats)
+		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
 
         }

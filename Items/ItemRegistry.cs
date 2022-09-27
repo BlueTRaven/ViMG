@@ -15,6 +15,11 @@ namespace ViMG.Items
 			Color colorCopper = new Color(220, 187, 146);
 			Color colorBronze = new Color(233, 81, 23);
 
+			SetBonusMaterial setBonusIron = new SetBonusMaterial("iron", new Player.AccumulatedStats() { Defense = 3 });
+			SetBonusMaterial setBonusTin = new SetBonusMaterial("tin", new Player.AccumulatedStats() { Defense = 1 });
+			SetBonusMaterial setBonusCopper = new SetBonusMaterial("copper", new Player.AccumulatedStats() { Defense = 1 });
+			SetBonusMaterial setBonusBronze = new SetBonusMaterial("bronze", new Player.AccumulatedStats() { Defense = 2 });
+
 			Register(new ItemSwordBase());
 			Register(new ItemPickaxeBase());
 			Register(new ItemSlimeChunk());
@@ -55,9 +60,18 @@ namespace ViMG.Items
 			Register(new ItemDebugStructureCopier());
 			Register(new ItemString());
 			Register(new ItemLantern());
-			Register(new ItemMetalHelmet("iron", colorIron, new Player.AccumulatedStats() { Defense = 2 }));
-			Register(new ItemMetalChestplate("iron", colorIron, new Player.AccumulatedStats() { Defense = 3 }));
-			Register(new ItemMetalLegs("iron", colorIron, new Player.AccumulatedStats() { Defense = 2 }));
+			Register(new ItemMetalHelmet("iron", colorIron, new Player.AccumulatedStats() { Defense = 2 }, setBonusIron));
+			Register(new ItemMetalChestplate("iron", colorIron, new Player.AccumulatedStats() { Defense = 3 }, setBonusIron));
+			Register(new ItemMetalLegs("iron", colorIron, new Player.AccumulatedStats() { Defense = 2 }, setBonusIron));
+			Register(new ItemMetalHelmet("tin", colorTin, new Player.AccumulatedStats() { Defense = 1 }, setBonusTin));
+			Register(new ItemMetalChestplate("tin", colorTin, new Player.AccumulatedStats() { Defense = 1 }, setBonusTin));
+			Register(new ItemMetalLegs("tin", colorTin, new Player.AccumulatedStats() { Defense = 0 }, setBonusTin));
+			Register(new ItemMetalHelmet("copper", colorCopper, new Player.AccumulatedStats() { Defense = 1 }, setBonusCopper));
+			Register(new ItemMetalChestplate("copper", colorCopper, new Player.AccumulatedStats() { Defense = 1 }, setBonusCopper));
+			Register(new ItemMetalLegs("copper", colorCopper, new Player.AccumulatedStats() { Defense = 0 }, setBonusCopper));
+			Register(new ItemMetalHelmet("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
+			Register(new ItemMetalChestplate("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
+			Register(new ItemMetalLegs("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
 			RegisterItemCubes();
 		}
 

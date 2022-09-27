@@ -14,12 +14,14 @@ namespace ViMG.Items
         private string material;
         private Color color;
         private readonly Player.AccumulatedStats stats;
+        private readonly SetBonus setBonus;
 
-        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats) : base("helmet_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 80, 16, 16))
+        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 80, 16, 16))
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;
             this.stats = stats;
+            this.setBonus = setBonus;
             Tags.Add("armor_head");
         }
 
@@ -28,9 +30,15 @@ namespace ViMG.Items
             return material + " Helmet";
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats)
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
-            base.AccumulateStats(player, inventory, index, ref stats);
+            base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
+
+            if (bonus.SetBonus == null)
+                bonus.SetBonus = setBonus;
+
+            if (bonus.SetBonus == setBonus)
+                bonus.Count++;
 
             stats += this.stats;
         }

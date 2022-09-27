@@ -14,7 +14,7 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[Serializable]
-	[EntityMeta(5, 0)]
+	[EntityMeta(6, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public struct AccumulatedStats
@@ -31,18 +31,20 @@ namespace ViMG
 
 			public static AccumulatedStats operator +(AccumulatedStats a, AccumulatedStats b)
             {
-				return new AccumulatedStats()
+				var stats = new AccumulatedStats()
 				{
 					AdditionalHP = a.AdditionalHP + b.AdditionalHP,
 					Defense = a.Defense + b.Defense,
 					KnockbackResist = a.KnockbackResist + b.KnockbackResist,
-					Speed = a.Speed + b.Speed,         
-					Acceleration = a.Acceleration + b.Acceleration, 
+					Speed = a.Speed + b.Speed,
+					Acceleration = a.Acceleration + b.Acceleration,
 					JumpSpeed = a.JumpSpeed + b.JumpSpeed,
 					JumpNum = a.JumpNum + b.JumpNum,
 					InvulnTime = a.InvulnTime + b.InvulnTime,
 					UseSpeed = a.UseSpeed + b.UseSpeed,
 				};
+				
+				return stats;
             }
         }
 
@@ -141,6 +143,7 @@ namespace ViMG
 		public int health;
 		public int maxHealth = 20;
 		private AccumulatedStats stats;
+		private SetBonus setBonus;
 
 		private bool hasMoved;
 		private bool hasRotated;
@@ -167,7 +170,7 @@ namespace ViMG
 			invulnTimer = 6f;	//6 seconds of invuln after respawning
 
 			inventory = deadPlayer.GetInventory();
-			accessoryInventory = new Inventory(3);	//TODO deadPlayer.GetAccessoryInventory();
+			accessoryInventory = deadPlayer.GetAccessoryInventory();
 			SpawnPosition = deadPlayer.SpawnPosition;
 			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
 
@@ -471,6 +474,7 @@ namespace ViMG
 		private void UpdateStats()
 		{
 			AccumulatedStats accumulatedStats = new AccumulatedStats();
+			SetBonus.SetBonusInstance bonus = new SetBonus.SetBonusInstance();
 
 			for (int i = 0; i < accessoryInventory.NumSlots; i++)
 			{
@@ -478,10 +482,16 @@ namespace ViMG
 
 				if (item.valid)
 				{
-					item.item.AccumulateStats(this, accessoryInventory, i, ref accumulatedStats);
+					item.item.AccumulateStats(this, accessoryInventory, i, ref accumulatedStats, ref bonus);
 				}
 			}
 
+			if (bonus.SetBonus != null && bonus.Count == 3)
+			{
+				bonus.SetBonus.AccumulateStats(this, ref accumulatedStats);
+			}
+
+			setBonus = bonus.SetBonus;
 			stats = accumulatedStats;
 		}
 
@@ -1219,6 +1229,11 @@ namespace ViMG
 			return inventory;
 		}
 
+		public Inventory GetAccessoryInventory()
+        {
+			return accessoryInventory;
+        }
+
 		public Matrix GetHeldMatrix()
 		{
 			float percent = useTimer / ATTACK_TIME;
@@ -1340,6 +1355,8 @@ namespace ViMG
 
 			inventory.Save(saveBytes);
 
+			accessoryInventory.Save(saveBytes);
+
 			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 		}
@@ -1359,6 +1376,9 @@ namespace ViMG
 			maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			inventory = Inventory.Load(loadBytes, ref index);
+
+			if (version == 6)
+				accessoryInventory = Inventory.Load(loadBytes, ref index);
 
 			uiPlayer = new UIInventoryPlayer(this, inventory, craftInventory, accessoryInventory);
 			currentUI = uiPlayer;
