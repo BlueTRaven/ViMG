@@ -46,7 +46,7 @@ namespace ViMG.Entities
 			{
 				noticeFalloffTimer -= (float)deltaTime;
 
-				if (noticeFalloffTimer <= 0)
+				if (noticeFalloffTimer <= 0 || Target == null || Target.Dead)
 				{
 					Noticed = false;
 					Target = null;

@@ -73,6 +73,9 @@ namespace ViMG
 		public Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
+		private float fallStartY;   //the upper-most point of the current jump. If the player hits something > FALL_HEIGHT_FATAL, they will die.
+		private const float FALL_HEIGHT_DAMAGE_START = Cube.CUBE_SCALE * 5;
+		private const float FALL_HEIGHT_FATAL = Cube.CUBE_SCALE * 18;
 
 		public float jumpSpeed = 10f * Cube.CUBE_SCALE;
 
@@ -90,6 +93,8 @@ namespace ViMG
 		private int hurtbox = -1;
 		private float invulnTimer;
 		private float inputLockupTimer;
+		private float damageAnimTimer;
+		private const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
 		private Vector3 damageDir;
@@ -111,9 +116,7 @@ namespace ViMG
 		//likewise, this is the position the player will place a cube if they right clicked the LookAtPos
 		//with a cube item in hand.
 		public CubePosition PlaceAtPos;	
-		private float lookAtColSine;
-		private const float lookAtColTimeMax = 0.5f;
-		private float alive = lookAtColTimeMax;
+		private float alive = 0;
 
 		private const float PULL_RADIUS = 3.25f * Cube.CUBE_SCALE;
 		private const float NEUTRAL_RADIUS = 2.5f * Cube.CUBE_SCALE;
@@ -309,6 +312,8 @@ namespace ViMG
 					state = State.Normal;
 			}
 
+			damageAnimTimer -= (float)deltaTime;
+
 			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
 			Vector2 center = new Vector2(worldRadius, worldRadius);
 			Vector2 distFromCenter = new Vector2(center.X - Position.X, center.Y - Position.Z);
@@ -452,8 +457,6 @@ namespace ViMG
 			itemUseCooldownTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
-
-			lookAtColSine = (float)(Math.Sin(2 * Math.PI * ((alive % lookAtColTimeMax) / lookAtColTimeMax)) + 1f) / 2f;
 		}
 
 		private void UpdateStats()
@@ -574,6 +577,11 @@ namespace ViMG
 			if (!jumpHeld)
 				Velocity.Y += World.GRAVITY;
 
+			if (!onGround && Velocity.Y > 0)
+            {
+				fallStartY = Position.Y;
+            }
+
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 			if (Velocity.Y > actualMaxVel.Y)
@@ -625,6 +633,8 @@ namespace ViMG
 							PerformAction();
 					}
 				}
+
+				fallStartY = Position.Y;	//so we don't immediately die sometimes
 			}
 			else
 			{
@@ -880,6 +890,23 @@ namespace ViMG
 										{
 											Velocity.Y = 0;
 											onGround = true;
+
+											float fallDistance = fallStartY - Position.Y;
+											if (fallDistance > FALL_HEIGHT_FATAL)
+												Kill();
+											else
+											{
+												if (fallDistance > FALL_HEIGHT_DAMAGE_START)
+												{
+													float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
+
+													int damage = (int)((float)maxHealth * t);
+
+													Damage(damage);
+												}
+
+												fallStartY = Position.Y;
+											}
 										}
 										else if (lowerChange.Y < 0)
 											Velocity.Y = 0;
@@ -1147,6 +1174,20 @@ namespace ViMG
 		{
 			currentUI.Draw(batch);
 
+			if (alive < 0.5f)
+            {
+				float t = 1 - (alive / 0.5f);
+				
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+			}
+
+			if (damageAnimTimer >= 0)
+            {
+				float t = damageAnimTimer / DAMAGE_ANIM_TIME;
+
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
+			}
+
 			if (headUnderWater)
             {
 				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
@@ -1193,12 +1234,7 @@ namespace ViMG
 
 					state = State.Hurt;
 
-					health -= DamageCalculation(other);
-
-					if (health <= 0)
-                    {
-						world.EntityManager.Remove(this);
-                    }
+					Damage(DamageCalculation(other));
 
 					inputLockupTimer = 0.25f;
 					invulnTimer = 4;
@@ -1211,6 +1247,18 @@ namespace ViMG
 			//health = 0;
 			world.EntityManager.Remove(this);
         }
+
+		private void Damage(int amt)
+        {
+			damageAnimTimer = DAMAGE_ANIM_TIME;
+
+			health -= amt;
+
+			if (health <= 0)
+			{
+				world.EntityManager.Remove(this);
+			}
+		}
 
 		private int DamageCalculation(HitboxManager.Hitbox hitbox)
         {
