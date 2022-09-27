@@ -11,6 +11,8 @@ namespace ViMG.Cubes
 	{
 		public CubeGlowDustOre() : base("ore_glowdust", new RectangleF(16, 48, 16, 16), Color.White, 7)
 		{
+			if (Main.TRANSPARENT_ORES)
+				Transparency = TransparencyValue.Transparent;
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

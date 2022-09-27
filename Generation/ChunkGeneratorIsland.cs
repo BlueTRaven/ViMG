@@ -14,7 +14,7 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorIsland : ChunkGenerator
     {
-		private static ushort[] BlacklistOre = new ushort[] { 0, Main.Registry.CubeRegistry.Get("stone").Id };
+		private static ushort[] BlacklistOre = new ushort[] { 0 };
         private delegate float EaseFunction(float scale);
 
 		private float[,] presetHeightmap;
@@ -214,20 +214,20 @@ namespace ViMG.Generation
 								bool doIron = GetRandom().NextFloat() < 1f / 384f;
 								if (doIron)
 									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
-										BlacklistOre, Span<ushort>.Empty);
+										BlacklistOre, BlacklistAir);
 							}
 
 							if (doGlow)
 								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, 
-									BlacklistOre, Span<ushort>.Empty);
+									BlacklistOre, BlacklistAir);
 
 							if (doTin)
 								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos, 
-									BlacklistOre, Span<ushort>.Empty);
+									BlacklistOre, BlacklistAir);
 
 							if (doCopper)
 								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos, 
-									BlacklistOre, Span<ushort>.Empty);
+									BlacklistOre, BlacklistAir);
 						}
 					}
 				}

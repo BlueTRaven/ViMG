@@ -11,6 +11,8 @@ namespace ViMG.Cubes
 	{
 		public CubeTinOre() : base("ore_tin", new RectangleF(32, 48, 16, 16), Color.White, 5)
 		{
+			if (Main.TRANSPARENT_ORES)
+				Transparency = TransparencyValue.Transparent;
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
