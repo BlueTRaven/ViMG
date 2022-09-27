@@ -37,7 +37,7 @@ namespace ViMG
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
 		private static SimpleMesh<VertexCube, int> meshMiningCube;
 		private static SimpleMesh<VertexCube, int> meshSun;
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshUVSphere;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
 
 		private static SimpleMesh<VertexCube, int> meshMaxDrawDistBottom;
 		private static bool meshesLoaded;
@@ -74,13 +74,14 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
+		private int lavaLight = -1;
+
 		private WorldSaver saver;
 
 		private ChunkManagerIO chunkIO;
 		private EntityManagerIO entIO;
 
 		public ChunkLoadManager ChunkLoadManager;
-		private ChunkLoadManager ChunkLoadManager2;
 
 		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		public DirectionalLight directionalLight;
@@ -101,7 +102,6 @@ namespace ViMG
 				CreateMeshes(device);
 
 			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
-			//ChunkManager2 = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
 			ProjectileManager = new ProjectileManager(device);
 			EntityManager = new EntityManager(this);
@@ -123,7 +123,6 @@ namespace ViMG
 
 		private void CreateMeshes(GraphicsDevice device)
         {
-			meshWireframeCube = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshMiningCube = Cube.MakeCubeWithCorrectedTextureCoordinates(device, Color.White, Main.assetsManager.GetAsset<Texture2D>("mine"));
 
@@ -246,7 +245,23 @@ namespace ViMG
 
 			meshSun = new SimpleMesh<VertexCube, int>(device, sunVertices, sunIndices);
 
-			meshUVSphere = DrawHelper3D.MakeUVSphere(device, 1);
+			vertices = new List<VertexCube>();
+			indices = new List<int>();
+
+			offset = vertices.Count;
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 0);
+			indices.Add(offset + 3);
+			indices.Add(offset + 2);
+			indices.Add(offset + 1);
+
+			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
+
+			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
 
 			meshesLoaded = true;
 		}
@@ -423,6 +438,26 @@ namespace ViMG
 			ProjectileManager.Update(this, deltaTime);
 			EntityManager.Update(deltaTime);
 
+			if (player.Position.Y / Cube.CUBE_SCALE < 140)
+			{
+				Vector3 lavaPosition = new Vector3(player.Position.X, Cube.CUBE_SCALE * 40.5f, player.Position.Z);
+
+				if (player.Position.Y < lavaPosition.Y)
+					player.Kill();
+
+				if (lavaLight == -1)
+					lavaLight = LightManager.Add(lavaPosition, 512 * Cube.CUBE_SCALE, 512 * Cube.CUBE_SCALE, Color.OrangeRed);
+				else LightManager.Update(lavaLight, lavaPosition, 512 * Cube.CUBE_SCALE, 512 * Cube.CUBE_SCALE, Color.OrangeRed);
+			}
+			else
+			{
+				if (lavaLight != -1)
+				{
+					LightManager.Remove(lavaLight);
+					lavaLight = -1;
+				}
+			}
+
 			foreach (var mined in miningCubes)
 			{
 				MinedCube mc = mined.Value;
@@ -539,21 +574,9 @@ namespace ViMG
 			Stopwatch drawTime = Stopwatch.StartNew();
 
 			directionalLight.DrawShadowmap(device, this);
-			//directionalLight.Bind(Main.CubeLitEffect);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 
 			LightManager.Draw(device);
-			//LightManager.DrawShadowmap(device, this);
-
-			//Main.CubeLitEffect.Parameters["TexturesLightDepth"].SetValue(directionalLight.GetShadowmapBuffers());
-
-			//device.SetRenderTarget(Main.WorldTarget);
-			//device.Clear(ClearOptions.Target, SkyColor, 1, 0);
-			//device.Clear(SkyColor);
-
-			//device.DepthStencilState = Main.genericDSS;
-			//device.RasterizerState = Main.genericRS;
-			//device.SamplerStates[2] = Main.clampSS;
 
 			bool drawSkybox = true;
 
@@ -567,14 +590,6 @@ namespace ViMG
 			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 			camChunkPosWS.Y -= dist;
 			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-
-			/*if (!player.InWater)
-			{
-				Main.FogManager.Set(Math.Max(0, dist - 20 * Cube.CUBE_SCALE), dist, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), GetTimeOfDay());
-			}
-			else
-				Main.FogManager.Set(1, 800, Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), Main.assetsManager.GetAsset<Texture2D>("heightmap_underwater"), 0);*/
-			//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(1 - GetTimeOfDay());
 
 			foreach (ChunkPosition pos in CulledChunkDrawPositions)
 			{
@@ -681,8 +696,15 @@ namespace ViMG
 				}
 			}
 
-			//LightManager.UpdateDatas(Main.CubeLitEffect);
-			//LightManager.UpdateDatas(Main.Renderer.EffectDeferred);
+			if (player.Position.Y / Cube.CUBE_SCALE < 140)
+			{
+				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
+					Matrix.CreateTranslation(player.Position.X, Cube.CUBE_SCALE * 40.5f, player.Position.Z);
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("lava"),
+					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
+			}
+
 			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
 
 			ProjectileManager.Draw(device, effect);
@@ -691,8 +713,6 @@ namespace ViMG
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
 
-			//player.Draw(device);
-			//player.DrawDebug(device);
 		}
 
 		public void DrawShadowmap(GraphicsDevice device, Effect effect)
