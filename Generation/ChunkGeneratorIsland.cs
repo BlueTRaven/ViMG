@@ -37,6 +37,7 @@ namespace ViMG.Generation
 		private Structure ellipsoidAtBottomOfHole;
 		private Structure obelisk;
 		private Structure house;
+		private Structure geode;
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
@@ -96,6 +97,7 @@ namespace ViMG.Generation
 			ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
 			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
 			house = Main.assetsManager.GetAsset<Structure>("house");
+			geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
 		}
 
 		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
@@ -200,15 +202,20 @@ namespace ViMG.Generation
 							}
 						}
 
-						if (pos.Y < sample - 64)
+						if (pos.Y < sample - 32)
                         {
-							bool doIron = GetRandom().NextFloat() < 1f / 512f;
-							bool doGlow = GetRandom().NextFloat() < 1f / 400f;
-							bool doTin = GetRandom().NextFloat() < 1f / 512f;
-							bool doCopper = GetRandom().NextFloat() < 1f / 512f;
-							if (doIron) 
-								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos, 
-									BlacklistOre, Span<ushort>.Empty);
+							
+							bool doGlow = GetRandom().NextFloat() < 1f / 300f;
+							bool doTin = GetRandom().NextFloat() < 1f / 384f;
+							bool doCopper = GetRandom().NextFloat() < 1f / 384f;
+
+							if (pos.Y < SEA_FLOOR)
+							{
+								bool doIron = GetRandom().NextFloat() < 1f / 384f;
+								if (doIron)
+									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
+										BlacklistOre, Span<ushort>.Empty);
+							}
 
 							if (doGlow)
 								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, 
@@ -240,6 +247,27 @@ namespace ViMG.Generation
 			PlaceStructureWithBlacklist(manager, null, ellipsoidAtBottomOfHole, 
 				new CubePosition(holeLocationX - 32, 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
 				BlacklistAir, Span<ushort>.Empty);
+
+			//place one preset geode always located within the ellipsoid
+			Vector2 geodeAng = GetRandom().NextAngle();
+			float geodeDist = GetRandom().NextFloat(3, 24);
+
+			CubePosition geodePos = new CubePosition((int)(geodeAng.X * geodeDist), 37, (int)(geodeAng.Y * geodeDist));
+
+			PlaceStructureWithBlacklist(manager, null, geode,
+				geodePos, BlacklistNone, BlacklistNone);
+
+			//also place a random number of other geodes throughout the world
+			int numGeodes = GetRandom().Next(10, 15);
+
+			for (int i = 0; i < numGeodes; i++)
+            {
+				int x = GetRandom().Next(0, manager.sizeInCubes);
+				int z = GetRandom().Next(0, manager.sizeInCubes);
+
+				PlaceStructureWithBlacklist(manager, null, geode,
+					new CubePosition(x, 37, z), BlacklistNone, BlacklistNone);
+			}
 
 			while (true)
 			{
@@ -382,6 +410,8 @@ namespace ViMG.Generation
 					}
 					else
 					{
+						//TODO GetRandom causes issues when multithreading, sometimes always returning 0 for this
+						//(thus replacing the entire dirt layer with brittle bone blocks)
 						if (GetRandom().NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
 							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
 						return Main.Registry.CubeRegistry.Get("dirt").Id;

@@ -12,6 +12,7 @@ namespace ViMG.Generation
 {
 	public abstract class ChunkGenerator
 	{
+		protected static ushort[] BlacklistNone = Array.Empty<ushort>();
 		protected static ushort[] BlacklistAir = new ushort[1] { 0 };
 		protected FastNoise noise;
 		private Random random;

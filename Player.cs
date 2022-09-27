@@ -1247,12 +1247,18 @@ namespace ViMG
 
 		public void Kill()
         {
+			if (state == State.Noclip)
+				return;
+
 			//health = 0;
 			world.EntityManager.Remove(this);
         }
 
 		private void Damage(int amt)
         {
+			if (state == State.Noclip)
+				return;
+
 			damageAnimTimer = DAMAGE_ANIM_TIME;
 
 			health -= amt;

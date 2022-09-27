@@ -546,13 +546,21 @@ namespace ViMG
 					float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
-					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+					if (!Main.inputManager.IsHeld(Keys.F6))
+						Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+					else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 					//Main.Renderer.EffectGBuffer.Parameters["Heightmap"].SetValue(ChunkManager.Heightmap);
 					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
 			}
-			else Main.Renderer.DoCSMLight = false;
+			else
+			{
+				Main.Renderer.DoCSMLight = false;
+
+				if (Main.inputManager.IsHeld(Keys.F6)) 
+					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+			}
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
