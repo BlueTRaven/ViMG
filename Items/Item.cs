@@ -26,6 +26,8 @@ namespace ViMG.Items
 		public readonly Texture2D Texture;
 		public readonly RectangleF SourceRect;
 
+		protected bool flipXInHand;
+
 		public string Identifier { get; private set; }
 		public HashSet<string> Tags = new HashSet<string>();
 
@@ -96,8 +98,15 @@ namespace ViMG.Items
 			if (meshItemQuadInWorld == null)
 				MakeMesh(device);
 
+			RectangleF sourceRect = SourceRect;
+			if (flipXInHand)
+            {
+				sourceRect.x = sourceRect.x + sourceRect.width;
+				sourceRect.width = -sourceRect.width;
+            }
+
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect));
+				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, sourceRect));
 
 			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}

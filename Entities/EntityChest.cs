@@ -6,7 +6,7 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
 	[Serializable]
-	[EntityMeta(0, 0)]
+	[EntityMeta(1, 1)]
 	public class EntityChest : Entity, ICubeTracker
 	{
 		public CubePosition TrackedPosition { get; private set; }
@@ -14,9 +14,15 @@ namespace ViMG.Entities
 		private Inventory inventory;
 		private int rows, columns;
 
+		public EntityChest()
+        {
+
+        }
+
 		public EntityChest(CubePosition position, int rows, int columns)
 		{
 			this.TrackedPosition = position;
+			this.Position = position.InWorldSpace(null);
 			this.rows = rows;
 			this.columns = columns;
 
@@ -31,6 +37,8 @@ namespace ViMG.Entities
 
 			if (!tracker.HasValue() || tracker.Get() != this)
 				world.EntityManager.Remove(this);
+
+			world.ChunkManager.MarkDirty(ChunkPosition.CubeChunk(TrackedPosition), true);
 		}
 
 		public void TrackingCubeDestroyed(World world, ChunkManager cm)
@@ -49,6 +57,7 @@ namespace ViMG.Entities
 		{
 			base.OnSave(saveBytes);
 
+			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
 			SaveHelper.SaveInt32(saveBytes, rows);
 			SaveHelper.SaveInt32(saveBytes, columns);
 			inventory.Save(saveBytes);
@@ -59,6 +68,9 @@ namespace ViMG.Entities
 			base.OnLoad(loadBytes, version);
 
 			int index = 0;
+
+			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			Position = TrackedPosition.InWorldSpace(null);
 
 			rows = SaveHelper.LoadInt32(loadBytes, ref index);
 			columns = SaveHelper.LoadInt32(loadBytes, ref index);

@@ -72,6 +72,8 @@ namespace ViMG.Items
 			Register(new ItemMetalHelmet("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
 			Register(new ItemMetalChestplate("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
 			Register(new ItemMetalLegs("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
+			Register(new ItemTinderbox());
+			Register(new ItemBookOfEmber());
 			RegisterItemCubes();
 		}
 

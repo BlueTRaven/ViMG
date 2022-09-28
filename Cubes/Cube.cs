@@ -279,6 +279,11 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
 		}
 
+		public virtual bool CanPlace(World world, ChunkManager manager, CubePosition position)
+        {
+			return true;
+        }
+
 		public virtual bool CanMine(CubePosition position)
 		{
 			return true;

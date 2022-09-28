@@ -167,7 +167,8 @@ namespace ViMG.Entities
 
 			foreach (Entity entity in entities)
 			{
-				entity.Update(deltaTime);
+				if (!entity.Dead)
+					entity.Update(deltaTime);
 			}
 
 			iterating = false;

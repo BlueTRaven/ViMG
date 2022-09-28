@@ -1,20 +1,21 @@
-﻿using System;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
-using BrUtility;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
-    public class CubeFlame : Cube
+    public class CubeCampfire : Cube
     {
         private static SimpleMesh<VertexCube, int> heldMesh;
 
-        public CubeFlame() : base("flame", new RectangleF(192, 0, 16, 16), Color.White, 1)
+        public CubeCampfire() : base("campfire", new RectangleF(192, 16, 16, 16), Color.White, 1)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.None;
@@ -49,15 +50,34 @@ namespace ViMG.Cubes
 
             float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
 
-            return new RectangleF((int)(t * 3) * 16f + 192, 0, 16f, 16f);
+            return new RectangleF((int)(t * 3) * 16f + 192, 16f, 16f, 16f);
         }
 
         public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {
-            if (pass != RenderPass.Opaque)
-                return;
+			if (pass != RenderPass.Opaque)
+				return;
 
             DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos, vertices, indices);
+        }
+
+        public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
+        {
+            return manager.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+        }
+
+        public override void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+        {
+            if (updating.Y == position.Y - 1)
+            {
+                //if the cube below us updates and it is an air block/no longer solid, remove self.
+                Cube cube = Main.Registry.CubeRegistry.Get(updatedId);
+
+                if (cube == null || !cube.Solid)
+                    parent.SetCube(position, 0);
+            }
+
+            base.OnAdjacentUpdated(parent, position, updatingParent, updating, updatedId);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -65,11 +85,15 @@ namespace ViMG.Cubes
             base.OnPlayerPlaced(player, position);
 
             player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, Main.random.NextFloat(3f * 60f, 15f * 60f)));
+
+            //player.GetWorld().EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
 
         public override void OnLoaded(World world, CubePosition position)
         {
             base.OnLoaded(world, position);
+
+            //world.EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
 
         public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)

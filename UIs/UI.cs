@@ -361,6 +361,10 @@ namespace ViMG.UIs
 					RectangleF bounds = new RectangleF(mousePos + new Vector2(16), textWidthMax, Math.Max(height, minH));
 					//batch.DrawRectangle(bounds, new Color(139, 139, 139, 255), 0.89f);
 
+					batch.DrawRectangle(bounds.ToRectangle(), new Color(139, 139, 139), 0.899f);
+
+					bounds.x += 8;
+					bounds.width -= 16;
 					TextHelper.DrawText(batch, fi, name, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
 
 					bounds.y += fi.StringHeight(name);

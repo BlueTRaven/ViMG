@@ -375,14 +375,14 @@ namespace ViMG
 
 					if (adjChunk != null)
 					{
-						GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+						GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
 
 						chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 					}
 				}
 				else
 				{
-					GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
+					GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
 
 					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 				}

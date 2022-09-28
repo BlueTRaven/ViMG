@@ -1,23 +1,23 @@
-﻿using System;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ViMG.Entities;
-using BrUtility;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+using ViMG.Cubes;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
-    public class CubeFlame : Cube
+    public class CubeCrystal : Cube
     {
         private static SimpleMesh<VertexCube, int> heldMesh;
 
-        public CubeFlame() : base("flame", new RectangleF(192, 0, 16, 16), Color.White, 1)
+        public CubeCrystal() : base("crystal_quartz", new RectangleF(48, 64, 16, 16), Color.White, 1)
         {
             Transparency = TransparencyValue.Transparent;
-            Collision = CollisionValue.None;
         }
 
         public override SimpleMesh<VertexCube, int> GetHeldMesh(GraphicsDevice device)
@@ -35,46 +35,33 @@ namespace ViMG.Cubes
                 MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(b, c, d, a,
                     new Vector3(0, 0, 1), Color.White, vertices, indices);
 
+                MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(c, b, a, d,
+                    new Vector3(0, 0, -1), Color.White, vertices, indices);
+
                 heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
             return heldMesh;
         }
 
-        public override RectangleF GetHeldSourceRect(World world)
-        {
-            const float FRAME_TIME = 0.125f * 3;
-
-            float alive = world.GetTime();
-
-            float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
-
-            return new RectangleF((int)(t * 3) * 16f + 192, 0, 16f, 16f);
-        }
-
         public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
         {
-            if (pass != RenderPass.Opaque)
+            if (pass == RenderPass.Opaque)
                 return;
 
             DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos, vertices, indices);
         }
 
-        public override void OnPlayerPlaced(Player player, CubePosition position)
+        public override RectangleF GetHeldSourceRect(World world)
         {
-            base.OnPlayerPlaced(player, position);
-
-            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, Main.random.NextFloat(3f * 60f, 15f * 60f)));
+            return GetSourceRect(RenderPass.Transparent, world, new CubePosition());
         }
 
-        public override void OnLoaded(World world, CubePosition position)
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
         {
-            base.OnLoaded(world, position);
-        }
+            base.GetDrops(itemsToDrop);
 
-        public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
-        {
-            return new CubeAnimation(0.125f, 3);
+            DropSelf(itemsToDrop);
         }
     }
 }
