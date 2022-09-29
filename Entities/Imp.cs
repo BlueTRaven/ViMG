@@ -223,6 +223,9 @@ namespace ViMG.Entities
         {
             base.OnDelete();
 
+			if (light != -1)
+				world.LightManager.Remove(light);
+
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
         }

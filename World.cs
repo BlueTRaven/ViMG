@@ -652,8 +652,8 @@ namespace ViMG
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						//Matrix.CreateScale(1.001f) *
 						Matrix.CreateTranslation(camChunkPosWS),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_night"), DrawHelper.BlackPixel,
-						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaNight));
+						Main.assetsManager.GetAsset<Texture2D>("skybox_night"), DrawHelper.WhitePixel,
+						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White));
 				}
 
 				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
