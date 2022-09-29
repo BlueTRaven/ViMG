@@ -29,7 +29,8 @@ namespace ViMG.Generation
 		private const int ISLAND_TOP = SEA_FLOOR + 64;
 		private const int ISLAND_RANGE = ISLAND_TOP - SEA_FLOOR;
 
-		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3D;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DAltarCaves;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DWaterCaves;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreIron;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreGlow;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreTin;
@@ -64,7 +65,8 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			structureBatchesGOL3D = new StructureGeneratorGOL3D(seed, null).Generate(56, 8);
+			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(seed, null).Generate(56, 8);
+			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(seed, null).Generate(56, 8);
 			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
 				3, 6, seed, null).Generate(18, 3);
 			structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
@@ -185,31 +187,34 @@ namespace ViMG.Generation
 							}
 						}
 
-						if (pos.Y < sample - 64)
+						if (pos.Y < SEA_FLOOR + 16 && pos.Y < sample - 8)
 						{
 							double shouldDoBigCave = GetRandom().NextDouble();
-							if (shouldDoBigCave < 1.0 / 200000.0)
+							if (shouldDoBigCave < 1.0 / 300000.0)
 							{
 								numBigCavesGenerated++;
 
-								/*int caveW = GetRandom().Next(16, 64);
-								int caveH = GetRandom().Next(16, 64);
-								int caveZ = GetRandom().Next(16, 64);*/
-
-								Structure structure = structureBatchesGOL3D.Get(GetRandom().Next(0, structureBatchesGOL3D.num));
+								Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
 
 								PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
 							}
+                            else
+                            {
+								if (shouldDoBigCave < 1.0 / 100000.0)
+                                {
+									numBigCavesGenerated++;
+
+									Structure structure = structureBatchesGOL3DWaterCaves.Get(GetRandom().Next(0, structureBatchesGOL3DWaterCaves.num));
+
+									StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, chunk, structure, pos);
+									//PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
+								}
+                            }
 						}
 
-						if (pos.Y < sample - 32)
+						if (pos.Y < sample)
                         {
-							
-							bool doGlow = GetRandom().NextFloat() < 1f / 300f;
-							bool doTin = GetRandom().NextFloat() < 1f / 384f;
-							bool doCopper = GetRandom().NextFloat() < 1f / 384f;
-
-							if (pos.Y < SEA_FLOOR)
+							if (pos.Y < SEA_FLOOR - 16)
 							{
 								bool doIron = GetRandom().NextFloat() < 1f / 384f;
 								if (doIron)
@@ -217,17 +222,29 @@ namespace ViMG.Generation
 										BlacklistOre, BlacklistAir);
 							}
 
-							if (doGlow)
-								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos, 
-									BlacklistOre, BlacklistAir);
+							if (pos.Y < SEA_FLOOR + 8)
+							{
+								bool doGlow = GetRandom().NextFloat() < 1f / 300f;
+								if (doGlow)
+									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
+										BlacklistOre, BlacklistAir);
+							}
 
-							if (doTin)
-								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos, 
-									BlacklistOre, BlacklistAir);
+							if (pos.Y < sample - 16)
+							{
+								bool doTin = GetRandom().NextFloat() < 1f / 384f;
+								if (doTin)
+									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
+										BlacklistOre, BlacklistAir);
+							}
 
-							if (doCopper)
-								PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos, 
-									BlacklistOre, BlacklistAir);
+							if (pos.Y < sample - 24)
+							{
+								bool doCopper = GetRandom().NextFloat() < 1f / 384f;
+								if (doCopper)
+									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
+										BlacklistOre, BlacklistAir);
+							}
 						}
 					}
 				}

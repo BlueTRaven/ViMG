@@ -8,13 +8,13 @@ using ViMG.Cubes;
 namespace ViMG.Generation
 {
     //TODO: GOL caves may spawn into the sea which is bad
-    public class StructureGeneratorGOL3D : StructureGenerator
+    public class StructureGeneratorGOL3DAltar : StructureGenerator
     {
         private Cube altarBrickCube;
         private Cube altarCube;
         private Cube stone;
 
-        public StructureGeneratorGOL3D(int seed, ChunkManager chunkManager) : base("GOL3D", seed, chunkManager)
+        public StructureGeneratorGOL3DAltar(int seed, ChunkManager chunkManager) : base("GOL3D", seed, chunkManager)
         {
             altarBrickCube = Main.Registry.CubeRegistry.Get("altar_brick");
             altarCube = Main.Registry.CubeRegistry.Get("ancient_altar");

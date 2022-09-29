@@ -500,6 +500,8 @@ namespace ViMG
 			bool jumpHeld = false;
 			bool swimmingFast = false;
 
+			fallStartY = Position.Y;
+
 			if (inputLockupTimer <= 0 && !uiPlayer.Opened)
 			{
 				if (Main.inputManager.IsHeld(Keys.LeftShift))

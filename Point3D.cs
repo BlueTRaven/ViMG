@@ -14,6 +14,13 @@ namespace ViMG
 
         public static Point3D Zero => new Point3D();
 
+        public Point3D(ValuePoint3D point)
+        {
+            this.X = point.x;
+            this.Y = point.y;
+            this.Z = point.z;
+        }
+
         public Point3D(int x, int y, int z)
         {
             this.X = x;

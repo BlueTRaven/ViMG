@@ -80,13 +80,13 @@ namespace ViMG.Generation
 			chunk.GetData().SetCube(pos, id, false);
 		}
 
-		private Chunk cachedWorkingChunk;
-		private ushort[] cachedWorkingCubes;
+		private static Chunk cachedWorkingChunk;
+		private static ushort[] cachedWorkingCubes;
 
-		private Chunk cachedAdjacentChunk;
-		private ushort[] cachedAdjacentCubes;
+		private static Chunk cachedAdjacentChunk;
+		private static ushort[] cachedAdjacentCubes;
 
-		protected void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
+		public static void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
 		{
 			if (!manager.IsInWorldBounds(pos))
 				return;
@@ -121,8 +121,8 @@ namespace ViMG.Generation
 					pos = pos.InChunkSpace(adjacent);
 
 				//This should never actually be called with the current way of doing things, but still...
-				if (adjacent.GetData().GenStep == ChunkData.GenerationStep.Broad)
-					GenerateChunkBroad(adjacent);
+				//if (adjacent.GetData().GenStep == ChunkData.GenerationStep.Broad)
+					//GenerateChunkBroad(adjacent);
 
 				cachedAdjacentCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
 			}
