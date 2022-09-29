@@ -110,6 +110,7 @@ namespace ViMG
 			Spawners.Add(new PSSlime(EntityManager));
 			Spawners.Add(new PSSKeleton(EntityManager));
 			Spawners.Add(new PSImp(EntityManager));
+			Spawners.Add(new PSCaveSlime(EntityManager));
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));

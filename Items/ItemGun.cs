@@ -24,7 +24,7 @@ namespace ViMG.Items
 
 			projStats = new ProjectileManager.ProjectileStats()
 			{
-				group = Player.GROUP_PLAYER_DEAL_SOURCE,
+				group = HitboxManager.Group.PLAYER_DEAL,
 				damage = 1,
 				dieOnCollision = true
 			};

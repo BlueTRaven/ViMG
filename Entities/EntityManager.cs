@@ -42,6 +42,9 @@ namespace ViMG.Entities
 
 		public void ForceAdd(Entity entity, ulong id)
 		{
+			if (iterating)
+				throw new Exception("Cannot add while iterating");
+
 			ReallyAdd(entity, (long)id, true);
 		}
 
@@ -62,6 +65,9 @@ namespace ViMG.Entities
 
 		private void ReallyAdd(Entity entity, long id = -1, bool replaceCubeTracker = false)
 		{
+			if (iterating)
+				throw new Exception("Cannot add while iterating");
+
 			if (entity is ICubeTracker tracker)
 			{
 				//If entity is already present, then replace it
@@ -183,6 +189,9 @@ namespace ViMG.Entities
 
 		private void ReallyRemove(Entity entity)
         {
+			if (iterating)
+				throw new Exception("Cannot remove entity while iterating");
+
 			entities.Remove(entity);
 
 			if (entitiesByType.ContainsKey(entity.GetType()))

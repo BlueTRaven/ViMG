@@ -9,7 +9,7 @@ namespace ViMG.Cubes
 {
 	public class CubeStone : Cube
 	{
-		public CubeStone() : base("stone", new RectangleF(16, 0, 16, 16), Color.White, 6)
+		public CubeStone() : base("stone", new RectangleF(16, 0, 16, 16), Color.White, 3)
 		{
 
 		}

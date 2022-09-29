@@ -55,7 +55,7 @@ namespace ViMG.Entities
 				if (hitbox == -1)
 					hitbox = world.HitboxManager.Add(this, 
 						new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 3), new Vector3(Cube.CUBE_SCALE * 6)).Offset(Position),
-						Vector3.One, Slime.GROUP_ENEMYHOSTILE_SOURCE, 40, 0);
+						Vector3.One, HitboxManager.Group.ENEMYHOSTILE_BOTH, 40, 0);
             }
 
             if (state == State.Enraged)
@@ -129,7 +129,7 @@ namespace ViMG.Entities
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
-			if (other.group == Player.GROUP_PLAYER_TAKE_SOURCE)
+			if (other.group == HitboxManager.Group.PLAYER_TAKE)
             {
 				if (other.owner is Player player)
                 {

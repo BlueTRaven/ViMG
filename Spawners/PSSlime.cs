@@ -64,7 +64,7 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            /*if (bigSlimes.Count < 4 && Main.random.Next(0, 4) == 0)
+            if (bigSlimes.Count < 4 && Main.random.Next(0, 4) == 0)
             {
                 int minR = 112;
                 int maxR = world.sizeInCubes - 112;
@@ -75,7 +75,7 @@ namespace ViMG.Spawners
                 SlimeBig bigSlime = new SlimeBig(position.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 2, 0));
                 world.EntityManager.Add(bigSlime);
                 return;
-            }*/
+            }
 
             if (slimes.Count < 32)
             {

@@ -11,7 +11,6 @@ namespace ViMG.Entities
 {
 	public class Slime : Entity, IHitboxOwner
 	{
-		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
 		public Vector3 Velocity;
 
 		public Vector3 MaxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
@@ -60,7 +59,7 @@ namespace ViMG.Entities
 			alive += (float)deltaTime;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f);
 			else world.HitboxManager.Update(hitbox, Bounds);
 
 			Vector3 actualMaxVel = MaxVelocity;
@@ -279,7 +278,7 @@ namespace ViMG.Entities
 		{
 			if (invulnTimer <= 0)
 			{
-				if (other.group == Player.GROUP_PLAYER_DEAL_SOURCE)
+				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
 					Vector3 direction = Vector3.Normalize(other.direction);
 

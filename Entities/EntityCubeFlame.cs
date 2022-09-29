@@ -9,32 +9,48 @@ using ViMG.Cubes;
 namespace ViMG.Entities
 {
     [Serializable]
-    [EntityMeta(0)]
-    public class EntityCubeFlame : Entity, ICubeTracker
+    [EntityMeta(1)]
+    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner
     {
+        //Store time as the point in world time after which this entity will be destroyed.
+        //We do it this way so that the timer technically keeps ticking even if we unload the chunk with this cube.
+        //Once we re-enter and load, it will immediately kill itself if it's well past its timer.
         private float time;
         private float timer;
         public CubePosition TrackedPosition { get; private set; }
         private int light = -1;
+        private int hitbox = -1;
+
+        private bool needsTimeFix = false;
 
         public EntityCubeFlame()
         {
         }
 
-        public EntityCubeFlame(CubePosition position, float timer)
+        public EntityCubeFlame(CubePosition position, float worldTimeExpiration)
         {
             this.Position = position.InWorldSpace(null);
             TrackedPosition = position;
 
-            this.time = timer;
-            this.timer = timer;
+            this.time = worldTimeExpiration;
+            this.timer = worldTimeExpiration;
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
-            timer -= (float)deltaTime;
+            if (needsTimeFix)
+            {
+                time = world.GetTime() + timer;
+                needsTimeFix = false;
+            }
+
+            if (hitbox == -1)
+                hitbox = world.HitboxManager.Add(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 4f), new Vector3(Cube.CUBE_SCALE / 2f)), 
+                    Vector3.Up, HitboxManager.Group.NEUTRAL_DEAL, 1, 0);
+
+            //timer -= (float)deltaTime;
 
             BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
@@ -54,7 +70,7 @@ namespace ViMG.Entities
                 }
             }
 
-            if (timer <= 0)
+            if (world.GetTime() > time)
             {
                 world.EntityManager.Remove(this);
 
@@ -81,8 +97,13 @@ namespace ViMG.Entities
             if (light != -1)
             {
                 world.LightManager.Remove(light);
-
                 light = -1;
+            }
+
+            if (hitbox != -1)
+            {
+                world.HitboxManager.Remove(hitbox);
+                hitbox = -1;
             }
         }
 
@@ -91,7 +112,8 @@ namespace ViMG.Entities
             base.OnSave(saveBytes);
 
             SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
-            SaveHelper.SaveFloat32(saveBytes, timer);
+
+            //SaveHelper.SaveFloat32(saveBytes, timer);
             SaveHelper.SaveFloat32(saveBytes, time);
         }
 
@@ -101,10 +123,19 @@ namespace ViMG.Entities
 
             int index = 0;
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-            timer = SaveHelper.LoadFloat32(loadBytes, ref index);
+
+            if (version == 0)
+                timer = SaveHelper.LoadFloat32(loadBytes, ref index);
             time = SaveHelper.LoadFloat32(loadBytes, ref index);
 
             Position = TrackedPosition.InWorldSpace(null);
+
+            if (version == 0)
+                needsTimeFix = true;
+        }
+
+        public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+        {
         }
     }
 }

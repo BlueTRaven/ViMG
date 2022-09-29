@@ -59,7 +59,7 @@ namespace ViMG.Entities
 			alive += (float)deltaTime;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, Slime.GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
+				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f);
 			else world.HitboxManager.Update(hitbox, bounds.Offset(entity.Position));
 
 			Vector3 actualMaxVel = maxVelocity;
@@ -176,7 +176,7 @@ namespace ViMG.Entities
 		{
 			if (invulnTimer <= 0)
 			{
-				if (other.group == Player.GROUP_PLAYER_DEAL_SOURCE)
+				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
 					Vector3 direction = Vector3.Normalize(other.direction);
 

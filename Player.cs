@@ -48,9 +48,6 @@ namespace ViMG
             }
         }
 
-		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
-		public const int GROUP_PLAYER_DEAL_SOURCE = 2;
-
 		public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
 
 		private enum State
@@ -257,7 +254,7 @@ namespace ViMG
 				return;
 
 			if (hurtbox == -1)
-				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, 0, -1, -1f);
+				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f);
 			else if (state != State.Noclip)
 				world.HitboxManager.Update(hurtbox, Bounds);
 
@@ -771,8 +768,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				world.EntityManager.Add(new CaveSlime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 
@@ -1014,7 +1011,7 @@ namespace ViMG
 
 			//Velocity.Z = -Main.camera.Forward.Z * 512f;
 
-			var hitboxes = world.HitboxManager.GetAll();
+			/*var hitboxes = world.HitboxManager.GetAll();
 
 			HitboxManager.Hitbox nearestHitbox = new HitboxManager.Hitbox();
 			float nearestDot = float.MinValue;
@@ -1040,7 +1037,7 @@ namespace ViMG
 			if (nearestHitbox.active)
 			{
 				attackStateTargetPos = nearestHitbox.bounds.Center;
-			}
+			}*/
 
 			this.itemUseCooldownTimer = cooldownTimer;
 			this.attackStateTimer = itemUseCooldownTimer;
@@ -1061,7 +1058,7 @@ namespace ViMG
 			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, GROUP_PLAYER_DEAL_SOURCE, damage, knockback);
+			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, damage, knockback);
 
 			hitboxTimer = HITBOX_TIME;
 
@@ -1272,7 +1269,8 @@ namespace ViMG
 		{
 			if (invulnTimer <= 0)
 			{
-				if (us.group == GROUP_PLAYER_TAKE_SOURCE && other.group == Slime.GROUP_ENEMYHOSTILE_SOURCE)
+				if (us.group == HitboxManager.Group.PLAYER_TAKE && 
+					(other.group == HitboxManager.Group.ENEMYHOSTILE_BOTH || other.group == HitboxManager.Group.NEUTRAL_DEAL))
 				{
 					Vector3 direction = Vector3.Normalize(Bounds.Center - other.bounds.Center);
 

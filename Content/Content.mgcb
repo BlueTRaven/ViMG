@@ -422,6 +422,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/skybox_night.png
 
+#begin Textures/slime_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/slime_emissive.png
+
 #begin Textures/slime.png
 /importer:TextureImporter
 /processor:TextureProcessor

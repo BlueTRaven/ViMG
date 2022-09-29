@@ -8,6 +8,19 @@ namespace ViMG
 {
 	public class HitboxManager
 	{
+		public enum Group
+        {
+			INVALID,
+			PLAYER_TAKE,
+			PLAYER_DEAL,
+			ENEMYHOSTILE_BOTH,
+			NEUTRAL_DEAL
+        }
+		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
+		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
+		public const int GROUP_PLAYER_DEAL_SOURCE = 2;
+		public const int GROUP_NEUTRAL_SOURCE = 3;
+
 		public readonly struct Hitbox 
 		{
 			public readonly int index;
@@ -17,7 +30,7 @@ namespace ViMG
 			public readonly Vector3 direction;
 
 			public readonly IHitboxOwner owner;
-			public readonly int group;
+			public readonly Group group;
 
 			public readonly int damage;
 			public readonly float knockback;
@@ -29,12 +42,12 @@ namespace ViMG
 				owner = null;
 				bounds = new Rectangle3D();
 				direction = Vector3.Zero;
-				group = -1;
+				group = Group.INVALID;
 				damage = -1;
 				knockback = -1;
 			}
 
-			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
+			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback)
 			{
 				this.index = index;
 				active = true;
@@ -75,7 +88,7 @@ namespace ViMG
 			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, int group, int damage, float knockback)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback)
 		{
 			for (int i = 0; i < capacity; i++)
 			{

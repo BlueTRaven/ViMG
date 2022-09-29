@@ -17,7 +17,8 @@ namespace ViMG.Entities
 		private bool onGround;
 		private bool shouldJump;
 
-		private NoticeHandler<Player> noticeHandler;
+		private NoticeHandler<Player> noticeHandlerDay;
+		private NoticeHandler<Player> noticeHandlerNight;
 
 		public Vector3 MaxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
 		public Vector3 Velocity;
@@ -54,7 +55,8 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+			noticeHandlerNight = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+			noticeHandlerDay = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6, false, noticeFalloffTime: 5);
 
 			health = maxHealth;
 		}
@@ -65,8 +67,13 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
+			NoticeHandler<Player> realNoticeHandler = noticeHandlerNight;
+
+			if (!world.IsNight())
+				realNoticeHandler = noticeHandlerDay;
+
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, Slime.GROUP_ENEMYHOSTILE_SOURCE, 1, 1f);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f);
 			else world.HitboxManager.Update(hitbox, Bounds);
 
 			float p0 = (alive % 0.65f) / 0.65f;
@@ -82,7 +89,7 @@ namespace ViMG.Entities
 
 			Velocity.Y += World.GRAVITY;
 
-			noticeHandler.Update(deltaTime);
+			realNoticeHandler.Update(deltaTime);
 
 			invulnTimer -= (float)deltaTime;
 
@@ -94,9 +101,9 @@ namespace ViMG.Entities
 					shouldJump = false;
 				}
 
-				if (noticeHandler.Noticed)
+				if (realNoticeHandler.Noticed)
 				{
-					Vector3 distance = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - Position;
+					Vector3 distance = (realNoticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - Position;
 
 					fireTimer -= (float)deltaTime;
 
@@ -125,8 +132,8 @@ namespace ViMG.Entities
                     {
 						if (fireTimer <= 0)
                         {
-							ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(this, 
-								Slime.GROUP_ENEMYHOSTILE_SOURCE, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, false, true); ;
+							ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(this,
+								HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, false, true); ;
 							ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), 
 								new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE, 
 								Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
@@ -297,8 +304,13 @@ namespace ViMG.Entities
 		{
 			if (invulnTimer <= 0)
 			{
-				if (other.group == Player.GROUP_PLAYER_DEAL_SOURCE)
+				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
+					NoticeHandler<Player> realNoticeHandler = noticeHandlerNight;
+
+					if (!world.IsNight())
+						realNoticeHandler = noticeHandlerDay;
+
 					Vector3 direction = Vector3.Normalize(other.direction);
 
 					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
@@ -313,7 +325,7 @@ namespace ViMG.Entities
 
 					invulnTimer = 0.25f;
 
-					noticeHandler.OnTakeDamage(other.owner as Player);
+					realNoticeHandler.OnTakeDamage(other.owner as Player);
 				}
 			}
 		}

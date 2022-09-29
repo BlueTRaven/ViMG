@@ -45,14 +45,14 @@ namespace ViMG.Entities
 		public struct ProjectileStats
 		{
 			public IHitboxOwner owner;
-			public int group;
+			public HitboxManager.Group group;
 			public int damage;
 			public float collisionRadius;
 			public float size;
 			public bool gravity;
 			public bool dieOnCollision;
 
-			public ProjectileStats(IHitboxOwner owner, int group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
+			public ProjectileStats(IHitboxOwner owner, HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
 			{
 				this.owner = owner;
 				this.group = group;

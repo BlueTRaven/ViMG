@@ -84,7 +84,7 @@ namespace ViMG.Cubes
         {
             base.OnPlayerPlaced(player, position);
 
-            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, Main.random.NextFloat(3f * 60f, 15f * 60f)));
+            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + Main.random.NextFloat(3f * 60f, 15f * 60f)));
 
             //player.GetWorld().EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
