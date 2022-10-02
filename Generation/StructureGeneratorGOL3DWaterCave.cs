@@ -105,12 +105,15 @@ namespace ViMG.Generation
             Queue<CubePosition> waterFloodFills = new Queue<CubePosition>();
             List<CubePosition> actualFills = new List<CubePosition>();
 
+            CubePosition seedPos = new CubePosition();
+
             for (int i = 0; i < structure.data.Length; i++)
             {
                 if (structure.data[i] == water.Id)
                 {
                     Util.OneDToThreeD(i, new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out ValuePoint3D spos);
-                    waterFloodFills.Enqueue(new CubePosition(spos.x, spos.y, spos.z) + pos);
+                    seedPos = new CubePosition(spos.x, spos.y, spos.z) + pos;
+                    waterFloodFills.Enqueue(seedPos);
                 }
             }
 
@@ -131,12 +134,16 @@ namespace ViMG.Generation
                             placeWater = false;
                             break;
                         }
-                        
+
+                        if (n.Y < seedPos.Y)
+                            continue;
+
                         actualFills.Add(n);
 
                         waterFloodFills.Enqueue(new CubePosition(n.X - 1, n.Y, n.Z));
                         waterFloodFills.Enqueue(new CubePosition(n.X + 1, n.Y, n.Z));
                         waterFloodFills.Enqueue(new CubePosition(n.X, n.Y - 1, n.Z));
+                        waterFloodFills.Enqueue(new CubePosition(n.X, n.Y + 1, n.Z));
                         waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z - 1));
                         waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z + 1));
                     }
@@ -162,10 +169,13 @@ namespace ViMG.Generation
                 }
             }
 
-            foreach (CubePosition actualPos in actualFills)
+            if (placeWater)
             {
-                ChunkGenerator.SetCubeOrAdjacent(manager, baseChunk, actualPos, water.Id);
-                //manager.GetChunk(actualPos).GetData().SetCube(actualPos, water.Id);
+                foreach (CubePosition actualPos in actualFills)
+                {
+                    ChunkGenerator.SetCubeOrAdjacent(manager, baseChunk, actualPos, water.Id);
+                    //manager.GetChunk(actualPos).GetData().SetCube(actualPos, water.Id);
+                }
             }
         }
     }

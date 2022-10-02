@@ -17,9 +17,23 @@ namespace ViMG
 	[EntityMeta(6, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
+		public enum PlayerDamageType
+        {
+			Unspecified,
+			Melee,
+			Range,
+			Magic,
+        }
+
 		public struct AccumulatedStats
         {
 			public int AdditionalHP;
+			public float MeleeScale;	//added to base scale value (1).
+			public float RangeScale;
+			public float MagicScale;
+			public float MeleeFlat;		//flat damage added on top of scale value. Added AFTER - unmodified by scale.
+			public float RangeFlat;
+			public float MagicFlat;
 			public int Defense;
 			public float KnockbackResist;
 			public float Speed;			//Adds to xz max velocity
@@ -97,6 +111,7 @@ namespace ViMG
 		private const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
+		private PlayerDamageType hitboxDamageType = PlayerDamageType.Unspecified;
 		private Vector3 damageDir;
 		private float hitboxTimer;
 		private float hitboxSize;
@@ -770,8 +785,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				//world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				world.EntityManager.Add(new CaveSlime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+				//world.EntityManager.Add(new CaveSlime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 
@@ -1048,19 +1063,20 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int damage, float knockback = 1)
+		public void SpawnHitbox(int damage, PlayerDamageType damageType = PlayerDamageType.Unspecified, float knockback = 1)
 		{
 			const float hitboxSize = Cube.CUBE_SCALE * 1.75f;
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
+			this.hitboxDamageType = damageType;
 
 			damageDir = -Main.camera.Forward * (hitboxSize + 0.5f * Cube.CUBE_SCALE);
 
 			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, damage, knockback);
+			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback);
 
 			hitboxTimer = HITBOX_TIME;
 
@@ -1280,7 +1296,7 @@ namespace ViMG
 
 					state = State.Hurt;
 
-					Damage(DamageCalculation(other));
+					Damage(TakeDamageCalculation(other));
 
 					inputLockupTimer = 0.25f;
 					invulnTimer = 4;
@@ -1317,7 +1333,7 @@ namespace ViMG
 			}
 		}
 
-		private int DamageCalculation(HitboxManager.Hitbox hitbox)
+		private int TakeDamageCalculation(HitboxManager.Hitbox hitbox)
         {
 			float defenseCalc = (float)stats.Defense * 0.5f;
 
@@ -1333,6 +1349,31 @@ namespace ViMG
 			}
 
 			return (int)damage;
+        }
+
+		private int DealDamageCalculation(PlayerDamageType damageType, int damage)
+        {
+			float startScale = 1;
+			float calculatedDamage = damage;
+
+			if (damageType == PlayerDamageType.Melee)
+			{
+				calculatedDamage *= startScale + stats.MeleeScale;
+				calculatedDamage += stats.MeleeFlat;
+			}
+			else if (damageType == PlayerDamageType.Magic)
+			{
+				calculatedDamage *= startScale + stats.MagicScale;
+				calculatedDamage += stats.MagicFlat;
+			}
+			else if (damageType == PlayerDamageType.Range)
+			{
+				calculatedDamage *= startScale + stats.RangeScale;
+				calculatedDamage += stats.RangeFlat;
+			}
+			else calculatedDamage *= startScale;
+
+			return (int)calculatedDamage;
         }
 
 		public void Heal(int amt)

@@ -238,11 +238,11 @@ namespace ViMG
 			sunIndices.Add(2);
 			sunIndices.Add(3);
 
-			const float SUN_VERT_DIST = Cube.CUBE_SCALE * 4;
-			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, Vector2.Zero, new Vector3(0, 0, -1)));
+			const float SUN_VERT_DIST = Cube.CUBE_SCALE * 128;
+			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
 
 			meshSun = new SimpleMesh<VertexCube, int>(device, sunVertices, sunIndices);
 
@@ -445,8 +445,8 @@ namespace ViMG
 					player.Kill();
 
 				if (lavaLight == -1)
-					lavaLight = LightManager.Add(lavaPosition, 512 * Cube.CUBE_SCALE, 512 * Cube.CUBE_SCALE, Color.OrangeRed);
-				else LightManager.Update(lavaLight, lavaPosition, 512 * Cube.CUBE_SCALE, 512 * Cube.CUBE_SCALE, Color.OrangeRed);
+					lavaLight = LightManager.Add(lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed);
+				else LightManager.Update(lavaLight, lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed);
 			}
 			else
 			{
@@ -487,6 +487,25 @@ namespace ViMG
 
 			miningRemove.Clear();
 			miningUpdate.Clear();
+
+			foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
+			{
+				Chunk chunk = ChunkManager.GetChunk(loadedPosition);
+
+				if (chunk.Initialized)
+				{
+					int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+					int id = chunk.GetData().GetAll()[num];
+
+					Cube cube = Main.Registry.CubeRegistry.Get(id);
+
+					if (cube != null)
+					{
+						Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point3d);
+						cube.OnRandomUpdate(this, ChunkManager, new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
+					}
+				}
+			}
 
 			Spawners.ForEach(x => x.Update(deltaTime, this));
 
@@ -660,7 +679,7 @@ namespace ViMG
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
 					Matrix.CreateTranslation(camChunkPosWS), null));*/
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("coconut"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
 					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
@@ -857,7 +876,7 @@ namespace ViMG
         }
         #endregion
 
-        public void MineCube(CubePosition position, bool instant = false)
+        public void MineCube(CubePosition position, int num, bool instant = false)
 		{
 			Chunk chunk = ChunkManager.GetChunk(position);
 
@@ -894,7 +913,7 @@ namespace ViMG
 
 				if (miningCubes.ContainsKey(position))
 				{
-					mined.progress = miningCubes[position].progress + 1;
+					mined.progress = miningCubes[position].progress + num;
 					if (mined.progress >= cube.MineProgressRequirement)
 					{
 						miningCubes.Remove(position);

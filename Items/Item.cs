@@ -14,12 +14,14 @@ namespace ViMG.Items
 		{
 			public float cooldownTime;
 			public int damage;
+			public float knockback;
 			//float size;
 
-			public AttackStats(float cooldownTime, int damage)
+			public AttackStats(float cooldownTime, int damage, float knockback)
 			{
 				this.cooldownTime = cooldownTime;
 				this.damage = damage;
+				this.knockback = knockback;
 			}
 		}
 

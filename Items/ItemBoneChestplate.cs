@@ -9,25 +9,13 @@ using System.Threading.Tasks;
 
 namespace ViMG.Items
 {
-    public class ItemMetalChestplate : Item
+    public class ItemBoneChestplate : Item
     {
-        private string material;
-        private Color color;
-        private readonly Player.AccumulatedStats stats;
-        private readonly SetBonus setBonus;
-
-        public ItemMetalChestplate(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("body_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 80, 16, 16))
+        public ItemBoneChestplate() : base("body_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 80, 16, 16))
         {
-            this.material = char.ToUpper(material[0]) + material.Substring(1); 
-            this.color = color;
-            this.stats = stats;
-            this.setBonus = setBonus;
+            name = "Bone Chestplate";
+            description = "Bodyarmor made of inflexible bone.";
             Tags.Add("armor_body");
-        }
-
-        public override string GetName(ItemInstance item)
-        {
-            return material + " Chestplate";
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
@@ -35,12 +23,13 @@ namespace ViMG.Items
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 
             if (bonus.SetBonus == null)
-                bonus.SetBonus = setBonus;
+                bonus.SetBonus = ItemBoneHelmet.SetBonusBoneArmor.Instance;
 
-            if (bonus.SetBonus == setBonus)
+            if (bonus.SetBonus == ItemBoneHelmet.SetBonusBoneArmor.Instance)
                 bonus.Count++;
 
-            stats += this.stats;
+            stats.Defense += 7;
+            stats.AdditionalHP += 5;
         }
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
@@ -49,12 +38,14 @@ namespace ViMG.Items
                 MakeMesh(device);
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-                meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
+                meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
         {
-            batch.Draw(Texture, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            //base.DrawInInventory(batch, position, scale);
+
+            batch.Draw(Texture, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

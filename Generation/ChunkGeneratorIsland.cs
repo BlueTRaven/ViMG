@@ -14,7 +14,23 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorIsland : ChunkGenerator
     {
-		private static ushort[] BlacklistOre = new ushort[] { 0 };
+		private static ushort[] BlacklistOre = new ushort[] 
+		{
+			0, 
+			Main.Registry.CubeRegistry.Get("water").Id,
+			Main.Registry.CubeRegistry.Get("sand").Id,
+		};
+		private static ushort[] BlacklistCave = new ushort[]
+		{
+			0,
+			Main.Registry.CubeRegistry.Get("sand").Id,
+			Main.Registry.CubeRegistry.Get("water").Id,
+			Main.Registry.CubeRegistry.Get("ore_tin").Id,
+			Main.Registry.CubeRegistry.Get("ore_copper").Id,
+			Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
+			Main.Registry.CubeRegistry.Get("ore_iron").Id
+		};
+
         private delegate float EaseFunction(float scale);
 
 		private float[,] presetHeightmap;
@@ -65,16 +81,16 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(seed, null).Generate(56, 8);
-			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(seed, null).Generate(56, 8);
+			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(56, 8);
+			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
 			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
-				3, 6, seed, null).Generate(18, 3);
+				3, 6, Seed, null).Generate(18, 3);
 			structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
-				4, 12, seed, null).Generate(18, 3);
+				4, 12, Seed, null).Generate(18, 3);
 			structureBatchesOreTin = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_tin").Id,
-				2, 5, seed, null).Generate(18, 3);
+				2, 5, Seed, null).Generate(18, 3);
 			structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
-				2, 5, seed, null).Generate(18, 3);
+				2, 5, Seed, null).Generate(18, 3);
 
 			ushort[] sd = new ushort[64 * 16 * 64];
 
@@ -115,14 +131,14 @@ namespace ViMG.Generation
 			return world.GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 		}
 
-        public override void GenerateChunkBroad(Chunk chunk)
+        public override void GenerateChunkBroad(ChunkManager.BroadGenerationState state)
         {
-			if (chunk.GetData().GenStep != ChunkData.GenerationStep.Broad)
+			if (state.chunk.GetData().GenStep != ChunkData.GenerationStep.Broad)
 				throw new Exception("");
 
-			var cubes = chunk.GetData().GetAll();
+			var cubes = state.chunk.GetData().GetAll();
 
-			int[,] heightMap = GenerateHeight(chunk);
+			int[,] heightMap = GenerateHeight(state.chunk);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 			{
@@ -132,19 +148,22 @@ namespace ViMG.Generation
 					{
 						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 
-						ushort id = GenerateCubeBroad(chunk, pos, heightMap);
+						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
 						cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
 			}
 
-			chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
+			state.chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
 		}
 
-		private static int numBigCavesGenerated = 0;
+		private static int numCopperOre;
+		private static int numTinOre;
+		private static int numGlowOre;
+		private static int numIronOre;
 
-        public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
+		public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
         {
 			int[,] heightMap = GenerateHeight(chunk);
 
@@ -187,12 +206,12 @@ namespace ViMG.Generation
 							}
 						}
 
-						if (pos.Y < SEA_FLOOR + 16 && pos.Y < sample - 8)
+						/*if (pos.Y < SEA_FLOOR + 16 && pos.Y < sample - 8)
 						{
 							double shouldDoBigCave = GetRandom().NextDouble();
 							if (shouldDoBigCave < 1.0 / 300000.0)
 							{
-								numBigCavesGenerated++;
+								numAltarCavesGenerated++;
 
 								Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
 
@@ -202,7 +221,7 @@ namespace ViMG.Generation
                             {
 								if (shouldDoBigCave < 1.0 / 100000.0)
                                 {
-									numBigCavesGenerated++;
+									numWaterCavesGenerated++;
 
 									Structure structure = structureBatchesGOL3DWaterCaves.Get(GetRandom().Next(0, structureBatchesGOL3DWaterCaves.num));
 
@@ -210,41 +229,11 @@ namespace ViMG.Generation
 									//PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
 								}
                             }
-						}
+						}*/
 
 						if (pos.Y < sample)
                         {
-							if (pos.Y < SEA_FLOOR - 16)
-							{
-								bool doIron = GetRandom().NextFloat() < 1f / 384f;
-								if (doIron)
-									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
-										BlacklistOre, BlacklistAir);
-							}
-
-							if (pos.Y < SEA_FLOOR + 8)
-							{
-								bool doGlow = GetRandom().NextFloat() < 1f / 300f;
-								if (doGlow)
-									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
-										BlacklistOre, BlacklistAir);
-							}
-
-							if (pos.Y < sample - 16)
-							{
-								bool doTin = GetRandom().NextFloat() < 1f / 384f;
-								if (doTin)
-									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
-										BlacklistOre, BlacklistAir);
-							}
-
-							if (pos.Y < sample - 24)
-							{
-								bool doCopper = GetRandom().NextFloat() < 1f / 384f;
-								if (doCopper)
-									PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
-										BlacklistOre, BlacklistAir);
-							}
+							
 						}
 					}
 				}
@@ -285,6 +274,110 @@ namespace ViMG.Generation
 				PlaceStructureWithBlacklist(manager, null, geode,
 					new CubePosition(x, 37, z), BlacklistNone, BlacklistNone);
 			}
+
+			for (int i = 0; i < 132; i++)
+            {
+				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
+				
+				Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
+
+				PlaceStructureWithBlacklist(manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+			}
+
+			for (int i = 0; i < 216; i++)
+            {
+				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
+
+				Structure structure = structureBatchesGOL3DWaterCaves.Get(GetRandom().Next(0, structureBatchesGOL3DWaterCaves.num));
+
+				StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, manager.GetChunk(randomPos), structure, randomPos);
+			}
+
+			//copper: 82037
+			for (int i = 0; i < 80000; i++) 
+			{
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
+					GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
+					BlacklistOre, BlacklistAir);
+			}
+
+			//tin: 87799
+			for (int i = 0; i < 90000; i++)
+            {
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
+					GetRandom().Next(0, ISLAND_TOP - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
+					BlacklistOre, BlacklistAir);
+			}
+
+			//glow: 114338
+			for (int i = 0; i < 116000; i++)
+            {
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
+					GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
+					BlacklistOre, BlacklistAir);
+			}
+
+			//iron: 76813
+			for (int i = 0; i < 75000; i++)
+            {
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
+					GetRandom().Next(0, SEA_FLOOR - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
+					BlacklistOre, BlacklistAir);
+			}
+
+            /*{
+				if (pos.Y < SEA_FLOOR - 16)
+				{
+					bool doIron = GetRandom().NextFloat() < 1f / 384f;
+					if (doIron)
+					{
+						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
+							BlacklistOre, BlacklistAir);
+						numIronOre++;
+					}
+				}
+
+				if (pos.Y < SEA_FLOOR + 8)
+				{
+					bool doGlow = GetRandom().NextFloat() < 1f / 300f;
+					if (doGlow)
+					{
+						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
+							  BlacklistOre, BlacklistAir);
+						numGlowOre++;
+					}
+				}
+
+				if (pos.Y < sample - 16)
+				{
+					bool doTin = GetRandom().NextFloat() < 1f / 384f;
+					if (doTin)
+					{
+						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
+							  BlacklistOre, BlacklistAir);
+						numTinOre++;
+					}
+				}
+
+				if (pos.Y < sample - 24)
+				{
+					bool doCopper = GetRandom().NextFloat() < 1f / 384f;
+					if (doCopper)
+					{
+						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
+							BlacklistOre, BlacklistAir);
+						numCopperOre++;
+					}
+				}
+			}*/
 
 			while (true)
 			{
@@ -394,12 +487,12 @@ namespace ViMG.Generation
 			return heightMap;
 		}
 
-		private ushort GenerateCubeBroad(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap)
+		private ushort GenerateCubeBroad(CubePosition cubeSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
 		{
 			CubePosition chunkSpacePos = cubeSpacePos;
-			cubeSpacePos = cubeSpacePos.InCubeSpace(chunk);
+			cubeSpacePos = cubeSpacePos.InCubeSpace(state.chunk);
 
-			if (Hole(cubeSpacePos, chunkSpacePos, heightMap))
+			if (Hole(cubeSpacePos, chunkSpacePos, heightMap, state))
 			{
 				if (cubeSpacePos.Y < 48)
 					return 3;
@@ -423,13 +516,13 @@ namespace ViMG.Generation
 
 					if (cubeSpacePos.Y < sample - 8)
 					{
-						return GenerateCubeCaveLayer(chunk, cubeSpacePos, heightMap);
+						return GenerateCubeCaveLayer(state.chunk, cubeSpacePos, heightMap, state);
 					}
 					else
 					{
 						//TODO GetRandom causes issues when multithreading, sometimes always returning 0 for this
 						//(thus replacing the entire dirt layer with brittle bone blocks)
-						if (GetRandom().NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
+						if (state.random.NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
 							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
 						return Main.Registry.CubeRegistry.Get("dirt").Id;
 					}
@@ -444,13 +537,9 @@ namespace ViMG.Generation
 			}
 		}
 
-		private ushort GenerateCubeCaveLayer(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap)
+		private ushort GenerateCubeCaveLayer(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
 		{
-			//return 3;
-
 			CubePosition chunkSpacePosition = cubeSpacePos.InChunkSpace(chunk);
-
-			//int offset = random.Next();
 
 			float noise3d1 = ((noise.GetNoise(cubeSpacePos.X, cubeSpacePos.Y, cubeSpacePos.Z) + 1) / 2);
 
@@ -467,7 +556,7 @@ namespace ViMG.Generation
 			else return 0;
 		}
 
-		private bool Hole(CubePosition cubeSpacePos, CubePosition chunkSpacePos, int[,] heightMap)
+		private bool Hole(CubePosition cubeSpacePos, CubePosition chunkSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
 		{
 			Vector2 dir = new Vector2(cubeSpacePos.X, cubeSpacePos.Z) - new Vector2(holeLocationX, holeLocationY);
 

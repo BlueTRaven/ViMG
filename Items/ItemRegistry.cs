@@ -39,18 +39,18 @@ namespace ViMG.Items
 			Register(new ItemBronzeIngot());
 			Register(new ItemDebugDepthTarget());
 			Register(new ItemArrow());
-			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(1, 1, 1, 0)));
-			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(0.90f, 5)));
-			Register(new ItemBow("iron", colorIron, new Item.AttackStats(0.95f, 4)));
-			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(1, 0, 0, 0)));
-			Register(new ItemSwordBlade("tin", colorTin, new Item.AttackStats(1, 3)));
-			Register(new ItemBow("tin", colorTin, new Item.AttackStats(1, 2)));
-			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.95f, 0, 0, 0)));
-			Register(new ItemSwordBlade("copper", colorCopper, new Item.AttackStats(0.95f, 3)));
-			Register(new ItemBow("copper", colorCopper, new Item.AttackStats(1, 2)));
-			Register(new ItemPickaxeHead("bronze", colorBronze, new ItemPickaxeHead.PickaxeStats(1.15f, 1, 1, 0)));
-			Register(new ItemSwordBlade("bronze", colorBronze, new Item.AttackStats(0.9f, 4)));
-			Register(new ItemBow("bronze", colorBronze, new Item.AttackStats(0.95f, 3)));
+			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 1, 1, 0)));
+			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(0.9f, 5, 1f)));
+			Register(new ItemBow("iron", colorIron, new Item.AttackStats(0.95f, 4, 1f)));
+			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 0, 0, 0)));
+			Register(new ItemSwordBlade("tin", colorTin, new Item.AttackStats(1, 3, 1f)));
+			Register(new ItemBow("tin", colorTin, new Item.AttackStats(1, 2, 1f)));
+			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.475f, 1, 0, 0, 0)));
+			Register(new ItemSwordBlade("copper", colorCopper, new Item.AttackStats(0.95f, 3, 1f)));
+			Register(new ItemBow("copper", colorCopper, new Item.AttackStats(1, 2, 1f)));
+			Register(new ItemPickaxeHead("bronze", colorBronze, new ItemPickaxeHead.PickaxeStats(0.575f, 1, 1, 1, 0)));
+			Register(new ItemSwordBlade("bronze", colorBronze, new Item.AttackStats(0.9f, 4, 1f)));
+			Register(new ItemBow("bronze", colorBronze, new Item.AttackStats(0.95f, 3, 1f)));
 			Register(new ItemPickaxe());
 			Register(new ItemSword());
 			Register(new ItemAltarDust());
@@ -74,6 +74,9 @@ namespace ViMG.Items
 			Register(new ItemMetalLegs("bronze", colorBronze, new Player.AccumulatedStats() { Defense = 2 }, setBonusBronze));
 			Register(new ItemTinderbox());
 			Register(new ItemBookOfEmber());
+			Register(new ItemBoneHelmet());
+			Register(new ItemBoneChestplate());
+			Register(new ItemBoneLegs());
 			RegisterItemCubes();
 		}
 
