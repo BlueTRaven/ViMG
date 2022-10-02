@@ -35,6 +35,21 @@ namespace ViMG
             }
 		};
 
+		public readonly struct BroadGenerationState
+        {
+            public readonly Chunk chunk;
+            public readonly ChunkGenerator generator;
+			public readonly Random random;
+
+            public BroadGenerationState(Chunk chunk, ChunkGenerator generator)
+            {
+                this.chunk = chunk;
+                this.generator = generator;
+
+				random = new Random(generator.Seed);
+			}
+        }
+
 		private struct ManagedChunk
 		{
 			public Chunk chunk;
@@ -258,7 +273,7 @@ namespace ViMG
 
 			for (int j = state.chunkStart; j < state.chunkEnd; j++)
 			{
-				state.generator.GenerateChunkBroad(state.chunks[j].chunk);
+				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j].chunk, state.generator));
 
 				if (!Main.DO_DETAIL)
 					state.chunks[j].chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
@@ -416,46 +431,6 @@ namespace ViMG
 			}
 
 			return allChunks;
-		}
-
-		private void GenerateChunk(World world, ChunkPosition position)
-		{
-			if (chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
-			{
-				GenerateChunkBroad(position);
-				GenerateChunkDetail(world, position);
-			}
-			else if (chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Detail)
-			{
-				GenerateChunkDetail(world, position);
-			}
-
-			chunks[PosToIndex(position)].genQueued = false;
-		}
-
-		public void GenerateChunkBroad(ChunkPosition position)
-		{
-			Chunk chunk = generator.MakeChunk(this, position);
-			generator.GenerateChunkBroad(chunk);
-
-			chunks[PosToIndex(position)].chunk = chunk;
-			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Detail;
-		}
-
-		public void GenerateChunkDetail(World world, ChunkPosition position)
-		{
-			Chunk chunk = chunks[PosToIndex(position)].chunk;
-			generator.GenerateChunkDetail(this, chunk, position);
-
-			int index = PosToIndex(position);
-
-			//chunks[position.X, position.Y, position.Z].genStep = GenerationStep.Done;
-			chunks[index].chunk.Initialize(world);
-			chunks[index].chunk.PostChunkGen(world);
-
-			chunks[index].meshDirty = true;
-			chunks[index].meshQueued = true;
-			chunksToMeshQueue.Enqueue(position);
 		}
 
 		private void MeshChunk(World world, ChunkPosition pos)

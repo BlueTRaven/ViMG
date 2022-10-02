@@ -314,6 +314,11 @@ namespace ViMG.Cubes
 
 		}
 
+		public virtual void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
+        {
+
+        }
+
 		public virtual SimpleMesh<VertexCube, int> GetHeldMesh(GraphicsDevice device)
 		{
 			if (mesh == null)

@@ -18,10 +18,11 @@ namespace ViMG.Generation
 		private Random random;
 		private Random threadRandom;
 
-		protected readonly int seed;
+		public readonly int Seed;
+
 		public ChunkGenerator(int seed = 1337)
 		{
-			this.seed = seed;
+			this.Seed = seed;
 
 			random = new Random(seed);
 			threadRandom = new Random(seed - 256);
@@ -51,7 +52,7 @@ namespace ViMG.Generation
 
 		public abstract Vector3 GetPlayerPosition(World world, ChunkManager chunks);
 
-		public abstract void GenerateChunkBroad(Chunk chunk);
+		public abstract void GenerateChunkBroad(ChunkManager.BroadGenerationState state);
 
 		private List<Chunk> detailCascadedChunks = new List<Chunk>();
 
@@ -138,7 +139,7 @@ namespace ViMG.Generation
 			detailCascadedChunks.Clear();
 		}
 
-		private void SetCubeOrAdjacent(ChunkGenerationThreadDataBus dataBus, Chunk chunk, CubePosition pos, ushort id, HashSet<Chunk> cascadedChunks)
+		/*private void SetCubeOrAdjacent(ChunkGenerationThreadDataBus dataBus, Chunk chunk, CubePosition pos, ushort id, HashSet<Chunk> cascadedChunks)
 		{
 			if (pos.Coord == CubePosition.CoordinateSpace.ChunkSpace)
 				throw new Exception("Cannot use chunk space");
@@ -149,7 +150,7 @@ namespace ViMG.Generation
 			Chunk cchunk = dataBus.GetChunk(ChunkPosition.CubeChunk(pos), this);
 
 			if (cchunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
-				GenerateChunkBroad(cchunk);
+				GenerateChunkBroad(chunk);
 
 			cchunk.GetData().SetCube(pos.InChunkSpace(cchunk), id, false);
 
@@ -158,7 +159,7 @@ namespace ViMG.Generation
 
 			return;
 
-			/*if (cchunk.GetData().IsInChunkBounds(pos))
+			*//*if (cchunk.GetData().IsInChunkBounds(pos))
 			{
 				chunk.GetData().SetCube(pos, id, false);
 
@@ -180,8 +181,8 @@ namespace ViMG.Generation
 
 				if (!cascadedChunks.Contains(newChunk))
 					cascadedChunks.Add(newChunk);
-			}*/
-		}
+			}*//*
+		}*/
 
 		private int OldGen(Chunk chunk, CubePosition position)
 		{

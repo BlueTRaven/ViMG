@@ -142,6 +142,8 @@ namespace ViMG
 			for (int i = 0; i < hitboxes.Length; i++)
 			{
 				ref Hitbox hitbox = ref hitboxes[i];
+				if (i == index || !hitbox.active)
+					continue;
 
 				if (hitbox.bounds.Intersects(bounds))
 				{

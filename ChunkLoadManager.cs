@@ -23,6 +23,9 @@ namespace ViMG
         private readonly EntityManagerIO entIO;
         private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
+		private List<ChunkPosition> gettableLoadedChunks;
+
+		private bool hasChanged = false;
 
 		private const float DISTANCE_UNLOAD_CHECK_TIME = 4;
 		private float distanceUnloadCheckTimer;
@@ -62,11 +65,16 @@ namespace ViMG
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
 				LoadAroundTarget(world);
 			}
+
+			if (hasChanged)
+				gettableLoadedChunks = new List<ChunkPosition>(loadedChunks.Keys);
+
+			hasChanged = false;
 		}
 
 		public IEnumerable<ChunkPosition> GetLoadedChunks()
         {
-			return loadedChunks.Keys;
+			return gettableLoadedChunks;
         }
 
 		//Loads the entirety of the loading queue at once.
@@ -84,6 +92,8 @@ namespace ViMG
 				chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
+
+				hasChanged = true;
 			}
 		}
 
@@ -110,6 +120,7 @@ namespace ViMG
 				entIO.Deserialize(queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
+				hasChanged = true;
 				currentNum++;
 			}
 		}
@@ -130,6 +141,8 @@ namespace ViMG
 					chunkIO.DeserializeChunk(world, pos);
 					entIO.Deserialize(pos);
 					loadedChunks.Add(pos, LoadingState.Loaded);
+
+					hasChanged = true;
 				}
             }
         }
@@ -141,6 +154,8 @@ namespace ViMG
 				chunkIO.DeserializeChunk(world, position);
 				entIO.Deserialize(position);
 				loadedChunks.Add(position, LoadingState.Loaded);
+
+				hasChanged = true;
 			}
 		}
 
@@ -164,11 +179,15 @@ namespace ViMG
 							{ 
 								loadedChunks.Add(pos, LoadingState.Loading);
 								queue.EnqueueWithoutSorting(pos);
+
+								hasChanged = true;
 							}
 							else if (loadedChunks[pos] == LoadingState.Unloaded)
                             {
 								loadedChunks[pos] = LoadingState.Loading;
 								queue.EnqueueWithoutSorting(pos);
+
+								hasChanged = true;
 							}
 						}
 					}
@@ -199,6 +218,8 @@ namespace ViMG
 				}
 
 				loadedChunks.Remove(pos);
+
+				hasChanged = true;
 			}
 
 			unloadChunks.Clear();

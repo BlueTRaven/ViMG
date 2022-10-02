@@ -12,14 +12,16 @@ namespace ViMG.Items
 		public readonly struct PickaxeStats 
 		{
 			public readonly float cooldownTime;
-			public readonly int height;
+            public readonly int mineRate;
+            public readonly int height;
 			public readonly int width;
 			public readonly int depth;
 
-			public PickaxeStats(float cooldownTime, int height, int width, int depth)
+			public PickaxeStats(float cooldownTime, int mineRate, int height, int width, int depth)
 			{
 				this.cooldownTime = cooldownTime;
-				this.height = height;
+                this.mineRate = mineRate;
+                this.height = height;
 				this.width = width;
 				this.depth = depth;
 			}

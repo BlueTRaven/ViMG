@@ -43,6 +43,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/debug_vpt.fx
 
+#begin Effects/deferred.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/deferred.fx
+
 #begin Effects/deferred_gbuffer.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -60,12 +66,6 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/deferred_lightaccum_pointlight.fx
-
-#begin Effects/deferred.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/deferred.fx
 
 #begin Effects/depth.fx
 /importer:EffectImporter
@@ -97,6 +97,13 @@
 /processorParam:DebugMode=Auto
 /build:Effects/vpctn.fx
 
+#begin Fonts/fira_mono.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/fira_mono.spritefont
+
 #begin Fonts/fira_mono_sml.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -110,13 +117,6 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:Fonts/fira_mono_tny.spritefont
-
-#begin Fonts/fira_mono.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Fonts/fira_mono.spritefont
 
 #begin Models/PrimitiveUvSphere.obj
 /importer:FbxImporter
@@ -170,6 +170,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/bullet.png
 
+#begin Textures/coconut.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/coconut.png
+
 #begin Textures/crosshair.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -182,18 +194,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/crosshair.png
 
-#begin Textures/cubes_textures_emissive.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/cubes_textures_emissive.png
-
 #begin Textures/cubes_textures.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -205,6 +205,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/cubes_textures.png
+
+#begin Textures/cubes_textures_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/cubes_textures_emissive.png
 
 #begin Textures/dirt_01.png
 /importer:TextureImporter
@@ -278,18 +290,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/heightmap_underwater.png
 
-#begin Textures/imp_emissive.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/imp_emissive.png
-
 #begin Textures/imp.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -301,6 +301,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/imp.png
+
+#begin Textures/imp_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/imp_emissive.png
 
 #begin Textures/island_preset_noise.png
 /importer:TextureImporter
@@ -314,18 +326,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/island_preset_noise.png
 
-#begin Textures/lava_worldheight_map.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/lava_worldheight_map.png
-
 #begin Textures/lava.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -337,6 +337,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/lava.png
+
+#begin Textures/lava_worldheight_map.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/lava_worldheight_map.png
 
 #begin Textures/leviathan.png
 /importer:TextureImporter
@@ -422,18 +434,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/skybox_night.png
 
-#begin Textures/slime_emissive.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/slime_emissive.png
-
 #begin Textures/slime.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -445,6 +445,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/slime.png
+
+#begin Textures/slime_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/slime_emissive.png
 
 #begin Textures/stone_01.png
 /importer:TextureImporter

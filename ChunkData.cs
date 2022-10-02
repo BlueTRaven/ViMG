@@ -228,6 +228,15 @@ namespace ViMG
 			else return new Cube.CubeInstance();
 		}
 
+		public Cube.CubeInstance GetCubeInstanceOrAdjacent(CubePosition position, World world)
+        {
+			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+				position = position.InChunkSpace(chunk);
+
+			return GetCubeInstanceOrAdjacent(position.X, position.Y, position.Z, world);
+        }
+
+		//Gets an adjacent cube instance using chunk space coordinates.
 		public Cube.CubeInstance GetCubeInstanceOrAdjacent(int x, int y, int z, World world)
 		{
 			if (IsDefault)
@@ -315,7 +324,9 @@ namespace ViMG
 			if (chunk.GetWorld().GetChunkManager().IsInWorldBounds(position))
 			{
 				Chunk offsetChunk = chunk.GetWorld().GetChunkManager().GetChunk(position);
-				offsetChunk.GetData().MarkDirty(position.InChunkSpace(offsetChunk));
+
+				if (offsetChunk != null && offsetChunk.Initialized)
+					offsetChunk.GetData().MarkDirty(position.InChunkSpace(offsetChunk));
 			}
 		}
 

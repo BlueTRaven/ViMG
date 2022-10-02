@@ -60,8 +60,8 @@ namespace ViMG
 			Chunk chunk = dataBus.GetChunk(position, generator);
 			if (chunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
 			{
-				GenerateChunkBroad(position);
-				GenerateChunkDetail(position, cascadedChunks);
+				//GenerateChunkBroad(position);
+				//GenerateChunkDetail(position, cascadedChunks);
 
 				dataBus.FinishChunk(position);
 
@@ -83,7 +83,7 @@ namespace ViMG
 			}
 			else if (chunk.GetData().GenStep == ChunkData.GenerationStep.Detail)
 			{
-				GenerateChunkDetail(position, cascadedChunks);
+				//GenerateChunkDetail(position, cascadedChunks);
 
 				dataBus.FinishChunk(position);
 
@@ -93,7 +93,7 @@ namespace ViMG
 			}
 		}
 
-		private void GenerateChunkBroad(ChunkPosition position)
+		/*private void GenerateChunkBroad(ChunkPosition position)
 		{
 			//Chunk chunk = generator.MakeChunk(dataBus.GetManager().ChunkDatas, position);
 			Chunk chunk = dataBus.GetChunk(position, generator);
@@ -107,6 +107,6 @@ namespace ViMG
 			generator.GenerateChunkDetail(dataBus, chunk, position, cascadedChunks);
 
 			//chunks[position.X, position.Y, position.Z].chunk.Initialize(world);
-		}
+		}*/
 	}
 }

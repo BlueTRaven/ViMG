@@ -40,7 +40,7 @@ namespace ViMG.Items
 
 							if (player.GetWorld().GetChunkManager().IsInWorldBounds(minePos))
 							{
-								player.GetWorld().MineCube(minePos);
+								player.GetWorld().MineCube(minePos, 1);
 							}
 						}
 					}

@@ -150,7 +150,7 @@ namespace ViMG.Items
 							if (player.GetWorld().GetChunkManager().IsInWorldBounds(minePos))
 							{
 								if (player.world.GetChunkManager().GetCube(minePos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-									player.GetWorld().MineCube(minePos);
+									player.GetWorld().MineCube(minePos, metaItem.GetStats().mineRate);
 							}
 						}
 					}
