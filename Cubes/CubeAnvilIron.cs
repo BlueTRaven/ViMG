@@ -122,7 +122,7 @@ namespace ViMG.Cubes
 
 			bounds.y += textureSize;
 
-			UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			var itemSlotOut = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
 								recipe.Outputs[0]);
 
