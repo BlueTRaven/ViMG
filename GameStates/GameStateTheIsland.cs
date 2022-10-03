@@ -10,16 +10,24 @@ namespace ViMG.GameStates
     public class GameStateTheIsland : GameState
     {
         public World World;
+        public bool Paused;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
+        }
+
+        public override void OnClose(GameState changingTo)
+        {
+            base.OnClose(changingTo);
+
+            SetMenu(null);
         }
 
         public override void Update(GraphicsDevice device, double deltaTime)
         {
             base.Update(device, deltaTime);
 
-            if (World.LoadedFolderName != null)
+            if (World.LoadedFolderName != null && !Paused)
             {
                 World.Update(deltaTime);
             }

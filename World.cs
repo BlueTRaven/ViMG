@@ -412,29 +412,6 @@ namespace ViMG
 
 			alive += (float)deltaTime;
 
-			if (Main.inputManager.JustPressed(Keys.Escape))
-			{
-				Main.Exit = true;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.T))
-            {
-				//TODO open pause GUI. This maybe should be done in Main.cs instead?
-				//Flush the load queue so we don't end up not saving chunks that are currently loading in.
-				//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
-				ChunkLoadManager.FlushLoadQueue(this);
-				//Serialize all the chunks that are currently loaded
-				chunkIO.Serialize(ChunkLoadManager.GetLoadedChunks());
-				entIO.Serialize(ChunkLoadManager.GetLoadedChunks());
-
-				//Save serialized data to disk
-				chunkIO.Save(LoadedFolderName);
-				entIO.Save(LoadedFolderName);
-
-				//Deduplicate/decache serialized entity data
-				entIO.DecacheCurrentlySerialized();
-			}
-
 			ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime, this);
 
@@ -583,6 +560,24 @@ namespace ViMG
 				if (Main.inputManager.IsHeld(Keys.F6)) 
 					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 			}
+		}
+
+		public void SaveWorld()
+        {
+			//TODO open pause GUI. This maybe should be done in Main.cs instead?
+			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
+			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
+			ChunkLoadManager.FlushLoadQueue(this);
+			//Serialize all the chunks that are currently loaded
+			chunkIO.Serialize(ChunkLoadManager.GetLoadedChunks());
+			entIO.Serialize(ChunkLoadManager.GetLoadedChunks());
+
+			//Save serialized data to disk
+			chunkIO.Save(LoadedFolderName);
+			entIO.Save(LoadedFolderName);
+
+			//Deduplicate/decache serialized entity data
+			entIO.DecacheCurrentlySerialized();
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.

@@ -325,10 +325,11 @@ namespace ViMG.Rendering
         {
             SetPipelineState();
 
+            device.SetRenderTargets(targets);
+            device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
+
             if (DrawsPassGBuffer.Count > 0)
             {
-                device.SetRenderTargets(targets);
-                device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
                 //device.RasterizerState = Main.noCullRS;
 
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();

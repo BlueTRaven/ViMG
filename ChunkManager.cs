@@ -712,8 +712,11 @@ namespace ViMG
 					}
 				}
 
-				ChunkDatas.Return(c.chunk.GetData());
-				c.chunk.SetData(null);
+				if (c.chunk.Initialized)
+				{
+					ChunkDatas.Return(c.chunk.GetData());
+					c.chunk.SetData(null);
+				}
 			}
 		}
 

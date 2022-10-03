@@ -16,11 +16,13 @@ namespace ViMG.UIs
 			public readonly int id;
 			public readonly bool isLast;
 
+			public readonly bool isEnabled;
+
 			public readonly Vector2 position;
 
 			public readonly bool valid;
 
-			public ID(int parent, int id, Vector2 position)
+			public ID(int parent, int id, Vector2 position, bool isEnabled)
 			{
 				this.parent = parent;
 				this.id = id;
@@ -30,9 +32,11 @@ namespace ViMG.UIs
 				this.isLast = false;
 
 				this.valid = true;
+
+				this.isEnabled = isEnabled;
 			}
 
-			public ID(int id, Vector2 position)
+			public ID(int id, Vector2 position, bool isEnabled)
 			{
 				parent = -1;
 				this.id = id;
@@ -41,6 +45,8 @@ namespace ViMG.UIs
 				this.isLast = true;
 
 				this.valid = true;
+
+				this.isEnabled = isEnabled;
 			}
 		}
 
@@ -75,10 +81,30 @@ namespace ViMG.UIs
 
 				this.color = color;
 				this.bounds = bounds;
-			}
+            }
+        }
+
+        public struct LabelConstructionParameters 
+		{
+            public string text;
+            public TextHelper.FontInfo font;
+            public float width;
+            public Vector2 position;
+
+			public bool valid;
+
+            public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position)
+            {
+                this.text = text;
+                this.font = font;
+                this.width = width;
+                this.position = position;
+
+				valid = true;
+            }
 		}
 
-		public readonly struct Label
+        public readonly struct Label
 		{
 			internal readonly ID id;
 
@@ -159,6 +185,7 @@ namespace ViMG.UIs
 		private static Dictionary<int, ID> ids = new Dictionary<int, ID>();
 		private static ID currentParent;
 		private static bool useParent;
+		private static bool isEnabled = true;
 
 		public static void Start()
 		{
@@ -178,14 +205,14 @@ namespace ViMG.UIs
 		{
 			if (currentParent.valid && useParent)
 			{
-				ID id = new ID(currentParent.id, idCounter++, currentParent.position + position);
+				ID id = new ID(currentParent.id, idCounter++, currentParent.position + position, isEnabled);
 				ids.Add(id.id, id);
 
 				return id;
 			}
 			else
 			{
-				ID id = new ID(idCounter++, position);
+				ID id = new ID(idCounter++, position, isEnabled);
 				ids.Add(id.id, id);
 
 				return id;
@@ -221,6 +248,16 @@ namespace ViMG.UIs
 			useParent = true;
 		}
 
+		public static void BeginDisable()
+        {
+			isEnabled = false;
+        }
+
+		public static void EndDisable()
+        {
+			isEnabled = true;
+        }
+
 		public static Texture MakeTexture(RectangleF bounds, Texture2D texture, RectangleF sourceRect)
 		{
 			ID id = MakeID(bounds.Position);
@@ -241,13 +278,24 @@ namespace ViMG.UIs
 			return panel;
 		}
 
-		public static Label MakeLabel(string text, TextHelper.FontInfo font, float width, Vector2 position)
-		{
-			ID id = MakeID(position);
-			Label label = new Label(id, text, font, width, id.position);
-			labels.Add(label);
+		//"Craft Recipe", fi, 256, Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16)
+		public static Label MakeLabel(string text, TextHelper.FontInfo fi, float width, Vector2 position)
+        {
+			return MakeLabel(new LabelConstructionParameters(text, fi, width, position));
+        }
 
-			return label;
+		public static Label MakeLabel(LabelConstructionParameters parameters)
+		{
+			if (parameters.valid)
+			{
+				ID id = MakeID(parameters.position);
+				Label label = new Label(id, parameters.text, parameters.font, parameters.width, id.position);
+				labels.Add(label);
+
+				return label;
+			}
+			
+			return default(Label);
 		}
 
 		public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect)
@@ -257,15 +305,15 @@ namespace ViMG.UIs
 
 		public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
         {
-			return MakeButton(bounds, texture, new Label(), sourceRect, hoveredSourceRect, clickedSourceRect);
+			return MakeButton(bounds, texture, new LabelConstructionParameters(), sourceRect, hoveredSourceRect, clickedSourceRect);
         }
 
-		public static Button MakeButton(RectangleF bounds, Texture2D texture, Label label, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
+		public static Button MakeButton(RectangleF bounds, Texture2D texture, LabelConstructionParameters label, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
 		{
 			ID id = MakeID(bounds.Position);
-			bounds = new RectangleF(id.position, bounds.Size);
+			RectangleF mouseBounds = new RectangleF(id.position, bounds.Size);
 
-			bool hovered = bounds.Contains(Main.inputManager.GetMousePosition().ToVector2());
+			bool hovered = mouseBounds.Contains(Main.inputManager.GetMousePosition().ToVector2()) && isEnabled;
 			bool clickedLeft = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
 			bool heldLeft = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
 			bool clickedRight = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton);
@@ -273,7 +321,13 @@ namespace ViMG.UIs
 
 			RectangleF defaultSr = new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height);
 
-			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, heldRight, bounds, texture, label, 
+			StartParent(bounds.Position);
+
+			Label constructedLabel = MakeLabel(label);
+
+			EndParent();
+
+			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, heldRight, mouseBounds, texture, constructedLabel,
 				sourceRect.GetValueOrDefault(defaultSr), hoveredSourceRect.GetValueOrDefault(defaultSr), clickedSourceRect.GetValueOrDefault(defaultSr));
 			buttons.Add(button);
 
@@ -307,10 +361,10 @@ namespace ViMG.UIs
 
 				batch.Draw(button.texture, button.bounds.Position, sourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.75f);
 				
-				if (button.label.text != null)
+				/*if (button.label.text != null)
 					TextHelper.DrawText(batch, button.label.font, button.label.text, Color.White, 
 						new RectangleF(button.label.position, button.label.width, 0).ToRectangle(), 
-						Enums.Alignment.TopLeft, (int)button.label.width, 1, TextHelper.OverFlowAction.None);
+						Enums.Alignment.TopLeft, (int)button.label.width, 1, TextHelper.OverFlowAction.None);*/
 			}
 
 			foreach (Label label in labels)

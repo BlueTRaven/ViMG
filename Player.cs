@@ -195,6 +195,8 @@ namespace ViMG
 			craftInventory = new Inventory(8);
 
 			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			menuPlayer.Close();
+			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
 			//currentUI = uiPlayer;
 
 			health = maxHealth / 4;
@@ -206,6 +208,8 @@ namespace ViMG
 			accessoryInventory = new Inventory(3);
 
 			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			menuPlayer.Close();
+			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
 			//currentUI = uiPlayer;
 
 			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
@@ -257,6 +261,9 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
+			if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == null)
+				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
+
 			hasMoved = false;
 			hasRotated = false;
 
@@ -456,6 +463,12 @@ namespace ViMG
 					if (inventory.Get(menuPlayer.HighlightIndex).valid)
 						inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
 				}
+			}
+
+			if (Main.inputManager.JustPressed(Keys.Escape))
+            {
+				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, 
+					world.GameStateManager.GetCurrentGameState() as GameStates.GameStateTheIsland, world));
 			}
 
 			if (inventory.Get(menuPlayer.HighlightIndex).valid)
@@ -1433,9 +1446,10 @@ namespace ViMG
 				accessoryInventory = Inventory.Load(loadBytes, ref index);
 
 			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			menuPlayer.Close();
 			//currentUI = menuPlayer;
 
-            loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
+			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
             SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 		}
 	}

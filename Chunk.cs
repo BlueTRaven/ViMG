@@ -40,11 +40,6 @@ namespace ViMG
 			this.position = position;
 		}
 
-		~Chunk()
-		{
-			manager.ChunkDatas.Return(data);
-		}
-
 		public void Initialize(World world)
 		{
 			this.world = world;

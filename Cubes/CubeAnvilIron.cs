@@ -44,7 +44,7 @@ namespace ViMG.Cubes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_iron"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 7, 1),
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 7, 1),
 					new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 7, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_iron"), 1, 1) }));
 
@@ -58,7 +58,7 @@ namespace ViMG.Cubes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("tin_ingot"), 7, 1),
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("tin_ingot"), 7, 1),
 					new ItemInstance(Main.Registry.ItemRegistry.Get("tin_ingot"), 7, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_tin"), 1, 1) }));
 
@@ -72,7 +72,7 @@ namespace ViMG.Cubes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_copper"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_ingot"), 7, 1),
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_ingot"), 7, 1),
 					new ItemInstance(Main.Registry.ItemRegistry.Get("copper_ingot"), 7, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_copper"), 1, 1) }));
 
@@ -86,7 +86,7 @@ namespace ViMG.Cubes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_bronze"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("bronze_ingot"), 7, 1),
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("bronze_ingot"), 7, 1),
 					new ItemInstance(Main.Registry.ItemRegistry.Get("bronze_ingot"), 7, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_bronze"), 1, 1) }));
 		}

@@ -70,7 +70,7 @@ namespace ViMG.UIs
             if (state == MenuState.Main)
             {
                 if (UI.MakeButton(new RectangleF(0, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
-                    UI.MakeLabel("Load World", fi, 128, Vector2.Zero),
+                    new UI.LabelConstructionParameters("Load World", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                 {
                     state = MenuState.Worlds;
@@ -78,8 +78,8 @@ namespace ViMG.UIs
                     clicked = true;
                 }
 
-                if (UI.MakeButton(new RectangleF(0, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
-                    UI.MakeLabel("Continue", fi, 128, new Vector2(0, 48)),
+                if (UI.MakeButton(new RectangleF(0, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                 {
                     if (Main.SessionInformation.LastLoadedSave != null)
@@ -89,8 +89,8 @@ namespace ViMG.UIs
                     }
                 }
 
-                if (UI.MakeButton(new RectangleF(0, 96, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
-                    UI.MakeLabel("Exit", fi, 128, new Vector2(0, 96)),
+                if (UI.MakeButton(new RectangleF(0, 96, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Exit", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                 {
                     Main.Exit = true;
@@ -101,7 +101,7 @@ namespace ViMG.UIs
                 if (!clicked)
                 {
                     if (UI.MakeButton(new RectangleF(-32, 256, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                       UI.MakeLabel("<", fi, 32, new Vector2(-32, 256)),
+                       new UI.LabelConstructionParameters("<", fi, 32, Vector2.Zero),
                        new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32)).clickLeft)
                     {
                         state = MenuState.Main;
@@ -112,7 +112,7 @@ namespace ViMG.UIs
                         int ypos = 48 * i;
 
                         if (UI.MakeButton(new RectangleF(0, ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                            UI.MakeLabel("Load " + directories[i], fi, 128, new Vector2(0, ypos)),
+                            new UI.LabelConstructionParameters("Load " + directories[i], fi, 128, Vector2.Zero),
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                         {
                             world.LoadWorld(device, directories[i]);
@@ -123,7 +123,7 @@ namespace ViMG.UIs
                     int fypos = 48 * directories.Length;
 
                     if (UI.MakeButton(new RectangleF(0, fypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                        UI.MakeLabel("Create New", fi, 128, new Vector2(0, fypos)),
+                        new UI.LabelConstructionParameters("Create New", fi, 128, Vector2.Zero),
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                     {
                         world.LoadWorld(device, "new" + directories.Length);

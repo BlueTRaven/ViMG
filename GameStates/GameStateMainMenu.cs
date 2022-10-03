@@ -36,6 +36,11 @@ namespace ViMG.GameStates
 
         public override void OnOpen(GameState changingFrom)
         {
+            if (world != null)
+            {
+                world.ChunkLoadManager.UnloadAll();
+            }
+
             world = new World(manager, device, 512);
 
             menuMain = new MenuMain(manager, world);

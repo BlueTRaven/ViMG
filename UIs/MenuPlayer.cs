@@ -66,9 +66,21 @@ namespace ViMG.UIs
 
 			Main.MouseControl = false;
 			Main.DrawCursor = false;
+
+			Options.CenterMouse();
 		}
 
-		public void Toggle()
+        public override void OnOpen()
+        {
+            base.OnOpen();
+
+			//reapply mouse/cursor settings
+			if (opened)
+				Open();
+			else Close();
+        }
+
+        public void Toggle()
         {
 			if (opened)
 				Close();

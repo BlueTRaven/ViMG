@@ -33,6 +33,8 @@ namespace ViMG.Entities
 			this.TrackedPosition = position;
 			this.Facing = facing;
 
+			Position = position.InWorldSpace(null);
+
 			inventory = new Inventory(5);
 		}
 

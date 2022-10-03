@@ -21,6 +21,7 @@ namespace ViMG.Entities
 		public EntityAnvilIron(CubePosition position)
 		{
 			this.TrackedPosition = position;
+			this.Position = position.InWorldSpace(null);
 
 			inventory = new Inventory(4);
 		}

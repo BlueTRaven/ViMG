@@ -49,26 +49,38 @@ namespace ViMG.GameStates
             currentMenu?.OnOpen();
         }
 
+        //Push the current menu to the stack, then set current menu to the parameter menu.
         public void PushMenu(Menu menu)
         {
-            menuStack.Push(menu);
+            currentMenu?.OnClose();
+            menuStack.Push(currentMenu);
 
             currentMenu = menu;
+
+            currentMenu?.OnOpen();
         }
 
         public void PopMenu()
         {
+            currentMenu?.OnClose();
+
             Menu nextMenu = menuStack.Pop();
 
             currentMenu = nextMenu;
+
+            currentMenu?.OnOpen();
         }
 
         //Directly set a menu. Clears the stack.
         public void SetMenu(Menu menu)
         {
+            currentMenu?.OnClose();
+
             menuStack.Clear();
             this.currentMenu = menu;
             menuStack.Push(menu);
+
+            currentMenu?.OnOpen();
         }
 
         public Menu GetCurrentMenu()
