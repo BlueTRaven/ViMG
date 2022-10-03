@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.GameStates;
 
 namespace ViMG.UIs
 {
-    public class UIMainMenu
+    public class MenuMain : Menu
     {
         private enum MenuState 
         { 
@@ -23,12 +24,17 @@ namespace ViMG.UIs
 
         private string[] directories;
 
-        bool clicked = false;
+        private bool clicked = false;
 
-        TextHelper.FontInfo fi;
+        private TextHelper.FontInfo fi;
+        private World world;
+        private readonly GameStateManager gsManager;
 
-        public UIMainMenu()
+        public MenuMain(GameStateManager gsManager, World world)
         {
+            this.gsManager = gsManager;
+            this.world = world;
+
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;
@@ -36,7 +42,23 @@ namespace ViMG.UIs
             saver = new WorldSaver(null, null, null);
         }
 
-        public void Update(GraphicsDevice device, World world)
+        public override void OnOpen()
+        {
+            base.OnOpen();
+
+            Main.MouseControl = true;
+            Main.DrawCursor = true;
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+
+            Main.MouseControl = false;
+            Main.DrawCursor = false;
+        }
+
+        public override void Update(GraphicsDevice device, double deltaTime)
         {
             UI.Start();
 
@@ -63,8 +85,7 @@ namespace ViMG.UIs
                     if (Main.SessionInformation.LastLoadedSave != null)
                     {
                         world.LoadWorld(device, Main.SessionInformation.LastLoadedSave);
-                        Main.MouseControl = false;
-                        Main.DrawCursor = false;
+                        gsManager.SetGameState(gsManager.TheIsland);
                     }
                 }
 
@@ -95,9 +116,7 @@ namespace ViMG.UIs
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                         {
                             world.LoadWorld(device, directories[i]);
-
-                            Main.MouseControl = false;
-                            Main.DrawCursor = false;
+                            gsManager.SetGameState(gsManager.TheIsland);
                         }
                     }
 
@@ -108,9 +127,7 @@ namespace ViMG.UIs
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
                     {
                         world.LoadWorld(device, "new" + directories.Length);
-
-                        Main.MouseControl = false;
-                        Main.DrawCursor = false;
+                        gsManager.SetGameState(gsManager.TheIsland);
                     }
                 }
             }
@@ -118,7 +135,7 @@ namespace ViMG.UIs
             UI.EndParent();
         }
 
-        public void Draw(SpriteBatch batch)
+        public override void Draw(SpriteBatch batch)
         {
             UI.Draw(batch, 1);
         }

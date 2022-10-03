@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Generation;
 using ViMG.Items;
 using ViMG.Spawners;
@@ -42,6 +43,7 @@ namespace ViMG
 		private static SimpleMesh<VertexCube, int> meshMaxDrawDistBottom;
 		private static bool meshesLoaded;
 
+		public GameStateManager GameStateManager;
 		public Player player;
 		//private Vector3 playerSpawnPos;
 
@@ -89,8 +91,10 @@ namespace ViMG
 
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
-		public World(GraphicsDevice device, int worldSize)
+		public World(GameStateManager gameStateManager, GraphicsDevice device, int worldSize)
 		{
+			this.GameStateManager = gameStateManager;
+
 			//TEMP start in night time
 			//alive = DAY_CYCLE_TIME * 0.65f;
 
