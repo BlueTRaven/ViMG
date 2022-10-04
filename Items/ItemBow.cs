@@ -29,10 +29,10 @@ namespace ViMG.Items
 			if (inventory.Find(Main.Registry.ItemRegistry.Get("arrow"), out int ammoIndex).valid)
 			{
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-				var stats = new ProjectileManager.ProjectileStats(player, HitboxManager.Group.PLAYER_DEAL, this.stats.damage, 
+				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, this.stats.damage, 
 					Cube.CUBE_SCALE / 5f, Cube.CUBE_SCALE / 5f, true, true);
 
-				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player.Position, 
+				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
 					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, visStats, stats),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)

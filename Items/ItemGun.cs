@@ -39,7 +39,7 @@ namespace ViMG.Items
 			if (item.valid)
 			{
 				inventory.Remove(bulletIndex, 1);
-				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player.Position + Main.camera.Right * 4,
+				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + Main.camera.Right * 4,
 					Vector3.Normalize(facing) * 100, 2, projVisStats, projStats),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
 

@@ -44,7 +44,6 @@ namespace ViMG.Entities
 
 		public struct ProjectileStats
 		{
-			public IHitboxOwner owner;
 			public HitboxManager.Group group;
 			public int damage;
 			public float collisionRadius;
@@ -52,9 +51,8 @@ namespace ViMG.Entities
 			public bool gravity;
 			public bool dieOnCollision;
 
-			public ProjectileStats(IHitboxOwner owner, HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
+			public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
 			{
-				this.owner = owner;
 				this.group = group;
 				this.damage = damage;
 				this.collisionRadius = collisionRadius;
@@ -66,6 +64,8 @@ namespace ViMG.Entities
 
 		public struct Projectile
 		{
+			public IHitboxOwner owner;
+
 			public Vector3 position;
 			public Vector3 velocity;
 			public float timeLeft;
@@ -79,8 +79,9 @@ namespace ViMG.Entities
 			public int hitbox;
 			public int light;
 
-			public Projectile(Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
+			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
 			{
+				this.owner = owner;
 				this.position = position;
 				this.velocity = velocity;
 				this.timeLeft = timeLeft;
@@ -142,7 +143,7 @@ namespace ViMG.Entities
 
 				if (projectiles[i].hitbox == -1)
 				{
-					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].stats.owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
+					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
 				}
 
 				if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
