@@ -13,6 +13,7 @@ namespace ViMG.UIs
 	{
 		private IRecipeCatalyst filterCatalyst;
 		private int page;
+		private const float PAGE_HEADER = 16;
 		private const float MAX_PAGE_HEIGHT = 320;
 		private const float MAX_PAGE_WIDTH = SIZE * 8;
 
@@ -20,6 +21,8 @@ namespace ViMG.UIs
 
 		private List<IRecipeCatalyst> currentCatalysts;
 		private List<Recipe> currentRecipes;
+
+		private TextHelper.FontInfo fi;
 
 		public MenuRecipeBook(IRecipeCatalyst catalyst, ItemInstance filterItem)
 		{
@@ -30,12 +33,31 @@ namespace ViMG.UIs
 			if (filterCatalyst == null && currentCatalysts.Count > 0)
 				this.filterCatalyst = currentCatalysts[0];
 			GetFilteredRecipes();
+
+			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
-		public override void Update(GraphicsDevice device, double deltaTime)
+		public override void OnOpen()
+        {
+            base.OnOpen();
+
+			Main.DrawCursor = true;
+			Main.MouseControl = true;
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+
+			Main.DrawCursor = false;
+			Main.MouseControl = false;
+		}
+
+        public override void Update(GraphicsDevice device, double deltaTime)
 		{
 			base.Update(device, deltaTime);
 
+			//TODO: size should be determined statically for each catalyst rather than asking to do a UI.
 			Size eachSize = Size.Zero;
 			if (currentRecipes != null && currentRecipes.Count > 0)
 				filterCatalyst.DoRecipeUI(out eachSize, currentRecipes[0], SIZE, SCALE);
@@ -53,9 +75,13 @@ namespace ViMG.UIs
 			if (currentRecipes != null && currentRecipes.Count > 0)
 				DoRecipes(numPerPageW, numPerPageH, eachSize);
 
-			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, MAX_PAGE_WIDTH, MAX_PAGE_HEIGHT));
+			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, MAX_PAGE_WIDTH, PAGE_HEADER));
 
-			UI.StartParent(new Vector2(MAX_PAGE_WIDTH, 0));
+			UI.MakeLabel(filterCatalyst.GetName(), fi, MAX_PAGE_WIDTH, Vector2.Zero);
+
+			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, PAGE_HEADER, MAX_PAGE_WIDTH, MAX_PAGE_HEIGHT));
+
+			UI.StartParent(new Vector2(MAX_PAGE_WIDTH, PAGE_HEADER));
 
 			RectangleF bounds = new RectangleF(0, 0, SIZE, SIZE);
 
@@ -63,6 +89,8 @@ namespace ViMG.UIs
 			{
 				var button = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16));
+
+				UI.MakeTexture(bounds, catalyst.GetTexture(), catalyst.GetSourceRect());
 
 				if (button.clickLeft)
 				{

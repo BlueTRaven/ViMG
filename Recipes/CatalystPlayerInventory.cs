@@ -141,5 +141,20 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_bronze"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 3, 1), },
 				new ItemInstance[] { ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_bronze"), 1, 1)) }));
 		}
+
+		public string GetName()
+		{
+			return "Inventory";
+		}
+
+		public Texture2D GetTexture()
+		{
+			return Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
+		}
+
+		public RectangleF GetSourceRect()
+		{
+			return new RectangleF(32, 64, 16, 16);
+		}
 	}
 }

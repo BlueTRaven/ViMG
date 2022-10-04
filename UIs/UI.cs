@@ -379,8 +379,7 @@ namespace ViMG.UIs
 
 			foreach (Texture tex in textures)
 			{
-				batch.Draw(tex.texture, new Rectangle(tex.bounds.ToRectangle().Location, 
-					new Point((int)(tex.bounds.Size.Width * scale), (int)(tex.bounds.Size.Height * scale))),
+				batch.Draw(tex.texture, tex.bounds.ToRectangle(),
 					tex.sourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, SpriteEffects.None, 0.76f);
 			}
 		}

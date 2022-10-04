@@ -21,6 +21,9 @@ namespace ViMG.Recipes
 			PlayerInventoryCatalyst = new CatalystPlayerInventory();
 			RegisterCatalyst(PlayerInventoryCatalyst);
 
+			RegisterCatalyst(new CatalystAnvilIronTools());
+			RegisterCatalyst(new CatalystAnvilIronArmor());
+
 			foreach (IRecipeCatalyst catalyst in catalysts)
 			{
 				List<Recipe> recipesMadeByCatalyst = new List<Recipe>();

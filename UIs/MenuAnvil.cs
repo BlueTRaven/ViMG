@@ -13,25 +13,48 @@ namespace ViMG.UIs
 	public class MenuAnvil : Menu
 	{
 		private readonly Player player;
-		private Inventory playerInventory;
-		private Inventory anvilInventory;
-		private bool inventoryUpdated;
+		private readonly Inventory playerInventory;
+		private readonly Inventory anvilInventoryTools;
+        private readonly Inventory anvilInventoryArmor;
+        private bool inventoryUpdated;
 		private Recipe currentRecipe;
 
 		private Items.ItemInstance held;
 
-		public MenuAnvil(Player player, Inventory playerInventory, Inventory anvilInventory)
+		private TextHelper.FontInfo fi;
+
+		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
+
+		public MenuAnvil(Player player, Inventory playerInventory, Inventory anvilInventoryTools, Inventory anvilInventoryArmor)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
-			this.anvilInventory = anvilInventory;
+			this.anvilInventoryTools = anvilInventoryTools;
+            this.anvilInventoryArmor = anvilInventoryArmor;
+
+			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+		}
+
+		public override void OnOpen()
+		{
+			base.OnOpen();
+
+			Main.DrawCursor = true;
+			Main.MouseControl = true;
+		}
+
+		public override void OnClose()
+		{
+			base.OnClose();
+
+			Main.DrawCursor = false;
+			Main.MouseControl = false;
 		}
 
 		public override void Update(GraphicsDevice device, double deltaTime)
 		{
 			base.Update(device, deltaTime);
 
-			TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 			UI.Start();
 
@@ -41,7 +64,12 @@ namespace ViMG.UIs
 
 			UI.EndParent();
 
-			UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE));
+			DoTools();
+		}
+
+		private void DoTools()
+        {
+			UI.StartParent(inventoryRight);
 
 			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 3f, SIZE * 4 + MARGIN * 2));
 
@@ -52,61 +80,61 @@ namespace ViMG.UIs
 
 			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventory.Get(0));
+								anvilInventoryTools.Get(0));
 
 			bounds.x += SIZE;
 
 			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventory.Get(1));
+								anvilInventoryTools.Get(1));
 
 			bounds.x -= SIZE;
 			bounds.y += SIZE;
 
 			var itemSlotC = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventory.Get(2));
+								anvilInventoryTools.Get(2));
 
 			bounds.y -= SIZE;
 
 			MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, 0, itemSlotA, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None) ;
+			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 0, itemSlotA, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventory, playerInventory, 0);
+					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 0);
 				inventoryUpdated = true;
 			}
 
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, 1, itemSlotB, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 1, itemSlotB, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventory, playerInventory, 1);
+					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 1);
 
 				inventoryUpdated = true;
 			}
 
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, 2, itemSlotC, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 2, itemSlotC, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventory, playerInventory, 2);
+					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 2);
 
 				inventoryUpdated = true;
 			}
 
 			if (inventoryUpdated)
 			{
-				currentRecipe = FindRecipe(anvilInventory);
+				currentRecipe = FindRecipe(anvilInventoryTools);
 
 				if (currentRecipe != null)
 				{
 					for (int i = 0; i < Math.Min(1, currentRecipe.Outputs.Length); i++)
 					{
-						anvilInventory.Set(currentRecipe.Outputs[i], 3 + i);
+						anvilInventoryTools.Set(currentRecipe.Outputs[i], 3 + i);
 					}
 				}
 				else
 				{
-					anvilInventory.Set(new ItemInstance(), 3);
+					anvilInventoryTools.Set(new ItemInstance(), 3);
 				}
 			}
 
@@ -118,7 +146,7 @@ namespace ViMG.UIs
 
 			UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventory.Get(3));
+								anvilInventoryTools.Get(3));
 
 			bounds.x += SIZE;
 
@@ -179,7 +207,7 @@ namespace ViMG.UIs
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(anvilInventory))
+			if (recipe.Matches(anvilInventoryTools))
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
@@ -187,10 +215,10 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-						anvilInventory.Find(recipe.Layout[i], 3, out int index);
+						anvilInventoryTools.Find(recipe.Layout[i], 3, out int index);
 
-						int overflow = anvilInventory.Get(i).num - numLeft;
-						anvilInventory.Remove(index, numLeft);
+						int overflow = anvilInventoryTools.Get(i).num - numLeft;
+						anvilInventoryTools.Remove(index, numLeft);
 						inventoryUpdated  = true;
 
 						if (overflow < 0)

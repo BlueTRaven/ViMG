@@ -105,6 +105,7 @@ namespace ViMG
 		private Rectangle3D Bounds => new Rectangle3D(Position + new Vector3(-Cube.CUBE_SCALE * 0.85f / 2f, -Cube.CUBE_SCALE * 2f, -Cube.CUBE_SCALE * 0.85f / 2f),
 			new Vector3(Cube.CUBE_SCALE * 0.85f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.85f));
 		private int hurtbox = -1;
+		private const float INVULN_TIME = 2f;
 		private float invulnTimer;
 		private float inputLockupTimer;
 		private float damageAnimTimer;
@@ -1329,7 +1330,7 @@ namespace ViMG
 					Damage(TakeDamageCalculation(other));
 
 					inputLockupTimer = 0.25f;
-					invulnTimer = 4;
+					invulnTimer = INVULN_TIME;
 				}
 			}
 		}

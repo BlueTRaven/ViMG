@@ -11,7 +11,8 @@ namespace ViMG.Entities
 	{
 		public CubePosition TrackedPosition { get; private set; }
 
-		private Inventory inventory;
+		private Inventory inventoryTools;
+		private Inventory inventoryArmor;
 
 		public EntityAnvilIron()
         {
@@ -23,7 +24,8 @@ namespace ViMG.Entities
 			this.TrackedPosition = position;
 			this.Position = position.InWorldSpace(null);
 
-			inventory = new Inventory(4);
+			inventoryTools = new Inventory(4);
+			inventoryArmor = new Inventory(8);
 		}
 
 		public void TrackingCubeDestroyed(World world, ChunkManager cm)
@@ -33,7 +35,7 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-			player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(player, player.GetInventory(), inventory));
+			player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(player, player.GetInventory(), inventoryTools, inventoryArmor));
 
 			return true;
 		}
@@ -43,7 +45,7 @@ namespace ViMG.Entities
 			base.OnSave(saveBytes);
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
-			inventory.Save(saveBytes);
+			inventoryTools.Save(saveBytes);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -55,7 +57,7 @@ namespace ViMG.Entities
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace(null);
 
-			inventory = Inventory.Load(loadBytes, ref index);
+			inventoryTools = Inventory.Load(loadBytes, ref index);
 		}
 	}
 }

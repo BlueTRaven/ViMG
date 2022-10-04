@@ -32,6 +32,22 @@ namespace ViMG.UIs
 			this.furnace = furnace;
 		}
 
+		public override void OnOpen()
+		{
+			base.OnOpen();
+
+			Main.DrawCursor = true;
+			Main.MouseControl = true;
+		}
+
+		public override void OnClose()
+		{
+			base.OnClose();
+
+			Main.DrawCursor = false;
+			Main.MouseControl = false;
+		}
+
 		public override void Update(GraphicsDevice device, double deltaTime)
 		{
 			base.Update(device, deltaTime);

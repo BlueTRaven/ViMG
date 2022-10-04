@@ -128,5 +128,20 @@ namespace ViMG.Cubes
 
 			size = new Size(textureSize * 2, bounds.y + bounds.height);
 		}
+
+		public string GetName()
+		{
+			return "Anvil";
+		}
+
+		public Texture2D GetTexture()
+		{
+			return Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
+		}
+
+		public RectangleF GetSourceRect()
+		{
+			return new RectangleF(32, 80, 16, 16);
+		}
 	}
 }
