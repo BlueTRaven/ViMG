@@ -376,13 +376,20 @@ namespace ViMG
 					CubePosition adjPos = newPos.InCubeSpace(chunk);
 					Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
 
-					//If the chunk is null, then that means it's probably an unloaded chunk.
-					if (adjChunk == null)
+					//TODO: re-enable this.
+					//BUG:
+					//Entity attempts to set a tile.
+					//Tile notifies adjacent
+					//In order to notify adjacent, chunk manager deserializes and loads adjacent chunk
+					//Loading adjacent chunk adds entities, throwing an error because we have modified the entity list while iterating.
+					//This needs to be fixed before this line of code can be re-enabled.
+					/*if (adjChunk == null)
 					{
+						//If the chunk is null, then that means it's probably an unloaded chunk.
 						//Try to load it.
 						chunk.GetWorld().ChunkLoadManager.LoadChunk(chunk.GetWorld(), ChunkPosition.CubeChunk(adjPos));
 						adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
-					}
+					}*/
 
 					if (adjChunk != null)
 					{

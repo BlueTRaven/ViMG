@@ -179,6 +179,8 @@ namespace ViMG
 		//Creates a new player from a dead player.
 		public Player(Player deadPlayer)
         {
+			world = deadPlayer.world;
+
 			invulnTimer = 6f;	//6 seconds of invuln after respawning
 
 			inventory = deadPlayer.GetInventory();
@@ -807,10 +809,14 @@ namespace ViMG
 					Velocity.Y = actualMaxVel.Y;
 			}
 
-			if (Main.inputManager.JustPressed(Keys.V))
+			if (Main.inputManager.JustPressed(Keys.T))
 			{
 				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-				//world.EntityManager.Add(new CaveSlime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+			}
+
+			if (Main.inputManager.JustPressed(Keys.V))
+            {
+				world.EntityManager.Add(new Cultist(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 

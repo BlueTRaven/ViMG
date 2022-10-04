@@ -220,8 +220,6 @@ namespace ViMG.Entities
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 
-			//if (!onGround) Velocity = new Vector3(Velocity.X * 0.95f, Velocity.Y, Velocity.Z * 0.95f);
-
 			Position += Velocity * (float)deltaTime;
 
 			onGround = false;

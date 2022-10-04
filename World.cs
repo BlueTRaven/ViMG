@@ -242,11 +242,19 @@ namespace ViMG
 			sunIndices.Add(2);
 			sunIndices.Add(3);
 
-			const float SUN_VERT_DIST = Cube.CUBE_SCALE * 128;
-			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
+			Color sunColor = Color.Yellow;
+			float sunVertDist = Cube.CUBE_SCALE * 4;
+
+			if (LoadedFolderName == "coconut")
+			{
+				sunVertDist = Cube.CUBE_SCALE * 128;
+				sunColor = Color.White;
+			}
+
+			sunVertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
+			sunVertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
 
 			meshSun = new SimpleMesh<VertexCube, int>(device, sunVertices, sunIndices);
 
@@ -678,7 +686,12 @@ namespace ViMG
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
 					Matrix.CreateTranslation(camChunkPosWS), null));*/
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("coconut"),
+				Texture2D sunTexture = DrawHelper.WhitePixel;
+
+				if (LoadedFolderName == "coconut")
+					sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(sunTexture,
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
 					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
