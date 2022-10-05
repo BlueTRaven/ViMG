@@ -38,7 +38,7 @@ namespace ViMG.Items
 			Register(new ItemCopperIngot());
 			Register(new ItemBronzeIngot());
 			Register(new ItemDebugDepthTarget());
-			Register(new ItemArrow());
+			Register(new ItemArrowStone());
 			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 1, 1, 0)));
 			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(0.9f, 5, 1f)));
 			Register(new ItemBow("iron", colorIron, new Item.AttackStats(0.95f, 4, 1f)));
