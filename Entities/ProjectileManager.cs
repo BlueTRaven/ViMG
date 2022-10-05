@@ -9,6 +9,57 @@ namespace ViMG.Entities
 {
 	public class ProjectileManager : IHitboxOwner
 	{
+		public struct ProjectileBatchStats
+        {
+			internal enum BatchingType
+            {
+				EvenSpacing,            //each projectile direction is spaced an even amount of degrees in local-space separately along pitch and yaw.
+				RandomOffsetInRange,	//each projectile direction is randomly varied in local-space in a range saparately along pitch and yaw.
+            }
+
+			public Vector2 yawRandomOffsetRange;	//local-space yaw offset from original direction
+			public Vector2 pitchRandomOffsetRange;  //local-space pitch offset from original direction
+
+			public float spacingYaw;
+			public float spacingPitch;
+
+			public int num;
+
+			internal BatchingType batchingType;
+
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="num"></param>
+			/// <param name="yawRange">yaw variance (in degrees) in local-space</param>
+			/// <param name="pitchRange">pitch variance (in degrees) in local-space</param>
+			public ProjectileBatchStats(int num, Vector2 yawRange, Vector2 pitchRange)
+            {
+				this.num = num;
+
+                this.yawRandomOffsetRange = yawRange;
+				this.pitchRandomOffsetRange = pitchRange;
+
+				spacingYaw = 0;
+				spacingPitch = 0;
+
+				batchingType = BatchingType.RandomOffsetInRange;
+            }
+
+			public ProjectileBatchStats(int num, float spacingYaw, float spacingPitch)
+            {
+				this.num = num;
+
+                this.yawRandomOffsetRange = Vector2.Zero;
+				this.pitchRandomOffsetRange = Vector2.Zero;
+
+				this.spacingYaw = spacingYaw;
+				this.spacingPitch = spacingPitch;
+
+				batchingType = BatchingType.EvenSpacing;
+			}
+		}
+
 		public struct ProjectileVisStats
 		{
 			public float scale;
@@ -19,6 +70,8 @@ namespace ViMG.Entities
 			public Vector4 lightColor;
 			public Vector2 lightExtents;
 
+			public bool rollFollowsVelocity;
+
 			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale)
 			{
 				this.texture = texture;
@@ -28,6 +81,8 @@ namespace ViMG.Entities
 				this.hasLight = false;
 				this.lightColor = Vector4.Zero;
 				this.lightExtents = Vector2.Zero;
+
+				rollFollowsVelocity = false;
 			}
 
 			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale, Vector4 lightColor, Vector2 lightExtents)
@@ -39,6 +94,8 @@ namespace ViMG.Entities
 				this.hasLight = true;
 				this.lightColor = lightColor;
 				this.lightExtents = lightExtents;
+
+				rollFollowsVelocity = false;
 			}
 		}
 
@@ -49,15 +106,17 @@ namespace ViMG.Entities
 			public float collisionRadius;
 			public float size;
 			public bool gravity;
+            public float gravityScale;
 			public bool dieOnCollision;
 
-			public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity, bool dieOnCollision)
+            public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true)
 			{
 				this.group = group;
 				this.damage = damage;
 				this.collisionRadius = collisionRadius;
 				this.size = size;
 				this.gravity = gravity;
+				this.gravityScale = gravityScale;
 				this.dieOnCollision = dieOnCollision;
 			}
 		}
@@ -163,7 +222,7 @@ namespace ViMG.Entities
 
 				if (projectiles[i].stats.gravity)
 				{
-					projectiles[i].velocity.Y += World.GRAVITY;
+					projectiles[i].velocity.Y += World.GRAVITY * projectiles[i].stats.gravityScale;
 
 					if (projectiles[i].velocity.Y < -340)
 						projectiles[i].velocity.Y = -340;
@@ -222,16 +281,49 @@ namespace ViMG.Entities
 			{
 				if (projectiles[i].active)
 				{
+					//float roll = Vector3.Dot(-Main.camera.Up, Vector3.Normalize(projectiles[i].velocity)) + MathHelper.ToRadians(180);
+					float roll = 0;
+
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(projectiles[i].visStats.texture,
 						DrawHelper.BlackPixel, projectiles[i].visStats.hasLight ? DrawHelper.WhitePixel : DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 						Matrix.CreateScale(projectiles[i].visStats.scale) *
-						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
-						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-						Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
+						Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, roll) *
+						//Matrix.CreateRotationZ(roll) *
 						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
 				}
 			}
 		}
+
+		public void AddBatch(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, 
+			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds)
+        {
+			for (int i = 0; i < batchStats.num; i++)
+			{
+				Projectile projectile = new Projectile(owner, position, velocity, timeLeft, visStats, stats);
+				Vector3 direction = Vector3.Normalize(projectile.velocity);
+				float speed = projectile.velocity.Length();
+
+				float yawOffset;
+				float pitchOffset;
+
+				if (batchStats.batchingType == ProjectileBatchStats.BatchingType.EvenSpacing)
+                {
+					yawOffset = batchStats.spacingYaw * i;
+					pitchOffset = batchStats.spacingPitch * i;
+                }
+				else
+                {
+					yawOffset = Main.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
+					pitchOffset = Main.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
+				}
+
+				Matrix offset = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yawOffset), MathHelper.ToRadians(pitchOffset), 0);
+
+				projectile.velocity = Vector3.Transform(direction, offset) * speed;
+
+				Add(projectile, bounds);
+			}
+        }
 
 		public int Add(Projectile projectile, Rectangle3D bounds)
 		{

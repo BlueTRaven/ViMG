@@ -25,6 +25,8 @@ namespace ViMG.Entities
         private readonly NoticeHandler<Player> noticeHandler;
         private readonly World world;
         private readonly T entity;
+		private readonly bool projectileBatch;
+		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
         private readonly ProjectileManager.ProjectileVisStats shotProjectileVisStats;
         private float idleTimer;
@@ -35,9 +37,6 @@ namespace ViMG.Entities
 
 		private State state;
 
-		private const float ATTACK_STUN_TIME = 1.65f;   //the amount of time the cultist waits in the attacking state after attacking before returning to the normal state
-		private const float ATTACK_COOLDOWN_TIME = 2f;  //the amount of time before the cultist can enter the attacking state again
-		private const float ATTACK_TIME = 0.25f;
 		private float attackTimer;
 
 		public float InvulnTimer;
@@ -48,10 +47,25 @@ namespace ViMG.Entities
 		private int health;
 		private int maxHealth;
 
+		public float AttackStunTime = 1.65f;	//the amount of time the shooter waits in the attacking state after attacking before returning to the normal state
+		public float AttackCooldownTime = 2f;	//the amount of time before the shooter can enter the attacking state again
+		public float AttackLockTime = 0.25f;	//the amount of time the shooter spends in the attack state before it can begin moving again.
+
+		public float ShootSpeed = Cube.CUBE_SCALE * 16;
+		public float MoveSpeed = Cube.CUBE_SCALE;
+
+		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 6f;
+		public float AttackTargetDistance = Cube.CUBE_SCALE * 8;
+
+		private bool isInRangeOfTarget;
+		public bool IsInRangeOfTarget => isInRangeOfTarget;
+
 		private Rectangle3D bounds;
 		private int hitbox = -1;
 
-		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, int maxHealth, ProjectileManager.ProjectileStats shotProjectileStats, ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, int maxHealth, 
+			ProjectileManager.ProjectileStats shotProjectileStats, 
+			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
         {
             this.noticeHandler = noticeHandler;
             this.world = world;
@@ -63,8 +77,30 @@ namespace ViMG.Entities
             this.shotProjectileStats = shotProjectileStats;
             this.shotProjectileVisStats = shotProjectileVisStats;
 
+			projectileBatch = false;
 			this.bounds = hitboxBounds;
         }
+
+		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, int maxHealth,
+			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
+			ProjectileManager.ProjectileStats shotProjectileStats,
+			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+		{
+			this.noticeHandler = noticeHandler;
+			this.world = world;
+			this.entity = entity;
+
+			this.health = maxHealth;
+			this.maxHealth = maxHealth;
+
+			projectileBatch = true;
+			this.shotProjectileBatchStats = shotProjectileBatchStats;
+
+			this.shotProjectileStats = shotProjectileStats;
+			this.shotProjectileVisStats = shotProjectileVisStats;
+
+			this.bounds = hitboxBounds;
+		}
 
 		public void Update(double deltaTime)
 		{
@@ -79,6 +115,8 @@ namespace ViMG.Entities
 			Velocity.Y += World.GRAVITY;
 
 			noticeHandler.Update(deltaTime);
+
+			isInRangeOfTarget = false;
 
 			if (InvulnTimer <= 0 && onGround)
 			{
@@ -96,9 +134,9 @@ namespace ViMG.Entities
 					{
 						Vector3 dir = noticeHandler.GetNoticedEntity().Position - entity.Position;
 						float distance = dir.Length();
-						dir = Vector3.Normalize(dir) * Cube.CUBE_SCALE;
+						dir = Vector3.Normalize(dir) * MoveSpeed;
 
-						if (distance > Cube.CUBE_SCALE * 6f)
+						if (distance > MoveTowardsTargetDistance)
 						{
 							Velocity.X += dir.X;
 							Velocity.Z += dir.Z;
@@ -109,19 +147,23 @@ namespace ViMG.Entities
 							Velocity.Z *= 0.95f;
 						}
 
-						if (distance < Cube.CUBE_SCALE * 8)
+						if (distance < AttackTargetDistance)
 						{
+							isInRangeOfTarget = true;
+
 							attackTimer -= (float)deltaTime;
 
 							if (attackTimer <= 0)
 							{
-								attackTimer = ATTACK_TIME;
+								attackTimer = AttackLockTime;
 								state = State.Attack;
 							}
 						}
 					}
 					else if (state == State.Attack)
 					{
+						isInRangeOfTarget = true;
+
 						Velocity.X *= 0.95f;
 						Velocity.Z *= 0.95f;
 
@@ -131,17 +173,28 @@ namespace ViMG.Entities
 						{
 							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
 
-							world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
-								Vector3.Normalize(dir) * Cube.CUBE_SCALE * 16,
-								8, shotProjectileVisStats, shotProjectileStats),
-								new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+							if (!projectileBatch)
+							{
+								world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
+									Vector3.Normalize(dir) * ShootSpeed,
+									8, shotProjectileVisStats, shotProjectileStats),
+									new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+							}
+                            else
+                            {
+								world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ShootSpeed, 8, 
+									shotProjectileBatchStats, shotProjectileVisStats, shotProjectileStats,
+									new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+                            }
 
 							state = State.AttackStun;
-							attackTimer = ATTACK_STUN_TIME;
+							attackTimer = AttackStunTime;
 						}
 					}
 					else if (state == State.AttackStun)
 					{
+						isInRangeOfTarget = true;
+
 						Velocity.X *= 0.5f;
 						Velocity.Z *= 0.5f;
 
@@ -150,14 +203,14 @@ namespace ViMG.Entities
 						if (attackTimer <= 0)
 						{
 							state = State.Normal;
-							attackTimer = ATTACK_COOLDOWN_TIME;
+							attackTimer = AttackCooldownTime;
 						}
 					}
 				}
 				else
 				{
 					state = State.Normal;
-					attackTimer = ATTACK_COOLDOWN_TIME;
+					attackTimer = AttackCooldownTime;
 
 					idleTimer -= (float)deltaTime;
 

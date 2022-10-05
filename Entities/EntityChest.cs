@@ -29,6 +29,17 @@ namespace ViMG.Entities
 			inventory = new Inventory(rows * columns);
 		}
 
+		//A separate constructor so world gen can provide prefilled inventory.
+		public EntityChest(CubePosition position, Inventory inventory, int rows, int columns)
+        {
+			this.TrackedPosition = position;
+			this.Position = position.InWorldSpace(null);
+			this.rows = rows;
+			this.columns = columns;
+
+			this.inventory = inventory;
+		}
+
 		public override void Initialize(World world)
 		{
 			base.Initialize(world);
