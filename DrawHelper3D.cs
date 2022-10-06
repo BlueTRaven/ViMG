@@ -14,7 +14,19 @@ namespace ViMG
         {
 			int verticesStart = vertices.Count;
 
-			Vector3 xMin = -new Vector3(Cube.CUBE_SCALE / 2, 0, -Cube.CUBE_SCALE / 2);
+			const int textureWidth = 1024;
+			const int textureHeight = 1024;
+
+			const float texelX = 1f / textureWidth;
+			const float texelY = 1f / textureHeight;
+
+			//face doesn't matter, any works
+			RectangleF sourceRect = cube.GetSourceRect(pass, world, CubePosition.FromWorldSpace(pos));
+			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
+			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
+
+			MakeXMeshRaw(vertices, indices, pos, sourceRect);
+			/*Vector3 xMin = -new Vector3(Cube.CUBE_SCALE / 2, 0, -Cube.CUBE_SCALE / 2);
 			Vector3 xMax = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
 
 			const int textureWidth = 1024;
@@ -127,7 +139,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(f, Color.White, btx, nrmSecondPlaneMax));
 			vertices.Add(new VertexCube(e, Color.White, atx, nrmSecondPlaneMax));
 			vertices.Add(new VertexCube(h, Color.White, dtx, nrmSecondPlaneMax));
-			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));
+			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
 
 			int verticesEnd = vertices.Count;
 
@@ -139,15 +151,15 @@ namespace ViMG
 			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2);
 			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
 
-			Vector3 a = new Vector3(min.X, min.Y, min.Z);
-			Vector3 b = new Vector3(min.X, max.Y, min.Z);
-			Vector3 c = new Vector3(max.X, max.Y, min.Z);
-			Vector3 d = new Vector3(max.X, min.Y, min.Z);
+			Vector3 a = pos + new Vector3(min.X, min.Y, min.Z);
+			Vector3 b = pos + new Vector3(min.X, max.Y, min.Z);
+			Vector3 c = pos + new Vector3(max.X, max.Y, min.Z);
+			Vector3 d = pos + new Vector3(max.X, min.Y, min.Z);
 
-			Vector3 e = new Vector3(min.X, min.Y, max.Z);
-			Vector3 f = new Vector3(min.X, max.Y, max.Z);
-			Vector3 g = new Vector3(max.X, max.Y, max.Z);
-			Vector3 h = new Vector3(max.X, min.Y, max.Z);
+			Vector3 e = pos + new Vector3(min.X, min.Y, max.Z);
+			Vector3 f = pos + new Vector3(min.X, max.Y, max.Z);
+			Vector3 g = pos + new Vector3(max.X, max.Y, max.Z);
+			Vector3 h = pos + new Vector3(max.X, min.Y, max.Z);
 
 			Vector3 anrm = new Vector3(0.5f, 0, 0.5f);
 			Vector3 bnrm = new Vector3(0.5f, 0, 0.5f);

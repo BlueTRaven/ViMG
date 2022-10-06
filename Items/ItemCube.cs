@@ -35,8 +35,7 @@ namespace ViMG.Items
 					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos) 
-						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos))
 					{
 						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
 						chunk.GetData().SetCube(placeAtPos, cubeId);
@@ -45,7 +44,7 @@ namespace ViMG.Items
 						cube.OnPlayerPlaced(player, placeAtPos);
 
 						//cubes can be placed as fast as possible
-						itemCooldownTime = 0;
+						itemCooldownTime = 0.25f;
 
 						return true;
 					}

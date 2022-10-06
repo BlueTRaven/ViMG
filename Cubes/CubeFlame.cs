@@ -57,7 +57,7 @@ namespace ViMG.Cubes
             if (pass != RenderPass.Opaque)
                 return;
 
-            DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, cube, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), vertices, indices);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
