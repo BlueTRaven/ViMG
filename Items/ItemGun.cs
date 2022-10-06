@@ -35,7 +35,7 @@ namespace ViMG.Items
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
 			int bulletIndex = -1;
-			ItemInstance item = inventory.Find(Main.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
+			ItemInstance item = inventory.FindType(Main.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
 			if (item.valid)
 			{
 				inventory.Remove(bulletIndex, 1);

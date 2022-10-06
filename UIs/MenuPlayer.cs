@@ -347,7 +347,7 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-							craftInventory.Find(recipe.Layout[i], 6, out int index);
+							craftInventory.FindExact(recipe.Layout[i], 6, out int index);
 
 							int overflow = inventory.Get(i).num - numLeft;
 							craftInventory.Remove(index, numLeft);

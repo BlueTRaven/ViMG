@@ -218,7 +218,7 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-						furnaceInventory.Find(recipe.Layout[i], 2, out int index);
+						furnaceInventory.FindExact(recipe.Layout[i], 2, out int index);
 
 						int overflow = furnaceInventory.Get(i).num - numLeft;
 						furnaceInventory.Remove(index, numLeft);

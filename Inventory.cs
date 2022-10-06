@@ -92,7 +92,23 @@ namespace ViMG
 			return -1;
 		}
 
-		public ref readonly ItemInstance Find(Item item, out int index)
+		//returns the first item instance with the given tag.
+		public ref readonly ItemInstance FindTag(string tag, out int index) 
+		{
+			for (int i = 0; i < numSlots; i++)
+			{
+				if (items[i].item.Tags.Contains(tag))
+				{
+					index = i;
+					return ref Get(i);
+				}
+			}
+
+			index = -1;
+			return ref ItemInstance.Empty;
+		}
+
+		public ref readonly ItemInstance FindType(Item item, out int index)
 		{
 			for (int i = 0; i < numSlots; i++)
 			{
@@ -107,7 +123,7 @@ namespace ViMG
 			return ref ItemInstance.Empty;
 		}
 
-		public ref readonly ItemInstance Find(ItemInstance item, int max, out int index)
+		public ref readonly ItemInstance FindExact(ItemInstance item, int max, out int index)
 		{
 			for (int i = 0; i < max; i++)
 			{
