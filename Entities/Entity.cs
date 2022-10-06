@@ -13,9 +13,14 @@ namespace ViMG.Entities
 
 		public bool Dead = false;
 		public bool AlwaysRender;
-		public bool Active = true;				//An entity is INACTIVE when the chunk that contains it unloads.
+		//An entity becomes INACTIVE once it is serialized. It is unloaded and removed from the entity list.
 		public bool CanBecomeInactive = true;	//Certain entity types (bosses, etc) may wish to never become inactive.
-		public bool DestroyOnInactive = true;	//Most entity types will be destroyed upon becoming inactive by default.
+		public bool DestroyOnInactive = true;   //Most entity types will be destroyed upon becoming inactive by default.
+
+		//Force the entity to be serialized.
+		//Note that this does not guarantee an entity will be properly serialized. Entities without properly implemented OnSave/OnLoad methods may be
+		//corrupted or in invalid state when deserialized. (They will also typically spawn at 0, 0, 0, which is a problem!)
+		public bool Serialize = false;
 
 		private ulong id = 0;
 		public ulong Id => id;

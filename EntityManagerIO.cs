@@ -104,17 +104,17 @@ namespace ViMG
 					version = -1;
 				}
 
-				SaveHelper.SaveInt32(headerBlock, entityDataBlockData.Count);	//s
+				SaveHelper.SaveInt32(headerBlock, entityDataBlockData.Count);	//e-s
 				size = entityDataBlockData.Count;
 
 				chksum = 0;
 				for (int i = 0; i < entityDataBlockData.Count; i++)
 					chksum += entityDataBlockData[i];
 
-				SaveHelper.SaveInt32(headerBlock, chksum);						//ck
+				SaveHelper.SaveInt32(headerBlock, chksum);						//e-ck
 
 				//SaveHelper.SaveBytesFlat(dataBlock, headerBlock);				//e-h
-				SaveHelper.SaveBytesFlat(dataBlock, entityDataBlockData);       //e
+				SaveHelper.SaveBytesFlat(dataBlock, entityDataBlockData);       //e	TODO this is pretty much just an unnecessary copy, could just use entityDataBlockData...
 
 				header = headerBlock.ToArray();
 				data = dataBlock.ToArray();
@@ -234,8 +234,9 @@ namespace ViMG
 				if (entityPos == pos)
 				{
 					var serializableAttribute = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-					if (serializableAttribute != null && 
-						(serializableAttribute.serializationType & EntitySerializableAttribute.SerializationType.World) == EntitySerializableAttribute.SerializationType.World)
+					if ((serializableAttribute != null && 
+						(serializableAttribute.serializationType & EntitySerializableAttribute.SerializationType.World) == EntitySerializableAttribute.SerializationType.World) ||
+						entity.Serialize)	//entities can force a serialize if Serialize is true. Typically used for structure-spawned entities.
 					{
 						entitiesToSerialize.Add(entity);
 					}
