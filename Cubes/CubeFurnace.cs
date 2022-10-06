@@ -102,23 +102,23 @@ namespace ViMG.Cubes
 
 			recipes.Add(new RecipeFuzzy(this,
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 1, 1) },
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 1, 1) }));
+							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_ingot"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 1, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("copper_ingot"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 2, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bronze_ingot"), 3, 1) }, 2));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }, 2));
 
 			recipes.Add(new RecipeFuzzy(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_ingot"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_ingot"), 2, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bronze_ingot"), 3, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }));
 		}
 
 		public void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale)

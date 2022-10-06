@@ -14,7 +14,7 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(6, 0)]
+	[EntityMeta(7, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public enum PlayerDamageType
@@ -27,14 +27,16 @@ namespace ViMG
 
 		public struct AccumulatedStats
         {
-			public int AdditionalHP;
+			public float HPScale;			//% hp increase.
+			public int HPFlat;			//flat hp increase. Applied AFTER, unmodified by scale.
 			public float MeleeScale;	//added to base scale value (1).
 			public float RangeScale;
 			public float MagicScale;
 			public float MeleeFlat;		//flat damage added on top of scale value. Added AFTER - unmodified by scale.
 			public float RangeFlat;
 			public float MagicFlat;
-			public int Defense;
+			public float DefenseScale;//% defense increase
+			public int DefenseFlat;		//flat defense increase. Applied AFTER, unmodified by scale.
 			public float KnockbackResist;
 			public float Speed;			//Adds to xz max velocity
 			public float Acceleration;  //Adds to xz accel
@@ -47,8 +49,16 @@ namespace ViMG
             {
 				var stats = new AccumulatedStats()
 				{
-					AdditionalHP = a.AdditionalHP + b.AdditionalHP,
-					Defense = a.Defense + b.Defense,
+					HPFlat = a.HPFlat + b.HPFlat,
+					HPScale = a.HPScale + b.HPScale,
+					DefenseScale = a.DefenseScale + b.DefenseScale,
+					DefenseFlat = a.DefenseFlat + b.DefenseFlat,
+					MeleeScale = a.MeleeScale + b.MeleeScale,
+					RangeScale = a.RangeScale + b.RangeScale,
+					MagicScale = a.MagicScale + b.MagicScale,
+					MeleeFlat = a.MeleeFlat + b.MeleeFlat,
+					RangeFlat = a.RangeFlat + b.RangeFlat,
+					MagicFlat = a.MagicFlat + b.MagicFlat,
 					KnockbackResist = a.KnockbackResist + b.KnockbackResist,
 					Speed = a.Speed + b.Speed,
 					Acceleration = a.Acceleration + b.Acceleration,
@@ -171,7 +181,7 @@ namespace ViMG
 			originalMS = Mouse.GetState();
 			Rotation = Main.camera.Rotation;
 
-			accessoryInventory = new Inventory(3);  //TODO deadPlayer.GetAccessoryInventory(); - Get rid of this
+			accessoryInventory = new Inventory(6);
 			craftInventory = new Inventory(8);
 
 			health = maxHealth;
@@ -208,7 +218,7 @@ namespace ViMG
 		public void FirstCreated()
 		{
 			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
-			accessoryInventory = new Inventory(3);
+			accessoryInventory = new Inventory(6);
 
 			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
 			menuPlayer.Close();
@@ -1366,7 +1376,8 @@ namespace ViMG
 
 		private int TakeDamageCalculation(HitboxManager.Hitbox hitbox)
         {
-			float defenseCalc = (float)stats.Defense * 0.5f;
+			float totalDefense = (float)stats.DefenseFlat * (stats.DefenseScale + 1f);
+			float defenseCalc = totalDefense * 0.5f;
 
 			float damage = (float)hitbox.damage - defenseCalc;
 
@@ -1374,7 +1385,7 @@ namespace ViMG
 			{
 				//If we have enough defense, negate damage entirely. Otherwise, max is 1.
 				//Player must have at least 10 defense before this negation can be applied.
-				if (stats.Defense > 10 && stats.Defense > hitbox.damage * 3)
+				if (totalDefense > 10 && totalDefense > hitbox.damage * 3)
 					damage = 0;
 				else damage = 1;
 			}
@@ -1411,8 +1422,8 @@ namespace ViMG
         {
 			health += amt;
 
-			if (health > maxHealth + stats.AdditionalHP)
-				health = maxHealth + stats.AdditionalHP;
+			if (health > maxHealth + stats.HPFlat)
+				health = maxHealth + stats.HPFlat;
         }
 
 		public override void OnSave(List<byte> saveBytes)
@@ -1449,8 +1460,13 @@ namespace ViMG
 
 			inventory = Inventory.Load(loadBytes, ref index);
 
-			if (version == 6)
+			if (version >= 6)
+			{
 				accessoryInventory = Inventory.Load(loadBytes, ref index);
+				//version 6 uses an inventory with 3 slots, 7 uses 6 slots; it must be expanded.
+				if (version == 6)
+					accessoryInventory = new Inventory(accessoryInventory, 6);	//expand to be 6 slots
+			}
 
 			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
 			menuPlayer.Close();

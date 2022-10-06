@@ -167,12 +167,14 @@ namespace ViMG.UIs
 		{
 			public readonly Button button;
 			public readonly ItemInstance item;
+            public readonly int maxStackSize;
 
-			public ItemSlot(Button button, ItemInstance item)
+            public ItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 			{
 				this.button = button;
 				this.item = item;
-			}
+                this.maxStackSize = maxStackSize;
+            }
 		}
 
 		private static List<Button> buttons = new List<Button>();
@@ -334,9 +336,9 @@ namespace ViMG.UIs
 			return button;
 		}
 
-		public static ItemSlot MakeItemSlot(Button button, ItemInstance item)
+		public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{
-			ItemSlot itemSlot = new ItemSlot(button, item);
+			ItemSlot itemSlot = new ItemSlot(button, item, maxStackSize);
 
 			itemSlots.Add(itemSlot);
 

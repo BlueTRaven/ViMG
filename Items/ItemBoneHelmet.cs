@@ -20,7 +20,7 @@ namespace ViMG.Items
                 base.AccumulateStats(player, ref stats);
 
                 stats.MeleeScale += 0.25f;
-                stats.AdditionalHP += 10;
+                stats.HPFlat += 10;
             }
         }
 
@@ -39,8 +39,8 @@ namespace ViMG.Items
             if (bonus.SetBonus == SetBonusBoneArmor.Instance)
                 bonus.Count++;
 
-            stats.Defense += 3;
-            stats.AdditionalHP += 3;
+            stats.DefenseFlat += 3;
+            stats.HPFlat += 3;
         }
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)

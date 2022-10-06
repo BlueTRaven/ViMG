@@ -45,7 +45,7 @@ namespace ViMG
 				return Get(registryByName[name]);
 			else
 			{
-				Console.WriteLine("Tried to get item with identifier {0} which does not exist.");
+				Console.WriteLine("Tried to get item with identifier {0} which does not exist.", name);
 				return null;
 			}
 		}

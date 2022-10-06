@@ -110,7 +110,7 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_furnace_t1"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_ingot"), 6, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_anvil_iron"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,

@@ -26,8 +26,8 @@ namespace ViMG.Items
             if (bonus.SetBonus == ItemBoneHelmet.SetBonusBoneArmor.Instance)
                 bonus.Count++;
 
-            stats.Defense += 5;
-            stats.AdditionalHP += 4;
+            stats.DefenseFlat += 5;
+            stats.HPFlat += 4;
         }
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)

@@ -20,6 +20,22 @@ namespace ViMG
 			lastEmpty = 0;
 		}
 
+		public Inventory(Inventory copyFrom, int newNum = -1)
+        {
+			if (newNum == -1)
+				numSlots = copyFrom.numSlots;
+			else numSlots = newNum;
+
+			items = new ItemInstance[numSlots];
+
+			for (int i = 0; i < copyFrom.numSlots; i++)
+            {
+				items[i] = copyFrom.items[i];
+            }
+
+			lastEmpty = copyFrom.lastEmpty;
+		}
+
 		public bool CanAdd(Item item)
 		{
 			for (int i = 0; i < numSlots; i++)

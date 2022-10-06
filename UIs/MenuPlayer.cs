@@ -19,12 +19,16 @@ namespace ViMG.UIs
 		private static string[] tagsLegs = new string[1] { "armor_legs" };
 		private static string[] tagsBody = new string[1] { "armor_body" };
 		private static string[] tagsHead = new string[1] { "armor_head" };
+		private static string[] tagsAccessories = new string[1] { "accessory" };
 
-		private static string[][] tagsAccessoriesBySlot = new string[3][]
+		private static string[][] tagsAccessoriesBySlot = new string[6][]
 		{
 			tagsLegs,
 			tagsBody,
 			tagsHead,
+			tagsAccessories,
+			tagsAccessories,
+			tagsAccessories,
 		};
 
         public int HoverIndex;
@@ -228,22 +232,26 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(MARGIN, 192));
 
-				for (int i = 0; i < 3; i++)
+				for (int i = 0; i < 6; i++)
 				{
 					pos = new Vector2(i * SIZE, 0);
+
+					if (i >= 3)
+						pos.X += MARGIN;
+
 					bounds = new RectangleF(pos, SIZE, SIZE);
 
 					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-									accessoryInventory.Get(i));
+									accessoryInventory.Get(i), 1);
 
 					if (!accessoryInventory.Get(i).valid)
-						UI.MakeTexture(new RectangleF(SIZE * i, 0, 16, 16), 
+						UI.MakeTexture(new RectangleF(pos, SIZE, SIZE), 
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
 					if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, ref held,
-						new MenuHelper.WhitelistTag(tagsAccessoriesBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
+						new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
