@@ -233,7 +233,9 @@ namespace ViMG
 
 				if (entityPos == pos)
 				{
-					if (entity.GetType().GetCustomAttribute<SerializableAttribute>() != null)
+					var serializableAttribute = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+					if (serializableAttribute != null && 
+						(serializableAttribute.serializationType & EntitySerializableAttribute.SerializationType.World) == EntitySerializableAttribute.SerializationType.World)
 					{
 						entitiesToSerialize.Add(entity);
 					}

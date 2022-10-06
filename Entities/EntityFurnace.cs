@@ -7,7 +7,7 @@ using ViMG.UIs;
 
 namespace ViMG.Entities
 {
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(2, 0)]
 	public class EntityFurnace : Entity, ICubeTracker
 	{

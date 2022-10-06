@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ViMG.Entities
 {
     //A cube tracker that has a set timer. Once the timer expires, it deletes itself and the tracked cube.
-    [Serializable]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0)]
     public class CubeTimer : Entity, ICubeTracker
     {

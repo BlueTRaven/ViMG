@@ -13,7 +13,7 @@ using ViMG.UIs;
 
 namespace ViMG
 {
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(6, 0)]
 	public class Player : Entity, IHitboxOwner
 	{

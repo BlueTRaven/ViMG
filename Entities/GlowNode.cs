@@ -9,7 +9,7 @@ using ViMG.Items;
 
 namespace ViMG.Entities
 {
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
 	public class GlowNode : Entity, ICubeTracker
 	{

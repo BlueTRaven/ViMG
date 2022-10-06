@@ -43,7 +43,11 @@ namespace ViMG
 		{
 			if (registryByName.ContainsKey(name))
 				return Get(registryByName[name]);
-			else return null;
+			else
+			{
+				Console.WriteLine("Tried to get item with identifier {0} which does not exist.");
+				return null;
+			}
 		}
 
 		public IReadOnlyList<T> GetIterable()

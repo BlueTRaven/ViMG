@@ -5,7 +5,7 @@ using ViMG.UIs;
 
 namespace ViMG.Entities
 {
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 1)]
 	public class EntityChest : Entity, ICubeTracker
 	{

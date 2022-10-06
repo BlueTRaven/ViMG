@@ -333,51 +333,27 @@ namespace ViMG.Generation
 					BlacklistOre, BlacklistAir);
 			}
 
-            /*{
-				if (pos.Y < SEA_FLOOR - 16)
-				{
-					bool doIron = GetRandom().NextFloat() < 1f / 384f;
-					if (doIron)
-					{
-						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
-							BlacklistOre, BlacklistAir);
-						numIronOre++;
-					}
-				}
+			int spawnNum = 1000;
+			while (spawnNum > 0)
+            {
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
+					GetRandom().Next(0, SEA_FLOOR - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (pos.Y < SEA_FLOOR + 8)
-				{
-					bool doGlow = GetRandom().NextFloat() < 1f / 300f;
-					if (doGlow)
-					{
-						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
-							  BlacklistOre, BlacklistAir);
-						numGlowOre++;
-					}
-				}
+				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+                {
+					var solidDown = manager.GetFirstSolidDown(pos);
 
-				if (pos.Y < sample - 16)
-				{
-					bool doTin = GetRandom().NextFloat() < 1f / 384f;
-					if (doTin)
-					{
-						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
-							  BlacklistOre, BlacklistAir);
-						numTinOre++;
-					}
-				}
+					if (solidDown.HasValue())
+                    {
+						CubePosition actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
 
-				if (pos.Y < sample - 24)
-				{
-					bool doCopper = GetRandom().NextFloat() < 1f / 384f;
-					if (doCopper)
-					{
-						PlaceStructureWithBlacklist(manager, chunk, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
-							BlacklistOre, BlacklistAir);
-						numCopperOre++;
-					}
+						manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
+						manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3));
+
+						spawnNum--;
+                    }
 				}
-			}*/
+			}
 
 			while (true)
 			{
@@ -573,5 +549,38 @@ namespace ViMG.Generation
 
 			return false;
 		}
+
+		private Inventory GenerateGenericLoot()
+        {
+			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
+
+			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("wood"), GetRandom().Next(3, 8), 1));
+
+			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("string"), GetRandom().Next(1, 2), 1));
+
+			if (GetRandom().NextCoinFlip())
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), GetRandom().Next(1, 2), 1));
+			else inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), GetRandom().Next(1, 3), 1));
+
+			int ingotGenPattern = GetRandom().Next(1, 3);
+			if (ingotGenPattern == 0)
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 4), 1));
+			else if (ingotGenPattern == 1)
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 4), 1));
+			else
+            {
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 2), 1));
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 2), 1));
+			}
+
+			Inventory inventory = new Inventory(9);
+
+			for (int i = 0; i < inventoryItems.Count; i++)
+            {
+				inventory.Set(inventoryItems[i], i);
+            }
+
+			return inventory;
+        }
 	}
 }

@@ -8,7 +8,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    [Serializable]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(1)]
     public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner
     {

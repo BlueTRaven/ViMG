@@ -5,7 +5,7 @@ using ViMG.UIs;
 
 namespace ViMG.Entities
 {
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
 	public class EntityAnvilIron : Entity, ICubeTracker
 	{

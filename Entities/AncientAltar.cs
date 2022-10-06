@@ -8,8 +8,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-	//TODO serializable
-	[Serializable]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
 	public class AncientAltar : Entity, ICubeTracker
 	{

@@ -10,8 +10,8 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    [Serializable]
-    [EntityMeta(0, 0)]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+	[EntityMeta(0, 0)]
     public class Sapling : Entity, ICubeTracker
     {
 		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
