@@ -19,7 +19,7 @@ namespace ViMG.Items
             {
                 base.AccumulateStats(player, ref stats);
 
-                stats.MeleeScale += 0.25f;
+                stats.MeleeAtkScale += 0.25f;
                 stats.HPFlat += 10;
             }
         }

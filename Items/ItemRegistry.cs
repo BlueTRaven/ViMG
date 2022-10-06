@@ -78,6 +78,7 @@ namespace ViMG.Items
 			Register(new ItemBoneChestplate());
 			Register(new ItemBoneLegs());
 			Register(new ItemMetalHeart());
+			Register(new ItemSkeletonHead());
 			RegisterItemCubes();
 		}
 

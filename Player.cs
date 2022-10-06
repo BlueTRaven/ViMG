@@ -29,12 +29,15 @@ namespace ViMG
         {
 			public float HPScale;			//% hp increase.
 			public int HPFlat;			//flat hp increase. Applied AFTER, unmodified by scale.
-			public float MeleeScale;	//added to base scale value (1).
-			public float RangeScale;
-			public float MagicScale;
+			public float MeleeAtkScale;	//added to base scale value (1).
+			public float RangeAtkScale;
+			public float MagicAtkScale;
 			public float MeleeFlat;		//flat damage added on top of scale value. Added AFTER - unmodified by scale.
 			public float RangeFlat;
 			public float MagicFlat;
+			public float MeleeSpdScale;
+			public float RangeSpdScale;
+			public float MagicSpdScale;
 			public float DefenseScale;//% defense increase
 			public int DefenseFlat;		//flat defense increase. Applied AFTER, unmodified by scale.
 			public float KnockbackResist;
@@ -53,12 +56,15 @@ namespace ViMG
 					HPScale = a.HPScale + b.HPScale,
 					DefenseScale = a.DefenseScale + b.DefenseScale,
 					DefenseFlat = a.DefenseFlat + b.DefenseFlat,
-					MeleeScale = a.MeleeScale + b.MeleeScale,
-					RangeScale = a.RangeScale + b.RangeScale,
-					MagicScale = a.MagicScale + b.MagicScale,
+					MeleeAtkScale = a.MeleeAtkScale + b.MeleeAtkScale,
+					RangeAtkScale = a.RangeAtkScale + b.RangeAtkScale,
+					MagicAtkScale = a.MagicAtkScale + b.MagicAtkScale,
 					MeleeFlat = a.MeleeFlat + b.MeleeFlat,
 					RangeFlat = a.RangeFlat + b.RangeFlat,
 					MagicFlat = a.MagicFlat + b.MagicFlat,
+					MeleeSpdScale = a.MeleeSpdScale + b.MeleeSpdScale,
+					RangeSpdScale = a.RangeSpdScale + b.RangeSpdScale,
+					MagicSpdScale = a.MagicSpdScale + b.MagicSpdScale,
 					KnockbackResist = a.KnockbackResist + b.KnockbackResist,
 					Speed = a.Speed + b.Speed,
 					Acceleration = a.Acceleration + b.Acceleration,
@@ -1058,7 +1064,7 @@ namespace ViMG
 			//useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
 		}
 
-		public void PerformAttack(float cooldownTimer)
+		public void PerformAttack(PlayerDamageType damageType, ref float cooldownTimer)
 		{
 			//Velocity.X = -Main.camera.Forward.X * 512f;
 
@@ -1097,8 +1103,19 @@ namespace ViMG
 				attackStateTargetPos = nearestHitbox.bounds.Center;
 			}*/
 
-			this.itemUseCooldownTimer = cooldownTimer;
-			this.attackStateTimer = itemUseCooldownTimer;
+			//this.itemUseCooldownTimer = cooldownTimer;
+
+			float scale = 0;
+
+			if (damageType == PlayerDamageType.Melee)
+				scale = stats.MeleeSpdScale;
+			else if (damageType == PlayerDamageType.Range)
+				scale = stats.RangeSpdScale;
+			else if (damageType == PlayerDamageType.Magic)
+				scale = stats.MagicSpdScale;
+
+			cooldownTimer -= (cooldownTimer * scale);
+			this.attackStateTimer = cooldownTimer;
 			this.attackStateMoveTimer = 1f / Main.FIXED_FPS;
 
 			state = State.Attack;
@@ -1400,17 +1417,17 @@ namespace ViMG
 
 			if (damageType == PlayerDamageType.Melee)
 			{
-				calculatedDamage *= startScale + stats.MeleeScale;
+				calculatedDamage *= startScale + stats.MeleeAtkScale;
 				calculatedDamage += stats.MeleeFlat;
 			}
 			else if (damageType == PlayerDamageType.Magic)
 			{
-				calculatedDamage *= startScale + stats.MagicScale;
+				calculatedDamage *= startScale + stats.MagicAtkScale;
 				calculatedDamage += stats.MagicFlat;
 			}
 			else if (damageType == PlayerDamageType.Range)
 			{
-				calculatedDamage *= startScale + stats.RangeScale;
+				calculatedDamage *= startScale + stats.RangeAtkScale;
 				calculatedDamage += stats.RangeFlat;
 			}
 			else calculatedDamage *= startScale;

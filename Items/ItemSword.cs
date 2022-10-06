@@ -30,7 +30,8 @@ namespace ViMG.Items
 
 			ItemSwordBlade meta = Get(inventory.Get(index));
 			player.SpawnHitbox(meta.GetStats().damage, Player.PlayerDamageType.Melee, meta.GetStats().knockback);
-			player.PerformAttack(meta.GetStats().cooldownTime);
+			itemCooldownTime = meta.GetStats().cooldownTime;
+			player.PerformAttack(Player.PlayerDamageType.Melee, ref itemCooldownTime);
 
 			return true;
 		}
