@@ -15,7 +15,7 @@ namespace ViMG.Items
             name = "Leather Gloves";
             description = "A pair of sturdy leather gloves.\n" +
                 "+3 defense\n" +
-                "Hitting an enemy increases your attack speed by 10% for 3 seconds. This effect cannot occur more than once every 10 seconds. (Unimplemented)";
+                "Hitting an enemy increases your attack speed by 10% for 3 seconds. This effect cannot occur more than once every 10 seconds.";
 
             Tags.Add("accessory");
         }
