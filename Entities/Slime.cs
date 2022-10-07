@@ -59,8 +59,8 @@ namespace ViMG.Entities
 			alive += (float)deltaTime;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f);
-			else world.HitboxManager.Update(hitbox, Bounds);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
+			else world.HitboxManager.Update(hitbox, Bounds, invulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
 

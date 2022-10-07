@@ -107,8 +107,8 @@ namespace ViMG.Entities
 			InvulnTimer -= (float)deltaTime;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f);
-			else world.HitboxManager.Update(hitbox, bounds.Offset(entity.Position));
+				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, InvulnTimer <= 0);
+			else world.HitboxManager.Update(hitbox, bounds.Offset(entity.Position), InvulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
 

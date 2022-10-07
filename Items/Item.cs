@@ -80,10 +80,11 @@ namespace ViMG.Items
 
 		public virtual void Hold(Player player, Inventory inventory, int index) { }
 
-		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
-        {
+		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus) { }
 
-        }
+		public virtual void OnAttack(Player player, Inventory inventory, int index) { }
+
+		public virtual void OnDealDamage(Player player, Inventory inventory, int index, IHitboxOwner hit) { }
 
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{

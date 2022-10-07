@@ -11,10 +11,12 @@ namespace ViMG
 		public enum Group
         {
 			INVALID,
-			PLAYER_TAKE,
-			PLAYER_DEAL,
-			ENEMYHOSTILE_BOTH,
-			NEUTRAL_DEAL
+			PLAYER_TAKE = 1 << 0,
+			PLAYER_DEAL = 1 << 1,
+			ENEMYHOSTILE_TAKE = 1 << 2,
+			ENEMYHOSTILE_DEAL = 1 << 3,
+			ENEMYHOSTILE_BOTH = ENEMYHOSTILE_DEAL | ENEMYHOSTILE_TAKE,
+			NEUTRAL_DEAL = 1 << 4
         }
 		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
 		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
@@ -35,6 +37,8 @@ namespace ViMG
 			public readonly int damage;
 			public readonly float knockback;
 
+			public readonly bool canInteract;
+
 			public Hitbox(int index)
 			{
 				this.index = index;
@@ -45,9 +49,10 @@ namespace ViMG
 				group = Group.INVALID;
 				damage = -1;
 				knockback = -1;
+				canInteract = false;
 			}
 
-			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback)
+			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract)
 			{
 				this.index = index;
 				active = true;
@@ -57,9 +62,11 @@ namespace ViMG
 				this.group = group;
 				this.damage = damage;
 				this.knockback = knockback;
+
+				this.canInteract = canInteract;
 			}
 
-			public Hitbox(Hitbox old, Rectangle3D bounds)
+			public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
 			{
 				this.index = old.index;
 				active = true;
@@ -69,6 +76,8 @@ namespace ViMG
 				this.group = old.group;
 				this.damage = old.damage;
 				this.knockback = old.knockback;
+
+				this.canInteract = canInteract;
 			}
 
 			public static Hitbox Invalid = new Hitbox();
@@ -88,7 +97,7 @@ namespace ViMG
 			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
@@ -96,7 +105,7 @@ namespace ViMG
 
 				if (!hitbox.active)
 				{
-					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback);
+					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback, canInteract);
 
 					return i;
 				}
@@ -132,11 +141,11 @@ namespace ViMG
 			hitboxes[index] = new Hitbox(index);
 		}
 
-		public void Update(int index, Rectangle3D bounds)
+		public void Update(int index, Rectangle3D bounds, bool canInteract = true)
 		{
 			if (hitboxes[index].active)
 			{
-				hitboxes[index] = new Hitbox(hitboxes[index], bounds);
+				hitboxes[index] = new Hitbox(hitboxes[index], bounds, canInteract);
 			}
 
 			for (int i = 0; i < hitboxes.Length; i++)

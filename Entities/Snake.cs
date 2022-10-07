@@ -94,8 +94,8 @@ namespace ViMG.Entities
 			InvulnTimer -= (float)deltaTime;
 
 			if (touchHitbox == -1)
-				touchHitbox = world.HitboxManager.Add(this, touchBounds.Offset(Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, touchDamage, 1f);
-			else world.HitboxManager.Update(touchHitbox, touchBounds.Offset(Position));
+				touchHitbox = world.HitboxManager.Add(this, touchBounds.Offset(Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, touchDamage, 1f, InvulnTimer <= 0);
+			else world.HitboxManager.Update(touchHitbox, touchBounds.Offset(Position), InvulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
 

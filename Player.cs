@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Items;
@@ -78,7 +79,7 @@ namespace ViMG
             }
         }
 
-		public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
+        public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
 
 		private enum State
 		{
@@ -176,7 +177,9 @@ namespace ViMG
 
 		private bool hasMoved;
 		private bool hasRotated;
-		
+
+		private BuffManagerPlayer buffManager;
+
 		public Player()
 		{
 			AlwaysRender = true;
@@ -239,6 +242,9 @@ namespace ViMG
         {
             base.Initialize(world);
 
+			//TODO serialize this maybe?
+			buffManager = new BuffManagerPlayer(this);
+
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
 			{
@@ -295,11 +301,11 @@ namespace ViMG
 				return;
 
 			if (hurtbox == -1)
-				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f);
+				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f, invulnTimer <= 0);
 			else if (state != State.Noclip)
-				world.HitboxManager.Update(hurtbox, Bounds);
+				world.HitboxManager.Update(hurtbox, Bounds, invulnTimer <= 0);
 
-			UpdateStats();
+			UpdateStats(deltaTime);
 
 			if (state == State.Noclip)
 			{
@@ -523,7 +529,7 @@ namespace ViMG
 			alive += (float)deltaTime;
 		}
 
-		private void UpdateStats()
+		private void UpdateStats(double deltaTime)
 		{
 			AccumulatedStats accumulatedStats = new AccumulatedStats();
 			SetBonus.SetBonusInstance bonus = new SetBonus.SetBonusInstance();
@@ -545,6 +551,8 @@ namespace ViMG
 
 			setBonus = bonus.SetBonus;
 			stats = accumulatedStats;
+
+			buffManager.Update(deltaTime, ref stats);
 		}
 
 		private void UpdateMovementWater(double deltaTime)
@@ -1114,6 +1122,12 @@ namespace ViMG
 			else if (damageType == PlayerDamageType.Magic)
 				scale = stats.MagicSpdScale;
 
+			for (int i = 0; i < accessoryInventory.NumSlots; i++)
+            {
+				if (accessoryInventory.Get(i).valid)
+					accessoryInventory.Get(i).item.OnAttack(this, inventory, menuPlayer.HighlightIndex);
+            }
+
 			cooldownTimer -= (cooldownTimer * scale);
 			this.attackStateTimer = cooldownTimer;
 			this.attackStateMoveTimer = 1f / Main.FIXED_FPS;
@@ -1346,7 +1360,8 @@ namespace ViMG
 			if (invulnTimer <= 0)
 			{
 				if (us.group == HitboxManager.Group.PLAYER_TAKE && 
-					(other.group == HitboxManager.Group.ENEMYHOSTILE_BOTH || other.group == HitboxManager.Group.NEUTRAL_DEAL))
+					((other.group & HitboxManager.Group.ENEMYHOSTILE_DEAL) == HitboxManager.Group.ENEMYHOSTILE_DEAL || 
+					other.group == HitboxManager.Group.NEUTRAL_DEAL))
 				{
 					Vector3 direction = Vector3.Normalize(Bounds.Center - other.bounds.Center);
 
@@ -1360,6 +1375,18 @@ namespace ViMG
 					invulnTimer = INVULN_TIME;
 				}
 			}
+
+			if (us.canInteract && other.canInteract && 
+				us.group == HitboxManager.Group.PLAYER_DEAL && 
+				(other.group & HitboxManager.Group.ENEMYHOSTILE_BOTH) != HitboxManager.Group.INVALID)
+            {
+				for (int i = 0; i < accessoryInventory.NumSlots; i++)
+                {
+					if (accessoryInventory.Get(i).valid)
+						accessoryInventory.Get(i).item.OnDealDamage(this, inventory, menuPlayer.HighlightIndex, other.owner);
+                }
+				//This may not be a valid hit; the enemy might be invulnerable
+            }
 		}
 
 		public void Kill()
@@ -1443,6 +1470,11 @@ namespace ViMG
 				health = maxHealth + stats.HPFlat;
         }
 
+		public BuffManagerPlayer GetBuffManager()
+		{
+			return buffManager;
+		}
+
 		public override void OnSave(List<byte> saveBytes)
 		{
 			base.OnSave(saveBytes);
@@ -1492,5 +1524,5 @@ namespace ViMG
 			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
             SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 		}
-	}
+    }
 }

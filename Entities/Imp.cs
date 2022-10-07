@@ -73,8 +73,8 @@ namespace ViMG.Entities
 				realNoticeHandler = noticeHandlerDay;
 
 			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f);
-			else world.HitboxManager.Update(hitbox, Bounds);
+				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
+			else world.HitboxManager.Update(hitbox, Bounds, invulnTimer <= 0);
 
 			float p0 = (alive % 0.65f) / 0.65f;
 			float p1 = ((alive + 0.3f) % 0.45f) / 0.45f;
