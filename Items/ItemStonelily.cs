@@ -16,6 +16,8 @@ namespace ViMG.Items
             description = "A lily made of solid stone. Despite its cold exterior, its beautiful appearance warms your heart.\n" +
                 "+4 defense\n" +
                 "+5% magic damage";
+
+            Tags.Add("accessory");
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

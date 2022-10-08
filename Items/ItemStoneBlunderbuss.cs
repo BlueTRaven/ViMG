@@ -29,7 +29,7 @@ namespace ViMG.Items
         {
 			name = "Stone Blunderbuss";
 			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +
-				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread.";
+				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread. Consumes 4 ammo per shot.";
 			flipXInHand = true;
         }
 
@@ -37,7 +37,7 @@ namespace ViMG.Items
 		{
 			ItemInstance ammo = inventory.FindTag("ammo_bullet", out int ammoIndex);
 
-			if (ammo.valid)
+			if (ammo.valid && ammo.num >= 4)
 			{
 				Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
 				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
@@ -51,7 +51,7 @@ namespace ViMG.Items
 				}
 			
 				itemCooldownTime = 0.95f;
-				inventory.Remove(ammoIndex, 1);
+				inventory.Remove(ammoIndex, 4);
 				return true;
 			}
 

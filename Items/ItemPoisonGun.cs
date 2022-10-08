@@ -22,11 +22,12 @@ namespace ViMG.Items
 		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private static ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1,
-			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, false, 0, true, applyBuffs);
+			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, false, 0, true, applyBuffs);
 
 		public ItemPoisonGun() : base("poison_gun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 128, 16, 16))
         {
             name = "Poison Gun";
+			//TODO normal bullets if not musketball
             description = "Musketballs are converted into poisonous gobs of poison, which inflict the poisoned debuff on enemies.";
 			flipXInHand = true;
         }

@@ -31,6 +31,17 @@ namespace ViMG.Generation
 			Main.Registry.CubeRegistry.Get("ore_iron").Id
 		};
 
+		private static string[] SpecialItemCaveChest = new string[]
+		{
+			"leather_gloves",
+			"metal_heart",
+			"stone_lily",
+			"stone_blunderbuss",
+			//TODO "ancient_sword",
+			//TODO "ornamental_sword",
+			"flintlock_pistol",
+		};
+
         private delegate float EaseFunction(float scale);
 
 		private float[,] presetHeightmap;
@@ -158,11 +169,6 @@ namespace ViMG.Generation
 			state.chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
 		}
 
-		private static int numCopperOre;
-		private static int numTinOre;
-		private static int numGlowOre;
-		private static int numIronOre;
-
 		public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
         {
 			int[,] heightMap = GenerateHeight(chunk);
@@ -204,36 +210,6 @@ namespace ViMG.Generation
 									SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
 								}
 							}
-						}
-
-						/*if (pos.Y < SEA_FLOOR + 16 && pos.Y < sample - 8)
-						{
-							double shouldDoBigCave = GetRandom().NextDouble();
-							if (shouldDoBigCave < 1.0 / 300000.0)
-							{
-								numAltarCavesGenerated++;
-
-								Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
-
-								PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
-							}
-                            else
-                            {
-								if (shouldDoBigCave < 1.0 / 100000.0)
-                                {
-									numWaterCavesGenerated++;
-
-									Structure structure = structureBatchesGOL3DWaterCaves.Get(GetRandom().Next(0, structureBatchesGOL3DWaterCaves.num));
-
-									StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, chunk, structure, pos);
-									//PlaceStructureWithBlacklist(manager, chunk, structure, pos, BlacklistAir, Span<ushort>.Empty);
-								}
-                            }
-						}*/
-
-						if (pos.Y < sample)
-                        {
-							
 						}
 					}
 				}
@@ -333,11 +309,15 @@ namespace ViMG.Generation
 					BlacklistOre, BlacklistAir);
 			}
 
-			int spawnNum = 1000;
+			const int NUM_CAVE_CHESTS = 750;
+			int spawnNum = NUM_CAVE_CHESTS;
+			Span<ChunkPosition> chunks = stackalloc ChunkPosition[NUM_CAVE_CHESTS];
+			int lastChunk = 0;
+
 			while (spawnNum > 0)
             {
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					GetRandom().Next(0, SEA_FLOOR - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
@@ -346,9 +326,18 @@ namespace ViMG.Generation
 					if (solidDown.HasValue())
                     {
 						CubePosition actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
+						ChunkPosition chunkPos = ChunkPosition.CubeChunk(actualGenPos);
+
+						for (int i = 0; i < lastChunk; i++)
+						{
+							if (chunkPos == chunks[i])
+								continue;
+						}
 
 						manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
 						manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3));
+
+						chunks[lastChunk++] = chunkPos;
 
 						spawnNum--;
                     }
@@ -554,9 +543,18 @@ namespace ViMG.Generation
         {
 			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
 
-			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("wood"), GetRandom().Next(3, 8), 1));
+			string specialItem = SpecialItemCaveChest[GetRandom().Next(0, SpecialItemCaveChest.Length)];
 
-			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("string"), GetRandom().Next(1, 2), 1));
+			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get(specialItem), 1, 1));
+
+			if (GetRandom().NextCoinFlip())
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), GetRandom().Next(1, 4), 1));
+
+			if (GetRandom().NextFloat() < 0.75f)
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("string"), GetRandom().Next(1, 2), 1));
+
+			if (GetRandom().NextCoinFlip())
+				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), GetRandom().Next(10, 20), 1));
 
 			if (GetRandom().NextCoinFlip())
 				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), GetRandom().Next(1, 2), 1));

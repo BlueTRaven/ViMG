@@ -83,10 +83,11 @@ namespace ViMG.Items
 			Register(new ItemStonelily());
 			Register(new ItemLeatherGloves());
 			Register(new ItemMusketBall());
-			Register(new ItemMatchlock());
+			Register(new ItemMatchlockPistol());
 			Register(new ItemStoneBlunderbuss());
 			Register(new ItemHandmadeAutoGun());
 			Register(new ItemPoisonGun());
+			Register(new ItemFlintlockPistol());
 			RegisterItemCubes();
 		}
 
