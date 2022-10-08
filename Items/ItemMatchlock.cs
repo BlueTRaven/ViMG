@@ -35,7 +35,7 @@ namespace ViMG.Items
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{
-					itemCooldownTime = 0.95f;
+					itemCooldownTime = 1.125f;
 					inventory.Remove(ammoIndex, 1);
 					return true;
 				}
