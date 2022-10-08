@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Buffs;
 
 namespace ViMG.Entities
 {
@@ -108,8 +109,9 @@ namespace ViMG.Entities
 			public bool gravity;
             public float gravityScale;
 			public bool dieOnCollision;
+			public Buff.BuffInstance[] applyBuffs;
 
-            public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true)
+            public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
 			{
 				this.group = group;
 				this.damage = damage;
@@ -118,6 +120,8 @@ namespace ViMG.Entities
 				this.gravity = gravity;
 				this.gravityScale = gravityScale;
 				this.dieOnCollision = dieOnCollision;
+
+				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
 			}
 		}
 
@@ -202,7 +206,9 @@ namespace ViMG.Entities
 
 				if (projectiles[i].hitbox == -1)
 				{
-					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
+					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), 
+						projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f, 
+						applyBuffs: projectiles[i].stats.applyBuffs);
 				}
                 else
                 {

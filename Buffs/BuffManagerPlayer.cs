@@ -9,7 +9,7 @@ namespace ViMG.Buffs
     public class BuffManagerPlayer
     {
         private readonly Player player;
-        private List<Buff> buffs = new List<Buff>();
+        private List<Buff.BuffInstance> buffs = new List<Buff.BuffInstance>();
         private HashSet<Type> buffTypes = new HashSet<Type>();
 
         public BuffManagerPlayer(Player player)
@@ -21,36 +21,38 @@ namespace ViMG.Buffs
         {
             for (int i = buffs.Count - 1; i >= 0; i--)
             {
-                Buff buff = buffs[i];
+                Buff.BuffInstance instance = buffs[i];
 
-                buff.Update(deltaTime, ref stats);
+                instance.buff.Update(deltaTime, ref instance, ref stats);
 
-                if (buff.Duration <= 0)
+                if (instance.duration <= 0 || !instance.valid)
                 {
                     buffs.RemoveAt(i);
-                    buffTypes.Remove(buff.GetType());
+                    buffTypes.Remove(instance.GetType());
                     i--;
                 }
-            }
-        }
-
-        public void AddBuff(Buff buff)
-        {
-            if (buffTypes.Contains(buff.GetType()))
-            {
-                foreach (Buff existingBuff in buffs)
+                else
                 {
-                    if (existingBuff.GetType() == buff.GetType())
-                        existingBuff.OnApplyOfSameType(buff);
+                    buffs[i] = instance;
                 }
             }
-            else this.buffs.Add(buff);
         }
 
-        public void AddBuffUnique(Buff buff)
+        public void AddBuff(Buff.BuffInstance buffInstance)
         {
-            if (buffs.Find(x => x.GetType() == buff.GetType()) == null)
-                AddBuff(buff);
+            if (buffTypes.Contains(buffInstance.buff.GetType()))
+            {
+                foreach (Buff.BuffInstance existingBuff in buffs)
+                {
+                    if (existingBuff.buff == buffInstance.buff)
+                        existingBuff.buff.OnApplyOfSameType(buffInstance);
+                }
+            }
+            else
+            {
+                this.buffs.Add(buffInstance);
+                this.buffTypes.Add(buffInstance.buff.GetType());
+            }
         }
     }
 }

@@ -4,12 +4,13 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 
 namespace ViMG.Entities
 {
-	public class Slime : Entity, IHitboxOwner
+	public class Slime : Entity, IHitboxOwner, IHasStats
 	{
 		public Vector3 Velocity;
 
@@ -30,6 +31,7 @@ namespace ViMG.Entities
 
 		private int health;
 		private int maxHealth = 4;
+		private Color tintColor = Color.White;
 
 		private Vector3 jumpDir;
 		private int numJumps;
@@ -39,6 +41,7 @@ namespace ViMG.Entities
 		private float alive;
 
 		private NoticeHandler<Player> noticeHandler;
+		private BuffManager buffManager;
 
 		public Slime(Vector3 position)
 		{
@@ -52,6 +55,7 @@ namespace ViMG.Entities
 			base.Initialize(world);
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
+			buffManager = new BuffManager(this);
 		}
 
 		public override void Update(double deltaTime)
@@ -61,6 +65,8 @@ namespace ViMG.Entities
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
 			else world.HitboxManager.Update(hitbox, Bounds, invulnTimer <= 0);
+
+			buffManager.Update(deltaTime);
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -273,12 +279,16 @@ namespace ViMG.Entities
 			if (onGround && (alive % interval) / interval < 0.5f)
 				ysrc = 16;
 
+			Color tintColor = this.tintColor;
+			if (invulnTimer > 0)
+				tintColor = Color.Red;
+
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("slime"), 
 				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),
-				noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16)));
+				noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16), tintColor.ToVector3()));
 
 			DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
 		}
@@ -300,11 +310,34 @@ namespace ViMG.Entities
 						world.EntityManager.Remove(this);
 					}
 
+					buffManager.AddBuffs(other.applyBuffs);
+
 					invulnTimer = 0.25f;
 
 					noticeHandler.OnTakeDamage(other.owner as Player);
 				}
 			}
 		}
-	}
+
+        public Stats GetStats()
+        {
+			return new Stats()
+			{
+				HP = health,
+				MaximumHP = maxHealth,
+
+				TintColor = tintColor,
+			};
+        }
+
+        public void SetStats(Stats stats)
+        {
+			health = stats.HP;
+			maxHealth = stats.MaximumHP;
+			tintColor = stats.TintColor;
+
+			if (stats.HP <= 0 || stats.MaximumHP <= 0)
+				world.EntityManager.Remove(this);
+        }
+    }
 }

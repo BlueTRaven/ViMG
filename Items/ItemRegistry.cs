@@ -86,6 +86,7 @@ namespace ViMG.Items
 			Register(new ItemMatchlock());
 			Register(new ItemStoneBlunderbuss());
 			Register(new ItemHandmadeAutoGun());
+			Register(new ItemPoisonGun());
 			RegisterItemCubes();
 		}
 

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 
@@ -42,6 +43,8 @@ namespace ViMG
 
 			public readonly bool canInteract;
 
+			public readonly Buff.BuffInstance[] applyBuffs;
+
 			public Hitbox(int index)
 			{
 				this.index = index;
@@ -53,9 +56,10 @@ namespace ViMG
 				damage = -1;
 				knockback = -1;
 				canInteract = false;
+				applyBuffs = null;
 			}
 
-			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract)
+			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs)
 			{
 				this.index = index;
 				active = true;
@@ -67,6 +71,8 @@ namespace ViMG
 				this.knockback = knockback;
 
 				this.canInteract = canInteract;
+
+				this.applyBuffs = applyBuffs;
 			}
 
 			public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
@@ -81,6 +87,8 @@ namespace ViMG
 				this.knockback = old.knockback;
 
 				this.canInteract = canInteract;
+
+				this.applyBuffs = old.applyBuffs;
 			}
 
 			public static Hitbox Invalid = new Hitbox();
@@ -100,7 +108,7 @@ namespace ViMG
 			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
@@ -108,7 +116,7 @@ namespace ViMG
 
 				if (!hitbox.active)
 				{
-					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback, canInteract);
+					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>());
 
 					return i;
 				}

@@ -7,58 +7,89 @@ using ViMG.Entities;
 
 namespace ViMG.Buffs
 {
-    public abstract class Buff
+    public abstract class Buff : IRegisterable
     {
+        public struct BuffInstance
+        {
+            public Buff buff;
+
+            public float duration;
+            public float tickInterval;
+
+            public bool valid;
+
+            public BuffInstance(Buff buff, float duration = -1)
+            {
+                this.buff = buff;
+                this.duration = duration <= -1 ? buff.durationMax : duration;
+                tickInterval = buff.tickIntervalMax;
+
+                valid = true;
+            }
+        }
+
         public string Name;
         public string Description;
 
-        protected readonly Player player;
-        protected readonly IHasStats stats;
         protected readonly float durationMax;
-        protected int stack;
-        protected float duration;
+        protected readonly float tickIntervalMax;
 
-        public float Duration => duration;
+        public string Identifier { get; private set; }
 
-        public Buff(IHasStats stats, float duration, int stack)
+        public Buff(string identifier, float durationMax, float tickIntervalMax)
         {
-            this.stats = stats;
-            this.durationMax = duration;
-            this.duration = duration;
-            this.stack = stack;
+            this.Identifier = identifier;
+            this.durationMax = durationMax;
+            this.tickIntervalMax = tickIntervalMax;
         }
 
-        public Buff(Player player, float duration, int stack)
+        public virtual void Update(double deltaTime, ref BuffInstance buffInstance, ref Stats stats)
         {
-            this.player = player;
-            this.durationMax = duration;
-            this.duration = duration;
-            this.stack = stack;
-        }
+            buffInstance.duration -= (float)deltaTime;
+            buffInstance.tickInterval -= (float)deltaTime;
 
-        public virtual void Update(double deltaTime, ref Stats stats)
-        {
-            duration -= (float)deltaTime;
-
-            if (duration <= 0 && stack > 1)
+            if (buffInstance.tickInterval <= 0)
             {
-                duration = durationMax;
-                stack -= 1;
+                buffInstance.tickInterval += tickIntervalMax;
+
+                Tick(deltaTime, ref buffInstance, ref stats);
+            }
+
+            if (buffInstance.duration <= 0)
+            {
+                buffInstance = new BuffInstance();
             }
         }
 
-        public virtual void Update(double deltaTime, ref Player.AccumulatedStats stats)
+        public virtual void Tick(double deltaTime, ref BuffInstance buffInstance, ref Stats stats)
         {
-            duration -= (float)deltaTime;
 
-            if (duration <= 0 && stack > 1)
+        }
+
+        public virtual void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        {
+            buffInstance.duration -= (float)deltaTime;
+            buffInstance.tickInterval -= (float)deltaTime;
+
+            if (buffInstance.tickInterval <= 0)
             {
-                duration = durationMax;
-                stack -= 1;
+                buffInstance.tickInterval += tickIntervalMax;
+
+                Tick(deltaTime, ref buffInstance, ref stats);
+            }
+
+            if (buffInstance.duration <= 0)
+            {
+                buffInstance = new BuffInstance();
             }
         }
 
-        public virtual void OnApplyOfSameType(Buff buff)
+        public virtual void Tick(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        {
+
+        }
+
+        public virtual void OnApplyOfSameType(BuffInstance instance)
         {
 
         }

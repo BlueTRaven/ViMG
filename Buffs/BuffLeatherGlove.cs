@@ -8,20 +8,18 @@ namespace ViMG.Buffs
 {
     public class BuffLeatherGlove : Buff
     {
-        public BuffLeatherGlove(Player player) : base(player, 13, 1)
+        public BuffLeatherGlove() : base("leather_glove", 13, 0)
         {
             Name = "Wild Hands";
             Description = "Attack speed increased by 10%.";
         }
 
-        public override void Update(double deltaTime, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
-            base.Update(deltaTime, ref stats);
-
-            //stats.MeleeSpdScale += 0.1f; //+10%
+            base.Update(deltaTime, ref buffInstance, ref stats);
 
             //10 seconds = cd time
-            if (duration > 10f)
+            if (buffInstance.duration > 10f)
                 stats.MeleeSpdScale += 0.5f;
             else
             {

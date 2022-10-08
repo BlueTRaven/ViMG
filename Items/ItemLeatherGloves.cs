@@ -31,7 +31,7 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, hit);
 
-            player.GetBuffManager().AddBuffUnique(new Buffs.BuffLeatherGlove(player));
+            player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("leather_glove")));
         }
     }
 }
