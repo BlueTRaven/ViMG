@@ -7,14 +7,16 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
+using ViMG.Buffs;
 
 namespace ViMG.Entities
 {
-    public class Cultist : Entity
+    public class Cultist : Entity, IHasStats
     {
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		private NoticeHandler<Player> noticeHandler;
+		private BuffManager buffManager;
 
 		private int maxHealth = 140;
 
@@ -42,9 +44,10 @@ namespace ViMG.Entities
 				Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+			buffManager = new BuffManager(this);
 
 			ai = new AIWalkerShooter<Cultist>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, maxHealth, stats, visStats);
+				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, visStats);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
 
@@ -93,7 +96,22 @@ namespace ViMG.Entities
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			DrawHelper3D.DrawHealthbar(device, ai.GetHealth(), maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+			DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
 		}
+
+        public Stats GetStats()
+        {
+			return new Stats
+			{
+				HP = ai.Health,
+				MaximumHP = ai.MaxHealth
+			};
+        }
+
+        public void SetStats(Stats stats)
+        {
+			ai.Health = stats.HP;
+			ai.MaxHealth = stats.MaximumHP;
+        }
     }
 }

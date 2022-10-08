@@ -28,6 +28,7 @@ namespace ViMG.Items
         {
             name = "Poison Gun";
             description = "Musketballs are converted into poisonous gobs of poison, which inflict the poisoned debuff on enemies.";
+			flipXInHand = true;
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)

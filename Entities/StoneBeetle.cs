@@ -6,15 +6,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    public class StoneBeetle : Entity
+    public class StoneBeetle : Entity, IHasStats
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
         private NoticeHandler<Player> noticeHandler;
+        private BuffManager buffManager;
 
         private int maxHealth = 20;
 
@@ -44,9 +46,10 @@ namespace ViMG.Entities
             visStats.rollFollowsVelocity = true;
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+            buffManager = new BuffManager(this);
 
             ai = new AIWalkerShooter<StoneBeetle>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, maxHealth, batchStats, stats, visStats);
+                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, batchStats, stats, visStats);
             ai.ShootSpeed = Cube.CUBE_SCALE * 8;
             ai.MoveTowardsTargetDistance = Cube.CUBE_SCALE * 5f;
             ai.AttackTargetDistance = Cube.CUBE_SCALE * 5f;
@@ -109,7 +112,22 @@ namespace ViMG.Entities
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-            DrawHelper3D.DrawHealthbar(device, ai.GetHealth(), maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+            DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+        }
+
+        public Stats GetStats()
+        {
+            return new Stats
+            {
+                HP = ai.Health,
+                MaximumHP = ai.MaxHealth,
+            };
+        }
+
+        public void SetStats(Stats stats)
+        {
+            ai.Health = stats.HP;
+            ai.MaxHealth = stats.MaximumHP;
         }
     }
 }

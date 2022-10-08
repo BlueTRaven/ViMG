@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
 	//Walks towards, then shoots at, the player.
-    public class AIWalkerShooter<T> : IHitboxOwner where T : Entity
+    public class AIWalkerShooter<T> : IHitboxOwner where T : Entity, IHasStats
     {
         public enum State
         {
@@ -23,6 +24,7 @@ namespace ViMG.Entities
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
         private readonly NoticeHandler<Player> noticeHandler;
+		private readonly BuffManager buffManager;
         private readonly World world;
         private readonly T entity;
 		private readonly bool projectileBatch;
@@ -44,8 +46,8 @@ namespace ViMG.Entities
 		private bool onGround;
 		private bool shouldJump;
 
-		private int health;
-		private int maxHealth;
+		public int Health;
+		public int MaxHealth;
 
 		public float AttackStunTime = 1.65f;	//the amount of time the shooter waits in the attacking state after attacking before returning to the normal state
 		public float AttackCooldownTime = 2f;	//the amount of time before the shooter can enter the attacking state again
@@ -63,16 +65,17 @@ namespace ViMG.Entities
 		private Rectangle3D bounds;
 		private int hitbox = -1;
 
-		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, int maxHealth, 
+		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
 			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
         {
             this.noticeHandler = noticeHandler;
+            this.buffManager = buffManager;
             this.world = world;
             this.entity = entity;
 
-			this.health = maxHealth;
-			this.maxHealth = maxHealth;
+			this.Health = maxHealth;
+			this.MaxHealth = maxHealth;
 
             this.shotProjectileStats = shotProjectileStats;
             this.shotProjectileVisStats = shotProjectileVisStats;
@@ -81,17 +84,18 @@ namespace ViMG.Entities
 			this.bounds = hitboxBounds;
         }
 
-		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, int maxHealth,
+		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
 			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
 			ProjectileManager.ProjectileStats shotProjectileStats,
 			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
 		{
 			this.noticeHandler = noticeHandler;
-			this.world = world;
+            this.buffManager = buffManager;
+            this.world = world;
 			this.entity = entity;
 
-			this.health = maxHealth;
-			this.maxHealth = maxHealth;
+			this.Health = maxHealth;
+			this.MaxHealth = maxHealth;
 
 			projectileBatch = true;
 			this.shotProjectileBatchStats = shotProjectileBatchStats;
@@ -115,6 +119,7 @@ namespace ViMG.Entities
 			Velocity.Y += World.GRAVITY;
 
 			noticeHandler.Update(deltaTime);
+			buffManager.Update(deltaTime);
 
 			isInRangeOfTarget = false;
 
@@ -365,16 +370,18 @@ namespace ViMG.Entities
 
 					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
 
-					health -= other.damage;
+					Health -= other.damage;
 
-					if (health <= 0)
+					if (Health <= 0)
 					{
-						health = 0;
+						Health = 0;
 						world.EntityManager.Remove(entity);
 
 						if (hitbox != -1)
 							world.HitboxManager.Remove(hitbox);
 					}
+
+					buffManager.AddBuffs(other.applyBuffs);
 
 					InvulnTimer = 0.25f;
 					attackTimer = 0;    //immediately attempt to attack?
@@ -387,11 +394,6 @@ namespace ViMG.Entities
 		public State GetState()
         {
 			return state;
-        }
-
-		public int GetHealth()
-        {
-			return health;
         }
 	}
 }
