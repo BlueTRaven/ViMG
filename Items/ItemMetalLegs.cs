@@ -16,7 +16,8 @@ namespace ViMG.Items
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 96, 16, 16))
+        public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material, 
+            Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 80, 16, 16))
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;

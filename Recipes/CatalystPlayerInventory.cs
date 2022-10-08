@@ -56,7 +56,7 @@ namespace ViMG.Recipes
 		{
 			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 1, 1) }, 
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("arrow_stone"), 4, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), 4, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] 

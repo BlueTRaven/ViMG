@@ -273,6 +273,11 @@ namespace ViMG
 					world.EntityManager.Add(ent);
 				}
 			}
+		}
+
+        public override void OnUnload()
+        {
+            base.OnUnload();
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);

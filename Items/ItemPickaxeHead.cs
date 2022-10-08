@@ -31,7 +31,8 @@ namespace ViMG.Items
 		private PickaxeStats stats;
 		private string materialName;
 
-		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 32, 16, 16))
+		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material, 
+			Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 144, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 

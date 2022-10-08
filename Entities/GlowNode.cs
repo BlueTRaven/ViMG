@@ -67,9 +67,9 @@ namespace ViMG.Entities
 			}
 		}
 
-		public override void OnDelete()
+		public override void OnUnload()
 		{
-			base.OnDelete();
+			base.OnUnload();
 
 			if (light != -1)
 				world.LightManager.Remove(light);

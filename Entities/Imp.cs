@@ -79,11 +79,11 @@ namespace ViMG.Entities
 			float p0 = (alive % 0.65f) / 0.65f;
 			float p1 = ((alive + 0.3f) % 0.45f) / 0.45f;
 			float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 1.25f;
-			float s1 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 1.25f;
+			float s1 = MathF.Sin(MathF.PI * 2 * p1) * Cube.CUBE_SCALE * 1.25f;
 
 			if (light == -1)
-				light = world.LightManager.Add(Position, Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);
-			else world.LightManager.Update(light, Position, Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);
+				light = world.LightManager.Add(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);
+			else world.LightManager.Update(light, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -219,9 +219,9 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-        public override void OnDelete()
-        {
-            base.OnDelete();
+		public override void OnUnload()
+		{
+			base.OnUnload();
 
 			if (light != -1)
 				world.LightManager.Remove(light);

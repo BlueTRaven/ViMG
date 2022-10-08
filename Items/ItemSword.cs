@@ -9,7 +9,7 @@ namespace ViMG.Items
 {
 	public class ItemSword : ItemMetaItem<ItemSwordBlade>
 	{
-		public ItemSword() : base("sword", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 48, 16, 16))
+		public ItemSword() : base("sword", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 128, 16, 16))
 		{
 		}
 

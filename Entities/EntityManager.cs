@@ -192,6 +192,7 @@ namespace ViMG.Entities
 			if (iterating)
 				throw new Exception("Cannot remove entity while iterating");
 
+			entity.OnUnload();
 			entities.Remove(entity);
 
 			if (entitiesByType.ContainsKey(entity.GetType()))

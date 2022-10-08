@@ -204,6 +204,11 @@ namespace ViMG.Entities
 				{
 					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f);
 				}
+                else
+                {
+					if (world.HitboxManager.Get(projectiles[i].hitbox).owner != projectiles[i].owner)
+						throw new Exception("???????");
+				}
 
 				if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
                 {

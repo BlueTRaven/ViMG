@@ -40,10 +40,17 @@ namespace ViMG.Entities
 
 		}
 
+		//Called when an enemy is killed by normal means; I.e. the player has dealt enough damage to it.
 		public virtual void OnDelete()
 		{
 			Dead = true;
 		}
+
+		//Called in all cases when an enemy is removed, including when it is unloaded.
+		public virtual void OnUnload()
+        {
+
+        }
 
 		public virtual void Draw(GraphicsDevice device, Effect effect)
 		{

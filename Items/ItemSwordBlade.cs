@@ -13,7 +13,8 @@ namespace ViMG.Items
 		private readonly AttackStats stats;
 		private readonly string materialName;
 
-		public ItemSwordBlade(string material, Color color, AttackStats stats) : base("sword_blade_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 48, 16, 16))
+		public ItemSwordBlade(string material, Color color, AttackStats stats) : base("sword_blade_" + material, 
+			Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 128, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 

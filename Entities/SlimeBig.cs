@@ -49,11 +49,11 @@ namespace ViMG.Entities
 			UpdateCollision();
         }
 
-        public override void OnDelete()
-        {
-            base.OnDelete();
+		public override void OnUnload()
+		{
+			base.OnUnload();
 
-			ai.OnDelete();
+			ai.OnUnload();
         }
 
         private Vector2[] offsetsDown = new Vector2[4]

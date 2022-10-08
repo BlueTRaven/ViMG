@@ -62,17 +62,22 @@ namespace ViMG.Entities
 			health = maxHealth;
 		}
 
-		public override void OnDelete()
+        public override void OnDelete()
+        {
+            base.OnDelete();
+
+			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
+			ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+				Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
+			world.EntityManager.Add(ent);
+		}
+
+        public override void OnUnload()
 		{
-			base.OnDelete();
+			base.OnUnload();
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
-
-			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
-			ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f, 
-				Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
-			world.EntityManager.Add(ent);
 		}
 
 		public override void Update(double deltaTime)

@@ -9,7 +9,7 @@ namespace ViMG.Items
 {
 	public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>
 	{
-		public ItemPickaxe() : base("pickaxe", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 32, 16, 16))
+		public ItemPickaxe() : base("pickaxe", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 144, 16, 16))
 		{
 		}
 

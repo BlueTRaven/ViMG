@@ -82,6 +82,8 @@ namespace ViMG.Items
 			Register(new ItemImpEyeball());
 			Register(new ItemStonelily());
 			Register(new ItemLeatherGloves());
+			Register(new ItemMusketBall());
+			Register(new ItemMatchlock());
 			RegisterItemCubes();
 		}
 

@@ -47,7 +47,7 @@ namespace ViMG.Entities
             }
 
             if (hitbox == -1)
-                hitbox = world.HitboxManager.Add(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 4f), new Vector3(Cube.CUBE_SCALE / 2f)), 
+                hitbox = world.HitboxManager.Add(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 4f), new Vector3(Cube.CUBE_SCALE / 2f)).Offset(Position), 
                     Vector3.Up, HitboxManager.Group.NEUTRAL_DEAL, 1, 0);
 
             //timer -= (float)deltaTime;
@@ -93,6 +93,11 @@ namespace ViMG.Entities
         public void TrackingCubeDestroyed(World world, ChunkManager cm)
         {
             world.EntityManager.Remove(this);
+        }
+
+        public override void OnUnload()
+        {
+            base.OnUnload();
 
             if (light != -1)
             {
