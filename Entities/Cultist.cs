@@ -43,8 +43,8 @@ namespace ViMG.Entities
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-			ai = new AIWalkerShooter<Cultist>(world, this, new Rectangle3D(new Vector3(Cube.CUBE_SCALE * 0.35f, Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, maxHealth, stats, visStats);
+			ai = new AIWalkerShooter<Cultist>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, maxHealth, stats, visStats);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
 

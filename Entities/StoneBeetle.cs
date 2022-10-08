@@ -38,14 +38,14 @@ namespace ViMG.Entities
             ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(5, new Vector2(-180, 180), new Vector2(-15, 65));
 
             ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
-                HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, Cube.CUBE_SCALE / 5, Cube.CUBE_SCALE, true, 0.5f, true); 
+                HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, true, 0.5f, true); 
             ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
                 new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
             visStats.rollFollowsVelocity = true;
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-            ai = new AIWalkerShooter<StoneBeetle>(world, this, new Rectangle3D(new Vector3(Cube.CUBE_SCALE * 0.35f, Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 0.35f),
+            ai = new AIWalkerShooter<StoneBeetle>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
                 new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, maxHealth, batchStats, stats, visStats);
             ai.ShootSpeed = Cube.CUBE_SCALE * 8;
             ai.MoveTowardsTargetDistance = Cube.CUBE_SCALE * 5f;

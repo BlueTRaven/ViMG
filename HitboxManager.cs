@@ -1,8 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Cubes;
 using ViMG.Entities;
 
 namespace ViMG
@@ -167,9 +169,31 @@ namespace ViMG
 			return hitboxes;
 		}
 
+		private static (VertexBuffer VBO, IndexBuffer IBO) debugMesh;
+
 		public void DrawDebug(GraphicsDevice device)
         {
+			if (debugMesh.VBO == null)
+            {
+				List<VertexCube> vertices = new List<VertexCube>();
+				List<int> indices = new List<int>();
+				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, Vector3.One, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
+ 				debugMesh = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+            }
 
+			for (int i = 0; i < hitboxes.Length; i++)
+            {
+				if (hitboxes[i].active)
+                {
+					float distance = (hitboxes[i].bounds.Position - Main.camera.Position).Length();
+					Matrix transform = Matrix.CreateScale(hitboxes[i].bounds.Size) *
+						Matrix.CreateTranslation(hitboxes[i].bounds.Position);
+
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(distance, transform, DrawHelper.WhitePixel, DrawHelper.WhitePixel,
+						debugMesh.VBO, debugMesh.IBO,
+						tintColor: Color.Red * 0.5f));
+                }
+            }
         }
 	}
 }

@@ -698,6 +698,8 @@ namespace ViMG
 					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
 					Matrix.CreateTranslation(player.Position), null));
 
+				if (Main.Debug)
+					HitboxManager.DrawDebug(device);
 				/*Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
 				Main.FogManager.Disable();
 

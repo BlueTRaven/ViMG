@@ -81,10 +81,10 @@ namespace ViMG.Entities
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-			touchBounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, Cube.CUBE_SCALE * 0.50f, Cube.CUBE_SCALE * 0.35f),
+			touchBounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f));
 
-			attackBounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 2f), new Vector3(Cube.CUBE_SCALE * 4));
+			attackBounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f));
 		}
 
 		public override void Update(double deltaTime)
@@ -161,7 +161,7 @@ namespace ViMG.Entities
 						{
 							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - Position;
 							if (attackHitbox == -1)
-								attackHitbox = world.HitboxManager.Add(this, attackBounds.Offset(Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE / 2f), 
+								attackHitbox = world.HitboxManager.Add(this, attackBounds.Offset(Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f), 
 									Vector3.Normalize(Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, attackDamage, 1);
 
 							state = State.AttackStun;
@@ -170,12 +170,6 @@ namespace ViMG.Entities
 					}
 					else if (state == State.AttackStun)
 					{
-						if (attackHitbox != -1)
-                        {
-							world.HitboxManager.Remove(attackHitbox);
-							attackHitbox = -1;
-                        }
-
 						isInRangeOfTarget = true;
 
 						Velocity.X *= 0.5f;
@@ -185,6 +179,13 @@ namespace ViMG.Entities
 
 						if (attackTimer <= 0)
 						{
+							//TODO temporary change to show hitbox easier
+							if (attackHitbox != -1)
+							{
+								world.HitboxManager.Remove(attackHitbox);
+								attackHitbox = -1;
+							}
+
 							state = State.Normal;
 							attackTimer = AttackCooldownTime;
 						}

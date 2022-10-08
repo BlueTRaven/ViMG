@@ -47,7 +47,7 @@ namespace ViMG.Entities
             }
 
             if (hitbox == -1)
-                hitbox = world.HitboxManager.Add(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 4f), new Vector3(Cube.CUBE_SCALE / 2f)).Offset(Position), 
+                hitbox = world.HitboxManager.Add(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 4f), new Vector3(Cube.CUBE_SCALE / 2f)).Offset(Position + new Vector3(Cube.CUBE_SCALE / 2f)), 
                     Vector3.Up, HitboxManager.Group.NEUTRAL_DEAL, 1, 0);
 
             //timer -= (float)deltaTime;
