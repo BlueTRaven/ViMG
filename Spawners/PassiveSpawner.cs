@@ -53,33 +53,57 @@ namespace ViMG.Spawners
         {
             if (Main.random.NextDouble() < spawnChance)
             {
-                float radMin = 0;
-                float radMax = MathF.PI * 2;
+                const int MAX_TRIES = 20;
+                int tries = MAX_TRIES;
 
-                if (Main.camera is CameraPerspective camera)
+                while (tries > 0)
                 {
-                    radMin = MathHelper.ToRadians(camera.HalfFOV);
-                    radMax = MathHelper.ToRadians(360f - camera.HalfFOV);
-                }
+                    if (GetRandomPosition(world, out CubePosition position))
+                    {
+                        Chunk spawnChunk = world.GetChunkManager().GetChunk(position);
 
-                Vector3 v = -Main.camera.Forward;
-                v = Vector3.Transform(v,
-                    Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
-                v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
-                v += world.player.Position;
-
-                //TODO clamping to bounds can cause min to no longer be taken into account.
-                v = spawnBounds.Clamp(v);
-
-                var cubeAtPos = world.ChunkManager.GetCube(CubePosition.FromWorldSpace(v)).Get();
-                if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
-                {
-                    CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
-                    Chunk spawnChunk = world.GetChunkManager().GetChunk(pos);
-                    if (spawnChunk != null && CanAreaSpawn(world, world.GetChunkManager(), world.GetChunkManager().GetChunk(pos), pos))
-                        Spawn(world, pos);
+                        if (spawnChunk != null && CanAreaSpawn(world, world.GetChunkManager(), spawnChunk, position))
+                        {
+                            Spawn(world, position);
+                            break;
+                        }
+                    }
+                    tries--;
                 }
             }
+        }
+
+        protected virtual bool GetRandomPosition(World world, out CubePosition position)
+        {
+            float radMin = 0;
+            float radMax = MathF.PI * 2;
+
+            /*if (Main.camera is CameraPerspective camera)
+            {
+                radMin = MathHelper.ToRadians(camera.HalfFOV);
+                radMax = MathHelper.ToRadians(360f - camera.HalfFOV);
+            }*/
+
+            Vector3 v = -Main.camera.Forward;
+            v = Vector3.Transform(v,
+                Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
+            v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
+            v += world.player.Position;
+
+            //TODO clamping to bounds can cause min to no longer be taken into account.
+            v = spawnBounds.Clamp(v);
+
+            var cubeAtPos = world.ChunkManager.GetCube(CubePosition.FromWorldSpace(v)).Get();
+            if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
+            {
+                CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+
+                position = pos;
+                return true;
+            }
+
+            position = new CubePosition();
+            return false;
         }
 
         protected abstract void Spawn(World world, CubePosition position);

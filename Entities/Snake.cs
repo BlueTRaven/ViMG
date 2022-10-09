@@ -54,6 +54,13 @@ namespace ViMG.Entities
 			initializeThroughSnakeFlying = true;
         }
 
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+			ai.OnUnload();
+        }
+
         public override void Initialize(World world)
         {
             base.Initialize(world);

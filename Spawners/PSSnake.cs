@@ -6,14 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using BrUtility;
 
 namespace ViMG.Spawners
 {
-    public class PSCaveSlime : PassiveSpawner
+    public class PSSnake : PassiveSpawner
     {
-        private List<CaveSlime> slimes = new List<CaveSlime>();
+        private List<Snake> snakes = new List<Snake>();
+        private List<SnakeFlying> flyingSnakes = new List<SnakeFlying>();
 
-        public PSCaveSlime(EntityManager entityManager) : base(3f, 1f / 5f,
+        public PSSnake(EntityManager entityManager) : base(3f, 1f / 5f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
@@ -25,14 +27,20 @@ namespace ViMG.Spawners
         //but that assumes we're using the same "load the world all at once" style that we're doing.
         private void OnEntityAdded(Entity entity)
         {
-            if (entity is CaveSlime s)
-                slimes.Add(s);
+            if (entity is Snake s)
+                snakes.Add(s);
+
+            if (entity is SnakeFlying sf)
+                flyingSnakes.Add(sf);
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            if (entity is CaveSlime s)
-                slimes.Remove(s);
+            if (entity is Snake s)
+                snakes.Remove(s);
+
+            if (entity is SnakeFlying sf)
+                flyingSnakes.Remove(sf);
         }
 
         public override bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position)
@@ -57,10 +65,21 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (slimes.Count < 32)
+            if (Main.random.NextCoinFlip() || flyingSnakes.Count >= 32)
             {
-                CaveSlime slime = new CaveSlime(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
-                world.EntityManager.Add(slime);
+                if (snakes.Count < 32)
+                {
+                    Snake snake = new Snake(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
+                    world.EntityManager.Add(snake);
+                }
+            }
+            else
+            {
+                if (flyingSnakes.Count < 32)
+                {
+                    SnakeFlying snake = new SnakeFlying(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
+                    world.EntityManager.Add(snake);
+                }
             }
         }
     }

@@ -48,6 +48,13 @@ namespace ViMG.Entities
 				noticeHandler, buffManager, MaxHealth);
 		}
 
+		public override void OnUnload()
+		{
+			base.OnUnload();
+
+			aiFlying.OnUnload();
+		}
+
 		public override void Update(double deltaTime)
 		{
 			base.Update(deltaTime);

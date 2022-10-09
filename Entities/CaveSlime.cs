@@ -20,7 +20,7 @@ namespace ViMG.Entities
 
 		private bool onGround;
 
-		private Rectangle3D Bounds => new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.35f, Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 0.35f),
+		private Rectangle3D Bounds => new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 			new Vector3(Cube.CUBE_SCALE * 0.70f));
 		private int hitbox = -1;
 

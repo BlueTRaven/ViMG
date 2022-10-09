@@ -63,7 +63,7 @@ namespace ViMG.Entities
 		public bool IsInRangeOfTarget => isInRangeOfTarget;
 
 		private Rectangle3D bounds;
-		private int hitbox = -1;
+		private int touchHitbox = -1;
 
 		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
@@ -106,13 +106,19 @@ namespace ViMG.Entities
 			this.bounds = hitboxBounds;
 		}
 
+		public void OnUnload()
+		{
+			if (touchHitbox != -1)
+				entity.world.HitboxManager.Remove(touchHitbox);
+		}
+
 		public void Update(double deltaTime)
 		{
 			InvulnTimer -= (float)deltaTime;
 
-			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, InvulnTimer <= 0);
-			else world.HitboxManager.Update(hitbox, bounds.Offset(entity.Position), InvulnTimer <= 0);
+			if (touchHitbox == -1)
+				touchHitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, InvulnTimer <= 0);
+			else world.HitboxManager.Update(touchHitbox, bounds.Offset(entity.Position), InvulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -377,8 +383,8 @@ namespace ViMG.Entities
 						Health = 0;
 						world.EntityManager.Remove(entity);
 
-						if (hitbox != -1)
-							world.HitboxManager.Remove(hitbox);
+						if (touchHitbox != -1)
+							world.HitboxManager.Remove(touchHitbox);
 					}
 
 					buffManager.AddBuffs(other.applyBuffs);

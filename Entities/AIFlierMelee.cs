@@ -65,6 +65,15 @@ namespace ViMG.Entities
 			this.MaxHealth = maxHealth;
 		}
 
+		public void OnUnload()
+        {
+			if (touchHitbox != -1)
+				entity.world.HitboxManager.Remove(touchHitbox);
+
+			if (attackHitbox != -1)
+				entity.world.HitboxManager.Remove(attackHitbox);
+        }
+
 		public void Update(double deltaTime)
 		{
 			InvulnTimer -= (float)deltaTime;

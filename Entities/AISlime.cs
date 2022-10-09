@@ -18,7 +18,7 @@ namespace ViMG.Entities
 		public Vector3 Velocity;
 		private Vector3 maxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
         private Rectangle3D bounds;
-		private int hitbox = -1;
+		private int touchHitbox = -1;
 
 		private float invulnTimer;
 		private float despawnTimer;
@@ -58,9 +58,9 @@ namespace ViMG.Entities
 		{
 			alive += (float)deltaTime;
 
-			if (hitbox == -1)
-				hitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
-			else world.HitboxManager.Update(hitbox, bounds.Offset(entity.Position), invulnTimer <= 0);
+			if (touchHitbox == -1)
+				touchHitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
+			else world.HitboxManager.Update(touchHitbox, bounds.Offset(entity.Position), invulnTimer <= 0);
 
 			Vector3 actualMaxVel = maxVelocity;
 
@@ -168,8 +168,8 @@ namespace ViMG.Entities
 
 		public void OnUnload()
         {
-			if (hitbox != -1)
-				world.HitboxManager.Remove(hitbox);
+			if (touchHitbox != -1)
+				world.HitboxManager.Remove(touchHitbox);
         }
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

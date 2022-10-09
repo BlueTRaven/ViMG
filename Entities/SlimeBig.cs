@@ -39,7 +39,7 @@ namespace ViMG.Entities
 				new Vector3(Cube.CUBE_SCALE * 2)), 16);
 		}
 
-        public override void Update(double deltaTime)
+		public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
