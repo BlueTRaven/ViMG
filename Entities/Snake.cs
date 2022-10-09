@@ -21,6 +21,8 @@ namespace ViMG.Entities
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
+		private bool initializeThroughSnakeFlying;
+
 		private float alive;
 
 		public Snake()
@@ -33,18 +35,41 @@ namespace ViMG.Entities
 			this.Position = position;
         }
 
+		public Snake(SnakeFlying snakeFlying, BuffManager buffManager, NoticeHandler<Player> noticeHandler)
+        {
+			this.Position = snakeFlying.Position;
+
+			this.buffManager = buffManager;
+			this.noticeHandler = noticeHandler;
+
+			ai = new AIWalkerMelee<Snake>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+					new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
+					new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
+					noticeHandler,
+					buffManager,
+					snakeFlying.GetStats().MaximumHP);
+
+			ai.Health = snakeFlying.GetStats().HP;
+
+			initializeThroughSnakeFlying = true;
+        }
+
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
-			buffManager = new BuffManager(this);
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
-			ai = new AIWalkerMelee<Snake>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
-				new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
-				noticeHandler,
-				buffManager,
-				12);
+			if (!initializeThroughSnakeFlying)
+			{
+				buffManager = new BuffManager(this);
+				noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+
+				ai = new AIWalkerMelee<Snake>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+					new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
+					new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
+					noticeHandler,
+					buffManager,
+					12);
+			}
 		}
 
 		public override void Update(double deltaTime)

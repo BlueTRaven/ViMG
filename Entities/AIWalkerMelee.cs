@@ -23,7 +23,6 @@ namespace ViMG.Entities
 		public Vector3 Velocity;
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-		private readonly World world;
 		private readonly T entity;
 		private float idleTimer;
 		private float idleMoveTimer;
@@ -69,11 +68,10 @@ namespace ViMG.Entities
 		private Rectangle3D attackHitboxBounds;
 		private int attackHitbox = -1;
 
-		public AIWalkerMelee(World world, T entity, Rectangle3D touchHitboxBounds, Rectangle3D attackHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
+		public AIWalkerMelee(T entity, Rectangle3D touchHitboxBounds, Rectangle3D attackHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
 		{
 			this.noticeHandler = noticeHandler;
 			this.buffManager = buffManager;
-			this.world = world;
 			this.entity = entity;
 
 			this.Health = maxHealth;
@@ -88,8 +86,8 @@ namespace ViMG.Entities
 			InvulnTimer -= (float)deltaTime;
 
 			if (touchHitbox == -1)
-				touchHitbox = world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
-			else world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
+				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
+			else entity.world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -159,7 +157,7 @@ namespace ViMG.Entities
 						{
 							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
 							if (attackHitbox == -1)
-								attackHitbox = world.HitboxManager.Add(this, attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
+								attackHitbox = entity.world.HitboxManager.Add(this, attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
 									Vector3.Normalize(Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, AttackDamage, 1);
 
 							state = State.AttackStun;
@@ -174,7 +172,7 @@ namespace ViMG.Entities
                         {
 							if (attackHitbox != -1)
                             {
-								world.HitboxManager.Remove(attackHitbox);
+								entity.world.HitboxManager.Remove(attackHitbox);
 								attackHitbox = -1;
                             }
                         }
@@ -259,8 +257,8 @@ namespace ViMG.Entities
 			shouldJump = false;
 			UpdateCollision();
 
-			if ((world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(entity);
+			if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+				entity.world.EntityManager.Remove(entity);
 		}
 
 		private void UpdateCollision()
@@ -275,8 +273,8 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (world.GetChunkManager().IsInWorldBounds(pos) &&
-							world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						if (entity.world.GetChunkManager().IsInWorldBounds(pos) &&
+							entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -308,10 +306,10 @@ namespace ViMG.Entities
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
-					var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
+					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 						(Vector3 pos) =>
 						{
-							Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							Cube cube = entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 							return cube.Collision != Cube.CollisionValue.None;
 						});
@@ -323,7 +321,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			foreach (T otherEntity in world.EntityManager.GetAll<T>())
+			foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
 			{
 				if (otherEntity != entity)
 				{
@@ -354,10 +352,10 @@ namespace ViMG.Entities
 					if (Health <= 0)
 					{
 						Health = 0;
-						world.EntityManager.Remove(entity);
+						entity.world.EntityManager.Remove(entity);
 
 						if (touchHitbox != -1)
-							world.HitboxManager.Remove(touchHitbox);
+							entity.world.HitboxManager.Remove(touchHitbox);
 					}
 
 					shouldJumpLockTimer = 1f;
