@@ -41,6 +41,7 @@ namespace ViMG.Entities
 
 		private bool onGround;
 		private bool shouldJump;
+		private float shouldJumpLockTimer;	//Sometimes we want to prevent the entity from jumping again.
 
 		public int TouchDamage = 2;
 		public int AttackDamage = 4;
@@ -101,6 +102,8 @@ namespace ViMG.Entities
 
 			if (InvulnTimer <= 0 && onGround)
 			{
+				shouldJumpLockTimer -= (float)deltaTime;
+
 				if (shouldJump)
 				{
 					Velocity.Y = Cube.CUBE_SCALE * 10;
@@ -301,7 +304,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0)
+			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer > 0)
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
@@ -357,6 +360,7 @@ namespace ViMG.Entities
 							world.HitboxManager.Remove(touchHitbox);
 					}
 
+					shouldJumpLockTimer = 1f;
 					buffManager.AddBuffs(other.applyBuffs);
 
 					InvulnTimer = 0.25f;

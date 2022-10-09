@@ -846,7 +846,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new Snake(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				world.EntityManager.Add(new SnakeFlying(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
 			}
 		}
 
