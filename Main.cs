@@ -62,7 +62,8 @@ namespace ViMG
 
 		public static bool Debug = true;
 		public static bool DebugChunks;
-		
+		public static string DEBUGPopupText = "";
+
 		public static WorldViewProjection WVP;
 		public static FogManager FogManager;
 		public static SessionInformation SessionInformation;
@@ -290,6 +291,8 @@ namespace ViMG
 
 		private void FixedUpdate(double deltaTime)
 		{
+			DEBUGPopupText = "";
+
 			inputManager.Update(new GameTime());
 
 			if (inputManager.JustPressed(Keys.P))
@@ -386,6 +389,10 @@ namespace ViMG
 				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered, 
 					Color.White, new Rectangle(0, (int)font.LineSpacing, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+
+				TextHelper.DrawText(batch, font, DEBUGPopupText,
+					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.Center, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 			}
 
 
