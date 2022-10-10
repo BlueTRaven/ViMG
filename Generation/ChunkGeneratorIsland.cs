@@ -446,6 +446,21 @@ namespace ViMG.Generation
 				return false;
 
 			//TODO replace structure_replace_00 with chest; 01 with bodies? skeletons? Something I haven't made yet. For now, air
+
+			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
+			{
+				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
+				world.EntityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+
+				return true;
+			}
+
+			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
+			{
+				id = 0;
+				return true;
+			}
+
 			return true;
         }
 

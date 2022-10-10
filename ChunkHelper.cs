@@ -134,25 +134,28 @@ namespace ViMG
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-						bool canWrite = true;
-						ushort placeId = structure.data[i];
-						if (shouldWrite != null && !shouldWrite(world, manager, realPos, structure, i, ref placeId))
-							canWrite = false;
-
-						//Allow world cube to be overwritten by structure
-						if (!overwriteWorldBlacklist.IsEmpty)
+						if (manager.IsInWorldBounds(realPos))
 						{
-							int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+							bool canWrite = true;
+							ushort placeId = structure.data[i];
+							if (shouldWrite != null && !shouldWrite(world, manager, realPos, structure, i, ref placeId))
+								canWrite = false;
 
-							for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
+							//Allow world cube to be overwritten by structure
+							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								if (overwriteWorldBlacklist[j] == overwritingId)
-									canWrite = false;
-							}
-						}
+								int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
-						if (canWrite)
-							ChunkHelper.SetCubeOrAdjacent(manager, realBaseChunk, realPos, placeId);
+								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
+								{
+									if (overwriteWorldBlacklist[j] == overwritingId)
+										canWrite = false;
+								}
+							}
+
+							if (canWrite)
+								ChunkHelper.SetCubeOrAdjacent(manager, realBaseChunk, realPos, placeId);
+						}
 					}
 				}
 			}
