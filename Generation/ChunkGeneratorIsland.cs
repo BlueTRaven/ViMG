@@ -66,6 +66,7 @@ namespace ViMG.Generation
 		private Structure obelisk;
 		private Structure house;
 		private Structure geode;
+		private Structure dungeon;
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
@@ -127,6 +128,7 @@ namespace ViMG.Generation
 			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
 			house = Main.assetsManager.GetAsset<Structure>("house");
 			geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
+			dungeon = Main.assetsManager.GetAsset<Structure>("dungeon");
 		}
 
 		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
@@ -347,6 +349,36 @@ namespace ViMG.Generation
 				}
 			}
 
+			const int NUM_DUNGEONS = 300;
+			spawnNum = NUM_DUNGEONS;
+			lastChunk = 0;
+
+			chunks = stackalloc ChunkPosition[NUM_DUNGEONS];
+
+			while (spawnNum > 0)
+			{
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
+					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				{
+					ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+
+					for (int i = 0; i < lastChunk; i++)
+					{
+						if (chunkPos == chunks[i])
+							continue;
+					}
+
+					ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
+											Span<ushort>.Empty, PlaceDungeon);
+
+					chunks[lastChunk++] = chunkPos;
+
+					spawnNum--;
+				}
+			}
+
 			while (true)
 			{
 				Vector2 offset = GetRandom().NextAngle() * (holeRadius + 16);
@@ -380,7 +412,7 @@ namespace ViMG.Generation
 			}
 		}
 
-		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, ref ushort id) 
+		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
 		{
 			if (id == 0)
 				return false;
@@ -403,6 +435,19 @@ namespace ViMG.Generation
 
 			return true;
 		}
+
+		private bool PlaceDungeon(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+        {
+			Util.OneDToThreeD(structureIndex, new ValuePoint3D(structure.size), out ValuePoint3D structurePosition);
+
+			//Get rid of air padding
+			if (structurePosition.x == 0 || structurePosition.x == structure.size.X - 1 ||
+				structurePosition.z == 0 || structurePosition.z == structure.size.Z - 1)
+				return false;
+
+			//TODO replace structure_replace_00 with chest; 01 with bodies? skeletons? Something I haven't made yet. For now, air
+			return true;
+        }
 
 		private int[,] GenerateHeight(Chunk chunk)
 		{

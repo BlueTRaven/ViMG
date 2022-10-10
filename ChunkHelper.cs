@@ -115,7 +115,7 @@ namespace ViMG
 			}
 		}
 
-		public delegate bool ShouldWriteFn(World world, ChunkManager chunkManager, CubePosition position, ref ushort id);
+		public delegate bool ShouldWriteFn(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
 		public static void PlaceStructureWithBlacklist(World world, ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite)
@@ -136,7 +136,7 @@ namespace ViMG
 
 						bool canWrite = true;
 						ushort placeId = structure.data[i];
-						if (shouldWrite != null && !shouldWrite(world, manager, realPos, ref placeId))
+						if (shouldWrite != null && !shouldWrite(world, manager, realPos, structure, i, ref placeId))
 							canWrite = false;
 
 						//Allow world cube to be overwritten by structure

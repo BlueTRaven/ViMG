@@ -137,6 +137,9 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/PrimitiveUvSphere.obj
 
+#begin Structures/dungeon.struct
+/copy:Structures/dungeon.struct
+
 #begin Structures/house.struct
 /copy:Structures/house.struct
 

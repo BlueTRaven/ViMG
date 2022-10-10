@@ -1368,9 +1368,19 @@ namespace ViMG
 					((other.group & HitboxManager.Group.ENEMYHOSTILE_DEAL) == HitboxManager.Group.ENEMYHOSTILE_DEAL || 
 					other.group == HitboxManager.Group.NEUTRAL_DEAL))
 				{
-					Vector3 direction = Vector3.Normalize(Bounds.Center - other.bounds.Center);
-
-					Velocity = new Vector3(direction.X * 6.4f, 6.4f, direction.Z * 6.4f);
+					if (other.direction.Length() > 0)
+					{
+						Velocity = Vector3.Normalize(other.direction) * other.knockback;
+						if (Velocity.Y < -Cube.CUBE_SCALE)
+							Velocity.Y = -Cube.CUBE_SCALE;
+					}
+                    else
+                    {
+						Vector3 direction = Vector3.Normalize(other.bounds.Center - Position);
+						Velocity = direction * other.knockback;
+						if (Velocity.Y < -Cube.CUBE_SCALE)
+							Velocity.Y = -Cube.CUBE_SCALE;
+					}
 
 					state = State.Hurt;
 
