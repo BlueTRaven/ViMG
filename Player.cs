@@ -44,13 +44,14 @@ namespace ViMG
 			public int DefenseFlat;		//flat defense increase. Applied AFTER, unmodified by scale.
 			public float KnockbackResist;
 			public float Speed;         //Adds to xz max velocity
+            public float RunSpeed;
 			public float Acceleration;  //Adds to xz accel
 			public float JumpSpeed;
 			public int JumpNum;
 			public float InvulnTime;
 			public float UseSpeed;
 
-			public static AccumulatedStats operator +(AccumulatedStats a, AccumulatedStats b)
+            public static AccumulatedStats operator +(AccumulatedStats a, AccumulatedStats b)
             {
 				var stats = new AccumulatedStats()
 				{
@@ -69,6 +70,7 @@ namespace ViMG
 					MagicSpdScale = a.MagicSpdScale + b.MagicSpdScale,
 					KnockbackResist = a.KnockbackResist + b.KnockbackResist,
 					Speed = a.Speed + b.Speed,
+					RunSpeed = a.RunSpeed + b.RunSpeed,
 					Acceleration = a.Acceleration + b.Acceleration,
 					JumpSpeed = a.JumpSpeed + b.JumpSpeed,
 					JumpNum = a.JumpNum + b.JumpNum,
@@ -100,8 +102,7 @@ namespace ViMG
 		public Vector3 Velocity;
 
 		private float moveSpeed = Cube.CUBE_SCALE * 0.4f;
-		public Vector3 MaxVelocity = new Vector3(3.2f, 17, 3.2f) * Cube.CUBE_SCALE;
-		public Vector3 MaxVelocityRunning = new Vector3(6.4f, 17, 6.4f) * Cube.CUBE_SCALE;
+		public Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
 		public Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
 		public float MaxFallVelocity;
@@ -109,7 +110,8 @@ namespace ViMG
 		private const float FALL_HEIGHT_DAMAGE_START = Cube.CUBE_SCALE * 5;
 		private const float FALL_HEIGHT_FATAL = Cube.CUBE_SCALE * 18;
 
-		public float jumpSpeed = 10f * Cube.CUBE_SCALE;
+		public float JumpSpeed = 10f * Cube.CUBE_SCALE;
+		public bool IsRunning;
 
 		private MouseState currentMS;
 		private MouseState originalMS;
@@ -730,18 +732,20 @@ namespace ViMG
 				Vector3 actualMaxVel = MaxVelocity;
 
 				bool movementPressed = false;
-				bool running = false;
 				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+
+				if (Main.inputManager.JustReleased(Keys.LeftShift))
+					IsRunning = false;
 
 				if (inputLockupTimer <= 0 && !menuPlayer.IsOpened)
 				{
-					if (Main.inputManager.IsHeld(Keys.LeftShift))
-						running = true;
+					if (onGround && Main.inputManager.IsHeld(Keys.LeftShift))
+						IsRunning = true;
 
-					if (running)
-						actualMaxVel = MaxVelocityRunning;
+					if (IsRunning)
+						actualMaxVel *= 1 + stats.RunSpeed;
 
-					actualMaxVel += new Vector3(stats.Speed, 0, stats.Speed);
+					actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
 
 					float actualAcceleration = moveSpeed + stats.Acceleration;
 
@@ -767,7 +771,7 @@ namespace ViMG
 					}
 					if (onGround && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = jumpSpeed + stats.JumpSpeed;
+						Velocity.Y = JumpSpeed + stats.JumpSpeed;
 						onGround = false;
 					}
 
