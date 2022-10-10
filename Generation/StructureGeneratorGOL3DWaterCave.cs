@@ -164,7 +164,7 @@ namespace ViMG.Generation
                         int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
                         if (overwritingId == stone.Id || (overwritingId == 0 && structure.data[i] == water.Id && placeWater))
-                            ChunkGenerator.SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
+                            ChunkHelper.SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
                     }
                 }
             }
@@ -173,7 +173,7 @@ namespace ViMG.Generation
             {
                 foreach (CubePosition actualPos in actualFills)
                 {
-                    ChunkGenerator.SetCubeOrAdjacent(manager, baseChunk, actualPos, water.Id);
+                    ChunkHelper.SetCubeOrAdjacent(manager, baseChunk, actualPos, water.Id);
                     //manager.GetChunk(actualPos).GetData().SetCube(actualPos, water.Id);
                 }
             }

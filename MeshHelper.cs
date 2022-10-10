@@ -89,6 +89,24 @@ namespace ViMG
 			ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK
 		}
 
+		public static CubeFace RandomHorizontalFace(this Random random)
+        {
+			int val = random.Next(0, 4);
+
+			switch (val)
+            {
+				case 0:
+					return CubeFace.LEFT;
+				case 1:
+					return CubeFace.FRONT;
+				case 2:
+					return CubeFace.RIGHT;
+				case 3:
+					return CubeFace.BACK;
+				default: return CubeFace.NONE;
+            }
+        }
+
 		public static SimpleMesh<VertexCube, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
 		{
 			List<VertexCube> vertices = new List<VertexCube>();

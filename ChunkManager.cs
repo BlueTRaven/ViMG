@@ -86,8 +86,8 @@ namespace ViMG
 
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
-
-		private ChunkGenerator generator;
+        public readonly World world;
+        private ChunkGenerator generator;
 		private ChunkMesher mesher;
 
 		private ManagedChunk[] chunks;
@@ -117,8 +117,8 @@ namespace ViMG
 
 			this.sizeInChunks = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
-
-			chunks = new ManagedChunk[sizeInChunks * sizeInChunks * sizeInChunks];
+            this.world = world;
+            chunks = new ManagedChunk[sizeInChunks * sizeInChunks * sizeInChunks];
 
 			for (int i = 0; i < chunks.Length; i++)
 			{

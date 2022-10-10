@@ -198,16 +198,16 @@ namespace ViMG.Generation
 										var posOffset = pos;
 										posOffset.Y += i;
 
-										SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
+										ChunkHelper.SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
 									}
 								}
 								else if (GetRandom().Next(0, 256) == 0)
 								{
-									SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
 								}
 								else if (GetRandom().Next(0, 256) == 0)
 								{
-									SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
 								}
 							}
 						}
@@ -226,7 +226,7 @@ namespace ViMG.Generation
 
 			Vector2 holePos = new Vector2(holeLocationX, holeLocationY);
 
-			PlaceStructureWithBlacklist(manager, null, ellipsoidAtBottomOfHole, 
+			ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, ellipsoidAtBottomOfHole, 
 				new CubePosition(holeLocationX - 32, 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
 				BlacklistAir, Span<ushort>.Empty);
 
@@ -236,7 +236,7 @@ namespace ViMG.Generation
 
 			CubePosition geodePos = new CubePosition((int)(geodeAng.X * geodeDist), 37, (int)(geodeAng.Y * geodeDist));
 
-			PlaceStructureWithBlacklist(manager, null, geode,
+			ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
 				geodePos, BlacklistNone, BlacklistNone);
 
 			//also place a random number of other geodes throughout the world
@@ -247,7 +247,7 @@ namespace ViMG.Generation
 				int x = GetRandom().Next(0, manager.sizeInCubes);
 				int z = GetRandom().Next(0, manager.sizeInCubes);
 
-				PlaceStructureWithBlacklist(manager, null, geode,
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
 					new CubePosition(x, 37, z), BlacklistNone, BlacklistNone);
 			}
 
@@ -257,7 +257,7 @@ namespace ViMG.Generation
 				
 				Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
 
-				PlaceStructureWithBlacklist(manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
 
 			for (int i = 0; i < 216; i++)
@@ -275,7 +275,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
 					GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 
@@ -285,7 +285,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
 					GetRandom().Next(0, ISLAND_TOP - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 
@@ -295,7 +295,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
 					GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 
@@ -305,11 +305,11 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), 
 					GetRandom().Next(0, SEA_FLOOR - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				PlaceStructureWithBlacklist(manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 
-			const int NUM_CAVE_CHESTS = 750;
+			const int NUM_CAVE_CHESTS = 300;
 			int spawnNum = NUM_CAVE_CHESTS;
 			Span<ChunkPosition> chunks = stackalloc ChunkPosition[NUM_CAVE_CHESTS];
 			int lastChunk = 0;
@@ -335,7 +335,10 @@ namespace ViMG.Generation
 						}
 
 						manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
-						manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3));
+
+						int randomFace = GetRandom().Next();
+
+                        manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
 
 						chunks[lastChunk++] = chunkPos;
 
@@ -352,7 +355,7 @@ namespace ViMG.Generation
 
 				if (solidPos.HasValue())
 				{
-					PlaceStructureWithBlacklist(manager, null, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
+					ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
 						Span<ushort>.Empty, BlacklistAir);
 					break;
 				}
@@ -371,68 +374,35 @@ namespace ViMG.Generation
 
 				if (solidPos.HasValue())
 				{
-					PlaceStructureWithBlacklist(manager, null, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
-						Span<ushort>.Empty, BlacklistAir);
+				 	ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
+						Span<ushort>.Empty, PlaceHouse);
 				}
 			}
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="manager"></param>
-		/// <param name="baseChunk"></param>
-		/// <param name="structure"></param>
-		/// <param name="pos"></param>
-		/// <param name="overwriteWorldBlacklist">Structure cubes will not overwrite cubes of this type in the world.</param>
-		/// <param name="dontwriteStructureBlacklist">If the structure encounters a cube of this type when placing, it will not place it.
-		/// For instance, if your structure is padded by air, you might not want to overwrite the world with that.</param>
-        private void PlaceStructureWithBlacklist(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos, 
-			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist)
-        {
-			Chunk realBaseChunk = baseChunk;
+		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, ref ushort id) 
+		{
+			if (id == 0)
+				return false;
 
-			if (baseChunk == null)
-				realBaseChunk = manager.GetChunk(pos);
-
-			for (int x = 0; x < structure.size.X; x++)
+			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
             {
-				for (int y = 0; y < structure.size.Y; y++)
-                {
-					for (int z = 0; z < structure.size.Z; z++)
-                    {
-						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
-						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
+				id = Main.Registry.CubeRegistry.Get("furnace_t1").Id;
+				world.EntityManager.Add(new Entities.EntityFurnace(position, MeshHelper.CubeFace.RIGHT));
 
-						bool canWrite = true;
-						//Allow structure cube to be overwritten (rather, not written) by world.
-						if (!dontwriteStructureBlacklist.IsEmpty)
-                        {
-							for (int j = 0; j < dontwriteStructureBlacklist.Length; j++)
-                            {
-								if (structure.data[i] == dontwriteStructureBlacklist[j])
-									canWrite = false;
-                            }
-                        }
+				return true;
+            }
 
-						//Allow world cube to be overwritten by structure
-						if (!overwriteWorldBlacklist.IsEmpty)
-						{
-							int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
+			{
+				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
+				world.EntityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(), 3, 3, MeshHelper.CubeFace.RIGHT));
 
-							for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
-							{
-								if (overwriteWorldBlacklist[j] == overwritingId)
-									canWrite = false;
-							}
-						}
-
-						if (canWrite)
-							SetCubeOrAdjacent(manager, realBaseChunk, realPos, structure.data[i]);
-					}
-				}
+				return true;
 			}
-        }
+
+			return true;
+		}
 
 		private int[,] GenerateHeight(Chunk chunk)
 		{
@@ -537,6 +507,22 @@ namespace ViMG.Generation
 			}
 
 			return false;
+		}
+
+		private Inventory GenerateHouseLoot()
+        {
+			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
+
+			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_spell_ember"), 1, 1));
+
+			Inventory inventory = new Inventory(9);
+
+			for (int i = 0; i < inventoryItems.Count; i++)
+			{
+				inventory.Set(inventoryItems[i], i);
+			}
+
+			return inventory;
 		}
 
 		private Inventory GenerateGenericLoot()

@@ -48,6 +48,12 @@ namespace ViMG.Cubes
 			Register(new CubeChains());
 			Register(new CubeStoneBrick());
 			Register(new CubeBars());
+			for (int i = 0; i < 16; i++)
+            {
+				int x = i % 8;
+				int y = i / 8;
+				Register(new CubeDebug("structure_replace_" + i.ToString("00"), new RectangleF(x * 16, 976 + y * 16, 16, 16), Color.White, 1));
+            }
 		}
 
         protected override void PostRegistration()
