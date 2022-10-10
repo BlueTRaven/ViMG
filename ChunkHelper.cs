@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 using ViMG.Generation;
 
 namespace ViMG
@@ -160,5 +161,27 @@ namespace ViMG
 				}
 			}
 		}
+
+		public static Cube ChooseShrine(Random random)
+        {
+			int num = random.Next(0, 6);
+
+			switch (num)
+            {
+				case 0:
+					return Main.Registry.CubeRegistry.Get("shrine_shimu");
+				case 1:
+					return Main.Registry.CubeRegistry.Get("shrine_irat");
+				case 2:
+					return Main.Registry.CubeRegistry.Get("shrine_adrath");
+				case 3:
+					return Main.Registry.CubeRegistry.Get("shrine_akkat");
+				case 4:
+					return Main.Registry.CubeRegistry.Get("shrine_gidamu");
+				case 5:
+					return Main.Registry.CubeRegistry.Get("shrine_arat");
+				default: return null;
+			}
+        }
 	}
 }

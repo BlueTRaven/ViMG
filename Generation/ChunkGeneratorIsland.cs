@@ -67,6 +67,7 @@ namespace ViMG.Generation
 		private Structure house;
 		private Structure geode;
 		private Structure dungeon;
+		private Structure[] shrine;
 
 		public ChunkGeneratorIsland(int seed = 1337) : base(seed)
         {
@@ -129,6 +130,11 @@ namespace ViMG.Generation
 			house = Main.assetsManager.GetAsset<Structure>("house");
 			geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
 			dungeon = Main.assetsManager.GetAsset<Structure>("dungeon");
+			shrine = new Structure[2]
+			{
+				Main.assetsManager.GetAsset<Structure>("shrine_new"),
+				Main.assetsManager.GetAsset<Structure>("shrine_old"),
+			};
 		}
 
 		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
@@ -313,8 +319,8 @@ namespace ViMG.Generation
 
 			const int NUM_CAVE_CHESTS = 300;
 			int spawnNum = NUM_CAVE_CHESTS;
-			Span<ChunkPosition> chunks = stackalloc ChunkPosition[NUM_CAVE_CHESTS];
-			int lastChunk = 0;
+			Span<CubePosition> positions = stackalloc CubePosition[NUM_CAVE_CHESTS];
+			int lastPosition = 0;
 
 			while (spawnNum > 0)
             {
@@ -328,32 +334,28 @@ namespace ViMG.Generation
 					if (solidDown.HasValue())
                     {
 						CubePosition actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
-						ChunkPosition chunkPos = ChunkPosition.CubeChunk(actualGenPos);
 
-						for (int i = 0; i < lastChunk; i++)
+						if (CanPlace(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							if (chunkPos == chunks[i])
-								continue;
+							manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
+
+							int randomFace = GetRandom().Next();
+
+							manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+
+							positions[lastPosition++] = actualGenPos;
+
+							spawnNum--;
 						}
-
-						manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
-
-						int randomFace = GetRandom().Next();
-
-                        manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
-
-						chunks[lastChunk++] = chunkPos;
-
-						spawnNum--;
                     }
 				}
 			}
 
 			const int NUM_DUNGEONS = 300;
 			spawnNum = NUM_DUNGEONS;
-			lastChunk = 0;
+			lastPosition = 0;
 
-			chunks = stackalloc ChunkPosition[NUM_DUNGEONS];
+			positions = stackalloc CubePosition[NUM_DUNGEONS];
 
 			while (spawnNum > 0)
 			{
@@ -362,20 +364,56 @@ namespace ViMG.Generation
 
 				if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-
-					for (int i = 0; i < lastChunk; i++)
+					if (CanPlace(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
-						if (chunkPos == chunks[i])
-							continue;
-					}
 
-					ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
+						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
 											Span<ushort>.Empty, PlaceDungeon);
 
-					chunks[lastChunk++] = chunkPos;
+						positions[lastPosition++] = pos;
 
-					spawnNum--;
+						spawnNum--;
+					}
+				}
+			}
+
+			const int NUM_SHRINES = 300;
+			spawnNum = NUM_SHRINES;
+			lastPosition = 0;
+
+			positions = stackalloc CubePosition[NUM_SHRINES];
+
+			while (spawnNum > 0)
+			{
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
+					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				{
+					var solidDown = manager.GetFirstSolidDown(pos);
+
+					if (solidDown.HasValue())
+					{
+						CubePosition actualGenPos;
+
+						int which = GetRandom().Next(0, 3);
+
+						if (which < 2)
+							actualGenPos = solidDown.Get();
+						else
+							actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
+
+						if (CanPlace(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
+						{
+							positions[lastPosition++] = actualGenPos;
+							if (which < 2)
+								ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, shrine[which], actualGenPos,
+									Span<ushort>.Empty, PlaceAltar);
+							else manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false, false);
+						}
+
+						spawnNum--;
+					}
 				}
 			}
 
@@ -410,6 +448,21 @@ namespace ViMG.Generation
 						Span<ushort>.Empty, PlaceHouse);
 				}
 			}
+		}
+
+		private bool CanPlace(Span<CubePosition> alreadyPlacedPositions, int lastPlaced, CubePosition placeAt, float minDistance)
+        {
+			for (int i = 0; i < lastPlaced; i++)
+			{
+				CubePosition pos = alreadyPlacedPositions[i];
+
+				float distance = (pos.InWorldSpace(null) - placeAt.InWorldSpace(null)).Length();
+
+				if (distance < minDistance)
+					return false;
+			}
+
+			return true;
 		}
 
 		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
@@ -463,6 +516,21 @@ namespace ViMG.Generation
 
 			return true;
         }
+
+		private bool PlaceAltar(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+        {
+			if (id == 0)
+				return false;
+
+			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
+			{
+				id = ChunkHelper.ChooseShrine(GetRandom()).Id;
+
+				return true;
+			}
+
+			return true;
+		}
 
 		private int[,] GenerateHeight(Chunk chunk)
 		{

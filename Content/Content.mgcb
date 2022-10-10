@@ -149,6 +149,12 @@
 #begin Structures/obelisk.struct
 /copy:Structures/obelisk.struct
 
+#begin Structures/shrine_new.struct
+/copy:Structures/shrine_new.struct
+
+#begin Structures/shrine_old.struct
+/copy:Structures/shrine_old.struct
+
 #begin Textures/axes.png
 /importer:TextureImporter
 /processor:TextureProcessor

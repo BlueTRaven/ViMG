@@ -451,10 +451,10 @@ namespace ViMG
 			{
 				MinedCube mc = mined.Value;
 
-				Cube cube = mc.chunk.GetData().GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
 				if (mc.chunk != null && mc.chunk.Initialized)
 				{
+					Cube cube = mc.chunk.GetData().GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
 					mc.timer -= (float)deltaTime;
 					if (mc.timer <= 0)
 					{

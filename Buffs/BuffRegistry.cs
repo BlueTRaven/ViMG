@@ -19,6 +19,10 @@ namespace ViMG.Buffs
             Register(new BuffShimuBlessing());
             Register(new BuffIratBlessing());
             Register(new BuffIratVengeance());
+            Register(new BuffAdrathBlessing());
+            Register(new BuffAkkatBlessing());
+            Register(new BuffGidamuBlessing());
+            Register(new BuffAratBlessing());
         }
     }
 }

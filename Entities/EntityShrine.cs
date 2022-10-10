@@ -7,12 +7,14 @@ using ViMG.Buffs;
 
 namespace ViMG.Entities
 {
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntityMeta(0)]
     public class EntityShrine : Entity, ICubeTracker
     {
         public CubePosition TrackedPosition { get; private set; }
-        private readonly Buff buff;
+        private Buff buff;
 
-        private const float COOLDOWN_TIME = 1f;//20f * 60f;  //20 minute cooldown timer
+        private const float COOLDOWN_TIME = 20f * 60f;  //20 minute cooldown timer
         private float cooldownTimer;
         public float CooldownTimer => cooldownTimer;
 
@@ -62,6 +64,31 @@ namespace ViMG.Entities
 
         public void TrackingCubeDestroyed(World world, ChunkManager cm)
         {
+        }
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+
+            SaveHelper.SaveFloat32(saveBytes, cooldownTimer);
+
+            SaveHelper.SaveString(saveBytes, buff.Identifier);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+            int index = 0;
+
+            TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+            Position = TrackedPosition.InWorldSpace(null);
+
+            cooldownTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
+
+            buff = Main.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
         }
     }
 }
