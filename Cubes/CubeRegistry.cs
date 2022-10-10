@@ -54,12 +54,12 @@ namespace ViMG.Cubes
 				int y = i / 8;
 				Register(new CubeDebug("structure_replace_" + i.ToString("00"), new RectangleF(x * 16, 976 + y * 16, 16, 16), Color.White, 1));
             }
-			Register(new CubeShrine("shrine_shimu", new RectangleF(128, 64, 16, 16), "shimu_blessing"));
-			Register(new CubeShrine("shrine_irat", new RectangleF(144, 64, 16, 16), "irat_blessing"));
-			Register(new CubeShrine("shrine_adrath", new RectangleF(160, 64, 16, 16), "test"));
-			Register(new CubeShrine("shrine_akkat", new RectangleF(176, 64, 16, 16), "test"));
-			Register(new CubeShrine("shrine_gidamu", new RectangleF(192, 64, 16, 16), "test"));
-			Register(new CubeShrine("shrine_arat", new RectangleF(208, 64, 16, 16), "test"));
+			Register(new CubeShrine("shrine_shimu", new RectangleF(128, 64, 16, 16), "shimu_blessing", "Shrine to Shimu"));
+			Register(new CubeShrine("shrine_irat", new RectangleF(144, 64, 16, 16), "irat_blessing", "Shrine to Irat"));
+			Register(new CubeShrine("shrine_adrath", new RectangleF(160, 64, 16, 16), "adrath_blessing", "Shrine to Adrath"));
+			Register(new CubeShrine("shrine_akkat", new RectangleF(176, 64, 16, 16), "akkat_blessing", "Shrine to Akkat"));
+			Register(new CubeShrine("shrine_gidamu", new RectangleF(192, 64, 16, 16), "gidamu_blessing", "Shrine to Gidamu"));
+			Register(new CubeShrine("shrine_arat", new RectangleF(208, 64, 16, 16), "arat_blessing", "Shrine to Arat"));
 		}
 
         protected override void PostRegistration()

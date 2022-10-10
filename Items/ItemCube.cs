@@ -16,6 +16,9 @@ namespace ViMG.Items
 			cube.GetSourceRect(Cube.RenderPass.Opaque, null, new CubePosition(), MeshHelper.CubeFace.FRONT))
 		{
 			this.cubeId = cubeId;
+
+			name = Main.Registry.CubeRegistry.Get(cubeId).Name;
+			description = Main.Registry.CubeRegistry.Get(cubeId).Description;
 		}
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)

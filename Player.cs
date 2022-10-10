@@ -40,10 +40,10 @@ namespace ViMG
 			public float RangeSpdScale;
 			public float MagicSpdScale;
 			public float MiningScale;	//TODO implement
-			public float DefenseScale;//% defense increase
+			public float DefenseScale;	//% defense increase
 			public int DefenseFlat;		//flat defense increase. Applied AFTER, unmodified by scale.
 			public float KnockbackResist;
-			public float Speed;			//Adds to xz max velocity
+			public float Speed;         //Adds to xz max velocity
 			public float Acceleration;  //Adds to xz accel
 			public float JumpSpeed;
 			public int JumpNum;
@@ -1492,6 +1492,11 @@ namespace ViMG
 		{
 			return buffManager;
 		}
+
+		public ref AccumulatedStats GetStats()
+        {
+			return ref stats;
+        }
 
 		public override void OnSave(List<byte> saveBytes)
 		{

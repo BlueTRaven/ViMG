@@ -15,9 +15,12 @@ namespace ViMG.Cubes
     {
         private readonly string buff;
 
-        public CubeShrine(string identifier, RectangleF sourceRect, string buff) : base(identifier, sourceRect, Color.White, 999)
+        public CubeShrine(string identifier, RectangleF sourceRect, string buff, string name = "", string description = "") : base(identifier, sourceRect, Color.White, 999)
         {
             this.buff = buff;
+
+            this.Name = name;
+            this.Description = description;
         }
 
         public override void PostChunkGen(ChunkData chunkData, CubePosition position)

@@ -40,6 +40,7 @@ namespace ViMG.Items
 			if (metaItem != null && lookAtResult.hasHit)
 			{
 				itemCooldownTime = metaItem.GetStats().cooldownTime;
+				itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
 
 				var lookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 

@@ -179,6 +179,9 @@ namespace ViMG.Cubes
 			LiquidWater
 		}
 
+		public string Name = "";
+		public string Description = "";
+
 		public ushort Id { get; private set; }
 		public string Identifier { get; private set; }
 		private readonly CubeFacingLayout layout;
