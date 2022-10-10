@@ -453,16 +453,21 @@ namespace ViMG
 
 				Cube cube = mc.chunk.GetData().GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-				mc.timer -= (float)deltaTime;
-				if (mc.timer <= 0)
+				if (mc.chunk != null && mc.chunk.Initialized)
 				{
-					mc.progress--;
-					mc.timer = 2;
-				}
+					mc.timer -= (float)deltaTime;
+					if (mc.timer <= 0)
+					{
+						mc.progress--;
+						mc.timer = 2;
+					}
 
-				if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
+					if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
+						miningRemove.Add(mc.position);
+					else miningUpdate.Add(mc);
+				}
+				else
 					miningRemove.Add(mc.position);
-				else miningUpdate.Add(mc);
 			}
 
 			foreach (var pos in miningRemove)
@@ -627,11 +632,15 @@ namespace ViMG
 			{
 				Matrix transform = ChunkManager.GetTransform(pos);
 
+				Texture2D emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive");
+				if (player.GetBuffManager().HasBuff("emissive_ores"))
+					emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores");
+
 				ChunkMesh mesh = ChunkManager.GetMesh(pos, 0);
 				if (mesh != null && mesh != ChunkMesh.Empty)
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-						DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive"), mesh.VBO, mesh.IBO,
+						DrawHelper.BlackPixel, emissiveTexture, mesh.VBO, mesh.IBO,
 						transform, null));
 				}
 
@@ -645,7 +654,9 @@ namespace ViMG
 					//Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive"), mesh.VBO, mesh.IBO, null, null));
+						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
+						emissiveTexture, 
+						mesh.VBO, mesh.IBO, null, null));
 				}
 
 				NumChunksDrawn++;

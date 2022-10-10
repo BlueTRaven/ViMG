@@ -39,6 +39,7 @@ namespace ViMG
 			public float MeleeSpdScale;
 			public float RangeSpdScale;
 			public float MagicSpdScale;
+			public float MiningScale;	//TODO implement
 			public float DefenseScale;//% defense increase
 			public int DefenseFlat;		//flat defense increase. Applied AFTER, unmodified by scale.
 			public float KnockbackResist;
@@ -1384,7 +1385,9 @@ namespace ViMG
 
 					state = State.Hurt;
 
-					Damage(TakeDamageCalculation(other));
+					int amt = TakeDamageCalculation(other);
+					Damage(amt);
+					buffManager.OnTakeDamage(this, amt, other);
 
 					inputLockupTimer = 0.25f;
 					invulnTimer = INVULN_TIME;

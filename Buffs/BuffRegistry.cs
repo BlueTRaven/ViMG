@@ -12,8 +12,13 @@ namespace ViMG.Buffs
         {
             base.DoRegistration();
 
+            Register(new TestBuff());
             Register(new BuffLeatherGlove());
             Register(new DebuffPoisoned());
+            Register(new BuffEmissiveOres(5f * 60f));
+            Register(new BuffShimuBlessing());
+            Register(new BuffIratBlessing());
+            Register(new BuffIratVengeance());
         }
     }
 }

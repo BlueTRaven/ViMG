@@ -9,7 +9,7 @@ namespace ViMG.Buffs
 {
     public abstract class Buff : IRegisterable
     {
-        public struct BuffInstance
+        public class BuffInstance
         {
             public Buff buff;
 
@@ -17,6 +17,11 @@ namespace ViMG.Buffs
             public float tickInterval;
 
             public bool valid;
+
+            public BuffInstance()
+            {
+                valid = false;
+            }
 
             public BuffInstance(Buff buff, float duration = -1)
             {
@@ -33,6 +38,8 @@ namespace ViMG.Buffs
 
         protected readonly float durationMax;
         protected readonly float tickIntervalMax;
+
+        public HashSet<string> Tags = new HashSet<string>();
 
         public string Identifier { get; private set; }
 
@@ -80,11 +87,16 @@ namespace ViMG.Buffs
 
             if (buffInstance.duration <= 0)
             {
-                buffInstance = new BuffInstance();
+                buffInstance.valid = false;
             }
         }
 
         public virtual void Tick(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        {
+
+        }
+
+        public virtual void OnTakeDamage(Entity entity, IBuffManager buffManager, int damage, HitboxManager.Hitbox hitbox)
         {
 
         }
