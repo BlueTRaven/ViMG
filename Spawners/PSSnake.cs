@@ -15,7 +15,7 @@ namespace ViMG.Spawners
         private List<Snake> snakes = new List<Snake>();
         private List<SnakeFlying> flyingSnakes = new List<SnakeFlying>();
 
-        public PSSnake(EntityManager entityManager) : base(3f, 1f / 5f,
+        public PSSnake(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 3f, 1f / 5f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
@@ -65,9 +65,9 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (Main.random.NextCoinFlip() || flyingSnakes.Count >= 32)
+            if (Main.random.NextCoinFlip() || flyingSnakes.Count >= GetSpawnCap())
             {
-                if (snakes.Count < 32)
+                if (snakes.Count < GetSpawnCap())
                 {
                     Snake snake = new Snake(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
                     world.EntityManager.Add(snake);
@@ -75,7 +75,7 @@ namespace ViMG.Spawners
             }
             else
             {
-                if (flyingSnakes.Count < 32)
+                if (flyingSnakes.Count < GetSpawnCap())
                 {
                     SnakeFlying snake = new SnakeFlying(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
                     world.EntityManager.Add(snake);

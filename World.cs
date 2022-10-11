@@ -55,7 +55,7 @@ namespace ViMG
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
 		public LightManager LightManager;
-		public List<PassiveSpawner> Spawners = new List<PassiveSpawner>();
+		public PassiveSpawnerManager PassiveSpawnerManager;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -111,11 +111,8 @@ namespace ViMG
 			EntityManager = new EntityManager(this);
 			LightManager = new LightManager(device);
 			LightManager.UpdateDatas(Main.CubeLitEffect);
-			Spawners.Add(new PSSlime(EntityManager));
-			Spawners.Add(new PSSKeleton(EntityManager));
-			Spawners.Add(new PSImp(EntityManager));
-			Spawners.Add(new PSCaveSlime(EntityManager));
-			Spawners.Add(new PSSnake(EntityManager));
+
+			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -502,7 +499,7 @@ namespace ViMG
 				}
 			}
 
-			Spawners.ForEach(x => x.Update(deltaTime, this));
+			PassiveSpawnerManager.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 

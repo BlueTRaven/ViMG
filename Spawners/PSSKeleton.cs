@@ -13,7 +13,7 @@ namespace ViMG.Spawners
     {
         private List<Skeleton> skeletons = new List<Skeleton>();
 
-        public PSSKeleton(EntityManager entityManager) : base(0.5f, 1f / 10f,
+        public PSSKeleton(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 0.5f, 1f / 10f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
@@ -54,7 +54,7 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (skeletons.Count < 32)
+            if (skeletons.Count < GetSpawnCap())
             {
                 int minR = 112;
                 int maxR = world.sizeInCubes - 112;

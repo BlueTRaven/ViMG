@@ -55,6 +55,11 @@ namespace ViMG.Buffs
             buffs.ForEach(x => x.buff.OnTakeDamage(entity, this, damage, hitbox));
         }
 
+        public List<Buff.BuffInstance> GetBuffs()
+        {
+            return buffs;
+        }
+
         public void AddBuffs(Buff.BuffInstance[] buffs)
         {
             for (int i = 0; i < buffs.Length; i++)

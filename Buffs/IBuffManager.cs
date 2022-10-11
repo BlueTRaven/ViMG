@@ -11,6 +11,8 @@ namespace ViMG.Buffs
     {
         void OnTakeDamage(Entity entity, int damage, HitboxManager.Hitbox hitbox);
 
+        List<Buff.BuffInstance> GetBuffs();
+
         void AddBuff(Buff.BuffInstance buffInstance);
 
         void AddBuffs(Buff.BuffInstance[] buffs);

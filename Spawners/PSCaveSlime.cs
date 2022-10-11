@@ -13,7 +13,7 @@ namespace ViMG.Spawners
     {
         private List<CaveSlime> slimes = new List<CaveSlime>();
 
-        public PSCaveSlime(EntityManager entityManager) : base(3f, 1f / 5f,
+        public PSCaveSlime(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 3f, 1f / 5f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
@@ -57,7 +57,7 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (slimes.Count < 32)
+            if (slimes.Count < GetSpawnCap())
             {
                 CaveSlime slime = new CaveSlime(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(slime);

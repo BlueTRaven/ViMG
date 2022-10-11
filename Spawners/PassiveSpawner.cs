@@ -15,14 +15,17 @@ namespace ViMG.Spawners
         private readonly Rectangle3D spawnBounds;
         protected readonly float spawnRadiusMin;
         protected readonly float spawnRadiusMax;
+        protected readonly PassiveSpawnerManager manager;
         private readonly float checkTime;
         private float checkTimer;
 
-        public PassiveSpawner(float checkTime, float spawnChance, Rectangle3D spawnBounds, float spawnRadiusMin = Cube.CUBE_SCALE * 16, float spawnRadiusMax = Cube.CUBE_SCALE * 64)
+        public int SpawnCap { get; protected set; } = 32;
+
+        public PassiveSpawner(PassiveSpawnerManager manager, float checkTime, float spawnChance, Rectangle3D spawnBounds, float spawnRadiusMin = Cube.CUBE_SCALE * 16, float spawnRadiusMax = Cube.CUBE_SCALE * 64)
         {
             if (spawnRadiusMin > MathF.Max(MathF.Max(spawnBounds.Size.X, spawnBounds.Size.Y), spawnBounds.Size.Z))
                 throw new Exception("This wouldn't be able to spawn, the min is larger than the size of the rect!");
-
+            this.manager = manager;
             this.checkTime = checkTime;
             this.checkTimer = checkTime;
 
@@ -109,5 +112,10 @@ namespace ViMG.Spawners
         protected abstract void Spawn(World world, CubePosition position);
 
         public abstract bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position);
+
+        public int GetSpawnCap()
+        {
+            return (int)((float)SpawnCap * manager.spawnCapMultiplier);
+        }
     }
 }

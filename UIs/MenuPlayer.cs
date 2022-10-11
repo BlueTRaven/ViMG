@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Buffs;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -11,6 +12,11 @@ namespace ViMG.UIs
 {
 	public class MenuPlayer : Menu
 	{
+		private const float HEALTHBAR_PADDING = 16;
+		private const float HEALTHBAR_MAX = 128;
+
+		private const float HEALTHBAR_HEIGHT = 16;
+
 		private Player player;
 		private Inventory inventory;
 		private Inventory craftInventory;
@@ -43,6 +49,8 @@ namespace ViMG.UIs
 
 		private int DEBUGItemListScrollRow = 0;
 
+		private TextHelper.FontInfo fi;
+
 		public MenuPlayer(Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory)
 		{
 			this.player = player;
@@ -52,6 +60,8 @@ namespace ViMG.UIs
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
             playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
+
+			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
 		public void Open()
@@ -108,6 +118,65 @@ namespace ViMG.UIs
 
 				if (inventory.Get(HighlightIndex).valid)
 					inventory.Get(HighlightIndex).item.StartHold(player, inventory, HighlightIndex);
+            }
+
+			UI.EndParent();
+
+			UI.StartParent(new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - HEALTHBAR_MAX, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING));
+
+			List<Buff.BuffInstance> buffs = player.GetBuffManager().GetBuffs();
+
+			int index = 0;
+			foreach (Buff.BuffInstance buff in buffs)
+            {
+				int x = index % 8;
+				int y = index / 8;
+
+				Texture2D texture = buff.buff.texture ?? Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
+				RectangleF sourceRect = buff.buff.sourceRect;
+
+				Vector2 position = new Vector2(x * (16 + 8), y * (16 + 8));
+				var button = UI.MakeButton(new RectangleF(position, new Size(SIZE)), texture, sourceRect);
+
+				if (button.hovered)
+                {
+					UI.DisableParent();
+
+					const int minW = 128;
+					const int minH = 16;
+
+					const int maxW = 256;
+
+					string name = buff.buff.Name;
+					string description = buff.buff.Description;
+
+					float widthName = fi.StringWidth(name);
+					Size sizeDescription = fi.StringSize(TextHelper.WrapText(fi, description, maxW));
+
+					float textWidthMax = Math.Max(minW, Math.Max(widthName, sizeDescription.Width));
+
+					float height = fi.StringHeight(name);
+					height += sizeDescription.Height;
+					height += 8;    //for padding
+
+					RectangleF bounds = new RectangleF(Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16), textWidthMax, Math.Max(height, minH));
+
+					int overlapFarX = (int)bounds.x + (int)bounds.width - Options.CurrentWindowResolution.X;
+					int overlapFarY = (int)bounds.y + (int)bounds.height - Options.CurrentWindowResolution.Y;
+
+					if (overlapFarX > 0)
+						bounds.x -= overlapFarX;
+					if (overlapFarY > 0)
+						bounds.y -= overlapFarY;
+
+					UI.MakeLabel(name, fi, bounds.width, bounds.Position);
+					bounds.y += fi.StringHeight(name);
+					bounds.y += 8;
+					UI.MakeLabel(description, fi, bounds.width, bounds.Position);
+					UI.EnableParent();
+                }
+
+				index++;
             }
 
 			UI.EndParent();
@@ -384,11 +453,6 @@ namespace ViMG.UIs
 			{
 				MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 			}
-
-			const float HEALTHBAR_PADDING = 16;
-			const float HEALTHBAR_MAX = 128;
-
-			const float HEALTHBAR_HEIGHT = 16;
 
 			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - HEALTHBAR_MAX, HEALTHBAR_PADDING);
 			Vector2 healthWidthScale = new Vector2((float)player.health / (float)player.maxHealth * HEALTHBAR_MAX, HEALTHBAR_HEIGHT);
