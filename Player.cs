@@ -15,7 +15,7 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(7, 0)]
+	[EntityMeta(8, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public enum PlayerDamageType
@@ -29,7 +29,11 @@ namespace ViMG
 		public struct AccumulatedStats
         {
 			public float HPScale;			//% hp increase.
-			public int HPFlat;			//flat hp increase. Applied AFTER, unmodified by scale.
+			public int HPFlat;          //flat hp increase. Applied AFTER, unmodified by scale.
+			public float MPScale;
+			public int MPFlat;
+			public float HPRegenTime;
+			public float MPRegenTime;
 			public float MeleeAtkScale;	//added to base scale value (1).
 			public float RangeAtkScale;
 			public float MagicAtkScale;
@@ -57,6 +61,11 @@ namespace ViMG
 				{
 					HPFlat = a.HPFlat + b.HPFlat,
 					HPScale = a.HPScale + b.HPScale,
+					MPFlat = a.MPFlat + b.MPFlat,
+					MPScale = a.MPScale + b.MPScale,
+					HPRegenTime = a.HPRegenTime + b.HPRegenTime,
+					MPRegenTime = a.MPRegenTime + b.MPRegenTime,
+					MiningScale = a.MiningScale + b.MiningScale,
 					DefenseScale = a.DefenseScale + b.DefenseScale,
 					DefenseFlat = a.DefenseFlat + b.DefenseFlat,
 					MeleeAtkScale = a.MeleeAtkScale + b.MeleeAtkScale,
@@ -173,8 +182,14 @@ namespace ViMG
 		//private Menu currentUI;
 		private MenuPlayer menuPlayer;
 
-		public int health;
-		public int maxHealth = 20;
+		public int Health;
+		public int MaxHealth = 20;
+		public int Magic;
+		public int MaxMagic = 5;
+
+		private float healthRegenTimer;
+		private float magicRegenTimer;
+
 		private AccumulatedStats stats;
 		private SetBonus setBonus;
 
@@ -196,7 +211,8 @@ namespace ViMG
 			accessoryInventory = new Inventory(6);
 			craftInventory = new Inventory(8);
 
-			health = maxHealth;
+			Health = MaxHealth;
+			Magic = MaxMagic;
 		}
 
 		//Creates a new player from a dead player.
@@ -224,7 +240,7 @@ namespace ViMG
 			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
 			//currentUI = uiPlayer;
 
-			health = maxHealth / 4;
+			Health = MaxHealth / 4;
 		}
 
 		public void FirstCreated()
@@ -314,6 +330,35 @@ namespace ViMG
 				world.HitboxManager.Update(hurtbox, Bounds, invulnTimer <= 0);
 
 			UpdateStats(deltaTime);
+
+			if (inputLockupTimer <= 0)
+			{
+				healthRegenTimer -= (float)deltaTime;
+				magicRegenTimer -= (float)deltaTime;
+
+				if (healthRegenTimer <= 0)
+                {
+					healthRegenTimer -= stats.HPRegenTime;
+					while (healthRegenTimer <= 0)
+					{
+						healthRegenTimer += 10f;
+						Heal(1);
+					}
+                }
+
+				if (magicRegenTimer <= 0)
+                {
+					magicRegenTimer -= stats.MPRegenTime;
+					while (magicRegenTimer <= 0)
+                    {
+						magicRegenTimer += 10f;
+						Magic += 1;
+
+						if (Magic > MaxMagic)
+							Magic = MaxMagic;
+					}
+                }
+			}
 
 			if (state == State.Noclip)
 			{
@@ -998,7 +1043,7 @@ namespace ViMG
 												{
 													float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
 
-													int damage = (int)((float)maxHealth * t);
+													int damage = (int)((float)MaxHealth * t);
 
 													Damage(damage);
 												}
@@ -1432,9 +1477,9 @@ namespace ViMG
 
 			damageAnimTimer = DAMAGE_ANIM_TIME;
 
-			health -= amt;
+			Health -= amt;
 
-			if (health <= 0)
+			if (Health <= 0)
 			{
 				Kill();
 			}
@@ -1486,10 +1531,10 @@ namespace ViMG
 
 		public void Heal(int amt)
         {
-			health += amt;
+			Health += amt;
 
-			if (health > maxHealth + stats.HPFlat)
-				health = maxHealth + stats.HPFlat;
+			if (Health > MaxHealth + stats.HPFlat)
+				Health = MaxHealth + stats.HPFlat;
         }
 
 		public BuffManagerPlayer GetBuffManager()
@@ -1509,8 +1554,10 @@ namespace ViMG
 			SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
 			SaveHelper.SaveVector3(saveBytes, Main.camera.Rotation);
 
-			SaveHelper.SaveInt32(saveBytes, health);
-			SaveHelper.SaveInt32(saveBytes, maxHealth);
+			SaveHelper.SaveInt32(saveBytes, Health);
+			SaveHelper.SaveInt32(saveBytes, MaxHealth);
+			SaveHelper.SaveInt32(saveBytes, Magic);
+			SaveHelper.SaveInt32(saveBytes, MaxMagic);
 
 			inventory.Save(saveBytes);
 
@@ -1531,8 +1578,14 @@ namespace ViMG
 			Main.camera.Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
 			Rotation = Main.camera.Rotation;
 
-			health = SaveHelper.LoadInt32(loadBytes, ref index);
-			maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+			Health = SaveHelper.LoadInt32(loadBytes, ref index);
+			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			if (version >= 8)
+            {
+				Magic = SaveHelper.LoadInt32(loadBytes, ref index);
+				MaxMagic = SaveHelper.LoadInt32(loadBytes, ref index);
+            }
 
 			inventory = Inventory.Load(loadBytes, ref index);
 

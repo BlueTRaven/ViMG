@@ -19,7 +19,7 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_grass"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1));
 		}
 
 		//No down Y as that is guaranteed to be covered by this cube, and thus not valid to spread to.

@@ -16,7 +16,8 @@ namespace ViMG.Items
         {
 			name = "Spellbook: Ember";
 			description = "A spellbook with an explanation of how to cast \"Ember\".\n" +
-				"This spell will light a small fire on any surface in front of you.";
+				"This spell will light a small fire on any surface in front of you.\n" +
+				"Costs 1 magic.";
 
 			flipXInHand = true;
         }
@@ -24,6 +25,9 @@ namespace ViMG.Items
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
 			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+
+			if (player.Magic < 1)
+				return false;
 
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
@@ -45,6 +49,8 @@ namespace ViMG.Items
 						chunk.GetData().SetCube(placeAtPos, cube.Id);
 
 						cube.OnPlayerPlaced(player, placeAtPos);
+
+						player.Magic -= 1;
 
 						itemCooldownTime = 0.25f;
 

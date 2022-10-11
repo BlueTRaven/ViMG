@@ -56,6 +56,7 @@ namespace ViMG
 		public EntityManager EntityManager;
 		public LightManager LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
+		public List<PointOfInterest> PointsOfInterest;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -80,6 +81,7 @@ namespace ViMG
 
 		private WorldSaver saver;
 
+		private WorldInfoIO worldInfoIO;
 		private ChunkManagerIO chunkIO;
 		private EntityManagerIO entIO;
 
@@ -113,6 +115,8 @@ namespace ViMG
 			LightManager.UpdateDatas(Main.CubeLitEffect);
 
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
+
+			PointsOfInterest = new List<PointOfInterest>();
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -291,12 +295,15 @@ namespace ViMG
 
 			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
 
+			worldInfoIO = new WorldInfoIO();
 			chunkIO = new ChunkManagerIO(ChunkManager, "test");
 			entIO = new EntityManagerIO(EntityManager);
 
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.GenerateWorld(this);
+
+				worldInfoIO.Save(folderName, this, PointsOfInterest);
 
 				Console.WriteLine("Saving Chunks...");
 				Stopwatch watch = Stopwatch.StartNew();
@@ -347,13 +354,17 @@ namespace ViMG
 			}
 			else
 			{
-				WorldIO.LoadError error = chunkIO.Load(folderName);//saver.Load(device, this, folderName);
+				WorldIO.LoadError error = worldInfoIO.Load(folderName, this, PointsOfInterest);
 				if (error == WorldIO.LoadError.InvalidVersion)
-					Console.WriteLine("Chunk file could not be loaded. The current chunk file version ({0}) is not supported.", chunkIO.Version);
+					Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", worldInfoIO.Version);
+
+				error = chunkIO.Load(folderName);
+				if (error == WorldIO.LoadError.InvalidVersion)
+					Console.WriteLine("Chunk file could not be loaded. The current file version ({0}) is not supported.", chunkIO.Version);
 
 				error = entIO.Load(folderName);//saver.Load(device, this, folderName);
 				if (error == WorldIO.LoadError.InvalidVersion)
-					Console.WriteLine("Entity file could not be loaded. The current entity file version ({0}) is not supported.", entIO.Version);
+					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
 				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 

@@ -257,6 +257,8 @@ namespace ViMG.Generation
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
 					new CubePosition(x, 37, z), BlacklistNone, BlacklistNone);
+
+				manager.world.PointsOfInterest.Add(new PointOfInterest(new CubePosition(x, 37, z), "geode", 1));
 			}
 
 			for (int i = 0; i < 132; i++)
@@ -342,6 +344,7 @@ namespace ViMG.Generation
 							int randomFace = GetRandom().Next();
 
 							manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+							manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "chest", 1));
 
 							positions[lastPosition++] = actualGenPos;
 
@@ -369,6 +372,8 @@ namespace ViMG.Generation
 
 						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
 											Span<ushort>.Empty, PlaceDungeon);
+
+						manager.world.PointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
 
 						positions[lastPosition++] = pos;
 
@@ -410,7 +415,9 @@ namespace ViMG.Generation
 								ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar);
 							else manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false, false);
-					
+
+							manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
+
 							spawnNum--;
 						}
 					}
@@ -445,6 +452,7 @@ namespace ViMG.Generation
 								positions[lastPosition++] = actualGenPos;
 
 								manager.world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
+								manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "heart", 1));
 								spawnNum--;
 							}
 						}
@@ -462,6 +470,8 @@ namespace ViMG.Generation
 				{
 					ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
 						Span<ushort>.Empty, BlacklistAir);
+
+					manager.world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "obelisk", 1));
 					break;
 				}
 			}
@@ -677,6 +687,8 @@ namespace ViMG.Generation
 			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
 
 			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_spell_ember"), 1, 1));
+			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("leather_boots"), 1, 1));
+			//inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_story_01"), 1, 1));	//TODO
 
 			Inventory inventory = new Inventory(9);
 

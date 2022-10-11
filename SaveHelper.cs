@@ -96,6 +96,22 @@ namespace ViMG
 			}
 		}
 
+		public static void SaveBytesFlat(List<byte> data1, List<byte> data2, int index, int length)
+		{
+			for (int i = index; i < index + length; i++)
+			{
+				data1.Add(data2[i]);
+			}
+		}
+
+		public static void SaveBytesFlat(List<byte> data1, byte[] data2, int index, int length)
+        {
+			for (int i = index; i < length; i++)
+			{
+				data1.Add(data2[i]);
+			}
+		}
+
 		public static void SaveCubePosition(List<byte> data, CubePosition position, Chunk chunk = null)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace && chunk != null)
