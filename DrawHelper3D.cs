@@ -408,7 +408,7 @@ namespace ViMG
 				Matrix.CreateTranslation(position), null));
 		}
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius)
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius, bool flip = false)
         {
 			VertexBuffer vbo;
 			IndexBuffer ibo;
@@ -416,7 +416,7 @@ namespace ViMG
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			MakeUVSphereRaw(vertices, indices, Vector3.Zero, RectangleF.Empty, radius, 16, 16);
+			MakeUVSphereRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1), radius, 16, 16, flip);
 
 			vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
 			ibo = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
@@ -427,7 +427,7 @@ namespace ViMG
 			return (vbo, ibo);
         }
 
-		public static void MakeUVSphereRaw(List<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16)
+		public static void MakeUVSphereRaw(List<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16, bool flip = false)
         {
 			//https://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
 			for (int t = 0; t < stacks; t++)
@@ -459,9 +459,18 @@ namespace ViMG
 
 					if (t == 0)
 					{
-						indices.Add(indicesStart + 0);
-						indices.Add(indicesStart + 1);
-						indices.Add(indicesStart + 2);
+						if (!flip)
+						{
+							indices.Add(indicesStart + 0);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 2);
+						}
+                        else
+                        {
+							indices.Add(indicesStart + 2);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 0);
+						}
 
 						Vector3 dir = Vector3.Cross(vert3 - vert1, vert4 - vert1);
 						Vector3 norm = Vector3.Normalize(dir);
@@ -472,9 +481,18 @@ namespace ViMG
 					}
 					else if (t + 1 == stacks)
 					{
-						indices.Add(indicesStart + 0);
-						indices.Add(indicesStart + 1);
-						indices.Add(indicesStart + 2);
+						if (!flip)
+						{
+							indices.Add(indicesStart + 0);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 2);
+						}
+                        else
+                        {
+							indices.Add(indicesStart + 2);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 0);
+						}
 
 						Vector3 dir = Vector3.Cross(vert1 - vert3, vert2 - vert3);
 						Vector3 norm = Vector3.Normalize(dir);
@@ -485,12 +503,24 @@ namespace ViMG
 					}
 					else
 					{
-						indices.Add(indicesStart + 0);
-						indices.Add(indicesStart + 1);
-						indices.Add(indicesStart + 3);
-						indices.Add(indicesStart + 1);
-						indices.Add(indicesStart + 2);
-						indices.Add(indicesStart + 3);
+						if (!flip)
+						{
+							indices.Add(indicesStart + 0);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 3);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 2);
+							indices.Add(indicesStart + 3);
+						}
+                        else
+                        {
+							indices.Add(indicesStart + 3);
+							indices.Add(indicesStart + 1);
+							indices.Add(indicesStart + 0);
+							indices.Add(indicesStart + 3);
+							indices.Add(indicesStart + 2);
+							indices.Add(indicesStart + 1);
+						}
 
 						Vector3 dir = Vector3.Cross(vert2 - vert1, vert4 - vert1);
 						Vector3 norm = Vector3.Normalize(dir);

@@ -463,6 +463,7 @@ namespace ViMG.Rendering
 
             EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
 
+            //device.RasterizerState = Main.noCullRS;
             foreach (TransparentDraw draw in DrawsTransparentPass)
             {
                 device.SetVertexBuffer(draw.VBO);
@@ -488,6 +489,8 @@ namespace ViMG.Rendering
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
                 }
             }
+
+            //device.RasterizerState = Main.genericRS;
 
             device.SetRenderTarget(ldrOutput);
             device.Clear(Color.Black);

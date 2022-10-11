@@ -40,6 +40,7 @@ namespace ViMG
 		private static SimpleMesh<VertexCube, int> meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
 
+		private static (VertexBuffer VBO, IndexBuffer IBO) nightSkybox;
 		private static SimpleMesh<VertexCube, int> meshMaxDrawDistBottom;
 		private static bool meshesLoaded;
 
@@ -157,15 +158,15 @@ namespace ViMG
 			vertices.Add(new VertexCube(d, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
 
 			max.Y = DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
-			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
-			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
-			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+			Vector3 l_t_f = new Vector3(0, 0, 1);
+			Vector3 r_t_f = new Vector3(1, 0, 1);
+			Vector3 r_t_n = new Vector3(1, 0, 0);
+			Vector3 l_t_n = new Vector3(0, 0, 0);
 
-			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
-			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
-			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
-			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+			Vector3 l_b_n = new Vector3(0, 1, 0);
+			Vector3 r_b_n = new Vector3(1, 1, 0);
+			Vector3 r_b_f = new Vector3(1, 1, 1);
+			Vector3 l_b_f = new Vector3(0, 1, 1);
 
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -233,6 +234,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
 
 			meshMaxDrawDistBottom = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
+			nightSkybox = DrawHelper3D.MakeUVSphere(device, 1, true);
 
 			List<VertexCube> sunVertices = new List<VertexCube>();
 			List<int> sunIndices = new List<int>();
@@ -688,23 +690,28 @@ namespace ViMG
 				if (alphaDay > 0)
 				{
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
-						Matrix.CreateTranslation(camChunkPosWS),
+						Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						Matrix.CreateScale(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
+						Matrix.CreateTranslation(Main.camera.Position),
 						Main.assetsManager.GetAsset<Texture2D>("skybox_day"), DrawHelper.BlackPixel,
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
 				}
 
 				if (alphaDay < 1)
 				{
+					const float mp = (DAY_CYCLE_TIME * 1.5f);
+					const float my = (DAY_CYCLE_TIME * 1.34f);
+					float p = MathF.Sin(MathF.PI * 2 * ((alive % mp) / mp));
+					float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
+
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
-						//Matrix.CreateScale(1.001f) *
-						Matrix.CreateTranslation(camChunkPosWS),
+						Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						Matrix.CreateScale(DrawDistanceHoriz * 1.95f * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
+						Matrix.CreateFromYawPitchRoll(y, p, 0) *
+						Matrix.CreateTranslation(Main.camera.Position),
 						Main.assetsManager.GetAsset<Texture2D>("skybox_night"), DrawHelper.WhitePixel,
 						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White));
 				}
-
-				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"),
-					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO,
-					Matrix.CreateTranslation(camChunkPosWS), null));*/
 
 				Texture2D sunTexture = DrawHelper.WhitePixel;
 
