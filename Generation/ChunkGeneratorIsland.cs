@@ -410,9 +410,44 @@ namespace ViMG.Generation
 								ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar);
 							else manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false, false);
+					
+							spawnNum--;
 						}
+					}
+				}
+			}
 
-						spawnNum--;
+			const int NUM_HEARTS = 300;
+			spawnNum = NUM_HEARTS;
+			lastPosition = 0;
+
+			positions = stackalloc CubePosition[NUM_HEARTS];
+
+			while (spawnNum > 0)
+			{
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
+					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				{
+					var solidDown = manager.GetFirstSolidDown(pos);
+
+					if (solidDown.HasValue())
+					{
+						CubePosition actualGenPos = solidDown.Get() + new CubePosition(0, 3, 0);
+
+						//cheesy way of checking we're an air block without actually checking.
+						//We can ensure any that anything <= pos.Y is an air block (since we traveled down to get to solidDown); not so if it's above it.
+						if (actualGenPos.Y <= pos.Y)
+						{
+							if (CanPlace(positions, lastPosition, actualGenPos, 32 * Cube.CUBE_SCALE))
+							{
+								positions[lastPosition++] = actualGenPos;
+
+								manager.world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
+								spawnNum--;
+							}
+						}
 					}
 				}
 			}
