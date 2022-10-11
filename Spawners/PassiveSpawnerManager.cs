@@ -11,7 +11,8 @@ namespace ViMG.Spawners
     {
         private List<PassiveSpawner> spawners = new List<PassiveSpawner>();
 
-        public float spawnCapMultiplier = 1;
+        public float SpawnCapMultiplier = 1;
+        public float SpawnChanceMultipler = 1;
 
         public PassiveSpawnerManager(EntityManager entityManager)
         {
@@ -25,6 +26,9 @@ namespace ViMG.Spawners
         public void Update(double deltaTime, World world)
         {
             spawners.ForEach(x => x.Update(deltaTime, world));
+
+            SpawnCapMultiplier = 1f;
+            SpawnChanceMultipler = 1f;
         }
 
     }

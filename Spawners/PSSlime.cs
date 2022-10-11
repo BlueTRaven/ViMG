@@ -66,12 +66,6 @@ namespace ViMG.Spawners
         {
             if (bigSlimes.Count < 4 && Main.random.Next(0, 4) == 0)
             {
-                int minR = 112;
-                int maxR = world.sizeInCubes - 112;
-
-                if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
-                    return;
-
                 SlimeBig bigSlime = new SlimeBig(position.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 2, 0));
                 world.EntityManager.Add(bigSlime);
                 return;
@@ -79,12 +73,6 @@ namespace ViMG.Spawners
 
             if (slimes.Count < GetSpawnCap())
             {
-                int minR = 112;
-                int maxR = world.sizeInCubes - 112;
-
-                if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
-                    return;
-
                 Slime slime = new Slime(position.InWorldSpace(out bool ok) + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(slime);
             }

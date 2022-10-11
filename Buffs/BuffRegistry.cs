@@ -23,6 +23,7 @@ namespace ViMG.Buffs
             Register(new BuffAkkatBlessing());
             Register(new BuffGidamuBlessing());
             Register(new BuffAratBlessing());
+            Register(new BuffHeartEnemySpawnRateIncrease());
         }
     }
 }

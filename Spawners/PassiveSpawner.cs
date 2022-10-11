@@ -54,7 +54,7 @@ namespace ViMG.Spawners
 
         protected void DoSpawnCheck(World world)
         {
-            if (Main.random.NextDouble() < spawnChance)
+            if (Main.random.NextDouble() < spawnChance * manager.SpawnChanceMultipler)
             {
                 const int MAX_TRIES = 20;
                 int tries = MAX_TRIES;
@@ -115,7 +115,7 @@ namespace ViMG.Spawners
 
         public int GetSpawnCap()
         {
-            return (int)((float)SpawnCap * manager.spawnCapMultiplier);
+            return (int)((float)SpawnCap * manager.SpawnCapMultiplier);
         }
     }
 }

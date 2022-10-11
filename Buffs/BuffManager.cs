@@ -75,7 +75,7 @@ namespace ViMG.Buffs
                 foreach (Buff.BuffInstance existingBuff in buffs)
                 {
                     if (existingBuff.buff == buffInstance.buff)
-                        existingBuff.buff.OnApplyOfSameType(buffInstance);
+                        existingBuff.buff.OnApplyOfSameType(existingBuff);
                 }
             }
             else
