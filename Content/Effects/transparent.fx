@@ -51,7 +51,8 @@ float4 MainPS(VSOutputCube input) : SV_TARGET
 
 	float4 diffuse = Diffuse.Sample(Sampler, input.TexCoord);
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb;
-	return float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color + float4(emissive.rgb, 0);
+	float4 finalColor = float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color;
+	return finalColor + ((diffuse * input.Color) * float4(emissive.rgb, 0));
 }
 
 technique BasicColorDrawing

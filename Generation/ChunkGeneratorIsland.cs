@@ -452,7 +452,6 @@ namespace ViMG.Generation
 								positions[lastPosition++] = actualGenPos;
 
 								manager.world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
-								manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "heart", 1));
 								spawnNum--;
 							}
 						}
@@ -491,6 +490,8 @@ namespace ViMG.Generation
 				{
 				 	ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
 						Span<ushort>.Empty, PlaceHouse);
+
+					manager.world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "house", 1));
 				}
 			}
 		}

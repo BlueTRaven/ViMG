@@ -330,8 +330,6 @@ namespace ViMG.Rendering
 
             if (DrawsPassGBuffer.Count > 0)
             {
-                //device.RasterizerState = Main.noCullRS;
-
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
                 EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
@@ -371,8 +369,6 @@ namespace ViMG.Rendering
                         }
                     }
                 }
-
-                //device.RasterizerState = Main.genericRS;
             }
 
             device.SetVertexBuffer(vboQuad);
@@ -473,6 +469,7 @@ namespace ViMG.Rendering
                 device.Indices = draw.IBO;
 
                 EffectTransparent.Parameters["Diffuse"].SetValue(draw.Diffuse);
+                EffectTransparent.Parameters["Emissive"].SetValue(draw.Emissive);
                 EffectTransparent.Parameters["World"].SetValue(draw.Transform);
                 EffectTransparent.Parameters["TintColor"].SetValue(draw.TintColor);
 
