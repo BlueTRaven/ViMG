@@ -15,7 +15,7 @@ using ViMG.UIs;
 namespace ViMG
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(8, 0)]
+	[EntityMeta(9, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public enum PlayerDamageType
@@ -192,6 +192,7 @@ namespace ViMG
 
 		private Inventory inventory;
 		private Inventory craftInventory;
+		private Inventory gearInventory;
 		private Inventory accessoryInventory;
 		//private Menu currentUI;
 		private MenuPlayer menuPlayer;
@@ -223,7 +224,11 @@ namespace ViMG
 			Rotation = Main.camera.Rotation;
 
 			accessoryInventory = new Inventory(6);
+			gearInventory = new Inventory(10);
 			craftInventory = new Inventory(8);
+			//Start with 10 gear slots so we don't have to worry about expanding in the future.
+			//For now, we only have 3:
+			//Heart, boots, and feather artefact. 
 
 			Health = MaxHealth;
 			Magic = MaxMagic;
@@ -236,8 +241,10 @@ namespace ViMG
 
 			invulnTimer = 6f;	//6 seconds of invuln after respawning
 
-			inventory = deadPlayer.GetInventory();
-			accessoryInventory = deadPlayer.GetAccessoryInventory();
+			inventory = deadPlayer.inventory;
+			accessoryInventory = deadPlayer.accessoryInventory;
+			gearInventory = deadPlayer.gearInventory;
+
 			SpawnPosition = deadPlayer.SpawnPosition;
 			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
 
@@ -249,7 +256,7 @@ namespace ViMG
 
 			craftInventory = new Inventory(8);
 
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
 			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
 			//currentUI = uiPlayer;
@@ -259,10 +266,11 @@ namespace ViMG
 
 		public void FirstCreated()
 		{
-			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
-			accessoryInventory = new Inventory(6);
-
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			inventory ??= new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
+			accessoryInventory ??= new Inventory(6);
+			gearInventory ??= new Inventory(10);	
+			
+			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
 			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
 			//currentUI = uiPlayer;
@@ -612,6 +620,16 @@ namespace ViMG
 				if (item.valid)
 				{
 					item.item.AccumulateStats(this, accessoryInventory, i, ref accumulatedStats, ref bonus);
+				}
+			}
+
+			for (int i = 0; i < gearInventory.NumSlots; i++)
+            {
+				ItemInstance item = gearInventory.Get(i);
+
+				if (item.valid)
+				{
+					item.item.AccumulateStats(this, gearInventory, i, ref accumulatedStats, ref bonus);
 				}
 			}
 
@@ -1073,7 +1091,7 @@ namespace ViMG
 												{
 													float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
 
-													int damage = (int)((float)MaxHealth * t);
+													int damage = (int)((float)GetRealMaxHealth() * t);
 
 													Damage(damage);
 												}
@@ -1537,8 +1555,8 @@ namespace ViMG
         {
 			Health += amt;
 
-			if (Health > MaxHealth + stats.HPFlat)
-				Health = MaxHealth + stats.HPFlat;
+			if (Health > GetRealMaxHealth())
+				Health = GetRealMaxHealth();
         }
 
 		public BuffManagerPlayer GetBuffManager()
@@ -1549,6 +1567,15 @@ namespace ViMG
 		public ref AccumulatedStats GetStats()
         {
 			return ref stats;
+        }
+
+		public int GetRealMaxHealth()
+        {
+			int hp = MaxHealth;
+			hp += (int)((float)hp * stats.HPScale);
+			hp += stats.HPFlat;
+
+			return hp;
         }
 
 		public override void OnSave(List<byte> saveBytes)
@@ -1564,8 +1591,8 @@ namespace ViMG
 			SaveHelper.SaveInt32(saveBytes, MaxMagic);
 
 			inventory.Save(saveBytes);
-
 			accessoryInventory.Save(saveBytes);
+			gearInventory.Save(saveBytes);
 
 			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
@@ -1601,7 +1628,10 @@ namespace ViMG
 					accessoryInventory = new Inventory(accessoryInventory, 6);	//expand to be 6 slots
 			}
 
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory);
+			if (version >= 9)
+				gearInventory = Inventory.Load(loadBytes, ref index);
+
+			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
 			//currentUI = menuPlayer;
 

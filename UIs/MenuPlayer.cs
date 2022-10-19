@@ -23,11 +23,19 @@ namespace ViMG.UIs
 		private Inventory inventory;
 		private Inventory craftInventory;
 		private Inventory accessoryInventory;
+		private Inventory gearInventory;
 
 		private static string[] tagsLegs = new string[1] { "armor_legs" };
 		private static string[] tagsBody = new string[1] { "armor_body" };
 		private static string[] tagsHead = new string[1] { "armor_head" };
 		private static string[] tagsAccessories = new string[1] { "accessory" };
+
+		private static string[] tagsGearBySlot = new string[3]
+        {
+			"gear_heart",
+			"gear_run",
+			"gear_dj",
+        };
 
 		private static string[][] tagsAccessoriesBySlot = new string[6][]
 		{
@@ -53,7 +61,7 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuPlayer(Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory)
+		public MenuPlayer(Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory)
 		{
 			this.player = player;
 
@@ -61,6 +69,7 @@ namespace ViMG.UIs
 
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
+			this.gearInventory = gearInventory;
             playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
 
 			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
@@ -328,8 +337,34 @@ namespace ViMG.UIs
 						{
 							MenuHelper.SwapInventory(accessoryInventory, inventory, i);
 						}
+					}
+				}
 
-						craftInventoryUpdated = true;
+				pos.X = 0;
+				pos.Y += SIZE + MARGIN;
+
+				for (int i = 0; i < 3; i++)
+                {
+					pos.X = i * SIZE;
+
+					bounds = new RectangleF(pos, SIZE, SIZE);
+
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+									gearInventory.Get(i), 1);
+
+					if (!gearInventory.Get(i).valid)
+						UI.MakeTexture(new RectangleF(pos, SIZE, SIZE),
+							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
+
+					var output = MenuHelper.ItemSlotClickOutput.None;
+					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, ref held,
+						new MenuHelper.WhitelistTag(tagsGearBySlot))) != MenuHelper.ItemSlotClickOutput.None)
+					{
+						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
+						{
+							MenuHelper.SwapInventory(gearInventory, inventory, i);
+						}
 					}
 				}
 
@@ -337,7 +372,7 @@ namespace ViMG.UIs
 
 				if (Main.Debug)
 				{
-					UI.StartParent(new Vector2(MARGIN, 256));
+					UI.StartParent(new Vector2(MARGIN, 256 + 64));
 
 					var allItems = Main.Registry.ItemRegistry.GetIterable();
 
@@ -457,7 +492,7 @@ namespace ViMG.UIs
 			}
 
 			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING, HEALTHBAR_PADDING);
-			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.MaxHealth, HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
+			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
 			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Red, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.Health, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
 
 			healthBarPos.Y += HEALTHBAR_HEIGHT + HEALTHBAR_PADDING;

@@ -14,5 +14,12 @@ namespace ViMG.Items
         {
 
         }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        {
+            base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
+
+
+        }
     }
 }
