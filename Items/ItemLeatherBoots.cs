@@ -18,7 +18,6 @@ namespace ViMG.Items
                 "+50% running speed.";
 
             Tags.Add("gear_run");
-            Tags.Add("accessory");  //TODO gear
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

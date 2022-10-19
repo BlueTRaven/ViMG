@@ -17,7 +17,6 @@ namespace ViMG.Items
                 "Allows you to jump an additional time. Press <Spacebar> while in the air to use it.";
 
             Tags.Add("gear_dj");
-            Tags.Add("accessory");
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

@@ -17,7 +17,6 @@ namespace ViMG.Items
                 "+10 max hp";
             
             Tags.Add("gear_heart");
-            Tags.Add("accessory");
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
