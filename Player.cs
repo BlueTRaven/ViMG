@@ -55,10 +55,23 @@ namespace ViMG
 			public float InvulnTime;
 			public float UseSpeed;
 
+			public IJumpEffect[] JumpEffects;
+			private int currentJumpEffectIndex;
+
+			public void AddJumpEffect(IJumpEffect effect)
+            {
+				if (currentJumpEffectIndex >= 4)
+					return;
+
+				JumpEffects[currentJumpEffectIndex++] = effect;
+            }
+
             public static AccumulatedStats operator +(AccumulatedStats a, AccumulatedStats b)
             {
 				var stats = new AccumulatedStats()
 				{
+					JumpEffects = a.JumpEffects,
+					currentJumpEffectIndex = a.currentJumpEffectIndex,
 					HPFlat = a.HPFlat + b.HPFlat,
 					HPScale = a.HPScale + b.HPScale,
 					MPFlat = a.MPFlat + b.MPFlat,
@@ -119,6 +132,7 @@ namespace ViMG
 		private const float FALL_HEIGHT_DAMAGE_START = Cube.CUBE_SCALE * 5;
 		private const float FALL_HEIGHT_FATAL = Cube.CUBE_SCALE * 18;
 
+		private int currentJumps;
 		public float JumpSpeed = 10f * Cube.CUBE_SCALE;
 		public bool IsRunning;
 
@@ -582,9 +596,13 @@ namespace ViMG
 			alive += (float)deltaTime;
 		}
 
+		private IJumpEffect[] jumpEffects = new IJumpEffect[4];
 		private void UpdateStats(double deltaTime)
 		{
+			Array.Clear(jumpEffects, 0, 4);
+
 			AccumulatedStats accumulatedStats = new AccumulatedStats();
+			accumulatedStats.JumpEffects = jumpEffects;
 			SetBonus.SetBonusInstance bonus = new SetBonus.SetBonusInstance();
 
 			for (int i = 0; i < accessoryInventory.NumSlots; i++)
@@ -814,10 +832,20 @@ namespace ViMG
 						Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
 						movementPressed = true;
 					}
-					if (onGround && Main.inputManager.JustPressed(Keys.Space))
+					if ((onGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
 					{
-						Velocity.Y = JumpSpeed + stats.JumpSpeed;
-						onGround = false;
+						if (!onGround)
+						{
+							stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref Velocity);
+
+							currentJumps--;
+						}
+						else
+						{
+
+							Velocity.Y = JumpSpeed + stats.JumpSpeed;
+							onGround = false;
+						}
 					}
 
 					Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
@@ -1033,6 +1061,8 @@ namespace ViMG
 										{
 											Velocity.Y = 0;
 											onGround = true;
+
+											currentJumps = stats.JumpNum;
 
 											float fallDistance = fallStartY - Position.Y;
 											if (fallDistance > FALL_HEIGHT_FATAL)

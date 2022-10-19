@@ -118,8 +118,21 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.noCullRS;
 
+			/*float widthScale = 1;
+			float heightScale = 1;
+
+			if (Item.item.SourceRect.width > Item.item.SourceRect.height)
+            {
+				widthScale = Item.item.SourceRect.width / Item.item.SourceRect.height;
+            }
+			else if (Item.item.SourceRect.height > Item.item.SourceRect.width)
+            {
+				heightScale = Item.item.SourceRect.height / Item.item.SourceRect.width;
+            }
+
+			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);*/
+
 			Item.item.DrawInWorld(device, world, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 4f)) *
-				//Matrix.CreateScale(0.5f) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
 				Matrix.CreateTranslation(new Vector3(0, (Cube.CUBE_SCALE / 4f) * bobPercent, 0)) *
 				//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *

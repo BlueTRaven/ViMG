@@ -93,6 +93,8 @@ namespace ViMG.Items
 			Register(new ItemFindScroll());
 			Register(new ItemBookWinds());
 			Register(new ItemBookBubble());
+			Register(new ItemFeatherRelic());
+			Register(new ItemHeart());
 			RegisterItemCubes();
 		}
 

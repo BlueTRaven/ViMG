@@ -93,6 +93,15 @@ namespace ViMG.Items
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
 		{
+			if (SourceRect.width > SourceRect.height)
+			{
+				scale *= SourceRect.height / SourceRect.width;
+			}
+			else if (SourceRect.height > SourceRect.width)
+			{
+				scale *= SourceRect.width / SourceRect.height;
+			}
+
 			batch.Draw(Texture, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 
@@ -100,6 +109,20 @@ namespace ViMG.Items
 		{
 			if (meshItemQuadInWorld == null)
 				MakeMesh(device);
+
+			float widthScale = 1;
+			float heightScale = 1;
+
+			if (SourceRect.width > SourceRect.height)
+			{
+				widthScale = SourceRect.width / SourceRect.height;
+			}
+			else if (SourceRect.height > SourceRect.width)
+			{
+				heightScale = SourceRect.height / SourceRect.width;
+			}
+
+			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
 
 			RectangleF sourceRect = SourceRect;
 			if (flipXInHand)
@@ -109,7 +132,8 @@ namespace ViMG.Items
             }
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, sourceRect));
+				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, 
+				Matrix.CreateScale(correctedScale) * transform, sourceRect));
 
 			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}

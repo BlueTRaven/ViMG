@@ -10,13 +10,14 @@ namespace ViMG.Items
 {
     public class ItemLeatherBoots : Item
     {
-        public ItemLeatherBoots() : base("leather_boots", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 48, 16, 16))
+        public ItemLeatherBoots() : base("run_leather_boots", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 48, 16, 16))
         {
             name = "Leather Boots";
             description = "Sturdy leather boots. They fit your feet perfectly.\n" +
                 "Press <Left Shift> to run.\n" +
                 "+50% running speed.";
 
+            Tags.Add("gear_run");
             Tags.Add("accessory");  //TODO gear
         }
 
