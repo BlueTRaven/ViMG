@@ -373,7 +373,7 @@ namespace ViMG.Entities
 					InvulnTimer = 0.25f;
 					attackTimer = 0;    //immediately attempt to attack?
 
-					noticeHandler.OnTakeDamage(other.owner as Player);
+					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}

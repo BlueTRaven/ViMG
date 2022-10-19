@@ -90,6 +90,9 @@ namespace ViMG.Items
 			Register(new ItemFlintlockPistol());
 			Register(new ItemDebugStructurePaster());
 			Register(new ItemLeatherBoots());
+			Register(new ItemFindScroll());
+			Register(new ItemBookWinds());
+			Register(new ItemBookBubble());
 			RegisterItemCubes();
 		}
 

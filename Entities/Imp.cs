@@ -328,7 +328,7 @@ namespace ViMG.Entities
 
 					invulnTimer = 0.25f;
 
-					realNoticeHandler.OnTakeDamage(other.owner as Player);
+					realNoticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}

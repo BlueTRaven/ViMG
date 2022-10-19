@@ -191,7 +191,7 @@ namespace ViMG.Entities
 
 					invulnTimer = 0.25f;
 
-					noticeHandler.OnTakeDamage(other.owner as Player);
+					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}

@@ -61,7 +61,7 @@ namespace ViMG.Entities
 			return Target;
 		}
 
-		public void OnTakeDamage(Entity entity)
+		public void OnTakeDamage(IHitboxOwner entity)
 		{
 			if (entity.GetType() == typeof(TDetect))
 			{

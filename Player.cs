@@ -142,7 +142,7 @@ namespace ViMG
 
 		private int hitbox = -1;
 		private PlayerDamageType hitboxDamageType = PlayerDamageType.Unspecified;
-		private Vector3 damageDir;
+		private Vector3 hitboxOffset;
 		private float hitboxTimer;
 		private float hitboxSize;
 		private const float HITBOX_TIME = 3f / Main.FIXED_FPS;
@@ -446,7 +446,7 @@ namespace ViMG
 				}
 				else
 				{
-					Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
+					Rectangle3D rect = new Rectangle3D(Position + hitboxOffset - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
 
 					world.HitboxManager.Update(hitbox, rect);
 				}
@@ -896,7 +896,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new Heart(Position - Main.camera.Forward * Cube.CUBE_SCALE * 4));
+				world.EntityManager.Add(new PlayerBubble(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 			}
 		}
 
@@ -1190,17 +1190,16 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int damage, PlayerDamageType damageType = PlayerDamageType.Unspecified, float knockback = 1)
+		public void SpawnHitbox(int damage, PlayerDamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
 		{
-			const float hitboxSize = Cube.CUBE_SCALE * 1.75f;
-
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 			this.hitboxDamageType = damageType;
 
-			damageDir = -Main.camera.Forward * (hitboxSize + 0.5f * Cube.CUBE_SCALE);
+			float offset = hitboxSize + (Cube.CUBE_SCALE / 2f) - (hitboxSize / 2f);
+			hitboxOffset = direction * offset;
 
-			Rectangle3D rect = new Rectangle3D(Position + damageDir - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
+			Rectangle3D rect = new Rectangle3D(Position + hitboxOffset, new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
 			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback);
@@ -1209,31 +1208,6 @@ namespace ViMG
 
 			useTimer = ATTACK_TIME;
 		}
-
-		/*public void OpenUI(Menu ui)
-		{
-			this.currentUI = ui;
-
-			if (ui == menuPlayer)
-				menuPlayer.opened = true;
-
-			Main.DrawCursor = true;
-			Main.MouseControl = true;
-
-			Options.CenterMouse();
-		}
-
-		public void CloseUI()
-		{
-			this.currentUI = menuPlayer;
-
-			menuPlayer.opened = false;
-
-			Main.DrawCursor = false;
-			Main.MouseControl = false;
-
-			Options.CenterMouse();
-		}*/
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{

@@ -22,9 +22,9 @@ namespace ViMG.Items
 			flipXInHand = true;
         }
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
-			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
 			if (player.Magic < 1)
 				return false;
@@ -35,27 +35,27 @@ namespace ViMG.Items
 				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
 			});
 
-			if (lookAtResult.hasHit)
+			Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;
+			Vector3 placeOffset = lookAtResult.hasHit ? CubePosition.ToWorldSpaceV3(lookAtResult.normal) : Vector3.Zero;
+
+			if (player.GetWorld().GetChunkManager().IsInWorldBounds(hitPos))
 			{
-				if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+				Cube cube = Main.Registry.CubeRegistry.Get("flame");
+				var placePosCS = CubePosition.FromWorldSpace(hitPos + placeOffset);
+
+				if (player.GetWorld().GetChunkManager().IsInWorldBounds(placePosCS) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placePosCS)
+					&& Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
 				{
-					Cube cube = Main.Registry.CubeRegistry.Get("flame");
-					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
+					Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placePosCS);
+					chunk.GetData().SetCube(placePosCS, cube.Id);
 
-					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos)
-						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
-					{
-						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
-						chunk.GetData().SetCube(placeAtPos, cube.Id);
+					cube.OnPlayerPlaced(player, placePosCS);
 
-						cube.OnPlayerPlaced(player, placeAtPos);
+					player.Magic -= 1;
 
-						player.Magic -= 1;
+					itemCooldownTime = 0.25f;
 
-						itemCooldownTime = 0.25f;
-
-						return true;
-					}
+					return true;
 				}
 			}
 

@@ -15,11 +15,15 @@ namespace ViMG
         public string name;
         public int weight;
 
+        public bool valid;
+
         public PointOfInterest(CubePosition position, string name, int weight)
         {
             this.position = position;
             this.name = name;
             this.weight = weight;
+
+            valid = true;
         }
 
         public void OnSave(List<byte> saveBytes)
@@ -34,6 +38,8 @@ namespace ViMG
             position = SaveHelper.LoadCubePosition(loadBytes, ref index);
             name = SaveHelper.LoadString(loadBytes, ref index);
             weight = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            valid = true;
         }
     }
 }

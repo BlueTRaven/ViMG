@@ -301,7 +301,7 @@ namespace ViMG.Entities
 				{
 					Vector3 direction = Vector3.Normalize(other.direction);
 
-					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
+					Velocity = direction * Cube.CUBE_SCALE * 3f * other.knockback;
 
 					health -= other.damage;
 
@@ -314,7 +314,7 @@ namespace ViMG.Entities
 
 					invulnTimer = 0.25f;
 
-					noticeHandler.OnTakeDamage(other.owner as Player);
+					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}
