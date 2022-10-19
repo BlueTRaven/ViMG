@@ -110,8 +110,6 @@ namespace ViMG.Entities
 
 			float scale = MathHelper.Lerp(0.75f, 1.15f, s);
 
-			RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
-
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("heart"),
@@ -120,9 +118,10 @@ namespace ViMG.Entities
 				Matrix.CreateScale(scale) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+				Matrix.CreateTranslation(Position), new RectangleF(0, 0, -16, 21), tintColor));
 
-			DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);
+			if (Health < MaxHealth)
+				DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);
 		}
 
         public override void OnSave(List<byte> saveBytes)
