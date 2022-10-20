@@ -56,6 +56,10 @@ namespace ViMG
 			public int JumpNum;
 			public float InvulnTime;
 			public float UseSpeed;
+			public int DashNum;
+			public float DashSpeed;
+
+			public IDashEffect DashEffect;
 
 			public IJumpEffect[] JumpEffects;
 			private int currentJumpEffectIndex;
@@ -116,6 +120,7 @@ namespace ViMG
 			Normal,
 			Swimming,
 			Attack,
+			Dash,
 			Hurt,
 			Dead,
 		}
@@ -169,6 +174,16 @@ namespace ViMG
 		private float itemUseCooldownTimer;
 		private float useTimer;
 		private const float ATTACK_TIME = 0.5f;
+
+		private int numDashes;
+		private float dashResetTimer;
+		private const float DASH_RESET_TIME = 0.5f;
+		private int dashSubstate;
+		private float dashTimer;
+		private float dashTime;
+		private Vector3 dashDirection;
+		private float dashDoublePressTimer;
+		private const float DOUBLEPRESS_DURATION = 1f / 4f;
 
 		private float deadTimer;
 		private const float DEAD_TIME = 3f;
@@ -406,6 +421,17 @@ namespace ViMG
 				
 				Position += Velocity * (float)deltaTime;
 			}
+			else if (state == State.Dash)
+            {
+				//always invulnerable during a dash?
+				invulnTimer = 0.01f;
+
+				UpdateDash(deltaTime);
+
+				UpdateCollision(deltaTime);
+
+				Position += Velocity * (float)deltaTime;
+            }
 			else if (state == State.Attack)
 			{
 				invulnTimer -= (float)deltaTime;
@@ -600,12 +626,16 @@ namespace ViMG
 			alive += (float)deltaTime;
 		}
 
+		private IDashEffect dashEffect = new DefaultDashEffect();
 		private IJumpEffect[] jumpEffects = new IJumpEffect[4];
 		private void UpdateStats(double deltaTime)
 		{
 			Array.Clear(jumpEffects, 0, 4);
 
 			AccumulatedStats accumulatedStats = new AccumulatedStats();
+			accumulatedStats.DashEffect = dashEffect;   //TODO remove this is temporary testing code
+			accumulatedStats.DashNum = 1;
+			accumulatedStats.DashSpeed = Cube.CUBE_SCALE * 16f;
 			accumulatedStats.JumpEffects = jumpEffects;
 			SetBonus.SetBonusInstance bonus = new SetBonus.SetBonusInstance();
 
@@ -931,6 +961,8 @@ namespace ViMG
 					Velocity.Y = actualMaxVel.Y;
 			}
 
+			UpdateMaybeDash(deltaTime);
+
 			if (Main.inputManager.JustPressed(Keys.T))
 			{
 				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
@@ -941,6 +973,74 @@ namespace ViMG
 				world.EntityManager.Add(new PlayerBubble(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 			}
 		}
+
+		private void UpdateMaybeDash(double deltaTime)
+        {
+			if (onGround)
+            {
+				dashResetTimer -= (float)deltaTime;
+            }
+
+			if (dashResetTimer <= 0)
+			{
+				if (stats.DashEffect != null && stats.DashNum > 0)
+				{
+					dashDoublePressTimer -= (float)deltaTime;
+
+					if (dashSubstate == 0)
+					{
+						if (Main.inputManager.JustPressed(Keys.LeftShift))
+						{
+							dashSubstate++;
+							dashDoublePressTimer = DOUBLEPRESS_DURATION;
+						}
+					}
+					else if (dashSubstate == 1)
+					{
+						if (dashDoublePressTimer >= 0)
+						{
+							if (Main.inputManager.JustPressed(Keys.LeftShift))
+							{
+								state = State.Dash;
+
+								stats.DashEffect.StartDash(this, ref Velocity, out dashDirection, out dashTime, in stats);
+								dashTimer = dashTime;
+
+								dashSubstate = 0;
+							}
+						}
+						else
+						{
+							dashSubstate = 0;
+						}
+					}
+				}
+			}
+        }
+
+		private void UpdateDash(double deltaTime)
+        {
+			//in the case where our dash effect suddenly becomes null, just stop dashing I guess?
+			if (stats.DashEffect == null)
+            {
+				state = State.Normal;
+				dashSubstate = 0;
+				return;
+            }
+
+			dashTimer -= (float)deltaTime;
+
+			stats.DashEffect.DoDash(this, ref Velocity, ref dashDirection, in stats);
+
+			hasMoved = true;
+
+			if (dashTimer <= 0)
+            {
+				dashResetTimer = DASH_RESET_TIME;
+				state = State.Normal;
+				dashSubstate = 0;
+            }
+        }
 
 		public void ThrowItem(Inventory inventory, int index, int num)
 		{
