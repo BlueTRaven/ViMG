@@ -970,7 +970,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new CaveSlime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				world.EntityManager.Add(new SlimeBig(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 			}
 		}
 
