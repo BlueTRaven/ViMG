@@ -40,6 +40,8 @@ namespace ViMG.Generation
 			//TODO "ancient_sword",
 			//TODO "ornamental_sword",
 			"flintlock_pistol",
+			"book_spell_bubble",
+			"book_spell_winds"
 		};
 
         private delegate float EaseFunction(float scale);
