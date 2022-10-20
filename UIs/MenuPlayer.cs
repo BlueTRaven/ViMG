@@ -30,11 +30,11 @@ namespace ViMG.UIs
 		private static string[] tagsHead = new string[1] { "armor_head" };
 		private static string[] tagsAccessories = new string[1] { "accessory" };
 
-		private static string[] tagsGearBySlot = new string[3]
-        {
-			"gear_heart",
-			"gear_run",
-			"gear_dj",
+		private static string[][] tagsGearBySlot = new string[3][]
+		{
+			new string[1] { "gear_heart" },
+			new string[1] { "gear_run" },
+			new string[1] { "gear_dj" },
         };
 
 		private static string[][] tagsAccessoriesBySlot = new string[6][]
@@ -359,7 +359,7 @@ namespace ViMG.UIs
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
 					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, ref held,
-						new MenuHelper.WhitelistTag(tagsGearBySlot))) != MenuHelper.ItemSlotClickOutput.None)
+						new MenuHelper.WhitelistTag(tagsGearBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
