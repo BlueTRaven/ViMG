@@ -17,7 +17,7 @@ namespace ViMG.Entities
         private readonly Texture2D texture;
         private readonly RectangleF sourceRectangle;
         private readonly Color color;
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		private float alive;
 		private float time;

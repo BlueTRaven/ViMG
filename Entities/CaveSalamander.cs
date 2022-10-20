@@ -12,7 +12,7 @@ namespace ViMG.Entities
 {
     public class CaveSalamander : Entity
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		public Vector3 MaxVelocity = new Vector3(1.6f * Cube.CUBE_SCALE);
 		public Vector3 MaxVelocityFalling = new Vector3(1.6f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 1.6f * Cube.CUBE_SCALE);

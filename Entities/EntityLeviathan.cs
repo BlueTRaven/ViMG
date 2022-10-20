@@ -21,7 +21,7 @@ namespace ViMG.Entities
 		private State state;
 		private int hitbox = -1;
 
-        private (VertexBuffer VBO, IndexBuffer IBO) quad;
+        private static (VertexBuffer VBO, IndexBuffer IBO) quad;
 
         public EntityLeviathan()
         {

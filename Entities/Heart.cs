@@ -14,7 +14,7 @@ namespace ViMG.Entities
 	[EntityMeta(0)]
     public class Heart : Entity, IHitboxOwner
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		public int Health;
 		public int MaxHealth = 20;
@@ -118,7 +118,7 @@ namespace ViMG.Entities
 				Matrix.CreateScale(scale) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), new RectangleF(0, 0, -16, 21), tintColor));
+				Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 21), tintColor));
 
 			if (Health < MaxHealth)
 				DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);

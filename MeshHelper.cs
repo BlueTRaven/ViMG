@@ -36,10 +36,10 @@ namespace ViMG
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
+			Vector2 atx = new Vector2(1, 1);
+			Vector2 btx = new Vector2(0, 1);
+			Vector2 ctx = new Vector2(0, 0);
+			Vector2 dtx = new Vector2(1, 0);
 
 			int offset = vertices.Count;
 			indices.Add(offset + 0);

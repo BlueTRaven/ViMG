@@ -119,6 +119,8 @@ namespace ViMG.Cubes
 
 		public const float CUBES_PER_UNIT = 10f;
 		public const float CUBE_SCALE = 1f / CUBES_PER_UNIT;
+		public const float PIXELS_PER_CUBE = 16;
+		public const float PIXEL_SCALE = CUBE_SCALE / PIXELS_PER_CUBE;
 
 		private readonly int[] cubeFaceLookup = new int[(int)MeshHelper.CubeFace.BACK + 1] 
 		{

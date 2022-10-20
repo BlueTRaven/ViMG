@@ -12,7 +12,7 @@ namespace ViMG.Entities
 {
     public class PlayerBubble : Entity, IHitboxOwner
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
         private float alive;
 
