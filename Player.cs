@@ -33,7 +33,9 @@ namespace ViMG
 			public float MPScale;
 			public int MPFlat;
 			public float HPRegenTime;
+			public int HPRegenAmt;
 			public float MPRegenTime;
+			public int MPRegenAmt;
 			public float MeleeAtkScale;	//added to base scale value (1).
 			public float RangeAtkScale;
 			public float MagicAtkScale;
@@ -77,7 +79,9 @@ namespace ViMG
 					MPFlat = a.MPFlat + b.MPFlat,
 					MPScale = a.MPScale + b.MPScale,
 					HPRegenTime = a.HPRegenTime + b.HPRegenTime,
+					HPRegenAmt = a.HPRegenAmt + b.HPRegenAmt,
 					MPRegenTime = a.MPRegenTime + b.MPRegenTime,
+					MPRegenAmt = a.MPRegenAmt + b.MPRegenAmt,
 					MiningScale = a.MiningScale + b.MiningScale,
 					DefenseScale = a.DefenseScale + b.DefenseScale,
 					DefenseFlat = a.DefenseFlat + b.DefenseFlat,
@@ -360,25 +364,17 @@ namespace ViMG
 
 				if (healthRegenTimer <= 0)
                 {
-					healthRegenTimer -= stats.HPRegenTime;
-					while (healthRegenTimer <= 0)
-					{
-						healthRegenTimer += 10f;
-						Heal(1);
-					}
+					healthRegenTimer = 10 - (5 * stats.HPRegenTime);
+					Heal(stats.HPRegenAmt);	//minimum of 0 hpregen; we will never regen unless stats have been increased
                 }
 
 				if (magicRegenTimer <= 0)
                 {
-					magicRegenTimer -= stats.MPRegenTime;
-					while (magicRegenTimer <= 0)
-                    {
-						magicRegenTimer += 10f;
-						Magic += 1;
+					magicRegenTimer = 10 - (5 * stats.MPRegenTime);
+					Magic += stats.MPRegenAmt + 1;	//minimum of 1 mana regen; we will always regen even if stats are unaffected
 
-						if (Magic > MaxMagic)
-							Magic = MaxMagic;
-					}
+					if (Magic > MaxMagic)
+						Magic = MaxMagic;
                 }
 			}
 

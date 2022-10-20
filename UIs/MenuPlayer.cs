@@ -146,7 +146,7 @@ namespace ViMG.UIs
 				Texture2D texture = buff.buff.texture ?? Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
 				RectangleF sourceRect = buff.buff.sourceRect;
 
-				Vector2 position = new Vector2(x * (16 + 8), y * (16 + 8));
+				Vector2 position = new Vector2(x * (SIZE + MARGIN), y * (SIZE + MARGIN));
 				var button = UI.MakeButton(new RectangleF(position, new Size(SIZE)), texture, sourceRect);
 
 				if (button.hovered)
