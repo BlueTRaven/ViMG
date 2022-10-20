@@ -4,31 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
 
 namespace ViMG.Entities
 {
-    public class AISlime : IHitboxOwner
-    {
-        private readonly World world;
-        private readonly NoticeHandler<Player> noticeHandler;
-		private readonly Entity entity;
+    public class AISlime<T> : IHitboxOwner where T : Entity, IHasStats
+	{
+		public float InvulnTimer;
 
+		public float Acceleration = Cube.CUBE_SCALE / 2f;
+
+		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
-		private Vector3 maxVelocity = new Vector3(3.2f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 3.2f * Cube.CUBE_SCALE);
-        private Rectangle3D bounds;
-		private int touchHitbox = -1;
-
-		private float invulnTimer;
-		private float despawnTimer;
-		private const float DESPAWN_TIME = 10f;
-
-		private int health;
-		private int maxHealth = 4;
-
-		public int Health => health;
-		public int MaxHealth => maxHealth;
+		private readonly NoticeHandler<Player> noticeHandler;
+		private readonly BuffManager buffManager;
+		private readonly T entity;
+		
+		private bool onGround;
+		public bool OnGround => onGround;
 
 		private Vector3 jumpDir;
 		private int numJumps;
@@ -38,108 +33,100 @@ namespace ViMG.Entities
 		public float JumpTimer => jumpTimer;
 		public float JumpTime => jumpTime;
 
-		private float alive;
-		public float Alive => alive;
+		public bool ShouldJumpAwayFromPlayer;
 
-		public RectangleF SourceRectangle;
+		public int Health;
+		public int MaxHealth = 10;
 
-		public AISlime(World world, Entity entity, NoticeHandler<Player> noticeHandler, Rectangle3D bounds, int maxHealth)
-        {
-            this.world = world;
-			this.entity = entity;
-            this.noticeHandler = noticeHandler;
-            this.bounds = bounds;
+		public int TouchDamage = 2;
+		private Rectangle3D touchHitboxBounds;
+		private int touchHitbox = -1;
 
-			this.maxHealth = maxHealth;
-			this.health = maxHealth;
-        }
-
-		public void Update(double deltaTime, bool onGround)
+		public AISlime(T entity, Rectangle3D touchHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
 		{
-			alive += (float)deltaTime;
+			this.noticeHandler = noticeHandler;
+			this.buffManager = buffManager;
+			this.entity = entity;
+			this.touchHitboxBounds = touchHitboxBounds;
+			this.Health = maxHealth;
+			this.MaxHealth = maxHealth;
+		}
+
+		public void OnUnload()
+		{
+			if (touchHitbox != -1)
+				entity.world.HitboxManager.Remove(touchHitbox);
+		}
+
+		public void Update(double deltaTime)
+		{
+			InvulnTimer -= (float)deltaTime;
 
 			if (touchHitbox == -1)
-				touchHitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);
-			else world.HitboxManager.Update(touchHitbox, bounds.Offset(entity.Position), invulnTimer <= 0);
+				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
+			else entity.world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
 
-			Vector3 actualMaxVel = maxVelocity;
+			Vector3 actualMaxVel = MaxVelocity;
 
 			Velocity.Y += World.GRAVITY;
 
-			if (invulnTimer <= 0)
+			noticeHandler.Update(deltaTime);
+			buffManager.Update(deltaTime);
+
+			if (InvulnTimer <= 0 && onGround)
 			{
-				if (onGround)
+				jumpTimer -= (float)deltaTime;
+
+				if (jumpTimer <= 0)
 				{
-					jumpTimer -= (float)deltaTime;
+					jumpTime = Main.random.NextFloat(0.25f, 3);
+					jumpTimer = jumpTime;
 
-					if (jumpTimer <= 0)
+					if (!noticeHandler.Noticed)
 					{
-						jumpTime = Main.random.NextFloat(0.25f, 3);
-						jumpTimer = jumpTime;
-
-						if (!noticeHandler.Noticed)
+						if (numJumps == 0)
 						{
-							if (numJumps == 0)
+							numJumps = Main.random.Next(1, 6);
+							jumpTime = Main.random.NextFloat(2, 6);
+							jumpTimer = jumpTime;
+
+							if (ShouldJumpAwayFromPlayer)
 							{
-								numJumps = Main.random.Next(1, 6);
-								jumpTime = Main.random.NextFloat(2, 6);
-								jumpTimer = jumpTime;
-
-								if (world.IsNight())
-								{
-									//During the night time, jump away from the player, regardless of whether or not they're noticed
-									jumpDir = entity.Position - world.player.Position;
-									jumpDir.Normalize();
-								}
-								else
-								{
-									//During the day time, jump in random directions
-									jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
-									jumpDir.Normalize();
-								}
+								jumpDir = entity.Position - entity.world.player.Position;
+								jumpDir.Normalize();
 							}
-
-							Velocity = new Vector3(jumpDir.X * 1.6f * Cube.CUBE_SCALE, maxVelocity.Y * 0.75f, jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
-
-							numJumps--;
-						}
-						else
-						{
-							Vector2 playerDir = Vector2.Normalize(new Vector2(noticeHandler.Target.Position.X, noticeHandler.Target.Position.Z) - new Vector2(entity.Position.X, entity.Position.Z));
-							Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, maxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
+							else
+							{
+								//During the day time, jump in random directions
+								jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+								jumpDir.Normalize();
+							}
 						}
 
-						onGround = false;
+						Velocity = new Vector3(jumpDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
+
+						numJumps--;
 					}
-
-					//At night, despawn 
-					if (world.IsNight())
+					else
 					{
-						float distance = (entity.Position - world.player.Position).Length();
-
-						if (distance > Cube.CUBE_SCALE * 24)
-						{
-							despawnTimer -= (float)deltaTime;
-
-							if (!noticeHandler.Noticed && despawnTimer <= 0)
-								world.EntityManager.Remove(entity);
-						}
-						else despawnTimer = DESPAWN_TIME;
+						Vector2 playerDir = Vector2.Normalize(new Vector2(noticeHandler.Target.Position.X, noticeHandler.Target.Position.Z) - new Vector2(entity.Position.X, entity.Position.Z));
+						Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
 					}
-					else despawnTimer = DESPAWN_TIME;
+
+					onGround = false;
 				}
-
-				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-				if (velXY.Length() > clampXY.Length())
-				{
-					velXY.Normalize();
-					velXY *= clampXY.Length();
-				}
-
-				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 			}
+
+			Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
+			Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+
+			if (velXY.Length() > clampXY.Length())
+			{
+				velXY.Normalize();
+				velXY *= clampXY.Length();
+			}
+
+			Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
@@ -157,24 +144,73 @@ namespace ViMG.Entities
 
 			entity.Position += Velocity * (float)deltaTime;
 
-			invulnTimer -= (float)deltaTime;
+			onGround = false;
+			UpdateCollision();
 
-			noticeHandler.Update(deltaTime);
-
-			//Kill self if too far away
-			if ((world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(entity);
+			if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+				entity.world.EntityManager.Remove(entity);
 		}
 
-		public void OnUnload()
-        {
-			if (touchHitbox != -1)
-				world.HitboxManager.Remove(touchHitbox);
-        }
+		private void UpdateCollision()
+		{
+			const int checkSize = 1;
+
+			for (int x = -checkSize; x <= checkSize; x++)
+			{
+				for (int y = -checkSize; y <= checkSize; y++)
+				{
+					for (int z = -checkSize; z <= checkSize; z++)
+					{
+						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
+
+						if (entity.world.GetChunkManager().IsInWorldBounds(pos) &&
+							entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						{
+							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+							Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+							Vector3 checkPos = entity.Position + offset;
+
+							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
+							{
+								entity.Position = (checkPos - offset) + change;
+
+								if (change.Y > 0)
+								{
+									Velocity.Y = 0;
+									onGround = true;
+								}
+								else if (change.Y < 0)
+									Velocity.Y = 0;
+								else if (change.X != 0)
+									Velocity.X = 0;
+								else if (change.Z != 0)
+									Velocity.Z = 0;
+							}
+						}
+					}
+				}
+			}
+
+			foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
+			{
+				if (otherEntity != entity)
+				{
+					Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
+
+					if (distXZ.Length() < Cube.CUBE_SCALE)
+					{
+						Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+
+						entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+					}
+				}
+			}
+		}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
-			if (invulnTimer <= 0)
+			if (InvulnTimer <= 0)
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
@@ -182,14 +218,20 @@ namespace ViMG.Entities
 
 					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
 
-					health -= other.damage;
+					Health -= other.damage;
 
-					if (health <= 0)
+					if (Health <= 0)
 					{
-						world.EntityManager.Remove(entity);
+						Health = 0;
+						entity.world.EntityManager.Remove(entity);
+
+						if (touchHitbox != -1)
+							entity.world.HitboxManager.Remove(touchHitbox);
 					}
 
-					invulnTimer = 0.25f;
+					buffManager.AddBuffs(other.applyBuffs);
+
+					InvulnTimer = 0.25f;
 
 					noticeHandler.OnTakeDamage(other.owner);
 				}

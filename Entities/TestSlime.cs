@@ -17,7 +17,7 @@ namespace ViMG.Entities
 
         private BuffManager buffManager;
         private NoticeHandler<Player> noticeHandler;
-        private AISlime2<TestSlime> ai;
+        private AISlime<TestSlime> ai;
 
         public TestSlime(Vector3 position)
         {
@@ -31,7 +31,7 @@ namespace ViMG.Entities
             buffManager = new BuffManager(this);
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 
-            ai = new AISlime2<TestSlime>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+            ai = new AISlime<TestSlime>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
                 new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, 4);
         }
 

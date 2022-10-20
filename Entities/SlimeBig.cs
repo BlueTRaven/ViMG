@@ -18,7 +18,7 @@ namespace ViMG.Entities
 
         private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
-		private AISlime2<SlimeBig> ai;
+		private AISlime<SlimeBig> ai;
 
 		private int maxHealth = 16;
 
@@ -42,7 +42,7 @@ namespace ViMG.Entities
 			buffManager = new BuffManager(this);
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 
-			ai = new AISlime2<SlimeBig>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
+			ai = new AISlime<SlimeBig>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
 				new Vector3(Cube.CUBE_SCALE * 1.5f)), noticeHandler, buffManager, maxHealth);
 		}
 

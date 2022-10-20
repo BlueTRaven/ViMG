@@ -22,7 +22,7 @@ namespace ViMG.Entities
 
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
-		private AISlime2<CaveSlime> ai;
+		private AISlime<CaveSlime> ai;
 
 		public CaveSlime(Vector3 position)
 		{
@@ -36,7 +36,7 @@ namespace ViMG.Entities
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 			buffManager = new BuffManager(this);
 
-			ai = new AISlime2<CaveSlime>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
+			ai = new AISlime<CaveSlime>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
 		}
 
