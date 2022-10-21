@@ -157,19 +157,23 @@ namespace ViMG
 			if (hitboxes[index].active)
 			{
 				hitboxes[index] = new Hitbox(hitboxes[index], bounds, canInteract);
-			}
 
-			for (int i = 0; i < hitboxes.Length; i++)
-			{
-				ref Hitbox hitbox = ref hitboxes[i];
-				if (i == index || !hitbox.active)
-					continue;
-
-				if (hitbox.bounds.Intersects(bounds))
+				for (int i = 0; i < hitboxes.Length; i++)
 				{
-					hitboxes[index].owner.OnInteractWithOther(hitboxes[index], hitbox);
+					ref Hitbox hitbox = ref hitboxes[i];
+					if (i == index || !hitbox.active)
+						continue;
+
+					if (hitbox.bounds.Intersects(bounds))
+					{
+						hitboxes[index].owner.OnInteractWithOther(hitboxes[index], hitbox);
+					}
 				}
 			}
+            else
+            {
+				Console.WriteLine("Tried to update hitbox id {0}, which was inactive.", index);
+            }
 		}
 
 		public Hitbox[] GetAll()

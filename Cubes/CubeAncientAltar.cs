@@ -10,15 +10,20 @@ namespace ViMG.Cubes
 {
 	public class CubeAncientAltar : Cube
 	{
-		public CubeAncientAltar() : base("ancient_altar", new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White, 12)
+		private readonly bool dropsSelf;
+
+		public CubeAncientAltar(bool dropsSelf) : base(dropsSelf ? "ancient_altar_placeable" : "ancient_altar_generated", new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White, 12)
 		{
-		}
+            this.dropsSelf = dropsSelf;
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
+			if (dropsSelf)
+				DropSelf(itemsToDrop);
+			else itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
 		}
 
 		public override void PostChunkGen(ChunkData chunkData, CubePosition position)

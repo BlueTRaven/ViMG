@@ -29,7 +29,7 @@ namespace ViMG.Cubes
 			Register(new CubeTinOre());
 			Register(new CubeCopperOre());
 			Register(new CubeAltarBrick());
-			Register(new CubeAncientAltar());
+			Register(new CubeAncientAltar(false));
 			Register(new CubeBrittleBone());
 			Register(new CubeSand());
 			Register(new CubeChest("wood", 3, 3));
@@ -60,6 +60,7 @@ namespace ViMG.Cubes
 			Register(new CubeShrine("shrine_akkat", new RectangleF(176, 64, 16, 16), "akkat_blessing", "Shrine to Akkat"));
 			Register(new CubeShrine("shrine_gidamu", new RectangleF(192, 64, 16, 16), "gidamu_blessing", "Shrine to Gidamu"));
 			Register(new CubeShrine("shrine_arat", new RectangleF(208, 64, 16, 16), "arat_blessing", "Shrine to Arat"));
+			Register(new CubeAncientAltar(true));
 		}
 
         protected override void PostRegistration()

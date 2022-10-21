@@ -14,6 +14,7 @@ namespace ViMG.Entities
         {
 			internal enum BatchingType
             {
+				ManualSpacing,			//each projectile direction is spaced with a manually provided array of numbers.
 				EvenSpacing,            //each projectile direction is spaced an even amount of degrees in local-space separately along pitch and yaw.
 				RandomOffsetInRange,	//each projectile direction is randomly varied in local-space in a range saparately along pitch and yaw.
             }
@@ -23,6 +24,9 @@ namespace ViMG.Entities
 
 			public float spacingYaw;
 			public float spacingPitch;
+
+			public float[] manualSpacingYaw;
+			public float[] manualSpacingPitch;
 
 			public int num;
 
@@ -44,6 +48,9 @@ namespace ViMG.Entities
 				spacingYaw = 0;
 				spacingPitch = 0;
 
+				manualSpacingYaw = null;
+				manualSpacingPitch = null;
+
 				batchingType = BatchingType.RandomOffsetInRange;
             }
 
@@ -57,7 +64,33 @@ namespace ViMG.Entities
 				this.spacingYaw = spacingYaw;
 				this.spacingPitch = spacingPitch;
 
+				manualSpacingYaw = null;
+				manualSpacingPitch = null;
+
 				batchingType = BatchingType.EvenSpacing;
+			}
+
+			/// <summary>
+			/// Creates a batch using the manual spacing method. Note that the number of elements in the provided arrays must be identical to num.
+			/// Remember pre-allocate and cache your arrays!
+			/// </summary>
+			/// <param name="num">The number of projectiles in the batch.</param>
+			/// <param name="manualSpacingYaw">The array determining spacing in yaw. May be null (in which case 0 will be assumed).</param>
+			/// <param name="manualSpacingPitch">The array determining spacing in pitch. May be null (in which case 0 will be assumed).</param>
+			public ProjectileBatchStats(int num, float[] manualSpacingYaw, float[] manualSpacingPitch)
+            {
+				this.num = num;
+
+				this.yawRandomOffsetRange = Vector2.Zero;
+				this.pitchRandomOffsetRange = Vector2.Zero;
+
+				this.spacingYaw = 0;
+				this.spacingPitch = 0;
+
+				this.manualSpacingYaw = manualSpacingYaw;
+				this.manualSpacingPitch = manualSpacingPitch;
+
+				batchingType = BatchingType.ManualSpacing;
 			}
 		}
 
@@ -314,19 +347,24 @@ namespace ViMG.Entities
 				Vector3 direction = Vector3.Normalize(projectile.velocity);
 				float speed = projectile.velocity.Length();
 
-				float yawOffset;
-				float pitchOffset;
+				float yawOffset = 0;
+				float pitchOffset = 0;
 
 				if (batchStats.batchingType == ProjectileBatchStats.BatchingType.EvenSpacing)
                 {
 					yawOffset = batchStats.spacingYaw * i;
 					pitchOffset = batchStats.spacingPitch * i;
                 }
-				else
+				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.RandomOffsetInRange)
                 {
 					yawOffset = Main.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
 					pitchOffset = Main.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
 				}
+				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.ManualSpacing)
+                {
+					yawOffset = batchStats.manualSpacingYaw != null ? batchStats.manualSpacingYaw[i] : 0;
+					pitchOffset = batchStats.manualSpacingPitch != null ? batchStats.manualSpacingPitch[i] : 0;
+                }
 
 				Matrix offset = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yawOffset), MathHelper.ToRadians(pitchOffset), 0);
 
