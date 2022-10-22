@@ -12,7 +12,8 @@ namespace ViMG.Entities
 	[EntityMeta(0, 0)]
 	public class AncientAltar : Entity, ICubeTracker
 	{
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		//private static SimpleMesh<VertexCube, int> mesh;
 
 		private float radius;
 
@@ -71,15 +72,16 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh == null)
+			if (mesh.VBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
-				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) * 
-				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
+				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+				Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
+			/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
-				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));
+				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));*/
 		}
 
 		public override void OnSave(List<byte> saveBytes)
@@ -102,51 +104,20 @@ namespace ViMG.Entities
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 		}
 
-		private static void MakeMesh(GraphicsDevice device)
+		private void MakeMesh(GraphicsDevice device)
 		{
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
+			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1));
 
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+			VertexBuffer VBO = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
+			IndexBuffer IBO = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
 
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+			VBO.SetData(vertices.ToArray());
+			IBO.SetData(indices.ToArray());
 
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+			mesh = (VBO, IBO);
 		}
 	}
 }

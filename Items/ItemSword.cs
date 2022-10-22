@@ -24,7 +24,19 @@ namespace ViMG.Items
 			else return base.GetName(item);
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override string GetDescription(ItemInstance item)
+        {
+			var meta = Get(item);
+
+			if (meta != null)
+            {
+				return meta.GetStats().GetTooltip();
+            }
+
+            return base.GetDescription(item);
+        }
+
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
