@@ -12,24 +12,29 @@ using ViMG.Entities;
 namespace ViMG.Items
 {
     public class ItemStoneBlunderbuss : Item
-    {
+	{
+		private static AttackStats attackStatsWithMusketballs = new AttackStats(Player.DamageType.Ranged, 0.95f, 4, 1);
+		private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.95f, 1, 1f);
+
 		private ProjectileManager.ProjectileBatchStats batchStatsWithMusketballs = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-45, 45), new Vector2(-45, 45));
 		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			   new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
-		private ProjectileManager.ProjectileStats statsWithMusketballs = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 4,
+		private ProjectileManager.ProjectileStats statsWithMusketballs = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 4, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, true, 0.3f, true);
 
 		private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-25, 25), new Vector2(-25, 25));
 		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			   new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1,
+		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, false, 0, true);
 
 		public ItemStoneBlunderbuss() : base("stone_blunderbuss", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 128, 16, 16))
         {
 			name = "Stone Blunderbuss";
 			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +
-				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread. Consumes 4 ammo per shot.";
+				attackStats.GetTooltip() +
+				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread.\n" +
+				"Consumes 4 ammo per shot.";
 			flipXInHand = true;
         }
 
@@ -43,14 +48,27 @@ namespace ViMG.Items
 				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
 				if (ammo.item == Main.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
                 {
+					itemCooldownTime = attackStatsWithMusketballs.cooldownTime;
+					int damage = attackStatsWithMusketballs.damage;
+					float knockback = attackStatsWithMusketballs.knockback;
+					player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+					statsWithMusketballs.damage = damage;
+					statsWithMusketballs.knockback = knockback;
+
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStatsWithMusketballs, visStatsWithMusketballs, statsWithMusketballs, bounds);
                 }
                 else
                 {
+					itemCooldownTime = attackStats.cooldownTime;
+					int damage = attackStats.damage;
+					float knockback = attackStats.knockback;
+					player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+					stats.damage = damage;
+					stats.knockback = knockback;
+
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds);
 				}
 			
-				itemCooldownTime = 0.95f;
 				inventory.Remove(ammoIndex, 4);
 				return true;
 			}

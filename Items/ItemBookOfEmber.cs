@@ -12,12 +12,13 @@ namespace ViMG.Items
 {
     public class ItemBookOfEmber : Item
     {
+		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 0.25f, 1, 0f), 1);
         public ItemBookOfEmber() : base("book_spell_ember", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 32, 16, 16))
         {
 			name = "Spellbook: Ember";
 			description = "A spellbook with an explanation of how to cast \"Ember\".\n" +
-				"This spell will light a small fire on any surface in front of you.\n" +
-				"Costs 1 magic.";
+				magicStats.GetTooltip() +
+				"This spell will light a small fire on any surface in front of you.";
 
 			flipXInHand = true;
         }
@@ -26,7 +27,7 @@ namespace ViMG.Items
 		{
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
-			if (player.Magic < 1)
+			if (!magicStats.CanUse(player))
 				return false;
 
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
@@ -46,14 +47,17 @@ namespace ViMG.Items
 				if (player.GetWorld().GetChunkManager().IsInWorldBounds(placePosCS) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placePosCS)
 					&& Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
 				{
+					itemCooldownTime = magicStats.attackStats.cooldownTime;
+					int damage = magicStats.attackStats.damage;
+					float knockback = magicStats.attackStats.knockback;
+					player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+
+					magicStats.Use(player);
+
 					Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placePosCS);
 					chunk.GetData().SetCube(placePosCS, cube.Id);
 
 					cube.OnPlayerPlaced(player, placePosCS);
-
-					player.Magic -= 1;
-
-					itemCooldownTime = 0.25f;
 
 					return true;
 				}

@@ -28,8 +28,14 @@ namespace ViMG.Items
 		{
 			if (inventory.FindTag("ammo_arrow", out int ammoIndex).valid)
 			{
+				itemCooldownTime = this.attackStats.cooldownTime;
+
+				int damage = attackStats.damage;
+				float knockback = attackStats.knockback;
+				player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, this.attackStats.damage, 
+				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, damage, knockback,
 					Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, true, 0.75f, true);
 
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
@@ -37,8 +43,6 @@ namespace ViMG.Items
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{
-					itemCooldownTime = this.attackStats.cooldownTime;
-					player.PerformAttack(Player.PlayerDamageType.Range, ref itemCooldownTime);
 					inventory.Remove(ammoIndex, 1);
 					return true;
 				}

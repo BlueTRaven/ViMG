@@ -13,16 +13,19 @@ namespace ViMG.Items
 {
     public class ItemHandmadeAutoGun : Item
     {
+        private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.8f, 1, 1);
+
         private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(2, 0, 0);
         private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
                new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-        private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1,
+        private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
             Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, false, 0, true);
 
         public ItemHandmadeAutoGun() : base("handmade_autogun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 128, 16, 16))
         {
             name = "Handmade Automatic Gun";
-            description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.";
+            description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.\n" +
+                attackStats.GetTooltip();
 
             flipXInHand = true;
         }
@@ -33,6 +36,13 @@ namespace ViMG.Items
 
             if (ammo.valid && ammo.num >= 2)
             {
+                itemCooldownTime = attackStats.cooldownTime;
+                int damage = attackStats.damage;
+                float knockback = attackStats.knockback;
+                player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+                stats.damage = damage;
+                stats.knockback = knockback;
+
                 Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
                 Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
                 batchStats.spacingYaw = Main.random.NextFloat(-15, 15);
@@ -40,7 +50,6 @@ namespace ViMG.Items
 
                 player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds);
 
-                itemCooldownTime = 0.8f;
                 inventory.Remove(ammoIndex, 2);
                 return true;
             }

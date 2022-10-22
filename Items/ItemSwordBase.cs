@@ -17,9 +17,12 @@ namespace ViMG.Items
 		{
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
-			player.SpawnHitbox(1, Player.PlayerDamageType.Melee, -Main.camera.Forward, 1f);
 			itemCooldownTime = 0.35f;
-			player.PerformAttack(Player.PlayerDamageType.Melee, ref itemCooldownTime);
+			int damage = 1;
+			float knockback = 1f;
+			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+
+			player.SpawnHitbox(1, Player.DamageType.Melee, -Main.camera.Forward, 1f);
 
 			return true;
 		}

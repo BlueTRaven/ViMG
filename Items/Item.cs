@@ -40,13 +40,15 @@ namespace ViMG.Items
 
 		public struct AttackStats
 		{
+			public Player.DamageType damageType;
 			public float cooldownTime;
 			public int damage;
 			public float knockback;
 			//float size;
 
-			public AttackStats(float cooldownTime, int damage, float knockback)
+			public AttackStats(Player.DamageType damageType, float cooldownTime, int damage, float knockback)
 			{
+				this.damageType = damageType;
 				this.cooldownTime = cooldownTime;
 				this.damage = damage;
 				this.knockback = knockback;
@@ -54,9 +56,11 @@ namespace ViMG.Items
 
 			public string GetTooltip()
             {
-				return String.Format("Damage: {0}\n" +
-					"Knockback: {1}%\n" +
-					"{2} Speed\n", damage, knockback * 100, Util.CooldownToString(cooldownTime));
+				return String.Format("{0} Weapon\n" +
+					"Damage: {1}\n" +
+					"Knockback: {2}%\n" +
+					"{3} Speed\n", 
+					damageType.ToString(), damage, knockback * 100, Util.CooldownToString(cooldownTime));
             }
 		}
 

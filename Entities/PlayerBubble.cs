@@ -21,17 +21,22 @@ namespace ViMG.Entities
 
         private Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f));
         private float explodingTime;
+        
+        private readonly int damage;
+        private readonly float knockback;
 
-        public PlayerBubble(Vector3 position)
+        public PlayerBubble(Vector3 position, int damage, float knockback)
         {
             this.Position = position;
+            this.damage = damage;
+            this.knockback = knockback;
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
-            hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.PLAYER_DEAL, 8, 8);
+            hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.PLAYER_DEAL, damage, knockback);
         }
 
         public override void Update(double deltaTime)

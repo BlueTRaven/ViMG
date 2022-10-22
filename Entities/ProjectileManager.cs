@@ -137,6 +137,7 @@ namespace ViMG.Entities
 		{
 			public HitboxManager.Group group;
 			public int damage;
+			public float knockback;
 			public float collisionRadius;
 			public float size;
 			public bool gravity;
@@ -144,10 +145,11 @@ namespace ViMG.Entities
 			public bool dieOnCollision;
 			public Buff.BuffInstance[] applyBuffs;
 
-            public ProjectileStats(HitboxManager.Group group, int damage, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
+            public ProjectileStats(HitboxManager.Group group, int damage, float knockback, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
 			{
 				this.group = group;
 				this.damage = damage;
+				this.knockback = knockback;
 				this.collisionRadius = collisionRadius;
 				this.size = size;
 				this.gravity = gravity;
@@ -240,7 +242,7 @@ namespace ViMG.Entities
 				if (projectiles[i].hitbox == -1)
 				{
 					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), 
-						projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, 1f, 
+						projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, projectiles[i].stats.knockback, 
 						applyBuffs: projectiles[i].stats.applyBuffs);
 				}
                 else

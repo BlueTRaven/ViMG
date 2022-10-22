@@ -82,7 +82,7 @@ namespace ViMG.Entities
 			stateTime = CHASE_TIME;
 
 			batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
-			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
+			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
 			visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(48, 128, 32, 32), Cube.CUBE_SCALE);
         }
 

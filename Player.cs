@@ -18,11 +18,11 @@ namespace ViMG
 	[EntityMeta(9, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
-		public enum PlayerDamageType
+		public enum DamageType
         {
 			Unspecified,
 			Melee,
-			Range,
+			Ranged,
 			Magic,
         }
 
@@ -164,7 +164,7 @@ namespace ViMG
 		private const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
-		private PlayerDamageType hitboxDamageType = PlayerDamageType.Unspecified;
+		private DamageType hitboxDamageType = DamageType.Unspecified;
 		private Vector3 hitboxOffset;
 		private float hitboxTimer;
 		private float hitboxSize;
@@ -1271,14 +1271,9 @@ namespace ViMG
 			//useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
 		}
 
-		public void PerformAttack(PlayerDamageType damageType, ref float cooldownTimer)
+		public void PerformAttack(DamageType damageType, ref float cooldownTimer, ref int damage, ref float knockback)
 		{
 			//Velocity.X = -Main.camera.Forward.X * 512f;
-
-			if (onGround)
-				Velocity.Y = -Main.camera.Forward.Y * 3.2f * Cube.CUBE_SCALE;
-			else if (Velocity.Y > Cube.CUBE_SCALE)
-				Velocity.Y = Cube.CUBE_SCALE;
 
 			//Velocity.Z = -Main.camera.Forward.Z * 512f;
 
@@ -1310,16 +1305,23 @@ namespace ViMG
 				attackStateTargetPos = nearestHitbox.bounds.Center;
 			}*/
 
-			//this.itemUseCooldownTimer = cooldownTimer;
-
 			float scale = 0;
 
-			if (damageType == PlayerDamageType.Melee)
+			if (damageType == DamageType.Melee)
+			{
 				scale = stats.MeleeSpdScale;
-			else if (damageType == PlayerDamageType.Range)
+
+				if (onGround)
+					Velocity.Y = -Main.camera.Forward.Y * 3.2f * Cube.CUBE_SCALE;
+				else if (Velocity.Y > Cube.CUBE_SCALE)
+					Velocity.Y = Cube.CUBE_SCALE;
+			}
+			else if (damageType == DamageType.Ranged)
 				scale = stats.RangeSpdScale;
-			else if (damageType == PlayerDamageType.Magic)
+			else if (damageType == DamageType.Magic)
 				scale = stats.MagicSpdScale;
+
+			damage = DealDamageCalculation(damageType, damage);
 
 			for (int i = 0; i < accessoryInventory.NumSlots; i++)
             {
@@ -1334,7 +1336,7 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int damage, PlayerDamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
+		public void SpawnHitbox(int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
 		{
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -1625,22 +1627,22 @@ namespace ViMG
 			return (int)damage;
         }
 
-		private int DealDamageCalculation(PlayerDamageType damageType, int damage)
+		private int DealDamageCalculation(DamageType damageType, int damage)
         {
 			float startScale = 1;
 			float calculatedDamage = damage;
 
-			if (damageType == PlayerDamageType.Melee)
+			if (damageType == DamageType.Melee)
 			{
 				calculatedDamage *= startScale + stats.MeleeAtkScale;
 				calculatedDamage += stats.MeleeFlat;
 			}
-			else if (damageType == PlayerDamageType.Magic)
+			else if (damageType == DamageType.Magic)
 			{
 				calculatedDamage *= startScale + stats.MagicAtkScale;
 				calculatedDamage += stats.MagicFlat;
 			}
-			else if (damageType == PlayerDamageType.Range)
+			else if (damageType == DamageType.Ranged)
 			{
 				calculatedDamage *= startScale + stats.RangeAtkScale;
 				calculatedDamage += stats.RangeFlat;

@@ -13,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemBoneStaff : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(0.68f, 6, 1), 3);
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 0.68f, 6, 1), 3);
 
         private ProjectileManager.ProjectileVisStats visStats;
         private ProjectileManager.ProjectileStats stats;
@@ -26,21 +26,25 @@ namespace ViMG.Items
 
             visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(80, 128, 32, 32), Cube.CUBE_SCALE);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, magicStats.attackStats.damage,
-                Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
+                magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
         {
             if (magicStats.CanUse(player))
             {
+                magicStats.Use(player);
+                itemCooldownTime = magicStats.attackStats.cooldownTime;
+                int damage = magicStats.attackStats.damage;
+                float knockback = magicStats.attackStats.knockback;
+                player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+                stats.damage = damage;
+                stats.knockback = knockback;
+
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
                     Vector3.Normalize(facing) * Cube.CUBE_SCALE * 6f, Cube.CUBE_SCALE * 10, visStats, stats),
                     new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 
-                magicStats.Use(player);
-
-                itemCooldownTime = magicStats.attackStats.cooldownTime;
-                player.PerformAttack(Player.PlayerDamageType.Magic, ref itemCooldownTime);
                 return true;
             }
 

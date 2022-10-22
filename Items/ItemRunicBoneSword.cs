@@ -11,13 +11,13 @@ namespace ViMG.Items
 {
     public class ItemRunicBoneSword : Item
     {
-        private static AttackStats stats = new AttackStats(1.85f, 16, 1);
+        private static AttackStats attackStats = new AttackStats(Player.DamageType.Melee, 1.85f, 16, 1);
 
         public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
         {
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
-                stats.GetTooltip() +
+                attackStats.GetTooltip() +
                 "Hitting enemies results in a small explosion of bones. (Unimplemented)";
 
             scale = 2f;
@@ -27,9 +27,12 @@ namespace ViMG.Items
         {
             base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
-            player.SpawnHitbox(stats.damage, Player.PlayerDamageType.Melee, -Main.camera.Forward, stats.knockback);
-            itemCooldownTime = stats.cooldownTime;
-            player.PerformAttack(Player.PlayerDamageType.Melee, ref itemCooldownTime);
+            itemCooldownTime = attackStats.cooldownTime;
+            int damage = attackStats.damage;
+            float knockback = attackStats.knockback;
+            player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+
+            player.SpawnHitbox(damage, Player.DamageType.Melee, -Main.camera.Forward, knockback);
 
             return true;
         }

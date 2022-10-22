@@ -13,13 +13,15 @@ namespace ViMG.Items
 {
     public class ItemBookBubble : Item
     {
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 8, 8), 5);
+
         public ItemBookBubble() : base("book_spell_bubble", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 48, 16, 16))
         {
             name = "Spellbook: Bubble";
             description = "A spellbook with an explanation of how to cast \"Bubble\".\n" +
                 "Press LMB to use.\n" +
-                "This spell will create a floating bubble in front of you. Enemies that touch this bubble will cause it to explode and deal heavy damage.\n" +
-                "Magic Cost: 5";
+                magicStats.GetTooltip() +
+                "Creates a floating bubble. Enemies that touch this bubble will cause it to explode and deal heavy damage.\n";
 
             flipXInHand = true;
         }
@@ -28,23 +30,29 @@ namespace ViMG.Items
         {
             bool valid = base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
-            if (player.Magic < 5)
-                return false;
-
-            var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
-            (Vector3 pos) =>
+            if (magicStats.CanUse(player))
             {
-                return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
-            });
+                var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+                (Vector3 pos) =>
+                {
+                    return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+                });
 
-            Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;
-            Vector3 placeOffset = lookAtResult.hasHit ? CubePosition.ToWorldSpaceV3(lookAtResult.normal) * 2f : Vector3.Zero;
+                Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;
+                Vector3 placeOffset = lookAtResult.hasHit ? CubePosition.ToWorldSpaceV3(lookAtResult.normal) * 2f : Vector3.Zero;
 
-            player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset));
+                int damage = magicStats.attackStats.damage;
+                float knockback = magicStats.attackStats.knockback;
+                player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+                player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset, damage, knockback));
 
-            player.Magic -= 5;
+                magicStats.Use(player);
 
-            return valid;
+                return true;
+            }
+
+            itemCooldownTime = 0;
+            return false;
         }
     }
 }

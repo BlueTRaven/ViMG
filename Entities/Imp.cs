@@ -133,7 +133,7 @@ namespace ViMG.Entities
 						if (fireTimer <= 0)
                         {
 							ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
-								HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, false, 0, true); ;
+								HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, false, 0, true); ;
 							ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), 
 								new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE, 
 								Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
