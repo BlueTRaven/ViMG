@@ -1494,16 +1494,19 @@ namespace ViMG
 			return accessoryInventory;
         }
 
-		public Matrix GetHeldMatrix()
+		public Matrix GetHeldMatrix(float originX, float originY, Vector3 scale)
 		{
 			float percent = useTimer / ATTACK_TIME;
 
 			if (useTimer <= 0)
 				percent = 0;
 
-			Matrix mat =
-				Matrix.CreateTranslation(-Cube.CUBE_SCALE / 4f, -Cube.CUBE_SCALE / 4f, 0) *
-				Matrix.CreateScale(0.5f) *
+			float ox = Cube.CUBE_SCALE / 4f - originX;
+			float oy = Cube.CUBE_SCALE / 4f - originY;
+
+            Matrix mat =
+				Matrix.CreateTranslation(-originX, -originY, 0) *
+				Matrix.CreateScale(0.5f * scale) *
 				Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
 				Matrix.CreateRotationX(-Main.camera.Rotation.X) *

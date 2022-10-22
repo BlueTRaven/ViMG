@@ -10,6 +10,34 @@ namespace ViMG.Items
 {
 	public abstract class Item : IRegisterable
 	{
+		public struct MagicAttackStats
+        {
+			public int magicUse;
+			public AttackStats attackStats;
+
+			public MagicAttackStats(AttackStats attackStats, int magicUse)
+            {
+				this.magicUse = magicUse;
+				this.attackStats = attackStats;
+            }
+
+			public bool CanUse(Player player)
+            {
+				return player.Magic >= magicUse;
+            }
+
+			public void Use(Player player)
+            {
+				player.Magic -= magicUse;
+            }
+
+			public string GetTooltip()
+            {
+				return String.Format("{0}" +
+					"Magic Use: {1}\n", attackStats.GetTooltip(), magicUse);
+            }
+        }
+
 		public struct AttackStats
 		{
 			public float cooldownTime;
@@ -34,6 +62,7 @@ namespace ViMG.Items
 
 		public readonly Texture2D Texture;
 		public readonly RectangleF SourceRect;
+		protected float scale = 1f;
 
 		protected bool flipXInHand;
 
@@ -95,7 +124,22 @@ namespace ViMG.Items
 
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{
-			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix());
+			float widthScale = 1;
+			float heightScale = 1;
+			//we need to correct the aspect ratio of the quad since it's only 1x1 and textures may not be.
+			if (SourceRect.width > SourceRect.height)
+			{
+				widthScale = SourceRect.width / SourceRect.height;
+			}
+			else if (SourceRect.height > SourceRect.width)
+			{
+				heightScale = SourceRect.height / SourceRect.width;
+			}
+
+			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
+
+			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, 
+				correctedScale * new Vector3(scale, scale, 1)));
 		}
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
@@ -122,20 +166,6 @@ namespace ViMG.Items
 			if (meshItemQuadInWorld == null)
 				MakeMesh(device);
 
-			float widthScale = 1;
-			float heightScale = 1;
-
-			if (SourceRect.width > SourceRect.height)
-			{
-				widthScale = SourceRect.width / SourceRect.height;
-			}
-			else if (SourceRect.height > SourceRect.width)
-			{
-				heightScale = SourceRect.height / SourceRect.width;
-			}
-
-			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
-
 			RectangleF sourceRect = SourceRect;
 			if (flipXInHand)
             {
@@ -145,7 +175,7 @@ namespace ViMG.Items
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
 				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, 
-				Matrix.CreateScale(correctedScale) * transform, sourceRect));
+				transform, sourceRect));
 
 			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}

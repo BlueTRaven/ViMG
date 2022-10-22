@@ -14,14 +14,14 @@ namespace ViMG.Items
 		private Color color;
 		private string materialName;
 
-		private readonly AttackStats stats;
+		private readonly AttackStats attackStats;
 
 		public ItemBow(string material, Color color, AttackStats stats) : base("bow_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 64, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 
 			this.color = color;
-			this.stats = stats;
+			this.attackStats = stats;
 		}
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
@@ -29,7 +29,7 @@ namespace ViMG.Items
 			if (inventory.FindTag("ammo_arrow", out int ammoIndex).valid)
 			{
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, this.stats.damage, 
+				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, this.attackStats.damage, 
 					Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, true, 0.75f, true);
 
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
@@ -37,7 +37,8 @@ namespace ViMG.Items
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{
-					itemCooldownTime = this.stats.cooldownTime;
+					itemCooldownTime = this.attackStats.cooldownTime;
+					player.PerformAttack(Player.PlayerDamageType.Range, ref itemCooldownTime);
 					inventory.Remove(ammoIndex, 1);
 					return true;
 				}
@@ -59,7 +60,7 @@ namespace ViMG.Items
 
 		public ref readonly AttackStats GetStats()
 		{
-			return ref stats;
+			return ref attackStats;
 		}
 
 		public override string GetDescription(ItemInstance item)

@@ -97,6 +97,8 @@ namespace ViMG.Items
 			Register(new ItemHeart());
 			Register(new ItemSuspiciouslyGlowingSkull());
 			Register(new ItemRunicBoneSword());
+			Register(new ItemBowner());
+			Register(new ItemBoneStaff());
 			RegisterItemCubes();
 		}
 

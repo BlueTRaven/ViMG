@@ -11,7 +11,7 @@ namespace ViMG.Items
 		public ItemAltarDust() : base("altar_dust", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 16, 16, 16))
 		{
 			name = "Ancient Altar Dust";
-			description = "Dust from an altar so ancient that merely touching it causes it to disintigrate.";
+			description = "Dust from an altar so ancient that merely touching it causes it to disintigrate. It is infused with a strange, otherworldly energy.";
 		}
 	}
 }

@@ -113,7 +113,7 @@ namespace ViMG
 		{
 			for (int i = 0; i < numSlots; i++)
 			{
-				if (items[i].item.Tags.Contains(tag))
+				if (items[i].valid && items[i].item.Tags.Contains(tag))
 				{
 					index = i;
 					return ref Get(i);

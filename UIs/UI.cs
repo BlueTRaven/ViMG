@@ -394,10 +394,10 @@ namespace ViMG.UIs
 			{
 				if (itemSlot.item.item != null)
 				{
-					const int minW = 128;
 					const int minH = 16;
 
-					const int maxW = 256;
+					int minW = Options.CurrentWindowResolution.X / 10;
+					int maxW = Options.CurrentWindowResolution.X / 5;
 
 					var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 

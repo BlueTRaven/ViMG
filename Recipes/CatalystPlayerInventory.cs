@@ -59,6 +59,10 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), 4, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 4, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ammo_bullet_musketball"), 4, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("item_wood"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 2, 1),
@@ -90,23 +94,32 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 20, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 2, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_infused_bone"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 4, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_ancient_altar"), 1, 1) }));
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_infused_bone"), 4, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 16, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 6, 1),
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bs_suspiciously_glowing_skull"), 1, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 8, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ancient_altar_placeable"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 2, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), 1, 1) }));
 
-			recipes.Add(new RecipeFuzzy(this,
+			/*recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 4, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 1, 1) }));*/
 
 			recipes.Add(new RecipeFuzzy(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 30, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 2, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 30, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 50, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_furnace_t1"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,

@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemRunicBoneSword : Item
     {
-        private static AttackStats stats = new AttackStats(1.25f, 16, 1);
+        private static AttackStats stats = new AttackStats(1.85f, 16, 1);
 
         public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
         {
@@ -19,6 +19,8 @@ namespace ViMG.Items
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
                 stats.GetTooltip() +
                 "Hitting enemies results in a small explosion of bones. (Unimplemented)";
+
+            scale = 2f;
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
