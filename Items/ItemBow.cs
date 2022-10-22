@@ -62,6 +62,11 @@ namespace ViMG.Items
 			return ref stats;
 		}
 
+		public override string GetDescription(ItemInstance item)
+		{
+			return GetStats().GetTooltip();
+		}
+
 		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			if (meshItemQuadInWorld == null)
