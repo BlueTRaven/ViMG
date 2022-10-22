@@ -25,6 +25,13 @@ namespace ViMG.Items
 				this.width = width;
 				this.depth = depth;
 			}
+
+			public string GetTooltip()
+            {
+				return String.Format("Mining Rate: {0}\n" +
+					"{1} Speed\n" +
+					"Size: {2}x{3}x{4} Width by Height by Depth\n", mineRate, Util.CooldownToString(cooldownTime), width + 1, height + 1, depth + 1);
+            }
 		}
 
 		private Color color;

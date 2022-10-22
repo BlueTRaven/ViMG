@@ -9,6 +9,29 @@ namespace ViMG
 {
     public static class Util
     {
+		public static string CooldownToString(float cooldownTime)
+		{
+			if (cooldownTime <= 0.125f)
+				return "Blisteringly Fast";
+			else if (cooldownTime <= 0.25f)
+				return "Very Fast";
+			else if (cooldownTime < 0.5)
+				return "Fast";
+
+			if (cooldownTime >= 2.5f)
+				return "Snail";
+			else if (cooldownTime >= 2f)
+				return "Very Slow";
+			else if (cooldownTime >= 1.5f)
+				return "Sluggish";
+			else if (cooldownTime >= 1f)
+				return "Slow";
+			else if (cooldownTime >= 0.5f)
+				return "Ordinary";
+
+			return "UNKNOWN???";
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void OneDToThreeD(int i, out ValuePoint3D point)
 		{

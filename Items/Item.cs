@@ -28,30 +28,7 @@ namespace ViMG.Items
             {
 				return String.Format("Damage: {0}\n" +
 					"Knockback: {1}%\n" +
-					"{2} Speed\n", damage, knockback * 100, CooldownToString());
-            }
-
-			private string CooldownToString()
-            {
-				if (cooldownTime <= 0.125f)
-					return "Blisteringly Fast";
-				else if (cooldownTime <= 0.25f)
-					return "Very Fast";
-				else if (cooldownTime < 0.5)
-					return "Fast";
-
-				if (cooldownTime >= 2.5f)
-					return "Snail";
-				else if (cooldownTime >= 2f)
-					return "Very Slow";
-				else if (cooldownTime >= 1.5f)
-					return "Sluggish";
-				else if (cooldownTime >= 1f)
-					return "Slow";
-				else if (cooldownTime >= 0.5f)
-					return "Ordinary";
-
-				return "UNKNOWN???";
+					"{2} Speed\n", damage, knockback * 100, Util.CooldownToString(cooldownTime));
             }
 		}
 
