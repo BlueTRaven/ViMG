@@ -1571,18 +1571,21 @@ namespace ViMG
 			if (us.canInteract && other.canInteract && 
 				us.group == HitboxManager.Group.PLAYER_DEAL && (other.group & HitboxManager.Group.ENEMYHOSTILE_TAKE) == HitboxManager.Group.ENEMYHOSTILE_TAKE)
             {
-				var item = inventory.Get(us.inventorySlot);
-				if (item.valid)
+				if (us.inventorySlot >= 0)
 				{
-					inventory.Get(us.inventorySlot).item.OnDealDamage(this, inventory, us.inventorySlot, other.owner);
-
-					for (int i = 0; i < accessoryInventory.NumSlots; i++)
+					var item = inventory.Get(us.inventorySlot);
+					if (item.valid)
 					{
-						if (accessoryInventory.Get(i).valid)
-							accessoryInventory.Get(i).item.OnDealDamage(this, inventory, us.inventorySlot, other.owner);
+						inventory.Get(us.inventorySlot).item.OnDealDamage(this, inventory, us.inventorySlot, other);
+
+						for (int i = 0; i < accessoryInventory.NumSlots; i++)
+						{
+							if (accessoryInventory.Get(i).valid)
+								accessoryInventory.Get(i).item.OnDealDamage(this, inventory, us.inventorySlot, other);
+						}
 					}
+					//This may not be a valid hit; the enemy might be invulnerable
 				}
-				//This may not be a valid hit; the enemy might be invulnerable
             }
 		}
 

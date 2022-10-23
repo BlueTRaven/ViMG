@@ -27,9 +27,9 @@ namespace ViMG.Items
             stats.DefenseFlat += 3;
         }
 
-        public override void OnDealDamage(Player player, Inventory inventory, int index, IHitboxOwner hit)
+        public override void OnDealDamage(Player player, Inventory inventory, int index, HitboxManager.Hitbox otherHitbox)
         {
-            base.OnDealDamage(player, inventory, index, hit);
+            base.OnDealDamage(player, inventory, index, otherHitbox);
 
             player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("leather_glove")));
         }

@@ -124,7 +124,7 @@ namespace ViMG.Items
 
 		public virtual void OnAttack(Player player, Inventory inventory, int index) { }
 
-		public virtual void OnDealDamage(Player player, Inventory inventory, int index, IHitboxOwner hit) { }
+		public virtual void OnDealDamage(Player player, Inventory inventory, int index, HitboxManager.Hitbox otherHitbox) { }
 
 		public void DrawInHand(GraphicsDevice device, ItemInstance item, Player player, Vector3 facing)
 		{

@@ -353,7 +353,7 @@ namespace ViMG.Entities
 		}
 
 		public void AddBatch(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, 
-			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds, int inventorySlot = 0)
+			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds, int inventorySlot = -1)
         {
 			for (int i = 0; i < batchStats.num; i++)
 			{
