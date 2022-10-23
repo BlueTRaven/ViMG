@@ -167,6 +167,12 @@ namespace ViMG
 					if (hitbox.bounds.Intersects(bounds))
 					{
 						hitboxes[index].owner.OnInteractWithOther(hitboxes[index], hitbox);
+
+						//OnInteractWithOther may occasionally remove this hitbox (for instance, a non-piercing projectile).
+						//This is behavior we want to support,
+						//so we simply check to see if the hitbox is active after this interaction. If it isn't, then break.
+						if (!hitboxes[index].active)
+							break;
 					}
 				}
 			}
