@@ -19,14 +19,18 @@ namespace ViMG.Entities
 			SetupDash,
 			Dash,
 			Rotate,
+			SlowChase,
         }
 
 		private const float CHASE_TIME = 1f;//6f;
 		private const float SETUPDASH_TIME = 3f;
 		private const float DASH_TIME = 0.75f;
 		private const float ROTATE_TIME = 1.4f; //or, in other words, time between each skull fire
+		private const float SLOW_CHASE_TIME = 8f;
 
-		private const float FOLLOW_DISTANCE = Cube.CUBE_SCALE * 12f;
+		private const float CHASE_DISTANCE = Cube.CUBE_SCALE * 12f;
+		private const float DASH_DISTANCE = Cube.CUBE_SCALE * 8f;
+		private const float SLOWCHASE_DISTANCE = Cube.CUBE_SCALE * 1.5f;
 
         private static (VertexBuffer VBO, IndexBuffer IBO) meshHead;
         private static (VertexBuffer VBO, IndexBuffer IBO) meshVertibrae;
@@ -140,7 +144,7 @@ namespace ViMG.Entities
 
 				stateTimer -= (float)deltaTime;
 
-				if (direction.Length() > FOLLOW_DISTANCE)
+				if (direction.Length() > CHASE_DISTANCE)
 				{
 					velocity += Vector3.Normalize(direction * Cube.CUBE_SCALE);
 				}
@@ -154,7 +158,7 @@ namespace ViMG.Entities
 						stateTimer = SETUPDASH_TIME;
 						stateTime = SETUPDASH_TIME;
 
-						targetOffset = -Vector3.Normalize(new Vector3(direction.X, 0, direction.Z)) * FOLLOW_DISTANCE;
+						targetOffset = -Vector3.Normalize(new Vector3(direction.X, 0, direction.Z)) * DASH_DISTANCE;
 					}
 				}
 
@@ -259,9 +263,9 @@ namespace ViMG.Entities
 				{
 					if (Math.Abs(stateCounter) >= 4)
                     {
-						state = State.Chase;
-						stateTimer = CHASE_TIME;
-						stateTime = CHASE_TIME;
+						state = State.SlowChase;
+						stateTimer = SLOW_CHASE_TIME;
+						stateTime = SLOW_CHASE_TIME;
 
 						stateCounter = 0;
 					}
@@ -276,6 +280,31 @@ namespace ViMG.Entities
 				}
 
 				ClampVelocityLength(Cube.CUBE_SCALE * 64f);
+			}
+			else if (state == State.SlowChase)
+            {
+				targetPosition = world.player.Position;
+				Vector3 direction = targetPosition - Position;
+
+				stateTimer -= (float)deltaTime;
+
+				if (direction.Length() > SLOWCHASE_DISTANCE)
+				{
+					velocity += Vector3.Normalize(direction * Cube.CUBE_SCALE / 2f);
+				}
+				else
+				{
+					velocity *= 0.98f;
+
+					if (stateTimer <= 0)
+					{
+						state = State.Chase;
+						stateTimer = CHASE_TIME;
+						stateTime = CHASE_TIME;
+					}
+				}
+
+				ClampVelocityLength(Cube.CUBE_SCALE * 5.5f);
 			}
 
 			if (world.player.Health <= 0)
