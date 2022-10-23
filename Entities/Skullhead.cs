@@ -213,7 +213,7 @@ namespace ViMG.Entities
 
 				if (direction.Length() > Cube.CUBE_SCALE / 2f)
 				{
-					velocity = Vector3.Normalize(direction) * Cube.CUBE_SCALE * 32f;
+					velocity = Vector3.Normalize(direction) * Cube.CUBE_SCALE * 20f;
 					inRange = false;
 				}
 				else inRange = true;
