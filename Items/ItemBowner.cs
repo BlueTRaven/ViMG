@@ -28,7 +28,7 @@ namespace ViMG.Items
 
 			visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, attackStats.damage, attackStats.knockback,
-				Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, true, 0.5f, true);
+				Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, 1, true, 0.5f, true);
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
 		}
 
@@ -45,7 +45,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.AddBatch(player, player.Position, Vector3.Normalize(facing) * Cube.CUBE_SCALE * 32,
-					Cube.CUBE_SCALE * 10, batchStats, visStats, stats, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+					Cube.CUBE_SCALE * 10, batchStats, visStats, stats, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)), index);
 				
 				inventory.Remove(ammoIndex, 2);
 				return true;

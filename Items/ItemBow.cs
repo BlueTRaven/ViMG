@@ -36,10 +36,10 @@ namespace ViMG.Items
 
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, damage, knockback,
-					Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, true, 0.75f, true);
+					Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, 1, true, 0.75f, true);
 
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
-					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, visStats, stats),
+					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, visStats, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{

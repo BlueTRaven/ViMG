@@ -143,15 +143,17 @@ namespace ViMG.Entities
 			public bool gravity;
             public float gravityScale;
 			public bool dieOnCollision;
+			public int pierce;
 			public Buff.BuffInstance[] applyBuffs;
 
-            public ProjectileStats(HitboxManager.Group group, int damage, float knockback, float collisionRadius, float size, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
+            public ProjectileStats(HitboxManager.Group group, int damage, float knockback, float collisionRadius, float size, int pierce = 1, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
 			{
 				this.group = group;
 				this.damage = damage;
 				this.knockback = knockback;
 				this.collisionRadius = collisionRadius;
 				this.size = size;
+				this.pierce = pierce;
 				this.gravity = gravity;
 				this.gravityScale = gravityScale;
 				this.dieOnCollision = dieOnCollision;
@@ -177,9 +179,11 @@ namespace ViMG.Entities
 			public int hitbox;
 			public int light;
 
+			public int inventorySlot;
+
 			public int currentPierce;
 
-			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
+			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats, int inventorySlot = -1)
 			{
 				this.owner = owner;
 				this.position = position;
@@ -194,7 +198,8 @@ namespace ViMG.Entities
 				hitbox = -1;
 				light = -1;
 
-				currentPierce = 1;
+				this.inventorySlot = inventorySlot;
+				currentPierce = stats.pierce;
 			}
 		}
 
@@ -250,7 +255,7 @@ namespace ViMG.Entities
 				{
 					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), 
 						projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, projectiles[i].stats.knockback, 
-						applyBuffs: projectiles[i].stats.applyBuffs, manager: this, data: i);
+						applyBuffs: projectiles[i].stats.applyBuffs, manager: this, inventorySlot: projectiles[i].inventorySlot, data: i);
 				}
                 else
                 {
@@ -348,11 +353,11 @@ namespace ViMG.Entities
 		}
 
 		public void AddBatch(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, 
-			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds)
+			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds, int inventorySlot = 0)
         {
 			for (int i = 0; i < batchStats.num; i++)
 			{
-				Projectile projectile = new Projectile(owner, position, velocity, timeLeft, visStats, stats);
+				Projectile projectile = new Projectile(owner, position, velocity, timeLeft, visStats, stats, inventorySlot);
 				Vector3 direction = Vector3.Normalize(projectile.velocity);
 				float speed = projectile.velocity.Length();
 
@@ -411,13 +416,14 @@ namespace ViMG.Entities
 			if (((int)us.group & HitboxManager.GROUP_SOURCE_MASK) != ((int)other.group & HitboxManager.GROUP_SOURCE_MASK) && 
 				((int)other.group & HitboxManager.DAMAGE_TYPE_TAKE) > 0 && other.canInteract)
             {
-				if (us.data != -1 && projectiles[us.data].active)
+				int index = us.data;
+				if (projectiles[index].active)
 				{
-					projectiles[us.data].currentPierce--;
+					projectiles[index].currentPierce--;
 
-					if (projectiles[us.data].currentPierce <= 0)
+					if (projectiles[index].currentPierce <= 0)
 					{
-						Kill(us.data);
+						Kill(index);
 					}
 				}
 			}

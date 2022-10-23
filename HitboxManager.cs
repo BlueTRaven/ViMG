@@ -54,6 +54,7 @@ namespace ViMG
 			public readonly Buff.BuffInstance[] applyBuffs;
 
 			public readonly int data;
+			public readonly int inventorySlot;
 
 			public Hitbox(int index)
 			{
@@ -68,7 +69,8 @@ namespace ViMG
 				knockback = -1;
 				canInteract = false;
 				applyBuffs = null;
-				data = -1;
+				inventorySlot = -1;
+				data = 0;
 			}
 
 			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs)
@@ -86,10 +88,11 @@ namespace ViMG
 				this.canInteract = canInteract;
 
 				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
-				data = -1;
+				inventorySlot = -1;
+				data = 0;
 			}
 
-			public Hitbox(int index, IHitboxOwner owner, IHitboxOwner manager, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs, int data)
+			public Hitbox(int index, IHitboxOwner owner, IHitboxOwner manager, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs, int inventorySlot, int data)
 			{
 				this.index = index;
 				active = true;
@@ -104,6 +107,7 @@ namespace ViMG
 				this.canInteract = canInteract;
 
 				this.applyBuffs = applyBuffs;
+				this.inventorySlot = inventorySlot;
 				this.data = data;
 			}
 
@@ -122,7 +126,7 @@ namespace ViMG
 				this.canInteract = canInteract;
 
 				this.applyBuffs = old.applyBuffs;
-
+				this.inventorySlot = old.inventorySlot;
 				this.data = old.data;
 			}
 
@@ -143,7 +147,7 @@ namespace ViMG
 			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null, IHitboxOwner manager = null, int data = -1)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null, IHitboxOwner manager = null, int inventorySlot = -1, int data = 0)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
@@ -151,7 +155,7 @@ namespace ViMG
 
 				if (!hitbox.active)
 				{
-					hitbox = new Hitbox(i, owner, manager, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>(), data);
+					hitbox = new Hitbox(i, owner, manager, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>(), inventorySlot, data);
 
 					return i;
 				}

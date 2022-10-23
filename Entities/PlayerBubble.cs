@@ -24,19 +24,21 @@ namespace ViMG.Entities
         
         private readonly int damage;
         private readonly float knockback;
+        private readonly int inventorySlot;
 
-        public PlayerBubble(Vector3 position, int damage, float knockback)
+        public PlayerBubble(Vector3 position, int damage, float knockback, int inventorySlot)
         {
             this.Position = position;
             this.damage = damage;
             this.knockback = knockback;
+            this.inventorySlot = inventorySlot;
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
-            hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.PLAYER_DEAL, damage, knockback);
+            hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.PLAYER_DEAL, damage, knockback, inventorySlot: inventorySlot);
         }
 
         public override void Update(double deltaTime)

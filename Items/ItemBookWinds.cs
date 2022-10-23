@@ -39,7 +39,7 @@ namespace ViMG.Items
             player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
 
             player.Magic -= 2;
-            player.SpawnHitbox(damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
+            player.SpawnHitbox(index, damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
             
             return val;
         }

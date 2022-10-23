@@ -18,7 +18,7 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), 
 			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
-			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, false, 0, true);
+			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true);
 
 		public ItemMatchlockPistol() : base("matchlock_pistol", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 128, 16, 16))
         {
@@ -41,7 +41,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 25, Cube.CUBE_SCALE * 10, visStats, stats),
+					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 25, Cube.CUBE_SCALE * 10, visStats, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				
 				inventory.Remove(ammoIndex, 1);

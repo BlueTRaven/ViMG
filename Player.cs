@@ -171,6 +171,7 @@ namespace ViMG
 		private const float HITBOX_TIME = 3f / Main.FIXED_FPS;
 		private float attackStateTimer;
 		private float attackStateMoveTimer;
+		private int attackStateInitiatedWeapon;	//the weapon that initiated the attack state.
 		private float itemUseCooldownTimer;
 		private float useTimer;
 		private const float ATTACK_TIME = 0.5f;
@@ -1336,7 +1337,7 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
+		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
 		{
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -1348,7 +1349,8 @@ namespace ViMG
 			Rectangle3D rect = new Rectangle3D(Position + hitboxOffset, new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback);
+			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback, 
+				inventorySlot: inventorySlot);
 
 			hitboxTimer = HITBOX_TIME;
 
@@ -1567,14 +1569,19 @@ namespace ViMG
 			}
 
 			if (us.canInteract && other.canInteract && 
-				us.group == HitboxManager.Group.PLAYER_DEAL && 
-				(other.group & HitboxManager.Group.ENEMYHOSTILE_BOTH) != HitboxManager.Group.INVALID)
+				us.group == HitboxManager.Group.PLAYER_DEAL && (other.group & HitboxManager.Group.ENEMYHOSTILE_TAKE) == HitboxManager.Group.ENEMYHOSTILE_TAKE)
             {
-				for (int i = 0; i < accessoryInventory.NumSlots; i++)
-                {
-					if (accessoryInventory.Get(i).valid)
-						accessoryInventory.Get(i).item.OnDealDamage(this, inventory, menuPlayer.HighlightIndex, other.owner);
-                }
+				var item = inventory.Get(us.inventorySlot);
+				if (item.valid)
+				{
+					inventory.Get(us.inventorySlot).item.OnDealDamage(this, inventory, us.inventorySlot, other.owner);
+
+					for (int i = 0; i < accessoryInventory.NumSlots; i++)
+					{
+						if (accessoryInventory.Get(i).valid)
+							accessoryInventory.Get(i).item.OnDealDamage(this, inventory, us.inventorySlot, other.owner);
+					}
+				}
 				//This may not be a valid hit; the enemy might be invulnerable
             }
 		}

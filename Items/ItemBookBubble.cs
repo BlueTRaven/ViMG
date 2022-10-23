@@ -44,7 +44,7 @@ namespace ViMG.Items
                 int damage = magicStats.attackStats.damage;
                 float knockback = magicStats.attackStats.knockback;
                 player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
-                player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset, damage, knockback));
+                player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset, damage, knockback, index));
 
                 magicStats.Use(player);
 

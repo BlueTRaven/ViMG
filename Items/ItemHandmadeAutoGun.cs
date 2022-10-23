@@ -19,7 +19,7 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
                new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
-            Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, false, 0, true);
+            Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, false, 0, true);
 
         public ItemHandmadeAutoGun() : base("handmade_autogun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 128, 16, 16))
         {
@@ -48,7 +48,7 @@ namespace ViMG.Items
                 batchStats.spacingYaw = Main.random.NextFloat(-15, 15);
                 batchStats.spacingPitch = Main.random.NextFloat(-7.5f, 7.5f);
 
-                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds);
+                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds, index);
 
                 inventory.Remove(ammoIndex, 2);
                 return true;

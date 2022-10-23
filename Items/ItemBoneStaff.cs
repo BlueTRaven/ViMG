@@ -42,7 +42,7 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 6f, Cube.CUBE_SCALE * 10, visStats, stats),
+                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 6f, Cube.CUBE_SCALE * 10, visStats, stats, index),
                     new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 
                 return true;

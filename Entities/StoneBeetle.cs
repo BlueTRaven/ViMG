@@ -40,7 +40,7 @@ namespace ViMG.Entities
             ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(5, new Vector2(-180, 180), new Vector2(-15, 65));
 
             ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
-                HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, true, 0.5f, true); 
+                HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 0.5f, true); 
             ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
                 new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
             visStats.rollFollowsVelocity = true;

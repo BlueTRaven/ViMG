@@ -22,7 +22,7 @@ namespace ViMG.Items
 			float knockback = 1f;
 			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
 
-			player.SpawnHitbox(1, Player.DamageType.Melee, -Main.camera.Forward, 1f);
+			player.SpawnHitbox(index, 1, Player.DamageType.Melee, -Main.camera.Forward, 1f);
 
 			return true;
 		}

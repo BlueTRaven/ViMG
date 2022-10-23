@@ -47,7 +47,7 @@ namespace ViMG.Items
 			float knockback = meta.GetStats().knockback;
 			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
 
-			player.SpawnHitbox(damage, Player.DamageType.Melee, -Main.camera.Forward, knockback);
+			player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback);
 
 			return true;
 		}

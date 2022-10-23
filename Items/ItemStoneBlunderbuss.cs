@@ -20,13 +20,13 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			   new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats statsWithMusketballs = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 4, 1f,
-			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, true, 0.3f, true);
+			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, true, 0.3f, true);
 
 		private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-25, 25), new Vector2(-25, 25));
 		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			   new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
-			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, false, 0, true);
+			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE);
 
 		public ItemStoneBlunderbuss() : base("stone_blunderbuss", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 128, 16, 16))
         {
@@ -55,7 +55,8 @@ namespace ViMG.Items
 					statsWithMusketballs.damage = damage;
 					statsWithMusketballs.knockback = knockback;
 
-					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStatsWithMusketballs, visStatsWithMusketballs, statsWithMusketballs, bounds);
+					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
+						batchStatsWithMusketballs, visStatsWithMusketballs, statsWithMusketballs, bounds, index);
                 }
                 else
                 {
@@ -66,7 +67,8 @@ namespace ViMG.Items
 					stats.damage = damage;
 					stats.knockback = knockback;
 
-					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds);
+					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
+						batchStats, visStats, stats, bounds, index);
 				}
 			
 				inventory.Remove(ammoIndex, 4);
