@@ -69,22 +69,48 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			AlwaysRender = true;
+            AlwaysRender = true;
 
-			Array.Fill(trainPositions, Position);
+            Array.Fill(trainPositions, Position);
 
-			health = maxHealth;
+            health = maxHealth;
 
-			buffManager = new BuffManager(this);
+            buffManager = new BuffManager(this);
 
-			state = State.Chase;
-			stateTimer = CHASE_TIME;
-			stateTime = CHASE_TIME;
+            state = State.Chase;
+            stateTimer = CHASE_TIME;
+            stateTime = CHASE_TIME;
 
-			batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
-			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-			visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(48, 128, 32, 32), Cube.CUBE_SCALE);
+            batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
+            stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
+            visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(48, 128, 32, 32), Cube.CUBE_SCALE);
         }
+
+        public override void OnDelete()
+        {
+            base.OnDelete();
+
+			int which = Main.random.Next(0, 3);
+
+			Items.ItemInstance drop;
+			if (which == 0)
+				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("bow_bowner"), 1, 1);
+			else if (which == 1)
+				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("sword_runic_bone"), 1, 1);
+			else if (which == 2)
+				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("magic_bone_staff"), 1, 1);
+			else drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1);
+
+			EntityItem ent = new EntityItem(Position, drop);
+			ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+				6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
+			world.EntityManager.Add(ent);
+
+			ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_infused_bone"), Main.random.Next(4, 20), 1));
+			ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+				6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
+			world.EntityManager.Add(ent);
+		}
 
         public override void OnUnload()
         {

@@ -177,6 +177,8 @@ namespace ViMG.Entities
 			public int hitbox;
 			public int light;
 
+			public int currentPierce;
+
 			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats)
 			{
 				this.owner = owner;
@@ -191,14 +193,17 @@ namespace ViMG.Entities
 				bounds = new Rectangle3D();
 				hitbox = -1;
 				light = -1;
+
+				currentPierce = 1;
 			}
 		}
 
 		private Projectile[] projectiles = new Projectile[1024];
 
+		private World world;
 		private SimpleMesh<VertexCube, int> mesh;
 
-		public ProjectileManager(GraphicsDevice device)
+		public ProjectileManager(World world, GraphicsDevice device)
 		{
 			Vector3 min = new Vector3(-0.5f, -0.5f, 0);
 			Vector3 max = new Vector3(0.5f, 0.5f, 0);
@@ -230,9 +235,11 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 
 			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
-		}
+            this.world = world;
+        }
 
-		public void Update(World world, double deltaTime)
+
+		public void Update(double deltaTime)
 		{
 			for (int i = 0; i < 1024; i++)
 			{
@@ -243,7 +250,7 @@ namespace ViMG.Entities
 				{
 					projectiles[i].hitbox = world.HitboxManager.Add(projectiles[i].owner, projectiles[i].bounds.Offset(projectiles[i].position), 
 						projectiles[i].velocity, projectiles[i].stats.group, projectiles[i].stats.damage, projectiles[i].stats.knockback, 
-						applyBuffs: projectiles[i].stats.applyBuffs);
+						applyBuffs: projectiles[i].stats.applyBuffs, manager: this, data: i);
 				}
                 else
                 {
@@ -263,7 +270,7 @@ namespace ViMG.Entities
 
 				if (projectiles[i].timeLeft <= 0)
 				{
-					Kill(world, i);
+					Kill(i);
 				}
 
 				if (projectiles[i].stats.gravity)
@@ -300,7 +307,7 @@ namespace ViMG.Entities
 								{
 									if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
 									{
-										Kill(world, i);
+										Kill(i);
 									}	
 								}
 							}
@@ -310,7 +317,7 @@ namespace ViMG.Entities
 			}
 		}
 
-		private void Kill(World world, int index)
+		private void Kill(int index)
         {
 			if (projectiles[index].hitbox != -1)
 				world.HitboxManager.Remove(projectiles[index].hitbox);
@@ -399,6 +406,21 @@ namespace ViMG.Entities
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
+			//the sources are not the same
+			//i.e. player vs enemy or enemy vs player, but not player vs player or enemy vs enemy
+			if (((int)us.group & HitboxManager.GROUP_SOURCE_MASK) != ((int)other.group & HitboxManager.GROUP_SOURCE_MASK) && 
+				((int)other.group & HitboxManager.DAMAGE_TYPE_TAKE) > 0 && other.canInteract)
+            {
+				if (us.data != -1 && projectiles[us.data].active)
+				{
+					projectiles[us.data].currentPierce--;
+
+					if (projectiles[us.data].currentPierce <= 0)
+					{
+						Kill(us.data);
+					}
+				}
+			}
 		}
 	}
 }

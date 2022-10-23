@@ -15,17 +15,24 @@ namespace ViMG
 		public enum Group
         {
 			INVALID,
-			PLAYER_TAKE = 1 << 0,
-			PLAYER_DEAL = 1 << 1,
-			ENEMYHOSTILE_TAKE = 1 << 2,
-			ENEMYHOSTILE_DEAL = 1 << 3,
+			/*TAKE = 1 << 0,
+			DEAL = 1 << 1,
+			PLAYER = 1 << 2,
+			ENEMY = 1 << 3,*/
+			PLAYER_TAKE = GROUP_SOURCE_PLAYER | DAMAGE_TYPE_TAKE,
+			PLAYER_DEAL = GROUP_SOURCE_PLAYER | DAMAGE_TYPE_DEAL,
+			ENEMYHOSTILE_TAKE = GROUP_SOURCE_ENEMY | DAMAGE_TYPE_TAKE,
+			ENEMYHOSTILE_DEAL = GROUP_SOURCE_ENEMY | DAMAGE_TYPE_DEAL,
 			ENEMYHOSTILE_BOTH = ENEMYHOSTILE_DEAL | ENEMYHOSTILE_TAKE,
-			NEUTRAL_DEAL = 1 << 4
-        }
-		public const int GROUP_PLAYER_TAKE_SOURCE = 0;
-		public const int GROUP_ENEMYHOSTILE_SOURCE = 1;
-		public const int GROUP_PLAYER_DEAL_SOURCE = 2;
-		public const int GROUP_NEUTRAL_SOURCE = 3;
+			NEUTRAL_DEAL = GROUP_SOURCE_PLAYER | GROUP_SOURCE_ENEMY | DAMAGE_TYPE_TAKE
+		}
+		
+		public const int GROUP_SOURCE_MASK = GROUP_SOURCE_PLAYER | GROUP_SOURCE_ENEMY;
+
+		public const int DAMAGE_TYPE_TAKE = 1 << 0;
+		public const int DAMAGE_TYPE_DEAL = 1 << 1;
+		public const int GROUP_SOURCE_PLAYER = 1 << 2;
+		public const int GROUP_SOURCE_ENEMY = 1 << 3;
 
 		public readonly struct Hitbox 
 		{
@@ -36,6 +43,7 @@ namespace ViMG
 			public readonly Vector3 direction;
 
 			public readonly IHitboxOwner owner;
+			public readonly IHitboxOwner manager;	//The entity that manages this hitbox, which might be different from the owner (in the case of Projectiles).
 			public readonly Group group;
 
 			public readonly int damage;
@@ -45,11 +53,14 @@ namespace ViMG
 
 			public readonly Buff.BuffInstance[] applyBuffs;
 
+			public readonly int data;
+
 			public Hitbox(int index)
 			{
 				this.index = index;
 				active = false;
 				owner = null;
+				manager = null;
 				bounds = new Rectangle3D();
 				direction = Vector3.Zero;
 				group = Group.INVALID;
@@ -57,6 +68,7 @@ namespace ViMG
 				knockback = -1;
 				canInteract = false;
 				applyBuffs = null;
+				data = -1;
 			}
 
 			public Hitbox(int index, IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs)
@@ -64,6 +76,25 @@ namespace ViMG
 				this.index = index;
 				active = true;
 				this.owner = owner;
+				this.manager = null;
+				this.bounds = bounds;
+				this.direction = direction;
+				this.group = group;
+				this.damage = damage;
+				this.knockback = knockback;
+
+				this.canInteract = canInteract;
+
+				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
+				data = -1;
+			}
+
+			public Hitbox(int index, IHitboxOwner owner, IHitboxOwner manager, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract, Buff.BuffInstance[] applyBuffs, int data)
+			{
+				this.index = index;
+				active = true;
+				this.owner = owner;
+				this.manager = manager;
 				this.bounds = bounds;
 				this.direction = direction;
 				this.group = group;
@@ -73,6 +104,7 @@ namespace ViMG
 				this.canInteract = canInteract;
 
 				this.applyBuffs = applyBuffs;
+				this.data = data;
 			}
 
 			public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
@@ -80,6 +112,7 @@ namespace ViMG
 				this.index = old.index;
 				active = true;
 				this.owner = old.owner;
+				this.manager = old.manager;
 				this.bounds = bounds;
 				this.direction = old.direction;
 				this.group = old.group;
@@ -89,6 +122,8 @@ namespace ViMG
 				this.canInteract = canInteract;
 
 				this.applyBuffs = old.applyBuffs;
+
+				this.data = old.data;
 			}
 
 			public static Hitbox Invalid = new Hitbox();
@@ -108,7 +143,7 @@ namespace ViMG
 			hitboxes = new Hitbox[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null, IHitboxOwner manager = null, int data = -1)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
@@ -116,7 +151,7 @@ namespace ViMG
 
 				if (!hitbox.active)
 				{
-					hitbox = new Hitbox(i, owner, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>());
+					hitbox = new Hitbox(i, owner, manager, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>(), data);
 
 					return i;
 				}
@@ -160,19 +195,20 @@ namespace ViMG
 
 				for (int i = 0; i < hitboxes.Length; i++)
 				{
-					ref Hitbox hitbox = ref hitboxes[i];
-					if (i == index || !hitbox.active)
+					//Note that these are intentionally copies
+					Hitbox ourHitbox = hitboxes[index];
+					Hitbox otherHitbox = hitboxes[i];
+
+					if (i == index || !ourHitbox.active || !otherHitbox.active)
 						continue;
 
-					if (hitbox.bounds.Intersects(bounds))
+					if (otherHitbox.bounds.Intersects(bounds))
 					{
-						hitboxes[index].owner.OnInteractWithOther(hitboxes[index], hitbox);
+						ourHitbox.owner.OnInteractWithOther(ourHitbox, otherHitbox);
+						ourHitbox.manager?.OnInteractWithOther(ourHitbox, otherHitbox);
 
-						//OnInteractWithOther may occasionally remove this hitbox (for instance, a non-piercing projectile).
-						//This is behavior we want to support,
-						//so we simply check to see if the hitbox is active after this interaction. If it isn't, then break.
-						if (!hitboxes[index].active)
-							break;
+						otherHitbox.owner.OnInteractWithOther(otherHitbox, ourHitbox);
+						otherHitbox.manager?.OnInteractWithOther(otherHitbox, ourHitbox);
 					}
 				}
 			}

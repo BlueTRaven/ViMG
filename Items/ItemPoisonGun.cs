@@ -16,10 +16,7 @@ namespace ViMG.Items
 	{
 		private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 1.125f, 1, 1f);
 
-		private static Buff.BuffInstance[] applyBuffs = new Buff.BuffInstance[1]
-		{
-			new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("poisoned"), 10)
-		};
+		private static Buff.BuffInstance[] applyBuffs;
 
 		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
@@ -37,6 +34,14 @@ namespace ViMG.Items
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
+			if (applyBuffs == null)
+			{
+				applyBuffs = new Buff.BuffInstance[1]
+				{
+						new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("poisoned"), 10)
+				};
+			}
+
 			if (inventory.FindTag("ammo_bullet", out int ammoIndex).valid)
 			{
 				itemCooldownTime = attackStats.cooldownTime;

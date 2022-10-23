@@ -110,7 +110,7 @@ namespace ViMG
 
 			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
-			ProjectileManager = new ProjectileManager(device);
+			ProjectileManager = new ProjectileManager(this, device);
 			EntityManager = new EntityManager(this);
 			LightManager = new LightManager(device);
 			LightManager.UpdateDatas(Main.CubeLitEffect);
@@ -434,7 +434,7 @@ namespace ViMG
 			ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime, this);
 
-			ProjectileManager.Update(this, deltaTime);
+			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
 
 			if (player.Position.Y / Cube.CUBE_SCALE < 140)
