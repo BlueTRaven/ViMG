@@ -23,11 +23,11 @@ namespace ViMG.Items
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
                 attackStats.GetTooltip() +
-                "Hitting enemies results in a small explosion of bones. (Unimplemented)";
+                "Hitting enemies results in a small explosion of bones.";
 
             scale = 2f;
 
-            batchStats = new ProjectileManager.ProjectileBatchStats(5, new Vector2(-180, 180), new Vector2(-45, 45));
+            batchStats = new ProjectileManager.ProjectileBatchStats(4, new Vector2(-180, 180), new Vector2(-45, 45));
 
             stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
@@ -53,14 +53,10 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, otherHitbox);
 
-            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Position.X + otherHitbox.bounds.Size.X / 2f, 
+            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Position.X + otherHitbox.bounds.Size.X / 2f,
                 otherHitbox.bounds.Top, otherHitbox.bounds.Position.Z + otherHitbox.bounds.Size.Z / 2f), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
                 batchStats, visStats, stats,
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
-
-            //TODO bone explosion
-            //Batch spawn some projectiles in a random direction with +y velocity.
-            //These projectiles should ignore the hit entity. (Will this already happen since the entity should be in invuln frames anyway?)
         }
     }
 }

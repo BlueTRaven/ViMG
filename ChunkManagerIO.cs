@@ -35,7 +35,7 @@ namespace ViMG
             this.manager = manager;
 			this.managerName = chunkManagerName;
 
-			numChunks = manager.sizeInChunks * manager.sizeInChunks * manager.sizeInChunks;
+			numChunks = manager.sizeInChunksXZ * manager.sizeInChunksXZ * manager.sizeInChunksXZ;
 			allBytes = new byte[numChunks * SIZEOF_CHUNK];
         }
 
@@ -67,7 +67,7 @@ namespace ViMG
         {
 			Chunk[] chunks = manager.GetChunks();
 
-			for (int i = 0; i < manager.sizeInChunks * manager.sizeInChunks * manager.sizeInChunks; i++)
+			for (int i = 0; i < manager.sizeInChunksXZ * manager.sizeInChunksXZ * manager.sizeInChunksXZ; i++)
             {
 				SerializeChunk(chunks, i);
             }
@@ -87,7 +87,7 @@ namespace ViMG
 		//Serializes a single chunk into the local byte stream. This does not save anything to disk! If you need to save, call Save!
 		public void SerializeChunk(Chunk[] chunks, ChunkPosition pos)
         {
-			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunks, manager.sizeInChunks, manager.sizeInChunks), out int i);
+			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunksXZ, manager.sizeInChunksXZ, manager.sizeInChunksXZ), out int i);
 
 			SerializeChunk(chunks, i);
 		}
@@ -142,7 +142,7 @@ namespace ViMG
 		//Deserializes a chunk from the local byte stream into the world. This does not load anything from the disk! If nothing has been loaded yet, this will error!
 		public void DeserializeChunk(World world, ChunkPosition pos)
         {
-			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunks, manager.sizeInChunks, manager.sizeInChunks), out int i);
+			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunksXZ, manager.sizeInChunksXZ, manager.sizeInChunksXZ), out int i);
 
 			DeserializeChunk(world, pos, i);
         }

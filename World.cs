@@ -303,7 +303,9 @@ namespace ViMG
 
 			if (!saver.DoesSaveExist(folderName))
 			{
-				ChunkManager.GenerateWorld(this);
+				ChunkManager.InitLayer(0);
+				//generate island layer
+				ChunkManager.GenerateWorld(this, 0);
 
 				worldInfoIO.Save(folderName, this, PointsOfInterest);
 
@@ -369,6 +371,7 @@ namespace ViMG
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
 				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
+				ChunkManager.InitLayer(0);
 
 				entIO.DeserializePlayerChunk();
 

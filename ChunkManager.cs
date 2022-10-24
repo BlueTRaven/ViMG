@@ -84,7 +84,8 @@ namespace ViMG
 			}
 		}
 
-		public readonly int sizeInChunks;
+		public readonly int sizeInChunksXZ;
+		public readonly int layerSizeInChunksY;
 		public readonly int sizeInCubes;
         public readonly World world;
         private ChunkGenerator generator;
@@ -115,25 +116,33 @@ namespace ViMG
 			//generator = new ChunkGeneratorFlat();
 			mesher = new ChunkMesher(device);
 
-			this.sizeInChunks = sizeInChunks;
+			this.sizeInChunksXZ = sizeInChunks;
+			this.layerSizeInChunksY = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
             this.world = world;
             chunks = new ManagedChunk[sizeInChunks * sizeInChunks * sizeInChunks];
+		}
 
-			for (int i = 0; i < chunks.Length; i++)
+		public void InitLayer(int layer)
+		{
+			int total = sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ;
+			int offset = total * layer;
+
+			for (int i = offset; i < total + offset; i++)
 			{
-				int x = i % sizeInChunks;
-				int y = (i / sizeInChunks) % sizeInChunks;
-				int z = i / (sizeInChunks * sizeInChunks);
+				int x = i % sizeInChunksXZ;
+				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
+				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
 				chunks[i] = new ManagedChunk(generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
 			}
 		}
 
-		public void GenerateWorld(World world)
+		public void GenerateWorld(World world, int layer)
 		{
 			int num = 0;
-			int total = sizeInChunks * sizeInChunks * sizeInChunks;
+			int total = sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ;
+			int offset = total * layer;
 
 			Stopwatch totalWatch = Stopwatch.StartNew();
 
@@ -145,7 +154,7 @@ namespace ViMG
 
 			const int split = 8;
 
-			for (int i = 0; i < total; i += split) 
+			for (int i = offset; i < offset + total; i += split) 
 			{
 				int chunkStart = i;
 				int chunkEnd = i + split;
@@ -181,15 +190,15 @@ namespace ViMG
 				num = 0;
 				for (int i = 0; i < total; i++)
 				{
-					int x = i % sizeInChunks;
-					int y = (i / sizeInChunks) % sizeInChunks;
-					int z = i / (sizeInChunks * sizeInChunks);
+					int x = i % sizeInChunksXZ;
+					int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
+					int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
 					generator.GenerateChunkDetail(this, chunks[i].chunk, new ChunkPosition(x, y, z));
 
 					num++;
 
-					if (num % sizeInChunks * sizeInChunks == 0)
+					if (num % sizeInChunksXZ * sizeInChunksXZ == 0)
 						Console.WriteLine("Detail: " + num + " / " + total);
 				}
 
@@ -200,9 +209,9 @@ namespace ViMG
 			num = 0;
 			for (int i = 0; i < total; i++)
 			{
-				int x = i % sizeInChunks;
-				int y = (i / sizeInChunks) % sizeInChunks;
-				int z = i / (sizeInChunks * sizeInChunks);
+				int x = i % sizeInChunksXZ;
+				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
+				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
 				chunks[i].chunk.Initialize(world);
 				chunks[i].chunk.PostChunkGen(world);
@@ -210,7 +219,7 @@ namespace ViMG
 				//MarkDirty(new ChunkPosition(x, y, z), false);
 				num++;
 
-				if (num % sizeInChunks * sizeInChunks == 0)
+				if (num % sizeInChunksXZ * sizeInChunksXZ == 0)
 					Console.WriteLine("Init: " + num + " / " + total);
 			}
 
@@ -299,7 +308,7 @@ namespace ViMG
 
 		private int PosToIndex(ChunkPosition position)
 		{
-			return position.X + sizeInChunks * (position.Y + sizeInChunks * position.Z);
+			return position.X + sizeInChunksXZ * (position.Y + sizeInChunksXZ * position.Z);
 		}
 
 		private Chunk[] cs = new Chunk[6];
@@ -372,7 +381,7 @@ namespace ViMG
 						cs[2] = adjacent;
 					}
 
-					if (pos.X + 1 < sizeInChunks)
+					if (pos.X + 1 < sizeInChunksXZ)
 					{
 						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk;
 					
@@ -386,7 +395,7 @@ namespace ViMG
 						cs[3] = adjacent;
 					}
 
-					if (pos.Y + 1 < sizeInChunks)
+					if (pos.Y + 1 < sizeInChunksXZ)
 					{
 						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk;
 						
@@ -400,7 +409,7 @@ namespace ViMG
 						cs[4] = adjacent;
 					}
 
-					if (pos.Z + 1 < sizeInChunks)
+					if (pos.Z + 1 < sizeInChunksXZ)
 					{
 						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk;
 					
@@ -530,9 +539,9 @@ namespace ViMG
 
 		public bool IsInWorldBounds(ChunkPosition position)
 		{
-			return position.X >= 0 && position.X < sizeInChunks &&
-					position.Y >= 0 && position.Y < sizeInChunks &&
-					position.Z >= 0 && position.Z < sizeInChunks;
+			return position.X >= 0 && position.X < sizeInChunksXZ &&
+					position.Y >= 0 && position.Y < sizeInChunksXZ &&
+					position.Z >= 0 && position.Z < sizeInChunksXZ;
 		}
 
 		// Takes a world space position.
@@ -661,7 +670,7 @@ namespace ViMG
 
 		public void UnloadAllMeshes()
 		{
-			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
+			for (int i = 0; i < sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ; i++)
 			{
 				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
                 {
@@ -697,7 +706,7 @@ namespace ViMG
 
 		public void UnloadAll()
 		{
-			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
+			for (int i = 0; i < sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ; i++)
 			{
 				ref ManagedChunk c = ref chunks[i];
 

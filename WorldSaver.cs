@@ -480,7 +480,7 @@ namespace ViMG
 					}
 				}
 
-				int totalSize = chunkManager.sizeInChunks * chunkManager.sizeInChunks * chunkManager.sizeInChunks;
+				int totalSize = chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ;
 
 				watch = Stopwatch.StartNew();
 
@@ -563,9 +563,9 @@ namespace ViMG
 			{
 				for (int i = 0; i < totalSize; i++)
 				{
-					int chunkX = i % chunkManager.sizeInChunks;
-					int chunkY = (i / chunkManager.sizeInChunks) % chunkManager.sizeInChunks;
-					int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
+					int chunkX = i % chunkManager.sizeInChunksXZ;
+					int chunkY = (i / chunkManager.sizeInChunksXZ) % chunkManager.sizeInChunksXZ;
+					int chunkZ = i / (chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ);
 
 					Chunk chunk = new Chunk(chunkManager, new ChunkPosition(chunkX, chunkY, chunkZ));
 					ChunkData data = chunk.GetData();
@@ -591,7 +591,7 @@ namespace ViMG
 					data.GenStep = ChunkData.GenerationStep.Done;
 					chunkManager.MarkDirty(chunkX, chunkY, chunkZ, false);
 
-					if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
+					if (i % (chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ) == 0)
 						Console.WriteLine("Loaded " + i + " / " + totalSize + " chunks...");
 				}
 			}
@@ -599,9 +599,9 @@ namespace ViMG
 
 		private void LoadChunk(FileStream fs, int i, World world, int totalSize)
 		{
-			int chunkX = i % chunkManager.sizeInChunks;
-			int chunkY = (i / chunkManager.sizeInChunks) % chunkManager.sizeInChunks;
-			int chunkZ = i / (chunkManager.sizeInChunks * chunkManager.sizeInChunks);
+			int chunkX = i % chunkManager.sizeInChunksXZ;
+			int chunkY = (i / chunkManager.sizeInChunksXZ) % chunkManager.sizeInChunksXZ;
+			int chunkZ = i / (chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ);
 
 			Chunk chunk = chunkManager.GetChunk(new ChunkPosition(chunkX, chunkY, chunkZ));
 			ChunkData data = chunk.GetData();
@@ -650,7 +650,7 @@ namespace ViMG
 				entityDatas.Remove(chunk.Position);
 			}
 
-			if (i % (chunkManager.sizeInChunks * chunkManager.sizeInChunks) == 0)
+			if (i % (chunkManager.sizeInChunksXZ * chunkManager.sizeInChunksXZ) == 0)
 				Console.WriteLine("Loaded " + i + " / " + totalSize + " chunks...");
 		}
 
