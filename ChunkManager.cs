@@ -17,6 +17,22 @@ namespace ViMG
 	{
 		public const int NUM_CHUNK_MESH_PASSES = 2;
 
+		private readonly struct Layer
+        {
+			public readonly int index;
+			public readonly ChunkGenerator generator;
+			public readonly ManagedChunk[] chunks;
+			//public readonly LayerStateManager layerStateManager;	//Do we need some method of performing layer-specific logic?
+
+			public Layer(int index, ChunkGenerator generator, int totalChunks)
+            {
+                this.index = index;
+                this.generator = generator;
+
+				this.chunks = new ManagedChunk[totalChunks];
+            }
+        }
+
 		private readonly struct BroadChunkTaskState
 		{
 			public readonly int chunkStart;
@@ -84,14 +100,21 @@ namespace ViMG
 			}
 		}
 
+		private Layer[] layerLookupTable;
+
+		private int discoveredLayers;
+		public int DiscoveredLayers => discoveredLayers + 1;
+
 		public readonly int sizeInChunksXZ;
 		public readonly int layerSizeInChunksY;
 		public readonly int sizeInCubes;
+		private readonly int totalNumChunks;
+		private readonly int layerNumChunks;
+
         public readonly World world;
-        private ChunkGenerator generator;
 		private ChunkMesher mesher;
 
-		private ManagedChunk[] chunks;
+		//private ManagedChunk[] chunks;
 
 		public GenericPool<ChunkData> ChunkDatas = new GenericPool<ChunkData>(() => new ChunkData());
 
@@ -110,17 +133,25 @@ namespace ViMG
 
 		public ChunkManager(GraphicsDevice device, int sizeInChunks, int sizeInCubes, World world)
 		{
-			Heightmap = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
-
-			generator = new ChunkGeneratorIsland();
-			//generator = new ChunkGeneratorFlat();
-			mesher = new ChunkMesher(device);
-
 			this.sizeInChunksXZ = sizeInChunks;
 			this.layerSizeInChunksY = sizeInChunks;
 			this.sizeInCubes = sizeInCubes;
-            this.world = world;
-            chunks = new ManagedChunk[sizeInChunks * sizeInChunks * sizeInChunks];
+			layerNumChunks = sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ;
+			
+			this.world = world;
+
+			layerLookupTable = new Layer[2]
+			{
+				new Layer(0, new ChunkGeneratorIsland(), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ),
+				new Layer(1, new ChunkGeneratorFlat(), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ)  //TODO
+			};
+
+			totalNumChunks = layerNumChunks * layerLookupTable.Length;
+
+			Heightmap = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
+
+			mesher = new ChunkMesher(device);
+            //chunks = new ManagedChunk[sizeInChunksXZ * (layerSizeInChunksY * layerLookupTable.Length) * sizeInChunksXZ];
 		}
 
 		public void InitLayer(int layer)
@@ -128,13 +159,16 @@ namespace ViMG
 			int total = sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ;
 			int offset = total * layer;
 
+			if (layer > discoveredLayers)
+				discoveredLayers = layer;
+
 			for (int i = offset; i < total + offset; i++)
 			{
 				int x = i % sizeInChunksXZ;
 				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-				chunks[i] = new ManagedChunk(generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
+				layerLookupTable[layer].chunks[i] = new ManagedChunk(layerLookupTable[layer].generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
 			}
 		}
 
@@ -146,7 +180,7 @@ namespace ViMG
 
 			Stopwatch totalWatch = Stopwatch.StartNew();
 
-			generator.Initialize(world);
+			layerLookupTable[layer].generator.Initialize(world);
 
 			Stopwatch broadWatch = Stopwatch.StartNew();
 
@@ -159,12 +193,12 @@ namespace ViMG
 				int chunkStart = i;
 				int chunkEnd = i + split;
 
-				BroadChunkTaskState state = new BroadChunkTaskState(chunkStart, chunkEnd, total, chunks, generator);
+				BroadChunkTaskState state = new BroadChunkTaskState(chunkStart, chunkEnd, total, layerLookupTable[layer].chunks, layerLookupTable[layer].generator);
 
 				for (int j = chunkStart; j < chunkEnd; j++)
                 {
-					chunks[j].chunk.SetData(ChunkDatas.Get());
-					chunks[j].chunk.Initialize(world);
+					layerLookupTable[layer].chunks[j].chunk.SetData(ChunkDatas.Get());
+					layerLookupTable[layer].chunks[j].chunk.Initialize(world);
                 }
 
 				Task task = new Task(GenerateChunkDetailTaskFn, state);
@@ -194,7 +228,7 @@ namespace ViMG
 					int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 					int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-					generator.GenerateChunkDetail(this, chunks[i].chunk, new ChunkPosition(x, y, z));
+					layerLookupTable[layer].generator.GenerateChunkDetail(this, layerLookupTable[layer].chunks[i].chunk, new ChunkPosition(x, y, z));
 
 					num++;
 
@@ -202,7 +236,7 @@ namespace ViMG
 						Console.WriteLine("Detail: " + num + " / " + total);
 				}
 
-				generator.PostGenerateDetail(this);
+				layerLookupTable[layer].generator.PostGenerateDetail(this);
 				//GenerateHeightmap();
 			}
 
@@ -213,8 +247,8 @@ namespace ViMG
 				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-				chunks[i].chunk.Initialize(world);
-				chunks[i].chunk.PostChunkGen(world);
+				layerLookupTable[layer].chunks[i].chunk.Initialize(world);
+				layerLookupTable[layer].chunks[i].chunk.PostChunkGen(world);
 
 				//MarkDirty(new ChunkPosition(x, y, z), false);
 				num++;
@@ -294,7 +328,7 @@ namespace ViMG
 
 		public Vector3 GetPlayerSpawnPos(World world)
         {
-			return generator.GetPlayerPosition(world, this);
+			return layerLookupTable[0].generator.GetPlayerPosition(world, this);
         }
 
 		public void ProcessChunkQueue(World world, int forceMode)
@@ -306,7 +340,13 @@ namespace ViMG
 			ProcessChunkQueueSync(world, 1, 8);
 		}
 
-		private int PosToIndex(ChunkPosition position)
+		private int LayerFromPos(ChunkPosition position)
+        {
+			//We subtract layer size from this because the range would otherwise be 512, 0, -512, etc. which would evaluate to 1, 0, -1 (which is index 1).
+			return Math.Abs(((position.Y + 1) - layerSizeInChunksY) / layerSizeInChunksY);
+        }
+
+		private int IndexFromPos(ChunkPosition position)
 		{
 			return position.X + sizeInChunksXZ * (position.Y + sizeInChunksXZ * position.Z);
 		}
@@ -328,7 +368,7 @@ namespace ViMG
 				{
 					var pos = chunksToMeshQueue.Dequeue();
 
-					var c = chunks[PosToIndex(pos)];
+					var c = layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(pos)];
 
 					if (!c.meshDirty || !c.chunk.Initialized)
 					{
@@ -343,7 +383,8 @@ namespace ViMG
 
 					if (pos.X - 1 >= 0)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X - 1, pos.Y, pos.Z))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X - 1, pos.Y, pos.Z); 
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 						if (!adjacent.Initialized)
 						{
 							chunksToMeshQueue.EnqueueWithoutSorting(pos);
@@ -356,7 +397,8 @@ namespace ViMG
 
 					if (pos.Y - 1 >= 0)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y - 1, pos.Z))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y - 1, pos.Z);
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 						if (!adjacent.Initialized)
 						{
 							chunksToMeshQueue.EnqueueWithoutSorting(pos);
@@ -369,7 +411,8 @@ namespace ViMG
 
 					if (pos.Z - 1 >= 0)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z - 1))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y, pos.Z - 1);
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 
 						if (!adjacent.Initialized)
 						{
@@ -383,7 +426,8 @@ namespace ViMG
 
 					if (pos.X + 1 < sizeInChunksXZ)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X + 1, pos.Y, pos.Z))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X + 1, pos.Y, pos.Z);
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 					
 						if (!adjacent.Initialized)
 						{
@@ -397,7 +441,8 @@ namespace ViMG
 
 					if (pos.Y + 1 < sizeInChunksXZ)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y + 1, pos.Z))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y + 1, pos.Z);
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 						
 						if (!adjacent.Initialized)
 						{
@@ -411,7 +456,8 @@ namespace ViMG
 
 					if (pos.Z + 1 < sizeInChunksXZ)
 					{
-						Chunk adjacent = chunks[PosToIndex(new ChunkPosition(pos.X, pos.Y, pos.Z + 1))].chunk;
+						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y, pos.Z + 1);
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
 					
 						if (!adjacent.Initialized)
 						{
@@ -433,10 +479,12 @@ namespace ViMG
 
 		public Chunk[] GetChunks()
 		{
-			Chunk[] allChunks = new Chunk[chunks.Length];
-			for (int i = 0; i < chunks.Length; i++)
+			Chunk[] allChunks = new Chunk[totalNumChunks];
+			for (int i = 0; i < totalNumChunks; i++)
 			{
-				allChunks[i] = chunks[i].chunk;
+				int layer = i / layerNumChunks;
+				int index = i % layerNumChunks;
+				allChunks[i] = layerLookupTable[layer].chunks[index].chunk;
 			}
 
 			return allChunks;
@@ -446,12 +494,14 @@ namespace ViMG
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
+			ManagedChunk mc = layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(pos)];
+
 			//First one must have forceUpdate = true,
 			//but all subsequent mesh generations should be false.
-			chunks[PosToIndex(pos)].meshes[0] = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, Cube.RenderPass.Opaque, true);
-			chunks[PosToIndex(pos)].meshes[1] = mesher.GenerateChunk(chunks[PosToIndex(pos)].chunk, world, Cube.RenderPass.Transparent, false);
-			chunks[PosToIndex(pos)].meshDirty = false;
-			chunks[PosToIndex(pos)].meshQueued = false;
+			mc.meshes[0] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
+			mc.meshes[1] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Transparent, false);
+			mc.meshDirty = false;
+			mc.meshQueued = false;
 
 			watch.Stop();
 
@@ -459,65 +509,42 @@ namespace ViMG
 		}
 
 		#region Get Things
-
-		public bool IsChunkGenerated(CubePosition position)
-		{
-			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-			return chunks[PosToIndex(chunkPos)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
-		}
-
-		public bool IsChunkGenerated(ChunkPosition position)
-		{
-			return chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done;
-		}
-
-		public ChunkData.GenerationStep GetChunkGenerationStep(CubePosition position)
-		{
-			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-			return chunks[PosToIndex(chunkPos)].chunk.GetData().GenStep;
-		}
-
-		public ChunkData.GenerationStep GetChunkGenerationStep(ChunkPosition position)
-		{
-			return chunks[PosToIndex(position)].chunk.GetData().GenStep;
-		}
-
 		public void SetChunk(Chunk chunk)
 		{
-			chunks[PosToIndex(chunk.Position)].chunk = chunk;
+			GetManagedChunk(chunk.Position).chunk = chunk;
+			//int layer = LayerFromPos(chunk.Position);
+			//int index = IndexFromPos(chunk.Position);
+
+			//layerLookupTable[layer].chunks[index].chunk = chunk;
 		}
 
 		public Chunk GetChunk(CubePosition position)
 		{
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-			int ind = PosToIndex(chunkPos);
+			int layer = LayerFromPos(chunkPos);
+			int index = IndexFromPos(chunkPos);
 
-			if (ind < 0 || ind >= chunks.Length || !chunks[ind].chunk.Initialized)
+			Chunk c = layerLookupTable[layer].chunks[index].chunk;
+			if (index < 0 || index >= layerNumChunks || !c.Initialized)
 				return null;
-			else return chunks[ind].chunk;
-		}
-
-		public Chunk GetChunk(int x, int y, int z)
-		{
-			return chunks[PosToIndex(new ChunkPosition(x, y, z))].chunk;
+			else return c;
 		}
 
 		public Chunk GetChunk(ChunkPosition position)
 		{
-			return chunks[PosToIndex(position)].chunk;
+			int layer = LayerFromPos(position);
+			int index = IndexFromPos(position);
+
+			return layerLookupTable[layer].chunks[index].chunk;
 		}
 
 		public ChunkMesh GetMesh(ChunkPosition position, int pass)
 		{
-			return chunks[PosToIndex(position)].meshes[pass];
-		}
+			int layer = LayerFromPos(position);
+			int index = IndexFromPos(position);
 
-		public ChunkMesh GetMesh(int x, int y, int z, int pass)
-		{
-			return chunks[PosToIndex(new ChunkPosition(x, y, z))].meshes[pass];
+			return layerLookupTable[layer].chunks[index].meshes[pass];
 		}
 
 		public bool IsInWorldBounds(Vector3 position)
@@ -525,6 +552,7 @@ namespace ViMG
 			return IsInWorldBounds(CubePosition.FromWorldSpace(position));
 		}
 
+		//TODO update to account for layers
 		public bool IsInWorldBounds(CubePosition position)
 		{
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
@@ -537,6 +565,7 @@ namespace ViMG
 			}
 		}
 
+		//TODO update to account for layers
 		public bool IsInWorldBounds(ChunkPosition position)
 		{
 			return position.X >= 0 && position.X < sizeInChunksXZ &&
@@ -619,8 +648,13 @@ namespace ViMG
 
 		public Matrix GetTransform(ChunkPosition position)
 		{
-			return chunks[PosToIndex(position)].transform;
+			return GetManagedChunk(position).transform;
 		}
+
+		private ref ManagedChunk GetManagedChunk(ChunkPosition position)
+        {
+			return ref layerLookupTable[LayerFromPos(position)].chunks[IndexFromPos(position)];
+        }
 
 		public OptionalValue<CubePosition> GetFirstSolidDown(Vector3 start)
 		{
@@ -654,7 +688,7 @@ namespace ViMG
 
 		public void UnloadMesh(ChunkPosition position)
 		{
-			ref ManagedChunk c = ref chunks[PosToIndex(position)];
+			ref ManagedChunk c = ref GetManagedChunk(position);
 
 			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
             {
@@ -670,16 +704,20 @@ namespace ViMG
 
 		public void UnloadAllMeshes()
 		{
-			for (int i = 0; i < sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ; i++)
+			for (int i = 0; i < layerLookupTable.Length; i++)
 			{
-				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
-                {
-					if (chunks[i].meshes[j] != null && chunks[i].meshes[j] != ChunkMesh.Empty)
+				for (int j = 0; j < layerNumChunks; j++)
+				{
+					for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
 					{
-						chunks[i].meshes[j].VBO.Dispose();
-						chunks[i].meshes[j].IBO.Dispose();
+						ChunkMesh mesh = layerLookupTable[i].chunks[j].meshes[k];
+						if (mesh != null && mesh != ChunkMesh.Empty)
+						{
+							mesh.VBO.Dispose();
+							mesh.IBO.Dispose();
 
-						chunks[i].meshes[j] = null;
+							layerLookupTable[i].chunks[j].meshes[k] = null;
+						}
 					}
 				}
 			}
@@ -687,7 +725,7 @@ namespace ViMG
 
 		public void Unload(ChunkPosition position)
 		{
-			ref ManagedChunk c = ref chunks[PosToIndex(position)];
+			ref ManagedChunk c = ref GetManagedChunk(position);
 
 			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
 			{
@@ -706,47 +744,36 @@ namespace ViMG
 
 		public void UnloadAll()
 		{
-			for (int i = 0; i < sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ; i++)
+			for (int i = 0; i < layerLookupTable.Length; i++)
 			{
-				ref ManagedChunk c = ref chunks[i];
-
-				for (int j = 0; j < NUM_CHUNK_MESH_PASSES; j++)
+				for (int j = 0; j < layerNumChunks; j++)
 				{
-					if (c.meshes[j] != null && !c.meshes[j].IsEmpty)
-					{
-						c.meshes[j].VBO.Dispose();
-						c.meshes[j].IBO.Dispose();
+					ref ManagedChunk c = ref layerLookupTable[i].chunks[j];
 
-						c.meshes[j] = null;
+					for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
+					{
+						if (c.meshes[k] != null && !c.meshes[k].IsEmpty)
+						{
+							c.meshes[k].VBO.Dispose();
+							c.meshes[k].IBO.Dispose();
+
+							c.meshes[k] = null;
+						}
+					}
+
+					if (c.chunk.Initialized)
+					{
+						ChunkDatas.Return(c.chunk.GetData());
+						c.chunk.SetData(null);
 					}
 				}
-
-				if (c.chunk.Initialized)
-				{
-					ChunkDatas.Return(c.chunk.GetData());
-					c.chunk.SetData(null);
-				}
 			}
-		}
-
-		public void MarkGenerateDirty(ChunkPosition position)
-		{
-			// Already queued, ignore
-			/*if (chunks[PosToIndex(position)].genQueued)
-				return;
-
-			if (chunks[PosToIndex(position)].chunk != null && chunks[PosToIndex(position)].chunk.GetData().GenStep == ChunkData.GenerationStep.Done)
-				throw new Exception("Tried to mark a chunk to generate after it has already been generated.");
-
-			// supports both generation step broad and detail, but not done.
-			if (dataBus.AddChunkToGenerate(position, generator, ChunkDatas))// generator.MakeChunk(ChunkDatas, position));
-				chunks[PosToIndex(position)].genQueued = true;*/
 		}
 
 		// Marks a chunk as dirty, meaning it needs to be remeshed.
 		public void MarkDirty(ChunkPosition position, bool markModified)
 		{
-			chunks[PosToIndex(position)].meshDirty = true;
+			GetManagedChunk(position).meshDirty = true;
 			if (!chunksToMeshAlreadyAdded.Contains(position))
 			{
 				chunksToMeshQueue.EnqueueWithoutSorting(position);

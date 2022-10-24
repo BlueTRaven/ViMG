@@ -17,7 +17,7 @@ namespace ViMG
 		private const long SIZEOF_HEADER = sizeof(int) * 4;
 		private const long SIZEOF_CHUNK = (sizeof(ushort) * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 
-		private const int VERSION = 1;
+		private const int VERSION = 2;
 		private const int MIN_VERSION = 1;
 
 		public int Version;
@@ -54,6 +54,7 @@ namespace ViMG
 			using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
+				fs.Write(BitConverter.GetBytes(manager.DiscoveredLayers));
 
 				//Write unused remaining header bytes
 				long remainingBytes = SIZEOF_HEADER - fs.Position;
@@ -67,7 +68,7 @@ namespace ViMG
         {
 			Chunk[] chunks = manager.GetChunks();
 
-			for (int i = 0; i < manager.sizeInChunksXZ * manager.sizeInChunksXZ * manager.sizeInChunksXZ; i++)
+			for (int i = 0; i < numChunks; i++)
             {
 				SerializeChunk(chunks, i);
             }
@@ -116,6 +117,10 @@ namespace ViMG
 				using (BinaryReader br = new BinaryReader(fs, Encoding.ASCII, true))
 				{
 					Version = br.ReadInt32();
+
+					int layers = 1;
+					if (Version >= 2)
+						layers = br.ReadInt32();
 
 					if (Version < MIN_VERSION)
 						return LoadError.InvalidVersion;
