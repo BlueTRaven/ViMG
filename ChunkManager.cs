@@ -84,6 +84,8 @@ namespace ViMG
 			public bool genQueued;
 			public bool meshQueued;
 
+			public bool valid;
+
 			public ManagedChunk(Chunk defaultChunk, int x, int y, int z)
 			{
 				chunk = defaultChunk;
@@ -97,6 +99,8 @@ namespace ViMG
 				//genStep = GenerationStep.Broad;
 				genQueued = false;
 				meshQueued = false;
+
+				valid = true;
 			}
 		}
 
@@ -477,9 +481,13 @@ namespace ViMG
 			}
 		}
 
+		private Chunk[] allChunks;
 		public Chunk[] GetChunks()
 		{
-			Chunk[] allChunks = new Chunk[totalNumChunks];
+			if (allChunks == null)
+				allChunks = new Chunk[totalNumChunks];
+
+			//Rebuild this every time as chunks may have changed.
 			for (int i = 0; i < totalNumChunks; i++)
 			{
 				int layer = i / layerNumChunks;
@@ -750,21 +758,24 @@ namespace ViMG
 				{
 					ref ManagedChunk c = ref layerLookupTable[i].chunks[j];
 
-					for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
+					if (c.valid)
 					{
-						if (c.meshes[k] != null && !c.meshes[k].IsEmpty)
+						for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
 						{
-							c.meshes[k].VBO.Dispose();
-							c.meshes[k].IBO.Dispose();
+							if (c.meshes[k] != null && !c.meshes[k].IsEmpty)
+							{
+								c.meshes[k].VBO.Dispose();
+								c.meshes[k].IBO.Dispose();
 
-							c.meshes[k] = null;
+								c.meshes[k] = null;
+							}
 						}
-					}
 
-					if (c.chunk.Initialized)
-					{
-						ChunkDatas.Return(c.chunk.GetData());
-						c.chunk.SetData(null);
+						if (c.chunk.Initialized)
+						{
+							ChunkDatas.Return(c.chunk.GetData());
+							c.chunk.SetData(null);
+						}
 					}
 				}
 			}

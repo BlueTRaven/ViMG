@@ -244,7 +244,7 @@ namespace ViMG.Generation
 			Vector2 geodeAng = GetRandom().NextAngle();
 			float geodeDist = GetRandom().NextFloat(3, 24);
 
-			CubePosition geodePos = new CubePosition((int)(geodeAng.X * geodeDist), 37, (int)(geodeAng.Y * geodeDist));
+			CubePosition geodePos = new CubePosition(holeLocationX + (int)(geodeAng.X * geodeDist), 37, holeLocationY + (int)(geodeAng.Y * geodeDist));
 
 			ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
 				geodePos, BlacklistNone, BlacklistNone);
