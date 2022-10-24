@@ -146,7 +146,8 @@ namespace ViMG
 		public bool IsRunning;
 
 		private MouseState currentMS;
-		private MouseState originalMS;
+		private MouseState previousMS;
+		private Vector2 previousMousePosition;
 
 		private State state;
 
@@ -240,7 +241,10 @@ namespace ViMG
 
 			//state = State.Noclip;
 			Options.CenterMouse();
-			originalMS = Mouse.GetState();
+			currentMS = Mouse.GetState();
+			previousMS = currentMS;
+			previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
+
 			Rotation = Main.camera.Rotation;
 
 			accessoryInventory = new Inventory(6);
@@ -271,7 +275,10 @@ namespace ViMG
 			AlwaysRender = true;
 
 			Options.CenterMouse();
-			originalMS = Mouse.GetState();
+			currentMS = Mouse.GetState();
+			previousMS = currentMS;
+			previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
+
 			Rotation = Main.camera.Rotation;
 
 			craftInventory = new Inventory(8);
@@ -1239,13 +1246,15 @@ namespace ViMG
 
 			currentMS = Mouse.GetState();
 
-			if (currentMS != originalMS)
+			if (currentMS != previousMS)
 			{
 				float scalar = 0.25f;
 
 				Vector3 camRotation = Rotation;
 
-				Vector2 delta = new Vector2(originalMS.X, originalMS.Y) - new Vector2(currentMS.X, currentMS.Y);
+				Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currentMS.X, currentMS.Y);
+				previousMS = currentMS;
+				previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
 
 				if (delta.Length() > float.Epsilon)
 				{
