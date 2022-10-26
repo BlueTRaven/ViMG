@@ -9,6 +9,8 @@ namespace ViMG.Recipes
 	public class RecipeRegistry
 	{
 		public CatalystPlayerInventory PlayerInventoryCatalyst;
+		public CatalystAnvilIronArmor AnvilIronArmorCatalyst;
+		public CatalystAnvilIronTools AnvilIronToolsCatalyst;
 
 		private List<Recipe> registry = new List<Recipe>();
 		private Dictionary<IRecipeCatalyst, List<Recipe>> recipesByCatalyst = new Dictionary<IRecipeCatalyst, List<Recipe>>();
@@ -19,10 +21,11 @@ namespace ViMG.Recipes
 		public void RegisterAll()
 		{
 			PlayerInventoryCatalyst = new CatalystPlayerInventory();
+			AnvilIronArmorCatalyst = new CatalystAnvilIronArmor();
+			AnvilIronToolsCatalyst = new CatalystAnvilIronTools();
 			RegisterCatalyst(PlayerInventoryCatalyst);
-
-			RegisterCatalyst(new CatalystAnvilIronTools());
-			RegisterCatalyst(new CatalystAnvilIronArmor());
+			RegisterCatalyst(AnvilIronArmorCatalyst);
+			RegisterCatalyst(AnvilIronToolsCatalyst);
 
 			foreach (IRecipeCatalyst catalyst in catalysts)
 			{

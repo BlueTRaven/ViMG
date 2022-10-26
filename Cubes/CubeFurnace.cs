@@ -121,6 +121,52 @@ namespace ViMG.Cubes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }));
 		}
 
+		public Size GetSize()
+		{
+			return new Size(UIConstants.SIZE * 2f, UIConstants.SIZE * 3f);
+		}
+
+		public void DoRecipeUI2(UI.ItemSlot[] itemSlots, Recipe recipe)
+		{
+			RectangleF bounds = new RectangleF(Vector2.Zero, UIConstants.SIZE, UIConstants.SIZE);
+
+			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				recipe.Layout[0]);
+
+			bounds.x += UIConstants.SIZE;
+
+			ItemInstance item = new ItemInstance();
+			if (recipe.Layout.Length > 1)
+				item = recipe.Layout[1];
+
+			itemSlots[1] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				item);
+
+			bounds.x -= UIConstants.SIZE;
+
+			bounds.y += UIConstants.SIZE;
+
+			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+
+			bounds.y += UIConstants.SIZE;
+
+			for (int i = 0; i < recipe.Outputs.Length; i++)
+			{
+				ItemInstance instance;
+				if (i < recipe.Outputs.Length)
+					instance = recipe.Outputs[i];
+				else instance = new ItemInstance();
+
+				itemSlots[2 + i] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+					instance);
+
+				bounds.x += UIConstants.SIZE;
+			}
+		}
+
 		public void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale)
 		{
 			RectangleF bounds = new RectangleF(Vector2.Zero, textureSize, textureSize);

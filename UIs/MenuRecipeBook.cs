@@ -60,7 +60,8 @@ namespace ViMG.UIs
 			//TODO: size should be determined statically for each catalyst rather than asking to do a UI.
 			Size eachSize = Size.Zero;
 			if (currentRecipes != null && currentRecipes.Count > 0)
-				filterCatalyst.DoRecipeUI(out eachSize, currentRecipes[0], SIZE, SCALE);
+				eachSize = filterCatalyst.GetSize();
+				//filterCatalyst.DoRecipeUI(out eachSize, currentRecipes[0], SIZE, SCALE);
 			
 			UI.Start();
 			UI.StartParent(new Vector2(MARGIN));
@@ -94,6 +95,7 @@ namespace ViMG.UIs
 
 				if (button.clickLeft)
 				{
+					page = 0;
 					filterCatalyst = catalyst;
 					GetFilteredRecipes();
 				}
@@ -126,7 +128,10 @@ namespace ViMG.UIs
 
 			UI.EndParent();
 		}
-
+		
+		//we don't actually use this, however DoRecipeUI2 relies on this array so it must be used.
+		//# item slots can vary wildly between different recipe catalysts, so just choose a large ish number.
+		private UI.ItemSlot[] dummyItemSlots = new UI.ItemSlot[32];
 		private void DoRecipes(int numPerWidth, int numPerHeight, Size eachSize)
 		{
 			UI.StartParent(new Vector2(MARGIN));
@@ -143,8 +148,8 @@ namespace ViMG.UIs
 						Recipe recipe = currentRecipes[i];
 
 						UI.StartParent(eachSize.ToVector2() * new Vector2(x, y));
-						Size size = new Size();
-						filterCatalyst.DoRecipeUI(out size, recipe, SIZE, SCALE);
+						filterCatalyst.DoRecipeUI2(dummyItemSlots, recipe);
+						//filterCatalyst.DoRecipeUI(out size, recipe, SIZE, SCALE);
 						UI.EndParent();
 					}
 				}
@@ -184,10 +189,13 @@ namespace ViMG.UIs
 
 				var catalystRecipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(filterCatalyst);
 
-				foreach (Recipe recipe in catalystRecipes)
+				if (catalystRecipes != null)
 				{
-					if (HasFilteredItem(recipe, true, true))
-						currentRecipes.Add(recipe);
+					foreach (Recipe recipe in catalystRecipes)
+					{
+						if (HasFilteredItem(recipe, true, true))
+							currentRecipes.Add(recipe);
+					}
 				}
 			}
 		}

@@ -13,63 +13,54 @@ namespace ViMG.Recipes
 {
     public class CatalystAnvilIronArmor : IRecipeCatalyst
 	{
-        public void RegisterRecipes(List<Recipe> recipes)
+		public void RegisterRecipes(List<Recipe> recipes)
 		{
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1), new ItemInstance(),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 8, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_iron"), 1, 1) }));
+		}
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 7, 1),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 7, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_iron"), 1, 1) }));
+		public Size GetSize()
+		{
+			return new Size(UIConstants.SIZE * 4f, UIConstants.SIZE * 5 + UIConstants.MARGIN * 2);
+		}
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 6, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 6, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1) }));
+		public void DoRecipeUI2(UI.ItemSlot[] itemSlots, Recipe recipe)
+		{
+			Vector2 pos = Vector2.Zero;
+			RectangleF bounds = new RectangleF(pos, UIConstants.SIZE, UIConstants.SIZE);
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 6, 1), new ItemInstance(),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 8, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1) }));
+			bounds.x += UIConstants.SIZE;
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 7, 1),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 7, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_tin"), 1, 1) }));
+			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				recipe.Layout[0]);
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 6, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 6, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_copper"), 1, 1) }));
+			bounds.x -= UIConstants.SIZE;
+			bounds.y += UIConstants.SIZE;
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 6, 1), new ItemInstance(),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 8, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_copper"), 1, 1) }));
+			for (int i = 1; i < 7; i++)
+			{
+				int j = i - 1;
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 7, 1),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 7, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_copper"), 1, 1) }));
+				//copies
+				RectangleF b = bounds;
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 6, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 6, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_bronze"), 1, 1) }));
+				b.x += (j % 3) * UIConstants.SIZE;
+				b.y += (int)(j / 3f) * UIConstants.SIZE;
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 6, 1), new ItemInstance(),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 8, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_bronze"), 1, 1) }));
+				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+					recipe.Layout[i]);
+			}
 
-			recipes.Add(new RecipeLayout(this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 7, 1),
-					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 7, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_bronze"), 1, 1) }));
+			bounds.y += UIConstants.SIZE * 2;
+
+			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+
+			bounds.y += UIConstants.SIZE;
+
+			itemSlots[7] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				recipe.Outputs[0]);
 		}
 
 		public void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale)
@@ -80,6 +71,7 @@ namespace ViMG.Recipes
 			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
 								recipe.Layout[0]);
+
 
 			bounds.x += textureSize;
 
@@ -115,13 +107,13 @@ namespace ViMG.Recipes
 		}
 
 		public Texture2D GetTexture()
-        {
+		{
 			return Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
-        }
+		}
 
-        public RectangleF GetSourceRect()
-        {
+		public RectangleF GetSourceRect()
+		{
 			return new RectangleF(48, 80, 16, 16);
-        }
-    }
+		}
+	}
 }

@@ -14,8 +14,7 @@ namespace ViMG.UIs
 	{
 		private readonly Player player;
 		private readonly Inventory playerInventory;
-		private readonly Inventory anvilInventoryTools;
-        private readonly Inventory anvilInventoryArmor;
+		private readonly Inventory anvilInventory;
         private bool inventoryUpdated;
 		private Recipe currentRecipe;
 
@@ -25,12 +24,11 @@ namespace ViMG.UIs
 
 		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
 
-		public MenuAnvil(Player player, Inventory playerInventory, Inventory anvilInventoryTools, Inventory anvilInventoryArmor)
+		public MenuAnvil(Player player, Inventory playerInventory, Inventory anvilInventory)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
-			this.anvilInventoryTools = anvilInventoryTools;
-            this.anvilInventoryArmor = anvilInventoryArmor;
+			this.anvilInventory = anvilInventory;
 
 			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
@@ -67,74 +65,71 @@ namespace ViMG.UIs
 			DoTools();
 		}
 
+		private UI.ItemSlot[] itemSlots;
+
 		private void DoTools()
         {
 			UI.StartParent(inventoryRight);
 
-			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 3f, SIZE * 4 + MARGIN * 2));
+			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 4f, SIZE * 5 + MARGIN * 2));
 
 			UI.StartParent(new Vector2(MARGIN));
 
 			Vector2 pos = Vector2.Zero;
 			RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
 
-			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventoryTools.Get(0));
+			if (itemSlots == null)
+				itemSlots = new UI.ItemSlot[7];
 
 			bounds.x += SIZE;
 
-			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventoryTools.Get(1));
+								anvilInventory.Get(0));
 
 			bounds.x -= SIZE;
 			bounds.y += SIZE;
 
-			var itemSlotC = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventoryTools.Get(2));
+			for (int i = 1; i < 7; i++)
+            {
+				int j = i - 1;
 
-			bounds.y -= SIZE;
+				//copies
+				RectangleF b = bounds;
 
-			MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 0, itemSlotA, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
-			{
-				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 0);
-				inventoryUpdated = true;
+				b.x += (j % 3) * SIZE;
+				b.y += (int)(j / 3f) * SIZE;
+
+				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+					anvilInventory.Get(i));
 			}
 
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 1, itemSlotB, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
-			{
-				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 1);
-
-				inventoryUpdated = true;
-			}
-
-			if ((output = MenuHelper.HandleItemSlot(player, anvilInventoryTools, 2, itemSlotC, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
-			{
-				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
-					MenuHelper.SwapInventory(anvilInventoryTools, playerInventory, 2);
-
-				inventoryUpdated = true;
+			for (int i = 0; i < 7; i++)
+            {
+				MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
+				if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+				{
+					if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
+						MenuHelper.SwapInventory(anvilInventory, playerInventory, i);
+					inventoryUpdated = true;
+				}
 			}
 
 			if (inventoryUpdated)
 			{
-				currentRecipe = FindRecipe(anvilInventoryTools);
+				currentRecipe = FindRecipe(anvilInventory);
 
 				if (currentRecipe != null)
 				{
 					for (int i = 0; i < Math.Min(1, currentRecipe.Outputs.Length); i++)
 					{
-						anvilInventoryTools.Set(currentRecipe.Outputs[i], 3 + i);
+						anvilInventory.Set(currentRecipe.Outputs[i], 7 + i);
 					}
 				}
 				else
 				{
-					anvilInventoryTools.Set(new ItemInstance(), 3);
+					anvilInventory.Set(new ItemInstance(), 7);
 				}
 			}
 
@@ -145,8 +140,8 @@ namespace ViMG.UIs
 			bounds.y += SIZE;
 
 			UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-								anvilInventoryTools.Get(3));
+				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				anvilInventory.Get(7));
 
 			bounds.x += SIZE;
 
@@ -163,8 +158,7 @@ namespace ViMG.UIs
 				UI.EnableParent();
 			}
 
-			bounds.x -= SIZE;
-			bounds.y += SIZE * 2f;
+			bounds.x += SIZE;
 
 			UI.Button recipeBookButton = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 				new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16));
@@ -178,7 +172,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.Registry.CubeRegistry.Get("anvil_iron") as CubeAnvilIron, new ItemInstance()));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst, new ItemInstance()));
 			}
 
 			UI.EndParent();
@@ -187,13 +181,25 @@ namespace ViMG.UIs
 
 		private Recipe FindRecipe(Inventory inventory)
 		{
-			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.CubeRegistry.Get("anvil_iron") as CubeAnvilIron);
+			var recipesTools = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst);
+			var recipesArmor = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.AnvilIronArmorCatalyst);
 
 			Recipe foundRecipe = null;
 
-			for (int i = 0; i < recipes.Count; i++)
+			for (int i = 0; i < recipesTools.Count; i++)
 			{
-				Recipe recipe = recipes[i];
+				Recipe recipe = recipesTools[i];
+
+				if (recipe.Matches(inventory))
+				{
+					if (foundRecipe == null || recipe.Weight > foundRecipe.Weight)
+						foundRecipe = recipe;
+				}
+			}
+
+			for (int i = 0; i < recipesArmor.Count; i++)
+			{
+				Recipe recipe = recipesArmor[i];
 
 				if (recipe.Matches(inventory))
 				{
@@ -207,7 +213,7 @@ namespace ViMG.UIs
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(anvilInventoryTools))
+			if (recipe.Matches(anvilInventory))
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
@@ -215,10 +221,10 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-						anvilInventoryTools.FindExact(recipe.Layout[i], 3, out int index);
+						anvilInventory.FindExact(recipe.Layout[i], 3, out int index);
 
-						int overflow = anvilInventoryTools.Get(i).num - numLeft;
-						anvilInventoryTools.Remove(index, numLeft);
+						int overflow = anvilInventory.Get(i).num - numLeft;
+						anvilInventory.Remove(index, numLeft);
 						inventoryUpdated  = true;
 
 						if (overflow < 0)

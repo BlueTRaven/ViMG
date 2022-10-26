@@ -1095,12 +1095,12 @@ namespace ViMG
 			result.start = start;
 			result.end = end;
 
-			float x1 = MathF.Floor(start.X / ONE_CUBE);
-			float y1 = MathF.Floor(start.Y / ONE_CUBE);
-			float z1 = MathF.Floor(start.Z / ONE_CUBE);
-			float x2 = MathF.Floor(end.X / ONE_CUBE);
-			float y2 = MathF.Floor(end.Y / ONE_CUBE);
-			float z2 = MathF.Floor(end.Z / ONE_CUBE);
+			float x1 = start.X / ONE_CUBE;
+			float y1 = start.Y / ONE_CUBE;
+			float z1 = start.Z / ONE_CUBE;
+			float x2 = end.X / ONE_CUBE;
+			float y2 = end.Y / ONE_CUBE;
+			float z2 = end.Z / ONE_CUBE;
 
 			int i = (int)x1;
 			int j = (int)y1;
