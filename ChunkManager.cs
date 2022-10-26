@@ -146,8 +146,8 @@ namespace ViMG
 
 			layerLookupTable = new Layer[2]
 			{
-				new Layer(0, new ChunkGeneratorIsland(), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ),
-				new Layer(1, new ChunkGeneratorFlat(), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ)  //TODO
+				new Layer(0, new ChunkGeneratorIsland(0), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ),
+				new Layer(1, new ChunkGeneratorFlat(1), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ)  //TODO
 			};
 
 			totalNumChunks = layerNumChunks * layerLookupTable.Length;
@@ -166,13 +166,15 @@ namespace ViMG
 			if (layer > discoveredLayers)
 				discoveredLayers = layer;
 
-			for (int i = offset; i < total + offset; i++)
+			for (int i = 0; i < total; i++)
 			{
 				int x = i % sizeInChunksXZ;
 				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-				layerLookupTable[layer].chunks[i] = new ManagedChunk(layerLookupTable[layer].generator.MakeChunk(this, new ChunkPosition(x, y, z)), x, y, z);
+				y -= layerSizeInChunksY * layer;
+
+				layerLookupTable[layer].chunks[i] = new ManagedChunk(layerLookupTable[layer].generator.MakeChunk(this, new ChunkPosition(x, y, z)), 0, 0, 0);
 			}
 		}
 
@@ -192,7 +194,7 @@ namespace ViMG
 
 			const int split = 8;
 
-			for (int i = offset; i < offset + total; i += split) 
+			for (int i = 0; i < total; i += split) 
 			{
 				int chunkStart = i;
 				int chunkEnd = i + split;
@@ -344,10 +346,20 @@ namespace ViMG
 			ProcessChunkQueueSync(world, 1, 8);
 		}
 
+		private ChunkPosition LayerRelativePosition(ChunkPosition chunkPosition)
+        {
+			return new ChunkPosition(chunkPosition.X, EngineMathHelper.Mod(chunkPosition.Y, layerSizeInChunksY), chunkPosition.Z);
+        }
+
+		private CubePosition LayerRelativePosition(CubePosition cubePosition)
+        {
+			return new CubePosition(cubePosition.X, EngineMathHelper.Mod(cubePosition.Y, sizeInCubes), cubePosition.Z);
+        }
+
 		private int LayerFromPos(ChunkPosition position)
         {
 			//We subtract layer size from this because the range would otherwise be 512, 0, -512, etc. which would evaluate to 1, 0, -1 (which is index 1).
-			return Math.Abs(((position.Y + 1) - layerSizeInChunksY) / layerSizeInChunksY);
+			return Math.Abs(((position.Y >= 0 ? position.Y + 1 : position.Y) - layerSizeInChunksY) / layerSizeInChunksY);
         }
 
 		private int IndexFromPos(ChunkPosition position)
@@ -399,10 +411,10 @@ namespace ViMG
 						cs[0] = adjacent;
 					}
 
-					if (pos.Y - 1 >= 0)
+					if (pos.Y - 1 >= -layerSizeInChunksY * (layerLookupTable.Length - 1))
 					{
 						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y - 1, pos.Z);
-						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(LayerRelativePosition(offsetPos))].chunk;
 						if (!adjacent.Initialized)
 						{
 							chunksToMeshQueue.EnqueueWithoutSorting(pos);
@@ -416,7 +428,7 @@ namespace ViMG
 					if (pos.Z - 1 >= 0)
 					{
 						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y, pos.Z - 1);
-						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(LayerRelativePosition(offsetPos))].chunk;
 
 						if (!adjacent.Initialized)
 						{
@@ -431,7 +443,7 @@ namespace ViMG
 					if (pos.X + 1 < sizeInChunksXZ)
 					{
 						ChunkPosition offsetPos = new ChunkPosition(pos.X + 1, pos.Y, pos.Z);
-						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(LayerRelativePosition(offsetPos))].chunk;
 					
 						if (!adjacent.Initialized)
 						{
@@ -446,7 +458,7 @@ namespace ViMG
 					if (pos.Y + 1 < sizeInChunksXZ)
 					{
 						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y + 1, pos.Z);
-						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(LayerRelativePosition(offsetPos))].chunk;
 						
 						if (!adjacent.Initialized)
 						{
@@ -461,7 +473,7 @@ namespace ViMG
 					if (pos.Z + 1 < sizeInChunksXZ)
 					{
 						ChunkPosition offsetPos = new ChunkPosition(pos.X, pos.Y, pos.Z + 1);
-						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(offsetPos)].chunk;
+						Chunk adjacent = layerLookupTable[LayerFromPos(offsetPos)].chunks[IndexFromPos(LayerRelativePosition(offsetPos))].chunk;
 					
 						if (!adjacent.Initialized)
 						{
@@ -502,7 +514,7 @@ namespace ViMG
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			ManagedChunk mc = layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(pos)];
+			ManagedChunk mc = layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(LayerRelativePosition(pos))];
 
 			//First one must have forceUpdate = true,
 			//but all subsequent mesh generations should be false.
@@ -531,7 +543,7 @@ namespace ViMG
 			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
 			int layer = LayerFromPos(chunkPos);
-			int index = IndexFromPos(chunkPos);
+			int index = IndexFromPos(LayerRelativePosition(chunkPos));
 
 			Chunk c = layerLookupTable[layer].chunks[index].chunk;
 			if (index < 0 || index >= layerNumChunks || !c.Initialized)
@@ -542,7 +554,7 @@ namespace ViMG
 		public Chunk GetChunk(ChunkPosition position)
 		{
 			int layer = LayerFromPos(position);
-			int index = IndexFromPos(position);
+			int index = IndexFromPos(LayerRelativePosition(position));
 
 			return layerLookupTable[layer].chunks[index].chunk;
 		}
@@ -550,7 +562,7 @@ namespace ViMG
 		public ChunkMesh GetMesh(ChunkPosition position, int pass)
 		{
 			int layer = LayerFromPos(position);
-			int index = IndexFromPos(position);
+			int index = IndexFromPos(LayerRelativePosition(position));
 
 			return layerLookupTable[layer].chunks[index].meshes[pass];
 		}
@@ -563,6 +575,8 @@ namespace ViMG
 		//TODO update to account for layers
 		public bool IsInWorldBounds(CubePosition position)
 		{
+			position = LayerRelativePosition(position);
+
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
 				return false;
 			else
@@ -577,7 +591,7 @@ namespace ViMG
 		public bool IsInWorldBounds(ChunkPosition position)
 		{
 			return position.X >= 0 && position.X < sizeInChunksXZ &&
-					position.Y >= 0 && position.Y < sizeInChunksXZ &&
+					LayerFromPos(position) <= layerLookupTable.Length &&
 					position.Z >= 0 && position.Z < sizeInChunksXZ;
 		}
 
@@ -597,6 +611,8 @@ namespace ViMG
 
 			if (IsInWorldBounds(position))
 			{
+				/*if (position.Y < 0)
+					Console.WriteLine("Aaa");*/
 				Chunk c = GetChunk(position);
 				if (c == null)
 					return 0;

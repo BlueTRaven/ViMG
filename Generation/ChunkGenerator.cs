@@ -18,10 +18,15 @@ namespace ViMG.Generation
 		private Random random;
 		private Random threadRandom;
 
+		public readonly int Layer;
 		public readonly int Seed;
 
-		public ChunkGenerator(int seed = 1337)
+		protected int layerYOffsetInCubes;
+		protected int layerYOffsetInChunks;
+
+		public ChunkGenerator(int layer, int seed = 1337)
 		{
+			this.Layer = layer;
 			this.Seed = seed;
 
 			random = new Random(seed);
@@ -35,7 +40,8 @@ namespace ViMG.Generation
 
 		public virtual void Initialize(World world)
 		{
-			
+			layerYOffsetInChunks = Layer * world.GetChunkManager().layerSizeInChunksY;
+			layerYOffsetInCubes = layerYOffsetInChunks * world.GetChunkManager().sizeInCubes;
 		}
 
 		protected Random GetRandom()

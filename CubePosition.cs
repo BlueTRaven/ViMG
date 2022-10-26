@@ -94,7 +94,10 @@ namespace ViMG
 
 		public static Vector3 FromWorldSpaceV3(Vector3 position)
 		{
-			return position / Cube.CUBE_SCALE;
+			return new Vector3(
+				MathF.Floor(position.X / Cube.CUBE_SCALE),
+				MathF.Floor(position.Y / Cube.CUBE_SCALE),
+				MathF.Floor(position.Z / Cube.CUBE_SCALE));
 		}
 
 		public static Vector3 ToWorldSpaceV3(Vector3 position)

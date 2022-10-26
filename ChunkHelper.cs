@@ -10,11 +10,11 @@ namespace ViMG
 {
     public static class ChunkHelper
     {
-		private static Chunk cachedWorkingChunk;
-		private static ushort[] cachedWorkingCubes;
+		private static Chunk cachedSetWorkingChunk;
+		private static ushort[] cachedSetWorkingCubes;
 
-		private static Chunk cachedAdjacentChunk;
-		private static ushort[] cachedAdjacentCubes;
+		private static Chunk cachedSetAdjacentChunk;
+		private static ushort[] cachedSetAdjacentCubes;
 
 		public static void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
 		{
@@ -24,16 +24,16 @@ namespace ViMG
 			// Chunks that have already been fully generated can be marked as dirty
 			if (chunk.GetData().IsInChunkBounds(pos))
 			{
-				if (cachedWorkingChunk != chunk)
+				if (cachedSetWorkingChunk != chunk)
 				{
-					cachedWorkingChunk = chunk;
-					cachedWorkingCubes = chunk.GetData().GetAll();
+					cachedSetWorkingChunk = chunk;
+					cachedSetWorkingCubes = chunk.GetData().GetAll();
 				}
 
 				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
 					pos = pos.InChunkSpace(chunk);
 
-				cachedWorkingCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
+				cachedSetWorkingCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
 			}
 			else
 			{
@@ -41,10 +41,10 @@ namespace ViMG
 				ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos.InCubeSpace(chunk));
 				Chunk adjacent = manager.GetChunk(chunkPos);
 
-				if (cachedAdjacentChunk != adjacent)
+				if (cachedSetAdjacentChunk != adjacent)
 				{
-					cachedAdjacentChunk = adjacent;
-					cachedAdjacentCubes = adjacent.GetData().GetAll();
+					cachedSetAdjacentChunk = adjacent;
+					cachedSetAdjacentCubes = adjacent.GetData().GetAll();
 				}
 
 				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
@@ -54,8 +54,54 @@ namespace ViMG
 				//if (adjacent.GetData().GenStep == ChunkData.GenerationStep.Broad)
 				//GenerateChunkBroad(adjacent);
 
-				cachedAdjacentCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
+				cachedSetAdjacentCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
 			}
+		}
+
+		private static Chunk cachedGetWorkingChunk;
+		private static ushort[] cachedGetWorkingCubes;
+
+		private static Chunk cachedGetAdjacentChunk;
+		private static ushort[] cachedGetAdjacentCubes;
+
+		public static Optional<Cube> GetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition position)
+        {
+			if (!manager.IsInWorldBounds(position))
+				return new Optional<Cube>();
+            else
+            {
+				if (chunk.GetData().IsInChunkBounds(position))
+				{
+					if (cachedGetWorkingChunk != chunk)
+					{
+						cachedGetWorkingChunk = chunk;
+						cachedGetWorkingCubes = chunk.GetData().GetAll();
+					}
+
+					if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+						position = position.InChunkSpace(chunk);
+
+					return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cachedGetWorkingCubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
+				}
+				else
+				{
+					ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+					Chunk adjacent = manager.GetChunk(chunkPos);
+
+					if (cachedGetAdjacentChunk != adjacent)
+					{
+						cachedGetAdjacentChunk = adjacent;
+						cachedGetAdjacentCubes = adjacent.GetData().GetAll();
+					}
+
+					if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+						position = position.InChunkSpace(adjacent);
+
+					return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cachedGetAdjacentCubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
+				}
+            }
+
+			return new Optional<Cube>();
 		}
 
 		/// <summary>

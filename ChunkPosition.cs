@@ -42,9 +42,9 @@ namespace ViMG
 				return new ChunkPosition(-1, -1, -1);
 			else
 			{
-				int x = (int)(position.X / Chunk.CHUNK_SIZE);
-				int y = (int)(position.Y / Chunk.CHUNK_SIZE);
-				int z = (int)(position.Z / Chunk.CHUNK_SIZE);
+				int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
+				int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
+				int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
 
 				return new ChunkPosition(x, y, z);
 			}

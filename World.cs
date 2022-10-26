@@ -304,8 +304,10 @@ namespace ViMG
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.InitLayer(0);
+				ChunkManager.InitLayer(1);
 				//generate island layer
 				ChunkManager.GenerateWorld(this, 0);
+				ChunkManager.GenerateWorld(this, 1);
 
 				worldInfoIO.Save(folderName, this, PointsOfInterest);
 
@@ -372,6 +374,7 @@ namespace ViMG
 
 				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 				ChunkManager.InitLayer(0);
+				ChunkManager.InitLayer(1);
 
 				entIO.DeserializePlayerChunk();
 
@@ -515,7 +518,8 @@ namespace ViMG
 				}
 			}
 
-			PassiveSpawnerManager.Update(deltaTime, this);
+			//TODO re-enable passive spawns
+			//PassiveSpawnerManager.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
@@ -525,7 +529,7 @@ namespace ViMG
 
 				for (int x = Math.Max(0, camPos.X - DrawDistanceHoriz); x <= Math.Min(sizeInChunks, camPos.X + DrawDistanceHoriz); x++)
 				{
-					for (int y = Math.Max(0, camPos.Y - DrawDistanceVert); y <= Math.Min(sizeInChunks, camPos.Y + DrawDistanceVert); y++)
+					for (int y = Math.Max(-ChunkManager.layerSizeInChunksY * (ChunkManager.DiscoveredLayers - 1), camPos.Y - DrawDistanceVert); y <= Math.Min(sizeInChunks, camPos.Y + DrawDistanceVert); y++)
 					{
 						for (int z = Math.Max(0, camPos.Z - DrawDistanceHoriz); z <= Math.Min(sizeInChunks, camPos.Z + DrawDistanceHoriz); z++)
 						{
@@ -1091,12 +1095,12 @@ namespace ViMG
 			result.start = start;
 			result.end = end;
 
-			float x1 = start.X / ONE_CUBE;
-			float y1 = start.Y / ONE_CUBE;
-			float z1 = start.Z / ONE_CUBE;
-			float x2 = end.X / ONE_CUBE;
-			float y2 = end.Y / ONE_CUBE;
-			float z2 = end.Z / ONE_CUBE;
+			float x1 = MathF.Floor(start.X / ONE_CUBE);
+			float y1 = MathF.Floor(start.Y / ONE_CUBE);
+			float z1 = MathF.Floor(start.Z / ONE_CUBE);
+			float x2 = MathF.Floor(end.X / ONE_CUBE);
+			float y2 = MathF.Floor(end.Y / ONE_CUBE);
+			float z2 = MathF.Floor(end.Z / ONE_CUBE);
 
 			int i = (int)x1;
 			int j = (int)y1;

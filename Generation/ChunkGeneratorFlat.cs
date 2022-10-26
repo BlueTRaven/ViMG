@@ -10,6 +10,11 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorFlat : ChunkGenerator
     {
+        public ChunkGeneratorFlat(int layer) : base(layer)
+        {
+
+        }
+
         public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
             int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);

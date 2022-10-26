@@ -797,8 +797,8 @@ namespace ViMG
 		{
 			if (state == State.Noclip)
 			{
-				const float MIN_CAM_SPEED = Cube.CUBE_SCALE;
-				const float MAX_CAM_SPEED = MIN_CAM_SPEED * 2;
+				const float MIN_CAM_SPEED = Cube.CUBE_SCALE / 4f;
+				const float MAX_CAM_SPEED = MIN_CAM_SPEED * 8;
 
 				float moveSpeed = MIN_CAM_SPEED;
 
@@ -808,13 +808,17 @@ namespace ViMG
 				Vector3 oldPos = Position;
 
 				if (Main.inputManager.IsPressed(Keys.W))
-					Position -= Vector3.Normalize(Main.camera.Forward) * moveSpeed;
+					Position -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.S))
-					Position += Vector3.Normalize(Main.camera.Forward) * moveSpeed;
+					Position += Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.A))
 					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.D))
 					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed;
+				if (Main.inputManager.IsPressed(Keys.Space))
+					Position += Vector3.Up * moveSpeed;
+				if (Main.inputManager.IsPressed(Keys.LeftControl))
+					Position -= Vector3.Up * moveSpeed;
 
 				if (Position != oldPos)
 					hasMoved = true;
