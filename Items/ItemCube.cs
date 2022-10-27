@@ -41,15 +41,19 @@ namespace ViMG.Items
 					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos))
 					{
 						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
-						chunk.GetData().SetCube(placeAtPos, cubeId);
-						inventory.Remove(index, 1);
 
-						cube.OnPlayerPlaced(player, placeAtPos);
+						if (chunk != null && chunk.Initialized)
+						{
+							chunk.GetData().SetCube(placeAtPos, cubeId);
+							inventory.Remove(index, 1);
 
-						//cubes can be placed as fast as possible
-						itemCooldownTime = 0.25f;
+							cube.OnPlayerPlaced(player, placeAtPos);
 
-						return true;
+							//cubes can be placed as fast as possible
+							itemCooldownTime = 0.25f;
+
+							return true;
+						}
 					}
 				}
 			}

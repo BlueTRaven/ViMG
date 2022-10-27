@@ -43,7 +43,7 @@ namespace ViMG
 			else
 			{
 				int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
-				int y = (int)MathF.Round(position.Y / (float)Chunk.CHUNK_SIZE, MidpointRounding.ToZero);
+				int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
 				int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
 
 				return new ChunkPosition(x, y, z);

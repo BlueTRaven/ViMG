@@ -172,7 +172,8 @@ namespace ViMG
 				int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 				int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-				y -= layerSizeInChunksY * layer;
+				if (layer > 0)
+					y = layerSizeInChunksY - (layerSizeInChunksY * layer) - 1;
 
 				layerLookupTable[layer].chunks[i] = new ManagedChunk(layerLookupTable[layer].generator.MakeChunk(this, new ChunkPosition(x, y, z)), 0, 0, 0);
 			}
@@ -351,7 +352,7 @@ namespace ViMG
 			int y = chunkPosition.Y;
 
 			if (chunkPosition.Y < 0)
-				y = EngineMathHelper.Mod(chunkPosition.Y, layerSizeInChunksY) + 1;
+				y = EngineMathHelper.Mod(chunkPosition.Y, layerSizeInChunksY);
 
 			return new ChunkPosition(chunkPosition.X, y, chunkPosition.Z);
         }
@@ -367,9 +368,17 @@ namespace ViMG
 
 		private int LayerFromPos(ChunkPosition position)
         {
+			int y = position.Y + 1;
 			//We subtract layer size from this because the range would otherwise be 512, 0, -512, etc. which would evaluate to 1, 0, -1 (which is index 1).
-			return Math.Abs(((position.Y >= 0 ? position.Y + 1 : position.Y) - layerSizeInChunksY) / layerSizeInChunksY);
+			return Math.Abs((y - layerSizeInChunksY) / layerSizeInChunksY);
         }
+
+		private int LayerFromPos(CubePosition position)
+		{
+			int y = position.Y + 1;
+
+			return Math.Abs((y - sizeInCubes) / sizeInCubes);
+		}
 
 		private int IndexFromPos(ChunkPosition position)
 		{
@@ -583,15 +592,29 @@ namespace ViMG
 
 		public bool IsInWorldBounds(CubePosition position)
 		{
+			int sign = MathF.Sign(position.Y);
+
+			int layer = LayerFromPos(position);
 			position = LayerRelativePosition(position);
 
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
 				return false;
 			else
 			{
-				return position.X >= 0 && position.X < sizeInCubes &&
-					position.Y >= 0 && position.Y < sizeInCubes &&
-					position.Z >= 0 && position.Z < sizeInCubes;
+				//positive sign/0 (Sign(0) == 0)
+				if (sign >= 0)
+				{
+					return position.X >= 0 && position.X < sizeInCubes &&
+						position.Y >= 0 && position.Y < sizeInCubes &&
+						position.Z >= 0 && position.Z < sizeInCubes;
+				}
+				else if (sign == -1)
+				{
+					return position.X > 0 && position.X <= sizeInCubes &&
+						position.Y > 0 && position.Y <= sizeInCubes &&
+						position.Z > 0 && position.Z <= sizeInCubes;
+				}
+				else return false;
 			}
 		}
 
@@ -618,9 +641,9 @@ namespace ViMG
 
 			if (IsInWorldBounds(position))
 			{
-				/*if (position.Y < 0)
-					Console.WriteLine("Aaa");*/
-				Chunk c = GetChunk(position);
+                /*if (position.Y < 0)
+                    Console.WriteLine("Aaa");*/
+                Chunk c = GetChunk(position);
 				if (c == null || !c.Initialized)
 					return 0;
 				else return c.GetData().GetRaw(position);
@@ -707,6 +730,8 @@ namespace ViMG
 			{
 				CubePosition pos = new CubePosition(start.X, start.Y - y, start.Z);
 
+				/*if (pos.Y < 0)
+					Console.WriteLine("aaa");*/
 				//Null check here is the same as doing out of bounds check.
 				Cube cubeAtPos = GetCube(pos).Get();
 				if (cubeAtPos != null && (cubeAtPos.Touchable && cubeAtPos.Collision == Cube.CollisionValue.Collidable))

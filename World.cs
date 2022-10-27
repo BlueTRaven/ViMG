@@ -304,10 +304,10 @@ namespace ViMG
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.InitLayer(0);
-				//ChunkManager.InitLayer(1);
+				ChunkManager.InitLayer(1);
 				//generate island layer
 				ChunkManager.GenerateWorld(this, 0);
-				//ChunkManager.GenerateWorld(this, 1);
+				ChunkManager.GenerateWorld(this, 1);
 
 				worldInfoIO.Save(folderName, this, PointsOfInterest);
 
@@ -374,7 +374,7 @@ namespace ViMG
 
 				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 				ChunkManager.InitLayer(0);
-				//ChunkManager.InitLayer(1);
+				ChunkManager.InitLayer(1);
 
 				entIO.DeserializePlayerChunk();
 
