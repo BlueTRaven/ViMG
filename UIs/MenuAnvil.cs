@@ -221,7 +221,7 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-						anvilInventory.FindExact(recipe.Layout[i], 3, out int index);
+						anvilInventory.FindExact(recipe.Layout[i], 7, out int index);
 
 						int overflow = anvilInventory.Get(i).num - numLeft;
 						anvilInventory.Remove(index, numLeft);

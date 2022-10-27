@@ -15,12 +15,145 @@ namespace ViMG.Recipes
 	{
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_tin"), 1, 1) }));
 
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_tin"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 4, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 4, 1), new ItemInstance()
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_tin"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_copper"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_copper"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 4, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 4, 1), new ItemInstance()
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_copper"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_iron"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_iron"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 4, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 4, 1), new ItemInstance()
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_iron"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_bronze"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_bronze"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 2, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 4, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 4, 1), new ItemInstance()
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_bronze"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 3, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 7, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_bone"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 7, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1), new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 4, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_bone"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 5, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 8, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 5, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 5, 1), new ItemInstance()
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_bone"), 1, 1) }));
 		}
 
 		public Size GetSize()
 		{
-			return new Size(UIConstants.SIZE * 4f, UIConstants.SIZE * 5 + UIConstants.MARGIN * 2);
+			return new Size(UIConstants.SIZE * 3f, UIConstants.SIZE * 5);
 		}
 
 		public void DoRecipeUI2(UI.ItemSlot[] itemSlots, Recipe recipe)

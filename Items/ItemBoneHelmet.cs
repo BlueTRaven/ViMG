@@ -26,6 +26,8 @@ namespace ViMG.Items
 
         public ItemBoneHelmet() : base("helmet_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 80, 16, 16))
         {
+            name = "Bone Helmet";
+            description = "A helmet carved from bone. Ordinarily fairly inflexible, enchantments make this armor piece fairly competent.";
             Tags.Add("armor_head");
         }
 

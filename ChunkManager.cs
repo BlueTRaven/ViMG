@@ -353,7 +353,11 @@ namespace ViMG
 
 		private CubePosition LayerRelativePosition(CubePosition cubePosition)
         {
-			return new CubePosition(cubePosition.X, EngineMathHelper.Mod(cubePosition.Y, sizeInCubes), cubePosition.Z);
+			int y = cubePosition.Y;
+
+			if (cubePosition.Y < 0)
+				y = EngineMathHelper.Mod(cubePosition.Y, sizeInCubes);
+			return new CubePosition(cubePosition.X, y, cubePosition.Z);
         }
 
 		private int LayerFromPos(ChunkPosition position)

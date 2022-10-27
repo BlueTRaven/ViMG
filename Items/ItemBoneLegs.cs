@@ -11,8 +11,10 @@ namespace ViMG.Items
 {
     public class ItemBoneLegs : Item
     {
-        public ItemBoneLegs() : base("legs_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 96, 16, 16))
+        public ItemBoneLegs() : base("legs_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 80, 16, 16))
         {
+            name = "Bone Leggings";
+            description = "Leggings produced from bone.";
             Tags.Add("armor_legs");
         }
 
