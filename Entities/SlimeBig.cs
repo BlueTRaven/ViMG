@@ -54,6 +54,16 @@ namespace ViMG.Entities
 
 			ai.Update(deltaTime);
         }
+		
+		public override void OnDelete()
+		{
+			base.OnDelete();
+
+			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), Main.random.Next(2, 8), 1));
+			ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+				6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
+			world.EntityManager.Add(ent);
+		}
 
 		public override void OnUnload()
 		{

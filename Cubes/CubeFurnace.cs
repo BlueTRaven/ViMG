@@ -101,6 +101,10 @@ namespace ViMG.Cubes
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
+							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
+							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_glass"), 1, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 1, 1) },
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 1, 1) }));
 

@@ -595,6 +595,10 @@ namespace ViMG
 			int sign = MathF.Sign(position.Y);
 
 			int layer = LayerFromPos(position);
+
+			if (layer > discoveredLayers)
+				return false;
+
 			position = LayerRelativePosition(position);
 
 			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)

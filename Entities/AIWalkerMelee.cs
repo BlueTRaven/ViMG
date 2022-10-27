@@ -371,6 +371,11 @@ namespace ViMG.Entities
 					buffManager.AddBuffs(other.applyBuffs);
 
 					InvulnTimer = 0.25f;
+					
+					//interrupt current attack
+					if (state == State.Attack || state == State.AttackStun)
+						state = State.Normal;
+
 					attackTimer = 0;    //immediately attempt to attack?
 
 					noticeHandler.OnTakeDamage(other.owner);

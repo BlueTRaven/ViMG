@@ -39,9 +39,9 @@ namespace ViMG.Items
 			Register(new ItemBronzeIngot());
 			Register(new ItemDebugDepthTarget());
 			Register(new ItemArrowStone());
-			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 1, 1, 0)));
-			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(Player.DamageType.Melee, 0.9f, 5, 1f)));
-			Register(new ItemBow("iron", colorIron, new Item.AttackStats(Player.DamageType.Ranged, 0.95f, 4, 1f)));
+			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.40f, 1, 1, 1, 0)));
+			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(Player.DamageType.Melee, 0.85f, 7, 1f)));
+			Register(new ItemBow("iron", colorIron, new Item.AttackStats(Player.DamageType.Ranged, 0.85f, 6, 1f)));
 			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 0, 0, 0)));
 			Register(new ItemSwordBlade("tin", colorTin, new Item.AttackStats(Player.DamageType.Melee, 1, 3, 1f)));
 			Register(new ItemBow("tin", colorTin, new Item.AttackStats(Player.DamageType.Ranged, 1, 2, 1f)));

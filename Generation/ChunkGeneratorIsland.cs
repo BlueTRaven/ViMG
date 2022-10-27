@@ -315,7 +315,7 @@ namespace ViMG.Generation
 			for (int i = 0; i < 75000; i++)
             {
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR - 32), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
 					BlacklistOre, BlacklistAir);

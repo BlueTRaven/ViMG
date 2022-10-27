@@ -11,7 +11,7 @@ namespace ViMG.Cubes
 {
     public class CubeGlass : Cube
     {
-        public CubeGlass() : base("Glass", RectangleF.Empty, Color.White, 4)
+        public CubeGlass() : base("glass", RectangleF.Empty, Color.White, 4)
         {
             Transparency = TransparencyValue.TransparentOccludesSiblings;
         }
