@@ -158,7 +158,7 @@ namespace ViMG
 				throw new Exception("Attempted to deserialize when nothing has been loaded. Call Load first!");
 
 			Chunk chunk = manager.GetChunk(pos);
-			ChunkData data = chunk.GetData();
+			ChunkData data = chunk?.GetData();
 
 			if (data == null)
 			{

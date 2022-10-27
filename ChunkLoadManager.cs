@@ -116,6 +116,10 @@ namespace ViMG
 				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 					continue;
 
+				//Chunk does not yet exist (typically, this means it's in a layer we haven't entered/generated yet)
+				if (chunkManager.GetChunk(queuedPosition) == null)
+					continue;
+
 				chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;

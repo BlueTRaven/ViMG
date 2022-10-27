@@ -21,6 +21,7 @@ namespace ViMG.Spawners
             spawners.Add(new PSImp(this, entityManager));
             spawners.Add(new PSCaveSlime(this, entityManager));
             spawners.Add(new PSSnake(this, entityManager));
+            spawners.Add(new PSStoneBeetle(this, entityManager));
         }
 
         public void Update(double deltaTime, World world)
@@ -30,6 +31,5 @@ namespace ViMG.Spawners
             SpawnCapMultiplier = 1f;
             SpawnChanceMultipler = 1f;
         }
-
     }
 }

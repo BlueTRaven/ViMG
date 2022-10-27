@@ -94,9 +94,11 @@ namespace ViMG
 
 		public static Vector3 FromWorldSpaceV3(Vector3 position)
 		{
+			float y = MathF.Round(position.Y / Cube.CUBE_SCALE, MidpointRounding.ToZero);
+
 			return new Vector3(
 				MathF.Floor(position.X / Cube.CUBE_SCALE),
-				MathF.Floor(position.Y / Cube.CUBE_SCALE),
+				y,
 				MathF.Floor(position.Z / Cube.CUBE_SCALE));
 		}
 

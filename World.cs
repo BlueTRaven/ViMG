@@ -304,10 +304,10 @@ namespace ViMG
 			if (!saver.DoesSaveExist(folderName))
 			{
 				ChunkManager.InitLayer(0);
-				ChunkManager.InitLayer(1);
+				//ChunkManager.InitLayer(1);
 				//generate island layer
 				ChunkManager.GenerateWorld(this, 0);
-				ChunkManager.GenerateWorld(this, 1);
+				//ChunkManager.GenerateWorld(this, 1);
 
 				worldInfoIO.Save(folderName, this, PointsOfInterest);
 
@@ -374,7 +374,7 @@ namespace ViMG
 
 				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 				ChunkManager.InitLayer(0);
-				ChunkManager.InitLayer(1);
+				//ChunkManager.InitLayer(1);
 
 				entIO.DeserializePlayerChunk();
 
@@ -503,7 +503,7 @@ namespace ViMG
 			{
 				Chunk chunk = ChunkManager.GetChunk(loadedPosition);
 
-				if (chunk.Initialized)
+				if (chunk != null && chunk.Initialized)
 				{
 					int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
 					int id = chunk.GetData().GetAll()[num];
@@ -518,8 +518,7 @@ namespace ViMG
 				}
 			}
 
-			//TODO re-enable passive spawns
-			//PassiveSpawnerManager.Update(deltaTime, this);
+			PassiveSpawnerManager.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 

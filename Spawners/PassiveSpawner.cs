@@ -96,13 +96,17 @@ namespace ViMG.Spawners
             //TODO clamping to bounds can cause min to no longer be taken into account.
             v = spawnBounds.Clamp(v);
 
-            var cubeAtPos = world.ChunkManager.GetCube(CubePosition.FromWorldSpace(v)).Get();
-            if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
+            //Can't start spawning in an uninitialized chunk
+            if (world.ChunkManager.GetChunk(CubePosition.FromWorldSpace(v)).Initialized)
             {
-                CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+                var cubeAtPos = world.ChunkManager.GetCube(CubePosition.FromWorldSpace(v)).Get();
+                if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
+                {
+                    CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 
-                position = pos;
-                return true;
+                    position = pos;
+                    return true;
+                }
             }
 
             position = new CubePosition();
