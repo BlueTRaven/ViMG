@@ -30,7 +30,7 @@ namespace ViMG.Entities
 			this.Position = position;
 			this.Item = item;
 
-			noPickupTimer = 2;
+			noPickupTimer = 1;
 
 			sineTimer = Main.random.NextFloat(0, 4.5f);
 		}

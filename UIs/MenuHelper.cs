@@ -224,7 +224,7 @@ namespace ViMG.UIs
 					else
 					{
 						// attempt to swap stacks
-						if (held.num <= itemSlot.maxStackSize)
+						if (itemSlot.maxStackSize == -1 || held.num <= itemSlot.maxStackSize)
 						{
 							if (!whiteList.Matches(held.item))
 								return ItemSlotClickOutput.None;

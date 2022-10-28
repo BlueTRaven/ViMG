@@ -989,7 +989,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new Skullhead(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				world.EntityManager.Add(new Ducken(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 			}
 		}
 

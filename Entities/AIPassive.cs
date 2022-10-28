@@ -10,17 +10,17 @@ using BrUtility;
 
 namespace ViMG.Entities
 {
-    public class AIWalkerMelee<T> : IHitboxOwner where T : Entity, IHasStats
-    {
+    public class AIPassive<T> : IHitboxOwner where T : Entity, IHasStats
+	{
 		public enum State
 		{
 			Normal,
-			Attack,
-			AttackStun
+			Flee,
 		}
 
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
+		public Vector3 Facing = new Vector3(1, 0, 0);
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
 		private readonly T entity;
@@ -32,43 +32,22 @@ namespace ViMG.Entities
 
 		private State state;
 
-		private float attackTimer;
-
-		public float AttackTimer => attackTimer;
+		private float fleeTimer;
+		public float FleeTimer => fleeTimer;
 
 		public float InvulnTimer;
 
 		private bool onGround;
 		private bool shouldJump;
-		private float shouldJumpLockTimer;	//Sometimes we want to prevent the entity from jumping again.
-
-		public int TouchDamage = 2;
-		public int AttackDamage = 4;
+		private float shouldJumpLockTimer;  //Sometimes we want to prevent the entity from jumping again.
 
 		public int Health;
 		public int MaxHealth;
 
-		public float AttackStunTime = 1.65f;    //the amount of time the ai waits in the attacking state after attacking before returning to the normal state
-		public float AttackCooldownTime = 2f;   //the amount of time before the ai can enter the attacking state again
-		public float AttackLockTime = 0.25f;    //the amount of time the ai spends in the attack state before it can begin moving again.
-		public float AttackHitboxTime = 6f / 60f;
-
-		public float ShootSpeed = Cube.CUBE_SCALE * 16;
-		public float MoveSpeed = Cube.CUBE_SCALE;
-
-		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 1.75f;
-		public float AttackTargetDistance = Cube.CUBE_SCALE * 1.75f;
-
-		private bool isInRangeOfTarget;
-		public bool IsInRangeOfTarget => isInRangeOfTarget;
-
 		private Rectangle3D touchHitboxBounds;
 		private int touchHitbox = -1;
-
-		private Rectangle3D attackHitboxBounds;
-		private int attackHitbox = -1;
-
-		public AIWalkerMelee(T entity, Rectangle3D touchHitboxBounds, Rectangle3D attackHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
+		
+		public AIPassive(T entity, Rectangle3D touchHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
 		{
 			this.noticeHandler = noticeHandler;
 			this.buffManager = buffManager;
@@ -78,16 +57,12 @@ namespace ViMG.Entities
 			this.MaxHealth = maxHealth;
 
 			this.touchHitboxBounds = touchHitboxBounds;
-            this.attackHitboxBounds = attackHitboxBounds;
-        }
+		}
 
 		public void OnUnload()
 		{
 			if (touchHitbox != -1)
 				entity.world.HitboxManager.Remove(touchHitbox);
-
-			if (attackHitbox != -1)
-				entity.world.HitboxManager.Remove(attackHitbox);
 		}
 
 		public void Update(double deltaTime)
@@ -95,7 +70,7 @@ namespace ViMG.Entities
 			InvulnTimer -= (float)deltaTime;
 
 			if (touchHitbox == -1)
-				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
+				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_TAKE, 0, 1f, InvulnTimer <= 0);
 			else entity.world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
 
 			Vector3 actualMaxVel = MaxVelocity;
@@ -104,8 +79,6 @@ namespace ViMG.Entities
 
 			noticeHandler.Update(deltaTime);
 			buffManager.Update(deltaTime);
-
-			isInRangeOfTarget = false;
 
 			if (InvulnTimer <= 0 && onGround)
 			{
@@ -117,92 +90,8 @@ namespace ViMG.Entities
 					shouldJump = false;
 				}
 
-				if (noticeHandler.Noticed)
+				if (state == State.Normal)
 				{
-					idleMovements = 0;
-
-					if (state == State.Normal)
-					{
-						Vector3 dir = noticeHandler.GetNoticedEntity().Position - entity.Position;
-						dir.Normalize();
-						dir *= MoveSpeed;
-
-						float distance = XZDistance(noticeHandler.GetNoticedEntity().Position, entity.Position);
-
-						if (distance > MoveTowardsTargetDistance)
-						{
-							Velocity.X += dir.X;
-							Velocity.Z += dir.Z;
-						}
-						else
-						{
-							Velocity.X *= 0.95f;
-							Velocity.Z *= 0.95f;
-						}
-
-						if (distance < AttackTargetDistance)
-						{
-							isInRangeOfTarget = true;
-
-							attackTimer -= (float)deltaTime;
-
-							if (attackTimer <= 0)
-							{
-								attackTimer = AttackLockTime;
-								state = State.Attack;
-							}
-						}
-					}
-					else if (state == State.Attack)
-					{
-						isInRangeOfTarget = true;
-
-						Velocity.X *= 0.95f;
-						Velocity.Z *= 0.95f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
-						{
-							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
-							if (attackHitbox == -1)
-								attackHitbox = entity.world.HitboxManager.Add(this, attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
-									Vector3.Normalize(Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, AttackDamage, 1);
-
-							state = State.AttackStun;
-							attackTimer = AttackStunTime;
-						}
-					}
-					else if (state == State.AttackStun)
-					{
-						isInRangeOfTarget = true;
-
-						if (attackTimer <= AttackStunTime - AttackHitboxTime)
-                        {
-							if (attackHitbox != -1)
-                            {
-								entity.world.HitboxManager.Remove(attackHitbox);
-								attackHitbox = -1;
-                            }
-                        }
-
-						Velocity.X *= 0.5f;
-						Velocity.Z *= 0.5f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
-						{
-							state = State.Normal;
-							attackTimer = AttackCooldownTime;
-						}
-					}
-				}
-				else
-				{
-					state = State.Normal;
-					attackTimer = AttackCooldownTime;
-
 					idleTimer -= (float)deltaTime;
 
 					if (idleTimer <= 0)
@@ -212,7 +101,7 @@ namespace ViMG.Entities
 					{
 						idleHome = new Vector2(entity.Position.X, entity.Position.Z);
 
-						idleTimer = Main.random.NextFloat(4f, 12f);
+						idleTimer = Main.random.NextFloat(5f, 12f);
 						idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
 						idleMovements = Main.random.Next(2, 6);
 
@@ -237,6 +126,8 @@ namespace ViMG.Entities
 					{
 						Velocity.X += idleDirection.X;
 						Velocity.Z += idleDirection.Y;
+
+						Facing = Vector3.Normalize(Velocity);
 					}
 					else
 					{
@@ -244,6 +135,23 @@ namespace ViMG.Entities
 						Velocity.Z *= 0.85f;
 					}
 				}
+                else
+                {
+					Vector3 dir = noticeHandler.Target.Position - entity.Position;
+					dir.Normalize();
+
+					Velocity.X += dir.X;
+					Velocity.Z += dir.Z;
+
+					fleeTimer -= (float)deltaTime;
+
+					if (fleeTimer <= 0)
+                    {
+						state = State.Normal;
+						idleMovements = 0;
+						idleTimer = 0;
+                    }
+                }
 
 				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
 				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
@@ -311,7 +219,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer > 0)
+			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer <= 0)
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
@@ -371,12 +279,6 @@ namespace ViMG.Entities
 					buffManager.AddBuffs(other.applyBuffs);
 
 					InvulnTimer = 0.25f;
-					
-					//interrupt current attack
-					if (state == State.Attack || state == State.AttackStun)
-						state = State.Normal;
-
-					attackTimer = 0;    //immediately attempt to attack?
 
 					noticeHandler.OnTakeDamage(other.owner);
 				}
