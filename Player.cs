@@ -223,6 +223,10 @@ namespace ViMG
 		public int Magic;
 		public int MaxMagic = 5;
 
+		//Toggled when pressing ctrl
+		//Whether or not to use the "expanded"/full-size mining space for pickaxes
+		public bool ExpandedMineState = true;
+
 		private float healthRegenTimer;
 		private float magicRegenTimer;
 
@@ -414,6 +418,9 @@ namespace ViMG
             }
 			else if (state == State.Normal)
 			{
+				if (Main.inputManager.JustPressed(Keys.LeftControl))
+					ExpandedMineState = !ExpandedMineState;
+
 				invulnTimer -= (float)deltaTime;
 
 				if (inWater)
@@ -1372,61 +1379,6 @@ namespace ViMG
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			/*if (testMesh.VBO == null)
-            {
-				List<VertexCube> sunVertices = new List<VertexCube>();
-				List<int> sunIndices = new List<int>();
-
-				sunIndices.Add(0);
-				sunIndices.Add(1);
-				sunIndices.Add(3);
-				sunIndices.Add(1);
-				sunIndices.Add(2);
-				sunIndices.Add(3);
-
-				sunIndices.Add(3);
-				sunIndices.Add(1);
-				sunIndices.Add(0);
-				sunIndices.Add(3);
-				sunIndices.Add(2);
-				sunIndices.Add(1);
-
-				const float SUN_VERT_DIST = Cube.CUBE_SCALE * 6;
-				sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, new Vector2(0, 1), new Vector3(0, 0, -1)));
-				sunVertices.Add(new VertexCube(new Vector3(-SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, new Vector2(0, 0), new Vector3(0, 0, -1)));
-				sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, SUN_VERT_DIST, 0), Color.Yellow, new Vector2(1, 0), new Vector3(0, 0, -1)));
-				sunVertices.Add(new VertexCube(new Vector3(SUN_VERT_DIST, -SUN_VERT_DIST, 0), Color.Yellow, new Vector2(1, 1), new Vector3(0, 0, -1)));
-
-				testMesh = MeshHelper.MakeSimplerMesh(device, sunVertices, sunIndices);
-            }
-            else
-            {
-				float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
-				Vector2 worldCenter = new Vector2(worldRadius, worldRadius);
-				Vector2 dirWorldCenter = new Vector2(worldCenter.X - Position.X, worldCenter.Y - Position.Z);
-				float dist = dirWorldCenter.Length();
-
-				const float MIN_DIST = Cube.CUBE_SCALE * 180;
-				const float MAX_DIST = Cube.CUBE_SCALE * 224;
-
-				//TODO: if dist > 232, do the thing...
-
-				if (dist > Cube.CUBE_SCALE * 180)
-				{
-					Vector3 tpos = Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 32;
-
-					float alpha = (dist - MIN_DIST) / (MAX_DIST - MIN_DIST);
-
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)(Cube.CUBE_SCALE * 40),
-						Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos), 
-						Main.assetsManager.GetAsset<Texture2D>("leviathan"), DrawHelper.WhitePixel, testMesh.VBO, testMesh.IBO, new RectangleF(0, 0, 64, 64), Color.White * alpha));
-				}
-			}*/
-
-			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
-
-			//Main.CubeEffect.Parameters["AmbientStrength"].SetValue(1f * sine);
-
 			if (inventory.Get(menuPlayer.HighlightIndex).item != null)
 			{
 				inventory.Get(menuPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(menuPlayer.HighlightIndex), this, -Main.camera.Forward);
@@ -1444,26 +1396,35 @@ namespace ViMG
 				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
 				Color color = Color.Lerp(Color.White, Color.Black, s);
 
-				Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
-					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-					Matrix.CreateScale(1.126f) *
-					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)), 
-					Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
-					lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
-				/*device.DepthStencilState = Main.genericDSS;
-				device.RasterizerState = Main.wireframeRS;
-				
-				//Main.BasicEffect.DiffuseColor = Color.Lerp(Color.Transparent, Color.Red, lookAtColSine).ToVector3();
-				lookAtMesh.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, 
-					Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-					Matrix.CreateScale(1.126f) *
-					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) * 
-					Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)));
-				//Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
+				if (ExpandedMineState && 
+					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasPickaxeStats pickStats)
+				{
+					CubePosition[] positions = pickStats.GetAffectedPositions(inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(null), lookAtResult.normal);
 
-				device.DepthStencilState = Main.genericDSS;
-				device.RasterizerState = Main.genericRS;*/
+					for (int i = 0; i < positions.Length; i++)
+					{
+						if (world.GetChunkManager().GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						{
+							Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
+								Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+								Matrix.CreateScale(1.126f) *
+								Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+								Matrix.CreateTranslation(positions[i].InWorldSpace(null)),
+								Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
+								lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
+						}
+					}
+				}
+				else 
+				{
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
+						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+						Matrix.CreateScale(1.126f) *
+						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+						Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)),
+						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
+						lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
+				}
 			}
 		}
 
