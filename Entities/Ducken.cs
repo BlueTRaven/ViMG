@@ -11,7 +11,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    public class Ducken : Entity, IHasStats
+    public class Ducken : Entity, IHasStats, IHitboxOwner
     {
         private const int MAX_HEALTH = 8;
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
@@ -136,6 +136,10 @@ namespace ViMG.Entities
         public void SetStats(Stats stats)
         {
             throw new NotImplementedException();
+        }
+
+        public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+        {
         }
     }
 }

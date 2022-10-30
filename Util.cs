@@ -9,6 +9,12 @@ namespace ViMG
 {
     public static class Util
     {
+		public enum MineTier
+        {
+			Weak,
+			Brittle,
+        }
+
 		public static string CooldownToString(float cooldownTime)
 		{
 			if (cooldownTime <= 0.125f)

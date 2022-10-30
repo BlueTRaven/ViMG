@@ -193,7 +193,8 @@ namespace ViMG.Cubes
 
 		public SimpleMesh<VertexCube, int> mesh;
 
-		public int MineProgressRequirement;
+		public int MineProgressToBreak;
+		public int MineLevelRequirement;
 		public bool Touchable = true;
 
 		//Touchable objects may be collidable, but we assume it's not solid in such a scenario since the player can't interact with it in any way.
@@ -202,7 +203,7 @@ namespace ViMG.Cubes
 		public TransparencyValue Transparency;
 		public CollisionValue Collision = CollisionValue.Collidable;
 
-		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressRequirement)
+		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressToBreak, int mineLevelRequirement = 0)
 		{
 			this.Identifier = identifier;
 
@@ -210,10 +211,11 @@ namespace ViMG.Cubes
 			layout = new CubeFacingLayout(sourceRect);
 			//Array.Fill(sourceRectSides, sourceRect);
 			this.tintColor = color;
-			this.MineProgressRequirement = mineProgressRequirement;
+			this.MineProgressToBreak = mineProgressToBreak;
+			this.MineLevelRequirement = mineLevelRequirement;
 		}
 
-		public Cube(string identifier, CubeFacingLayout layout, Color color, int mineProgressRequirement)
+		public Cube(string identifier, CubeFacingLayout layout, Color color, int mineProgressToBreak, int mineLevelRequirement = 0)
 		{
 			/*if (sourceRectSides.Length != 6)
 				throw new Exception("Cubes cannot have more or less than 6 sides.");*/
@@ -224,7 +226,8 @@ namespace ViMG.Cubes
 			this.layout = layout;
 			//this.sourceRectSides = sourceRectSides;
 			this.tintColor = color;
-			this.MineProgressRequirement = mineProgressRequirement;
+			this.MineProgressToBreak = mineProgressToBreak;
+			this.MineLevelRequirement = mineLevelRequirement;
 		}
 
 		public void SetId(ushort id)
@@ -425,5 +428,10 @@ namespace ViMG.Cubes
 			vertices.Add(new VertexCube(c, color, new Vector2(xmax, ymax), normal));
 			vertices.Add(new VertexCube(d, color, new Vector2(xmin, ymax), normal));
 		}
+
+		public static Item GetItem(Cube cube)
+        {
+			return Main.Registry.ItemRegistry.Get("item_" + cube.Identifier);
+        }
 	}
 }

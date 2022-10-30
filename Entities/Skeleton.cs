@@ -88,9 +88,33 @@ namespace ViMG.Entities
 
 			invulnTimer -= (float)deltaTime;
 
+			bool hasBoneWhistle = noticeHandler.Target != null && Items.ItemBoneWhistle.HasBoneWhistle(noticeHandler.Target);
+
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f);
-			else world.HitboxManager.Update(hitbox, Bounds);
+			else
+			{
+				if (hasBoneWhistle)
+				{
+					//if BOTH, replace with TAKE since we're passive now and don't want to deal touch damage.
+					if (world.HitboxManager.Get(hitbox).group == HitboxManager.Group.ENEMYHOSTILE_BOTH)
+					{
+						world.HitboxManager.Remove(hitbox);
+						hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_TAKE, 4, 1f);
+					}
+				}
+                else
+                {
+					//if TAKE, this means we had the bone whistle on previously and must now re-enable the DEAL part of the hitbox (so put it back onto BOTH).
+					if (world.HitboxManager.Get(hitbox).group == HitboxManager.Group.ENEMYHOSTILE_TAKE)
+					{
+						world.HitboxManager.Remove(hitbox);
+						hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f);
+					}
+                }
+
+				world.HitboxManager.Update(hitbox, Bounds);
+			}
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -131,7 +155,7 @@ namespace ViMG.Entities
 
 				if (state == State.Active)
 				{
-					if (noticeHandler.Noticed)
+					if (noticeHandler.Noticed && !hasBoneWhistle)
 					{
 						idleMovements = 0;
 

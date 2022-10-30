@@ -12,7 +12,7 @@ namespace ViMG.Cubes
 	{
 		private readonly bool dropsSelf;
 
-		public CubeAncientAltar(bool dropsSelf) : base(dropsSelf ? "ancient_altar_placeable" : "ancient_altar_generated", new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White, 12)
+		public CubeAncientAltar(bool dropsSelf) : base(dropsSelf ? "ancient_altar_placeable" : "ancient_altar_generated", new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White, 12, dropsSelf ? 0 : 1)
 		{
             this.dropsSelf = dropsSelf;
         }

@@ -94,7 +94,7 @@ namespace ViMG.Entities
         {
             base.OnDelete();
 
-			int which = Main.random.Next(0, 3);
+			int which = Main.random.Next(0, 5);
 
 			Items.ItemInstance drop;
 			if (which == 0)
@@ -103,6 +103,10 @@ namespace ViMG.Entities
 				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("sword_runic_bone"), 1, 1);
 			else if (which == 2)
 				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("magic_bone_staff"), 1, 1);
+			else if (which == 3)
+				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("heart_ossified"), 1, 1);
+			else if (which == 4)
+				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("bone_whistle"), 1, 1);
 			else drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1);
 
 			EntityItem ent = new EntityItem(Position, drop);

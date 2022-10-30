@@ -12,14 +12,16 @@ namespace ViMG.Items
 		public readonly struct PickaxeStats 
 		{
 			public readonly float cooldownTime;
+			public readonly int mineLevel;
             public readonly int mineRate;
             public readonly int height;
 			public readonly int width;
 			public readonly int depth;
 
-			public PickaxeStats(float cooldownTime, int mineRate, int height, int width, int depth)
+			public PickaxeStats(float cooldownTime, int mineLevel, int mineRate, int height, int width, int depth)
 			{
 				this.cooldownTime = cooldownTime;
+				this.mineLevel = mineLevel;
                 this.mineRate = mineRate;
                 this.height = height;
 				this.width = width;
@@ -28,9 +30,10 @@ namespace ViMG.Items
 
 			public string GetTooltip()
             {
-				return String.Format("Mining Rate: {0}\n" +
-					"{1} Speed\n" +
-					"Size: {2}x{3}x{4} Width by Height by Depth\n", mineRate, Util.CooldownToString(cooldownTime), width + 1, height + 1, depth + 1);
+				return String.Format("{0} Mining Level\n" +
+					"Mining Rate: {1}\n" +
+					"{2} Speed\n" +
+					"Size: {3}x{4}x{5} Width by Height by Depth\n", ((Util.MineTier)mineLevel).ToString(), mineRate, Util.CooldownToString(cooldownTime), width + 1, height + 1, depth + 1);
             }
 		}
 

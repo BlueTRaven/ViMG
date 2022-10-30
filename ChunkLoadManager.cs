@@ -212,13 +212,18 @@ namespace ViMG
 
 			foreach (ChunkPosition pos in unloadChunks)
 			{
-				if (loadedChunks[pos] == LoadingState.Loaded)
-				{
-					chunkIO.SerializeChunk(chunks, pos);
-					entIO.Serialize(pos);
+				Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.sizeInChunksXZ, chunkManager.sizeInChunksXZ, chunkManager.sizeInChunksXZ), out int i);
 
-					entityManager.Unload(pos);
-					chunkManager.Unload(pos);
+				if (chunks[i] != null && chunks[i].Initialized)
+				{
+					if (loadedChunks[pos] == LoadingState.Loaded)
+					{
+						chunkIO.SerializeChunk(chunks, pos);
+						entIO.Serialize(pos);
+
+						entityManager.Unload(pos);
+						chunkManager.Unload(pos);
+					}
 				}
 
 				loadedChunks.Remove(pos);

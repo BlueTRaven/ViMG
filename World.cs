@@ -745,7 +745,7 @@ namespace ViMG
 
 				if (cube != Main.Registry.CubeRegistry.Air)
 				{
-					float percent = (float)mined.Value.progress / (float)cube.MineProgressRequirement;
+					float percent = (float)mined.Value.progress / (float)cube.MineProgressToBreak;
 
 					float stepped = ((int)(percent * 8f)) / 8f;
 
@@ -923,7 +923,7 @@ namespace ViMG
         }
         #endregion
 
-        public void MineCube(CubePosition position, int num, bool instant = false)
+        public bool TryMineCube(CubePosition position, int level, int num, bool instant = false)
 		{
 			Chunk chunk = ChunkManager.GetChunk(position);
 
@@ -931,13 +931,13 @@ namespace ViMG
 			{
 				position = position,
 				chunk = chunk,
-				progress = 1,
+				progress = num,
 				timer = 2
 			};
 
 			Cube cube = Main.Registry.CubeRegistry.Get(ChunkManager.GetRaw(position));
 
-			if (cube != null)
+			if (cube != null && (level >= cube.MineLevelRequirement || instant))
 			{
 				if (instant)
 				{
@@ -955,13 +955,13 @@ namespace ViMG
 
 					cube.OnMined(player, position);
 
-					return;
+					return true;
 				}
 
 				if (miningCubes.ContainsKey(position))
 				{
 					mined.progress = miningCubes[position].progress + num;
-					if (mined.progress >= cube.MineProgressRequirement)
+					if (mined.progress >= cube.MineProgressToBreak)
 					{
 						miningCubes.Remove(position);
 						mined.chunk.GetData().SetCube(position, 0);
@@ -977,12 +977,14 @@ namespace ViMG
 						}
 
 						cube.OnMined(player, position);
+
+						return true;
 					}
 					else miningCubes[position] = mined;
 				}
 				else
 				{
-					if (mined.progress < cube.MineProgressRequirement)
+					if (mined.progress < cube.MineProgressToBreak)
 						miningCubes.Add(position, mined);
 					else
 					{
@@ -999,9 +1001,13 @@ namespace ViMG
 						}
 
 						cube.OnMined(player, position);
+
+						return true;
 					} 
 				}
 			}
+
+			return false;
 		}
 
 		public CubePosition GetFirstSolidDown(Vector3 start)

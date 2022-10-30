@@ -62,7 +62,7 @@ namespace ViMG.Items
 						if (player.GetWorld().GetChunkManager().IsInWorldBounds(affectedPositions[i]))
 						{
 							if (player.world.GetChunkManager().GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-								player.GetWorld().MineCube(affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineRate);
+								player.GetWorld().TryMineCube(affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 						}
 					}
 				}
@@ -71,7 +71,7 @@ namespace ViMG.Items
 					if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
 					{
 						if (player.world.GetChunkManager().GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-							player.GetWorld().MineCube(CubePosition.FromWorldSpace(lookAtResult.hit), metaItem.GetStats(inventory.Get(index)).mineRate);
+							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 			}

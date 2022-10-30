@@ -58,7 +58,7 @@ namespace ViMG.Cubes
 
 			if (position.Y > updating.Y && updatedId == 0)
 			{
-				parent.GetChunk().GetWorld().MineCube(position, 0, true);
+				parent.GetChunk().GetWorld().TryMineCube(position, 0, 0, true);
 				//parent.SetCube(position, 0);
 			}
 		}

@@ -16,6 +16,15 @@ namespace ViMG.Recipes
         public void RegisterRecipes(List<Recipe> recipes)
 		{
 			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("item_lava_crystal"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 12, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 12, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 7, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_lavacrystal"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(), 

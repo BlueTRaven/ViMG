@@ -39,16 +39,16 @@ namespace ViMG.Items
 			Register(new ItemBronzeIngot());
 			Register(new ItemDebugDepthTarget());
 			Register(new ItemArrowStone());
-			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.40f, 1, 1, 1, 0)));
+			Register(new ItemPickaxeHead("iron", colorIron, new ItemPickaxeHead.PickaxeStats(0.40f, 0, 1, 1, 1, 0)));
 			Register(new ItemSwordBlade("iron", colorIron, new Item.AttackStats(Player.DamageType.Melee, 0.85f, 7, 1f)));
 			Register(new ItemBow("iron", colorIron, new Item.AttackStats(Player.DamageType.Ranged, 0.85f, 6, 1f)));
-			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(0.5f, 1, 0, 0, 0)));
+			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(0.5f, 0, 1, 0, 0, 0)));
 			Register(new ItemSwordBlade("tin", colorTin, new Item.AttackStats(Player.DamageType.Melee, 1, 3, 1f)));
 			Register(new ItemBow("tin", colorTin, new Item.AttackStats(Player.DamageType.Ranged, 1, 2, 1f)));
-			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.475f, 1, 0, 0, 0)));
+			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.475f, 0, 1, 0, 0, 0)));
 			Register(new ItemSwordBlade("copper", colorCopper, new Item.AttackStats(Player.DamageType.Melee, 0.95f, 3, 1f)));
 			Register(new ItemBow("copper", colorCopper, new Item.AttackStats(Player.DamageType.Ranged, 1, 2, 1f)));
-			Register(new ItemPickaxeHead("bronze", colorBronze, new ItemPickaxeHead.PickaxeStats(0.575f, 1, 1, 1, 0)));
+			Register(new ItemPickaxeHead("bronze", colorBronze, new ItemPickaxeHead.PickaxeStats(0.575f, 0, 1, 1, 1, 0)));
 			Register(new ItemSwordBlade("bronze", colorBronze, new Item.AttackStats(Player.DamageType.Melee, 0.9f, 4, 1f)));
 			Register(new ItemBow("bronze", colorBronze, new Item.AttackStats(Player.DamageType.Ranged, 0.95f, 3, 1f)));
 			Register(new ItemPickaxe());
@@ -99,6 +99,9 @@ namespace ViMG.Items
 			Register(new ItemRunicBoneSword());
 			Register(new ItemBowner());
 			Register(new ItemBoneStaff());
+			Register(new ItemOssifiedHeart());
+			Register(new ItemBoneWhistle());
+			Register(new ItemLavaCrystalPickaxe());
 			RegisterItemCubes();
 		}
 

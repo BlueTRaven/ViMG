@@ -19,6 +19,7 @@ namespace ViMG.Entities
 		}
 
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
+		public Vector3 MaxVelocityFleeing = new Vector3(Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 4f);
 		public Vector3 Velocity;
 		public Vector3 Facing = new Vector3(1, 0, 0);
 		private readonly NoticeHandler<Player> noticeHandler;
@@ -137,11 +138,13 @@ namespace ViMG.Entities
 				}
                 else
                 {
+					actualMaxVel = MaxVelocityFleeing;
+
 					Vector3 dir = noticeHandler.Target.Position - entity.Position;
 					dir.Normalize();
 
-					Velocity.X += dir.X;
-					Velocity.Z += dir.Z;
+					Velocity.X -= dir.X;
+					Velocity.Z -= dir.Z;
 
 					fleeTimer -= (float)deltaTime;
 
@@ -219,7 +222,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer <= 0)
+			if (onGround && InvulnTimer <= 0 && shouldJumpLockTimer <= 0)
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
@@ -256,6 +259,9 @@ namespace ViMG.Entities
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
+			if (entity is IHitboxOwner hitboxOwner)
+				hitboxOwner.OnInteractWithOther(us, other);
+
 			if (InvulnTimer <= 0)
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
@@ -281,6 +287,12 @@ namespace ViMG.Entities
 					InvulnTimer = 0.25f;
 
 					noticeHandler.OnTakeDamage(other.owner);
+
+					if (state == State.Normal)
+					{
+						state = State.Flee;
+						fleeTimer = 6f;
+					}
 				}
 			}
 		}
@@ -288,11 +300,6 @@ namespace ViMG.Entities
 		public State GetState()
 		{
 			return state;
-		}
-
-		private static float XZDistance(Vector3 otherPosition, Vector3 position)
-		{
-			return (new Vector2(otherPosition.X, otherPosition.Z) - new Vector2(position.X, position.Z)).Length();
 		}
 	}
 }
