@@ -14,6 +14,7 @@ namespace ViMG.Entities
     {
 		public enum State
 		{
+			Paused,
 			Normal,
 			Attack,
 			AttackStun
@@ -121,7 +122,15 @@ namespace ViMG.Entities
 				{
 					idleMovements = 0;
 
-					if (state == State.Normal)
+					if (state == State.Paused)
+                    {
+						//In paused state, slow down and attempt to transition into Normal state.
+						Velocity.X *= 0.95f;
+						Velocity.Z *= 0.95f;
+
+						state = State.Normal;
+                    }
+					else if (state == State.Normal)
 					{
 						Vector3 dir = noticeHandler.GetNoticedEntity().Position - entity.Position;
 						dir.Normalize();
@@ -311,11 +320,11 @@ namespace ViMG.Entities
 				}
 			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer > 0)
+			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer <= 0)
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
-					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
+					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 1.25f,
 						(Vector3 pos) =>
 						{
 							Cube cube = entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
@@ -387,6 +396,11 @@ namespace ViMG.Entities
 		{
 			return state;
 		}
+
+		public void SetPaused()
+        {
+			state = State.Paused;
+        }
 
 		private static float XZDistance(Vector3 otherPosition, Vector3 position)
 		{

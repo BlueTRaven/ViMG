@@ -8,7 +8,7 @@ namespace ViMG
 {
 	public class LightManager
 	{
-		private const int MAX_LIGHTS = 128;
+		public const int MAX_LIGHTS = 128;
 
 		private StructuredBuffer structuredBuffer;
 		private int version;
@@ -84,6 +84,11 @@ namespace ViMG
 			//for (int i = 0; i < MAX_LIGHTS; i++)
 				//lightsCubemaps[i] = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24);
 		}
+
+		public Light Get(int index)
+        {
+			return lights[index];
+        }
 
 		public int Add(Vector3 position, float start, float end, Color color)
 		{
