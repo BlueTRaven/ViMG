@@ -99,14 +99,22 @@ namespace ViMG
 
 			int offset = chunkOffset;
 
-			Span<ushort> chunkData = chunks[i].GetData().GetAll();
-			int len = chunkData.Length;
+			Span<ushort> chunkData = chunks[i]?.GetData()?.GetAll();
 
-			for (int j = 0; j < len; j++)
+			if (chunkData != null && !chunkData.IsEmpty)
 			{
-				allBytes[offset++] = (byte)chunkData[j];
-				allBytes[offset++] = (byte)(chunkData[j] >> 8);
+				int len = chunkData.Length;
+
+				for (int j = 0; j < len; j++)
+				{
+					allBytes[offset++] = (byte)chunkData[j];
+					allBytes[offset++] = (byte)(chunkData[j] >> 8);
+				}
 			}
+            else
+            {
+				Console.WriteLine("Tried to serialize uninitialized chunk... fix me!");
+            }
 		}
 
 		//Loads bytes from disk. Does not fill in chunks! Use Load, then Deserialize!

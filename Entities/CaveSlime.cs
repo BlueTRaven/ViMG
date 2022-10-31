@@ -96,7 +96,8 @@ namespace ViMG.Entities
 				Matrix.CreateTranslation(Position),
 				noticeHandler.Noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16), tintColor.ToVector3()));
 
-			DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position);
+			if (ai.Health < maxHealth)
+				DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position);
 		}
 
 		public Stats GetStats()

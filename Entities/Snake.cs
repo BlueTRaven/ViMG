@@ -150,7 +150,8 @@ namespace ViMG.Entities
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			DrawHelper3D.DrawHealthbar(device, ai.Health, ai.MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+			if (ai.Health < ai.MaxHealth)
+				DrawHelper3D.DrawHealthbar(device, ai.Health, ai.MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
 		}
 
         public Stats GetStats()
