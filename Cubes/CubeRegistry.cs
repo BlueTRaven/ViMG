@@ -62,6 +62,9 @@ namespace ViMG.Cubes
 			Register(new CubeShrine("shrine_arat", new RectangleF(208, 64, 16, 16), "arat_blessing", "Shrine to Arat"));
 			Register(new CubeAncientAltar(true));
 			Register(new CubeAzureFlower());
+			Register(new CubeMushroomOrangeTop());
+			Register(new CubeMushroomStem());
+			Register(new CubeOrangeCoveredStone());
 		}
 
         protected override void PostRegistration()

@@ -324,7 +324,7 @@ namespace ViMG.Entities
 			{
 				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
 				{
-					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 1.25f,
+					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 1.15f,
 						(Vector3 pos) =>
 						{
 							Cube cube = entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);

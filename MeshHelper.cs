@@ -86,6 +86,7 @@ namespace ViMG
 			DOWN = 1 << 3,
 			FRONT = 1 << 4,
 			BACK = 1 << 5,
+			SIDES = LEFT | RIGHT | FRONT | BACK,
 			ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK
 		}
 
