@@ -105,6 +105,10 @@ namespace ViMG.Recipes
 
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
+			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_fibrous_plant"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("paper"), 4, 1) }, 2));
+
 			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 1, 1) }, 
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), 4, 1) }));
@@ -126,7 +130,7 @@ namespace ViMG.Recipes
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_fibrous_plant"), 1, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 4, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 2, 1) },
@@ -139,6 +143,10 @@ namespace ViMG.Recipes
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 6, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_brittle_bone_block"), 1, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("paper"), 2, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 7, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("scroll_sonar"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 20, 1) },
@@ -164,6 +172,15 @@ namespace ViMG.Recipes
 			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 2, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), 1, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] 
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 2, 1), 
+					new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 6, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("item_azure_flower"), 1, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_magicpotion1"), 2, 1) }));
 
 			/*recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("glowdust"), 4, 1) },

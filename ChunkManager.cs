@@ -15,7 +15,7 @@ namespace ViMG
 {
 	public class ChunkManager
 	{
-		public const int NUM_CHUNK_MESH_PASSES = 2;
+		public const int NUM_CHUNK_MESH_PASSES = 4;
 
 		private readonly struct Layer
         {
@@ -538,6 +538,8 @@ namespace ViMG
 			//but all subsequent mesh generations should be false.
 			mc.meshes[0] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
 			mc.meshes[1] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Transparent, false);
+			mc.meshes[2] = null;	//TODO fluids?
+			mc.meshes[3] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);
 			mc.meshDirty = false;
 			mc.meshQueued = false;
 

@@ -144,6 +144,8 @@ namespace ViMG.Rendering
         public Effect EffectLightAccumPointLight;
         public Effect EffectDeferred;
         public Effect EffectTransparent;
+        public bool EffectEmptyEnabled;
+        public Effect EffectEmpty;
         public Effect EffectHDR;
 
         private BasicEffect EffectCopy;
@@ -165,8 +167,10 @@ namespace ViMG.Rendering
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
+        public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
 
         public static int NumPointLightsRendered;
+        public static int NumDrawCalls;
 
         public bool DoCSMLight = true;
         private float alive;
@@ -217,6 +221,7 @@ namespace ViMG.Rendering
             EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
             EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
             EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
+            EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
@@ -252,7 +257,9 @@ namespace ViMG.Rendering
             DrawsPassGBuffer.Clear();
             DrawsPointLightVolumePass.Clear();
             DrawsTransparentPass.Clear();
+            DrawsEmptyPass.Clear();
 
+            NumDrawCalls = 0;
             NumPointLightsRendered = 0;
         }
 
@@ -366,6 +373,8 @@ namespace ViMG.Rendering
                         {
                             pass.Apply();
                             device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+
+                            NumDrawCalls++;
                         }
                     }
                 }
@@ -386,6 +395,8 @@ namespace ViMG.Rendering
                 device.BlendState = additiveBS;
 
                 DrawFullscreenQuad(EffectLightAccumCSM);
+
+                NumDrawCalls++;
             }
 
             if (DrawsPointLightVolumePass.Count > 0)
@@ -423,6 +434,8 @@ namespace ViMG.Rendering
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
                         //device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.)
+
+                        NumDrawCalls++;
                     }
 
                     NumPointLightsRendered++;
@@ -487,6 +500,32 @@ namespace ViMG.Rendering
                 {
                     pass.Apply();
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+
+                    NumDrawCalls++;
+                }
+            }
+
+            if (EffectEmptyEnabled)
+            {
+                EffectEmpty.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+
+                device.DepthStencilState = DepthStencilState.None;
+                //device.RasterizerState = cullCWRS;
+                foreach (TransparentDraw draw in DrawsEmptyPass)
+                {
+                    device.SetVertexBuffer(draw.VBO);
+                    device.Indices = draw.IBO;
+
+                    EffectEmpty.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
+                    EffectEmpty.Parameters["World"].SetValue(draw.Transform);
+                    
+                    foreach (var pass in EffectEmpty.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+
+                        NumDrawCalls++;
+                    }
                 }
             }
 
@@ -511,6 +550,8 @@ namespace ViMG.Rendering
             {
                 pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboQuad.IndexCount / 3);
+
+                NumDrawCalls++;
             }
         }
 

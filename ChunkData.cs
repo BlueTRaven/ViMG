@@ -517,26 +517,26 @@ namespace ViMG
 		{
 			Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-			if (cube == Main.Registry.CubeRegistry.Air)
+			/*if (cube.Transparency == Cube.TransparencyValue.Air)
 				return MeshHelper.CubeFace.ALL;
-			else if (cube.Transparency == Cube.TransparencyValue.Invisible)
+			else*/ if (cube.Transparency == Cube.TransparencyValue.Invisible)
 				return MeshHelper.CubeFace.NONE;
 
 			MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-			if (HasClearSide(position.X - 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X - 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X - 1, position.Y, position.Z, cube, world))
 				faces |= MeshHelper.CubeFace.LEFT;
-			if (HasClearSide(position.X + 1, position.Y, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X + 1, position.Y, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X + 1, position.Y, position.Z, cube, world))
 				faces |= MeshHelper.CubeFace.RIGHT;
 
-			if (HasClearSide(position.X, position.Y - 1, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y - 1, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X, position.Y - 1, position.Z, cube, world))
 				faces |= MeshHelper.CubeFace.DOWN;
-			if (HasClearSide(position.X, position.Y + 1, position.Z, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y + 1, position.Z, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X, position.Y + 1, position.Z, cube, world))
 				faces |= MeshHelper.CubeFace.UP;
 
-			if (HasClearSide(position.X, position.Y, position.Z - 1, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y, position.Z - 1, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X, position.Y, position.Z - 1, cube, world))
 				faces |= MeshHelper.CubeFace.FRONT;
-			if (HasClearSide(position.X, position.Y, position.Z + 1, cube, world))//if (GetCubeOrAdjacent(position.X, position.Y, position.Z + 1, world).GetOrDefault(Main.Registry.CubeRegistry.Air).Transparency == Cube.TransparencyValue.Transparent)
+			if (HasClearSide(position.X, position.Y, position.Z + 1, cube, world))
 				faces |= MeshHelper.CubeFace.BACK;
 
 			return faces;
@@ -552,9 +552,21 @@ namespace ViMG
 
 			Cube adjacentCube = GetCubeOrAdjacent(x, y, z, world).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-			if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent || adjacentCube.Transparency == Cube.TransparencyValue.Invisible)
-				return true;
-			if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+			if (currentCube.Transparency != Cube.TransparencyValue.Air)
+			{
+				if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent || 
+					adjacentCube.Transparency == Cube.TransparencyValue.Invisible || 
+					adjacentCube.Transparency == Cube.TransparencyValue.Air)
+					return true;
+				if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+				{
+					if (currentCube == adjacentCube)
+						return false;
+					else return true;
+				}
+				else return false;
+			}
+			else if (currentCube.Transparency == Cube.TransparencyValue.Air)
 			{
 				if (currentCube == adjacentCube)
 					return false;

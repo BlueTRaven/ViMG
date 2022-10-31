@@ -10,9 +10,9 @@ using ViMG.Cubes;
 
 namespace ViMG.Items
 {
-    public class ItemFindScroll : Item
+    public class ItemScrollFind : Item
     {
-        public ItemFindScroll() : base("scroll_find", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 32, 16, 16))
+        public ItemScrollFind() : base("scroll_find", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 32, 16, 16))
         {
         }
 

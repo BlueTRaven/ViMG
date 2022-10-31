@@ -13,6 +13,12 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Effects/air.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/air.fx
+
 #begin Effects/cube_lit.fx
 /importer:EffectImporter
 /processor:EffectProcessor

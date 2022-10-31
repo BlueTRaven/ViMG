@@ -9,12 +9,12 @@ using ViMG.Items;
 
 namespace ViMG.Cubes
 {
-    public class CubeFibrousPlant : Cube
+    public class CubeAzureFlower : Cube
     {
-        public CubeFibrousPlant() : base("fibrous_plant", new RectangleF(48, 80, 16, 16), Color.White, 1)
+        public CubeAzureFlower() : base("azure_flower", new RectangleF(64, 80, 16, 16), Color.White, 1)
         {
             Transparency = TransparencyValue.Transparent;
-			Collision = CollisionValue.None;
+            Collision = CollisionValue.None;
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
@@ -26,10 +26,10 @@ namespace ViMG.Cubes
 
         public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
         {
-			if (pass != RenderPass.Opaque)
-				return;
+            if (pass != RenderPass.Opaque)
+                return;
 
-			DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), vertices, indices);
         }
     }
 }

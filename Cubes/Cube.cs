@@ -163,7 +163,8 @@ namespace ViMG.Cubes
         {
 			Opaque,
 			Transparent,
-			Fluid
+			Fluid,
+			Air,
         }
 
 		public enum TransparencyValue
@@ -172,6 +173,7 @@ namespace ViMG.Cubes
 			Transparent,
 			TransparentOccludesSiblings, //occludes "siblings", or cubes of the same type
 			Invisible,	//don't mesh at all
+			Air,		//Air can be meshed under specific conditions
 		}
 
 		public enum CollisionValue 
@@ -348,7 +350,7 @@ namespace ViMG.Cubes
 			return new RectangleF(0, 0, 1024, 1024);
         }
 
-		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
+		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
         {
 			if (Transparency == TransparencyValue.Invisible)
 				return;
@@ -363,7 +365,10 @@ namespace ViMG.Cubes
 			if ((Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings) && pass == RenderPass.Transparent)
 				return;
 
-			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, visual, cube, vertices, indices);
+			if (Transparency == TransparencyValue.Air && pass != RenderPass.Air)
+				return;
+
+			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, visual, this, vertices, indices);
         }
 
 		public Color GetTintColor()

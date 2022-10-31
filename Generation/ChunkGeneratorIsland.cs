@@ -211,14 +211,12 @@ namespace ViMG.Generation
 										ChunkHelper.SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
 									}
 								}
-								else if (GetRandom().Next(0, 256) == 0)
-								{
+								if (GetRandom().Next(0, 256) == 1)
 									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
-								}
-								else if (GetRandom().Next(0, 256) == 0)
-								{
+								if (GetRandom().Next(0, 256) == 2)
 									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
-								}
+								if (GetRandom().Next(0, 256) == 3)
+									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
 							}
 						}
 					}

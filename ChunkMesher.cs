@@ -45,19 +45,29 @@ namespace ViMG
 						ushort id = cubes[ci];
 						Cube.CubeVisualInstance visual = data.GetVisual(pos, forceUpdate);
 
-						if (id == 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
-							continue;
+						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid)
+						{
+							if (id == 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
+								continue;
 
-						Cube cube = Main.Registry.CubeRegistry.Get(id);
-						data.SetDensity(0, cube.Id);
+							Cube cube = Main.Registry.CubeRegistry.Get(id);
+							data.SetDensity(0, cube.Id);
 
-						int oldCount = vertices.Count;
+							int oldCount = vertices.Count;
 
-						cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, cube, vertices, indices);
+							cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, vertices, indices);
 
-						int count = vertices.Count - oldCount;
+							int count = vertices.Count - oldCount;
 
-						BakeAO(world, chunk, pos, oldCount, oldCount + count, vertices);
+							BakeAO(world, chunk, pos, oldCount, oldCount + count, vertices);
+						}
+                        else if (pass == Cube.RenderPass.Air)
+                        {
+							if (id != 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
+								continue;
+
+							Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, vertices, indices);
+						}
 					}
 				}
 			}

@@ -90,7 +90,7 @@ namespace ViMG.Items
 			Register(new ItemFlintlockPistol());
 			Register(new ItemDebugStructurePaster());
 			Register(new ItemLeatherBoots());
-			Register(new ItemFindScroll());
+			Register(new ItemScrollFind());
 			Register(new ItemBookWinds());
 			Register(new ItemBookBubble());
 			Register(new ItemFeatherRelic());
@@ -102,6 +102,9 @@ namespace ViMG.Items
 			Register(new ItemOssifiedHeart());
 			Register(new ItemBoneWhistle());
 			Register(new ItemLavaCrystalPickaxe());
+			Register(new ItemScrollSonar());
+			Register(new ItemPaper());
+			Register(new ItemFlaskMagicPotion1());
 			RegisterItemCubes();
 		}
 
