@@ -371,7 +371,8 @@ namespace ViMG.Entities
 				Matrix.CreateTranslation(vibratePos) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
+			if (health < maxHealth)
+				DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
 		}
 
 		private static void MakeMesh(GraphicsDevice device)

@@ -180,6 +180,7 @@ namespace ViMG.Cubes
 		{
 			None,
 			Collidable,
+			Rope,
 			LiquidWater
 		}
 

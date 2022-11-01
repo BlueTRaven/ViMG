@@ -152,6 +152,7 @@ namespace ViMG
 		private State state;
 
 		private bool onGround;
+		private bool inRope;
 		private bool inWater;
 		private bool headUnderWater;
 
@@ -423,7 +424,14 @@ namespace ViMG
 				}
 				else
 				{
-					UpdateMovement(deltaTime);
+					if (inRope)
+					{
+						UpdateMovementRope(deltaTime);
+					}
+					else
+					{
+						UpdateMovement(deltaTime);
+					}
 				}
 				
 				UpdateCollision(deltaTime);
@@ -669,6 +677,125 @@ namespace ViMG
 			buffManager.Update(deltaTime, ref stats);
 		}
 
+		private void UpdateMovementRope(double deltaTime)
+        {
+			Vector3 actualMaxVel = MaxVelocity;
+
+			bool movementPressed = false;
+			Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+
+			if (inputLockupTimer <= 0 && world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
+			{
+				actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
+
+				float actualAcceleration = moveSpeed + stats.Acceleration;
+
+				if (Main.inputManager.IsPressed(Keys.W))
+				{
+					Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.S))
+				{
+					Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.A))
+				{
+					Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (Main.inputManager.IsPressed(Keys.D))
+				{
+					Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+
+				if (Main.inputManager.IsPressed(Keys.Space))
+                {
+					Velocity.Y -= World.GRAVITY;
+					movementPressed = true;
+                }
+
+				if (Main.inputManager.IsPressed(Keys.LeftControl))
+                {
+					Velocity.Y += World.GRAVITY;
+					movementPressed = true;
+				}
+
+				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
+				velXY = new Vector2(Velocity.X, Velocity.Z);
+
+				if (velXY.Length() > clampXY.Length())
+				{
+					velXY.Normalize();
+					velXY *= clampXY.Length();
+				}
+
+				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
+					!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+				{
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+					{
+						if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+
+					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+					{
+						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
+						if (tracker.HasValue() && tracker.Get().OnInteract(this))
+							PerformAction();
+						else if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+							PerformAction();
+					}
+				}
+
+				if (Main.inputManager.JustPressed(Keys.Q))
+				{
+					if (inventory.Get(menuPlayer.HighlightIndex).valid)
+					{
+						ThrowItem(inventory, menuPlayer.HighlightIndex, 1);
+					}
+				}
+			}
+
+			if (!movementPressed)
+			{
+				if (velXY.Length() > 0)
+				{
+					float decel = Cube.CUBE_SCALE / 2f;
+
+					if (!onGround)
+						decel = Cube.CUBE_SCALE / 8f;
+
+					velXY = Vector2.Normalize(velXY) * MathF.Max(velXY.Length() - decel, 0);
+				}
+
+				if (MathF.Abs(Velocity.Y) > 0)
+                {
+					float decel = Cube.CUBE_SCALE / 2f;
+					float signedDecel = decel * -MathF.Sign(Velocity.Y);
+
+					if (MathF.Abs(Velocity.Y) - decel < 0)
+						Velocity.Y = 0;
+					else Velocity.Y += signedDecel;
+                }
+			}
+
+			Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+
+			if (Velocity.Length() > float.Epsilon)
+				hasMoved = true;
+
+			if (Velocity.Y < -actualMaxVel.Y)
+				Velocity.Y = -actualMaxVel.Y;
+			if (Velocity.Y > actualMaxVel.Y / 4f)
+				Velocity.Y = actualMaxVel.Y / 4f;
+		}
+
 		private void UpdateMovementWater(double deltaTime)
 		{
 			Vector3 actualMaxVel = MaxVelocitySwimming;
@@ -904,7 +1031,7 @@ namespace ViMG
 						velXY *= clampXY.Length();
 					}
 
-					Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+					//Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 
 					if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && 
 						!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
@@ -1096,6 +1223,7 @@ namespace ViMG
 
 		private void UpdateCollision(double deltaTime)
 		{
+			inRope = false;
 			inWater = false;
 			onGround = false;
 			headUnderWater = false;
@@ -1140,7 +1268,7 @@ namespace ViMG
 
 						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && 
-							(cube.Collision == Cube.CollisionValue.Collidable || cube.Collision == Cube.CollisionValue.LiquidWater))
+							(cube.Collision == Cube.CollisionValue.Collidable || cube.Collision == Cube.CollisionValue.LiquidWater || cube.Collision == Cube.CollisionValue.Rope))
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -1167,6 +1295,23 @@ namespace ViMG
 										headUnderWater = true;
 										collided = true;
 									}
+								}
+								else if (cube.Collision == Cube.CollisionValue.Rope)
+                                {
+									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+									{
+										inRope = true;
+										collided = true;
+									}
+
+									if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+									{
+										inRope = true;
+										collided = true;
+									}
+
+									if (collided)
+										fallStartY = Position.Y;
 								}
 								else
 								{

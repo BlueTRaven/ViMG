@@ -65,6 +65,7 @@ namespace ViMG.Cubes
 			Register(new CubeMushroomOrangeTop());
 			Register(new CubeMushroomStem());
 			Register(new CubeOrangeCoveredStone());
+			Register(new CubeRope());
 		}
 
         protected override void PostRegistration()

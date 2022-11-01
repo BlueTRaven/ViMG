@@ -10,9 +10,12 @@ namespace ViMG.Cubes
 {
     public class CubeChains : Cube
     {
-        public CubeChains() : base("ceiling_chains", new RectangleF(0, 0, 0, 0), Color.White, 10)
+        public CubeChains() : base("ceiling_chains", new RectangleF(80, 64, 16, 16), Color.White, 10)
         {
             Transparency = TransparencyValue.Transparent;
+            Collision = CollisionValue.Rope;
+
+            Name = "Rusted Steel Chains";
         }
 
         public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)

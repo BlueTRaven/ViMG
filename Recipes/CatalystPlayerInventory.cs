@@ -137,6 +137,10 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_wood"), 4, 1) }));
 
 			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 4, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("rope"), 2, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 4, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("string"), 1, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_bundled_wood"), 1, 1) }));
 
