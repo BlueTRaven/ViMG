@@ -28,11 +28,9 @@ namespace ViMG.UIs
 
         private TextHelper.FontInfo fi;
         private World world;
-        private readonly GameStateManager gsManager;
 
-        public MenuMain(GameStateManager gsManager, World world)
+        public MenuMain(GameStateManager gsManager, World world) : base(gsManager)
         {
-            this.gsManager = gsManager;
             this.world = world;
 
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);

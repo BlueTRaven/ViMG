@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -24,7 +25,7 @@ namespace ViMG.UIs
 
 		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
 
-		public MenuAnvil(Player player, Inventory playerInventory, Inventory anvilInventory)
+		public MenuAnvil(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory anvilInventory) : base(gsManager)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
@@ -172,7 +173,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst, new ItemInstance()));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst, new ItemInstance()));
 			}
 
 			UI.EndParent();

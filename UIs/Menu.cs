@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.GameStates;
 
 namespace ViMG.UIs
 {
@@ -15,6 +16,13 @@ namespace ViMG.UIs
 		protected const int MARGIN_CRAFTING = 8 * SCALE;
 		protected const int SIZE = 16 * SCALE;
 		protected const int SCALE = 2;
+
+		protected readonly GameStateManager gsManager;
+
+		public Menu(GameStateManager gsManager)
+        {
+			this.gsManager = gsManager;
+        }
 
 		public virtual void OnOpen()
         {

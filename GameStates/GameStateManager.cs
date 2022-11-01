@@ -14,6 +14,8 @@ namespace ViMG.GameStates
         public GameStateMainMenu MainMenu;
         public GameStateTheIsland TheIsland;
 
+        public bool Paused;
+
         private GameState currentGameState;
 
         public virtual void Initialize(GraphicsDevice device)

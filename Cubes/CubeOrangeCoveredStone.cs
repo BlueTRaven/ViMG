@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
@@ -13,6 +14,14 @@ namespace ViMG.Cubes
         public CubeOrangeCoveredStone() : base("stone_covered_orange", new CubeFacingLayout(new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 0, 16, 16)), Color.White, 3)
         {
             Name = "Orange Mushroom Covered Stone";
+        }
+
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            //drop stone instead of orange stuff
+            itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1));
         }
 
         public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)

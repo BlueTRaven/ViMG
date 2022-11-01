@@ -1,10 +1,12 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -61,7 +63,7 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuPlayer(Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory)
+		public MenuPlayer(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory) : base(gsManager)
 		{
 			this.player = player;
 
@@ -194,6 +196,9 @@ namespace ViMG.UIs
 
 			if (opened)
 			{
+				if (Main.inputManager.JustPressed(Keys.Escape))
+					Close();
+
 				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 				UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN));
@@ -303,7 +308,7 @@ namespace ViMG.UIs
 				
 				if (recipeBookButton.clickLeft)
 				{
-					player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.Registry.RecipeRegistry.PlayerInventoryCatalyst, new ItemInstance()));
+					player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.PlayerInventoryCatalyst, new ItemInstance()));
 				}
 
 				UI.EndParent();
@@ -416,6 +421,9 @@ namespace ViMG.UIs
 			}
 			else
 			{
+				if (Main.inputManager.JustPressed(Keys.Escape))
+					gsManager.GetCurrentGameState().PushMenu(new MenuPause(gsManager, player.world));
+
 				for (int y = 0; y < 2; y++)
 				{
 					for (int x = 0; x < 3; x++)

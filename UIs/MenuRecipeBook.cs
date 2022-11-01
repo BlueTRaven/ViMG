@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -24,7 +25,7 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuRecipeBook(IRecipeCatalyst catalyst, ItemInstance filterItem)
+		public MenuRecipeBook(GameStateManager gsManager, IRecipeCatalyst catalyst, ItemInstance filterItem) : base(gsManager)
 		{
 			this.filterCatalyst = catalyst;
 			this.filterItem = filterItem;

@@ -15,16 +15,12 @@ namespace ViMG.UIs
     {
         private TextHelper.FontInfo fi;
 
-        private readonly GameStateManager gsManager;
-        private readonly GameStateTheIsland gsIsland;
         private readonly World world;
 
-        public MenuPause(GameStateManager gsManager, GameStateTheIsland gsIsland, World world)
+        public MenuPause(GameStateManager gsManager, World world) : base(gsManager)
         {
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
-            this.gsManager = gsManager;
-            this.gsIsland = gsIsland;
             this.world = world;
         }
 
@@ -32,7 +28,7 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
-            gsIsland.Paused = true;
+            gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
         }
@@ -41,7 +37,7 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            gsIsland.Paused = false;
+            gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;
         }

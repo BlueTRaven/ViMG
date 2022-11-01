@@ -160,7 +160,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(null, inventory.Get(index)));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, null, inventory.Get(index)));
 
 				return ItemSlotClickOutput.FilterRecipe;
 			}
@@ -175,7 +175,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(null, inventory.Get(index)));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, null, inventory.Get(index)));
 
 				return ItemSlotClickOutput.FilterRecipe;
 			}

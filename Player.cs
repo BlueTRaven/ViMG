@@ -287,11 +287,6 @@ namespace ViMG
 
 			craftInventory = new Inventory(8);
 
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
-			menuPlayer.Close();
-			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
-			//currentUI = uiPlayer;
-
 			Health = MaxHealth / 4;
 		}
 
@@ -301,11 +296,6 @@ namespace ViMG
 			accessoryInventory ??= new Inventory(6);
 			gearInventory ??= new Inventory(10);	
 			
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
-			menuPlayer.Close();
-			world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
-			//currentUI = uiPlayer;
-
 			inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));//new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_base"), 1, 1));
 			inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
 		}
@@ -313,6 +303,10 @@ namespace ViMG
         public override void Initialize(World world)
         {
             base.Initialize(world);
+
+			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
+			menuPlayer.Close();
+			world.GameStateManager.TheIsland.SetMenu(menuPlayer);
 
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
@@ -363,8 +357,8 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == null)
-				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
+			/*if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == null)
+				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);*/
 
 			hasMoved = false;
 			hasRotated = false;
@@ -533,80 +527,70 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.E))
 			{
-				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);
-
 				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-				{
 					world.GameStateManager.GetCurrentGameState().PopMenu();
-				}
 				else menuPlayer.Toggle();
+			}
 
-				/*if (currentUI == menuPlayer)
+			if (useTimer <= 0)
+			{
+				int oldHighlight = menuPlayer.HighlightIndex;
+				if (Main.inputManager.JustPressed(Keys.D1))
 				{
-					if (menuPlayer.Opened)
-						CloseUI();
-					else OpenUI(menuPlayer);
+					menuPlayer.HighlightIndex = 0;
 				}
-				else CloseUI();*/
-			}
 
-			int oldHighlight = menuPlayer.HighlightIndex;
-			if (Main.inputManager.JustPressed(Keys.D1))
-			{
-				menuPlayer.HighlightIndex = 0;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D2))
-			{
-				menuPlayer.HighlightIndex = 1;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D3))
-			{
-				menuPlayer.HighlightIndex = 2;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D4))
-			{
-				menuPlayer.HighlightIndex = 3;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D5))
-			{
-				menuPlayer.HighlightIndex = 4;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D6))
-			{
-				menuPlayer.HighlightIndex = 5;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.D7))
-			{
-				menuPlayer.HighlightIndex = 6;
-			}
-			
-			if (Main.inputManager.JustPressed(Keys.D8))
-			{
-				menuPlayer.HighlightIndex = 7;
-			}
-
-			if (oldHighlight != menuPlayer.HighlightIndex)
-            {
-				if (inventory.Get(oldHighlight).valid)
+				if (Main.inputManager.JustPressed(Keys.D2))
 				{
-					inventory.Get(oldHighlight).item.EndHold(this, inventory, menuPlayer.HighlightIndex);
+					menuPlayer.HighlightIndex = 1;
+				}
 
-					if (inventory.Get(menuPlayer.HighlightIndex).valid)
-						inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
+				if (Main.inputManager.JustPressed(Keys.D3))
+				{
+					menuPlayer.HighlightIndex = 2;
+				}
+
+				if (Main.inputManager.JustPressed(Keys.D4))
+				{
+					menuPlayer.HighlightIndex = 3;
+				}
+
+				if (Main.inputManager.JustPressed(Keys.D5))
+				{
+					menuPlayer.HighlightIndex = 4;
+				}
+
+				if (Main.inputManager.JustPressed(Keys.D6))
+				{
+					menuPlayer.HighlightIndex = 5;
+				}
+
+				if (Main.inputManager.JustPressed(Keys.D7))
+				{
+					menuPlayer.HighlightIndex = 6;
+				}
+
+				if (Main.inputManager.JustPressed(Keys.D8))
+				{
+					menuPlayer.HighlightIndex = 7;
+				}
+
+				if (oldHighlight != menuPlayer.HighlightIndex)
+				{
+					if (inventory.Get(oldHighlight).valid)
+					{
+						inventory.Get(oldHighlight).item.EndHold(this, inventory, menuPlayer.HighlightIndex);
+
+						if (inventory.Get(menuPlayer.HighlightIndex).valid)
+							inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
+					}
 				}
 			}
 
-			if (Main.inputManager.JustPressed(Keys.Escape))
+			/*if (Main.inputManager.JustPressed(Keys.Escape))
             {
-				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, 
-					world.GameStateManager.GetCurrentGameState() as GameStates.GameStateTheIsland, world));
-			}
+				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, world));
+			}*/
 
 			if (inventory.Get(menuPlayer.HighlightIndex).valid)
 				inventory.Get(menuPlayer.HighlightIndex).item.Hold(this, inventory, menuPlayer.HighlightIndex);
@@ -863,7 +847,7 @@ namespace ViMG
 				if (Main.inputManager.JustReleased(Keys.LeftShift))
 					IsRunning = false;
 
-				if (inputLockupTimer <= 0 && !menuPlayer.IsOpened)
+				if (inputLockupTimer <= 0 && world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
 				{
 					if (onGround && Main.inputManager.IsHeld(Keys.LeftShift))
 						IsRunning = true;
@@ -1716,8 +1700,8 @@ namespace ViMG
 			if (version >= 9)
 				gearInventory = Inventory.Load(loadBytes, ref index);
 
-			menuPlayer = new MenuPlayer(this, inventory, craftInventory, accessoryInventory, gearInventory);
-			menuPlayer.Close();
+			/*menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
+			menuPlayer.Close();*/
 			//currentUI = menuPlayer;
 
 			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);

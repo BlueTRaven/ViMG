@@ -10,7 +10,6 @@ namespace ViMG.GameStates
     public class GameStateTheIsland : GameState
     {
         public World World;
-        public bool Paused;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
@@ -27,7 +26,7 @@ namespace ViMG.GameStates
         {
             base.Update(device, deltaTime);
 
-            if (World.LoadedFolderName != null && !Paused)
+            if (World.LoadedFolderName != null && !manager.Paused)
             {
                 World.Update(deltaTime);
             }

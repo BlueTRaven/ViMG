@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
 
@@ -23,7 +24,7 @@ namespace ViMG.UIs
 
 		private Items.ItemInstance held;
 
-		public MenuFurnace(Player player, Inventory playerInventory, Inventory furnaceInventory, EntityFurnace furnace)
+		public MenuFurnace(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
@@ -182,7 +183,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance()));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance()));
 			}
 
 			UI.EndParent();

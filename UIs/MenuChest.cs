@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.GameStates;
 using ViMG.Items;
 
 namespace ViMG.UIs
@@ -17,7 +18,7 @@ namespace ViMG.UIs
 
 		private ItemInstance held;
 
-		public MenuChest(Player player, Inventory playerInventory, Inventory chestInventory, int rows, int columns)
+		public MenuChest(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory chestInventory, int rows, int columns) : base(gsManager)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
