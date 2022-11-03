@@ -226,8 +226,8 @@ namespace ViMG.UIs
 						bounds = new RectangleF(pos, SIZE, SIZE);
 
 						var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-										new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-										craftInventory.Get(i));
+							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+							craftInventory.Get(i));
 
 
 						var output = MenuHelper.ItemSlotClickOutput.None;

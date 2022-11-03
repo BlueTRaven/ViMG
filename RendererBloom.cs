@@ -1,0 +1,105 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ViMG
+{
+    public class RendererBloom
+    {
+        private const int NUM_MIPS = 4;
+        private RenderTarget2D[] mips;
+
+        private readonly GraphicsDevice device;
+
+        private Effect downsampleEffect;
+        private Effect upsampleEffect;
+
+        public RendererBloom(GraphicsDevice device)
+        {
+            this.device = device;
+
+            downsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_downsample");
+            upsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_upsample");
+
+            ConstructRTs(Options.CurrentWindowResolution);
+
+            Main.WindowResizedEvent += ConstructRTs;
+        }
+
+        private void ConstructRTs(Point resolution)
+        {
+            if (mips != null)
+                for (int i = 0; i < mips.Length; i++)
+                    mips[i].Dispose();
+            else mips = new RenderTarget2D[NUM_MIPS];
+
+            Point mipResolution = resolution;
+
+            for (int i = 0; i < NUM_MIPS; i++) 
+            {
+                mipResolution = new Point(mipResolution.X / 2, mipResolution.Y / 2);
+
+                mips[i] = new RenderTarget2D(device, mipResolution.X, mipResolution.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            }
+        }
+
+        public RenderTarget2D Draw(RenderTarget2D sourceTexture)
+        {
+            SamplerState oldSamplerState = device.SamplerStates[0];
+            device.SamplerStates[0] = SamplerState.LinearClamp;
+
+            downsampleEffect.Parameters["Texture"].SetValue(sourceTexture);
+            downsampleEffect.Parameters["SrcResolution"].SetValue(new Vector2(sourceTexture.Width, sourceTexture.Height));
+
+            for (int i = 0; i < NUM_MIPS; i++)
+            {
+                device.SetRenderTarget(mips[i]);
+
+                DrawHelper3D.DrawFullscreenQuad(device, downsampleEffect);
+
+                downsampleEffect.Parameters["Texture"].SetValue(mips[i]);
+                downsampleEffect.Parameters["SrcResolution"].SetValue(new Vector2(mips[i].Width, mips[i].Height));
+            }
+
+            upsampleEffect.Parameters["FilterRadius"].SetValue(0.001f);
+
+            BlendState oldBlendState = device.BlendState;
+            device.BlendState = BlendState.Additive;
+
+            for (int i = NUM_MIPS - 1; i >= 0; i--)
+            {
+                if (i > 0)
+                {
+                    RenderTarget2D mip = mips[i];
+                    RenderTarget2D nextMip = mips[i - 1];
+
+                    upsampleEffect.Parameters["Texture"].SetValue(mip);
+
+                    device.SetRenderTarget(nextMip);
+
+                    DrawHelper3D.DrawFullscreenQuad(device, upsampleEffect);
+                }
+                else
+                {
+                    RenderTarget2D mip = mips[i];
+                    RenderTarget2D nextMip = sourceTexture;
+
+                    upsampleEffect.Parameters["Texture"].SetValue(mip);
+
+                    device.SetRenderTarget(nextMip);
+
+                    DrawHelper3D.DrawFullscreenQuad(device, upsampleEffect);
+                }
+            }
+
+            device.SamplerStates[0] = oldSamplerState;
+            device.BlendState = oldBlendState;
+
+            return sourceTexture;
+        }
+    }
+}

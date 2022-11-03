@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -168,12 +169,17 @@ namespace ViMG.UIs
 			public readonly Button button;
 			public readonly ItemInstance item;
             public readonly int maxStackSize;
+			public readonly bool lookForInputs;
+			public readonly bool lookForOutputs;
 
-            public ItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
+            public ItemSlot(Button button, ItemInstance item, bool lookForInputs, bool lookForOutputs, int maxStackSize = -1)
 			{
 				this.button = button;
 				this.item = item;
                 this.maxStackSize = maxStackSize;
+
+				this.lookForInputs = lookForInputs;
+				this.lookForOutputs = lookForOutputs;
             }
 		}
 
@@ -338,7 +344,9 @@ namespace ViMG.UIs
 
 		public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{
-			ItemSlot itemSlot = new ItemSlot(button, item, maxStackSize);
+			bool lookForInputs = button.hovered && Main.inputManager.JustPressed(Keys.U);
+			bool lookForOutputs = button.hovered && Main.inputManager.JustPressed(Keys.R);
+			ItemSlot itemSlot = new ItemSlot(button, item, lookForInputs, lookForOutputs, maxStackSize);
 
 			itemSlots.Add(itemSlot);
 

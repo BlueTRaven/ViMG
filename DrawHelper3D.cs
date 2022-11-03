@@ -10,6 +10,44 @@ namespace ViMG
 {
 	public static class DrawHelper3D
 	{
+		private static VertexBuffer vboQuad;
+		private static IndexBuffer iboQuad;
+
+		public static void DrawFullscreenQuad(GraphicsDevice device, Effect effect)
+		{
+			if (vboQuad == null)
+			{
+				VertexPositionTexture[] vpt = new VertexPositionTexture[4]
+				{
+					new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0)),
+					new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0)),
+					new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1)),
+					new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)),
+				};
+
+				uint[] indices = new uint[6]
+				{
+					0, 1, 2,
+					2, 3, 0,
+				};
+
+				vboQuad = new VertexBuffer(device, typeof(VertexPositionTexture), vpt.Length, BufferUsage.WriteOnly);
+				vboQuad.SetData(vpt);
+
+				iboQuad = new IndexBuffer(device, typeof(uint), 6, BufferUsage.WriteOnly);
+				iboQuad.SetData(indices);
+			}
+
+			device.SetVertexBuffer(vboQuad);
+			device.Indices = iboQuad;
+
+			foreach (var pass in effect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboQuad.IndexCount / 3);
+			}
+		}
+
 		public static void MakeXMeshVerts(Cube.RenderPass pass, Cube cube, World world, Vector3 pos, List<VertexCube> vertices, List<int> indices)
         {
 			int verticesStart = vertices.Count;

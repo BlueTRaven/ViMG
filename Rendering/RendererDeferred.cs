@@ -137,6 +137,8 @@ namespace ViMG.Rendering
         //SetRenderTargets uses params, which constructs an implicit array every time it's called,
         //which is an allocation every frame. Don't do that. Just allocate one to start with...
         private RenderTargetBinding[] targets;
+        private RendererBloom bloom;
+        
         private int currentOutput = -1;
 
         public Effect EffectGBuffer;
@@ -147,6 +149,8 @@ namespace ViMG.Rendering
         public bool EffectEmptyEnabled;
         public Effect EffectEmpty;
         public Effect EffectHDR;
+
+        public bool BloomEnabled;
 
         private BasicEffect EffectCopy;
         private SamplerState shadowBorderClampSS;
@@ -177,6 +181,8 @@ namespace ViMG.Rendering
 
         public RendererDeferred(GraphicsDevice device)
         {
+            bloom = new RendererBloom(device);
+
             EffectCopy = new BasicEffect(device);
             EffectCopy.TextureEnabled = true;
             EffectCopy.VertexColorEnabled = false;
@@ -529,8 +535,10 @@ namespace ViMG.Rendering
                 }
             }
 
-            //device.RasterizerState = Main.genericRS;
+            if (BloomEnabled)
+                bloom.Draw(diffuse);
 
+            //convert HDR to LDR for rendering to screen.
             device.SetRenderTarget(ldrOutput);
             device.Clear(Color.Black);
             EffectHDR.Parameters["Texture"].SetValue(diffuse);

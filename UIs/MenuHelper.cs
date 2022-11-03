@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.GameStates;
 using ViMG.Items;
 
 namespace ViMG.UIs
@@ -168,17 +169,42 @@ namespace ViMG.UIs
 			return output;
 		}
 
+		public static ItemSlotClickOutput HandleRecipeFilter(GameStateManager gsManager, ItemInstance item, in UI.Button itemSlotButton)
+        {
+			if (itemSlotButton.hovered)
+			{
+				if (Main.inputManager.JustPressed(Keys.R))
+				{
+					if (MenuRecipeBook.HasAnyFilteredCatalysts(item, false, true))
+					{
+						gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, null, item, false, true));
+
+						return ItemSlotClickOutput.FilterRecipe;
+					}
+				}
+				else if (Main.inputManager.JustPressed(Keys.U))
+				{
+					if (MenuRecipeBook.HasAnyFilteredCatalysts(item, true, false))
+					{
+						gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, null, item, true, false));
+
+						return ItemSlotClickOutput.FilterRecipe;
+					}
+				}
+			}
+
+			return ItemSlotClickOutput.None;
+        }
+
 		public static ItemSlotClickOutput HandleItemSlot<TWhiteList>(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, ref ItemInstance held, TWhiteList whiteList) 
 			where TWhiteList : struct, IWhiteList
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
-			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
-			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, null, inventory.Get(index)));
+			ItemSlotClickOutput reciperval = HandleRecipeFilter(player.world.GameStateManager, inventory.Get(index), itemSlot.button);
 
-				return ItemSlotClickOutput.FilterRecipe;
-			}
+			if (reciperval != ItemSlotClickOutput.None)
+				return reciperval;
 
 			if (itemSlot.button.clickLeft)
 			{

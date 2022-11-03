@@ -19,6 +19,18 @@
 /processorParam:DebugMode=Auto
 /build:Effects/air.fx
 
+#begin Effects/bloom_downsample.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/bloom_downsample.fx
+
+#begin Effects/bloom_upsample.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/bloom_upsample.fx
+
 #begin Effects/cube_lit.fx
 /importer:EffectImporter
 /processor:EffectProcessor

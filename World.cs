@@ -421,18 +421,6 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
-			/*if (Main.inputManager.JustPressed(Keys.K))
-            {
-				ChunkLoadManager.UnloadAll();
-				var tmpLM = ChunkLoadManager;
-				ChunkLoadManager = ChunkLoadManager2;
-				ChunkLoadManager2 = tmpLM;
-
-				var tmpCM = ChunkManager;
-				ChunkManager = ChunkManager2;
-				ChunkManager2 = tmpCM;
-            }*/
-
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
 			alive += (float)deltaTime;

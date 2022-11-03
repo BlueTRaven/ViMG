@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
@@ -16,6 +17,13 @@ namespace ViMG.Cubes
             Collision = CollisionValue.Rope;
 
             Name = "Rope";
+        }
+
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            DropSelf(itemsToDrop);
         }
 
         public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)

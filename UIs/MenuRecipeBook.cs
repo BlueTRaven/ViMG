@@ -19,18 +19,22 @@ namespace ViMG.UIs
 		private const float MAX_PAGE_WIDTH = SIZE * 8;
 
 		private ItemInstance filterItem;
+		private bool includeInputs;
+		private bool includeOutputs;
 
 		private List<IRecipeCatalyst> currentCatalysts;
 		private List<Recipe> currentRecipes;
 
 		private TextHelper.FontInfo fi;
 
-		public MenuRecipeBook(GameStateManager gsManager, IRecipeCatalyst catalyst, ItemInstance filterItem) : base(gsManager)
+		public MenuRecipeBook(GameStateManager gsManager, IRecipeCatalyst catalyst, ItemInstance filterItem, bool includeInputs = false, bool includeOutputs = false) : base(gsManager)
 		{
 			this.filterCatalyst = catalyst;
 			this.filterItem = filterItem;
+			this.includeInputs = includeInputs;
+			this.includeOutputs = includeOutputs;
 
-			GetFilteredCatalysts();
+			currentCatalysts = GetFilteredCatalysts(filterItem, includeInputs, includeOutputs);
 			if (filterCatalyst == null && currentCatalysts.Count > 0)
 				this.filterCatalyst = currentCatalysts[0];
 			GetFilteredRecipes();
@@ -62,7 +66,6 @@ namespace ViMG.UIs
 			Size eachSize = Size.Zero;
 			if (currentRecipes != null && currentRecipes.Count > 0)
 				eachSize = filterCatalyst.GetSize();
-				//filterCatalyst.DoRecipeUI(out eachSize, currentRecipes[0], SIZE, SCALE);
 			
 			UI.Start();
 			UI.StartParent(new Vector2(MARGIN));
@@ -75,7 +78,7 @@ namespace ViMG.UIs
 			int numPerPage = numPerPageW * numPerPageH;
 
 			if (currentRecipes != null && currentRecipes.Count > 0)
-				DoRecipes(numPerPageW, numPerPageH, eachSize);
+				DoRecipes( numPerPageW, numPerPageH, eachSize);
 
 			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, MAX_PAGE_WIDTH, PAGE_HEADER));
 
@@ -150,7 +153,12 @@ namespace ViMG.UIs
 
 						UI.StartParent(eachSize.ToVector2() * new Vector2(x, y));
 						filterCatalyst.DoRecipeUI2(dummyItemSlots, recipe);
-						//filterCatalyst.DoRecipeUI(out size, recipe, SIZE, SCALE);
+
+						for (int j = 0; j < 32; j++)
+						{
+							if (dummyItemSlots[j].item.valid)
+								MenuHelper.HandleRecipeFilter(gsManager, dummyItemSlots[j].item, dummyItemSlots[j].button);
+						}
 						UI.EndParent();
 					}
 				}
@@ -159,27 +167,47 @@ namespace ViMG.UIs
 			UI.EndParent();
 		}
 
-		private void GetFilteredCatalysts()
-		{
-			if (!filterItem.valid)
-			{
-				currentCatalysts = new List<IRecipeCatalyst>(Main.Registry.RecipeRegistry.GetCatalysts());
-				return;
-			}
-
-			currentCatalysts = new List<IRecipeCatalyst>();
+		public static bool HasAnyFilteredCatalysts(ItemInstance itemInstance, bool includeInputs, bool includeOutputs)
+        {
+			if (!itemInstance.valid)
+				return false;
 
 			foreach (var catalyst in Main.Registry.RecipeRegistry.GetCatalysts())
 			{
 				foreach (Recipe recipe in Main.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
 				{
-					if (HasFilteredItem(recipe, true, true))
+					if (HasFilteredItem(recipe, itemInstance, includeInputs, includeOutputs))
 					{
-						currentCatalysts.Add(catalyst);
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public static List<IRecipeCatalyst> GetFilteredCatalysts(ItemInstance filterItem, bool includeInputs, bool includeOutputs)
+		{
+			if (!filterItem.valid)
+			{
+				return new List<IRecipeCatalyst>(Main.Registry.RecipeRegistry.GetCatalysts());
+			}
+
+			List<IRecipeCatalyst> catalysts = new List<IRecipeCatalyst>();
+
+			foreach (var catalyst in Main.Registry.RecipeRegistry.GetCatalysts())
+			{
+				foreach (Recipe recipe in Main.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
+				{
+					if (HasFilteredItem(recipe, filterItem, includeInputs, includeOutputs))
+					{
+						catalysts.Add(catalyst);
 						break;
 					}
 				}
 			}
+
+			return catalysts;
 		}
 
 		private void GetFilteredRecipes()
@@ -194,14 +222,14 @@ namespace ViMG.UIs
 				{
 					foreach (Recipe recipe in catalystRecipes)
 					{
-						if (HasFilteredItem(recipe, true, true))
+						if (HasFilteredItem(recipe, filterItem, includeInputs, includeOutputs))
 							currentRecipes.Add(recipe);
 					}
 				}
 			}
 		}
 
-		private bool HasFilteredItem(Recipe recipe, bool includeInput, bool includeOutput)
+		private static bool HasFilteredItem(Recipe recipe, ItemInstance filterItem, bool includeInputs, bool includeOutputs)
 		{
 			if (!filterItem.valid)
 				return true;
@@ -209,11 +237,11 @@ namespace ViMG.UIs
 			{
 				for (int i = 0; i < Math.Max(recipe.Layout.Length, recipe.Outputs.Length); i++)
 				{
-					if (includeInput && i < recipe.Layout.Length)
+					if (includeInputs && i < recipe.Layout.Length)
 						if (recipe.Layout[i].item == filterItem.item && recipe.Layout[i].damage == filterItem.damage)
 							return true;
 
-					if (includeOutput && i < recipe.Outputs.Length)
+					if (includeOutputs && i < recipe.Outputs.Length)
 						if (recipe.Outputs[i].item == filterItem.item && recipe.Outputs[i].damage == filterItem.damage)
 							return true;
 				}
