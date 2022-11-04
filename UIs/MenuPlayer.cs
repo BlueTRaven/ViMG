@@ -149,7 +149,7 @@ namespace ViMG.UIs
 				RectangleF sourceRect = buff.buff.sourceRect;
 
 				Vector2 position = new Vector2(x * (SIZE + MARGIN), y * (SIZE + MARGIN));
-				var button = UI.MakeButton(new RectangleF(position, new Size(SIZE)), texture, sourceRect);
+				var button = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(position, new Size(SIZE)), texture, sourceRect));
 
 				if (button.hovered)
                 {
@@ -225,8 +225,8 @@ namespace ViMG.UIs
 						pos = new Vector2(x * SIZE, y * SIZE);
 						bounds = new RectangleF(pos, SIZE, SIZE);
 
-						var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+						var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 							craftInventory.Get(i));
 
 
@@ -269,19 +269,20 @@ namespace ViMG.UIs
 
 				bounds.x += SIZE;
 
-				UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 								craftInventory.Get(6));
 
 				bounds.x += SIZE;
 
-				UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 								craftInventory.Get(7));
 
 				bounds.y += SIZE;
 
-				UI.Button craftRecipeButton = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16));
+				UI.Button craftRecipeButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+					new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16)));
 				if (craftRecipeButton.clickLeft)
 				{
 					if (currentRecipe != null)
@@ -297,7 +298,8 @@ namespace ViMG.UIs
 				pos = new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2);
 				bounds = new RectangleF(pos, SIZE, SIZE);
 
-				UI.Button recipeBookButton = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16));
+				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+					new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 
 				if (recipeBookButton.hovered)
 				{
@@ -326,8 +328,8 @@ namespace ViMG.UIs
 
 					bounds = new RectangleF(pos, SIZE, SIZE);
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 									accessoryInventory.Get(i), 1);
 
 					if (!accessoryInventory.Get(i).valid)
@@ -354,8 +356,8 @@ namespace ViMG.UIs
 
 					bounds = new RectangleF(pos, SIZE, SIZE);
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 									gearInventory.Get(i), 1);
 
 					if (!gearInventory.Get(i).valid)
@@ -387,8 +389,8 @@ namespace ViMG.UIs
 						int y = i / 8;
 						RectangleF b = new RectangleF(x * SIZE, (y - DEBUGItemListScrollRow) * SIZE , SIZE, SIZE);
 
-						var cheatSlot = UI.MakeItemSlot(UI.MakeButton(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
+						var cheatSlot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 									new ItemInstance(allItems[i], 999, 1));
 
 						if (cheatSlot.button.clickLeft)

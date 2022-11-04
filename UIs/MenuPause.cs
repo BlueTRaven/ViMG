@@ -52,9 +52,9 @@ namespace ViMG.UIs
 
             int y = 0;
 
-            if (UI.MakeButton(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Resume", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft ||
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft ||
                 Main.inputManager.JustPressed(Keys.Escape))
             {
                 //return to old menu.
@@ -63,27 +63,27 @@ namespace ViMG.UIs
 
             y += 32 + MARGIN;
 
-            if (UI.MakeButton(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("Save", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
                 world.SaveWorld();
             }
 
             y += 32 + MARGIN;
 
-            if (UI.MakeButton(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("Exit To Title", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
                 world.GameStateManager.SetGameState(world.GameStateManager.MainMenu);
             }
 
             y += 32 + MARGIN;
 
-            if (UI.MakeButton(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("Exit To Desktop", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)).clickLeft)
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
                 Main.Exit = true;
             }

@@ -125,6 +125,95 @@ namespace ViMG.UIs
 			}
 		}
 
+		public struct ButtonConstructionParameters
+        {
+			public RectangleF bounds;
+
+			public LabelConstructionParameters label;
+			public Texture2D texture;
+			public RectangleF sourceRect;
+			public RectangleF hoveredSourceRect;
+			public RectangleF clickedSourceRect;
+
+			public bool valid;
+
+			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture,
+				RectangleF? sourceRect)
+			{
+				this.bounds = bounds;
+				this.texture = texture;
+				this.label = new LabelConstructionParameters();
+
+				RectangleF sr = sourceRect.GetValueOrDefault(new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height));
+
+				this.sourceRect = sr;
+				this.hoveredSourceRect = sr;
+				this.clickedSourceRect = sr;
+
+				valid = true;
+			}
+
+			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture,
+				LabelConstructionParameters label,
+				RectangleF? sourceRect)
+            {
+				this.bounds = bounds;
+				this.texture = texture;
+				this.label = label;
+				
+				RectangleF sr = sourceRect.GetValueOrDefault(new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height));
+
+				this.sourceRect = sr;
+				this.hoveredSourceRect = sr;
+				this.clickedSourceRect = sr;
+
+				valid = true;
+			}
+
+			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture,
+				RectangleF sourceRect, RectangleF hoveredSourceRect, RectangleF clickedSourceRect)
+			{
+				this.bounds = bounds;
+				this.texture = texture;
+				this.label = new LabelConstructionParameters();
+				this.sourceRect = sourceRect;
+				this.hoveredSourceRect = hoveredSourceRect;
+				this.clickedSourceRect = clickedSourceRect;
+
+				valid = true;
+			}
+
+			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture, 
+				LabelConstructionParameters label, 
+				RectangleF sourceRect, RectangleF hoveredSourceRect, RectangleF clickedSourceRect)
+            {
+                this.bounds = bounds;
+                this.texture = texture;
+                this.label = label;
+                this.sourceRect = sourceRect;
+                this.hoveredSourceRect = hoveredSourceRect;
+                this.clickedSourceRect = clickedSourceRect;
+
+				valid = true;
+			}
+
+			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture,
+				LabelConstructionParameters label)
+            {
+				this.bounds = bounds;
+				this.texture = texture;
+				this.label = label;
+
+				RectangleF defaultSR = new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height);
+
+				sourceRect = defaultSR;
+				hoveredSourceRect = defaultSR;
+				clickedSourceRect = defaultSR;
+
+				valid = true;
+			}
+		}
+
 		public readonly struct Button
 		{
 			internal readonly ID id;
@@ -306,7 +395,7 @@ namespace ViMG.UIs
 			return default(Label);
 		}
 
-		public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect)
+		/*public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect)
 		{
 			return MakeButton(bounds, texture, sourceRect, sourceRect, sourceRect);
 		}
@@ -314,9 +403,33 @@ namespace ViMG.UIs
 		public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
         {
 			return MakeButton(bounds, texture, new LabelConstructionParameters(), sourceRect, hoveredSourceRect, clickedSourceRect);
-        }
+        }*/
+		
+		public static Button MakeButton(ButtonConstructionParameters parameters)
+        {
+			ID id = MakeID(parameters.bounds.Position);
+			RectangleF mouseBounds = new RectangleF(id.position, parameters.bounds.Size);
 
-		public static Button MakeButton(RectangleF bounds, Texture2D texture, LabelConstructionParameters label, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
+			bool hovered = mouseBounds.Contains(Main.inputManager.GetMousePosition().ToVector2()) && isEnabled;
+			bool clickedLeft = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
+			bool heldLeft = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
+			bool clickedRight = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton);
+			bool heldRight = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.RightButton);
+
+			StartParent(parameters.bounds.Position);
+
+			Label constructedLabel = MakeLabel(parameters.label);
+
+			EndParent();
+
+			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, heldRight, mouseBounds, parameters.texture, constructedLabel,
+				parameters.sourceRect, parameters.hoveredSourceRect, parameters.clickedSourceRect);
+			buttons.Add(button);
+
+			return button;
+		}
+
+		/*public static Button MakeButton(RectangleF bounds, Texture2D texture, LabelConstructionParameters label, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
 		{
 			ID id = MakeID(bounds.Position);
 			RectangleF mouseBounds = new RectangleF(id.position, bounds.Size);
@@ -340,7 +453,7 @@ namespace ViMG.UIs
 			buttons.Add(button);
 
 			return button;
-		}
+		}*/
 
 		public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{

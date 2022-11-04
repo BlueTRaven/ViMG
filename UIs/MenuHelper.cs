@@ -132,9 +132,10 @@ namespace ViMG.UIs
 					Vector2 pos = new Vector2(x * size + x * padding, y * size + y * padding);
 					RectangleF bounds = new RectangleF(pos, size, size);
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)),
-									inventory.Get(i));
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+						new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
+						inventory.Get(i));
+
 					var oldItem = inventory.Get(i);
 
 					var output = HandleItemSlot(player, inventory, i, itemslot, ref held, new MenuHelper.WhiteListNone());

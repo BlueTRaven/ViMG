@@ -92,8 +92,8 @@ namespace ViMG.UIs
 
 			foreach (IRecipeCatalyst catalyst in currentCatalysts)
 			{
-				var button = UI.MakeButton(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16));
+				var button = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)));
 
 				UI.MakeTexture(bounds, catalyst.GetTexture(), catalyst.GetSourceRect());
 
@@ -113,8 +113,8 @@ namespace ViMG.UIs
 			{
 				if (page > 0)
 				{
-					if (UI.MakeButton(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-						new RectangleF(0, 112, 8, 8), new RectangleF(8, 112, 8, 8), new RectangleF(8, 112, 8, 8)).clickLeft)
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+						new RectangleF(0, 112, 8, 8), new RectangleF(8, 112, 8, 8), new RectangleF(8, 112, 8, 8))).clickLeft)
 					{
 						page--;
 					}
@@ -122,8 +122,8 @@ namespace ViMG.UIs
 
 				if (page * numPerPage + numPerPage < currentRecipes.Count)
 				{
-					if (UI.MakeButton(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-						new RectangleF(0, 120, 8, 8), new RectangleF(8, 120, 8, 8), new RectangleF(8, 120, 8, 8)).clickLeft)
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+						new RectangleF(0, 120, 8, 8), new RectangleF(8, 120, 8, 8), new RectangleF(8, 120, 8, 8))).clickLeft)
 					{
 						page++;
 					}
