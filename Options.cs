@@ -19,10 +19,10 @@ namespace ViMG
 
         public enum SMAAQuality
         {
-            SMAA_ULTRA,
-            SMAA_HIGH,
+            SMAA_LOW,
             SMAA_MEDIUM,
-            SMAA_LOW
+            SMAA_HIGH,
+            SMAA_ULTRA,
         }
 
         //some sentinel value. Just needs to not be any of the existing options. This is so we know for sure when we go from no SMAA to

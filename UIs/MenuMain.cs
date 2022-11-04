@@ -29,6 +29,12 @@ namespace ViMG.UIs
         private TextHelper.FontInfo fi;
         private World world;
 
+        //TODO remove
+        private UI.LabelConstructionParameters[] options;
+        private int currentOption;
+        private bool open;
+        private UI.Button[] outputs;
+
         public MenuMain(GameStateManager gsManager, World world) : base(gsManager)
         {
             this.world = world;
@@ -38,6 +44,16 @@ namespace ViMG.UIs
             Main.DrawCursor = true;
 
             saver = new WorldSaver(null, null, null);
+
+            options = new UI.LabelConstructionParameters[4]
+            {
+                new UI.LabelConstructionParameters("Test 0", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("Test 1", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("Test 2", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("Test 3", fi, 128, Vector2.Zero),
+            };
+
+            outputs = new UI.Button[4];
         }
 
         public override void OnOpen()
@@ -67,7 +83,7 @@ namespace ViMG.UIs
 
             if (state == MenuState.Main)
             {
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
                     new UI.LabelConstructionParameters("Load World", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
@@ -76,7 +92,7 @@ namespace ViMG.UIs
                     clicked = true;
                 }
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 1, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
@@ -87,7 +103,14 @@ namespace ViMG.UIs
                     }
                 }
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 96, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 2, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+                {
+                    gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager, world));
+                }
+
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 3, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Exit", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {

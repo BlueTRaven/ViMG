@@ -73,6 +73,15 @@ namespace ViMG.UIs
             y += 32 + MARGIN;
 
             if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+            {
+                gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager, world));
+            }
+
+            y += 32 + MARGIN;
+
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("Exit To Title", fi, 128, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
