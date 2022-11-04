@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SMAADemo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,12 +133,16 @@ namespace ViMG.Rendering
         private RenderTarget2D ao;          //R AO data
 
         private RenderTarget2D preTransparencyOutput;
-        private RenderTarget2D ldrOutput;
+        private RenderTarget2D ldrOutputPing;
+        private RenderTarget2D ldrOutputPong;
+
+        private RenderTarget2D outputRT;
 
         //SetRenderTargets uses params, which constructs an implicit array every time it's called,
         //which is an allocation every frame. Don't do that. Just allocate one to start with...
         private RenderTargetBinding[] targets;
         private RendererBloom bloom;
+        private SMAA smaa;
         
         private int currentOutput = -1;
 
@@ -149,6 +154,8 @@ namespace ViMG.Rendering
         public bool EffectEmptyEnabled;
         public Effect EffectEmpty;
         public Effect EffectHDR;
+
+        public Effect EffectFXAA;
 
         public bool BloomEnabled;
 
@@ -178,6 +185,8 @@ namespace ViMG.Rendering
 
         public bool DoCSMLight = true;
         private float alive;
+
+        private Options.SMAAQuality previousAAOption;
 
         public RendererDeferred(GraphicsDevice device)
         {
@@ -229,6 +238,7 @@ namespace ViMG.Rendering
             EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
             EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
+            EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
@@ -271,6 +281,8 @@ namespace ViMG.Rendering
 
         private void ConstructRTs(Point rez)
         {
+            ConstructSMAA(rez);
+
             diffuse?.Dispose();
             ao?.Dispose();
             position?.Dispose();
@@ -303,7 +315,44 @@ namespace ViMG.Rendering
             };
 
             preTransparencyOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            ldrOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ldrOutputPing = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ldrOutputPong = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+        }
+
+        private void ConstructSMAA(Point rez)
+        {
+            smaa?.Dispose();
+
+            switch (Options.CurrentAntiAliasing)
+            {
+                case Options.AntiAliasing.SMAA:
+                    switch (Options.CurrentSMAAQuality)
+                    {
+                        case Options.SMAAQuality.SMAA_ULTRA:
+                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.ULTRA);
+                            previousAAOption = Options.SMAAQuality.SMAA_ULTRA;
+                            break;
+                        case Options.SMAAQuality.SMAA_HIGH:
+                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.HIGH);
+                            previousAAOption = Options.SMAAQuality.SMAA_HIGH;
+                            break;
+                        case Options.SMAAQuality.SMAA_MEDIUM:
+                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.MEDIUM);
+                            previousAAOption = Options.SMAAQuality.SMAA_MEDIUM;
+                            break;
+                        case Options.SMAAQuality.SMAA_LOW:
+                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.LOW);
+                            previousAAOption = Options.SMAAQuality.SMAA_LOW;
+                            break;
+                    }
+                    break;
+                case Options.AntiAliasing.None:
+                case Options.AntiAliasing.FXAA:
+                default:
+                    
+                    previousAAOption = Options.SMAA_INVALID;    
+                    break;
+            }
         }
 
         public void SetPipelineState()
@@ -337,6 +386,9 @@ namespace ViMG.Rendering
         public void Draw(SpriteBatch batch)
         {
             SetPipelineState();
+
+            if (Options.CurrentSMAAQuality != previousAAOption)
+                ConstructSMAA(Options.CurrentWindowResolution);
 
             device.SetRenderTargets(targets);
             device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
@@ -539,13 +591,54 @@ namespace ViMG.Rendering
                 bloom.Draw(diffuse);
 
             //convert HDR to LDR for rendering to screen.
-            device.SetRenderTarget(ldrOutput);
+            device.SetRenderTarget(ldrOutputPing);
             device.Clear(Color.Black);
             EffectHDR.Parameters["Texture"].SetValue(diffuse);
             //EffectHDR.Parameters["Exposure"].SetValue(...);
             device.SetVertexBuffer(vboQuad);
             device.Indices = iboQuad;
             DrawFullscreenQuad(EffectHDR);
+
+            if (Options.CurrentAntiAliasing == Options.AntiAliasing.FXAA)
+            {
+                device.SamplerStates[0] = SamplerState.LinearClamp;
+
+                /*EffectFXAA.CurrentTechnique = EffectFXAA.Techniques["ppfxaa_Console"];
+                EffectFXAA.Parameters["ConsoleOpt1"].SetValue(new Vector4(-2.0f / ldrOutputPong.Width, -2.0f / ldrOutputPong.Height, 2.0f / ldrOutputPong.Width, 2.0f / ldrOutputPong.Height));
+                EffectFXAA.Parameters["ConsoleOpt2"].SetValue(new Vector4(8.0f / ldrOutputPong.Width, 8.0f / ldrOutputPong.Height, -4.0f / ldrOutputPong.Width, -4.0f / ldrOutputPong.Height));
+                EffectFXAA.Parameters["ConsoleEdgeSharpness"].SetValue(8.0f);
+                EffectFXAA.Parameters["ConsoleEdgeThreshold"].SetValue(0.125f);
+                EffectFXAA.Parameters["ConsoleEdgeThresholdMin"].SetValue(0.05f);*/
+
+                EffectFXAA.CurrentTechnique = EffectFXAA.Techniques["ppfxaa_PC"];
+                EffectFXAA.Parameters["fxaaQualitySubpix"].SetValue(0.75f);
+                EffectFXAA.Parameters["fxaaQualityEdgeThreshold"].SetValue(0.166f); //
+                EffectFXAA.Parameters["fxaaQualityEdgeThresholdMin"].SetValue(0.0625f); //0.0833f
+
+                EffectFXAA.Parameters["invViewportWidth"].SetValue(1f / ldrOutputPong.Width);
+                EffectFXAA.Parameters["invViewportHeight"].SetValue(1f / ldrOutputPong.Height);
+
+                device.SetRenderTarget(ldrOutputPong);
+                EffectFXAA.Parameters["Texture"].SetValue(ldrOutputPing);
+
+                DrawFullscreenQuad(EffectFXAA);
+
+                outputRT = ldrOutputPong;
+
+                device.SamplerStates[0] = SamplerState.PointWrap;
+            }
+            else if (Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA)
+            {
+                //diffuse for depth,
+                //otherwise ldrOutputPing for lumi/color?
+                smaa.Go(diffuse, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
+
+                outputRT = ldrOutputPong;
+            }
+            else
+            {
+                outputRT = ldrOutputPing;
+            }
 
             EffectCopy.View = Matrix.Identity;
             EffectCopy.Projection = Matrix.Identity;
@@ -573,7 +666,7 @@ namespace ViMG.Rendering
         public RenderTargetBinding GetOutput()
         {
             if (currentOutput == -1)
-                return ldrOutput;
+                return outputRT;
             else return targets[currentOutput];
         }
     }

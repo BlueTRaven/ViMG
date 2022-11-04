@@ -295,6 +295,29 @@ namespace ViMG
 
 			inputManager.Update(new GameTime());
 
+			if (Main.inputManager.JustPressed(Keys.L))
+			{
+				if (Options.CurrentAntiAliasing == Options.AntiAliasing.None)
+				{
+					Options.CurrentAntiAliasing = Options.AntiAliasing.SMAA;
+					Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_ULTRA;
+				}
+				else if (Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA)
+				{
+					if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_ULTRA)
+						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_HIGH;
+					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_HIGH)
+						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_MEDIUM;
+					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_MEDIUM)
+						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_LOW;
+					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_LOW)
+					{
+						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_ULTRA;
+						Options.CurrentAntiAliasing = Options.AntiAliasing.None;
+					}
+				}
+			}
+
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;
@@ -386,11 +409,15 @@ namespace ViMG
 				TextHelper.DrawText(batch, font, "GBuffer: " + Renderer.GetOutputString(),
 					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "Num Draw Calls: " + RendererDeferred.NumDrawCalls,
+				TextHelper.DrawText(batch, font, "AA: " + Options.CurrentAntiAliasing.ToString() + 
+					(Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA ? " " + Options.CurrentSMAAQuality.ToString() : ""),
 					Color.White, new Rectangle(0, (int)font.LineSpacing, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered, 
+				TextHelper.DrawText(batch, font, "Num Draw Calls: " + RendererDeferred.NumDrawCalls,
 					Color.White, new Rectangle(0, (int)font.LineSpacing * 2, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered, 
+					Color.White, new Rectangle(0, (int)font.LineSpacing * 3, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				TextHelper.DrawText(batch, font, DEBUGPopupText,

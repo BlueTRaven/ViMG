@@ -10,6 +10,25 @@ namespace ViMG
 {
     public static class Options
     {
+        public enum AntiAliasing
+        {
+            None,
+            FXAA,
+            SMAA,
+        }
+
+        public enum SMAAQuality
+        {
+            SMAA_ULTRA,
+            SMAA_HIGH,
+            SMAA_MEDIUM,
+            SMAA_LOW
+        }
+
+        //some sentinel value. Just needs to not be any of the existing options. This is so we know for sure when we go from no SMAA to
+        //any SMAA.
+        public const SMAAQuality SMAA_INVALID = (SMAAQuality)200;
+
         public static Point[] Resolutions = new Point[]
         {
             new Point(320, 224),
@@ -23,6 +42,9 @@ namespace ViMG
 
         public static Point CurrentWindowResolution = Resolutions[3];
         public static Point CurrentInternalResolution = Resolutions[0];
+
+        public static AntiAliasing CurrentAntiAliasing;
+        public static SMAAQuality CurrentSMAAQuality = SMAA_INVALID;
 
         public static void CenterMouse()
         {

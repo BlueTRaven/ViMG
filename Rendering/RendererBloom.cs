@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViMG
+namespace ViMG.Rendering
 {
     public class RendererBloom
     {
