@@ -53,6 +53,8 @@ float threshold;
 float maxSearchSteps;
 float maxSearchStepsDiag;
 
+float2 zplanes;
+
 #ifdef SMAA_PRESET_CUSTOM
 #define SMAA_THRESHOLD threshold
 #define SMAA_MAX_SEARCH_STEPS maxSearchSteps
@@ -72,7 +74,7 @@ float maxSearchStepsDiag;
  * Input vars and textures.
  */
 
- #ifdef SMAA_HLSL_3
+#ifdef SMAA_HLSL_3
 texture2D colorTex2D;
 texture2D depthTex2D;
 texture2D edgesTex2D;
@@ -208,7 +210,7 @@ float4 DX9_SMAAColorEdgeDetectionPS(float4 position : SV_POSITION,
 float4 DX9_SMAADepthEdgeDetectionPS(float4 position : SV_POSITION,
                                     float2 texcoord : TEXCOORD0,
                                     float4 offset[3] : TEXCOORD1) : COLOR {
-    return SMAADepthEdgeDetectionPS(texcoord, offset, depthTex);
+    return SMAADepthEdgeDetectionPS(texcoord, offset, depthTex, zplanes);
 }
 
 float4 DX9_SMAABlendingWeightCalculationPS(float4 position : SV_POSITION,

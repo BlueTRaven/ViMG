@@ -10,6 +10,62 @@ namespace ViMG.UIs
 {
     public static class UIWidgets
     {
+        private static int trackingID = -1;
+        public static bool MakeSlider(UI.ButtonConstructionParameters sliderButton, UI.TextureConstructionParameters texture, 
+            float width, ref float currentValue) 
+        {
+            bool hasChanged = false;
+
+            var parentId = UI.StartParent(sliderButton.bounds.Position);
+            sliderButton.bounds.Position = Vector2.Zero;
+
+            UI.MakeTexture(texture);
+
+            float end = width - sliderButton.bounds.Size.Width;
+
+            sliderButton.bounds.Position = new Vector2(MathHelper.Lerp(0, end, currentValue), 0);
+            UI.Button dummyButton = UI.MakeButton(new UI.ButtonConstructionParameters(sliderButton.bounds, DrawHelper.TransparentPixel, null));
+
+            if (trackingID == dummyButton.id.id)
+            {
+                //we're currently dragging.
+                float mouseX = Main.inputManager.GetMousePosition().X;
+
+                float realStart = parentId.position.X;
+                float realEnd = realStart + end;
+
+                float realSliderPosition = Math.Clamp(mouseX, realStart, realEnd);
+
+                currentValue = (realSliderPosition - realStart) / (realEnd - realStart);
+
+                UI.MakeTexture(sliderButton.bounds, sliderButton.texture, sliderButton.clickedSourceRect);
+
+                hasChanged = true;
+
+                if (!Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+                    trackingID = -1;
+            }
+            else if (trackingID == -1)
+            {
+                //we're not currently dragging. Check too see if we want to start dragging.
+                if (dummyButton.clickLeft)
+                {
+                    trackingID = dummyButton.id.id;
+
+                    UI.MakeTexture(sliderButton.bounds, sliderButton.texture, sliderButton.clickedSourceRect);
+
+                    hasChanged = true;
+                }
+                else if (dummyButton.hovered)
+                    UI.MakeTexture(sliderButton.bounds, sliderButton.texture, sliderButton.hoveredSourceRect);
+                else UI.MakeTexture(sliderButton.bounds, sliderButton.texture, sliderButton.sourceRect);
+            }
+
+            UI.EndParent();
+
+            return hasChanged;
+        }
+
         public static bool MakeDropdown(UI.ButtonConstructionParameters baseButton, UI.ButtonConstructionParameters dropdownButtons,
             UI.LabelConstructionParameters[] options, UI.Button[] outputState, ref bool open, ref int currentState)
         {

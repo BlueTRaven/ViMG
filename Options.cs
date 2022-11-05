@@ -25,9 +25,17 @@ namespace ViMG
             SMAA_ULTRA,
         }
 
+        public enum FXAAQuality
+        {
+            FXAA_LOW,
+            FXAA_MEDIUM,
+            FXAA_HIGH,
+        }
+
         //some sentinel value. Just needs to not be any of the existing options. This is so we know for sure when we go from no SMAA to
         //any SMAA.
         public const SMAAQuality SMAA_INVALID = (SMAAQuality)200;
+        public const FXAAQuality FXAA_INVALID = (FXAAQuality)200;
 
         public static Point[] Resolutions = new Point[]
         {
@@ -45,6 +53,11 @@ namespace ViMG
 
         public static AntiAliasing CurrentAntiAliasing;
         public static SMAAQuality CurrentSMAAQuality = SMAA_INVALID;
+        public static FXAAQuality CurrentFXAAQuality = FXAAQuality.FXAA_HIGH;//FXAA_INVALID;
+
+        //TODO Remove
+        public static float SMAAThreshold = 0.05f;
+        public static bool SMAAThresholdChanged;
 
         public static void CenterMouse()
         {

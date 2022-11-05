@@ -17,10 +17,17 @@ namespace ViMG.UIs
         private bool dropdownAAOpen;
         private UI.Button[] outputsAA;
 
+        private UI.LabelConstructionParameters[] optionsFXAA;
+        private int currentFXAAOption;
+        private bool dropdownFXAAOpen;
+        private UI.Button[] outputsFXAA;
+
         private UI.LabelConstructionParameters[] optionsSMAA;
         private int currentSMAAOption;
         private bool dropdownSMAAOpen;
         private UI.Button[] outputsSMAA;
+
+        private float smaaThreshold;
 
         private World world;
         private TextHelper.FontInfo fi;
@@ -42,6 +49,16 @@ namespace ViMG.UIs
             };
 
             outputsAA = new UI.Button[3];
+
+            currentFXAAOption = (int)Options.CurrentFXAAQuality;
+            optionsFXAA = new UI.LabelConstructionParameters[3]
+            {
+                new UI.LabelConstructionParameters("Low", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("Medium", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("High", fi, 128, Vector2.Zero),
+            };
+
+            outputsFXAA = new UI.Button[4];
 
             currentSMAAOption = (int)Options.CurrentSMAAQuality;
             optionsSMAA = new UI.LabelConstructionParameters[4]
@@ -95,18 +112,26 @@ namespace ViMG.UIs
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
                 optionsAA, outputsAA, ref dropdownAAOpen, ref currentAAOption))
             {
-                if (currentAAOption < 2)
+                if (currentAAOption == 0)
                 {
-                    if (currentAAOption == 0)
-                        Options.CurrentAntiAliasing = Options.AntiAliasing.None;
-                    else if (currentAAOption == 1)
-                        Options.CurrentAntiAliasing = Options.AntiAliasing.FXAA;
-                    
+                    Options.CurrentAntiAliasing = Options.AntiAliasing.None;
                     Options.CurrentSMAAQuality = Options.SMAA_INVALID;
+                    Options.CurrentFXAAQuality = Options.FXAA_INVALID;
+                }
+                else if (currentAAOption == 1)
+                {
+                    Options.CurrentAntiAliasing = Options.AntiAliasing.FXAA;
+                    Options.CurrentSMAAQuality = Options.SMAA_INVALID;
+
+                    if (Options.CurrentFXAAQuality == Options.FXAA_INVALID)
+                        Options.CurrentFXAAQuality = Options.FXAAQuality.FXAA_LOW;
+
+                    currentFXAAOption = (int)Options.CurrentFXAAQuality;
                 }
                 else if (currentAAOption == 2)
                 {
                     Options.CurrentAntiAliasing = Options.AntiAliasing.SMAA;
+                    Options.CurrentFXAAQuality = Options.FXAA_INVALID;
 
                     if (Options.CurrentSMAAQuality == Options.SMAA_INVALID)
                         Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_LOW;
@@ -117,7 +142,23 @@ namespace ViMG.UIs
 
             pos.Y += 32 + MARGIN;
 
-            if (currentAAOption == 2)
+            if (currentAAOption == 1)
+            {
+                UI.MakeLabel(new UI.LabelConstructionParameters("FXAA Quality", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
+
+                if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("FXAA Quality", fi, 128 + 16, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
+                    new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
+                    optionsFXAA, outputsFXAA, ref dropdownFXAAOpen, ref currentFXAAOption))
+                {
+                    Options.CurrentFXAAQuality = (Options.FXAAQuality)currentFXAAOption;
+                }
+
+                pos.Y += 32 + MARGIN;
+            }
+            else if (currentAAOption == 2)
             {
                 UI.MakeLabel(new UI.LabelConstructionParameters("SMAA Quality", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
 
@@ -130,7 +171,26 @@ namespace ViMG.UIs
                 {
                     Options.CurrentSMAAQuality = (Options.SMAAQuality)currentSMAAOption;
                 }
+
+                pos.Y += 32 + MARGIN;
             }
+
+            /*Options.SMAAThresholdChanged = UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(64, 64, 32, 32), new RectangleF(96, 64, 32, 32), new RectangleF(96, 64, 32, 32)),
+                new UI.TextureConstructionParameters(new RectangleF(0, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), new RectangleF(0, 96, 128, 32)),
+                128, ref smaaThreshold);
+
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(pos + new Vector2(128, 0), 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new UI.LabelConstructionParameters("R", fi, 32, Vector2.Zero),
+                new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32))).clickLeft)
+            {
+                smaaThreshold = 0f;
+                Options.SMAAThresholdChanged = true;
+            }
+            Options.SMAAThreshold = MathHelper.Lerp(0.05f, 0.5f, smaaThreshold);
+
+            pos.Y += 32 + MARGIN;*/
+
 
             UI.EndParent();
         }

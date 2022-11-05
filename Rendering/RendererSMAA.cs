@@ -61,7 +61,7 @@ namespace SMAADemo
         /**
         * Maximum length to search for patterns. Each step is two pixels wide.
         */
-        int MaxSearchSteps
+        public int MaxSearchSteps
         {
             get
             {
@@ -78,7 +78,7 @@ namespace SMAADemo
         /**
          * Threshold for the edge detection.
          */
-        float Threshold
+        public float Threshold
         {
             get
             {
@@ -104,6 +104,7 @@ namespace SMAADemo
         private readonly Texture2D areaTex;
         private readonly Texture2D searchTex;
 
+        private readonly EffectParameter zplanesHandle;
         private readonly EffectParameter thresholdHandle;
         private readonly EffectParameter maxSearchStepsHandle;
         private readonly EffectParameter areaTexHandle;
@@ -209,6 +210,7 @@ namespace SMAADemo
             searchTex = Main.assetsManager.GetAsset<Texture2D>("SearchTex");
 
             // Create some handles for techniques and variables.
+            zplanesHandle = effect.Parameters["zplanes"];
             thresholdHandle = effect.Parameters["threshold"];
             maxSearchStepsHandle = effect.Parameters["maxSearchSteps"];
             areaTexHandle = effect.Parameters["areaTex2D"];
@@ -291,6 +293,7 @@ namespace SMAADemo
             device.Clear(ClearOptions.Stencil | ClearOptions.Target, new Color(0, 0, 0, 0), 1.0f, 0);
 
             // Setup variables.
+            zplanesHandle.SetValue(new Vector2(Main.camera.Near, Main.camera.Far));
             thresholdHandle.SetValue(threshold);
             maxSearchStepsHandle.SetValue((float)maxSearchSteps);
 

@@ -295,29 +295,6 @@ namespace ViMG
 
 			inputManager.Update(new GameTime());
 
-			if (Main.inputManager.JustPressed(Keys.L))
-			{
-				if (Options.CurrentAntiAliasing == Options.AntiAliasing.None)
-				{
-					Options.CurrentAntiAliasing = Options.AntiAliasing.SMAA;
-					Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_ULTRA;
-				}
-				else if (Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA)
-				{
-					if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_ULTRA)
-						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_HIGH;
-					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_HIGH)
-						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_MEDIUM;
-					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_MEDIUM)
-						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_LOW;
-					else if (Options.CurrentSMAAQuality == Options.SMAAQuality.SMAA_LOW)
-					{
-						Options.CurrentSMAAQuality = Options.SMAAQuality.SMAA_ULTRA;
-						Options.CurrentAntiAliasing = Options.AntiAliasing.None;
-					}
-				}
-			}
-
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;

@@ -97,6 +97,24 @@
 /processorParam:DebugMode=Auto
 /build:Effects/fxaa.fx
 
+#begin Effects/FXAAGreenLumaHigh.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/FXAAGreenLumaHigh.fx
+
+#begin Effects/FXAAGreenLumaLow.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/FXAAGreenLumaLow.fx
+
+#begin Effects/FXAAGreenLumaMedium.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/FXAAGreenLumaMedium.fx
+
 #begin Effects/hdr.fx
 /importer:EffectImporter
 /processor:EffectProcessor

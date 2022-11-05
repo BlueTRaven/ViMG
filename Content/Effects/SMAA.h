@@ -789,13 +789,19 @@ float4 SMAAColorEdgeDetectionPS(float2 texcoord,
     return float4(edges, 0.0, 0.0);
 }
 
+float linearize_depth(float d, float zNear, float zFar)
+{
+    return zNear * zFar / (zFar + d * (zNear - zFar));
+}
+
 /**
  * Depth Edge Detection
  */
 float4 SMAADepthEdgeDetectionPS(float2 texcoord,
                                 float4 offset[3],
-                                SMAATexture2D depthTex) {
+                                SMAATexture2D depthTex, float2 zplanes) {
     float3 neighbours = SMAAGatherNeighbours(texcoord, offset, depthTex);
+    neighbours = float3(linearize_depth(neighbours.x, zplanes.x, zplanes.y), linearize_depth(neighbours.y, zplanes.x, zplanes.y), linearize_depth(neighbours.z, zplanes.x, zplanes.y));
     float2 delta = abs(neighbours.xx - float2(neighbours.y, neighbours.z));
     float2 edges = step(SMAA_DEPTH_THRESHOLD, delta);
 

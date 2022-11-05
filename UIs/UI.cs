@@ -11,7 +11,7 @@ namespace ViMG.UIs
 {
 	public static class UI
 	{
-		internal readonly struct ID
+		public readonly struct ID
 		{
 			public readonly int parent;
 			public readonly int id;
@@ -49,6 +49,20 @@ namespace ViMG.UIs
 
 				this.isEnabled = isEnabled;
 			}
+		}
+
+		public struct TextureConstructionParameters
+        {
+			public Texture2D texture;
+			public RectangleF bounds;
+			public RectangleF sourceRect;
+
+			public TextureConstructionParameters(RectangleF bounds, Texture2D texture, RectangleF sourceRect)
+            {
+                this.bounds = bounds;
+                this.texture = texture;
+                this.sourceRect = sourceRect;
+            }
 		}
 
 		public readonly struct Texture
@@ -286,6 +300,7 @@ namespace ViMG.UIs
 
 		public static void Start()
 		{
+			idCounter = 0;
 			ids.Clear();
 
 			currentParent = new ID();
@@ -316,10 +331,12 @@ namespace ViMG.UIs
 			}
 		}
 
-		public static void StartParent(Vector2 position)
+		public static ID StartParent(Vector2 position)
 		{
 			useParent = true;
 			currentParent = MakeID(position);
+
+			return currentParent;
 		}
 
 		public static void EndParent()
@@ -354,6 +371,16 @@ namespace ViMG.UIs
         {
 			isEnabled = true;
         }
+
+		public static Texture MakeTexture(TextureConstructionParameters parameters)
+        {
+			ID id = MakeID(parameters.bounds.Position);
+			parameters.bounds = new RectangleF(id.position, parameters.bounds.Size);
+			Texture tex = new Texture(id, parameters.bounds, parameters.texture, parameters.sourceRect);
+			textures.Add(tex);
+
+			return tex;
+		}
 
 		public static Texture MakeTexture(RectangleF bounds, Texture2D texture, RectangleF sourceRect)
 		{

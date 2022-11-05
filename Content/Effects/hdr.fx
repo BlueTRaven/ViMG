@@ -33,7 +33,10 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	float4 hdrColor = Texture.Sample(Sampler, input.TexCoord);
 	float3 ldrColor = ACESFitted(hdrColor.rgb);
 
-	return float4(ldrColor, hdrColor.a);
+	//luma is encoded in alpha channel
+	//float alpha = dot(ldrColor.rgb, float3(0.299, 0.587, 0.114));
+
+	return float4(ldrColor, 1);
 }
 
 technique BasicColorDrawing
