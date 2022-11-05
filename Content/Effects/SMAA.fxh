@@ -61,7 +61,8 @@ float maxSearchStepsDiag;
 #endif
 
 // Set the HLSL version:
-#define SMAA_HLSL_3 1
+//#define SMAA_HLSL_3 1
+#define SMAA_HLSL_4_1 1
 
 // And include our header!
 #include "SMAA.h"
@@ -71,6 +72,7 @@ float maxSearchStepsDiag;
  * Input vars and textures.
  */
 
+ #ifdef SMAA_HLSL_3
 texture2D colorTex2D;
 texture2D depthTex2D;
 texture2D edgesTex2D;
@@ -144,6 +146,29 @@ sampler2D searchTex {
     SRGBTexture = false;
 #endif
 };
+#endif
+
+#ifdef SMAA_HLSL_4_1
+sampler UVPointClamp : register(s0);
+sampler UVLinearClamp : register(s1);
+sampler UVWPointClamp : register(s2);
+sampler UVWLinearClamp : register(s3);
+
+Texture2D colorTex2D;
+Texture2D depthTex2D;
+Texture2D edgesTex2D;
+Texture2D blendTex2D;
+Texture2D areaTex2D;
+Texture2D searchTex2D;
+
+#define colorTex colorTex2D
+#define colorTexG colorTex2D
+#define depthTex depthTex2D
+#define edgesTex edgesTex2D
+#define blendTex blendTex2D
+#define areaTex areaTex2D
+#define searchTex searchTex2D
+#endif
 
 /**
  * Function wrappers
@@ -205,8 +230,8 @@ float4 DX9_SMAANeighborhoodBlendingPS(float4 position : SV_POSITION,
  */
 technique LumaEdgeDetection {
     pass LumaEdgeDetection {
-        VertexShader = compile vs_4_0 DX9_SMAAEdgeDetectionVS();
-        PixelShader = compile ps_4_0 DX9_SMAALumaEdgeDetectionPS();
+        VertexShader = compile vs_4_1 DX9_SMAAEdgeDetectionVS();
+        PixelShader = compile ps_4_1 DX9_SMAALumaEdgeDetectionPS();
         ZEnable = false;        
 #ifndef XNA_HAVE_NO_SRGBWRITEENABLE
         SRGBWriteEnable = false;
@@ -226,8 +251,8 @@ technique LumaEdgeDetection {
 
 technique ColorEdgeDetection {
     pass ColorEdgeDetection {
-        VertexShader = compile vs_4_0 DX9_SMAAEdgeDetectionVS();
-        PixelShader = compile ps_4_0 DX9_SMAAColorEdgeDetectionPS();
+        VertexShader = compile vs_4_1 DX9_SMAAEdgeDetectionVS();
+        PixelShader = compile ps_4_1 DX9_SMAAColorEdgeDetectionPS();
         ZEnable = false;        
 #ifndef XNA_HAVE_NO_SRGBWRITEENABLE
         SRGBWriteEnable = false;
@@ -251,8 +276,8 @@ technique ColorEdgeDetection {
 
 technique DepthEdgeDetection {
     pass DepthEdgeDetection {
-        VertexShader = compile vs_4_0 DX9_SMAAEdgeDetectionVS();
-        PixelShader = compile ps_4_0 DX9_SMAADepthEdgeDetectionPS();
+        VertexShader = compile vs_4_1 DX9_SMAAEdgeDetectionVS();
+        PixelShader = compile ps_4_1 DX9_SMAADepthEdgeDetectionPS();
         ZEnable = false;        
 #ifndef XNA_HAVE_NO_SRGBWRITEENABLE
         SRGBWriteEnable = false;
@@ -276,8 +301,8 @@ technique DepthEdgeDetection {
 
 technique BlendWeightCalculation {
     pass BlendWeightCalculation {
-        VertexShader = compile vs_4_0 DX9_SMAABlendingWeightCalculationVS();
-        PixelShader = compile ps_4_0 DX9_SMAABlendingWeightCalculationPS();
+        VertexShader = compile vs_4_1 DX9_SMAABlendingWeightCalculationVS();
+        PixelShader = compile ps_4_1 DX9_SMAABlendingWeightCalculationPS();
         ZEnable = false;
 #ifndef XNA_HAVE_NO_SRGBWRITEENABLE
         SRGBWriteEnable = false;
@@ -302,8 +327,8 @@ technique BlendWeightCalculation {
 
 technique NeighborhoodBlending {
     pass NeighborhoodBlending {
-        VertexShader = compile vs_4_0 DX9_SMAANeighborhoodBlendingVS();
-        PixelShader = compile ps_4_0 DX9_SMAANeighborhoodBlendingPS();
+        VertexShader = compile vs_4_1 DX9_SMAANeighborhoodBlendingVS();
+        PixelShader = compile ps_4_1 DX9_SMAANeighborhoodBlendingPS();
         ZEnable = false;
 #ifndef XNA_HAVE_NO_SRGBWRITEENABLE
         SRGBWriteEnable = true;

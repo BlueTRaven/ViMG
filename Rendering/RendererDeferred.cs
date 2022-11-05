@@ -629,9 +629,9 @@ namespace ViMG.Rendering
             }
             else if (Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA)
             {
-                //diffuse for depth,
+                //depth for depth,
                 //otherwise ldrOutputPing for lumi/color?
-                smaa.Go(diffuse, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
+                smaa.Go(depth, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
 
                 outputRT = ldrOutputPong;
             }

@@ -205,7 +205,7 @@ namespace SMAADemo
 
 
             // Load the precomputed textures.
-            areaTex = Main.assetsManager.GetAsset<Texture2D>("AreaTexDX9");
+            areaTex = Main.assetsManager.GetAsset<Texture2D>("AreaTexDX10");
             searchTex = Main.assetsManager.GetAsset<Texture2D>("SearchTex");
 
             // Create some handles for techniques and variables.
