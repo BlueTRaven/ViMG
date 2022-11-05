@@ -58,6 +58,7 @@ namespace ViMG
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;
+        public static bool UseInstancedLightVolumes;
 
         public static void CenterMouse()
         {

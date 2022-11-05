@@ -295,6 +295,9 @@ namespace ViMG
 
 			inputManager.Update(new GameTime());
 
+			if (inputManager.JustPressed(Keys.L))
+				Options.UseInstancedLightVolumes = !Options.UseInstancedLightVolumes;
+
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;
@@ -393,7 +396,7 @@ namespace ViMG
 				TextHelper.DrawText(batch, font, "Num Draw Calls: " + GraphicsDevice.Metrics.DrawCount,
 					Color.White, new Rectangle(0, (int)font.LineSpacing * 2, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered, 
+				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered + "(instanced: " + Options.UseInstancedLightVolumes + ")", 
 					Color.White, new Rectangle(0, (int)font.LineSpacing * 3, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 

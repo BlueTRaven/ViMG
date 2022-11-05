@@ -13,6 +13,9 @@ Texture2D Diffuse			: register(t3);
 float4x4 ViewProjection;
 float4x4 InvViewProjection;
 float3 CameraPosition;
+
+bool UseInstancing;
+
 uint LightIndex;
 
 struct Light
@@ -23,6 +26,9 @@ struct Light
 	float End;
 };
 
+//a structured buffer containing a list of all indices of lights to draw.
+StructuredBuffer<uint> LightInstanceIndices : register(t14);
+//a structured buffer containing a list of all lights.
 StructuredBuffer<Light> Lights : register(t15);
 
 struct VertexShaderInput
@@ -38,11 +44,18 @@ struct VertexShaderOutput
 	uint InstanceID : INSTANCEID;
 };
 
+Light GetLight(uint instanceId)
+{
+	if (UseInstancing)
+		return Lights[LightInstanceIndices[instanceId]];
+	else return Lights[LightIndex];
+}
+
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
-	float3 wpos = input.Position.xyz * Lights[LightIndex].End + Lights[LightIndex].Position;
+	float3 wpos = input.Position.xyz * GetLight(input.InstanceID).End + GetLight(input.InstanceID).Position;
 	output.Position = mul(float4(wpos, input.Position.w), ViewProjection);
 	//output.Position = input.Position;
 	output.PositionSS = output.Position;
@@ -78,7 +91,7 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	 
 	float3 pointLightsColor = 0;
 
-	Light light = Lights[LightIndex];
+	Light light = GetLight(input.InstanceID);
 
 	float intensity = light.Color.a;
 	if (intensity > 0)

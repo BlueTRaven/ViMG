@@ -176,6 +176,9 @@ namespace ViMG.Rendering
         private VertexBuffer vboUVSphere;
         private IndexBuffer iboUVSphere;
 
+        private uint[] lightVolumeIndices = new uint[LightManager.MAX_LIGHTS];
+        private StructuredBuffer bufferLightVolumeIndices;
+
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
@@ -268,6 +271,9 @@ namespace ViMG.Rendering
             iboQuad.SetData(indices);
 
             (vboUVSphere, iboUVSphere) = DrawHelper3D.MakeUVSphere(device, 1);
+
+            bufferLightVolumeIndices = new StructuredBuffer(device, typeof(uint), lightVolumeIndices.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
+            EffectLightAccumPointLight.Parameters["LightInstanceIndices"].SetValue(bufferLightVolumeIndices);
         }
 
         public void FrameStart()
@@ -491,31 +497,43 @@ namespace ViMG.Rendering
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
-                //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetProjectionMatrix()));
+                EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
 
-                foreach (PointLightVolumeDraw draw in DrawsPointLightVolumePass)
+                device.SetVertexBuffer(vboUVSphere);
+                device.Indices = iboUVSphere;
+
+                if (!Options.UseInstancedLightVolumes)
                 {
-                    /*EffectLightAccumPointLight.Parameters["WorldViewProjection"].SetValue(
-                        Matrix.CreateScale(draw.LightScale) * 
-                        Matrix.CreateTranslation(draw.LightPosition) *
-                        viewProj);*/
+                    foreach (PointLightVolumeDraw draw in DrawsPointLightVolumePass)
+                    {
+                        EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
 
-                    EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
+                        foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < DrawsPointLightVolumePass.Count; i++)
+                    {
+                        PointLightVolumeDraw draw = DrawsPointLightVolumePass[i];
 
-                    device.SetVertexBuffer(vboUVSphere);
-                    device.Indices = iboUVSphere;
+                        lightVolumeIndices[i] = (uint)draw.LightIndex;
+                    }
 
+                    bufferLightVolumeIndices.SetData(lightVolumeIndices);
+                    
                     foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
-                        //device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.)
-
-                        NumDrawCalls++;
+                        device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.Count);
                     }
-
-                    NumPointLightsRendered++;
                 }
+
+                NumPointLightsRendered = DrawsPointLightVolumePass.Count;
 
                 device.RasterizerState = cullCCWRS;
 

@@ -8,7 +8,7 @@ namespace ViMG
 {
 	public class LightManager
 	{
-		public const int MAX_LIGHTS = 128;
+		public const int MAX_LIGHTS = 512;
 
 		private StructuredBuffer structuredBuffer;
 		private int version;
