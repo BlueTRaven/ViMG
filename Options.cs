@@ -55,10 +55,11 @@ namespace ViMG
         public static SMAAQuality CurrentSMAAQuality = SMAA_INVALID;
         public static FXAAQuality CurrentFXAAQuality = FXAAQuality.FXAA_HIGH;//FXAA_INVALID;
 
+        public static bool UseInstancedLightVolumes = true;
+        
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;
-        public static bool UseInstancedLightVolumes;
 
         public static void CenterMouse()
         {

@@ -10,7 +10,21 @@ namespace ViMG.UIs
 {
     public static class UIWidgets
     {
-        private static int trackingID = -1;
+        public static void MakeCheckbox(UI.ButtonConstructionParameters checkboxButton, 
+            UI.TextureConstructionParameters offTexture, UI.TextureConstructionParameters onTexture, ref bool checkedValue)
+        {
+            UI.StartParent(checkboxButton.bounds.Position);
+            checkboxButton.bounds.Position = Vector2.Zero;
+
+            if (!checkedValue)
+                UI.MakeTexture(offTexture);
+            else UI.MakeTexture(onTexture);
+
+            if (UI.MakeButton(checkboxButton).clickLeft)
+                checkedValue = !checkedValue;
+        }
+
+        private static int sliderTrackingId = -1;
         public static bool MakeSlider(UI.ButtonConstructionParameters sliderButton, UI.TextureConstructionParameters texture, 
             float width, ref float currentValue) 
         {
@@ -26,7 +40,7 @@ namespace ViMG.UIs
             sliderButton.bounds.Position = new Vector2(MathHelper.Lerp(0, end, currentValue), 0);
             UI.Button dummyButton = UI.MakeButton(new UI.ButtonConstructionParameters(sliderButton.bounds, DrawHelper.TransparentPixel, null));
 
-            if (trackingID == dummyButton.id.id)
+            if (sliderTrackingId == dummyButton.id.id)
             {
                 //we're currently dragging.
                 float mouseX = Main.inputManager.GetMousePosition().X;
@@ -43,14 +57,14 @@ namespace ViMG.UIs
                 hasChanged = true;
 
                 if (!Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-                    trackingID = -1;
+                    sliderTrackingId = -1;
             }
-            else if (trackingID == -1)
+            else if (sliderTrackingId == -1)
             {
                 //we're not currently dragging. Check too see if we want to start dragging.
                 if (dummyButton.clickLeft)
                 {
-                    trackingID = dummyButton.id.id;
+                    sliderTrackingId = dummyButton.id.id;
 
                     UI.MakeTexture(sliderButton.bounds, sliderButton.texture, sliderButton.clickedSourceRect);
 

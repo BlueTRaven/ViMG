@@ -27,8 +27,6 @@ namespace ViMG.UIs
         private bool dropdownSMAAOpen;
         private UI.Button[] outputsSMAA;
 
-        private float smaaThreshold;
-
         private World world;
         private TextHelper.FontInfo fi;
 
@@ -174,6 +172,16 @@ namespace ViMG.UIs
 
                 pos.Y += 32 + MARGIN;
             }
+
+            UI.MakeLabel(new UI.LabelConstructionParameters("Instanced Light Volumes", fi, 256 - 8, pos - new Vector2(256 - 8, 0)));
+
+            UIWidgets.MakeCheckbox(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(16, 16, 16, 16)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 16, 16, 16)),
+                ref Options.UseInstancedLightVolumes);
+            
+            pos.Y += 32 + MARGIN;
 
             /*Options.SMAAThresholdChanged = UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(64, 64, 32, 32), new RectangleF(96, 64, 32, 32), new RectangleF(96, 64, 32, 32)),
