@@ -487,7 +487,7 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
-			foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
+			/*foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
 			{
 				Chunk chunk = ChunkManager.GetChunk(loadedPosition);
 
@@ -504,7 +504,7 @@ namespace ViMG
 						cube.OnRandomUpdate(this, ChunkManager, new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
 					}
 				}
-			}
+			}*/
 
 			PassiveSpawnerManager.Update(deltaTime, this);
 

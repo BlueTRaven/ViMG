@@ -293,9 +293,11 @@ namespace ViMG.Rendering
             ConstructFXAA(rez);
 
             diffuse?.Dispose();
-            ao?.Dispose();
+            lightAccum?.Dispose();
+            depth?.Dispose();
             position?.Dispose();
             normal?.Dispose();
+            ao?.Dispose();
 
             diffuse = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
             diffuse.Name = "Diffuse";
@@ -322,6 +324,10 @@ namespace ViMG.Rendering
                 normal,
                 ao,
             };
+
+            preTransparencyOutput?.Dispose();
+            ldrOutputPing?.Dispose();
+            ldrOutputPong?.Dispose();
 
             preTransparencyOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ldrOutputPing = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);

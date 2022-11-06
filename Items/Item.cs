@@ -10,6 +10,20 @@ namespace ViMG.Items
 {
 	public abstract class Item : IRegisterable
 	{
+		public struct RangedAttackStats
+		{
+			public float projectileSpeed;
+			public float projectileGravity;
+			public AttackStats attackStats;
+
+			public RangedAttackStats(AttackStats attackStats, float projectileSpeed, float projectileGravity = 1f)
+            {
+				this.attackStats = attackStats;
+				this.projectileSpeed = projectileSpeed;
+				this.projectileGravity = projectileGravity;
+            }
+		}
+
 		public struct MagicAttackStats
         {
 			public int magicUse;

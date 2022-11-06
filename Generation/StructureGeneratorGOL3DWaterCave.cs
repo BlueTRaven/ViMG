@@ -119,6 +119,7 @@ namespace ViMG.Generation
 
             bool placeWater = true;
 
+            int numTries = Chunk.NUM_CUBES_IN_CHUNK * 8;
             while (waterFloodFills.Count > 0)
             {
                 CubePosition n = waterFloodFills.Dequeue();
@@ -129,7 +130,7 @@ namespace ViMG.Generation
 
                     if (manager.GetCube(n).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
                     {
-                        if (n.Y < 40 || waterFloodFills.Count > Chunk.NUM_CUBES_IN_CHUNK * 8)
+                        if (n.Y < 40)
                         {
                             placeWater = false;
                             break;
@@ -147,6 +148,14 @@ namespace ViMG.Generation
                         waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z - 1));
                         waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z + 1));
                     }
+                }
+
+                numTries--;
+
+                if (numTries < 0)
+                {
+                    placeWater = false;
+                    break;
                 }
             }
 

@@ -200,7 +200,8 @@ namespace ViMG.Generation
 
 							if (ChunkHelper.GetCubeOrAdjacent(manager, chunk, posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
 							{
-								if (GetRandom().Next(0, 256) == 0)
+								int val = GetRandom().Next(0, 256);
+								if (val == 0)
 								{
 									int num = GetRandom().Next(3, 12);
 									for (int i = 0; i < num; i++)
@@ -211,11 +212,11 @@ namespace ViMG.Generation
 										ChunkHelper.SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
 									}
 								}
-								if (GetRandom().Next(0, 256) == 1)
+								else if (val == 1)
 									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
-								if (GetRandom().Next(0, 256) == 2)
+								else if (val == 2)
 									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
-								if (GetRandom().Next(0, 256) == 3)
+								else if (val == 3)
 									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
 							}
 						}

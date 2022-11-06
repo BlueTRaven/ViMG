@@ -344,7 +344,7 @@ namespace ViMG
 
 			//ProcessPriorityMeshChunks(world);
 
-			ProcessChunkQueueSync(world, 1, 8);
+			ProcessChunkQueueSync(world, 1, 4);
 		}
 
 		private ChunkPosition LayerRelativePosition(ChunkPosition chunkPosition)

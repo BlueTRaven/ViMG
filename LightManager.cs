@@ -8,7 +8,7 @@ namespace ViMG
 {
 	public class LightManager
 	{
-		public const int MAX_LIGHTS = 512;
+		public const int MAX_LIGHTS = 1024 * 8;
 
 		private StructuredBuffer structuredBuffer;
 		private int version;
@@ -78,6 +78,7 @@ namespace ViMG
 
 		private Light[] lights = new Light[MAX_LIGHTS];
 		private Data[] datas = new Data[MAX_LIGHTS];
+		private int numUsedLights;
 
 		public LightManager(GraphicsDevice device)
 		{
@@ -92,6 +93,10 @@ namespace ViMG
 
 		public int Add(Vector3 position, float start, float end, Color color)
 		{
+			//Early-out - we have no more light slots available.
+			if (numUsedLights == MAX_LIGHTS)
+				return -1;
+
 			for (int i = 0; i < MAX_LIGHTS; i++)
 			{
 				if (!lights[i].active)
@@ -99,6 +104,8 @@ namespace ViMG
 					lights[i] = new Light(position, start, end, color, i);
 
 					version++;
+
+					numUsedLights++;
 					return i;
 				}
 			}
@@ -120,6 +127,8 @@ namespace ViMG
 			{
 				lights[index] = new Light();
 				version++;
+
+				numUsedLights--;
 			}
 		}
 

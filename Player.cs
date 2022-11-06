@@ -252,6 +252,7 @@ namespace ViMG
 
 			Rotation = Main.camera.Rotation;
 
+			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
 			accessoryInventory = new Inventory(6);
 			gearInventory = new Inventory(10);
 			craftInventory = new Inventory(8);

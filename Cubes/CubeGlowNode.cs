@@ -16,7 +16,15 @@ namespace ViMG.Cubes
 			Collision = CollisionValue.None;
 		}
 
-		public override void OnPlayerPlaced(Player player, CubePosition position)
+        public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+        {
+            base.PostChunkGen(chunkData, position);
+
+			chunkData.GetChunk().GetWorld().EntityManager.Add(new GlowNode(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 5, CUBE_SCALE * 4,
+				new Color(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+		}
+
+        public override void OnPlayerPlaced(Player player, CubePosition position)
 		{
 			base.OnPlayerPlaced(player, position);
 

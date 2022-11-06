@@ -544,12 +544,7 @@ namespace ViMG
 
 		private bool HasClearSide(int x, int y, int z, Cube currentCube, World world)
 		{
-			/*if (!IsInChunkBounds(x, y, z))
-			{
-				CubePosition cpos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk);
-				chunk.GetChunkManager().GetChunk(cpos).GetData().MarkOffsetChunkDirty(cpos);
-			}*/
-
+			
 			Cube adjacentCube = GetCubeOrAdjacent(x, y, z, world).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (currentCube.Transparency != Cube.TransparencyValue.Air)

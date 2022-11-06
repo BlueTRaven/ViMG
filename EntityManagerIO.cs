@@ -227,6 +227,7 @@ namespace ViMG
 
 			List<Entity> entitiesToSerialize = new List<Entity>();
 
+
 			foreach (Entity entity in entities)
 			{
 				ChunkPosition entityPos = ChunkPosition.WorldSpaceChunk(entity.Position);
@@ -243,6 +244,8 @@ namespace ViMG
 				}
 			}
 
+			Console.WriteLine("Saving {0} entities...", entitiesToSerialize.Count);
+
 			foreach (Entity entity in entitiesToSerialize)
 			{
 				if (entity is Player)
@@ -255,6 +258,8 @@ namespace ViMG
 				EntityData data = new EntityData(entity);
 				entityDatas[pos].Add(data);
 			}
+
+			Console.WriteLine("Done.");
 		}
 
 		//Sometimes we need to save and keep the world loaded. In this case, cached entities will be duplicates of

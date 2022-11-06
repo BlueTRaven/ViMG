@@ -14,32 +14,33 @@ namespace ViMG.Items
 		private Color color;
 		private string materialName;
 
-		private readonly AttackStats attackStats;
+		private readonly RangedAttackStats rangedAttackStats;
 
-		public ItemBow(string material, Color color, AttackStats stats) : base("bow_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 64, 16, 16))
+		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 64, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 
 			this.color = color;
-			this.attackStats = stats;
+			this.rangedAttackStats = stats;
 		}
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
 			if (inventory.FindTag("ammo_arrow", out int ammoIndex).valid)
 			{
-				itemCooldownTime = this.attackStats.cooldownTime;
+				itemCooldownTime = this.rangedAttackStats.attackStats.cooldownTime;
 
-				int damage = attackStats.damage;
-				float knockback = attackStats.knockback;
+				int damage = rangedAttackStats.attackStats.damage;
+				float knockback = rangedAttackStats.attackStats.knockback;
 				player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
 
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, damage, knockback,
-					Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE, 1, true, 0.75f, true);
+					Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE, 1, true, 0.75f * rangedAttackStats.projectileGravity, true);
 
+				//CUBE_SCALE * 15
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
-					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, visStats, stats, index),
+					Vector3.Normalize(facing) * rangedAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, visStats, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{
@@ -64,7 +65,7 @@ namespace ViMG.Items
 
 		public ref readonly AttackStats GetStats()
 		{
-			return ref attackStats;
+			return ref rangedAttackStats.attackStats;
 		}
 
 		public override string GetDescription(ItemInstance item)

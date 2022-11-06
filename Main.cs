@@ -222,6 +222,7 @@ namespace ViMG
 		private void WindowResolutionChanged(object? sender, EventArgs args)
         {
 			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+			WorldTarget?.Dispose();
 			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, 
 				false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			camera.MarkDirty();

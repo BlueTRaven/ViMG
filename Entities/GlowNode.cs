@@ -19,7 +19,7 @@ namespace ViMG.Entities
 
 		private int light = -1;
 
-		private SimpleMesh<VertexCube, int> mesh;
+		private static SimpleMesh<VertexCube, int> mesh;
 
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -82,10 +82,10 @@ namespace ViMG.Entities
 			if (mesh == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
+			/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
 				mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), null));
+				Matrix.CreateTranslation(Position), null));*/
 		}
 
 		private void MakeMesh(GraphicsDevice device)
