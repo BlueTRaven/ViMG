@@ -11,8 +11,8 @@ Texture2D Depth				: register(t1);
 Texture2D Normal			: register(t2);
 Texture2D Diffuse			: register(t3);
 
-//TextureCubeArray<float4> Cubemaps : register(t4);
-TextureCube Cubemaps : register(t4);
+TextureCubeArray Cubemaps : register(t4);
+//TextureCube Cubemaps : register(t4);
 
 float4x4 ViewProjection;
 float4x4 InvViewProjection;
@@ -34,22 +34,12 @@ struct Light
 	float End;
 };
 
-struct LightShadowmapped
-{
-	float4 Color;
-	float3 Position;
-	float Start;
-	float End;
-
-	float4x4 ViewProjs[6];
-};
-
 //a structured buffer containing a list of all indices of lights to draw.
 StructuredBuffer<uint> LightInstanceIndices : register(t13);
 //a structured buffer containing a list of all lights.
 StructuredBuffer<Light> Lights : register(t14);
 //a structured buffer containing a list of all shadowmapped lights.
-StructuredBuffer<LightShadowmapped> ShadowmappedLights : register(t15);
+StructuredBuffer<Light> ShadowmappedLights : register(t15);
 
 struct VertexShaderInput
 {
@@ -123,7 +113,7 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 	if (UseShadowmap)
 	{
 		//TODO: support instancing
-		LightShadowmapped light = ShadowmappedLights[LightIndex];
+		Light light = ShadowmappedLights[LightIndex];
 
 		float intensity = light.Color.a;
 
@@ -142,14 +132,14 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
 
-			float sampledDepth = Cubemaps.Sample(CubeSampler, shadowDir).r;
+			float4 sampledDepth = Cubemaps.Sample(CubeSampler, float4(shadowDir, LightIndex));
 			float realDepth = sampledDepth * light.End;
 			float currentDepth = length(dir);
 
 			float shadow = currentDepth - 0.005 < realDepth ? 1.0 : 0.0;
 
 			if (ShowDepth)
-				pointLightsColor += float3(currentDepth, realDepth, currentDepth - realDepth);
+				pointLightsColor += sampledDepth.aaa;//float3(currentDepth, realDepth, currentDepth - realDepth);
 			else pointLightsColor += lightDiffuse * shadow;
 		}
 	}

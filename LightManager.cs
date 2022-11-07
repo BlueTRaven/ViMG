@@ -42,46 +42,6 @@ namespace ViMG
 			}
 		}
 
-		public readonly struct DataShadowmapped
-        {
-			public readonly Vector4 color;
-			public readonly Vector3 position;
-			public readonly float start;
-			public readonly float end;
-
-			public readonly Matrix A;
-			public readonly Matrix B;
-			public readonly Matrix C;
-			public readonly Matrix D;
-			public readonly Matrix E;
-			public readonly Matrix F;
-
-			public DataShadowmapped(Light light, Matrix[] lightViewProjections)
-			{
-				if (!light.active)
-				{
-					this.position = Vector3.Zero;
-					this.start = 0;
-					this.end = 0;
-					this.color = Color.Transparent.ToVector4();
-				}
-				else
-				{
-					this.position = light.position;
-					this.start = light.start;
-					this.end = light.end;
-					this.color = light.color.ToVector4();
-				}
-
-				this.A = lightViewProjections[0];
-				this.B = lightViewProjections[1];
-				this.C = lightViewProjections[2];
-				this.D = lightViewProjections[3];
-				this.E = lightViewProjections[4];
-				this.F = lightViewProjections[5];
-			}
-		}
-
 		public readonly struct Light
 		{
 			public readonly Vector3 position;
@@ -132,22 +92,23 @@ namespace ViMG
 		private ushort[] oldLightVersions = new ushort[MAX_LIGHTS];
 
 		private Data[] datas = new Data[MAX_LIGHTS];
-		private DataShadowmapped[] datasShadowmapped = new DataShadowmapped[MAX_LIGHTS_SHADOWMAPPED];
+		private Data[] datasShadowmapped = new Data[MAX_LIGHTS_SHADOWMAPPED];
 
 		private int numUsedLights;
 		private int numUsedLightsShadowmapped;
 
 		public LightManager(GraphicsDevice device)
 		{
-			//lightsCubemaps = new RenderTarget2D(device, 256, 256, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents, false, MAX_LIGHTS_SHADOWMAPPED * 6);
-			lightsCubemaps = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			//lightsCubemaps = new RenderTarget2D(device, 256, 256, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents, false, 
+				//MAX_LIGHTS_SHADOWMAPPED * 6);
+			lightsCubemaps = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents, MAX_LIGHTS_SHADOWMAPPED);
 
 			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
 			{
 				lightShadowmappedMatrices[i] = new Matrix[6];
 				Array.Fill(lightShadowmappedMatrices[i], Matrix.Identity);
 
-				datasShadowmapped[i] = new DataShadowmapped(new Light(), lightShadowmappedMatrices[i]);
+				datasShadowmapped[i] = new Data(new Light());
 			}
 			/*for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
 				lightsCubemaps[i] = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24);*/
@@ -259,7 +220,7 @@ namespace ViMG
 				bufferLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS, BufferUsage.WriteOnly, ShaderAccess.Read);
 
 			if (bufferShadowmappedLights == null)
-				bufferShadowmappedLights = new StructuredBuffer(effect.GraphicsDevice, typeof(DataShadowmapped), MAX_LIGHTS_SHADOWMAPPED, BufferUsage.WriteOnly, ShaderAccess.Read);
+				bufferShadowmappedLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS_SHADOWMAPPED, BufferUsage.WriteOnly, ShaderAccess.Read);
 
 			//if (version != lastUploadedVersion)
 			{
@@ -289,7 +250,7 @@ namespace ViMG
 						Array.Fill(lightShadowmappedMatrices[i], Matrix.Identity);
 					}
 
-					datasShadowmapped[i] = new DataShadowmapped(lightsShadowmapped[i], lightShadowmappedMatrices[i]);
+					datasShadowmapped[i] = new Data(lightsShadowmapped[i]);
 				}
 
 				bufferLights.SetData(datas);
@@ -317,7 +278,7 @@ namespace ViMG
 				Light light = lightsShadowmapped[i];
 				
 				if (light.active)
-					Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new Rendering.RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, lightsCubemaps));
+					Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new Rendering.RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
 			}
         }
 
@@ -335,8 +296,7 @@ namespace ViMG
 
 			//To begin with, draw everything every frame. This is SLOW! Eventually we'll want to only draw these lights
 			//if something changes in them (i.e. chunk is dirty)
-			//for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
-			int i = 0;
+			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
 			{
 				Light light = lightsShadowmapped[i];
 
@@ -350,7 +310,7 @@ namespace ViMG
 						Matrix viewProj = lightShadowmappedMatrices[i][j];
 						effectDepth.Parameters["ViewProjection"].SetValue(viewProj);
 
-						device.SetRenderTarget(lightsCubemaps, (CubeMapFace)j);
+						device.SetRenderTarget(lightsCubemaps, (CubeMapFace)j, i);
 						//device.SetRenderTarget(lightsCubemaps, i * 6 + j);
 						device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
