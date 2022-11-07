@@ -10,6 +10,111 @@ namespace ViMG
 {
 	public static class MeshHelper
 	{
+		private static Color[] faceColors = new Color[6]
+		{
+			Color.Red,
+			Color.Green,
+			Color.Yellow,
+			Color.Blue,
+			Color.Pink,
+			Color.Purple
+		};
+
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeCubemap(GraphicsDevice device, Vector3 min, Vector3 max)
+        {
+			List<VertexCube> vertices = new List<VertexCube>();
+			List<int> indices = new List<int>();
+
+			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+
+			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+			indices.Add(0);
+			indices.Add(1);
+			indices.Add(3);
+			indices.Add(1);
+			indices.Add(2);
+			indices.Add(3);
+
+			vertices.Add(new VertexCube(l_t_n, faceColors[0], new Vector2(1, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(r_t_n, faceColors[0], new Vector2(0, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(r_t_f, faceColors[0], new Vector2(0, 0), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(l_t_f, faceColors[0], new Vector2(1, 0), new Vector3(0, 1, 0)));
+
+			int offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(r_t_n, faceColors[1], new Vector2(1, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_t_n, faceColors[1], new Vector2(0, 1), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_b_n, faceColors[1], new Vector2(0, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(r_b_n, faceColors[1], new Vector2(1, 0), new Vector3(0, 0, 1)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(r_t_f, faceColors[2], new Vector2(1, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_t_n, faceColors[2], new Vector2(0, 1), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_n, faceColors[2], new Vector2(0, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_f, faceColors[2], new Vector2(1, 0), new Vector3(-1, 0, 0)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(l_t_f, faceColors[3], new Vector2(1, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_t_f, faceColors[3], new Vector2(0, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_b_f, faceColors[3], new Vector2(0, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(l_b_f, faceColors[3], new Vector2(1, 0), new Vector3(0, 0, -1)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(l_t_n, faceColors[4], new Vector2(1, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_t_f, faceColors[4], new Vector2(0, 1), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_f, faceColors[4], new Vector2(0, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_n, faceColors[4], new Vector2(1, 0), new Vector3(1, 0, 0)));
+
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(l_b_f, faceColors[5], new Vector2(1, 1), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_b_f, faceColors[5], new Vector2(0, 1), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_b_n, faceColors[5], new Vector2(0, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(l_b_n, faceColors[5], new Vector2(1, 0), new Vector3(0, -1, 0)));
+
+			return MakeSimplerMesh(device, vertices, indices);
+		}
+
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices) 
 			where TVertex : struct 
 			where TIndex : struct

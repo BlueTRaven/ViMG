@@ -46,7 +46,7 @@ VSOutputCube MainVS(in VSInputCube input)
 
 	output.PositionWS = mul(input.Position, World).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
-	output.PositionSS = mul(float4(output.PositionWS, 1), ViewProjection).xyz;
+	output.PositionSS = output.Position;
 	output.Color = input.Color * float4(TintColor, 1);
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
 	output.AO = input.AO;

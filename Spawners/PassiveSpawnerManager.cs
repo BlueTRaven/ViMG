@@ -16,12 +16,15 @@ namespace ViMG.Spawners
 
         public PassiveSpawnerManager(EntityManager entityManager)
         {
-            spawners.Add(new PSSlime(this, entityManager));
-            spawners.Add(new PSSKeleton(this, entityManager));
-            spawners.Add(new PSImp(this, entityManager));
-            spawners.Add(new PSCaveSlime(this, entityManager));
-            spawners.Add(new PSSnake(this, entityManager));
-            spawners.Add(new PSStoneBeetle(this, entityManager));
+            if (Main.ENABLE_ENT_SPAWNING)
+            {
+                spawners.Add(new PSSlime(this, entityManager));
+                spawners.Add(new PSSKeleton(this, entityManager));
+                spawners.Add(new PSImp(this, entityManager));
+                spawners.Add(new PSCaveSlime(this, entityManager));
+                spawners.Add(new PSSnake(this, entityManager));
+                spawners.Add(new PSStoneBeetle(this, entityManager));
+            }
         }
 
         public void Update(double deltaTime, World world)

@@ -17,12 +17,16 @@ namespace ViMG.Rendering
             public int LightIndex;
             public Vector3 LightPosition;
             public float LightScale;  //In other words, its End value
-            
-            public PointLightVolumeDraw(int index, Vector3 position, float scale)
+
+            public RenderTargetCube Cubemap;
+
+            public PointLightVolumeDraw(int index, Vector3 position, float scale, RenderTargetCube cubemap = null)
             {
                 this.LightIndex = index;
                 this.LightPosition = position;
                 this.LightScale = scale;
+
+                this.Cubemap = cubemap;
             }
         }
 
@@ -158,6 +162,8 @@ namespace ViMG.Rendering
 
         public Effect EffectFXAA;
 
+        private Effect DEBUGEffectVisualizeCubemap;
+
         public bool BloomEnabled;
 
         private BasicEffect EffectCopy;
@@ -181,6 +187,7 @@ namespace ViMG.Rendering
 
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
+        public List<PointLightVolumeDraw> DrawsShadowmappedPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
 
@@ -193,8 +200,11 @@ namespace ViMG.Rendering
         private Options.SMAAQuality previousSMAAOption;
         private Options.FXAAQuality previousFXAAOption;
 
+        public (VertexBuffer VBO, IndexBuffer IBO) cubemapMesh;
+
         public RendererDeferred(GraphicsDevice device)
         {
+            cubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
             bloom = new RendererBloom(device);
 
             EffectCopy = new BasicEffect(device);
@@ -245,6 +255,8 @@ namespace ViMG.Rendering
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
             EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
 
+            DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
+
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
 
@@ -280,6 +292,7 @@ namespace ViMG.Rendering
         {
             DrawsPassGBuffer.Clear();
             DrawsPointLightVolumePass.Clear();
+            DrawsShadowmappedPointLightVolumePass.Clear();
             DrawsTransparentPass.Clear();
             DrawsEmptyPass.Clear();
 
@@ -423,6 +436,8 @@ namespace ViMG.Rendering
             device.SetRenderTargets(targets);
             device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
 
+            EffectGBuffer.Parameters["AmbientStrength"].SetValue(0);
+
             if (DrawsPassGBuffer.Count > 0)
             {
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
@@ -473,7 +488,8 @@ namespace ViMG.Rendering
 
             device.SetRenderTarget(lightAccum);
 
-            if (DoCSMLight)
+            //TODO re-enable
+            if (DoCSMLight && false)
             {
                 EffectLightAccumCSM.Parameters["Position"].SetValue(position);
                 EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
@@ -493,6 +509,7 @@ namespace ViMG.Rendering
                 device.RasterizerState = cullCWRS;
                 device.SamplerStates[1] = shadowBorderClampSS;
                 device.BlendState = additiveBS;
+                device.DepthStencilState = depthReadNoWriteDSS;
 
                 EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
@@ -504,6 +521,7 @@ namespace ViMG.Rendering
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
+                EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(false);
 
                 device.SetVertexBuffer(vboUVSphere);
                 device.Indices = iboUVSphere;
@@ -531,7 +549,7 @@ namespace ViMG.Rendering
                     }
 
                     bufferLightVolumeIndices.SetData(lightVolumeIndices);
-                    
+
                     foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                     {
                         pass.Apply();
@@ -545,7 +563,50 @@ namespace ViMG.Rendering
 
                 device.SetVertexBuffer(vboQuad);
                 device.Indices = iboQuad;
-                //DrawFullscreenQuad(EffectLightAccumPointLight);
+            }
+
+            if (DrawsShadowmappedPointLightVolumePass.Count > 0)
+            {
+                device.SetRenderTarget(lightAccum);
+                device.RasterizerState = cullCWRS;
+                device.SamplerStates[1] = shadowBorderClampSS;
+                device.BlendState = additiveBS;
+                device.DepthStencilState = depthReadNoWriteDSS;
+
+                EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
+                //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
+                EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
+                //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+
+                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+
+                EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
+                EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(false);
+                EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(true);
+
+                EffectLightAccumPointLight.Parameters["ShowDepth"].SetValue(Main.inputManager.IsPressed(Microsoft.Xna.Framework.Input.Keys.O));
+
+                device.SetVertexBuffer(vboUVSphere);
+                device.Indices = iboUVSphere;
+
+                foreach (PointLightVolumeDraw draw in DrawsShadowmappedPointLightVolumePass)
+                {
+                    EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
+
+                    foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                    }
+                }
+
+                NumPointLightsRendered += DrawsShadowmappedPointLightVolumePass.Count;
+
+                device.RasterizerState = cullCCWRS;
+
+                device.SetVertexBuffer(vboQuad);
+                device.Indices = iboQuad;
             }
 
             device.SetRenderTarget(preTransparencyOutput);
@@ -604,6 +665,30 @@ namespace ViMG.Rendering
                     NumDrawCalls++;
                 }
             }
+
+            /*foreach (PointLightVolumeDraw draw in DrawsShadowmappedPointLightVolumePass)
+            {
+                DEBUGEffectVisualizeCubemap.Parameters["Position"].SetValue(position);
+                DEBUGEffectVisualizeCubemap.Parameters["Cubemap"].SetValue(draw.Cubemap);
+                DEBUGEffectVisualizeCubemap.Parameters["CubemapCenter"].SetValue(draw.LightPosition);
+                DEBUGEffectVisualizeCubemap.Parameters["ProjectionFar"].SetValue(draw.LightScale);
+
+                DEBUGEffectVisualizeCubemap.Parameters["World"].SetValue(Matrix.CreateTranslation(draw.LightPosition));
+                DEBUGEffectVisualizeCubemap.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+
+                device.SetVertexBuffer(cubemapMesh.VBO);
+                device.Indices = cubemapMesh.IBO;
+
+                //device.SetRenderTarget(diffuse);
+                device.DepthStencilState = noDepthReadWriteDSS;
+                device.BlendState = BlendState.Opaque;
+
+                foreach (var pass in DEBUGEffectVisualizeCubemap.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, cubemapMesh.IBO.IndexCount / 3);
+                }
+            }*/
 
             if (EffectEmptyEnabled)
             {

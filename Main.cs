@@ -89,6 +89,7 @@ namespace ViMG
 		public const bool ENABLE_PCF = true;
 		public const bool DO_DETAIL = true;
 		public const bool TRANSPARENT_ORES = false;
+		public const bool ENABLE_ENT_SPAWNING = false;
 
 		public static bool Exit = false;
 

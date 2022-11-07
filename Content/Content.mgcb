@@ -91,6 +91,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/depth.fx
 
+#begin Effects/depth_pointlight.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/depth_pointlight.fx
+
 #begin Effects/fxaa.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -156,6 +162,13 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/transparent.fx
+
+#begin Effects/visualize_cubemap.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/processorParam:Defines=
+/build:Effects/visualize_cubemap.fx
 
 #begin Effects/vpctn.fx
 /importer:EffectImporter

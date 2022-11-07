@@ -113,7 +113,6 @@ namespace ViMG
 			ProjectileManager = new ProjectileManager(this, device);
 			EntityManager = new EntityManager(this);
 			LightManager = new LightManager(device);
-			LightManager.UpdateDatas(Main.CubeLitEffect);
 
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
@@ -617,6 +616,8 @@ namespace ViMG
 			directionalLight.DrawShadowmap(device, this);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 
+			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
+			LightManager.DrawShadowmap(device, this);
 			LightManager.Draw(device);
 
 			bool drawSkybox = true;
@@ -767,8 +768,6 @@ namespace ViMG
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("lava"),
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
 			}
-
-			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
 
 			ProjectileManager.Draw(device, effect);
 			EntityManager.Draw(device, Main.CubeLitEffect);

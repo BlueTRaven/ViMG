@@ -20,7 +20,7 @@ struct VSOutputCube
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
 	float3 PositionWS : TEXCOORD1;
-	float3 PositionSS : TEXCOORD2;
+	float4 PositionSS : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 	float AO : TEXCOORD4;
 	float DepthVS : DEPTHVS;

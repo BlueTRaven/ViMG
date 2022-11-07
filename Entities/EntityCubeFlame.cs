@@ -19,6 +19,7 @@ namespace ViMG.Entities
         private float timer;
         public CubePosition TrackedPosition { get; private set; }
         private int light = -1;
+        private bool isShadowmapped;
         private int hitbox = -1;
 
         private bool needsTimeFix = false;
@@ -58,7 +59,9 @@ namespace ViMG.Entities
             {
                 if (light != -1)
                 {
-                    world.LightManager.Remove(light);
+                    if (isShadowmapped)
+                        world.LightManager.RemoveShadowmapped(light);
+                    else world.LightManager.Remove(light);
                     light = -1;
                 }
             }
@@ -66,7 +69,8 @@ namespace ViMG.Entities
             {
                 if (light == -1)
                 {
-                    light = world.LightManager.Add(Position + new Vector3(Cube.CUBE_SCALE / 2f), Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed);
+                    world.LightManager.AddShadowmapped(Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE / 2f), 
+                        Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed, out light, out isShadowmapped);
                 }
             }
 
@@ -75,13 +79,6 @@ namespace ViMG.Entities
                 world.EntityManager.Remove(this);
 
                 world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0);
-
-                if (light != -1)
-                {
-                    world.LightManager.Remove(light);
-
-                    light = -1;
-                }
             }
         }
 
@@ -101,7 +98,10 @@ namespace ViMG.Entities
 
             if (light != -1)
             {
-                world.LightManager.Remove(light);
+                if (isShadowmapped)
+                    world.LightManager.RemoveShadowmapped(light);
+                else world.LightManager.Remove(light);
+
                 light = -1;
             }
 

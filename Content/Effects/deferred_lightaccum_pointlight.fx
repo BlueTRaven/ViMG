@@ -4,17 +4,25 @@
 #define MAX_LIGHTS 128
 
 sampler Sampler : register(s0);
+sampler CubeSampler : register(s4);
 
 Texture2D Position			: register(t0);
 Texture2D Depth				: register(t1);
 Texture2D Normal			: register(t2);
 Texture2D Diffuse			: register(t3);
 
+//TextureCubeArray<float4> Cubemaps : register(t4);
+TextureCube Cubemaps : register(t4);
+
 float4x4 ViewProjection;
 float4x4 InvViewProjection;
 float3 CameraPosition;
 
 bool UseInstancing;
+
+bool UseShadowmap;
+
+bool ShowDepth;
 
 uint LightIndex;
 
@@ -26,10 +34,22 @@ struct Light
 	float End;
 };
 
+struct LightShadowmapped
+{
+	float4 Color;
+	float3 Position;
+	float Start;
+	float End;
+
+	float4x4 ViewProjs[6];
+};
+
 //a structured buffer containing a list of all indices of lights to draw.
-StructuredBuffer<uint> LightInstanceIndices : register(t14);
+StructuredBuffer<uint> LightInstanceIndices : register(t13);
 //a structured buffer containing a list of all lights.
-StructuredBuffer<Light> Lights : register(t15);
+StructuredBuffer<Light> Lights : register(t14);
+//a structured buffer containing a list of all shadowmapped lights.
+StructuredBuffer<LightShadowmapped> ShadowmappedLights : register(t15);
 
 struct VertexShaderInput
 {
@@ -55,7 +75,11 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
-	float3 wpos = input.Position.xyz * GetLight(input.InstanceID).End + GetLight(input.InstanceID).Position;
+	float3 wpos = 0;
+	if (!UseShadowmap)
+		wpos = input.Position.xyz * GetLight(input.InstanceID).End + GetLight(input.InstanceID).Position;
+	else wpos = input.Position.xyz * ShadowmappedLights[LightIndex].End + ShadowmappedLights[LightIndex].Position;
+
 	output.Position = mul(float4(wpos, input.Position.w), ViewProjection);
 	//output.Position = input.Position;
 	output.PositionSS = output.Position;
@@ -77,38 +101,79 @@ float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
 	return positionVS;
 }
 
+float linearize_depth(float d, float zNear, float zFar)
+{
+	return zNear * zFar / (zFar + d * (zNear - zFar));
+}
+
 float4 MainPS(VertexShaderOutput input) : SV_TARGET
 {
 	float2 texCoord = (input.PositionSS.xy / input.PositionSS.w) * 0.5 + 0.5;
 	texCoord.y = 1 - texCoord.y;
-	
+
 	float3 normal = Normal.Sample(Sampler, texCoord).rgb;
-	float depth = Depth.Sample(Sampler, texCoord).r;
-	
+	//float depth = Depth.Sample(Sampler, texCoord).r;
+
 	//float3 position = ScreenSpaceToWorldSpace(texCoord, depth);
 	float3 position = Position.Sample(Sampler, texCoord).rgb;
 	//float specular = Diffuse.Sample(Sampler, texCoord).a;
-	 
+
 	float3 pointLightsColor = 0;
 
-	Light light = GetLight(input.InstanceID);
-
-	float intensity = light.Color.a;
-	if (intensity > 0)
+	if (UseShadowmap)
 	{
-		float3 dir = light.Position - position;
+		//TODO: support instancing
+		LightShadowmapped light = ShadowmappedLights[LightIndex];
 
-		float normMult = max(dot(normal, normalize(dir)), 0.0);
+		float intensity = light.Color.a;
 
-		float scaleByDistance = 1 - saturate((length(dir) - light.Start) / (light.End - light.Start));
+		if (intensity > 0)
+		{
+			float3 dir = light.Position - position;
+			//Don't ask...
+			//have to negate shadow direction as the cubemap has an inverted y axis
+			float3 shadowDir = position - light.Position;
+			shadowDir.y = -shadowDir.y;
 
-		float3 halfwayDir = normalize(normalize(dir) + CameraPosition);
-		float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-		float3 lightSpec = light.Color.rgb * spec * scaleByDistance * intensity;
+			float normMult = max(dot(normal, normalize(dir)), 0.0);
 
-		float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
+			//Create a gradient beginning at light.Start and ending at light.End.
+			float scaleByDistance = 1 - saturate((length(dir) - light.Start) / (light.End - light.Start));
 
-		pointLightsColor += lightDiffuse + lightSpec;
+			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
+
+			float sampledDepth = Cubemaps.Sample(CubeSampler, shadowDir).r;
+			float realDepth = sampledDepth * light.End;
+			float currentDepth = length(dir);
+
+			float shadow = currentDepth - 0.005 < realDepth ? 1.0 : 0.0;
+
+			if (ShowDepth)
+				pointLightsColor += float3(currentDepth, realDepth, currentDepth - realDepth);
+			else pointLightsColor += lightDiffuse * shadow;
+		}
+	}
+	else 
+	{
+		Light light = GetLight(input.InstanceID);
+
+		float intensity = light.Color.a;
+		if (intensity > 0)
+		{
+			float3 dir = light.Position - position;
+
+			float normMult = max(dot(normal, normalize(dir)), 0.0);
+
+			float scaleByDistance = 1 - saturate((length(dir) - light.Start) / (light.End - light.Start));
+
+			float3 halfwayDir = normalize(normalize(dir) + CameraPosition);
+			float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+			float3 lightSpec = light.Color.rgb * spec * scaleByDistance * intensity;
+
+			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
+
+			pointLightsColor += lightDiffuse + lightSpec;
+		}
 	}
 
 	return float4(pointLightsColor, 1);

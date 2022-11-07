@@ -117,7 +117,8 @@ namespace ViMG
 
 			lastUpdatedVersion = version;
 
-			if (!Main.ENABLE_SHADOWS)
+			//TODO re-enable
+			if (!Main.ENABLE_SHADOWS || true)
 			{
 				return;
 			}
