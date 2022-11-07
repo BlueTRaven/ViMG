@@ -560,9 +560,6 @@ namespace ViMG.Rendering
                 NumPointLightsRendered = DrawsPointLightVolumePass.Count;
 
                 device.RasterizerState = cullCCWRS;
-
-                device.SetVertexBuffer(vboQuad);
-                device.Indices = iboQuad;
             }
 
             if (DrawsShadowmappedPointLightVolumePass.Count > 0)
@@ -582,31 +579,46 @@ namespace ViMG.Rendering
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
-                EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(false);
+                EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
                 EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(true);
-
-                EffectLightAccumPointLight.Parameters["ShowDepth"].SetValue(Main.inputManager.IsPressed(Microsoft.Xna.Framework.Input.Keys.O));
 
                 device.SetVertexBuffer(vboUVSphere);
                 device.Indices = iboUVSphere;
 
-                foreach (PointLightVolumeDraw draw in DrawsShadowmappedPointLightVolumePass)
+                if (!Options.UseInstancedLightVolumes)
                 {
-                    EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
+                    foreach (PointLightVolumeDraw draw in DrawsShadowmappedPointLightVolumePass)
+                    {
+                        EffectLightAccumPointLight.Parameters["LightIndex"].SetValue(draw.LightIndex);
+
+                        foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < DrawsShadowmappedPointLightVolumePass.Count; i++)
+                    {
+                        PointLightVolumeDraw draw = DrawsShadowmappedPointLightVolumePass[i];
+
+                        lightVolumeIndices[i] = (uint)draw.LightIndex;
+                    }
+
+                    bufferLightVolumeIndices.SetData(lightVolumeIndices);
 
                     foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                        device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsShadowmappedPointLightVolumePass.Count);
                     }
                 }
 
                 NumPointLightsRendered += DrawsShadowmappedPointLightVolumePass.Count;
 
                 device.RasterizerState = cullCCWRS;
-
-                device.SetVertexBuffer(vboQuad);
-                device.Indices = iboQuad;
             }
 
             device.SetRenderTarget(preTransparencyOutput);
@@ -620,6 +632,8 @@ namespace ViMG.Rendering
             //EffectDeferred.Parameters["Normal"].SetValue(normal);
             EffectDeferred.Parameters["AO"].SetValue(ao);
 
+            device.SetVertexBuffer(vboQuad);
+            device.Indices = iboQuad;
             DrawFullscreenQuad(EffectDeferred);
 
             //We want to reuse the diffuse target and its depth buffer, so copy the output data back to diffuse

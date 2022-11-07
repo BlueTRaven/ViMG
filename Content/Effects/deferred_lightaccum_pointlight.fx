@@ -22,8 +22,6 @@ bool UseInstancing;
 
 bool UseShadowmap;
 
-bool ShowDepth;
-
 uint LightIndex;
 
 struct Light
@@ -35,7 +33,7 @@ struct Light
 };
 
 //a structured buffer containing a list of all indices of lights to draw.
-StructuredBuffer<uint> LightInstanceIndices : register(t13);
+StructuredBuffer<uint> LightInstanceIndices : register(t12);
 //a structured buffer containing a list of all lights.
 StructuredBuffer<Light> Lights : register(t14);
 //a structured buffer containing a list of all shadowmapped lights.
@@ -56,19 +54,25 @@ struct VertexShaderOutput
 
 Light GetLight(uint instanceId)
 {
-	if (UseInstancing)
-		return Lights[LightInstanceIndices[instanceId]];
-	else return Lights[LightIndex];
+	if (UseShadowmap) 
+	{
+		if (UseInstancing)
+			return ShadowmappedLights[LightInstanceIndices[instanceId]];
+		else return ShadowmappedLights[LightIndex];
+	}
+	else 
+	{
+		if (UseInstancing)
+			return Lights[LightInstanceIndices[instanceId]];
+		else return Lights[LightIndex];
+	}
 }
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
-	float3 wpos = 0;
-	if (!UseShadowmap)
-		wpos = input.Position.xyz * GetLight(input.InstanceID).End + GetLight(input.InstanceID).Position;
-	else wpos = input.Position.xyz * ShadowmappedLights[LightIndex].End + ShadowmappedLights[LightIndex].Position;
+	float3 wpos = input.Position.xyz * GetLight(input.InstanceID).End + GetLight(input.InstanceID).Position;
 
 	output.Position = mul(float4(wpos, input.Position.w), ViewProjection);
 	//output.Position = input.Position;
@@ -112,8 +116,7 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 	if (UseShadowmap)
 	{
-		//TODO: support instancing
-		Light light = ShadowmappedLights[LightIndex];
+		Light light = GetLight(input.InstanceID);
 
 		float intensity = light.Color.a;
 
@@ -132,15 +135,13 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
 
-			float4 sampledDepth = Cubemaps.Sample(CubeSampler, float4(shadowDir, LightIndex));
+			float4 sampledDepth = Cubemaps.Sample(CubeSampler, float4(shadowDir, UseInstancing ? input.InstanceID : LightIndex));
 			float realDepth = sampledDepth * light.End;
 			float currentDepth = length(dir);
 
 			float shadow = currentDepth - 0.005 < realDepth ? 1.0 : 0.0;
 
-			if (ShowDepth)
-				pointLightsColor += sampledDepth.aaa;//float3(currentDepth, realDepth, currentDepth - realDepth);
-			else pointLightsColor += lightDiffuse * shadow;
+			pointLightsColor += lightDiffuse * shadow;
 		}
 	}
 	else 
