@@ -69,7 +69,7 @@ namespace ViMG.Entities
             {
                 if (light == -1)
                 {
-                    world.LightManager.AddShadowmapped(Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE / 2f), 
+                    world.LightManager.AddShadowmapped(Position + new Vector3(Cube.CUBE_SCALE / 2f), 
                         Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed, out light, out isShadowmapped);
                 }
             }

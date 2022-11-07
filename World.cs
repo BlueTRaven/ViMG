@@ -641,7 +641,7 @@ namespace ViMG
 				if (player.GetBuffManager().HasBuff("emissive_ores"))
 					emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores");
 
-                ChunkMesh mesh = ChunkManager.GetMesh(pos, 0);
+                ChunkMesh mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
                 if (mesh != null && mesh != ChunkMesh.Empty)
                 {
                     Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
@@ -649,7 +649,7 @@ namespace ViMG
                         transform, null));
                 }
 
-                mesh = ChunkManager.GetMesh(pos, 1);
+                mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
                 if (mesh != null && mesh != ChunkMesh.Empty)
                 {
                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
@@ -664,18 +664,21 @@ namespace ViMG
                         mesh.VBO, mesh.IBO, null, null));
                 }
 
-				mesh = ChunkManager.GetMesh(pos, 3);
-				if (mesh != null && mesh != ChunkMesh.Empty)
+				if (Main.Renderer.EffectEmptyEnabled)
 				{
-					Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-					Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+					mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Air);
+					if (mesh != null && mesh != ChunkMesh.Empty)
+					{
+						Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+						Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-					Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+						Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-					Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-						DrawHelper.WhitePixel,
-						mesh.VBO, mesh.IBO));
+						Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
+							Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+							DrawHelper.WhitePixel,
+							mesh.VBO, mesh.IBO));
+					}
 				}
 
 				NumChunksDrawn++;

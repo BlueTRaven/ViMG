@@ -16,7 +16,7 @@ namespace ViMG.Cubes
 
         public CubeFlame() : base("flame", new RectangleF(192, 0, 16, 16), Color.White, 1)
         {
-            Transparency = TransparencyValue.Transparent;
+            Transparency = TransparencyValue.Transparent | TransparencyValue.InvisibleOnDepth;
             Collision = CollisionValue.None;
         }
 

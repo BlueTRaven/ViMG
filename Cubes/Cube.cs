@@ -163,6 +163,7 @@ namespace ViMG.Cubes
         {
 			Opaque,
 			Transparent,
+			DepthOnly,
 			Fluid,
 			Air,
         }
@@ -174,6 +175,8 @@ namespace ViMG.Cubes
 			TransparentOccludesSiblings, //occludes "siblings", or cubes of the same type
 			Invisible,	//don't mesh at all
 			Air,		//Air can be meshed under specific conditions
+
+			InvisibleOnDepth = 1 << 32,
 		}
 
 		public enum CollisionValue 
@@ -354,6 +357,9 @@ namespace ViMG.Cubes
 		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
         {
 			if (Transparency == TransparencyValue.Invisible)
+				return;
+
+			if (pass == RenderPass.DepthOnly && (Transparency & TransparencyValue.InvisibleOnDepth) > 0)
 				return;
 
 			//Opaque cubes only generate a mesh in the opaque pass.

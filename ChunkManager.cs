@@ -15,7 +15,7 @@ namespace ViMG
 {
 	public class ChunkManager
 	{
-		public const int NUM_CHUNK_MESH_PASSES = 4;
+		public const int NUM_CHUNK_MESH_PASSES = 5;
 
 		private readonly struct Layer
         {
@@ -536,10 +536,11 @@ namespace ViMG
 
 			//First one must have forceUpdate = true,
 			//but all subsequent mesh generations should be false.
-			mc.meshes[0] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
-			mc.meshes[1] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Transparent, false);
-			mc.meshes[2] = null;	//TODO fluids?
-			mc.meshes[3] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);
+			mc.meshes[(int)Cube.RenderPass.Opaque] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
+			mc.meshes[(int)Cube.RenderPass.Transparent] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Transparent, false);
+			mc.meshes[(int)Cube.RenderPass.DepthOnly] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.DepthOnly, false);
+			mc.meshes[(int)Cube.RenderPass.Fluid] = null;	//TODO fluids?
+			mc.meshes[(int)Cube.RenderPass.Air] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);
 			mc.meshDirty = false;
 			mc.meshQueued = false;
 
@@ -579,12 +580,12 @@ namespace ViMG
 			return layerLookupTable[layer].chunks[index].chunk;
 		}
 
-		public ChunkMesh GetMesh(ChunkPosition position, int pass)
+		public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
 		{
 			int layer = LayerFromPos(position);
 			int index = IndexFromPos(LayerRelativePosition(position));
 
-			return layerLookupTable[layer].chunks[index].meshes[pass];
+			return layerLookupTable[layer].chunks[index].meshes[(int)pass];
 		}
 
 		public bool IsInWorldBounds(Vector3 position)

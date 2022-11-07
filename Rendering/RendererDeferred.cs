@@ -436,8 +436,6 @@ namespace ViMG.Rendering
             device.SetRenderTargets(targets);
             device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
 
-            EffectGBuffer.Parameters["AmbientStrength"].SetValue(0);
-
             if (DrawsPassGBuffer.Count > 0)
             {
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
@@ -488,8 +486,7 @@ namespace ViMG.Rendering
 
             device.SetRenderTarget(lightAccum);
 
-            //TODO re-enable
-            if (DoCSMLight && false)
+            if (DoCSMLight)
             {
                 EffectLightAccumCSM.Parameters["Position"].SetValue(position);
                 EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);

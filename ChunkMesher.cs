@@ -45,7 +45,7 @@ namespace ViMG
 						ushort id = cubes[ci];
 						Cube.CubeVisualInstance visual = data.GetVisual(pos, forceUpdate);
 
-						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid)
+						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
 						{
 							if (id == 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
 								continue;
