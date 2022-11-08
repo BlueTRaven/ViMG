@@ -20,6 +20,8 @@ namespace ViMG.Entities
 		public CubePosition TrackedPosition { get; private set; }
 
 		private int light = -1;
+		private bool isShadowmapped;
+		private float breatheOffset;
 
 		public AncientAltar()
         {
@@ -33,7 +35,14 @@ namespace ViMG.Entities
 			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.25f, Cube.CUBE_SCALE / 2f);
 		}
 
-		public bool OnInteract(Player player)
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			breatheOffset = Main.random.NextFloat(0, 10f);
+        }
+
+        public bool OnInteract(Player player)
 		{
 			return false;
 		}
@@ -51,7 +60,7 @@ namespace ViMG.Entities
 
 			BoundingSphere sphere = new BoundingSphere(Position, radius);
 
-			if (!Main.camera.GetFrustum().Intersects(sphere))
+			/*if (!Main.camera.GetFrustum().Intersects(sphere))
 			{
 				if (light != -1)
 				{
@@ -65,7 +74,14 @@ namespace ViMG.Entities
 				{
 					light = world.LightManager.Add(Position, 0, radius, Color.Red);
 				}
-			}
+			}*/
+
+			float p0 = ((world.GetTime() + breatheOffset) % 7f) / 7f;
+			float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 3;
+
+			LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
+				0, MathF.Max(Cube.CUBE_SCALE, radius + s0), Color.Red.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
+				sphere, ref light, ref isShadowmapped, true);
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)

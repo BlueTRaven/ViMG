@@ -10,6 +10,13 @@ namespace ViMG
 {
     public static class LightHelper
     {
+        public enum LightUpdateType
+        {
+            DontUpdate,
+            UpdateClean,
+            UpdateDirty,
+        }
+
         //Distance at which lights attempt to transition to/from shadowmapped lights.
         public static float LODToNonShadowmappedDistance = Cube.CUBE_SCALE * 16;
 
@@ -29,11 +36,22 @@ namespace ViMG
             }
         }
 
-        public static void UpdateLight(LightManager lightManager, LightInfo lightInfo, BoundingSphere? sphere, ref int lightIndex, ref bool lightIsShadowmapped, bool allowShadowmapped)
+        /// <summary>
+        /// Updates the state of the light.
+        /// If the light is shadowmapped, it will attempt to transition into or out of shadowmapped state when entering or leaving <see cref="LODToNonShadowmappedDistance"/>.
+        /// </summary>
+        /// <param name="lightInfo">The light information used to construct the light, and if update is true, to update it. Otherwise unused.</param>
+        /// <param name="update">If true, the light will be updated to match lightInfo.</param>
+        /// <param name="sphere">A (nullable) BoundingSphere used to determine if the light is within view of the camera. If null is passed, it will use the light's position instead.</param>
+        /// <param name="lightIndex">The light reference.</param>
+        /// <param name="lightIsShadowmapped">Whether or not the light is currently shadowmapped.</param>
+        /// <param name="allowShadowmapped">Whether or not to allow the light to be shadowmapped. Shadowmapped lights are more expensive. Use as few of them as you can.</param>
+        public static void UpdateLight(LightManager lightManager, LightInfo lightInfo, LightUpdateType update, BoundingSphere? sphere, ref int lightIndex, ref bool lightIsShadowmapped, bool allowShadowmapped)
         {
             bool intersectsCamera = sphere.HasValue ? Main.camera.GetFrustum().Intersects(sphere.Value) : 
                 Main.camera.GetFrustum().Contains(lightInfo.Position) == ContainmentType.Contains;
 
+            //offscreen - delete light
             if (!intersectsCamera)
             {
                 if (lightIndex != -1)
@@ -46,6 +64,7 @@ namespace ViMG
             }
             else
             {
+                //onscreen
                 if (lightIndex == -1)
                 {
                     if (allowShadowmapped)
@@ -67,6 +86,14 @@ namespace ViMG
 
                         if (lightIsShadowmapped)
                         {
+                            if (update != LightUpdateType.DontUpdate)
+                            {
+                                bool markDirty = false;
+                                if (lightInfo.End != lightManager.GetShadowmapped(lightIndex).end || update == LightUpdateType.UpdateDirty)
+                                    markDirty = true;
+                                lightManager.UpdateShadowmapped(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, new Color(lightInfo.Color), markDirty);
+                            }
+
                             //if we're outside the shadowmapping LOD distance,
                             //Transition into a non-shadowmapped light.
                             if (dir.Length() > LODToNonShadowmappedDistance)
@@ -80,6 +107,9 @@ namespace ViMG
                         }
                         else
                         {
+                            if (update != LightUpdateType.DontUpdate)
+                                lightManager.Update(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, new Color(lightInfo.Color));
+
                             //if we're inside the shadowmapping LOD distance,
                             //attempt to transition into a shadowmapped light.
                             if (dir.Length() <= LODToNonShadowmappedDistance)

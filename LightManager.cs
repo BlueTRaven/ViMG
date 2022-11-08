@@ -120,6 +120,11 @@ namespace ViMG
 			return lights[index];
         }
 
+		public Light GetShadowmapped(int index)
+        {
+			return lightsShadowmapped[index];
+        }
+
 		public int Add(Vector3 position, float start, float end, Color color)
 		{
 			//Early-out - we have no more light slots available.
@@ -179,6 +184,7 @@ namespace ViMG
         {
 			if (lights[index].active)
             {
+				version++;
 				lights[index] = new Light(position, start, end, color, false, index);
             }
         }
@@ -187,6 +193,7 @@ namespace ViMG
 		{
 			if (lightsShadowmapped[index].active)
 			{
+				version++;
 				lightsShadowmapped[index] = new Light(position, start, end, color, true, index);
 
 				if (markDirty)

@@ -53,10 +53,13 @@ namespace ViMG.Entities
 
             //timer -= (float)deltaTime;
 
+            float p0 = ((world.GetTime() + time) % 0.65f) / 0.65f;
+            float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 0.25f;
+
             BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
             LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-                Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()),
+                Cube.CUBE_SCALE * 4f + s0, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
                 sphere, ref light, ref isShadowmapped, true);
             /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {
