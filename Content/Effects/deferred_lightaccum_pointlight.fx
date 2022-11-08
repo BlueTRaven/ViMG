@@ -135,11 +135,17 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
 
-			float4 sampledDepth = Cubemaps.Sample(CubeSampler, float4(shadowDir, UseInstancing ? input.InstanceID : LightIndex));
+			uint index;
+
+			if (UseInstancing)
+				index = LightInstanceIndices[input.InstanceID];
+			else index = LightIndex;
+
+			float4 sampledDepth = Cubemaps.Sample(CubeSampler, float4(shadowDir, index));
 			float realDepth = sampledDepth * light.End;
 			float currentDepth = length(dir);
 
-			float shadow = currentDepth - 0.005 < realDepth ? 1.0 : 0.0;
+			float shadow = (currentDepth - 0.005 < realDepth) ? 1.0 : 0.0;
 
 			pointLightsColor += lightDiffuse * shadow;
 		}
