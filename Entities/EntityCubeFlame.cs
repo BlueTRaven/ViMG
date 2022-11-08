@@ -55,7 +55,10 @@ namespace ViMG.Entities
 
             BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
-            if (!Main.camera.GetFrustum().Intersects(sphere))
+            LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
+                Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()),
+                sphere, ref light, ref isShadowmapped, true);
+            /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {
                 if (light != -1)
                 {
@@ -72,7 +75,7 @@ namespace ViMG.Entities
                     world.LightManager.AddShadowmapped(Position + new Vector3(Cube.CUBE_SCALE / 2f), 
                         Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 8f, Color.OrangeRed, out light, out isShadowmapped);
                 }
-            }
+            }*/
 
             if (world.GetTime() > time)
             {

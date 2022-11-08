@@ -9,7 +9,7 @@ namespace ViMG
 	public class LightManager
 	{
 		public const int MAX_LIGHTS = 1024 * 8;
-		public const int MAX_LIGHTS_SHADOWMAPPED = 4;
+		public const int MAX_LIGHTS_SHADOWMAPPED = 64;
 
 		private StructuredBuffer bufferLights;
 		private StructuredBuffer bufferShadowmappedLights;
@@ -88,8 +88,9 @@ namespace ViMG
 		private Light[] lights = new Light[MAX_LIGHTS];
 		private Light[] lightsShadowmapped = new Light[MAX_LIGHTS_SHADOWMAPPED];
 
-		private ushort[] lightVersions = new ushort[MAX_LIGHTS];
-		private ushort[] oldLightVersions = new ushort[MAX_LIGHTS];
+		private ushort[] lightVersions = new ushort[MAX_LIGHTS_SHADOWMAPPED];
+		private ushort[] oldLightVersions = new ushort[MAX_LIGHTS_SHADOWMAPPED];
+		private int[] oldShadowmapVersions = new int[MAX_LIGHTS_SHADOWMAPPED];
 
 		private Data[] datas = new Data[MAX_LIGHTS];
 		private Data[] datasShadowmapped = new Data[MAX_LIGHTS_SHADOWMAPPED];
@@ -132,7 +133,6 @@ namespace ViMG
 					lights[i] = new Light(position, start, end, color, true, i);
 
 					version++;
-					lightVersions[i]++;
 
 					numUsedLights++;
 
@@ -179,18 +179,26 @@ namespace ViMG
         {
 			if (lights[index].active)
             {
-				lightVersions[index]++;
 				lights[index] = new Light(position, start, end, color, false, index);
             }
         }
 
-		public void UpdateShadowmapped(int index, Vector3 position, float start, float end, Color color)
+		public void UpdateShadowmapped(int index, Vector3 position, float start, float end, Color color, bool markDirty = false)
 		{
 			if (lightsShadowmapped[index].active)
 			{
 				lightsShadowmapped[index] = new Light(position, start, end, color, true, index);
+
+				if (markDirty)
+					MarkDirty(index);
 			}
 		}
+
+		//Marks the shadowmapped light as dirty, forcing it to be re-calculated.
+		public void MarkDirty(int index)
+        {
+			lightVersions[index]++;
+        }
 
 		public void Remove(int index)
 		{
@@ -222,7 +230,9 @@ namespace ViMG
 			if (bufferShadowmappedLights == null)
 				bufferShadowmappedLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS_SHADOWMAPPED, BufferUsage.WriteOnly, ShaderAccess.Read);
 
-			//if (version != lastUploadedVersion)
+			//if version does not match last version, that means something was added and we need to reupload datas.
+			//for now, this happens if either normal or shadowmapped lights are updated.
+			if (version != lastUploadedVersion)
 			{
 				lastUploadedVersion = version;
 
@@ -241,7 +251,7 @@ namespace ViMG
 						lightShadowmappedMatrices[i][0] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(1, 0, 0), new Vector3(0, -1, 0)) * proj;
 						lightShadowmappedMatrices[i][1] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(-1, 0, 0), new Vector3(0, -1, 0)) * proj;
 						lightShadowmappedMatrices[i][2] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(0, -1, 0), new Vector3(0, 0, -1)) * proj;
-						lightShadowmappedMatrices[i][3] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(0, 1, 0), new Vector3(0, 0, -1)) * proj;
+						lightShadowmappedMatrices[i][3] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(0, 1, 0), new Vector3(0, 0, 1)) * proj;
 						lightShadowmappedMatrices[i][4] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(0, 0, 1), new Vector3(0, -1, 0)) * proj;
 						lightShadowmappedMatrices[i][5] = Matrix.CreateLookAt(lightsShadowmapped[i].position, lightsShadowmapped[i].position + new Vector3(0, 0, -1), new Vector3(0, -1, 0)) * proj;
 					}
@@ -260,8 +270,6 @@ namespace ViMG
 			effect.Parameters["Lights"].SetValue(bufferLights);
 			effect.Parameters["ShadowmappedLights"].SetValue(bufferShadowmappedLights);
 		}
-
-		private Matrix[] views = new Matrix[6];
 
 		public void Draw(GraphicsDevice device)
         {
@@ -282,6 +290,8 @@ namespace ViMG
 			}
         }
 
+		private ChunkPosition[] drawnChunks = new ChunkPosition[9 * 9 * 9];
+
 		public void DrawShadowmap(GraphicsDevice device, World world)
 		{
 			if (!Main.ENABLE_SHADOWS)
@@ -294,6 +304,8 @@ namespace ViMG
 
 			Effect effectDepth = Main.assetsManager.GetAsset<Effect>("depth_pointlight");
 
+			bool anyDrawn = false;
+
 			//To begin with, draw everything every frame. This is SLOW! Eventually we'll want to only draw these lights
 			//if something changes in them (i.e. chunk is dirty)
 			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
@@ -302,64 +314,85 @@ namespace ViMG
 
 				if (light.active)
 				{
-					effectDepth.Parameters["LightPosition"].SetValue(light.position);
-					effectDepth.Parameters["FarPlane"].SetValue(light.end);
-
-					for (int j = 0; j < 6; j++)
+					//We can determine the version of a chunk (whether or not it's changed from the last frame, compared to what the light knows)
+					//by accumulating the hash code of the chunk reference itself + a version number (which is incremented each time the chunk is meshed).
+					int versionSum = 0;
+					int drawnChunksCount = 0;
+					//TODO: fit drawn chunks more accurately. Right now we're drawing tons of unseen stuff
+					const int drawDist = 1;
+					for (int x = -drawDist; x <= drawDist; x++)
 					{
-						Matrix viewProj = lightShadowmappedMatrices[i][j];
-						effectDepth.Parameters["ViewProjection"].SetValue(viewProj);
-
-						device.SetRenderTarget(lightsCubemaps, (CubeMapFace)j, i);
-						//device.SetRenderTarget(lightsCubemaps, i * 6 + j);
-						device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
-
-						//TODO: fit drawn chunks more accurately. Right now we're drawing tons of unseen stuff
-						const int drawDist = 1;
-						for (int x = -drawDist; x <= drawDist; x++)
+						for (int y = -drawDist; y <= drawDist; y++)
 						{
-							for (int y = -drawDist; y <= drawDist; y++)
+							for (int z = -drawDist; z <= drawDist; z++)
 							{
-								for (int z = -drawDist; z <= drawDist; z++)
+								ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(light.position);
+								chunkPos.X += x;
+								chunkPos.Y += y;
+								chunkPos.Z += z;
+
+								drawnChunks[drawnChunksCount++] = chunkPos;
+
+								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									ChunkPosition chunkPos = ChunkPosition.WorldSpaceChunk(light.position);
-									chunkPos.X += x;
-									chunkPos.Y += y;
-									chunkPos.Z += z;
+									versionSum += world.ChunkManager.GetMeshVersionCode(chunkPos);
+								}
+							}
+						}
+					}
 
-									if (world.ChunkManager.IsInWorldBounds(chunkPos))
+					//Redraw the shadowmap if either:
+					//The light itself has changed
+					//Or the world around it has changed.
+					if (lightVersions[i] != oldLightVersions[i] || versionSum != oldShadowmapVersions[i])
+					{
+						oldLightVersions[i] = lightVersions[i];
+						oldShadowmapVersions[i] = versionSum;
+
+						anyDrawn = true;
+						effectDepth.Parameters["LightPosition"].SetValue(light.position);
+						effectDepth.Parameters["FarPlane"].SetValue(light.end);
+
+						for (int j = 0; j < 6; j++)
+						{
+							Matrix viewProj = lightShadowmappedMatrices[i][j];
+							effectDepth.Parameters["ViewProjection"].SetValue(viewProj);
+
+							device.SetRenderTarget(lightsCubemaps, (CubeMapFace)j, i);
+							//device.SetRenderTarget(lightsCubemaps, i * 6 + j);
+							device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
+
+							for (int k = 0; k < drawnChunksCount; k++)
+							{
+								ChunkPosition chunkPos = drawnChunks[k];
+
+								if (world.ChunkManager.IsInWorldBounds(chunkPos))
+								{
+									ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+									Matrix transform = world.ChunkManager.GetTransform(chunkPos);
+
+									if (mesh != null && !mesh.IsEmpty)
 									{
-										ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
-										Matrix transform = world.ChunkManager.GetTransform(chunkPos);
+										device.SetVertexBuffer(mesh.VBO);
+										device.Indices = mesh.IBO;
 
-										if (mesh != null && !mesh.IsEmpty)
+										effectDepth.Parameters["World"].SetValue(transform);
+
+										foreach (var pass in effectDepth.CurrentTechnique.Passes)
 										{
-											device.SetVertexBuffer(mesh.VBO);
-											device.Indices = mesh.IBO;
-
-											effectDepth.Parameters["World"].SetValue(transform);
-
-											foreach (var pass in effectDepth.CurrentTechnique.Passes)
-											{
-												pass.Apply();
-												device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IndexCount / 3);
-											}
+											pass.Apply();
+											device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IndexCount / 3);
 										}
 									}
 								}
 							}
 						}
 					}
-
-					Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
-					//Main.CubeLitEffect.Parameters["TexturesPointLights[" + i + "]"].SetValue(lightsCubemaps[i]);
 				}
-
-				//Main.CubeLitEffect.Parameters["Test"].SetValue(lightsCubemaps[0]);
 			}
 
-			Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
-			Main.WVP.SetView(Main.camera.GetViewMatrix());
+			if (anyDrawn)
+				Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
 		}
 	}
 }

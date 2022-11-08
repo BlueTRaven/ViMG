@@ -79,6 +79,7 @@ namespace ViMG
 			//public GenerationStep genStep;
 			// If true, the mesh is dirty and must be regenerated (or generated.)
 			public bool meshDirty;
+			public int meshVersion;
 
 			// In the queue to be generated
 			public bool genQueued;
@@ -96,11 +97,17 @@ namespace ViMG
 				transform = Matrix.Identity;
 
 				meshDirty = true;
+				meshVersion = 0;
 				//genStep = GenerationStep.Broad;
 				genQueued = false;
 				meshQueued = false;
 
 				valid = true;
+			}
+
+			public int GetMeshVersionCode()
+            {
+				return chunk.GetHashCode() + meshVersion;
 			}
 		}
 
@@ -532,7 +539,7 @@ namespace ViMG
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			ManagedChunk mc = layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(LayerRelativePosition(pos))];
+			ref ManagedChunk mc = ref layerLookupTable[LayerFromPos(pos)].chunks[IndexFromPos(LayerRelativePosition(pos))];
 
 			//First one must have forceUpdate = true,
 			//but all subsequent mesh generations should be false.
@@ -543,6 +550,8 @@ namespace ViMG
 			mc.meshes[(int)Cube.RenderPass.Air] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);
 			mc.meshDirty = false;
 			mc.meshQueued = false;
+
+			mc.meshVersion++;
 
 			watch.Stop();
 
@@ -587,6 +596,11 @@ namespace ViMG
 
 			return layerLookupTable[layer].chunks[index].meshes[(int)pass];
 		}
+
+		public int GetMeshVersionCode(ChunkPosition position)
+        {
+			return GetManagedChunk(position).GetMeshVersionCode();
+        }
 
 		public bool IsInWorldBounds(Vector3 position)
 		{
