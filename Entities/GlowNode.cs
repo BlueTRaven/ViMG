@@ -15,7 +15,7 @@ namespace ViMG.Entities
 	{
 		private float radius;
 		private float fade;
-		private Color color;
+		private Vector4 color;
 
 		private int light = -1;
 
@@ -28,7 +28,7 @@ namespace ViMG.Entities
 
         }
 
-		public GlowNode(CubePosition position, float radius, float fade, Color color)
+		public GlowNode(CubePosition position, float radius, float fade, Vector4 color)
 		{
 			TrackedPosition = position;
 			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
@@ -165,7 +165,7 @@ namespace ViMG.Entities
             base.OnSave(saveBytes);
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
-			SaveHelper.SaveVector4(saveBytes, color.ToVector4());
+			SaveHelper.SaveVector4(saveBytes, color);
 			SaveHelper.SaveFloat32(saveBytes, radius);
 			SaveHelper.SaveFloat32(saveBytes, fade);
         }
@@ -176,7 +176,7 @@ namespace ViMG.Entities
 
 			int index = 0;
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-			color = new Color(SaveHelper.LoadVector4(loadBytes, ref index));
+			color = SaveHelper.LoadVector4(loadBytes, ref index);
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 			fade = SaveHelper.LoadFloat32(loadBytes, ref index);
 

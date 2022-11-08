@@ -69,11 +69,11 @@ namespace ViMG
                 {
                     if (allowShadowmapped)
                         lightManager.AddShadowmapped(lightInfo.Position,
-                            lightInfo.Start, lightInfo.End, new Color(lightInfo.Color), out lightIndex, out lightIsShadowmapped);
+                            lightInfo.Start, lightInfo.End, lightInfo.Color, out lightIndex, out lightIsShadowmapped);
                     else
                     {
                         lightIndex = lightManager.Add(lightInfo.Position,
-                          lightInfo.Start, lightInfo.End, new Color(lightInfo.Color));
+                          lightInfo.Start, lightInfo.End, lightInfo.Color);
                         lightIsShadowmapped = false;
                     }
                 }
@@ -91,7 +91,7 @@ namespace ViMG
                                 bool markDirty = false;
                                 if (lightInfo.End != lightManager.GetShadowmapped(lightIndex).end || update == LightUpdateType.UpdateDirty)
                                     markDirty = true;
-                                lightManager.UpdateShadowmapped(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, new Color(lightInfo.Color), markDirty);
+                                lightManager.UpdateShadowmapped(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, lightInfo.Color, markDirty);
                             }
 
                             //if we're outside the shadowmapping LOD distance,
@@ -101,14 +101,14 @@ namespace ViMG
                                 lightManager.RemoveShadowmapped(lightIndex);
 
                                 lightIndex = lightManager.Add(lightInfo.Position,
-                                    lightInfo.Start, lightInfo.End, new Color(lightInfo.Color));
+                                    lightInfo.Start, lightInfo.End, lightInfo.Color);
                                 lightIsShadowmapped = false;
                             }
                         }
                         else
                         {
                             if (update != LightUpdateType.DontUpdate)
-                                lightManager.Update(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, new Color(lightInfo.Color));
+                                lightManager.Update(lightIndex, lightInfo.Position, lightInfo.Start, lightInfo.End, lightInfo.Color);
 
                             //if we're inside the shadowmapping LOD distance,
                             //attempt to transition into a shadowmapped light.
@@ -117,7 +117,7 @@ namespace ViMG
                                 lightManager.Remove(lightIndex);
 
                                 lightManager.AddShadowmapped(lightInfo.Position,
-                                    lightInfo.Start, lightInfo.End, new Color(lightInfo.Color), out lightIndex, out lightIsShadowmapped);
+                                    lightInfo.Start, lightInfo.End, lightInfo.Color, out lightIndex, out lightIsShadowmapped);
                             }
                         }
                     }

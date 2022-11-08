@@ -37,7 +37,7 @@ namespace ViMG
 					this.position = light.position;
 					this.start = light.start;
 					this.end = light.end;
-					this.color = light.color.ToVector4();
+					this.color = light.color;
 				}
 			}
 		}
@@ -47,14 +47,14 @@ namespace ViMG
 			public readonly Vector3 position;
 			public readonly float start;
 			public readonly float end;
-			public readonly Color color;
+			public readonly Vector4 color;
 
 			public readonly bool isShadowmapped;
 
 			public readonly int index;
 			public readonly bool active;
 
-			public Light(Vector3 position, float start, float end, Color color, bool isShadowmapped, int index)
+			public Light(Vector3 position, float start, float end, Vector4 color, bool isShadowmapped, int index)
 			{
 				this.position = position;
 				this.start = start;
@@ -125,7 +125,7 @@ namespace ViMG
 			return lightsShadowmapped[index];
         }
 
-		public int Add(Vector3 position, float start, float end, Color color)
+		public int Add(Vector3 position, float start, float end, Vector4 color)
 		{
 			//Early-out - we have no more light slots available.
 			if (numUsedLights >= MAX_LIGHTS)
@@ -148,7 +148,7 @@ namespace ViMG
 			return -1;
 		}
 
-		public void AddShadowmapped(Vector3 position, float start, float end, Color color, out int shadowmappedLightIndex, out bool success)
+		public void AddShadowmapped(Vector3 position, float start, float end, Vector4 color, out int shadowmappedLightIndex, out bool success)
 		{
 			//Attempt to allocate a non-shadowmapped light if we're above the max shadowmapped lights.
 			if (numUsedLightsShadowmapped >= MAX_LIGHTS_SHADOWMAPPED)
@@ -180,7 +180,7 @@ namespace ViMG
 			success = false;
 		}
 
-		public void Update(int index, Vector3 position, float start, float end, Color color)
+		public void Update(int index, Vector3 position, float start, float end, Vector4 color)
         {
 			if (lights[index].active)
             {
@@ -189,7 +189,7 @@ namespace ViMG
             }
         }
 
-		public void UpdateShadowmapped(int index, Vector3 position, float start, float end, Color color, bool markDirty = false)
+		public void UpdateShadowmapped(int index, Vector3 position, float start, float end, Vector4 color, bool markDirty = false)
 		{
 			if (lightsShadowmapped[index].active)
 			{

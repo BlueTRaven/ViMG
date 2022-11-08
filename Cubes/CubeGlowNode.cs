@@ -21,7 +21,7 @@ namespace ViMG.Cubes
             base.PostChunkGen(chunkData, position);
 
 			chunkData.GetChunk().GetWorld().EntityManager.Add(new GlowNode(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 5, CUBE_SCALE * 4,
-				new Color(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
 		}
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -30,7 +30,7 @@ namespace ViMG.Cubes
 
 			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, Color.White));
 			player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, 
-				new Color(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
 			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE, new Color(Color.Red, 100)));
 		}
 

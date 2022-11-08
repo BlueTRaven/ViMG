@@ -37,7 +37,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-            light = world.LightManager.Add(Position, lightExtents.X, lightExtents.Y, new Color(lightColor));
+            light = world.LightManager.Add(Position, lightExtents.X, lightExtents.Y, lightColor);
         }
 
         public bool OnInteract(Player player)

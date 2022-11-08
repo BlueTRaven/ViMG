@@ -438,8 +438,8 @@ namespace ViMG
 					player.Kill();
 
 				if (lavaLight == -1)
-					lavaLight = LightManager.Add(lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed);
-				else LightManager.Update(lavaLight, lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed);
+					lavaLight = LightManager.Add(lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
+				else LightManager.Update(lavaLight, lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
 			}
 			else
 			{

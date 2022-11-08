@@ -268,7 +268,7 @@ namespace ViMG.Entities
 					projectiles[i].light = world.LightManager.Add(projectiles[i].position, 
 						projectiles[i].visStats.lightExtents.X, 
 						projectiles[i].visStats.lightExtents.Y, 
-						new Color(projectiles[i].visStats.lightColor));
+						projectiles[i].visStats.lightColor);
                 }
 
 				projectiles[i].timeLeft -= (float)deltaTime;
@@ -294,7 +294,7 @@ namespace ViMG.Entities
 				if (projectiles[i].light != -1)
 					world.LightManager.Update(projectiles[i].light, projectiles[i].position, 
 						projectiles[i].visStats.lightExtents.X, projectiles[i].visStats.lightExtents.Y, 
-						new Color(projectiles[i].visStats.lightColor));
+						projectiles[i].visStats.lightColor);
 
 				for (int x = -1; x <= 1; x++)
 				{

@@ -80,7 +80,7 @@ namespace ViMG.Entities
 			craftTimer = 3f;
 
 			if (light == -1)
-				light = world.LightManager.Add(Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.OrangeRed);
+				light = world.LightManager.Add(Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.OrangeRed.ToVector4());
         }
 
 		public override void OnSave(List<byte> saveBytes)

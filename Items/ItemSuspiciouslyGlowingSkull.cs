@@ -31,7 +31,7 @@ namespace ViMG.Items
                 light = -1;
             }
 
-            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 8, Color.Red * 0.4f);
+            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 8, Color.Red.ToVector4() * 0.4f);
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)

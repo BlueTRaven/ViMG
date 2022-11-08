@@ -1,0 +1,94 @@
+﻿using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ViMG.Cubes;
+using BrUtility;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace ViMG.Entities
+{
+    public class LightStressTest : Entity
+    {
+        const float RADIUS_XZ = Cube.CUBE_SCALE * 16;
+        const float RADIUS_Y = Cube.CUBE_SCALE * 2f;
+
+        private int[] lights;
+        private bool[] shadowmapped;
+        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+
+        public LightStressTest(Vector3 position)
+        {
+            this.Position = position;
+
+            lights = new int[64];
+            shadowmapped = new bool[64];
+
+            Array.Fill(lights, -1);
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+            for (int i = 0; i < 64; i++)
+            {
+                float t = ((world.GetTime() + 0.03f * i) % 2f) / 2f;
+                float zt = ((world.GetTime() + 0.03f * i + 0.3f) % 2f) / 2f;
+
+                float x = MathF.Cos(MathF.PI * 2 * t) * RADIUS_XZ;
+                float y = MathF.Sin(MathF.PI * 2 * t) * RADIUS_Y;
+                float z = -MathF.Sin(MathF.PI * 2 * zt) * RADIUS_XZ;
+
+                Vector3 lightPos = Position + new Vector3(x, y, z);
+
+                if (lights[i] == -1)
+                {
+                    Vector4 color = new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 50);
+                    world.LightManager.AddShadowmapped(lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color, out lights[i], out shadowmapped[i]);
+                }
+                else
+                {
+                    if (shadowmapped[i])
+                    {
+                        Vector4 color = world.LightManager.GetShadowmapped(lights[i]).color;
+                        world.LightManager.UpdateShadowmapped(lights[i], lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color, true);
+                    }
+                    else
+                    {
+                        Vector4 color = world.LightManager.Get(lights[i]).color;
+                        world.LightManager.Update(lights[i], lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color);
+                    }
+                }
+            }
+        }
+
+        public override void Draw(GraphicsDevice device, Effect effect)
+        {
+            base.Draw(device, effect);
+
+            if (mesh.VBO == null)
+                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+
+            for (int i = 0; i < 64; i++)
+            {
+                float t = ((world.GetTime() + 0.03f * i) % 2f) / 2f;
+                float zt = ((world.GetTime() + 0.03f * i + 0.3f) % 2f) / 2f;
+
+                float x = MathF.Cos(MathF.PI * 2 * t) * RADIUS_XZ;
+                float y = MathF.Sin(MathF.PI * 2 * t) * RADIUS_Y;
+                float z = -MathF.Sin(MathF.PI * 2 * zt) * RADIUS_XZ;
+
+                Vector3 lightPos = Position + new Vector3(x, y, z);
+
+                Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("glow_node"),
+                    DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                    Matrix.CreateTranslation(lightPos), null));
+            }
+        }
+    }
+}
