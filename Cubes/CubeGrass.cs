@@ -22,20 +22,32 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1));
 		}
 
+		private Cube dirt;
 		//No down Y as that is guaranteed to be covered by this cube, and thus not valid to spread to.
-		private CubePosition[] offsets = new CubePosition[5]
+		private CubePosition[] offsets = new CubePosition[13]
 		{
 			new CubePosition(-1, 0, 0),
 			new CubePosition(1, 0, 0),
 			new CubePosition(0, 1, 0),
 			new CubePosition(0, 0, -1),
-			new CubePosition(0, 0, 1)
+			new CubePosition(0, 0, 1),
+			new CubePosition(-1, 1, 0),
+			new CubePosition(-1, -1, 0),
+			new CubePosition(1, 1, 0),
+			new CubePosition(1, -1, 0),
+			new CubePosition(0, 1, -1),
+			new CubePosition(0, -1, -1),
+			new CubePosition(0, 1, 1),
+			new CubePosition(0, -1, 1),
 		};
         public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
         {
             base.OnRandomUpdate(world, manager, position);
 
-			for (int i = 0; i < 5; i++) 
+			if (dirt == null)
+				dirt = Main.Registry.CubeRegistry.Get("dirt");
+
+			for (int i = 0; i < 13; i++) 
 			{
 				CubePosition offsetPosition = position + offsets[i];
 
@@ -47,11 +59,11 @@ namespace ViMG.Cubes
 
 					if (instance.valid)
 					{
-						if (instance.cubeId == Main.Registry.CubeRegistry.Get("dirt").Id)
+						if (instance.cubeId == dirt.Id)
 						{
 							//check the block above to see if 
 							CubePosition abovePosition = offsetPosition + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-							Chunk aboveChunk = manager.GetChunk(position);
+							Chunk aboveChunk = manager.GetChunk(abovePosition);
 
 							if (aboveChunk != null && aboveChunk.Initialized)
                             {
@@ -65,7 +77,7 @@ namespace ViMG.Cubes
                                     {
 										//Set self to dirt.
 										//We don't need to check to see if the chunk is valid as only valid chunks have random cube updates performed in them.
-										manager.GetChunk(position).GetData().SetCube(position, Main.Registry.CubeRegistry.Get("dirt").Id);
+										manager.GetChunk(position).GetData().SetCube(position, dirt.Id);
                                     }
                                 }
                             }
@@ -73,6 +85,20 @@ namespace ViMG.Cubes
 					}
 				}
 			}
+        }
+
+        public override void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+        {
+            base.OnAdjacentUpdated(parent, position, updatingParent, updating, updatedId);
+
+			//top block is updating.
+			if (updating.Y == position.Y + 1)
+            {
+				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Touchable)
+                {
+					parent.SetCubeFast(position.InChunkSpace(parent.GetChunk()), dirt.Id);
+                }
+            }
         }
     }
 }

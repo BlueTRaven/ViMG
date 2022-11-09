@@ -42,5 +42,115 @@ namespace ViMG.Cubes
 
             return base.GetSourceRect(pass, world, pos, face);
         }
+
+        private Cube mushroomStem;
+        private Cube mushroomTop;
+        private Cube mushroomSmall;
+
+        private CubePosition[] placeOffsets = new CubePosition[8]
+        {
+            new CubePosition(1, 1, 0),
+            new CubePosition(1, 1, 1),
+            new CubePosition(0, 1, 1),
+            new CubePosition(-1, 1, 0),
+            new CubePosition(-1, 1, 1),
+            new CubePosition(-1, 1, -1),
+            new CubePosition(1, 1, -1),
+            new CubePosition(0, 1, -1),
+        };
+
+        public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
+        {
+            base.OnRandomUpdate(world, manager, position);
+
+            if (mushroomStem == null)
+            {
+                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
+                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");
+            }
+
+            //Don't try to spawn a mushroom most of the time
+            if (Main.random.NextFloat() >= 0.05f)
+                return;
+
+            List<CubePosition> positionsWeveChecked = new List<CubePosition>();
+
+            //check the block above to see if we can place a mushroom or other block there
+            CubePosition abovePosition = position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
+            if (ChunkHelper.CanPlaceIfNonSolid(manager, abovePosition, out Chunk offsetChunk, out Cube offsetCube))
+            {
+                bool smallMushroom = Main.random.NextCoinFlip();
+
+                if (smallMushroom)
+                {
+                    offsetChunk.GetData().SetCube(abovePosition, mushroomSmall.Id);
+                }
+                else
+                {
+                    int size = Main.random.Next(3, 8);
+                    bool canPlaceBigMushroom = true;
+                    for (int i = 0; i < placeOffsets.Length; i++)
+                    {
+                        //First, check the surrounding blocks just above to see if we can place a mushroom.
+                        CubePosition offsetPosition = position + placeOffsets[i];
+                        positionsWeveChecked.Add(offsetPosition);
+                        if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
+                        {
+                            canPlaceBigMushroom = false;
+                            break;
+                        }
+                    }
+
+                    if (canPlaceBigMushroom)
+                    {
+                        for (int i = 1; i < size + 1; i++)
+                        {
+                            CubePosition offsetPosition = position + new CubePosition(0, i, 0);
+                            positionsWeveChecked.Add(offsetPosition);
+                            if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
+                            {
+                                canPlaceBigMushroom = false;
+                                break;
+                            }
+                        }
+
+                    }
+
+                    if (canPlaceBigMushroom)
+                    {
+                        for (int i = 0; i < placeOffsets.Length; i++)
+                        {
+                            CubePosition offsetPosition = position + placeOffsets[i] + new CubePosition(0, size, 0);
+                            positionsWeveChecked.Add(offsetPosition);
+                            if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
+                            {
+                                canPlaceBigMushroom = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (canPlaceBigMushroom)
+                    {
+                        for (int i = 1; i < size + 1; i++)
+                        {
+                            CubePosition offsetPosition = position + new CubePosition(0, i, 0);
+
+                            if (i < size)
+                                manager.GetChunk(offsetPosition).GetData().SetCube(offsetPosition, mushroomStem.Id);
+                            else manager.GetChunk(offsetPosition).GetData().SetCube(offsetPosition, mushroomTop.Id);
+                        }
+
+                        for (int i = 0; i < placeOffsets.Length; i++)
+                        {
+                            CubePosition offsetPosition = position + placeOffsets[i] + new CubePosition(0, size - 1, 0);
+
+                            manager.GetChunk(offsetPosition).GetData().SetCube(offsetPosition, mushroomTop.Id);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -229,5 +229,22 @@ namespace ViMG
 				default: return null;
 			}
         }
+
+		public static bool CanPlaceIfNonSolid(ChunkManager manager, CubePosition positionInCubeSpace, out Chunk offsetChunk, out Cube offsetCube)
+        {
+			offsetChunk = manager.GetChunk(positionInCubeSpace);
+
+			if (offsetChunk != null && offsetChunk.Initialized)
+			{
+				offsetCube = offsetChunk.GetData().GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				if (!offsetCube.Solid)
+				{
+					return true;
+				}
+			}
+
+			offsetCube = null;
+			return false;
+		}
 	}
 }

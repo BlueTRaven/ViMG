@@ -90,6 +90,7 @@ namespace ViMG
 		public const bool DO_DETAIL = true;
 		public const bool TRANSPARENT_ORES = false;
 		public const bool ENABLE_ENT_SPAWNING = true;
+		public const int RANDOM_UPDATES_PER_CHUNK = 1;
 
 		public static bool Exit = false;
 

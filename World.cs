@@ -486,26 +486,30 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
-			/*foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
-			{
-				Chunk chunk = ChunkManager.GetChunk(loadedPosition);
+            foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
+            {
+                Chunk chunk = ChunkManager.GetChunk(loadedPosition);
 
-				if (chunk != null && chunk.Initialized)
-				{
-					int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
-					int id = chunk.GetData().GetAll()[num];
-
-					Cube cube = Main.Registry.CubeRegistry.Get(id);
-
-					if (cube != null)
+                if (chunk != null && chunk.Initialized)
+                {
+					ushort[] data = chunk.GetData().GetAll();
+					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
 					{
-						Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point3d);
-						cube.OnRandomUpdate(this, ChunkManager, new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
-					}
-				}
-			}*/
+						int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+						int id = data[num];
 
-			PassiveSpawnerManager.Update(deltaTime, this);
+						Cube cube = Main.Registry.CubeRegistry.Get(id);
+
+						if (cube != null)
+						{
+							Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point3d);
+							cube.OnRandomUpdate(this, ChunkManager, new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
+						}
+					}
+                }
+            }
+
+            PassiveSpawnerManager.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
