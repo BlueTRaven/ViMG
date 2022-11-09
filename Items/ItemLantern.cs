@@ -19,7 +19,7 @@ namespace ViMG.Items
         static ItemLantern()
         {
             color = Color.Orange.ToVector4();
-            color.W = 12;
+            color.W = 1.5f;
         }
 
         public ItemLantern() : base("lantern", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 64, 16, 16))
@@ -61,7 +61,9 @@ namespace ViMG.Items
 
             if (light != -1)
             {
-                player.GetWorld().LightManager.Remove(light);
+                if (shadowmapped)
+                    player.GetWorld().LightManager.RemoveShadowmapped(light);
+                else player.GetWorld().LightManager.Remove(light);
                 light = -1;
             }
         }

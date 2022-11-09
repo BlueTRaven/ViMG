@@ -18,6 +18,16 @@ namespace ViMG.Rendering
         private Effect downsampleEffect;
         private Effect upsampleEffect;
 
+        private BlendState bs = new BlendState()
+        {
+            ColorBlendFunction = BlendFunction.Add,
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.One,
+            AlphaBlendFunction = BlendFunction.Add,
+            AlphaSourceBlend = Blend.One,
+            AlphaDestinationBlend = Blend.One,
+        };
+
         public RendererBloom(GraphicsDevice device)
         {
             this.device = device;
@@ -43,7 +53,7 @@ namespace ViMG.Rendering
             {
                 mipResolution = new Point(mipResolution.X / 2, mipResolution.Y / 2);
 
-                mips[i] = new RenderTarget2D(device, mipResolution.X, mipResolution.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                mips[i] = new RenderTarget2D(device, mipResolution.X, mipResolution.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             }
         }
 
@@ -51,6 +61,9 @@ namespace ViMG.Rendering
         {
             SamplerState oldSamplerState = device.SamplerStates[0];
             device.SamplerStates[0] = SamplerState.LinearClamp;
+
+            BlendState oldBlendState = device.BlendState;
+            device.BlendState = BlendState.AlphaBlend;
 
             downsampleEffect.Parameters["Texture"].SetValue(sourceTexture);
             downsampleEffect.Parameters["SrcResolution"].SetValue(new Vector2(sourceTexture.Width, sourceTexture.Height));
@@ -65,10 +78,12 @@ namespace ViMG.Rendering
                 downsampleEffect.Parameters["SrcResolution"].SetValue(new Vector2(mips[i].Width, mips[i].Height));
             }
 
-            upsampleEffect.Parameters["FilterRadius"].SetValue(0.001f);
+            upsampleEffect.Parameters["FilterRadius"].SetValue(0.0001f);
 
-            BlendState oldBlendState = device.BlendState;
-            device.BlendState = BlendState.Additive;
+            device.BlendState = bs;
+
+            if (Main.inputManager.IsPressed(Microsoft.Xna.Framework.Input.Keys.O))
+                device.BlendState = BlendState.Additive;
 
             for (int i = NUM_MIPS - 1; i >= 0; i--)
             {

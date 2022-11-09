@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,6 +27,11 @@ namespace ViMG
             this.X = x;
             this.Y = y;
             this.Z = z;
+        }
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(X, Y, Z);
         }
 
         /// <summary>

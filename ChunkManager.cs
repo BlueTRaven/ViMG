@@ -154,6 +154,7 @@ namespace ViMG
 			layerLookupTable = new Layer[2]
 			{
 				new Layer(0, new ChunkGeneratorIsland(0), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ),
+				//new Layer(0, new ChunkGeneratorStructurePermutations(0), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ),
 				new Layer(1, new ChunkGeneratorFlat(1), sizeInChunksXZ * layerSizeInChunksY * sizeInChunksXZ)  //TODO
 			};
 

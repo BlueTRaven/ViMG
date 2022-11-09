@@ -167,7 +167,8 @@ namespace ViMG.Generation
                     int sliceStart = i;
                     int sliceEnd = i + numPerBatch;
 
-                    StructureTaskState state = new StructureTaskState(sliceStart, sliceEnd, batches, new Random(seed + i * 128 / 3), chunkManager);
+                    //i + 1 because Random cannot be seeded with 0?
+                    StructureTaskState state = new StructureTaskState(sliceStart, sliceEnd, batches, new Random(seed + (i + 1) * 128 / 3), chunkManager);
 
                     Task<Structure[]> task = new Task<Structure[]>(GenerateOneWrapper, state);
                     batches[i / numPerBatch] = new StructureGeneratorBatch(task);

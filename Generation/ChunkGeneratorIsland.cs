@@ -59,6 +59,7 @@ namespace ViMG.Generation
 		private const int ISLAND_RANGE = ISLAND_TOP - SEA_FLOOR;
 
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DAltarCaves;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DOrangeShroomCaves;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DWaterCaves;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreIron;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreGlow;
@@ -96,7 +97,8 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(56, 8);
+			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
+			structureBatchesGOL3DOrangeShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
 			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
 			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
 				3, 6, Seed, null).Generate(18, 3);
@@ -266,7 +268,16 @@ namespace ViMG.Generation
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
 				
-				Structure structure = structureBatchesGOL3DAltarCaves.Get(GetRandom().Next(0, structureBatchesGOL3DAltarCaves.num));
+				Structure structure = structureBatchesGOL3DAltarCaves.Get(i % structureBatchesGOL3DAltarCaves.num);
+
+				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+			}
+
+			for (int i = 0; i < 128; i++)
+			{
+				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
+
+				Structure structure = structureBatchesGOL3DOrangeShroomCaves.Get(i % structureBatchesGOL3DOrangeShroomCaves.num);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}

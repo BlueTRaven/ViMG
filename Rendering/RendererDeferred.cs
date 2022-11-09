@@ -164,8 +164,6 @@ namespace ViMG.Rendering
 
         private Effect DEBUGEffectVisualizeCubemap;
 
-        public bool BloomEnabled;
-
         private BasicEffect EffectCopy;
         private SamplerState shadowBorderClampSS;
         private SamplerState bilinearClampSS;
@@ -725,7 +723,7 @@ namespace ViMG.Rendering
                 }
             }
 
-            if (BloomEnabled)
+            if (Options.BloomEnabled)
                 bloom.Draw(diffuse);
 
             device.BlendState = noAlphaBlendBS;

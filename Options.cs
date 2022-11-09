@@ -56,7 +56,9 @@ namespace ViMG
         public static FXAAQuality CurrentFXAAQuality = FXAAQuality.FXAA_HIGH;//FXAA_INVALID;
 
         public static bool UseInstancedLightVolumes = true;
-        
+
+        public static bool BloomEnabled;
+
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;

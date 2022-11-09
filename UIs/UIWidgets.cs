@@ -22,6 +22,8 @@ namespace ViMG.UIs
 
             if (UI.MakeButton(checkboxButton).clickLeft)
                 checkedValue = !checkedValue;
+
+            UI.EndParent();
         }
 
         private static int sliderTrackingId = -1;

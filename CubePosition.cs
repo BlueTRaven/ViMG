@@ -31,6 +31,12 @@ namespace ViMG
 			this.Coord = coord;
 		}
 
+		public CubePosition(Point3D point, CoordinateSpace coord = CoordinateSpace.CubeSpace) : 
+			this(point.X, point.Y, point.Z, coord)
+        {
+
+        }
+
 		public CubePosition InChunkSpace(Chunk chunk)
 		{
 			if (Coord == CoordinateSpace.ChunkSpace)
