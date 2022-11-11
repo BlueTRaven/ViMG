@@ -59,7 +59,7 @@ namespace ViMG.Generation
 		private const int ISLAND_RANGE = ISLAND_TOP - SEA_FLOOR;
 
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DAltarCaves;
-		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DOrangeShroomCaves;
+		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DShroomCaves;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DWaterCaves;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreIron;
 		private StructureGenerator.StructureGeneratorBatchCollection structureBatchesOreGlow;
@@ -98,7 +98,7 @@ namespace ViMG.Generation
 			}
 
 			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
-			structureBatchesGOL3DOrangeShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
+			structureBatchesGOL3DShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
 			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
 			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
 				3, 6, Seed, null).Generate(18, 3);
@@ -264,11 +264,14 @@ namespace ViMG.Generation
 				manager.world.PointsOfInterest.Add(new PointOfInterest(new CubePosition(x, layerYOffsetInCubes + 39, z), "geode", 1));
 			}
 
+			List<Rectangle3DI> cavePositions = new List<Rectangle3DI>();
+
 			for (int i = 0; i < 132; i++)
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
 				
 				Structure structure = structureBatchesGOL3DAltarCaves.Get(i % structureBatchesGOL3DAltarCaves.num);
+				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
@@ -277,7 +280,8 @@ namespace ViMG.Generation
 			{
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
 
-				Structure structure = structureBatchesGOL3DOrangeShroomCaves.Get(i % structureBatchesGOL3DOrangeShroomCaves.num);
+				Structure structure = structureBatchesGOL3DShroomCaves.Get(i % structureBatchesGOL3DShroomCaves.num);
+				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
@@ -287,9 +291,15 @@ namespace ViMG.Generation
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
 
 				Structure structure = structureBatchesGOL3DWaterCaves.Get(GetRandom().Next(0, structureBatchesGOL3DWaterCaves.num));
+				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
 				StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, manager.GetChunk(randomPos), structure, randomPos);
 			}
+
+			Console.WriteLine("Generating cave connections...");
+			for (int i = 0; i < 800; i++)
+				GenerateCaveConnection(manager, cavePositions);
+			Console.WriteLine("Done.");
 
 			//copper: 82037
 			for (int i = 0; i < 80000; i++) 
@@ -349,7 +359,7 @@ namespace ViMG.Generation
                     {
 						CubePosition actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
 
-						if (CanPlace(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
+						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
 							manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
 
@@ -379,7 +389,7 @@ namespace ViMG.Generation
 
 				if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					if (CanPlace(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
+					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
 
 						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
@@ -420,7 +430,7 @@ namespace ViMG.Generation
 						else
 							actualGenPos = solidDown.Get() + new CubePosition(0, 1, 0);
 
-						if (CanPlace(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
+						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
 							positions[lastPosition++] = actualGenPos;
 							if (which < 2)
@@ -459,7 +469,7 @@ namespace ViMG.Generation
 						//We can ensure any that anything <= pos.Y is an air block (since we traveled down to get to solidDown); not so if it's above it.
 						if (actualGenPos.Y <= pos.Y)
 						{
-							if (CanPlace(positions, lastPosition, actualGenPos, 32 * Cube.CUBE_SCALE))
+							if (IsNotNearAny(positions, lastPosition, actualGenPos, 32 * Cube.CUBE_SCALE))
 							{
 								positions[lastPosition++] = actualGenPos;
 
@@ -508,7 +518,223 @@ namespace ViMG.Generation
 			}
 		}
 
-		private bool CanPlace(Span<CubePosition> alreadyPlacedPositions, int lastPlaced, CubePosition placeAt, float minDistance)
+		private void GenerateCaveConnection(ChunkManager manager, List<Rectangle3DI> cavePositions)
+		{
+			int startCaveIndex = GetRandom().Next(0, cavePositions.Count);
+
+			List<CubePosition> airs = ChunkHelper.SelectInArea(manager, cavePositions[startCaveIndex], 0);
+			if (airs.Count <= 0)
+				return;
+			CubePosition startPosition = airs[GetRandom().Next(0, airs.Count)];
+
+			//Find the nearest 3 CubePositions to this point.
+			int ni = 0;
+			Span<int> nearests = stackalloc int[3];
+
+			for (int i = 0; i < 3; i++)
+			{
+				int currentPosition = -1;
+				float currentDistance = float.MaxValue;
+
+				for (int j = 0; j < cavePositions.Count; j++)
+				{
+					//So we don't compare against self
+					if (startCaveIndex == j)
+						continue;
+
+					CubePosition pos = new CubePosition(cavePositions[j].Position);
+					pos = startPosition - pos;
+
+					float compareDistance = MathF.Sqrt((pos.X * pos.X) + (pos.Y * pos.Y) + (pos.Z * pos.Z));
+
+					//Make sure this value isn't already used.
+					bool isUsed = false;
+					for (int k = 0; k < ni; k++)
+					{
+						if (nearests[k] == j)
+						{
+							isUsed = true;
+							break;
+						}
+					}
+
+					if (!isUsed && compareDistance > 16 && compareDistance < currentDistance)
+					{
+						currentDistance = compareDistance;
+						currentPosition = j;
+					}
+				}
+
+				nearests[ni++] = currentPosition;
+			}
+
+			//all that just to choose between one of the three closest caves.
+			int nearestIndex = GetRandom().Next(0, 3);
+			airs = ChunkHelper.SelectInArea(manager, cavePositions[nearests[nearestIndex]], 0);
+			if (airs.Count <= 0)
+				return;
+			CubePosition endPosition = airs[GetRandom().Next(0, airs.Count)];//new CubePosition(cavePositions[nearests[GetRandom().Next(0, 3)]].Position);
+			Vector3 dir = new Vector3(endPosition.X - startPosition.X, endPosition.Y - startPosition.Y, endPosition.Z - startPosition.Z);
+
+			const float RADIUS_MIN = 2;
+			const float RADIUS_MAX = 4;
+			const float PERTURBATION = 8;
+			int numSegments = (int)(dir.Length() % 8); 
+
+			CubePosition[] segments = new CubePosition[numSegments];
+			float[] radii = new float[numSegments];
+
+			Vector3 dirNorm = Vector3.Normalize(dir);
+			dir /= numSegments;
+			for (int i = 0; i < numSegments; i++)
+			{
+				Vector3 segment = dir * (i + 1);
+
+				if (i > 0 && i < numSegments - 1)
+				{
+					//https://answers.unity.com/questions/1618126/given-a-vector-how-do-i-generate-a-random-perpendi.html
+					//Choose a random perpendicular vector to dir
+					//We choose a perpendicular so as to not end up backtracking on ourselves.
+					float du = Vector3.Dot(dirNorm, Vector3.Up);
+					float df = Vector3.Dot(dirNorm, Vector3.Forward);
+					Vector3 angle = MathF.Abs(du) < MathF.Abs(df) ? Vector3.Up : Vector3.Forward;
+
+					Vector3 perp = Vector3.Cross(angle, dirNorm);
+
+					float rotateBy = GetRandom().NextFloat(0, 360);
+					perp = Vector3.Transform(perp, Quaternion.CreateFromAxisAngle(dirNorm, MathHelper.ToRadians(rotateBy)));
+
+					segment += perp * GetRandom().NextFloat(0, PERTURBATION);
+					/*segment += new Vector3(GetRandom().NextFloat(-PERTURBATION, PERTURBATION),
+						GetRandom().NextFloat(-PERTURBATION, PERTURBATION),
+						GetRandom().NextFloat(-PERTURBATION, PERTURBATION));*/
+				}
+
+				segments[i] = new CubePosition(startPosition.X + (int)segment.X, startPosition.Y + (int)segment.Y, startPosition.Z + (int)segment.Z);
+				radii[i] = GetRandom().NextFloat(RADIUS_MIN, RADIUS_MAX);
+			}
+
+			Color color = new Color(GetRandom().NextFloat(), GetRandom().NextFloat(), GetRandom().NextFloat(), 1f);
+			Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
+            {
+				Position = startPosition.InWorldSpace(null),
+				Color = color * 1.25f,
+				Scale = Vector3.One
+            });
+
+			Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
+			{
+				Position = endPosition.InWorldSpace(null),
+				Color = color * 1.25f,
+				Scale = Vector3.One
+			});
+			for (int i = 0; i < numSegments; i++)
+			{
+				Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
+				{
+					Position = segments[i].InWorldSpace(null),
+					Color = color,
+					Scale = Vector3.One / 4f
+				});
+
+				CubePosition prevSegmentPos = i == 0 ? startPosition : segments[i - 1];
+
+				Vector3 x1 = new Vector3(segments[i].X, segments[i].Y, segments[i].Z);
+				Vector3 x2 = new Vector3(prevSegmentPos.X, prevSegmentPos.Y, prevSegmentPos.Z);
+				float len = (x2 - x1).Length();
+
+				CubePosition basePos = segments[i];
+				HashSet<CubePosition> used = new HashSet<CubePosition>();
+				Queue<CubePosition> floodFills = new Queue<CubePosition>();
+				floodFills.Enqueue(basePos);
+
+				while (floodFills.Count > 0)
+				{
+					CubePosition toFill = floodFills.Dequeue();
+					Vector3 x0 = new Vector3(toFill.X, toFill.Y, toFill.Z);
+
+					//first check to make sure we lie on the line segment.
+					//we can do this: |normalize(x2 - x1) dot x1 - x0| < |x2 - x1| and >= 0.
+					float dot = Vector3.Dot(Vector3.Normalize(x2 - x1), x0 - x1);
+
+					if (dot >= 0 && dot < len)
+					{
+						//https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+						//distance from line equation, where toFill = x0, chosenPosition = x1, and usingPosition = x2
+						float numerator = Vector3.Cross(x2 - x1, x1 - x0).Length();
+						float denominator = (x2 - x1).Length();
+
+						float distance = numerator / denominator;
+
+						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
+						{
+							Chunk chunk = manager.GetChunk(toFill);
+
+							if (chunk != null && chunk.Initialized)
+							{
+								used.Add(toFill);
+								chunk.GetData().SetCube(toFill, 0, false, false);
+								floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
+								floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
+								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));
+								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y + 1, toFill.Z));
+								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z - 1));
+								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z + 1));
+							}
+						}
+					}
+				}
+			}
+
+			/*Vector3 x1 = new Vector3(chosenPosition.X, chosenPosition.Y, chosenPosition.Z);
+			Vector3 x2 = new Vector3(usingPosition.X, usingPosition.Y, usingPosition.Z);
+			float len = (x2 - x1).Length();
+
+			CubePosition basePos = chosenPosition;
+			HashSet<CubePosition> used = new HashSet<CubePosition>();
+			Queue<CubePosition> floodFills = new Queue<CubePosition>();
+			floodFills.Enqueue(basePos);
+
+			while (floodFills.Count > 0)
+			{
+				CubePosition toFill = floodFills.Dequeue();
+				Vector3 x0 = new Vector3(toFill.X, toFill.Y, toFill.Z);
+
+				//first check to make sure we lie on the line segment.
+				//we can do this: |normalize(x2 - x1) dot x1 - x0| < |x2 - x1| and >= 0.
+				float dot = Vector3.Dot(Vector3.Normalize(x2 - x1), x0 - x1);
+
+				if (dot >= 0 && dot < len)
+				{
+					//https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+					//distance from line equation, where toFill = x0, chosenPosition = x1, and usingPosition = x2
+					float numerator = Vector3.Cross(x2 - x1, x1 - x0).Length();
+					float denominator = (x2 - x1).Length();
+
+					float distance = numerator / denominator;
+
+					if (distance < RADIUS && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
+					{
+						Chunk chunk = manager.GetChunk(toFill);
+
+						if (chunk != null && chunk.Initialized)
+						{
+							used.Add(toFill);
+							chunk.GetData().SetCube(toFill, 0, false, false);
+							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y + 1, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z - 1));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z + 1));
+						}
+					}
+				}
+			}*/
+		}
+
+		//Returns whether or not placeAt is near (near being within minDistance distance) any position in alreadyPlacedPositions. This is O(n) over lastPlaced elements; short-circuits as soon as possible if false.
+		private bool IsNotNearAny(Span<CubePosition> alreadyPlacedPositions, int lastPlaced, CubePosition placeAt, float minDistance)
         {
 			for (int i = 0; i < lastPlaced; i++)
 			{

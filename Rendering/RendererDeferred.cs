@@ -127,6 +127,13 @@ namespace ViMG.Rendering
             }
         }
 
+        public struct DEBUGDraw
+        {
+            public Vector3 Position;
+            public Vector3 Scale;
+            public Color Color;
+        }
+
         private readonly GraphicsDevice device;
 
         private RenderTarget2D diffuse;       //RGB albedo data; A specular data
@@ -188,6 +195,10 @@ namespace ViMG.Rendering
         public List<PointLightVolumeDraw> DrawsShadowmappedPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
+        //Note that DEBUG markers ARE NOT RESET EVERY FRAME.
+        //If you want to add a different type of data, RESET THEM YOURSELF!
+        public List<DEBUGDraw> DEBUGMarkersSphere = new List<DEBUGDraw>();
+        public List<DEBUGDraw> DEBUGMarkersRect = new List<DEBUGDraw>();
 
         public static int NumPointLightsRendered;
         public static int NumDrawCalls;
@@ -198,11 +209,20 @@ namespace ViMG.Rendering
         private Options.SMAAQuality previousSMAAOption;
         private Options.FXAAQuality previousFXAAOption;
 
-        public (VertexBuffer VBO, IndexBuffer IBO) cubemapMesh;
+        public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
+        public (VertexBuffer VBO, IndexBuffer IBO) DEBUGSphereMesh;
+        public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
 
         public RendererDeferred(GraphicsDevice device)
         {
-            cubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
+            DEBUGCubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
+            DEBUGSphereMesh = DrawHelper3D.MakeUVSphere(device, Cubes.Cube.CUBE_SCALE);
+
+            List<VertexCube> cubeVertices = new List<VertexCube>();
+            List<int> cubeIndices = new List<int>();
+            MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(-Vector3.One / 2f, Vector3.One / 2f, MeshHelper.CubeFace.ALL, Color.White, cubeVertices, cubeIndices);
+            DEBUGCubeMesh = MeshHelper.MakeSimplerMesh(device, cubeVertices, cubeIndices);
+
             bloom = new RendererBloom(device);
 
             EffectCopy = new BasicEffect(device);
@@ -284,6 +304,8 @@ namespace ViMG.Rendering
 
             bufferLightVolumeIndices = new StructuredBuffer(device, typeof(uint), lightVolumeIndices.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
             EffectLightAccumPointLight.Parameters["LightInstanceIndices"].SetValue(bufferLightVolumeIndices);
+
+
         }
 
         public void FrameStart()
@@ -672,6 +694,50 @@ namespace ViMG.Rendering
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
 
                     NumDrawCalls++;
+                }
+            }
+
+            foreach (DEBUGDraw draw in DEBUGMarkersSphere)
+            {
+                EffectTransparent.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
+                EffectTransparent.Parameters["Emissive"].SetValue(DrawHelper.WhitePixel);
+                EffectTransparent.Parameters["World"].SetValue(Matrix.CreateScale(draw.Scale) * Matrix.CreateTranslation(draw.Position));
+                EffectTransparent.Parameters["TintColor"].SetValue(draw.Color.ToVector4());
+
+                EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
+
+                device.SetVertexBuffer(DEBUGSphereMesh.VBO);
+                device.Indices = DEBUGSphereMesh.IBO;
+
+                device.DepthStencilState = noDepthReadWriteDSS;
+                device.BlendState = BlendState.Opaque;
+
+                foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGSphereMesh.IBO.IndexCount / 3);
+                }
+            }
+
+            foreach (DEBUGDraw draw in DEBUGMarkersRect)
+            {
+                EffectTransparent.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
+                EffectTransparent.Parameters["Emissive"].SetValue(DrawHelper.WhitePixel);
+                EffectTransparent.Parameters["World"].SetValue(Matrix.CreateScale(draw.Scale) * Matrix.CreateTranslation(draw.Position));
+                EffectTransparent.Parameters["TintColor"].SetValue(draw.Color.ToVector4());
+
+                EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
+
+                device.SetVertexBuffer(DEBUGCubeMesh.VBO);
+                device.Indices = DEBUGCubeMesh.IBO;
+
+                device.DepthStencilState = noDepthReadWriteDSS;
+                device.BlendState = BlendState.Opaque;
+
+                foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
                 }
             }
 

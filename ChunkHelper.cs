@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -246,5 +247,107 @@ namespace ViMG
 			offsetCube = null;
 			return false;
 		}
+
+		public static List<CubePosition> SelectAllCubesInLine(CubePosition start, CubePosition end)
+		{
+			List<CubePosition> positions = new List<CubePosition>();
+
+			Vector3 startWS = start.InWorldSpace(null);
+			Vector3 endWS = end.InWorldSpace(null);
+
+			const float ONE_CUBE = Cube.CUBE_SCALE;
+
+			float x1 = startWS.X / ONE_CUBE;
+			float y1 = startWS.Y / ONE_CUBE;
+			float z1 = startWS.Z / ONE_CUBE;
+			float x2 = endWS.X / ONE_CUBE;
+			float y2 = endWS.Y / ONE_CUBE;
+			float z2 = endWS.Z / ONE_CUBE;
+
+			int i = (int)x1;
+			int j = (int)y1;
+			int k = (int)z1;
+
+			int iend = (int)x2;
+			int jend = (int)y2;
+			int kend = (int)z2;
+
+			int di = ((x1 < x2) ? 1 : ((x1 > x2) ? -1 : 0));
+			int dj = ((y1 < y2) ? 1 : ((y1 > y2) ? -1 : 0));
+			int dk = ((z1 < z2) ? 1 : ((z1 > z2) ? -1 : 0));
+
+			float deltatx = 1.0f / Math.Abs(x2 - x1);
+			float deltaty = 1.0f / Math.Abs(y2 - y1);
+			float deltatz = 1.0f / Math.Abs(z2 - z1);
+
+			float minx = (int)x1, maxx = minx + 1;
+			float tx = ((x1 > x2) ? (x1 - minx) : (maxx - x1)) * deltatx;
+			float miny = (int)y1, maxy = miny + 1;
+			float ty = ((y1 > y2) ? (y1 - miny) : (maxy - y1)) * deltaty;
+			float minz = (int)z1, maxz = minz + 1;
+			float tz = ((z1 > z2) ? (z1 - minz) : (maxz - z1)) * deltatz;
+
+			Vector3 hitPos = new Vector3(x1 * ONE_CUBE, y1 * ONE_CUBE, z1 * ONE_CUBE);
+
+			while (true)
+			{
+				positions.Add(CubePosition.FromWorldSpace(hitPos));
+
+				if (tx <= ty && tx <= tz)
+				{
+					if (i == iend)
+						break;
+					tx += deltatx;
+					i += di;
+
+					if (di == 1) hitPos.X += ONE_CUBE;
+					if (di == -1) hitPos.X -= ONE_CUBE;
+				}
+				else if (ty <= tz)
+				{
+					if (j == jend)
+						break;
+					ty += deltaty;
+					j += dj;
+
+					if (dj == 1) hitPos.Y += ONE_CUBE;
+					if (dj == -1) hitPos.Y -= ONE_CUBE;
+				}
+				else
+				{
+					if (k == kend)
+						break;
+					tz += deltatz;
+					k += dk;
+
+					if (dk == 1) hitPos.Z += ONE_CUBE;
+					if (dk == -1) hitPos.Z -= ONE_CUBE;
+				}
+			}
+
+			return positions;
+		}
+
+		public static List<CubePosition> SelectInArea(ChunkManager manager, Rectangle3DI bounds, ushort ofType)
+        {
+			List<CubePosition> selected = new List<CubePosition>();
+
+			for (int x = bounds.Position.X; x <= bounds.FarPosition.X; x++)
+            {
+				for (int y = bounds.Position.Y; y <= bounds.FarPosition.Y; y++)
+                {
+					for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
+                    {
+						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+						if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+                        {
+							selected.Add(pos);
+                        }
+                    }
+				}
+			}
+
+			return selected;
+        }
 	}
 }
