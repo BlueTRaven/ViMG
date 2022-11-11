@@ -59,6 +59,21 @@ namespace ViMG.Cubes
             new CubePosition(0, 1, -1),
         };
 
+        public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+        {
+            base.PostChunkGen(chunkData, position);
+
+            if (mushroomStem == null)
+            {
+                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
+                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");
+            }
+
+            if (Main.random.NextFloat() < 1f / 30f)
+                SpawnMushrooms(chunkData.GetChunk().GetChunkManager(), position.InCubeSpace(chunkData.GetChunk()));
+        }
+
         public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
         {
             base.OnRandomUpdate(world, manager, position);
@@ -71,10 +86,13 @@ namespace ViMG.Cubes
             }
 
             //Don't try to spawn a mushroom most of the time
-            if (Main.random.NextFloat() >= 0.05f)
-                return;
+            if (Main.random.NextFloat() < 0.05f)
+                SpawnMushrooms(manager, position);
+        }
 
-            List<CubePosition> positionsWeveChecked = new List<CubePosition>();
+        private void SpawnMushrooms(ChunkManager manager, CubePosition position)
+        {
+            List<CubePosition> positionsChecked = new List<CubePosition>();
 
             //check the block above to see if we can place a mushroom or other block there
             CubePosition abovePosition = position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
@@ -94,7 +112,7 @@ namespace ViMG.Cubes
                     {
                         //First, check the surrounding blocks just above to see if we can place a mushroom.
                         CubePosition offsetPosition = position + placeOffsets[i];
-                        positionsWeveChecked.Add(offsetPosition);
+                        positionsChecked.Add(offsetPosition);
                         if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
                         {
                             canPlaceBigMushroom = false;
@@ -107,7 +125,7 @@ namespace ViMG.Cubes
                         for (int i = 1; i < size + 1; i++)
                         {
                             CubePosition offsetPosition = position + new CubePosition(0, i, 0);
-                            positionsWeveChecked.Add(offsetPosition);
+                            positionsChecked.Add(offsetPosition);
                             if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
                             {
                                 canPlaceBigMushroom = false;
@@ -122,7 +140,7 @@ namespace ViMG.Cubes
                         for (int i = 0; i < placeOffsets.Length; i++)
                         {
                             CubePosition offsetPosition = position + placeOffsets[i] + new CubePosition(0, size, 0);
-                            positionsWeveChecked.Add(offsetPosition);
+                            positionsChecked.Add(offsetPosition);
                             if (!ChunkHelper.CanPlaceIfNonSolid(manager, offsetPosition, out Chunk a, out Cube b))
                             {
                                 canPlaceBigMushroom = false;

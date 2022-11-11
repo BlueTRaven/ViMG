@@ -79,6 +79,7 @@ namespace ViMG
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
 		private int lavaLight = -1;
+		private bool lavaLightShadowmapped;
 
 		private WorldSaver saver;
 
@@ -438,14 +439,26 @@ namespace ViMG
 					player.Kill();
 
 				if (lavaLight == -1)
-					lavaLight = LightManager.Add(lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
-				else LightManager.Update(lavaLight, lavaPosition, 32 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
+					LightManager.AddShadowmapped(lavaPosition, 28 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4(), out lavaLight, out lavaLightShadowmapped);
+				else
+				{
+					if (lavaLightShadowmapped)
+						LightManager.UpdateShadowmapped(lavaLight, lavaPosition, 28 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
+                    else
+                    {
+						//try again next frame.
+						LightManager.Remove(lavaLight);
+						lavaLight = -1;
+                    }
+				}
 			}
 			else
 			{
 				if (lavaLight != -1)
 				{
-					LightManager.Remove(lavaLight);
+					if (lavaLightShadowmapped)
+						LightManager.RemoveShadowmapped(lavaLight);
+					else LightManager.Remove(lavaLight);
 					lavaLight = -1;
 				}
 			}

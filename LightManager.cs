@@ -326,7 +326,7 @@ namespace ViMG
 					int versionSum = 0;
 					int drawnChunksCount = 0;
 					//TODO: fit drawn chunks more accurately. Right now we're drawing tons of unseen stuff
-					const int drawDist = 1;
+					int drawDist = (int)MathF.Round((light.end / Cubes.Cube.CUBE_SCALE) / Chunk.CHUNK_SIZE, MidpointRounding.ToPositiveInfinity);
 					for (int x = -drawDist; x <= drawDist; x++)
 					{
 						for (int y = -drawDist; y <= drawDist; y++)

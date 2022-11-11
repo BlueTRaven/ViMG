@@ -286,6 +286,7 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
 
+			ProfilingHelper.Start("Generating water caves and flood filling...");
 			for (int i = 0; i < 216; i++)
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
@@ -295,11 +296,12 @@ namespace ViMG.Generation
 
 				StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, manager.GetChunk(randomPos), structure, randomPos);
 			}
+			ProfilingHelper.End("Done.");
 
-			Console.WriteLine("Generating cave connections...");
+			ProfilingHelper.Start("Generating cave connections...");
 			for (int i = 0; i < 800; i++)
 				GenerateCaveConnection(manager, cavePositions);
-			Console.WriteLine("Done.");
+			ProfilingHelper.End("Done.");
 
 			//copper: 82037
 			for (int i = 0; i < 80000; i++) 

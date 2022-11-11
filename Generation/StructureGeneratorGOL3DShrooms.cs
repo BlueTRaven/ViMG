@@ -26,10 +26,10 @@ namespace ViMG.Generation
         private Cube mushroomStem;
         private Cube stoneCoveredOrange;
         private Cube stoneCoveredPurple;
-        private Cube mushroomOrangeTop;
+        /*private Cube mushroomOrangeTop;
         private Cube mushroomOrangeSmall;
         private Cube mushroomPurpleTop;
-        private Cube mushroomPurpleSmall;
+        private Cube mushroomPurpleSmall;*/
 
         public StructureGeneratorGOL3DShrooms(int seed, ChunkManager chunkManager) : base("GOL3D Shrooms", seed, chunkManager)
         {
@@ -37,10 +37,10 @@ namespace ViMG.Generation
             mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
             stoneCoveredOrange = Main.Registry.CubeRegistry.Get("stone_covered_orange");
             stoneCoveredPurple = Main.Registry.CubeRegistry.Get("stone_covered_purple");
-            mushroomOrangeTop = Main.Registry.CubeRegistry.Get("mushroom_orange_top");
+            /*mushroomOrangeTop = Main.Registry.CubeRegistry.Get("mushroom_orange_top");
             mushroomOrangeSmall = Main.Registry.CubeRegistry.Get("mushroom_orange_small");
             mushroomPurpleTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
-            mushroomPurpleSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");
+            mushroomPurpleSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");*/
         }
 
         protected unsafe override Structure[] GenerateOne(ref StructureTaskState state)
@@ -56,8 +56,8 @@ namespace ViMG.Generation
                 bool mcolor = state.random.NextCoinFlip();
 
                 Cube covered = mcolor ? stoneCoveredOrange : stoneCoveredPurple;
-                Cube mushroomSmall = mcolor ? mushroomOrangeSmall : mushroomPurpleSmall;
-                Cube mushroomTop = mcolor ? mushroomOrangeTop : mushroomPurpleTop;
+                /*Cube mushroomSmall = mcolor ? mushroomOrangeSmall : mushroomPurpleSmall;
+                Cube mushroomTop = mcolor ? mushroomOrangeTop : mushroomPurpleTop;*/
 
                 int width = state.random.Next(16, 40);
                 int height = state.random.Next(16, 40);
@@ -93,7 +93,7 @@ namespace ViMG.Generation
                                 //This will overwrite the stone we just placed there
                                 data[j] = covered.Id;
 
-                                double placeMushroom = state.random.NextDouble();
+                                /*double placeMushroom = state.random.NextDouble();
                                 //If the stone was placed, maybe place a mushroom on the empty space above it
                                 if (placeMushroom < BIGMUSHROOM_CHANCE)
                                 {
@@ -155,7 +155,7 @@ namespace ViMG.Generation
                                     Util.ThreeDToOneD(new ValuePoint3D(point.x, point.y + 1, point.z), new ValuePoint3D(width, height, depth), out int pi);
 
                                     data[pi] = mushroomSmall.Id;
-                                }
+                                }*/
                             }
                         }
                     }

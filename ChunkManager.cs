@@ -247,7 +247,7 @@ namespace ViMG
 
 					num++;
 
-					if (num % sizeInChunksXZ * sizeInChunksXZ == 0)
+					if (num % (sizeInChunksXZ * sizeInChunksXZ) == 0)
 						Console.WriteLine("Detail: " + num + " / " + total);
 				}
 
@@ -268,7 +268,7 @@ namespace ViMG
 				//MarkDirty(new ChunkPosition(x, y, z), false);
 				num++;
 
-				if (num % sizeInChunksXZ * sizeInChunksXZ == 0)
+				if (num % (sizeInChunksXZ * sizeInChunksXZ) == 0)
 					Console.WriteLine("Init: " + num + " / " + total);
 			}
 
@@ -624,6 +624,8 @@ namespace ViMG
 			else
 			{
 				//positive sign/0 (Sign(0) == 0)
+				//Below 0, the y axis has its inclusivity/exclusivity reversed (aka, min exclusive, max inclusive, instead of the opposite).
+				//Note that this only applies to the y axis and no other.
 				if (sign >= 0)
 				{
 					return position.X >= 0 && position.X < sizeInCubes &&
@@ -632,9 +634,9 @@ namespace ViMG
 				}
 				else if (sign == -1)
 				{
-					return position.X > 0 && position.X <= sizeInCubes &&
+					return position.X >= 0 && position.X < sizeInCubes &&
 						position.Y > 0 && position.Y <= sizeInCubes &&
-						position.Z > 0 && position.Z <= sizeInCubes;
+						position.Z >= 0 && position.Z < sizeInCubes;
 				}
 				else return false;
 			}

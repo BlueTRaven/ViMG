@@ -102,6 +102,7 @@ namespace ViMG.Generation
 
         public static void PlaceInWorld(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos)
         {
+            HashSet<CubePosition> touchedPositions = new HashSet<CubePosition>();
             Queue<CubePosition> waterFloodFills = new Queue<CubePosition>();
             List<CubePosition> actualFills = new List<CubePosition>();
 
@@ -114,6 +115,7 @@ namespace ViMG.Generation
                     Util.OneDToThreeD(i, new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out ValuePoint3D spos);
                     seedPos = new CubePosition(spos.x, spos.y, spos.z) + pos;
                     waterFloodFills.Enqueue(seedPos);
+                    touchedPositions.Add(seedPos);
                 }
             }
 
@@ -122,31 +124,27 @@ namespace ViMG.Generation
             int numTries = Chunk.NUM_CUBES_IN_CHUNK * 8;
             while (waterFloodFills.Count > 0)
             {
-                CubePosition n = waterFloodFills.Dequeue();
+                CubePosition waterPosition = waterFloodFills.Dequeue();
 
-                if (manager.IsInWorldBounds(n))
+                if (manager.IsInWorldBounds(waterPosition) && !touchedPositions.Contains(waterPosition) && waterPosition.Y <= seedPos.Y)
                 {
-                    Util.ThreeDToOneD(new ValuePoint3D(n.X, n.Y, n.Z), new ValuePoint3D(structure.size), out int wi);
-
-                    if (manager.GetCube(n).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+                    if (waterPosition.Y < 40)
                     {
-                        if (n.Y < 40)
-                        {
-                            placeWater = false;
-                            break;
-                        }
+                        placeWater = false;
+                        break;
+                    }
 
-                        if (n.Y < seedPos.Y)
-                            continue;
+                    if (manager.GetCube(waterPosition).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+                    {
+                        actualFills.Add(waterPosition);
+                        touchedPositions.Add(waterPosition);
 
-                        actualFills.Add(n);
-
-                        waterFloodFills.Enqueue(new CubePosition(n.X - 1, n.Y, n.Z));
-                        waterFloodFills.Enqueue(new CubePosition(n.X + 1, n.Y, n.Z));
-                        waterFloodFills.Enqueue(new CubePosition(n.X, n.Y - 1, n.Z));
-                        waterFloodFills.Enqueue(new CubePosition(n.X, n.Y + 1, n.Z));
-                        waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z - 1));
-                        waterFloodFills.Enqueue(new CubePosition(n.X, n.Y, n.Z + 1));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X - 1, waterPosition.Y, waterPosition.Z));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X + 1, waterPosition.Y, waterPosition.Z));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X, waterPosition.Y - 1, waterPosition.Z));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X, waterPosition.Y + 1, waterPosition.Z));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X, waterPosition.Y, waterPosition.Z - 1));
+                        waterFloodFills.Enqueue(new CubePosition(waterPosition.X, waterPosition.Y, waterPosition.Z + 1));
                     }
                 }
 
@@ -159,7 +157,7 @@ namespace ViMG.Generation
                 }
             }
 
-            Console.WriteLine("Placing water: {0}", placeWater);
+            //Console.WriteLine("Placing water: {0}", placeWater);
 
             for (int x = 0; x < structure.size.X; x++)
             {
