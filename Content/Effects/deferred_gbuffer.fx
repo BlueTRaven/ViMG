@@ -77,7 +77,7 @@ VSOutputCube MainVS(in VSInputCube input)
 
 		uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFrames;
 
-		float2 wh = 16.0 / 1024.0;
+		float2 wh = input.AnimFrameSize / 1024.0;
 
 		output.TexCoord.x += wh.x * frame;
 	}

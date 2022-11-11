@@ -17,15 +17,17 @@ namespace ViMG.Cubes
         {
 			public float FrameTime;
 			public int NumFrames;
+			public int FrameWidth;
 
 			public readonly bool Valid;
 
-			public CubeAnimation(float frameTime, int numFrames)
+			public CubeAnimation(float frameTime, int numFrames, int frameWidth)
             {
 				this.FrameTime = frameTime;
 				this.NumFrames = numFrames;
+                this.FrameWidth = frameWidth;
 
-				Valid = true;
+                Valid = true;
             }
         }
 

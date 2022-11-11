@@ -48,7 +48,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeXMeshVerts(Cube.RenderPass pass, Cube cube, World world, Vector3 pos, List<VertexCube> vertices, List<int> indices)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, Cube cube, World world, Vector3 pos, Vector3 scale, List<VertexCube> vertices, List<int> indices)
         {
 			int verticesStart = vertices.Count;
 
@@ -63,7 +63,7 @@ namespace ViMG
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
-			MakeXMeshRaw(vertices, indices, pos, sourceRect);
+			MakeXMeshRaw(vertices, indices, pos, scale, sourceRect);
 			/*Vector3 xMin = -new Vector3(Cube.CUBE_SCALE / 2, 0, -Cube.CUBE_SCALE / 2);
 			Vector3 xMax = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
 
@@ -184,10 +184,10 @@ namespace ViMG
 			ApplyCubeAnim(pass, world, CubePosition.FromWorldSpace(pos), cube, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
 		}
 
-		public static void MakeXMeshRaw(List<VertexCube> vertices, List<int> indices, Vector3 pos, RectangleF sourceRect)
+		public static void MakeXMeshRaw(List<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect)
         {
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2);
+			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2 * scale.X, 0, Cube.CUBE_SCALE / 2 * scale.Z);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2 * scale.X, Cube.CUBE_SCALE * scale.Y, Cube.CUBE_SCALE / 2 * scale.Z);
 
 			Vector3 a = pos + new Vector3(min.X, min.Y, min.Z);
 			Vector3 b = pos + new Vector3(min.X, max.Y, min.Z);
@@ -378,6 +378,7 @@ namespace ViMG
 
 					vert.AnimFrameTime = anim.FrameTime;
 					vert.NumAnimFrames = anim.NumFrames;
+					vert.AnimFrameSize = anim.FrameWidth;
 
 					vertices[i] = vert;
 				}

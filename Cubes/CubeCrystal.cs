@@ -49,7 +49,7 @@ namespace ViMG.Cubes
             if (pass == RenderPass.Opaque)
                 return;
 
-            DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
         }
 
         public override RectangleF GetHeldSourceRect(World world)

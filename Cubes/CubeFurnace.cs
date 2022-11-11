@@ -80,7 +80,7 @@ namespace ViMG.Cubes
 					EntityFurnace furnace = ent.Get() as EntityFurnace;
 
 					if (face == furnace.Facing)
-						return new CubeAnimation(0.125f, 3);
+						return new CubeAnimation(0.125f, 3, 16);
 				}
 			}
 

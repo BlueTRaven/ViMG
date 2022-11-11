@@ -12,6 +12,7 @@ struct VSInputCube
 
 	float AnimFrameTime : TEXCOORD2;
 	float NumAnimFrames : TEXCOORD3;
+	float AnimFrameSize : TEXCOORD4;
 };
 
 struct VSOutputCube

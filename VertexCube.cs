@@ -22,6 +22,7 @@ namespace ViMG
 
 		public float AnimFrameTime;
 		public float NumAnimFrames;
+		public float AnimFrameSize;
 
 		public VertexCube(Vector3 position, Color color, Vector2 textureCoordinate, Vector3 normal)
 		{
@@ -33,6 +34,7 @@ namespace ViMG
 
 			AnimFrameTime = 0;
 			NumAnimFrames = 0;
+			AnimFrameSize = 0;
 		}
 
 		VertexDeclaration IVertexType.VertexDeclaration
@@ -93,6 +95,7 @@ namespace ViMG
 				new VertexElement(12 + 4 + 8 + 12, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
 				new VertexElement(12 + 4 + 8 + 12 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
 				new VertexElement(12 + 4 + 8 + 12 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
+				new VertexElement(12 + 4 + 8 + 12 + 4 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
 			};
 			VertexDeclaration = new VertexDeclaration(elements);
 		}

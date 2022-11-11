@@ -255,6 +255,7 @@ namespace ViMG
 
 					vertex.AnimFrameTime = anim.FrameTime;
 					vertex.NumAnimFrames = anim.NumFrames;
+					vertex.AnimFrameSize = anim.FrameWidth;
 
 					vertices[i] = vertex;
 				}

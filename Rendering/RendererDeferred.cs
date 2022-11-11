@@ -486,9 +486,10 @@ namespace ViMG.Rendering
                             EffectGBuffer.Parameters["UseSourceRect"].SetValue(true);
                             EffectGBuffer.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
                             EffectGBuffer.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
-                            EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
                         }
                         else EffectGBuffer.Parameters["UseSourceRect"].SetValue(false);
+                        
+                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
 
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
@@ -684,9 +685,10 @@ namespace ViMG.Rendering
                     EffectTransparent.Parameters["UseSourceRect"].SetValue(true);
                     EffectTransparent.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
                     EffectTransparent.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
-                    EffectTransparent.Parameters["TextureSize"].SetValue(draw.TextureSize);
                 }
                 else EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
+
+                EffectTransparent.Parameters["TextureSize"].SetValue(draw.TextureSize);
 
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {

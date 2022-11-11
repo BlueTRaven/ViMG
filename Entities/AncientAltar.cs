@@ -125,7 +125,7 @@ namespace ViMG.Entities
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1));
+			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
 			VertexBuffer VBO = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
 			IndexBuffer IBO = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
