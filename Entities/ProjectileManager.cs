@@ -145,8 +145,9 @@ namespace ViMG.Entities
 			public bool dieOnCollision;
 			public int pierce;
 			public Buff.BuffInstance[] applyBuffs;
+			public IProjectileEffects effects;
 
-            public ProjectileStats(HitboxManager.Group group, int damage, float knockback, float collisionRadius, float size, int pierce = 1, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null)
+            public ProjectileStats(HitboxManager.Group group, int damage, float knockback, float collisionRadius, float size, int pierce = 1, bool gravity = false, float gravityScale = 1, bool dieOnCollision = true, Buff.BuffInstance[] applyBuffs = null, IProjectileEffects effects = null)
 			{
 				this.group = group;
 				this.damage = damage;
@@ -159,6 +160,7 @@ namespace ViMG.Entities
 				this.dieOnCollision = dieOnCollision;
 
 				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
+				this.effects = effects;
 			}
 		}
 
@@ -183,8 +185,31 @@ namespace ViMG.Entities
 
 			public int currentPierce;
 
+			public int index;
+
+			public Projectile(int index)
+            {
+				this.index = index;
+				owner = null;
+				position = Vector3.Zero;
+				velocity = Vector3.Zero;
+				timeLeft = 0;
+				visStats = new ProjectileVisStats();
+				stats = new ProjectileStats();
+
+				bounds = new Rectangle3D();
+				hitbox = -1;
+				light = -1;
+				inventorySlot = -1;
+
+				currentPierce = -1;
+
+				active = false;
+			}
+
 			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats, int inventorySlot = -1)
 			{
+				index = -1;
 				this.owner = owner;
 				this.position = position;
 				this.velocity = velocity;
@@ -192,18 +217,20 @@ namespace ViMG.Entities
 				this.visStats = visStats;
 				this.stats = stats;
 
-				active = true;
-
 				bounds = new Rectangle3D();
 				hitbox = -1;
 				light = -1;
 
 				this.inventorySlot = inventorySlot;
 				currentPierce = stats.pierce;
+
+				active = true;
 			}
 		}
 
-		private Projectile[] projectiles = new Projectile[1024];
+		public const int PROJECTILES_MAX = 1024;
+
+		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
 
 		private World world;
 		private SimpleMesh<VertexCube, int> mesh;
@@ -246,7 +273,7 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
-			for (int i = 0; i < 1024; i++)
+			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{
 				if (!projectiles[i].active)
 					continue;
@@ -324,18 +351,20 @@ namespace ViMG.Entities
 
 		private void Kill(int index)
         {
+			projectiles[index].stats.effects?.OnProjectileDeath(world, index);
+
 			if (projectiles[index].hitbox != -1)
 				world.HitboxManager.Remove(projectiles[index].hitbox);
 
 			if (projectiles[index].light != -1)
 				world.LightManager.Remove(projectiles[index].light);
 
-			projectiles[index] = new Projectile();
+			projectiles[index] = new Projectile(index);
 		}
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
-			for (int i = 0; i < 1024; i++)
+			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{
 				if (projectiles[i].active)
 				{
@@ -390,12 +419,12 @@ namespace ViMG.Entities
 
 		public int Add(Projectile projectile, Rectangle3D bounds)
 		{
-			for (int i = 0; i < 1024; i++)
+			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{
 				if (!projectiles[i].active)
 				{
 					projectiles[i] = projectile;
-
+					projectiles[i].index = i;
 					projectiles[i].bounds = bounds;
 					return i;
 				}

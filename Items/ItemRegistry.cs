@@ -106,6 +106,8 @@ namespace ViMG.Items
 			Register(new ItemPaper());
 			Register(new ItemFlaskMagicPotion1());
 			Register(new ItemRope());
+			Register(new ItemLavaCannon());
+			Register(new ItemBookLavaSpout());
 			RegisterItemCubes();
 		}
 

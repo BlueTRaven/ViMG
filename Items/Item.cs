@@ -22,6 +22,12 @@ namespace ViMG.Items
 				this.projectileSpeed = projectileSpeed;
 				this.projectileGravity = projectileGravity;
             }
+
+			public string GetTooltip()
+			{
+				return String.Format("{0}" +
+					"Projectile Speed: {1}\n", attackStats.GetTooltip(), projectileSpeed);
+			}
 		}
 
 		public struct MagicAttackStats
