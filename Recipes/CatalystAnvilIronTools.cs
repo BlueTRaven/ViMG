@@ -25,6 +25,24 @@ namespace ViMG.Recipes
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_lavacrystal"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("item_lava_crystal"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 14, 1),
+					new ItemInstance(), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 14, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("book_blank"), 1, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("book_spell_lava_spout"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
+				new ItemInstance[]
+				{
+					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("item_lava_crystal"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 12, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1),
+					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 6, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 12, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 8, 1)
+				},
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("cannon_lavacrystal"), 1, 1) }));
+
+			recipes.Add(new RecipeLayout(this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(), 

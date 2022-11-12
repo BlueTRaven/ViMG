@@ -108,6 +108,7 @@ namespace ViMG.Items
 			Register(new ItemRope());
 			Register(new ItemLavaCannon());
 			Register(new ItemBookLavaSpout());
+			Register(new ItemBookBlank());
 			RegisterItemCubes();
 		}
 

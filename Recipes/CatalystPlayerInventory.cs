@@ -106,6 +106,10 @@ namespace ViMG.Recipes
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
 			recipes.Add(new RecipeFuzzy(this,
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("paper"), 12, 1) },
+				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("book_blank"), 1, 1) }));
+
+			recipes.Add(new RecipeFuzzy(this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_fibrous_plant"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("paper"), 4, 1) }, 2));
 
