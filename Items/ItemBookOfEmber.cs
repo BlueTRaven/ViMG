@@ -30,37 +30,25 @@ namespace ViMG.Items
 			if (!magicStats.CanUse(player))
 				return false;
 
-			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
-			(Vector3 pos) =>
-			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
-			});
+			CubePosition placePos = player.IsLooking && player.CanPlace ? player.PlaceAtPos : player.LookAtEnd;
 
-			Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;
-			Vector3 placeOffset = lookAtResult.hasHit ? CubePosition.ToWorldSpaceV3(lookAtResult.normal) : Vector3.Zero;
+			Cube cube = Main.Registry.CubeRegistry.Get("flame");
 
-			if (player.GetWorld().GetChunkManager().IsInWorldBounds(hitPos))
-			{
-				Cube cube = Main.Registry.CubeRegistry.Get("flame");
-				var placePosCS = CubePosition.FromWorldSpace(hitPos + placeOffset);
+			if (cube.CanPlace(player.world, player.world.GetChunkManager(), placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
+            {
+				itemCooldownTime = magicStats.attackStats.cooldownTime;
+				int damage = magicStats.attackStats.damage;
+				float knockback = magicStats.attackStats.knockback;
+				player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
 
-				if (player.GetWorld().GetChunkManager().IsInWorldBounds(placePosCS) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placePosCS)
-					&& Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
-				{
-					itemCooldownTime = magicStats.attackStats.cooldownTime;
-					int damage = magicStats.attackStats.damage;
-					float knockback = magicStats.attackStats.knockback;
-					player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+				magicStats.Use(player);
 
-					magicStats.Use(player);
+				Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placePos);
+				chunk.GetData().SetCube(placePos, cube.Id);
 
-					Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placePosCS);
-					chunk.GetData().SetCube(placePosCS, cube.Id);
+				cube.OnPlayerPlaced(player, placePos);
 
-					cube.OnPlayerPlaced(player, placePosCS);
-
-					return true;
-				}
+				return true;
 			}
 
 			return false;
