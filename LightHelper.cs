@@ -27,12 +27,16 @@ namespace ViMG
             public readonly float End;
             public readonly Vector4 Color;
 
-            public LightInfo(Vector3 position, float start, float end, Vector4 color)
+            public readonly bool UseNDotL;
+
+            public LightInfo(Vector3 position, float start, float end, Vector4 color, bool useNDotL = true)
             {
                 Position = position;
                 Start = start;
                 End = end;
                 Color = color;
+
+                UseNDotL = useNDotL;
             }
         }
 
@@ -73,7 +77,7 @@ namespace ViMG
                     else
                     {
                         lightIndex = lightManager.Add(lightInfo.Position,
-                          lightInfo.Start, lightInfo.End, lightInfo.Color);
+                          lightInfo.Start, lightInfo.End, lightInfo.Color, lightInfo.UseNDotL);
                         lightIsShadowmapped = false;
                     }
                 }

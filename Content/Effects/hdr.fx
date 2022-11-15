@@ -28,22 +28,36 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	return output;
 }
 
-float4 MainPS(VertexShaderOutput input) : SV_TARGET
+float4 HDRExp(VertexShaderOutput input) : SV_TARGET
 {
 	float4 hdrColor = Texture.Sample(Sampler, input.TexCoord);
-	float3 ldrColor = ACESFitted(hdrColor.rgb);
-
-	//luma is encoded in alpha channel
-	//float alpha = dot(ldrColor.rgb, float3(0.299, 0.587, 0.114));
+	float3 ldrColor = 1 - exp(-hdrColor * 1.0);//ACESFitted(hdrColor.rgb);
 
 	return float4(ldrColor, 1);
 }
 
-technique BasicColorDrawing
+float4 HDRAces(VertexShaderOutput input) : SV_TARGET
+{
+	float4 hdrColor = Texture.Sample(Sampler, input.TexCoord);
+	float3 ldrColor = ACESFitted(hdrColor.rgb);
+
+	return float4(ldrColor, 1);
+}
+
+technique TechHDRExp
 {
 	pass P0
 	{
 		VertexShader = compile VS_SHADERMODEL MainVS();
-		PixelShader = compile PS_SHADERMODEL MainPS();
+		PixelShader = compile PS_SHADERMODEL HDRExp();
+	}
+};
+
+technique TechHDRAces
+{
+	pass P0
+	{
+		VertexShader = compile VS_SHADERMODEL MainVS();
+		PixelShader = compile PS_SHADERMODEL HDRAces();
 	}
 };

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,12 @@ namespace ViMG
             FXAA_HIGH,
         }
 
+        public enum HDRType
+        {
+            HDR_EXP,
+            HDR_ACES
+        }
+
         //some sentinel value. Just needs to not be any of the existing options. This is so we know for sure when we go from no SMAA to
         //any SMAA.
         public const SMAAQuality SMAA_INVALID = (SMAAQuality)200;
@@ -54,6 +61,7 @@ namespace ViMG
         public static AntiAliasing CurrentAntiAliasing;
         public static SMAAQuality CurrentSMAAQuality = SMAA_INVALID;
         public static FXAAQuality CurrentFXAAQuality = FXAAQuality.FXAA_HIGH;//FXAA_INVALID;
+        public static HDRType CurrentHDRType = HDRType.HDR_EXP;
 
         public static bool UseInstancedLightVolumes = true;
 
@@ -66,6 +74,78 @@ namespace ViMG
         public static void CenterMouse()
         {
             Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
+        }
+
+        public static void OnSave(List<byte> saveBytes)
+        {
+            SaveHelper.SaveInt32(saveBytes, CurrentWindowResolution.X);
+            SaveHelper.SaveInt32(saveBytes, CurrentWindowResolution.Y);
+
+            SaveHelper.SaveInt32(saveBytes, (int)CurrentAntiAliasing);
+            SaveHelper.SaveInt32(saveBytes, (int)CurrentSMAAQuality);
+            SaveHelper.SaveInt32(saveBytes, (int)CurrentFXAAQuality);
+            SaveHelper.SaveInt32(saveBytes, (int)CurrentHDRType);
+
+            SaveHelper.SaveBool(saveBytes, UseInstancedLightVolumes);
+            SaveHelper.SaveBool(saveBytes, BloomEnabled);
+        }
+
+        public static void OnLoad(byte[] loadBytes, ref int index)
+        {
+            CurrentWindowResolution.X = SaveHelper.LoadInt32(loadBytes, ref index);
+            CurrentWindowResolution.Y = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            CurrentAntiAliasing = (AntiAliasing)SaveHelper.LoadInt32(loadBytes, ref index);
+            CurrentSMAAQuality = (SMAAQuality)SaveHelper.LoadInt32(loadBytes, ref index);
+            CurrentFXAAQuality = (FXAAQuality)SaveHelper.LoadInt32(loadBytes, ref index);
+            CurrentHDRType = (HDRType)SaveHelper.LoadInt32(loadBytes, ref index);
+
+            UseInstancedLightVolumes = SaveHelper.LoadBool(loadBytes, ref index);
+            BloomEnabled = SaveHelper.LoadBool(loadBytes, ref index);
+        }
+
+        public static void OnSave(StreamWriter writer)
+        {
+            writer.WriteLine("rez_x " + CurrentWindowResolution.X);
+            writer.WriteLine("rez_y " + CurrentWindowResolution.Y);
+                        
+            writer.WriteLine("aa " + (int)CurrentAntiAliasing);
+            writer.WriteLine("smaa_quality " + (int)CurrentSMAAQuality);
+            writer.WriteLine("fxaa_quality " + (int)CurrentFXAAQuality);
+            writer.WriteLine("hdr " + (int)CurrentHDRType);
+                        
+            writer.WriteLine("instanced_light_volumes " + UseInstancedLightVolumes);
+            writer.WriteLine("bloom " + BloomEnabled);
+        }
+
+        public static void OnLoad(List<string> lines)
+        {
+            foreach (string line in lines)
+            {
+                string[] split = line.Split(' ');
+                if (split[0] == "rez_x")
+                    int.TryParse(split[1], out CurrentWindowResolution.X);
+                if (split[0] == "rez_y")
+                    int.TryParse(split[1], out CurrentWindowResolution.Y);
+
+                if (split[0] == "aa")
+                    if (int.TryParse(split[1], out int aa))
+                        CurrentAntiAliasing = (AntiAliasing)aa;
+                if (split[0] == "smaa_quality")
+                    if (int.TryParse(split[1], out int smaa))
+                        CurrentSMAAQuality = (SMAAQuality)smaa;
+                if (split[0] == "fxaa_quality")
+                    if (int.TryParse(split[1], out int fxaa))
+                        CurrentFXAAQuality = (FXAAQuality)fxaa;
+                if (split[0] == "hdr")
+                    if (int.TryParse(split[1], out int hdr))
+                        CurrentHDRType = (HDRType)hdr;
+
+                if (split[0] == "instanced_light_volumes")
+                    bool.TryParse(split[1], out UseInstancedLightVolumes);
+                if (split[0] == "bloom")
+                    bool.TryParse(split[1], out BloomEnabled);
+            }
         }
     }
 }

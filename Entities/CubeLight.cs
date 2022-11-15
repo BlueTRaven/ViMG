@@ -9,12 +9,12 @@ using ViMG.Cubes;
 namespace ViMG.Entities
 {
     //For cubes that don't want a fully-fledged cube entity, but want a light.
-    //[Serializable]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0, 0)]
     public class CubeLight : Entity, ICubeTracker
     {
-        private readonly CubePosition position;
-        public CubePosition TrackedPosition => position;
+        private CubePosition trackedPosition;
+        public CubePosition TrackedPosition => trackedPosition;
 
         private Vector4 lightColor;
         private Vector2 lightExtents;
@@ -26,7 +26,7 @@ namespace ViMG.Entities
 
         public CubeLight(CubePosition position, Vector4 lightColor, Vector2 lightExtents)
         {
-            this.position = position;
+            this.trackedPosition = position;
             Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2);
 
             this.lightColor = lightColor;
@@ -49,6 +49,28 @@ namespace ViMG.Entities
         {
             world.LightManager.Remove(light);
             world.EntityManager.Remove(this);
+        }
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
+
+            SaveHelper.SaveVector4(saveBytes, lightColor);
+            SaveHelper.SaveVector2(saveBytes, lightExtents);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+            int index = 0;
+            trackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+            Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2);
+
+            lightColor = SaveHelper.LoadVector4(loadBytes, ref index);
+            lightExtents = SaveHelper.LoadVector2(loadBytes, ref index);
         }
     }
 }

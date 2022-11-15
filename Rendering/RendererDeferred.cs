@@ -799,6 +799,7 @@ namespace ViMG.Rendering
             //convert HDR to LDR for rendering to screen.
             device.SetRenderTarget(ldrOutputPing);
             device.Clear(Color.Black);
+            EffectHDR.CurrentTechnique = Options.CurrentHDRType == Options.HDRType.HDR_EXP ? EffectHDR.Techniques["TechHDRExp"] : EffectHDR.Techniques["TechHDRAces"];
             EffectHDR.Parameters["Texture"].SetValue(diffuse);
             //EffectHDR.Parameters["Exposure"].SetValue(...);
             device.SetVertexBuffer(vboQuad);

@@ -27,6 +27,11 @@ namespace ViMG.UIs
         private bool dropdownSMAAOpen;
         private UI.Button[] outputsSMAA;
 
+        private UI.LabelConstructionParameters[] optionsHDR;
+        private int currentHDROption;
+        private bool dropdownHDROpen;
+        private UI.Button[] outputsHDR;
+
         private World world;
         private TextHelper.FontInfo fi;
 
@@ -66,8 +71,15 @@ namespace ViMG.UIs
                 new UI.LabelConstructionParameters("High", fi, 128, Vector2.Zero),
                 new UI.LabelConstructionParameters("Ultra", fi, 128, Vector2.Zero),
             };
-
             outputsSMAA = new UI.Button[4];
+
+            currentHDROption = (int)Options.CurrentHDRType;
+            optionsHDR = new UI.LabelConstructionParameters[2]
+            {
+                new UI.LabelConstructionParameters("EXP", fi, 128, Vector2.Zero),
+                new UI.LabelConstructionParameters("Aces", fi, 128, Vector2.Zero)
+            };
+            outputsHDR = new UI.Button[2];
         }
 
         public override void OnOpen()
@@ -96,6 +108,7 @@ namespace ViMG.UIs
                 new UI.LabelConstructionParameters("<", fi, 32, Vector2.Zero),
                 new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32))).clickLeft)
             {
+                Main.SessionIO.Save();
                 gsManager.GetCurrentGameState().PopMenu();
             }
 
@@ -172,6 +185,22 @@ namespace ViMG.UIs
 
                 pos.Y += 32 + MARGIN;
             }
+
+            UI.MakeLabel(new UI.LabelConstructionParameters("HDR Type", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
+
+            if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new UI.LabelConstructionParameters("HDR", fi, 128 + 16, Vector2.Zero),
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
+                new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
+                optionsHDR, outputsHDR, ref dropdownHDROpen, ref currentHDROption))
+            {
+                if (currentHDROption == 0)
+                    Options.CurrentHDRType = Options.HDRType.HDR_EXP;
+                else Options.CurrentHDRType = Options.HDRType.HDR_ACES;
+            }
+
+            pos.Y += 32 + MARGIN;
 
             UI.MakeLabel(new UI.LabelConstructionParameters("Instanced Light Volumes", fi, 256 - 8, pos - new Vector2(256 - 8, 0)));
 

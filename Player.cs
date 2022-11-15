@@ -198,6 +198,8 @@ namespace ViMG
 		//position that the player is currently looking at (if any), in cube space.
 		//Will be the position of the last looked at object if nothing is currently looked at.
 		public CubePosition LookAtPos;
+		public CubePosition LookAtEnd;
+		public Vector3 LookAtNormal;
 		//likewise, this is the position the player will place a cube if they right clicked the LookAtPos
 		//with a cube item in hand.
 		public CubePosition PlaceAtPos;	
@@ -627,12 +629,16 @@ namespace ViMG
 					var c = world.GetChunkManager().GetCube(lookAtResult.hit);
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
+					this.LookAtNormal = lookAtResult.normal;
 					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
 					if (world.GetChunkManager().IsInWorldBounds(PlaceAtPos))
 						CanPlace = true;
 				}
 			}
+			
+			if (world.GetChunkManager().IsInWorldBounds(lookAtResult.end))
+				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
 			//currentUI.Update(null, deltaTime);
 			UpdateMouse();

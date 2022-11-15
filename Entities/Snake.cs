@@ -76,6 +76,8 @@ namespace ViMG.Entities
 					noticeHandler,
 					buffManager,
 					12);
+
+				ai.InvulnTimer = 0.5f;
 			}
 		}
 

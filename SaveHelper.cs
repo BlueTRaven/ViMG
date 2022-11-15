@@ -8,6 +8,11 @@ namespace ViMG
 {
 	public static class SaveHelper
 	{
+		public static void SaveBool(List<byte> data, bool b)
+        {
+			data.Add((byte)(b ? 0 : 1));
+        }
+
 		public static void SaveString(List<byte> data, string str)
 		{
 			SaveInt32(data, str.Length);
@@ -61,6 +66,12 @@ namespace ViMG
 			data.Add(bytes[1]);
 			data.Add(bytes[2]);
 			data.Add(bytes[3]);
+		}
+
+		public static void SaveVector2(List<byte> data, Vector2 vec)
+		{
+			SaveFloat32(data, vec.X);
+			SaveFloat32(data, vec.Y);
 		}
 
 		public static void SaveVector3(List<byte> data, Vector3 vec)
@@ -129,6 +140,12 @@ namespace ViMG
 			SaveInt32(data, item.damage);
 		}
 
+		public static bool LoadBool(byte[] data, ref int index)
+        {
+			byte b = data[index++];
+			return b >= 1;
+        }
+
 		public static string LoadString(byte[] data, ref int index)
 		{
 			int len = LoadInt32(data, ref index);
@@ -196,6 +213,14 @@ namespace ViMG
 
 			return rval;
         }
+
+		public static Vector2 LoadVector2(byte[] data, ref int index)
+		{
+			float x = LoadFloat32(data, ref index);
+			float y = LoadFloat32(data, ref index);
+
+			return new Vector2(x, y);
+		}
 
 		public static Vector3 LoadVector3(byte[] data, ref int index)
 		{

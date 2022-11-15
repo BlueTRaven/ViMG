@@ -598,6 +598,9 @@ namespace ViMG
 
 		public void SaveWorld()
         {
+			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+			Main.SessionIO.Save();
+
 			//TODO open pause GUI. This maybe should be done in Main.cs instead?
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.

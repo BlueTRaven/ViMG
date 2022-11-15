@@ -30,6 +30,8 @@ struct Light
 	float3 Position;
 	float Start;
 	float End;
+
+	float UseNDotL;
 };
 
 //a structured buffer containing a list of all indices of lights to draw.
@@ -145,7 +147,7 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 			float realDepth = sampledDepth * light.End;
 			float currentDepth = length(dir);
 
-			float shadow = (currentDepth - 0.005 < realDepth) ? 1.0 : 0.0;
+			float shadow = (currentDepth - 0.009 < realDepth) ? 1.0 : 0.0;
 
 			pointLightsColor += lightDiffuse * shadow;
 		}
@@ -159,15 +161,21 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 		{
 			float3 dir = light.Position - position;
 
-			float normMult = max(dot(normal, normalize(dir)), 0.0);
+			float nDotL = 1; 
+
+			if (light.UseNDotL > 0)
+				nDotL = max(dot(normal, normalize(dir)), 0.0);
 
 			float scaleByDistance = 1 - saturate((length(dir) - light.Start) / (light.End - light.Start));
+
+			if (light.UseNDotL > 0)
+				scaleByDistance = scaleByDistance * scaleByDistance;
 
 			float3 halfwayDir = normalize(normalize(dir) + CameraPosition);
 			float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
 			float3 lightSpec = light.Color.rgb * spec * scaleByDistance * intensity;
 
-			float3 lightDiffuse = light.Color.rgb * scaleByDistance * normMult * intensity;
+			float3 lightDiffuse = light.Color.rgb * scaleByDistance * nDotL * intensity;
 
 			pointLightsColor += lightDiffuse + lightSpec;
 		}

@@ -19,6 +19,7 @@ namespace ViMG.Entities
         private float timer;
         public CubePosition TrackedPosition { get; private set; }
         private int light = -1;
+        private int ambientLight = -1;
         private bool isShadowmapped;
         private int hitbox = -1;
 
@@ -58,9 +59,17 @@ namespace ViMG.Entities
 
             BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
+            Vector4 ambientLightColor = Color.OrangeRed.ToVector4();
+            ambientLightColor.W = 0.25f;
+
             LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
                 Cube.CUBE_SCALE * 4f + s0, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
                 sphere, ref light, ref isShadowmapped, true);
+
+            bool dummy = false;
+            LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
+                Cube.CUBE_SCALE * 6f + s0, Cube.CUBE_SCALE * 12f, ambientLightColor, false), LightHelper.LightUpdateType.UpdateClean,
+                sphere, ref ambientLight, ref dummy, false);
             /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {
                 if (light != -1)
@@ -109,6 +118,11 @@ namespace ViMG.Entities
                 else world.LightManager.Remove(light);
 
                 light = -1;
+            }
+
+            if (ambientLight != -1)
+            {
+                world.LightManager.Remove(ambientLight);
             }
 
             if (hitbox != -1)

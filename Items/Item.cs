@@ -168,17 +168,6 @@ namespace ViMG.Items
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
 		{
-			if (SourceRect.width > SourceRect.height)
-			{
-				//fix aspect ratio
-				scale *= SourceRect.height / SourceRect.width;
-			}
-			else if (SourceRect.height > SourceRect.width)
-			{
-				//fix aspect ratio
-				scale *= SourceRect.width / SourceRect.height;
-			}
-
 			//fit to frame
 			scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
 

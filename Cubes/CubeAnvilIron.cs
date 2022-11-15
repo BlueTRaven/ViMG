@@ -13,8 +13,9 @@ namespace ViMG.Cubes
 {
 	public class CubeAnvilIron : Cube
 	{
-		public CubeAnvilIron() : base("anvil_iron", new RectangleF(160, 0, 16, 16), Color.White, 6)
+		public CubeAnvilIron() : base("anvil_iron", new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White, 6)
 		{
+			Transparency = TransparencyValue.Transparent;
 		}
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -28,7 +29,44 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_anvil_iron"), 1, 1));
+			DropSelf(itemsToDrop);
 		}
-	}
+
+        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
+        {
+			CubePosition cp = CubePosition.FromWorldSpace(pos);
+
+			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+			Vector3 leftOffset = new Vector3(PIXEL_SCALE, 0, 0);
+			Vector3 backOffset = new Vector3(0, 0, PIXEL_SCALE);
+			//A little hacky, but DOWN corresponds to the trim responsible for making this look 3d.
+			ChunkMesher.MakeQuadVerts(pass, world, cp, l_t_n + backOffset, r_t_n + backOffset, r_b_n + backOffset, l_b_n + backOffset, new Vector3(0, 0, -1), MeshHelper.CubeFace.DOWN, this, vertices, indices);
+
+			ChunkMesher.MakeQuadVerts(pass, world, cp, r_t_n - leftOffset, r_t_f - leftOffset, r_b_f - leftOffset, r_b_n - leftOffset, new Vector3(1, 0, 0), MeshHelper.CubeFace.DOWN, this, vertices, indices);
+
+			ChunkMesher.MakeQuadVerts(pass, world, cp, r_t_f - backOffset, l_t_f - backOffset, l_b_f - backOffset, r_b_f - backOffset, new Vector3(0, 0, 1), MeshHelper.CubeFace.DOWN, this, vertices, indices);
+
+			ChunkMesher.MakeQuadVerts(pass, world, cp, l_t_f + leftOffset, l_t_n + leftOffset, l_b_n + leftOffset, l_b_f + leftOffset, new Vector3(-1, 0, 0), MeshHelper.CubeFace.DOWN, this, vertices, indices);
+
+			max.Y -= PIXEL_SCALE * 5;
+
+			ChunkMesher.MakeQuadVerts(pass, world, cp, new Vector3(max.X, max.Y, max.Z), new Vector3(min.X, max.Y, max.Z),
+				new Vector3(min.X, max.Y, min.Z), new Vector3(max.X, max.Y, min.Z), new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, this, vertices, indices);
+
+			max.Y -= PIXEL_SCALE;
+
+			ChunkMesher.MakeQuadVerts(pass, world, cp, new Vector3(min.X, max.Y, max.Z), new Vector3(max.X, max.Y, max.Z),
+				new Vector3(max.X, max.Y, min.Z), new Vector3(min.X, max.Y, min.Z), new Vector3(0, -1, 0), MeshHelper.CubeFace.UP, this, vertices, indices);
+
+			DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
+		}
+    }
 }

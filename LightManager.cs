@@ -23,24 +23,29 @@ namespace ViMG
 			public readonly float start;
 			public readonly float end;
 
+			public readonly float useNDotL;
+
 			public Data(Light light, float intensity = 1)
-			{
-				if (!light.active)
-				{
-					this.position = Vector3.Zero;
-					this.start = 0;
-					this.end = 0;
-					this.color = Color.Transparent.ToVector4();
-				}
-				else
-				{
-					this.position = light.position;
-					this.start = light.start;
-					this.end = light.end;
-					this.color = light.color;
-				}
-			}
-		}
+            {
+                if (!light.active)
+                {
+                    this.position = Vector3.Zero;
+                    this.start = 0;
+                    this.end = 0;
+                    this.color = Color.Transparent.ToVector4();
+					this.useNDotL = 1;
+                }
+                else
+                {
+                    this.position = light.position;
+                    this.start = light.start;
+                    this.end = light.end;
+                    this.color = light.color;
+
+					this.useNDotL = light.useNDotL ? 1 : 0;
+                }
+            }
+        }
 
 		public readonly struct Light
 		{
@@ -50,11 +55,12 @@ namespace ViMG
 			public readonly Vector4 color;
 
 			public readonly bool isShadowmapped;
+			public readonly bool useNDotL;
 
 			public readonly int index;
 			public readonly bool active;
 
-			public Light(Vector3 position, float start, float end, Vector4 color, bool isShadowmapped, int index)
+			public Light(Vector3 position, float start, float end, Vector4 color, bool isShadowmapped, bool useNDotL, int index)
 			{
 				this.position = position;
 				this.start = start;
@@ -62,6 +68,7 @@ namespace ViMG
 				this.color = color;
 
 				this.isShadowmapped = isShadowmapped;
+				this.useNDotL = useNDotL;
 
 				this.index = index;
 				active = true;
@@ -125,7 +132,7 @@ namespace ViMG
 			return lightsShadowmapped[index];
         }
 
-		public int Add(Vector3 position, float start, float end, Vector4 color)
+		public int Add(Vector3 position, float start, float end, Vector4 color, bool useNDotL = true)
 		{
 			//Early-out - we have no more light slots available.
 			if (numUsedLights >= MAX_LIGHTS)
@@ -135,7 +142,7 @@ namespace ViMG
 			{
 				if (!lights[i].active)
 				{
-					lights[i] = new Light(position, start, end, color, true, i);
+					lights[i] = new Light(position, start, end, color, true, useNDotL, i);
 
 					version++;
 
@@ -162,7 +169,7 @@ namespace ViMG
 			{
 				if (!lightsShadowmapped[i].active)
 				{
-					lightsShadowmapped[i] = new Light(position, start, end, color, true, i);
+					lightsShadowmapped[i] = new Light(position, start, end, color, true, true, i);
 
 					version++;
 					lightVersions[i]++;
@@ -185,7 +192,7 @@ namespace ViMG
 			if (lights[index].active)
             {
 				version++;
-				lights[index] = new Light(position, start, end, color, false, index);
+				lights[index] = new Light(position, start, end, color, false, true, index);
             }
         }
 
@@ -194,7 +201,7 @@ namespace ViMG
 			if (lightsShadowmapped[index].active)
 			{
 				version++;
-				lightsShadowmapped[index] = new Light(position, start, end, color, true, index);
+				lightsShadowmapped[index] = new Light(position, start, end, color, true, true, index);
 
 				if (markDirty)
 					MarkDirty(index);
