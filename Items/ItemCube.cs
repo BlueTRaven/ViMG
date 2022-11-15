@@ -25,36 +25,23 @@ namespace ViMG.Items
 		{
 			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
 
-			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
-			(Vector3 pos) =>
+			if (player.IsLooking && player.CanPlace)
 			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
-			});
+				Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 
-			if (lookAtResult.hasHit)
-			{
-				if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+				Chunk chunk = player.world.GetChunkManager().GetChunk(player.PlaceAtPos);
+
+				if (chunk != null && chunk.Initialized)
 				{
-					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
+					chunk.GetData().SetCube(player.PlaceAtPos, cubeId);
+					inventory.Remove(index, 1);
 
-					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos))
-					{
-						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
+					cube.OnPlayerPlaced(player, player.PlaceAtPos);
 
-						if (chunk != null && chunk.Initialized)
-						{
-							chunk.GetData().SetCube(placeAtPos, cubeId);
-							inventory.Remove(index, 1);
+					//cubes can be placed as fast as possible
+					itemCooldownTime = 0.25f;
 
-							cube.OnPlayerPlaced(player, placeAtPos);
-
-							//cubes can be placed as fast as possible
-							itemCooldownTime = 0.25f;
-
-							return true;
-						}
-					}
+					return true;
 				}
 			}
 

@@ -194,6 +194,7 @@ namespace ViMG
 		private World.RaycastResult lookAtResult;
 		//Is currently looking at a cube or not
 		public bool IsLooking;
+		public bool CanPlace;
 		//position that the player is currently looking at (if any), in cube space.
 		//Will be the position of the last looked at object if nothing is currently looked at.
 		public CubePosition LookAtPos;
@@ -607,11 +608,18 @@ namespace ViMG
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				//return true;
-				return world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+				Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				bool isLooking = world.GetChunkManager().IsInWorldBounds(pos) && cube.Touchable;
+				
+				//if we're climbing a rope, ignore the rope
+				if (inRope)
+					isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
+
+				return isLooking;
 			});
 
 			IsLooking = false;
+			CanPlace = false;
 			if (lookAtResult.hasHit)
 			{
 				if (world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
@@ -620,6 +628,9 @@ namespace ViMG
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
+
+					if (world.GetChunkManager().IsInWorldBounds(PlaceAtPos))
+						CanPlace = true;
 				}
 			}
 
