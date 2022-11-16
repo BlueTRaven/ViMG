@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ViMG.Items
 {
-	public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>, IHasPickaxeStats
+	public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>, IHasAreaEffect
 	{
 		public ItemPickaxe() : base("pickaxe", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 144, 16, 16))
 		{
@@ -45,7 +45,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(null), player.LookAtNormal);
+					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(null), player.LookAtNormal);
 
 					itemCooldownTime = metaItem.GetStats(inventory.Get(index)).cooldownTime;
 					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
@@ -79,9 +79,9 @@ namespace ViMG.Items
 			return ref Get(item).GetStats(item);
         }
 
-        public CubePosition[] GetAffectedPositions(ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
         {
-			return Get(item).GetAffectedPositions(item, standingPosition, hit, normal);
+			return Get(item).GetAffectedPositions(player, item, standingPosition, hit, normal);
         }
     }
 }

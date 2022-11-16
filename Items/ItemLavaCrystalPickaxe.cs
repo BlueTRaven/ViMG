@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ViMG.Items
 {
-    public class ItemLavaCrystalPickaxe : Item, IHasPickaxeStats
+    public class ItemLavaCrystalPickaxe : Item, IHasAreaEffect
 	{
 		private ItemPickaxeHead.PickaxeStats stats = new ItemPickaxeHead.PickaxeStats(0.55f, 1, 2, 1, 1, 0);
 
@@ -37,7 +37,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = GetAffectedPositions(inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal);
+					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal);
 
 					itemCooldownTime = GetStats(inventory.Get(index)).cooldownTime;
 					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
@@ -65,7 +65,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 

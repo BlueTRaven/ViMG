@@ -186,7 +186,8 @@ namespace ViMG.Cubes
 			None,
 			Collidable,
 			Rope,
-			LiquidWater
+			Platform,
+			LiquidWater,
 		}
 
 		public string Name = "";

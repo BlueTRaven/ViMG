@@ -775,7 +775,11 @@ namespace ViMG
 				{
 					if (inventory.Get(menuPlayer.HighlightIndex).valid)
 					{
-						ThrowItem(inventory, menuPlayer.HighlightIndex, 1);
+						int num = 1;
+						if (Main.inputManager.IsPressed(Keys.LeftControl))
+							num = inventory.Get(menuPlayer.HighlightIndex).num;
+
+						ThrowItem(inventory, menuPlayer.HighlightIndex, num);
 					}
 				}
 			}
@@ -894,7 +898,11 @@ namespace ViMG
 				{
 					if (inventory.Get(menuPlayer.HighlightIndex).valid)
 					{
-						ThrowItem(inventory, menuPlayer.HighlightIndex, 1);
+						int num = 1;
+						if (Main.inputManager.IsPressed(Keys.LeftControl))
+							num = inventory.Get(menuPlayer.HighlightIndex).num;
+
+						ThrowItem(inventory, menuPlayer.HighlightIndex, num);
 					}
 				}
 			}
@@ -1076,7 +1084,11 @@ namespace ViMG
 					{
 						if (inventory.Get(menuPlayer.HighlightIndex).valid)
 						{
-							ThrowItem(inventory, menuPlayer.HighlightIndex, 1);
+							int num = 1;
+							if (Main.inputManager.IsPressed(Keys.LeftControl))
+								num = inventory.Get(menuPlayer.HighlightIndex).num;
+
+							ThrowItem(inventory, menuPlayer.HighlightIndex, num);
 						}
 					}
 				}
@@ -1287,7 +1299,10 @@ namespace ViMG
 
 						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && 
-							(cube.Collision == Cube.CollisionValue.Collidable || cube.Collision == Cube.CollisionValue.LiquidWater || cube.Collision == Cube.CollisionValue.Rope))
+							(cube.Collision == Cube.CollisionValue.Collidable || 
+							cube.Collision == Cube.CollisionValue.LiquidWater || 
+							cube.Collision == Cube.CollisionValue.Rope ||
+							cube.Collision == Cube.CollisionValue.Platform))
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -1332,6 +1347,20 @@ namespace ViMG
 									if (collided)
 										fallStartY = Position.Y;
 								}
+								else if (cube.Collision == Cube.CollisionValue.Platform)
+                                {
+									//Only perform this logic if LCtrl is not held.
+									if (!Main.inputManager.IsPressed(Keys.LeftControl) && CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+									{
+										if (lowerChange.Y > 0 && Velocity.Y <= 0)
+										{
+											Position.Y = lowerCheckPos.Y + Bounds.Size.Y - LOWER_OFFSET + lowerChange.Y;
+											LandOnGround();
+										}
+
+										collided = true;
+									}
+								}
 								else
 								{
 									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
@@ -1339,29 +1368,7 @@ namespace ViMG
 										Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
 
 										if (lowerChange.Y > 0 && Velocity.Y <= 0)
-										{
-											Velocity.Y = 0;
-											onGround = true;
-
-											currentJumps = stats.JumpNum;
-
-											float fallDistance = fallStartY - Position.Y;
-											if (fallDistance > FALL_HEIGHT_FATAL)
-												Kill();
-											else
-											{
-												if (fallDistance > FALL_HEIGHT_DAMAGE_START)
-												{
-													float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
-
-													int damage = (int)((float)GetRealMaxHealth() * t);
-
-													Damage(damage);
-												}
-
-												fallStartY = Position.Y;
-											}
-										}
+											LandOnGround();
 										else if (lowerChange.Y < 0)
 											Velocity.Y = 0;
 										else if (lowerChange.X != 0)
@@ -1392,6 +1399,31 @@ namespace ViMG
 						}
 					}
 				}
+			}
+		}
+
+		private void LandOnGround()
+        {
+			Velocity.Y = 0;
+			onGround = true;
+
+			currentJumps = stats.JumpNum;
+
+			float fallDistance = fallStartY - Position.Y;
+			if (fallDistance > FALL_HEIGHT_FATAL)
+				Kill();
+			else
+			{
+				if (fallDistance > FALL_HEIGHT_DAMAGE_START)
+				{
+					float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
+
+					int damage = (int)((float)GetRealMaxHealth() * t);
+
+					Damage(damage);
+				}
+
+				fallStartY = Position.Y;
 			}
 		}
 
@@ -1545,13 +1577,13 @@ namespace ViMG
 				Color color = Color.Lerp(Color.White, Color.Black, s);
 
 				if (ExpandedMineState && 
-					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasPickaxeStats pickStats)
+					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasAreaEffect pickStats)
 				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(null), lookAtResult.normal);
+					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(null), lookAtResult.normal);
 
 					for (int i = 0; i < positions.Length; i++)
 					{
-						if (world.GetChunkManager().GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (pickStats.CanPredictAir() || world.GetChunkManager().GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 						{
 							Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
 								Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *

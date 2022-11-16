@@ -109,6 +109,7 @@ namespace ViMG.Items
 			Register(new ItemLavaCannon());
 			Register(new ItemBookLavaSpout());
 			Register(new ItemBookBlank());
+			Register(new ItemDebugPlaceBlockWand());
 			RegisterItemCubes();
 		}
 

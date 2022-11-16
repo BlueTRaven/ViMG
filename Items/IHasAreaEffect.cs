@@ -7,10 +7,15 @@ using System.Threading.Tasks;
 
 namespace ViMG.Items
 {
-    public interface IHasPickaxeStats
+    public interface IHasAreaEffect
     {
         ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item);
 
-        CubePosition[] GetAffectedPositions(ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal);
+        CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal);
+
+        bool CanPredictAir()
+        {
+            return false;
+        }
     }
 }

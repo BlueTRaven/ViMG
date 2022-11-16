@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ViMG.Items
 {
-	public class ItemPickaxeHead : Item, IHasPickaxeStats
+	public class ItemPickaxeHead : Item, IHasAreaEffect
 	{
 		public readonly struct PickaxeStats 
 		{
@@ -66,7 +66,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
