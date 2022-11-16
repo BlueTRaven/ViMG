@@ -374,28 +374,32 @@ namespace ViMG
 				if (!IsInChunkBounds(newPos))
 				{
 					CubePosition adjPos = newPos.InCubeSpace(chunk);
-					Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
 
-					//TODO: re-enable this.
-					//BUG:
-					//Entity attempts to set a tile.
-					//Tile notifies adjacent
-					//In order to notify adjacent, chunk manager deserializes and loads adjacent chunk
-					//Loading adjacent chunk adds entities, throwing an error because we have modified the entity list while iterating.
-					//This needs to be fixed before this line of code can be re-enabled.
-					/*if (adjChunk == null)
+					if (GetChunk().GetChunkManager().IsInWorldBounds(adjPos))
 					{
-						//If the chunk is null, then that means it's probably an unloaded chunk.
-						//Try to load it.
-						chunk.GetWorld().ChunkLoadManager.LoadChunk(chunk.GetWorld(), ChunkPosition.CubeChunk(adjPos));
-						adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
-					}*/
+						Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
 
-					if (adjChunk != null)
-					{
-						GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+						//TODO: re-enable this.
+						//BUG:
+						//Entity attempts to set a tile.
+						//Tile notifies adjacent
+						//In order to notify adjacent, chunk manager deserializes and loads adjacent chunk
+						//Loading adjacent chunk adds entities, throwing an error because we have modified the entity list while iterating.
+						//This needs to be fixed before this line of code can be re-enabled.
+						/*if (adjChunk == null)
+						{
+							//If the chunk is null, then that means it's probably an unloaded chunk.
+							//Try to load it.
+							chunk.GetWorld().ChunkLoadManager.LoadChunk(chunk.GetWorld(), ChunkPosition.CubeChunk(adjPos));
+							adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
+						}*/
 
-						chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+						if (adjChunk != null)
+						{
+							GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+
+							chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+						}
 					}
 				}
 				else

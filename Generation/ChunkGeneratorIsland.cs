@@ -37,8 +37,8 @@ namespace ViMG.Generation
 			"heart_metal",
 			"stone_lily",
 			"stone_blunderbuss",
-			//TODO "ancient_sword",
-			//TODO "ornamental_sword",
+			"sword_rusted",
+			"sword_ornamental",
 			"flintlock_pistol",
 			"book_spell_bubble",
 			"book_spell_winds"
@@ -635,7 +635,7 @@ namespace ViMG.Generation
 				radii[i] = GetRandom().NextFloat(RADIUS_MIN, RADIUS_MAX);
 			}
 
-			Color color = new Color(GetRandom().NextFloat(), GetRandom().NextFloat(), GetRandom().NextFloat(), 1f);
+			/*Color color = new Color(GetRandom().NextFloat(), GetRandom().NextFloat(), GetRandom().NextFloat(), 1f);
 			Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
             {
 				Position = startPosition.InWorldSpace(null),
@@ -648,15 +648,15 @@ namespace ViMG.Generation
 				Position = endPosition.InWorldSpace(null),
 				Color = color * 1.25f,
 				Scale = Vector3.One
-			});
+			});*/
 			for (int i = 0; i < numSegments; i++)
 			{
-				Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
+				/*Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
 				{
 					Position = segments[i].InWorldSpace(null),
 					Color = color,
 					Scale = Vector3.One / 4f
-				});
+				});*/
 
 				CubePosition prevSegmentPos = i == 0 ? startPosition : segments[i - 1];
 
@@ -965,9 +965,6 @@ namespace ViMG.Generation
 
 			if (GetRandom().NextCoinFlip())
 				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), GetRandom().Next(1, 4), 1));
-
-			if (GetRandom().NextFloat() < 0.75f)
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("string"), GetRandom().Next(1, 2), 1));
 
 			if (GetRandom().NextCoinFlip())
 				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), GetRandom().Next(10, 20), 1));

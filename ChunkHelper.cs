@@ -233,16 +233,20 @@ namespace ViMG
 
 		public static bool CanPlaceIfNonSolid(ChunkManager manager, CubePosition positionInCubeSpace, out Chunk offsetChunk, out Cube offsetCube)
         {
-			offsetChunk = manager.GetChunk(positionInCubeSpace);
-
-			if (offsetChunk != null && offsetChunk.Initialized)
+			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = offsetChunk.GetData().GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
-				if (!offsetCube.Solid)
+				offsetChunk = manager.GetChunk(positionInCubeSpace);
+
+				if (offsetChunk != null && offsetChunk.Initialized)
 				{
-					return true;
+					offsetCube = offsetChunk.GetData().GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					if (!offsetCube.Solid)
+					{
+						return true;
+					}
 				}
 			}
+			else offsetChunk = null;
 
 			offsetCube = null;
 			return false;
