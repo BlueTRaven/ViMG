@@ -219,6 +219,15 @@
 #begin Structures/dungeon.struct
 /copy:Structures/dungeon.struct
 
+#begin Structures/dungeon_hallway.struct
+/copy:Structures/dungeon_hallway.struct
+
+#begin Structures/dungeon_staircase.struct
+/copy:Structures/dungeon_staircase.struct
+
+#begin Structures/dungeon_tall.struct
+/copy:Structures/dungeon_tall.struct
+
 #begin Structures/house.struct
 /copy:Structures/house.struct
 

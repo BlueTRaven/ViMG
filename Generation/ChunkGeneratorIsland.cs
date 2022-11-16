@@ -69,7 +69,7 @@ namespace ViMG.Generation
 		private Structure obelisk;
 		private Structure house;
 		private Structure geode;
-		private Structure dungeon;
+		private Structure[] dungeon;
 		private Structure[] shrine;
 
 		public ChunkGeneratorIsland(int layer, int seed = 1337) : base(layer, seed)
@@ -124,16 +124,22 @@ namespace ViMG.Generation
 				float dist = new Vector3((pos.x - center.x) / 4, pos.y - center.y, (pos.z - center.z) / 4).Length();
 
 				if (dist < 8)
-                {
+				{
 					sd[i] = 0;
-                }
+				}
 			}
 
 			ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
 			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
 			house = Main.assetsManager.GetAsset<Structure>("house");
 			geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
-			dungeon = Main.assetsManager.GetAsset<Structure>("dungeon");
+			dungeon = new Structure[4]
+			{
+				Main.assetsManager.GetAsset<Structure>("dungeon"),
+				Main.assetsManager.GetAsset<Structure>("dungeon_tall"),
+				Main.assetsManager.GetAsset<Structure>("dungeon_hallway"),
+				Main.assetsManager.GetAsset<Structure>("dungeon_staircase"),
+			};
 			shrine = new Structure[2]
 			{
 				Main.assetsManager.GetAsset<Structure>("shrine_new"),
@@ -266,6 +272,7 @@ namespace ViMG.Generation
 
 			List<Rectangle3DI> cavePositions = new List<Rectangle3DI>();
 
+			ProfilingHelper.Start("Generating Caves...");
 			for (int i = 0; i < 132; i++)
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
@@ -285,8 +292,9 @@ namespace ViMG.Generation
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
+			ProfilingHelper.End("Done.");
 
-			ProfilingHelper.Start("Generating water caves and flood filling...");
+			/*ProfilingHelper.Start("Generating water caves and flood filling...");
 			for (int i = 0; i < 216; i++)
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
@@ -296,13 +304,15 @@ namespace ViMG.Generation
 
 				StructureGeneratorGOL3DWaterCave.PlaceInWorld(manager, manager.GetChunk(randomPos), structure, randomPos);
 			}
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End("Done.");*/
 
 			ProfilingHelper.Start("Generating cave connections...");
 			for (int i = 0; i < 800; i++)
 				GenerateCaveConnection(manager, cavePositions);
 			ProfilingHelper.End("Done.");
 
+			ProfilingHelper.Start("Generating ores...");
+			ProfilingHelper.Start("Copper...");
 			//copper: 82037
 			for (int i = 0; i < 80000; i++) 
 			{
@@ -312,7 +322,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
+			ProfilingHelper.End("Done.");
 
+			ProfilingHelper.Start("Tin...");
 			//tin: 87799
 			for (int i = 0; i < 90000; i++)
             {
@@ -322,7 +334,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
+			ProfilingHelper.End("Done.");
 
+			ProfilingHelper.Start("Glow...");
 			//glow: 114338
 			for (int i = 0; i < 116000; i++)
             {
@@ -332,7 +346,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
+			ProfilingHelper.End("Done.");
 
+			ProfilingHelper.Start("Iron...");
 			//iron: 76813
 			for (int i = 0; i < 75000; i++)
             {
@@ -342,6 +358,8 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
+			ProfilingHelper.End("Done.");
+			ProfilingHelper.End("Done.");
 
 			const int NUM_CAVE_CHESTS = 300;
 			int spawnNum = NUM_CAVE_CHESTS;
@@ -378,7 +396,8 @@ namespace ViMG.Generation
 				}
 			}
 
-			const int NUM_DUNGEONS = 300;
+			ProfilingHelper.Start("Generating Dungeons...");
+			const int NUM_DUNGEONS = 800;
 			spawnNum = NUM_DUNGEONS;
 			lastPosition = 0;
 
@@ -393,8 +412,7 @@ namespace ViMG.Generation
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
-
-						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon, pos,
+						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon[GetRandom().Next(0, 4)], pos,
 											Span<ushort>.Empty, PlaceDungeon);
 
 						manager.world.PointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
@@ -405,6 +423,7 @@ namespace ViMG.Generation
 					}
 				}
 			}
+			ProfilingHelper.End("Done.");
 
 			const int NUM_SHRINES = 300;
 			spawnNum = NUM_SHRINES;
@@ -779,11 +798,6 @@ namespace ViMG.Generation
         {
 			Util.OneDToThreeD(structureIndex, new ValuePoint3D(structure.size), out ValuePoint3D structurePosition);
 
-			//Get rid of air padding
-			if (structurePosition.x == 0 || structurePosition.x == structure.size.X - 1 ||
-				structurePosition.z == 0 || structurePosition.z == structure.size.Z - 1)
-				return false;
-
 			//TODO replace structure_replace_00 with chest; 01 with bodies? skeletons? Something I haven't made yet. For now, air
 
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
@@ -796,7 +810,7 @@ namespace ViMG.Generation
 
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
 			{
-				id = 0;
+				id = (GetRandom().Next(0, 4) == 0) ? Main.Registry.CubeRegistry.Get("bonepile").Id : (ushort)0;
 				return true;
 			}
 
