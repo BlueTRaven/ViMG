@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace ViMG.Buffs
 {
-    public class DebuffPoisoned : Buff
+    public class DebuffBleeding : Buff
     {
-        public DebuffPoisoned() : base("poisoned", 999f * 60f, 2f)
+        public DebuffBleeding() : base("bleeding", 999f * 60f, 3.5f)
         {
         }
 
@@ -18,7 +20,7 @@ namespace ViMG.Buffs
             base.Tick(deltaTime, ref buffInstance, ref stats);
 
             stats.HP -= 1;
-            stats.TintColor = new Color(89, 125, 34);
+            stats.TintColor = Color.DarkRed;
         }
     }
 }

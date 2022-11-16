@@ -58,6 +58,24 @@ namespace ViMG.Items
             }
         }
 
+		public struct MeleeAttackStats
+        {
+			public float range;
+			public AttackStats attackStats;
+
+			public MeleeAttackStats(AttackStats attackStats, float range)
+            {
+                this.attackStats = attackStats;
+                this.range = range;
+            }
+
+			public string GetTooltip()
+			{
+				return String.Format("{0}" +
+					"Magic Use: {1}\n", attackStats.GetTooltip(), Util.RangeToString(Player.DamageType.Melee, range));
+			}
+		}
+
 		public struct AttackStats
 		{
 			public Player.DamageType damageType;

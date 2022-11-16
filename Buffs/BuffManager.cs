@@ -11,7 +11,7 @@ namespace ViMG.Buffs
     {
         private readonly IHasStats stats;
         private List<Buff.BuffInstance> buffs = new List<Buff.BuffInstance>();
-        private HashSet<Type> buffTypes = new HashSet<Type>();
+        private HashSet<Buff> buffTypes = new HashSet<Buff>();
         private Dictionary<string, List<Buff.BuffInstance>> buffTags = new Dictionary<string, List<Buff.BuffInstance>>();
 
         public BuffManager(IHasStats stats)
@@ -34,7 +34,7 @@ namespace ViMG.Buffs
                 if (instance.duration <= 0 || !instance.valid)
                 {
                     buffs.RemoveAt(i);
-                    buffTypes.Remove(instance.GetType());
+                    buffTypes.Remove(instance.buff);
 
                     foreach (string tag in instance.buff.Tags)
                     {
@@ -70,7 +70,7 @@ namespace ViMG.Buffs
 
         public void AddBuff(Buff.BuffInstance buffInstance)
         {
-            if (buffTypes.Contains(buffInstance.GetType()))
+            if (buffTypes.Contains(buffInstance.buff))
             {
                 foreach (Buff.BuffInstance existingBuff in buffs)
                 {
@@ -81,7 +81,7 @@ namespace ViMG.Buffs
             else
             {
                 this.buffs.Add(buffInstance);
-                this.buffTypes.Add(buffInstance.buff.GetType());
+                this.buffTypes.Add(buffInstance.buff);
                 foreach (string tag in buffInstance.buff.Tags)
                 {
                     if (!buffTags.ContainsKey(tag))
@@ -94,7 +94,7 @@ namespace ViMG.Buffs
 
         public bool HasBuff(Buff buff)
         {
-            return buffTypes.Contains(buff.GetType());
+            return buffTypes.Contains(buff);
         }
 
         public bool HasBuff(string tag)

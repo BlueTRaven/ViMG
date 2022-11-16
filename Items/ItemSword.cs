@@ -42,12 +42,12 @@ namespace ViMG.Items
 
 			ItemSwordBlade meta = Get(inventory.Get(index));
 
-			itemCooldownTime = meta.GetStats().cooldownTime;
-			int damage = meta.GetStats().damage;
-			float knockback = meta.GetStats().knockback;
+			itemCooldownTime = meta.GetStats().attackStats.cooldownTime;
+			int damage = meta.GetStats().attackStats.damage;
+			float knockback = meta.GetStats().attackStats.knockback;
 			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
 
-			player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback);
+			player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
 
 			return true;
 		}

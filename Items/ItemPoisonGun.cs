@@ -20,8 +20,7 @@ namespace ViMG.Items
 
 		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
 			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
-		private static ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
-			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true, applyBuffs);
+		private static ProjectileManager.ProjectileStats stats;
 
 		public ItemPoisonGun() : base("poison_gun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 128, 16, 16))
         {
@@ -38,8 +37,11 @@ namespace ViMG.Items
 			{
 				applyBuffs = new Buff.BuffInstance[1]
 				{
-						new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("poisoned"), 10)
+					new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("poisoned"), 10)
 				};
+
+				stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
+				   Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true, applyBuffs);
 			}
 
 			if (inventory.FindTag("ammo_bullet", out int ammoIndex).valid)

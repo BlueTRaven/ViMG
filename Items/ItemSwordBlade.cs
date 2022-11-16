@@ -10,10 +10,10 @@ namespace ViMG.Items
 	public class ItemSwordBlade : Item
 	{
 		private readonly Color color;
-		private readonly AttackStats stats;
+		private readonly MeleeAttackStats stats;
 		private readonly string materialName;
 
-		public ItemSwordBlade(string material, Color color, AttackStats stats) : base("sword_blade_" + material, 
+		public ItemSwordBlade(string material, Color color, MeleeAttackStats stats) : base("sword_blade_" + material, 
 			Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 128, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
@@ -27,7 +27,7 @@ namespace ViMG.Items
 			return materialName;
 		}
 
-		public ref readonly AttackStats GetStats()
+		public ref readonly MeleeAttackStats GetStats()
 		{
 			return ref stats;
 		}

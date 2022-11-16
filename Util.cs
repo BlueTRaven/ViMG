@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG
 {
@@ -13,6 +14,27 @@ namespace ViMG
         {
 			Weak,
 			Brittle,
+        }
+
+		public static string RangeToString(Player.DamageType damageType, float range)
+        {
+			if (damageType == Player.DamageType.Melee)
+			{
+				if (range <= Cube.CUBE_SCALE / 2f)
+					return "Teeny Tiny";
+				else if (range <= Cube.CUBE_SCALE)
+					return "Short";
+				else if (range <= Cube.CUBE_SCALE * 2.5f)
+					return "Medium";
+				else if (range <= Cube.CUBE_SCALE * 3.5f)
+					return "Ordinary";
+				else if (range <= Cube.CUBE_SCALE * 5f)
+					return "Long";
+				else if (range >= Cube.CUBE_SCALE * 5f)
+					return "Very Long";
+			}
+
+			return "UNKNOWN???";
         }
 
 		public static string CooldownToString(float cooldownTime)

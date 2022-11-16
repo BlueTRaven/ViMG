@@ -16,13 +16,13 @@ namespace ViMG.Items
         private static ProjectileManager.ProjectileStats stats;
         private static ProjectileManager.ProjectileVisStats visStats;
         private static ProjectileManager.ProjectileBatchStats batchStats;
-        private static AttackStats attackStats = new AttackStats(Player.DamageType.Melee, 1.85f, 16, 1);
+        private static MeleeAttackStats meleeStats = new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.85f, 16, 1), Cube.CUBE_SCALE * 1.75f);
 
         public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
         {
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
-                attackStats.GetTooltip() +
+                meleeStats.GetTooltip() +
                 "Hitting enemies results in a small explosion of bones.";
 
             scale = 2f;
@@ -39,12 +39,12 @@ namespace ViMG.Items
         {
             base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
 
-            itemCooldownTime = attackStats.cooldownTime;
-            int damage = attackStats.damage;
-            float knockback = attackStats.knockback;
+            itemCooldownTime = meleeStats.attackStats.cooldownTime;
+            int damage = meleeStats.attackStats.damage;
+            float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
 
-            player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback);
+            player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
 
             return true;
         }

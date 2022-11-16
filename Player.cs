@@ -1537,7 +1537,7 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f)
+		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)
 		{
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -1550,7 +1550,7 @@ namespace ViMG
 			this.hitboxSize = hitboxSize;
 
 			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback, 
-				inventorySlot: inventorySlot);
+				applyBuffs: applyBuffs, inventorySlot: inventorySlot);
 
 			hitboxTimer = HITBOX_TIME;
 

@@ -11,7 +11,7 @@ namespace ViMG.Buffs
 {
     public abstract class Buff : IRegisterable
     {
-        public class BuffInstance
+        public struct BuffInstance
         {
             public Buff buff;
 
@@ -19,11 +19,6 @@ namespace ViMG.Buffs
             public float tickInterval;
 
             public bool valid;
-
-            public BuffInstance()
-            {
-                valid = false;
-            }
 
             public BuffInstance(Buff buff, float duration = -1)
             {
@@ -65,11 +60,6 @@ namespace ViMG.Buffs
                 buffInstance.tickInterval += tickIntervalMax;
 
                 Tick(deltaTime, ref buffInstance, ref stats);
-            }
-
-            if (buffInstance.duration <= 0)
-            {
-                buffInstance = new BuffInstance();
             }
         }
 
