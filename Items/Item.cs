@@ -72,7 +72,7 @@ namespace ViMG.Items
 			public string GetTooltip()
 			{
 				return String.Format("{0}" +
-					"Magic Use: {1}\n", attackStats.GetTooltip(), Util.RangeToString(Player.DamageType.Melee, range));
+					"{1} Range\n", attackStats.GetTooltip(), Util.RangeToString(Player.DamageType.Melee, range));
 			}
 		}
 

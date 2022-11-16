@@ -22,7 +22,7 @@ namespace ViMG.Items
             name = "Rusted Sword";
             description = "A rusted and ruined sword made of iron. Perhaps it had once been a fine blade, but it is now a shadow of its former self.\n" +
                 meleeStats.GetTooltip() +
-                "Hitting enemies applies bleed for 4 seconds.";
+                "Hitting enemies applies bleed for 7 seconds.";
 
             scale = 1f;
         }

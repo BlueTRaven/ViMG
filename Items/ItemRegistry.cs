@@ -111,6 +111,7 @@ namespace ViMG.Items
 			Register(new ItemBookBlank());
 			Register(new ItemDebugPlaceBlockWand());
 			Register(new ItemRustedSword());
+			Register(new ItemOrnamentalSword());
 			RegisterItemCubes();
 		}
 
