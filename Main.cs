@@ -103,6 +103,10 @@ namespace ViMG
         {
 			MainThread = Thread.CurrentThread;
 
+			SessionInformation = new SessionInformation();
+			SessionIO = new SessionIO();
+			SessionIO.Load(graphics);
+
 			graphics = new GraphicsDeviceManager(this)
 			{
 				GraphicsProfile = GraphicsProfile.HiDef,
@@ -120,9 +124,6 @@ namespace ViMG
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
 
-			SessionInformation = new SessionInformation();
-			SessionIO = new SessionIO();
-			SessionIO.Load();
 			//WorldSaver saver = new WorldSaver(null, null, SessionInformation);
 			//saver.LoadSession();
         }

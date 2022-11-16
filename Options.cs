@@ -118,7 +118,7 @@ namespace ViMG
             writer.WriteLine("bloom " + BloomEnabled);
         }
 
-        public static void OnLoad(List<string> lines)
+        public static void OnLoad(List<string> lines, GraphicsDeviceManager graphics)
         {
             foreach (string line in lines)
             {
@@ -146,6 +146,9 @@ namespace ViMG
                 if (split[0] == "bloom")
                     bool.TryParse(split[1], out BloomEnabled);
             }
+
+            //graphics.PreferredBackBufferWidth = CurrentWindowResolution.X;
+            //graphics.PreferredBackBufferHeight = CurrentWindowResolution.Y;
         }
     }
 }

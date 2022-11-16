@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,7 +34,7 @@ namespace ViMG
             }
         }
 
-        public void Load()
+        public void Load(GraphicsDeviceManager graphics)
         {
             if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION))
                 return;
@@ -52,7 +53,7 @@ namespace ViMG
                         line = reader.ReadLine();
                     }
 
-                    Options.OnLoad(lines);
+                    Options.OnLoad(lines, graphics);
                 }
             }
         }
