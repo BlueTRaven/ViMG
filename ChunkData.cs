@@ -411,8 +411,6 @@ namespace ViMG
 			}
 		}
 
-		private float[] uploadArr = new float[1];
-
 		public void SetCube(CubePosition position, ushort id, bool markDirty = true, bool killTrackedEntities = true)
 		{
 			if (IsDefault)
@@ -439,44 +437,6 @@ namespace ViMG
 
 				CubeUpdate(positionChunkSpace, id);
 			}
-
-			/*int sizeInCubes = chunk.GetChunkManager().sizeInCubes;
-			ref float height = ref chunk.GetChunkManager().HeightmapRaw[positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X];
-
-			if (positionCubeSpace.Y > height * sizeInCubes)
-			{
-				//If we're modifying a position above the height and our cube is opaque,
-				//We can safely overwrite it.
-				Cube cube = Main.Registry.CubeRegistry.Get(id);
-
-				if (cube != null)
-				{
-					if (cube.Transparency == Cube.TransparencyValue.Opaque)
-					{
-						height = (float)positionCubeSpace.Y / sizeInCubes;
-						chunk.GetChunkManager().Heightmap.SetData(0, new Rectangle(positionCubeSpace.X, positionCubeSpace.Z, 1, 1), 
-							chunk.GetChunkManager().HeightmapRaw, positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X, 1);
-						//chunk.GetChunkManager().Heightmap.SetData(chunk.GetChunkManager().HeightmapRaw);
-					}
-				}
-			}
-			else if (positionCubeSpace.Y == (int)MathF.Round(height * sizeInCubes, MidpointRounding.ToEven))
-            {
-				int wheight = (int)MathF.Round(height * sizeInCubes, MidpointRounding.ToEven);
-				//Otherwise, if we're modifying the cube at the current height, we need to look down (starting from the height) 
-				//until we find the next opaque cube.
-				//TODO this might look down instead of up
-				for (int i = (int)wheight; i >= 0; i--)
-				{
-					Cube newCube = chunk.GetChunkManager().GetCube(new CubePosition(positionCubeSpace.X, i, positionCubeSpace.Z))
-						.GetOrDefault(Main.Registry.CubeRegistry.Air);
-					if (newCube.Transparency == Cube.TransparencyValue.Opaque)
-						height = (float)i;
-
-					chunk.GetChunkManager().Heightmap.SetData(0, new Rectangle(positionCubeSpace.X, positionCubeSpace.Z, 1, 1),
-							chunk.GetChunkManager().HeightmapRaw, positionCubeSpace.Z * sizeInCubes + positionCubeSpace.X, 1);
-				}
-			}*/
 
 			cubes[index] = id;
 
