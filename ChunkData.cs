@@ -396,7 +396,7 @@ namespace ViMG
 
 						if (adjChunk != null)
 						{
-							GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+							GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
 
 							chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 						}
@@ -404,7 +404,7 @@ namespace ViMG
 				}
 				else
 				{
-					GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
+					GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
 
 					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 				}

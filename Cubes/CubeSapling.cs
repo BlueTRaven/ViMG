@@ -22,7 +22,7 @@ namespace ViMG.Cubes
             base.PostChunkGen(world, manager, chunkData, position);
 
             Sapling sapling = new Sapling(position.InCubeSpace(chunkData.GetChunk()));
-            chunkData.GetChunk().GetWorld().EntityManager.Add(sapling);
+            world.EntityManager.Add(sapling);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

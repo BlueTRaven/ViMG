@@ -66,7 +66,7 @@ namespace ViMG.Cubes
             return manager.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
         }
 
-        public override void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+        public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
         {
             if (updating.Y == position.Y - 1)
             {
@@ -77,7 +77,7 @@ namespace ViMG.Cubes
                     parent.SetCube(position, 0);
             }
 
-            base.OnAdjacentUpdated(parent, position, updatingParent, updating, updatedId);
+            base.OnAdjacentUpdated(world, manager, parent, position, updatingParent, updating, updatedId);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

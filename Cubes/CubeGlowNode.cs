@@ -20,7 +20,7 @@ namespace ViMG.Cubes
         {
             base.PostChunkGen(world, manager, chunkData, position);
 
-			chunkData.GetChunk().GetWorld().EntityManager.Add(new GlowNode(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 5, CUBE_SCALE * 4,
+			world.EntityManager.Add(new GlowNode(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 5, CUBE_SCALE * 4,
 				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
 		}
 

@@ -311,7 +311,7 @@ namespace ViMG.Cubes
 
         }
 
-		public virtual void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+		public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
 		{
 
 		}

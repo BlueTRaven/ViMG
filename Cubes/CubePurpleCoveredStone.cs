@@ -71,7 +71,7 @@ namespace ViMG.Cubes
             }
 
             if (Main.random.NextFloat() < 1f / 30f)
-                SpawnMushrooms(chunkData.GetChunk().GetChunkManager(), position.InCubeSpace(chunkData.GetChunk()));
+                SpawnMushrooms(manager, position.InCubeSpace(chunkData.GetChunk()));
         }
 
         public override void OnRandomUpdate(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)

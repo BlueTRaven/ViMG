@@ -28,7 +28,7 @@ namespace ViMG.Cubes
             base.PostChunkGen(world, manager, chunkData, position);
 
             EntityShrine shrine = new EntityShrine(position.InCubeSpace(chunkData.GetChunk()), Main.Registry.BuffRegistry.Get(buff));
-            chunkData.GetChunk().GetWorld().EntityManager.Add(shrine);
+            world.EntityManager.Add(shrine);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

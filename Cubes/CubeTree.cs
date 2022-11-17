@@ -22,16 +22,14 @@ namespace ViMG.Cubes
 			int size = 0;
 
 			// don't generate a tree if there's a tree below us. We only want the base cube to care.
-			if (chunkData.GetChunk().GetWorld().GetChunkManager()
-				.GetCube(position.InCubeSpace(chunkData.GetChunk()) - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace))
+			if (manager.GetCube(position.InCubeSpace(chunkData.GetChunk()) - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace))
 				.GetOrDefault(Main.Registry.CubeRegistry.Air) != this)
 			{
 				//List<CubePosition> listenPositions = new List<CubePosition>();
 				for (int i = 0; i < 12; i++)
 				{
 					CubePosition pos = position.InCubeSpace(chunkData.GetChunk()) + new CubePosition(0, i, 0, CubePosition.CoordinateSpace.CubeSpace);
-					if (chunkData.GetChunk().GetWorld().GetChunkManager()
-						.GetCube(pos)
+					if (manager.GetCube(pos)
 						.GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
 					{
 						size = i;
@@ -41,7 +39,7 @@ namespace ViMG.Cubes
 
 				Tree tree = new Tree(position.InWorldSpace(chunkData.GetChunk()) - new Vector3(CUBE_SCALE * 1.25f, 0, CUBE_SCALE * 1.25f), 
 					size, position.InCubeSpace(chunkData.GetChunk()));
-				chunkData.GetChunk().GetWorld().EntityManager.Add(tree);
+				world.EntityManager.Add(tree);
 			}
 		}
 
@@ -52,9 +50,9 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1));
 		}
 
-		public override void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+		public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
 		{
-			base.OnAdjacentUpdated(parent, position, updatingParent, updating, updatedId);
+			base.OnAdjacentUpdated(world, manager, parent, position, updatingParent, updating, updatedId);
 
 			if (position.Y > updating.Y && updatedId == 0)
 			{

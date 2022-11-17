@@ -87,9 +87,9 @@ namespace ViMG.Cubes
 			}
         }
 
-        public override void OnAdjacentUpdated(ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+        public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
         {
-            base.OnAdjacentUpdated(parent, position, updatingParent, updating, updatedId);
+            base.OnAdjacentUpdated(world, manager, parent, position, updatingParent, updating, updatedId);
 
 			//top block is updating.
 			if (updating.Y == position.Y + 1)
