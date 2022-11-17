@@ -40,9 +40,9 @@ namespace ViMG.Cubes
 			new CubePosition(0, 1, 1),
 			new CubePosition(0, -1, 1),
 		};
-        public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
+        public override void OnRandomUpdate(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
         {
-            base.OnRandomUpdate(world, manager, position);
+            base.OnRandomUpdate(world, manager, chunkData, position);
 
 			if (dirt == null)
 				dirt = Main.Registry.CubeRegistry.Get("dirt");

@@ -60,7 +60,12 @@ namespace ViMG
 
 		private bool paused;
 
+#if DEBUG
 		public static bool Debug = true;
+#else
+		public static bool Debug = false;
+#endif
+
 		public static bool DebugChunks;
 		public static string DEBUGPopupText = "";
 
@@ -89,6 +94,7 @@ namespace ViMG
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
 		public const bool DO_DETAIL = true;
+		public const bool MULTITHREAD_GENERATION = false;
 		public const bool TRANSPARENT_ORES = false;
 		public const bool ENABLE_ENT_SPAWNING = true;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;

@@ -23,9 +23,9 @@ namespace ViMG.Cubes
 			this.slots = rows * columns;
 		}
 
-		public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+		public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
 		{
-			base.PostChunkGen(chunkData, position);
+			base.PostChunkGen(world, manager, chunkData, position);
 		}
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)

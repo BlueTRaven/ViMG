@@ -59,9 +59,9 @@ namespace ViMG.Cubes
             new CubePosition(0, 1, -1),
         };
 
-        public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
         {
-            base.PostChunkGen(chunkData, position);
+            base.PostChunkGen(world, manager, chunkData, position);
 
             if (mushroomStem == null)
             {
@@ -74,9 +74,9 @@ namespace ViMG.Cubes
                 SpawnMushrooms(chunkData.GetChunk().GetChunkManager(), position.InCubeSpace(chunkData.GetChunk()), false);
         }
 
-        public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
+        public override void OnRandomUpdate(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
         {
-            base.OnRandomUpdate(world, manager, position);
+            base.OnRandomUpdate(world, manager, chunkData, position);
 
             if (mushroomStem == null)
             {

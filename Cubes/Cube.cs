@@ -326,12 +326,12 @@ namespace ViMG.Cubes
 
 		}
 
-		public virtual void PostChunkGen(ChunkData chunkData, CubePosition position)
+		public virtual void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
 		{
 
 		}
 
-		public virtual void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
+		public virtual void OnRandomUpdate(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
         {
 
         }

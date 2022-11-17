@@ -76,9 +76,9 @@ namespace ViMG.Generation
         {
 		}
 
-		public override void Initialize(World world)
+		public override void Initialize(ChunkManager chunkManager)
 		{
-			base.Initialize(world);
+			base.Initialize(chunkManager);
 
 			holeLocationX = GetRandom().Next(192, 320);
 			holeLocationY = GetRandom().Next(192, 320);
@@ -97,54 +97,57 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
-			structureBatchesGOL3DShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
-			structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
-			structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
-				3, 6, Seed, null).Generate(18, 3);
-			structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
-				4, 12, Seed, null).Generate(18, 3);
-			structureBatchesOreTin = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_tin").Id,
-				2, 5, Seed, null).Generate(18, 3);
-			structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
-				2, 5, Seed, null).Generate(18, 3);
-
-			ushort[] sd = new ushort[64 * 16 * 64];
-
-			ushort stone = Main.Registry.CubeRegistry.Get("stone").Id;
-
-			for (int i = 0; i < sd.Length; i++)
-				sd[i] = stone;
-
-			ValuePoint3D center = new ValuePoint3D(32, 8, 32);
-			for (int i = 0; i < sd.Length; i++)
+			if (Main.DO_DETAIL)
 			{
-				Util.OneDToThreeD(i, new ValuePoint3D(64, 16, 64), out ValuePoint3D pos);
+				structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
+				structureBatchesGOL3DShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
+				structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
+				structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
+					3, 6, Seed, null).Generate(18, 3);
+				structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
+					4, 12, Seed, null).Generate(18, 3);
+				structureBatchesOreTin = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_tin").Id,
+					2, 5, Seed, null).Generate(18, 3);
+				structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
+					2, 5, Seed, null).Generate(18, 3);
 
-				float dist = new Vector3((pos.x - center.x) / 4, pos.y - center.y, (pos.z - center.z) / 4).Length();
+				ushort[] sd = new ushort[64 * 16 * 64];
 
-				if (dist < 8)
+				ushort stone = Main.Registry.CubeRegistry.Get("stone").Id;
+
+				for (int i = 0; i < sd.Length; i++)
+					sd[i] = stone;
+
+				ValuePoint3D center = new ValuePoint3D(32, 8, 32);
+				for (int i = 0; i < sd.Length; i++)
 				{
-					sd[i] = 0;
-				}
-			}
+					Util.OneDToThreeD(i, new ValuePoint3D(64, 16, 64), out ValuePoint3D pos);
 
-			ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
-			obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
-			house = Main.assetsManager.GetAsset<Structure>("house");
-			geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
-			dungeon = new Structure[4]
-			{
+					float dist = new Vector3((pos.x - center.x) / 4, pos.y - center.y, (pos.z - center.z) / 4).Length();
+
+					if (dist < 8)
+					{
+						sd[i] = 0;
+					}
+				}
+
+				ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
+				obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
+				house = Main.assetsManager.GetAsset<Structure>("house");
+				geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
+				dungeon = new Structure[4]
+				{
 				Main.assetsManager.GetAsset<Structure>("dungeon"),
 				Main.assetsManager.GetAsset<Structure>("dungeon_tall"),
 				Main.assetsManager.GetAsset<Structure>("dungeon_hallway"),
 				Main.assetsManager.GetAsset<Structure>("dungeon_staircase"),
-			};
-			shrine = new Structure[2]
-			{
+				};
+				shrine = new Structure[2]
+				{
 				Main.assetsManager.GetAsset<Structure>("shrine_new"),
 				Main.assetsManager.GetAsset<Structure>("shrine_old"),
-			};
+				};
+			}
 		}
 
 		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)

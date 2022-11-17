@@ -81,8 +81,6 @@ namespace ViMG
 		private int lavaLight = -1;
 		private bool lavaLightShadowmapped;
 
-		private WorldSaver saver;
-
 		private WorldInfoIO worldInfoIO;
 		private ChunkManagerIO chunkIO;
 		private EntityManagerIO entIO;
@@ -92,6 +90,8 @@ namespace ViMG
 		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		public DirectionalLight directionalLight;
 		private int currentCascadeDebug;
+
+		private Task<ChunkManager> GenerateWorldTask;
 
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
@@ -109,7 +109,7 @@ namespace ViMG
 			if (!meshesLoaded)
 				CreateMeshes(device);
 
-			ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+			//ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
 			ProjectileManager = new ProjectileManager(this, device);
 			EntityManager = new EntityManager(this);
@@ -285,8 +285,6 @@ namespace ViMG
 
 		public void LoadWorld(GraphicsDevice device, string folderName)
 		{
-			//ChunkManager.Initialize(this);
-
 			int spawnX = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int spawnZ = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 
@@ -295,71 +293,54 @@ namespace ViMG
 			playerPos.Z = spawnZ;
 			playerPos.Y = sizeInCubes;
 
-			saver = new WorldSaver(ChunkManager, EntityManager, Main.SessionInformation);
-
-			worldInfoIO = new WorldInfoIO();
-			chunkIO = new ChunkManagerIO(ChunkManager, "test");
-			entIO = new EntityManagerIO(EntityManager);
-
-			if (!saver.DoesSaveExist(folderName))
+			if (!Directory.Exists("./saves/" + folderName + "/"))
 			{
-				ChunkManager.InitLayer(0);
-				ChunkManager.InitLayer(1);
-				//generate island layer
-				ChunkManager.GenerateWorld(this, 0);
-				ChunkManager.GenerateWorld(this, 1);
-
-				worldInfoIO.Save(folderName, this, PointsOfInterest);
-
-				Console.WriteLine("Saving Chunks...");
-				Stopwatch watch = Stopwatch.StartNew();
-				//saver.Save(folderName);
-				chunkIO.SerializeAll();
-				chunkIO.Save(folderName);
-
-				watch.Stop();
-				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
-
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
-
-				player = new Player();
-				EntityManager.Add(player);
-				player.FirstCreated();
-
-				Vector3 playerSpawnPosition = ChunkManager.GetPlayerSpawnPos(this);
-				player.Position = playerSpawnPosition;
-				player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-
-				Console.WriteLine("Saving Entities...");
-				watch = Stopwatch.StartNew();
-
-				entIO.SerializeAll(this);
-				entIO.Save(folderName);
-
-				watch.Stop();
-				Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
-
-				Console.WriteLine("Reloading...");
-				watch = Stopwatch.StartNew();
-
-				//This will unload everything, then reload only the things nearby.
-				ChunkLoadManager.UnloadAll();
-				ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
-				ChunkLoadManager.LoadAroundTarget(this);	//enqueue to be loaded...
-				ChunkLoadManager.FlushLoadQueue(this);	//actually load.
-
-                Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
-
-				//This includes the player, so this.player needs to be set again. (Kinda awkward, I know.)
-				if (EntityManager.GetAll<Player>().Count > 0)
+				if (!Main.MULTITHREAD_GENERATION)
 				{
-					player = EntityManager.GetAll<Player>().First() as Player;
+					ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 
-					Main.camera.Position = player.Position;
+					ChunkManager.InitLayer(0);
+					//ChunkManager.InitLayer(1);
+					//generate island layer
+					ChunkManager.GenerateWorld(this, 0);
+					//ChunkManager.GenerateWorld(this, 1);
+
+					LoadedFolderName = folderName;
+					Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+
+					FinishGenWorld();
+				}
+                else
+                {
+					//I think this needs to be moved up a level.
+					//Instead of attempting to multi-thread the ChunkManager (which has plenty of issues, namely that generation needs access to the entity manager through the world)
+					//we do it through the world instead, which is a smaller bottleneck.
+					GenerateWorldTask = new Task<ChunkManager>(() =>
+					{
+						ChunkManager manager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+						manager.InitLayer(0);
+						manager.GenerateWorld(this, 0);
+						return manager;
+					});
+
+					LoadedFolderName = folderName;
+					Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+
+					GenerateWorldTask.Start();
+					GenerateWorldTask.Wait();
+
+					ChunkManager = GenerateWorldTask.Result;
+
+					FinishGenWorld();
 				}
 			}
 			else
 			{
+				ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+				worldInfoIO = new WorldInfoIO();
+				chunkIO = new ChunkManagerIO(ChunkManager, "test");
+				entIO = new EntityManagerIO(EntityManager);
+
 				WorldIO.LoadError error = worldInfoIO.Load(folderName, this, PointsOfInterest);
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", worldInfoIO.Version);
@@ -372,7 +353,7 @@ namespace ViMG
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
-				ChunkLoadManager = new ChunkLoadManager(saver, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
+				ChunkLoadManager = new ChunkLoadManager(null, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
 				ChunkManager.InitLayer(0);
 				ChunkManager.InitLayer(1);
 
@@ -403,14 +384,71 @@ namespace ViMG
 
 					Main.camera.Position = player.Position;
 				}
+
+				LoadedFolderName = folderName;
+				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 			}
 
-			Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
+			//Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
 			//ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
 
 			//EntityManager.Add(new EntityLeviathan());
-			LoadedFolderName = folderName;
-			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+		}
+
+		private void FinishGenWorld()
+        {
+			worldInfoIO = new WorldInfoIO();
+			chunkIO = new ChunkManagerIO(ChunkManager, "test");
+			entIO = new EntityManagerIO(EntityManager);
+
+			worldInfoIO.Save(LoadedFolderName, this, PointsOfInterest);
+
+			Console.WriteLine("Saving Chunks...");
+			Stopwatch watch = Stopwatch.StartNew();
+			//saver.Save(folderName);
+			chunkIO.SerializeAll();
+			chunkIO.Save(LoadedFolderName);
+
+			watch.Stop();
+			Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+
+			ChunkLoadManager = new ChunkLoadManager(null, ChunkManager, EntityManager, 6, 6, 8, chunkIO, entIO);
+
+			player = new Player();
+			EntityManager.Add(player);
+			player.FirstCreated();
+
+			Vector3 playerSpawnPosition = ChunkManager.GetPlayerSpawnPos(this);
+			player.Position = playerSpawnPosition;
+			player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
+
+			Console.WriteLine("Saving Entities...");
+			watch = Stopwatch.StartNew();
+
+			entIO.SerializeAll(this);
+			entIO.Save(LoadedFolderName);
+
+			watch.Stop();
+			Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+
+			Console.WriteLine("Reloading...");
+			watch = Stopwatch.StartNew();
+
+			//This will unload everything, then reload only the things nearby.
+			ChunkLoadManager.UnloadAll();
+			ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
+			ChunkLoadManager.LoadAroundTarget(this);    //enqueue to be loaded...
+			ChunkLoadManager.FlushLoadQueue(this);  //actually load.
+
+			Console.WriteLine("Done. {0}s.", watch.Elapsed.TotalSeconds);
+
+			//This includes the player, so this.player needs to be set again. (Kinda awkward, I know.)
+			if (EntityManager.GetAll<Player>().Count > 0)
+			{
+				player = EntityManager.GetAll<Player>().First() as Player;
+
+				Main.camera.Position = player.Position;
+			}
 		}
 
 		public void UnfixedUpdate()
@@ -516,7 +554,7 @@ namespace ViMG
 						if (cube != null)
 						{
 							Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point3d);
-							cube.OnRandomUpdate(this, ChunkManager, new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
+							cube.OnRandomUpdate(this, ChunkManager, chunk.GetData(), new CubePosition(point3d.x, point3d.y, point3d.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
 						}
 					}
                 }

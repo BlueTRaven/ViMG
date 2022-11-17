@@ -64,7 +64,7 @@ namespace ViMG
 
 					var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 					Cube cube = Main.Registry.CubeRegistry.Get(id);
-					cube.PostChunkGen(GetData(), pos);
+					cube.PostChunkGen(world, GetChunkManager(), GetData(), pos);
 
 					if (cube.Solid)
 						data.Density++;

@@ -38,10 +38,10 @@ namespace ViMG.Generation
 
 		}
 
-		public virtual void Initialize(World world)
+		public virtual void Initialize(ChunkManager chunkManager)
 		{
-			layerYOffsetInChunks = Layer * world.GetChunkManager().layerSizeInChunksY;
-			layerYOffsetInCubes = layerYOffsetInChunks * world.GetChunkManager().sizeInCubes;
+			layerYOffsetInChunks = Layer * chunkManager.layerSizeInChunksY;
+			layerYOffsetInCubes = layerYOffsetInChunks * chunkManager.sizeInCubes;
 		}
 
 		protected Random GetRandom()

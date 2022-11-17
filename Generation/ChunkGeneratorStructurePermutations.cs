@@ -15,9 +15,9 @@ namespace ViMG.Generation
         {
         }
 
-        public override void Initialize(World world)
+        public override void Initialize(ChunkManager chunkManager)
         {
-            base.Initialize(world);
+            base.Initialize(chunkManager);
 
             structureBatchesGOL3DOrangeShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
         }

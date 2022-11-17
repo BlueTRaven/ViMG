@@ -26,9 +26,9 @@ namespace ViMG.Cubes
 			else itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
 		}
 
-		public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+		public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
 		{
-			base.PostChunkGen(chunkData, position);
+			base.PostChunkGen(world, manager, chunkData, position);
 
 			chunkData.GetChunk().GetWorld().EntityManager.Add(new AncientAltar(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 10));
 		}

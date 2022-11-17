@@ -40,9 +40,9 @@ namespace ViMG.Cubes
             else return base.GetSourceRect(pass, world, pos);
         }
 
-        public override void PostChunkGen(ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
         {
-            base.PostChunkGen(chunkData, position);
+            base.PostChunkGen(world, manager, chunkData, position);
 
             chunkData.GetChunk().GetWorld().EntityManager.Add(new Entities.CubeLight(position.InCubeSpace(chunkData.GetChunk()), color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }

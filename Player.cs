@@ -344,6 +344,11 @@ namespace ViMG
 					world.EntityManager.Add(ent);
 				}
 			}
+
+			//TODO death screen and stuff
+			Player p = new Player(this);
+			world.EntityManager.Add(p);
+			world.player = p;
 		}
 
         public override void OnUnload()
@@ -353,11 +358,6 @@ namespace ViMG
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 			hitbox = -1;
-
-			//TODO death screen and stuff
-			Player p = new Player(this);
-			world.EntityManager.Add(p);
-			world.player = p;
 		}
 
         public override void Update(double deltaTime)

@@ -195,7 +195,7 @@ namespace ViMG
 
 			Stopwatch totalWatch = Stopwatch.StartNew();
 
-			layerLookupTable[layer].generator.Initialize(world);
+			layerLookupTable[layer].generator.Initialize(this);
 
 			Stopwatch broadWatch = Stopwatch.StartNew();
 

@@ -418,9 +418,6 @@ namespace ViMG
 			if (IsDefault)
 				throw new Exception("Cannot set data in sentinel chunk data.");
 
-			if (Thread.CurrentThread != Main.MainThread && chunk.Initialized)
-				throw new Exception("Cannot set chunk outside of main thread after initialization.");
-
 			CubePosition positionCubeSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk);
 			CubePosition positionChunkSpace = position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position.InChunkSpace(chunk) : position;
 
