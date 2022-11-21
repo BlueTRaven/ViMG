@@ -39,15 +39,20 @@ namespace ViMG
 
 		public CubePosition InChunkSpace(Chunk chunk)
 		{
+			return InChunkSpace(chunk.Position);
+		}
+
+		public CubePosition InChunkSpace(ChunkPosition position)
+        {
 			if (Coord == CoordinateSpace.ChunkSpace)
 			{
 				return this;
 			}
 			else
 			{
-				return new CubePosition(X - chunk.Position.X * Chunk.CHUNK_SIZE,
-					Y - chunk.Position.Y * Chunk.CHUNK_SIZE,
-					Z - chunk.Position.Z * Chunk.CHUNK_SIZE, CoordinateSpace.ChunkSpace);
+				return new CubePosition(X - position.X * Chunk.CHUNK_SIZE,
+					Y - position.Y * Chunk.CHUNK_SIZE,
+					Z - position.Z * Chunk.CHUNK_SIZE, CoordinateSpace.ChunkSpace);
 			}
 		}
 

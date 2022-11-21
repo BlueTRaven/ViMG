@@ -23,7 +23,7 @@ namespace ViMG
         private readonly EntityManagerIO entIO;
         private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
-		private List<ChunkPosition> gettableLoadedChunks;
+		private IEnumerable<ChunkPosition> gettableLoadedChunks;
 
 		private bool hasChanged = false;
 
@@ -67,14 +67,19 @@ namespace ViMG
 			}
 
 			if (hasChanged)
-				gettableLoadedChunks = new List<ChunkPosition>(loadedChunks.Keys);
+				gettableLoadedChunks = loadedChunks.Keys;
 
 			hasChanged = false;
 		}
 
-		public IEnumerable<ChunkPosition> GetLoadedChunks()
+		public IEnumerable<ChunkPosition> GetLoaded()
         {
 			return gettableLoadedChunks;
+        }
+
+		public bool IsLoaded(ChunkPosition position)
+        {
+			return loadedChunks.ContainsKey(position) && loadedChunks[position] == LoadingState.Loaded;
         }
 
 		//Loads the entirety of the loading queue at once.
@@ -161,6 +166,16 @@ namespace ViMG
 
 				hasChanged = true;
 			}
+		}
+
+		//TODO this is primarily for debug purposes, I don't expect this to ever actually be used
+		public void ReloadChunk(World world, ChunkPosition position)
+        {
+			if (chunkManager.IsInWorldBounds(position) && loadedChunks.ContainsKey(position))
+            {
+				chunkIO.DeserializeChunk(world, position);
+				loadedChunks[position] = LoadingState.Loading;
+            }
 		}
 
 		public void LoadAroundTarget(World world)

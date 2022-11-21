@@ -75,33 +75,6 @@ namespace ViMG
 			if (data.Density == -1)
 				data.Density = 0;
 
-			/*for (int i = 0; i < vertices.Count; i += 4)
-			{
-				var aoA = vertices[i].AO;
-				var aoB = vertices[i + 1].AO;
-				var aoC = vertices[i + 2].AO;
-				var aoD = vertices[i + 3].AO;
-
-				if (aoA + aoD > aoB + aoC)
-				{
-					var v1 = vertices[i];
-					var v2 = vertices[i + 1];
-					var v3 = vertices[i + 2];
-					var v4 = vertices[i + 3];
-
-					var tmp = vertices[i].AO;
-					v1.AO = v2.AO;
-					v2.AO = v4.AO;
-					v4.AO = v3.AO;
-					v3.AO = tmp;
-
-					vertices[i] = v1;
-					vertices[i + 1] = v2;
-					vertices[i + 2] = v3;
-					vertices[i + 3] = v4;
-				}
-			}*/
-
 			if (vertices.Count > 0 && indices.Count > 0)
 			{
 				var mesh = new ChunkMesh(device, vertices, indices);

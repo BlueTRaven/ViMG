@@ -505,7 +505,6 @@ namespace ViMG
 
 		private bool HasClearSide(int x, int y, int z, Cube currentCube, World world)
 		{
-			
 			Cube adjacentCube = GetCubeOrAdjacent(x, y, z, world).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (currentCube.Transparency != Cube.TransparencyValue.Air)

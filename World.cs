@@ -33,6 +33,7 @@ namespace ViMG
 		public readonly int sizeInCubes;
 
 		public ChunkManager ChunkManager;
+		public ChunkManager2 ChunkManager2;
 
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
@@ -341,6 +342,8 @@ namespace ViMG
 				chunkIO = new ChunkManagerIO(ChunkManager, "test");
 				entIO = new EntityManagerIO(EntityManager);
 
+				ChunkManager2 = new ChunkManager2(sizeInChunks, ChunkLoadManager, chunkIO);
+
 				WorldIO.LoadError error = worldInfoIO.Load(folderName, this, PointsOfInterest);
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", worldInfoIO.Version);
@@ -537,7 +540,7 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
-            foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoadedChunks())
+            foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
             {
                 Chunk chunk = ChunkManager.GetChunk(loadedPosition);
 
@@ -644,8 +647,8 @@ namespace ViMG
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
 			ChunkLoadManager.FlushLoadQueue(this);
 			//Serialize all the chunks that are currently loaded
-			chunkIO.Serialize(ChunkLoadManager.GetLoadedChunks());
-			entIO.Serialize(ChunkLoadManager.GetLoadedChunks());
+			chunkIO.Serialize(ChunkLoadManager.GetLoaded());
+			entIO.Serialize(ChunkLoadManager.GetLoaded());
 
 			//Save serialized data to disk
 			chunkIO.Save(LoadedFolderName);

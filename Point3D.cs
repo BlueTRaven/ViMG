@@ -175,6 +175,13 @@ namespace ViMG
         public int y;
         public int z;
 
+        public ValuePoint3D(int n)
+        {
+            this.x = n;
+            this.y = n;
+            this.z = n;
+        }
+
         public ValuePoint3D(int x, int y, int z)
         {
             this.x = x;

@@ -33,7 +33,11 @@ namespace ViMG.Items
 
 				if (chunk != null && chunk.Initialized)
 				{
-					chunk.GetData().SetCube(player.PlaceAtPos, cubeId);
+					//chunk.GetData().SetCube(player.PlaceAtPos, cubeId);
+					player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
+					
+					player.world.ChunkLoadManager.ReloadChunk(player.world, chunk.Position);
+
 					inventory.Remove(index, 1);
 
 					cube.OnPlayerPlaced(player, player.PlaceAtPos);

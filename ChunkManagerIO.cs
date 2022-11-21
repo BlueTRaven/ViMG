@@ -44,6 +44,11 @@ namespace ViMG
 
         }
 
+		public byte[] GetBytes()
+        {
+			return allBytes;
+        }
+
 		//Saves the contents of allBytes to disk.
 		public void Save(string folderName)
         {
@@ -181,8 +186,8 @@ namespace ViMG
 			ushort[] allCubes = chunk.GetData().GetAll();
 			for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
 			{
-				const int NUM_BYTES_PER_CHUNK = 2;
-				int offset = j * NUM_BYTES_PER_CHUNK;
+				const int NUM_BYTES_PER_CUBE = sizeof(ushort);
+				int offset = j * NUM_BYTES_PER_CUBE;
 
 				byte a = buffer[offset + 0];
 				byte b = buffer[offset + 1];
@@ -198,6 +203,11 @@ namespace ViMG
 				{
 					Util.OneDToThreeD(j, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point);
 					c.OnLoaded(world, new CubePosition(point.x, point.y, point.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk));
+				}
+				else if (id != 0)	//0 is null but obviously isn't included as an invalid cube
+				{
+					Util.OneDToThreeD(j, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D point);
+					Console.WriteLine("Invalid cube ID in chunk x {0} y {1} z {2}, pos x {3} y {4} z {5}", pos.X, pos.Y, pos.Z, point.x, point.y, point.z);
 				}
 
 				allCubes[j] = (ushort)id;
