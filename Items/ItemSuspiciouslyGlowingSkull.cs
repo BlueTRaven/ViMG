@@ -52,15 +52,15 @@ namespace ViMG.Items
             var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
             (Vector3 pos) =>
             {
-                return player.world.GetChunkManager().IsInWorldBounds(pos) &&
-                    player.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+                return player.world.ChunkManager2.IsInWorldBounds(pos) &&
+                    player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
             });
 
             if (lookAtResult.hasHit)
             {
                 CubePosition pos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
-                Cube cube = player.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                 bool a = cube == Main.Registry.CubeRegistry.Get("ancient_altar_placeable");
                 bool b = cube == Main.Registry.CubeRegistry.Get("ancient_altar_generated");
 

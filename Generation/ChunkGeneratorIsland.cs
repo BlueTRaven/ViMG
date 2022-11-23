@@ -76,9 +76,9 @@ namespace ViMG.Generation
         {
 		}
 
-		public override void Initialize(ChunkManager chunkManager)
+		public override void Initialize(int sizeInCubesXZ, int sizeInChunksY)
 		{
-			base.Initialize(chunkManager);
+			base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
 			holeLocationX = GetRandom().Next(192, 320);
 			holeLocationY = GetRandom().Next(192, 320);
@@ -150,7 +150,7 @@ namespace ViMG.Generation
 			}
 		}
 
-		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+		public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
         {
 			int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
 			int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
@@ -163,14 +163,9 @@ namespace ViMG.Generation
 			return world.GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 		}
 
-        public override void GenerateChunkBroad(ChunkManager.BroadGenerationState state)
+        public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
         {
-			if (state.chunk.GetData().GenStep != ChunkData.GenerationStep.Broad)
-				throw new Exception("");
-
-			var cubes = state.chunk.GetData().GetAll();
-
-			int[,] heightMap = GenerateHeight(state.chunk);
+			int[,] heightMap = GenerateHeight(state.position);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 			{
@@ -182,17 +177,17 @@ namespace ViMG.Generation
 
 						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
-						cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
+						//TODO: 
+						state.manager.SetCube(pos.InCubeSpace(state.position), id);
+						//cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
 			}
-
-			state.chunk.GetData().GenStep = ChunkData.GenerationStep.Detail;
 		}
 
-		public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
+		public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
         {
-			int[,] heightMap = GenerateHeight(chunk);
+			int[,] heightMap = GenerateHeight(position);
 
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 			{
@@ -201,15 +196,15 @@ namespace ViMG.Generation
 					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 					{
 						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-						pos = pos.InCubeSpace(chunk);
+						pos = pos.InCubeSpace(position);
 
 						int sample = heightMap[x, z];
 
 						if (pos.Y == sample + 1 && pos.Y > SEA_LEVEL)
 						{
-							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(chunk);
+							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-							if (ChunkHelper.GetCubeOrAdjacent(manager, chunk, posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
+							if (manager.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
 							{
 								int val = GetRandom().Next(0, 256);
 								if (val == 0)
@@ -220,33 +215,29 @@ namespace ViMG.Generation
 										var posOffset = pos;
 										posOffset.Y += i;
 
-										ChunkHelper.SetCubeOrAdjacent(manager, chunk, posOffset, 6);    //Tree
+										manager.SetCube(posOffset, 6);	//tree
 									}
 								}
 								else if (val == 1)
-									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
 								else if (val == 2)
-									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
 								else if (val == 3)
-									ChunkHelper.SetCubeOrAdjacent(manager, chunk, pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
 							}
 						}
 					}
 				}
 			}
-
-			//HandleCascaded();
-
-			chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
 		}
 
-        public override void PostGenerateDetail(ChunkManager manager)
+        public override void PostGenerateDetail(World world, ChunkManager2 manager)
         {
-            base.PostGenerateDetail(manager);
+            base.PostGenerateDetail(world, manager);
 
 			Vector2 holePos = new Vector2(holeLocationX, holeLocationY);
 
-			ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, ellipsoidAtBottomOfHole, 
+			ChunkHelper.PlaceStructureWithBlacklist(manager, ellipsoidAtBottomOfHole, 
 				new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
 				BlacklistAir, Span<ushort>.Empty);
 
@@ -256,7 +247,7 @@ namespace ViMG.Generation
 
 			CubePosition geodePos = new CubePosition(holeLocationX + (int)(geodeAng.X * geodeDist), layerYOffsetInCubes + 39, holeLocationY + (int)(geodeAng.Y * geodeDist));
 
-			ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
+			ChunkHelper.PlaceStructureWithBlacklist(manager, geode,
 				geodePos, BlacklistNone, BlacklistNone);
 
 			//also place a random number of other geodes throughout the world
@@ -264,13 +255,13 @@ namespace ViMG.Generation
 
 			for (int i = 0; i < numGeodes; i++)
             {
-				int x = GetRandom().Next(0, manager.sizeInCubes);
-				int z = GetRandom().Next(0, manager.sizeInCubes);
+				int x = GetRandom().Next(0, manager.SizeInCubes);
+				int z = GetRandom().Next(0, manager.SizeInCubes);
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, geode,
+				ChunkHelper.PlaceStructureWithBlacklist(manager, geode,
 					new CubePosition(x, layerYOffsetInCubes + 37, z), BlacklistNone, BlacklistNone);
 
-				manager.world.PointsOfInterest.Add(new PointOfInterest(new CubePosition(x, layerYOffsetInCubes + 39, z), "geode", 1));
+				world.PointsOfInterest.Add(new PointOfInterest(new CubePosition(x, layerYOffsetInCubes + 39, z), "geode", 1));
 			}
 
 			List<Rectangle3DI> cavePositions = new List<Rectangle3DI>();
@@ -278,22 +269,22 @@ namespace ViMG.Generation
 			ProfilingHelper.Start("Generating Caves...");
 			for (int i = 0; i < 132; i++)
             {
-				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
+				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.SizeInCubes));
 				
 				Structure structure = structureBatchesGOL3DAltarCaves.Get(i % structureBatchesGOL3DAltarCaves.num);
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
 
 			for (int i = 0; i < 128; i++)
 			{
-				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.sizeInCubes));
+				CubePosition randomPos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes), layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, manager.SizeInCubes));
 
 				Structure structure = structureBatchesGOL3DShroomCaves.Get(i % structureBatchesGOL3DShroomCaves.num);
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(randomPos), structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty);
 			}
 			ProfilingHelper.End("Done.");
 
@@ -319,10 +310,10 @@ namespace ViMG.Generation
 			//copper: 82037
 			for (int i = 0; i < 80000; i++) 
 			{
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 			ProfilingHelper.End("Done.");
@@ -331,10 +322,10 @@ namespace ViMG.Generation
 			//tin: 87799
 			for (int i = 0; i < 90000; i++)
             {
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 16), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 16), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 			ProfilingHelper.End("Done.");
@@ -343,10 +334,10 @@ namespace ViMG.Generation
 			//glow: 114338
 			for (int i = 0; i < 116000; i++)
             {
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 			ProfilingHelper.End("Done.");
@@ -355,10 +346,10 @@ namespace ViMG.Generation
 			//iron: 76813
 			for (int i = 0; i < 75000; i++)
             {
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR - 32), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR - 32), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(pos), structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
 					BlacklistOre, BlacklistAir);
 			}
 			ProfilingHelper.End("Done.");
@@ -371,8 +362,8 @@ namespace ViMG.Generation
 
 			while (spawnNum > 0)
             {
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
@@ -384,12 +375,12 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false, false);
+							manager.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
 
 							int randomFace = GetRandom().Next();
 
-							manager.GetChunk(actualGenPos).GetWorld().EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
-							manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "chest", 1));
+							world.EntityManager.Add(new Entities.EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+							world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "chest", 1));
 
 							positions[lastPosition++] = actualGenPos;
 
@@ -408,17 +399,17 @@ namespace ViMG.Generation
 
 			while (spawnNum > 0)
 			{
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
-						ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, dungeon[GetRandom().Next(0, 4)], pos,
+						ChunkHelper.PlaceStructureWithBlacklist(world, manager, dungeon[GetRandom().Next(0, 4)], pos,
 											Span<ushort>.Empty, PlaceDungeon);
 
-						manager.world.PointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
+						world.PointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
 
 						positions[lastPosition++] = pos;
 
@@ -436,8 +427,8 @@ namespace ViMG.Generation
 
 			while (spawnNum > 0)
 			{
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
@@ -458,11 +449,11 @@ namespace ViMG.Generation
 						{
 							positions[lastPosition++] = actualGenPos;
 							if (which < 2)
-								ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, shrine[which], actualGenPos,
+								ChunkHelper.PlaceStructureWithBlacklist(world, manager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar);
-							else manager.GetChunk(actualGenPos).GetData().SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false, false);
+							else manager.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
 
-							manager.world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
+							world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
 
 							spawnNum--;
 						}
@@ -478,8 +469,8 @@ namespace ViMG.Generation
 
 			while (spawnNum > 0)
 			{
-				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.sizeInCubes),
-					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.sizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
+					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
@@ -497,7 +488,7 @@ namespace ViMG.Generation
 							{
 								positions[lastPosition++] = actualGenPos;
 
-								manager.world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
+								world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
 								spawnNum--;
 							}
 						}
@@ -513,10 +504,10 @@ namespace ViMG.Generation
 
 				if (solidPos.HasValue())
 				{
-					ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
+					ChunkHelper.PlaceStructureWithBlacklist(manager, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
 						Span<ushort>.Empty, BlacklistAir);
 
-					manager.world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "obelisk", 1));
+					world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "obelisk", 1));
 					break;
 				}
 			}
@@ -534,15 +525,15 @@ namespace ViMG.Generation
 
 				if (solidPos.HasValue())
 				{
-				 	ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, null, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
+				 	ChunkHelper.PlaceStructureWithBlacklist(world, manager, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
 						Span<ushort>.Empty, PlaceHouse);
 
-					manager.world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "house", 1));
+					world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "house", 1));
 				}
 			}
 		}
 
-		private void GenerateCaveConnection(ChunkManager manager, List<Rectangle3DI> cavePositions)
+		private void GenerateCaveConnection(ChunkManager2 manager, List<Rectangle3DI> cavePositions)
 		{
 			int startCaveIndex = GetRandom().Next(0, cavePositions.Count);
 
@@ -692,19 +683,14 @@ namespace ViMG.Generation
 
 						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
 						{
-							Chunk chunk = manager.GetChunk(toFill);
-
-							if (chunk != null && chunk.Initialized)
-							{
-								used.Add(toFill);
-								chunk.GetData().SetCube(toFill, 0, false, false);
-								floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
-								floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
-								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));
-								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y + 1, toFill.Z));
-								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z - 1));
-								floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z + 1));
-							}
+							used.Add(toFill);
+							manager.SetCube(toFill, 0);
+							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y + 1, toFill.Z));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z - 1));
+							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y, toFill.Z + 1));
 						}
 					}
 				}
@@ -773,7 +759,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
+		private bool PlaceHouse(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
 		{
 			if (id == 0)
 				return false;
@@ -797,7 +783,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceDungeon(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceDungeon(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			Util.OneDToThreeD(structureIndex, new ValuePoint3D(structure.size), out ValuePoint3D structurePosition);
 
@@ -820,7 +806,7 @@ namespace ViMG.Generation
 			return true;
         }
 
-		private bool PlaceAltar(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceAltar(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			if (id == 0)
 				return false;
@@ -835,7 +821,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private int[,] GenerateHeight(Chunk chunk)
+		private int[,] GenerateHeight(ChunkPosition position)
 		{
 			int[,] heightMap = new int[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
 
@@ -843,22 +829,22 @@ namespace ViMG.Generation
 			{
 				for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 				{
-					Point cubePos = new Point(x + chunk.Position.X * Chunk.CHUNK_SIZE, z + chunk.Position.Z * Chunk.CHUNK_SIZE);
+					Point cubePos = new Point(x + position.X * Chunk.CHUNK_SIZE, z + position.Z * Chunk.CHUNK_SIZE);
 
 					heightMap[x, z] = (int)(((float)presetHeightmap[cubePos.X, cubePos.Y] * ISLAND_RANGE) + SEA_FLOOR) +
-						(int)(noise.GetNoise(x + chunk.Position.X * Chunk.CHUNK_SIZE, z + chunk.Position.Z * Chunk.CHUNK_SIZE) * 4);
+						(int)(noise.GetNoise(x + position.X * Chunk.CHUNK_SIZE, z + position.Z * Chunk.CHUNK_SIZE) * 4);
 				}
 			}
 
 			return heightMap;
 		}
 
-		private ushort GenerateCubeBroad(CubePosition cubeSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
+		private ushort GenerateCubeBroad(CubePosition cubeSpacePos, int[,] heightMap, ChunkGeneratorTasker.BroadGenerationState state)
 		{
 			CubePosition chunkSpacePos = cubeSpacePos;
-			cubeSpacePos = cubeSpacePos.InCubeSpace(state.chunk);
+			cubeSpacePos = cubeSpacePos.InCubeSpace(state.position);
 
-			if (Hole(cubeSpacePos, chunkSpacePos, heightMap, state))
+			if (Hole(cubeSpacePos, chunkSpacePos, heightMap))
 			{
 				if (cubeSpacePos.Y < 48)
 					return 3;
@@ -882,7 +868,7 @@ namespace ViMG.Generation
 
 					if (cubeSpacePos.Y < sample - 8)
 					{
-						return GenerateCubeCaveLayer(state.chunk, cubeSpacePos, heightMap, state);
+						return GenerateCubeCaveLayer(cubeSpacePos, heightMap);
 					}
 					else
 					{
@@ -903,13 +889,11 @@ namespace ViMG.Generation
 			}
 		}
 
-		private ushort GenerateCubeCaveLayer(Chunk chunk, CubePosition cubeSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
+		private ushort GenerateCubeCaveLayer(CubePosition cubeSpacePos, int[,] heightMap)
 		{
-			CubePosition chunkSpacePosition = cubeSpacePos.InChunkSpace(chunk);
-
 			float noise3d1 = ((noise.GetNoise(cubeSpacePos.X, cubeSpacePos.Y, cubeSpacePos.Z) + 1) / 2);
 
-			int distance = heightMap[chunkSpacePosition.X, chunkSpacePosition.Z] - cubeSpacePos.Y;
+			int distance = heightMap[cubeSpacePos.X % Chunk.CHUNK_SIZE, cubeSpacePos.Z % Chunk.CHUNK_SIZE] - cubeSpacePos.Y;
 			int start = 12;
 			int end = 32;
 
@@ -922,7 +906,7 @@ namespace ViMG.Generation
 			else return 0;
 		}
 
-		private bool Hole(CubePosition cubeSpacePos, CubePosition chunkSpacePos, int[,] heightMap, ChunkManager.BroadGenerationState state)
+		private bool Hole(CubePosition cubeSpacePos, CubePosition chunkSpacePos, int[,] heightMap)
 		{
 			Vector2 dir = new Vector2(cubeSpacePos.X, cubeSpacePos.Z) - new Vector2(holeLocationX, holeLocationY);
 

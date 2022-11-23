@@ -37,9 +37,9 @@ namespace ViMG.Items
         {
             if (player.IsLooking && player.CanPlace)
             {
-                Cube startCube = player.world.GetChunkManager().GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube startCube = player.world.ChunkManager2.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-                /*Cube startCube = player.world.GetChunkManager().GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                /*Cube startCube = player.world.ChunkManager2.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
                 if (player.LookAtNormal.X != 0 && player.LookAtNormal.Y == 0 && player.LookAtNormal.Z == 0)
                 {
@@ -85,11 +85,11 @@ namespace ViMG.Items
                     {
                         visitedPositions.Add(pos);
 
-                        if (player.world.GetChunkManager().IsInWorldBounds(pos) && player.world.GetChunkManager().IsInWorldBounds(checkPos))
+                        if (player.world.ChunkManager2.IsInWorldBounds(pos) && player.world.ChunkManager2.IsInWorldBounds(checkPos))
                         {
-                            if (player.world.GetChunkManager().GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
+                            if (player.world.ChunkManager2.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
                             {
-                                Chunk c = player.world.GetChunkManager().GetChunk(pos);
+                                Chunk c = player.world.ChunkManager2.GetChunk(pos);
 
                                 if (c != null && c.Initialized)
                                 {
@@ -113,13 +113,11 @@ namespace ViMG.Items
                 {
                     CubePosition pos = positions[i];
 
-                    if (player.world.GetChunkManager().IsInWorldBounds(pos))
+                    if (player.world.ChunkManager2.IsInWorldBounds(pos))
                     {
-                        Chunk c = player.world.GetChunkManager().GetChunk(pos);
-
-                        if (c != null && c.Initialized)
+                        if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(pos)))
                         {
-                            c.GetData().SetCube(pos, startCube.Id);
+                            player.world.ChunkManager2.SetCube(pos, startCube.Id);
                         }
                     }
                 }
@@ -138,7 +136,7 @@ namespace ViMG.Items
 
         public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
         {
-            Cube startCube = player.world.GetChunkManager().GetCube(hit).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube startCube = player.world.ChunkManager2.GetCube(hit).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             if (normal.X != 0 && normal.Y == 0 && normal.Z == 0)
             {
@@ -187,10 +185,10 @@ namespace ViMG.Items
                 {
                     visitedPositions.Add(pos);
 
-                    if (player.world.GetChunkManager().IsInWorldBounds(pos) && player.world.GetChunkManager().IsInWorldBounds(checkPos))
+                    if (player.world.ChunkManager2.IsInWorldBounds(pos) && player.world.ChunkManager2.IsInWorldBounds(checkPos))
                     {
-                        if (player.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air && 
-                            player.world.GetChunkManager().GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
+                        if (player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air && 
+                            player.world.ChunkManager2.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
                         {
                             validPositions[numPlaced++] = pos;
 

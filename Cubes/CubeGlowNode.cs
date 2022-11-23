@@ -16,11 +16,11 @@ namespace ViMG.Cubes
 			Collision = CollisionValue.None;
 		}
 
-        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
         {
-            base.PostChunkGen(world, manager, chunkData, position);
+            base.PostChunkGen(world, manager, position);
 
-			world.EntityManager.Add(new GlowNode(position.InCubeSpace(chunkData.GetChunk()), CUBE_SCALE * 5, CUBE_SCALE * 4,
+			world.EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4,
 				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
 		}
 

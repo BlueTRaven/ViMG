@@ -35,7 +35,8 @@ namespace ViMG.Items
                 var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
                 (Vector3 pos) =>
                 {
-                    return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+                    //TODO check solidity, not id != 0
+                    return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && player.GetWorld().ChunkManager2.GetCubeId(CubePosition.FromWorldSpace(pos)) != 0;
                 });
 
                 Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;

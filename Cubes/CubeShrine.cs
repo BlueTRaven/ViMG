@@ -23,11 +23,11 @@ namespace ViMG.Cubes
             this.Description = description;
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
         {
-            base.PostChunkGen(world, manager, chunkData, position);
+            base.PostChunkGen(world, manager, position);
 
-            EntityShrine shrine = new EntityShrine(position.InCubeSpace(chunkData.GetChunk()), Main.Registry.BuffRegistry.Get(buff));
+            EntityShrine shrine = new EntityShrine(position, Main.Registry.BuffRegistry.Get(buff));
             world.EntityManager.Add(shrine);
         }
 

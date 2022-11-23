@@ -45,14 +45,15 @@ namespace ViMG.Entities
 
             const int SEARCH_RADIUS = 2;
 
-            for (int x = -SEARCH_RADIUS; x <= SEARCH_RADIUS; x++)
+            //TODO: re-implement density calculation
+            /*for (int x = -SEARCH_RADIUS; x <= SEARCH_RADIUS; x++)
             {
                 for (int y = -SEARCH_RADIUS; y <= SEARCH_RADIUS; y++)
                 {
                     for (int z = -SEARCH_RADIUS; z <= SEARCH_RADIUS; z++)
                     {
                         ChunkPosition pos = ChunkPosition.CubeChunk(CubePosition.FromWorldSpace(Position)) + new ChunkPosition(x, y, z);
-                        if (world.ChunkManager.IsInWorldBounds(pos))
+                        if (world.ChunkManager2.IsInWorldBounds(pos))
                         {
                             Chunk currentChunk = world.ChunkManager.GetChunk(pos);
 
@@ -71,7 +72,7 @@ namespace ViMG.Entities
                         }
                     }
                 }
-            }
+            }*/
         }
 
         public override void Update(double deltaTime)

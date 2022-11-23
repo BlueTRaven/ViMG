@@ -38,10 +38,10 @@ namespace ViMG.Generation
 
 		}
 
-		public virtual void Initialize(ChunkManager chunkManager)
+		public virtual void Initialize(int sizeInCubesXZ, int sizeInChunksY)
 		{
-			layerYOffsetInChunks = Layer * chunkManager.layerSizeInChunksY;
-			layerYOffsetInCubes = layerYOffsetInChunks * chunkManager.sizeInCubes;
+			layerYOffsetInChunks = Layer * sizeInChunksY;
+			layerYOffsetInCubes = layerYOffsetInChunks * sizeInCubesXZ;
 		}
 
 		protected Random GetRandom()
@@ -56,22 +56,16 @@ namespace ViMG.Generation
 			return new Chunk(cm, position);
 		}
 
-		public abstract Vector3 GetPlayerPosition(World world, ChunkManager chunks);
+		public abstract Vector3 GetPlayerPosition(World world, ChunkManager2 chunks);
 
-		public abstract void GenerateChunkBroad(ChunkManager.BroadGenerationState state);
+		public abstract void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state);
 
 		private List<Chunk> detailCascadedChunks = new List<Chunk>();
 
 		// Main thread version
-		public abstract void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position);
+		public abstract void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position);
 
-		public virtual void PostGenerateDetail(ChunkManager manager) 
-		{
-			
-		}
-
-		[Obsolete]
-		public void GenerateChunkDetail(ChunkGenerationThreadDataBus dataBus, Chunk chunk, ChunkPosition position, HashSet<Chunk> cascadedChunks)
+		public virtual void PostGenerateDetail(World world, ChunkManager2 manager) 
 		{
 			
 		}
@@ -81,11 +75,6 @@ namespace ViMG.Generation
         {
 			return Vector2.Zero;
         }
-
-		protected void SetCube(Chunk chunk, CubePosition pos, ushort id)
-		{
-			chunk.GetData().SetCube(pos, id, false);
-		}
 
 		protected void HandleCascaded()
         {

@@ -52,16 +52,16 @@ namespace ViMG.Items
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
-						if (player.GetWorld().GetChunkManager().IsInWorldBounds(affectedPositions[i]))
+						if (player.GetWorld().ChunkManager2.IsInWorldBounds(affectedPositions[i]))
 						{
-							if (player.world.GetChunkManager().GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+							if (player.world.ChunkManager2.GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 								player.GetWorld().TryMineCube(affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 						}
 					}
 				}
                 else
                 {
-					if (player.world.GetChunkManager().GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+					if (player.world.ChunkManager2.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 						player.GetWorld().TryMineCube(player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 				}
 			}

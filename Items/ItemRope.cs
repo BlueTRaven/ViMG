@@ -27,18 +27,19 @@ namespace ViMG.Items
 		{
 			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
 
+			//TODO check touch not id != 0
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && player.GetWorld().ChunkManager2.GetCubeId(CubePosition.FromWorldSpace(pos)) != 0;
 			});
 
 			if (lookAtResult.hasHit)
 			{
-				if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+				if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 				{
 					//we're placing on a pre-existing rope block.
-					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().GetChunkManager().GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager2.GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
 					{
 						Cube currentCube = cube;
 						CubePosition nextPos = CubePosition.FromWorldSpace(lookAtResult.hit);
@@ -47,22 +48,20 @@ namespace ViMG.Items
                         {
 							nextPos -= new CubePosition(0, 1, 0);
 
-							currentCube = player.GetWorld().GetChunkManager().GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							currentCube = player.GetWorld().ChunkManager2.GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 							//if not in world bounds, then we can't place it, so just return false.
-							if (!player.GetWorld().GetChunkManager().IsInWorldBounds(nextPos))
+							if (!player.GetWorld().ChunkManager2.IsInWorldBounds(nextPos))
 								return false;
                         }
 
 						if (!currentCube.Touchable)
                         {
-							if (cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), nextPos))
+							if (cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager2, nextPos))
 							{
-								Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(nextPos);
-
-								if (chunk != null && chunk.Initialized)
+								if (player.GetWorld().ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(nextPos)))
 								{
-									chunk.GetData().SetCube(nextPos, cube.Id);
+									player.GetWorld().ChunkManager2.SetCube(nextPos, cube.Id);
 									inventory.Remove(index, 1);
 
 									cube.OnPlayerPlaced(player, nextPos);
@@ -79,13 +78,11 @@ namespace ViMG.Items
 					{
 						var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-						if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().GetChunkManager(), placeAtPos))
+						if (player.GetWorld().ChunkManager2.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager2, placeAtPos))
 						{
-							Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
-
-							if (chunk != null && chunk.Initialized)
+							if (player.GetWorld().ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(placeAtPos)))
 							{
-								chunk.GetData().SetCube(placeAtPos, cube.Id);
+								player.GetWorld().ChunkManager2.SetCube(placeAtPos, cube.Id);
 								inventory.Remove(index, 1);
 
 								cube.OnPlayerPlaced(player, placeAtPos);

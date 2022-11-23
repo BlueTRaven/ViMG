@@ -15,7 +15,7 @@ namespace ViMG.Generation
 
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+        public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
         {
             int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
             int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
@@ -28,10 +28,8 @@ namespace ViMG.Generation
             return world.GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
         }
 
-        public override void GenerateChunkBroad(ChunkManager.BroadGenerationState state)
+        public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
         {
-            var cubes = state.chunk.GetData().GetAll();
-
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
@@ -39,21 +37,19 @@ namespace ViMG.Generation
                     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
                         var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-                        pos = pos.InCubeSpace(state.chunk);
+                        pos = pos.InCubeSpace(state.position);
 
                         ushort id = 0;
                         if (pos.Y < 256)
                             id = 1;
 
-                        cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
+                        state.manager.SetCube(pos, id);
                     }
                 }
             }
-
-            state.chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
         }
 
-        public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
+        public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
         {
             HandleCascaded();
         }

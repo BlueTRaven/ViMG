@@ -40,9 +40,9 @@ namespace ViMG.Cubes
 			new CubePosition(0, 1, 1),
 			new CubePosition(0, -1, 1),
 		};
-        public override void OnRandomUpdate(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
+        public override void OnRandomUpdate(World world, ChunkManager2 manager, CubePosition position)
         {
-            base.OnRandomUpdate(world, manager, chunkData, position);
+            base.OnRandomUpdate(world, manager, position);
 
 			if (dirt == null)
 				dirt = Main.Registry.CubeRegistry.Get("dirt");
@@ -51,52 +51,45 @@ namespace ViMG.Cubes
 			{
 				CubePosition offsetPosition = position + offsets[i];
 
-				Chunk chunk = manager.GetChunk(offsetPosition);
-
-				if (chunk != null && chunk.Initialized)
+				if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(offsetPosition)))
 				{
-					var instance = chunk.GetData().GetCubeInstance(offsetPosition.InCubeSpace(chunk));
-
-					if (instance.valid)
+					ushort id = manager.GetCubeId(offsetPosition);
+					if (id == dirt.Id)
 					{
-						if (instance.cubeId == dirt.Id)
+						//check the block above to see if 
+						CubePosition abovePosition = offsetPosition + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
+						
+						if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(abovePosition)))
 						{
-							//check the block above to see if 
-							CubePosition abovePosition = offsetPosition + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
-							Chunk aboveChunk = manager.GetChunk(abovePosition);
+							if (!manager.GetCube(abovePosition).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+							{
+								//set dirt to grass
+								manager.SetCube(offsetPosition, Id);
 
-							if (aboveChunk != null && aboveChunk.Initialized)
-                            {
-								if (!aboveChunk.GetData().GetCube(abovePosition).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
-                                {
-									//set dirt to grass
-									chunk.GetData().SetCube(offsetPosition.InCubeSpace(chunk), Id);
-
-									//if spreading UP
-									if (i == 2)
-                                    {
-										//Set self to dirt.
-										//We don't need to check to see if the chunk is valid as only valid chunks have random cube updates performed in them.
-										manager.GetChunk(position).GetData().SetCube(position, dirt.Id);
-                                    }
-                                }
-                            }
+								//if spreading UP
+								if (i == 2)
+								{
+									//Set self to dirt.
+									//We don't need to check to see if the chunk is valid as only valid chunks have random cube updates performed in them.
+									manager.SetCube(position, dirt.Id);
+								}
+							}
 						}
 					}
 				}
 			}
         }
 
-        public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
-        {
-            base.OnAdjacentUpdated(world, manager, parent, position, updatingParent, updating, updatedId);
+		public override void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition position, CubePosition updating, int updatedId)
+		{
+			base.OnAdjacentUpdated(world, manager, position, updating, updatedId);
 
 			//top block is updating.
 			if (updating.Y == position.Y + 1)
             {
-				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Touchable)
+				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Solid)
                 {
-					parent.SetCubeFast(position.InChunkSpace(parent.GetChunk()), dirt.Id);
+					manager.SetCube(position, dirt.Id);
                 }
             }
         }

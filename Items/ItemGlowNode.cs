@@ -21,23 +21,23 @@ namespace ViMG.Items
 		{
 			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
 
+			//TODO check solidity not id != 0
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && player.GetWorld().ChunkManager2.GetCubeId(CubePosition.FromWorldSpace(pos)) != 0;
 			});
 
 			if (lookAtResult.hasHit)
 			{
-				if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+				if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 				{
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().GetChunkManager().IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+					if (player.GetWorld().ChunkManager2.IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
 						Cube glowNode = Main.Registry.CubeRegistry.Get("glow_node");
-						Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(placeAtPos);
-						chunk.GetData().SetCube(placeAtPos, glowNode.Id);
+						player.world.ChunkManager2.SetCube(placeAtPos, glowNode.Id);
 						glowNode.OnPlayerPlaced(player, placeAtPos);
 						inventory.Remove(index, 1);
 

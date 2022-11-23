@@ -20,8 +20,8 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)
         {
-            Cube aboveCube = world.GetChunkManager().GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            Cube belowCube = world.GetChunkManager().GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = world.ChunkManager2.GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != this && aboveCube.Solid)
                 return new RectangleF(80, 64, 16, 16);

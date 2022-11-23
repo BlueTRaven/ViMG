@@ -302,8 +302,8 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (world.GetChunkManager().IsInWorldBounds(pos) &&
-							world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						if (world.ChunkManager2.IsInWorldBounds(pos) &&
+							world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -338,7 +338,7 @@ namespace ViMG.Entities
 					var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 						(Vector3 pos) =>
 						{
-							Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 							return cube.Collision != Cube.CollisionValue.None;
 						});

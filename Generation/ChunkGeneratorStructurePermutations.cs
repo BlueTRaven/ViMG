@@ -15,42 +15,42 @@ namespace ViMG.Generation
         {
         }
 
-        public override void Initialize(ChunkManager chunkManager)
+        public override void Initialize(int sizeInCubesXZ, int sizeInChunksY)
         {
-            base.Initialize(chunkManager);
+            base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
             structureBatchesGOL3DOrangeShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
         }
 
-        public override void GenerateChunkBroad(ChunkManager.BroadGenerationState state)
+        public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
         {
         }
 
-        public override void GenerateChunkDetail(ChunkManager manager, Chunk chunk, ChunkPosition position)
+        public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
         {
         }
 
-        public override void PostGenerateDetail(ChunkManager manager)
+        public override void PostGenerateDetail(World world, ChunkManager2 manager)
         {
-            base.PostGenerateDetail(manager);
+            base.PostGenerateDetail(world, manager);
 
-            CubePosition testp = new CubePosition(2, 256, 256);
+            CubePosition startPosition = new CubePosition(2, 256, 256);
 
             for (int i = 0; i < 64; i++)
             {
                 Structure s = structureBatchesGOL3DOrangeShroomCaves.Get(i);
-                ChunkHelper.PlaceStructureWithBlacklist(manager.world, manager, manager.GetChunk(testp), s, testp, Span<ushort>.Empty, Span<ushort>.Empty);
-                testp.X += s.size.X + 2;
+                ChunkHelper.PlaceStructureWithBlacklist(manager, s, startPosition, Span<ushort>.Empty, Span<ushort>.Empty);
+                startPosition.X += s.size.X + 2;
 
-                if (testp.X > manager.sizeInCubes)
+                if (startPosition.X > manager.SizeInCubes)
                 {
-                    testp.X = 0;
-                    testp.Z += 40;
+                    startPosition.X = 0;
+                    startPosition.Z += 40;
                 }
             }
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+        public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
         {
             return new CubePosition(2, 256, 256).InWorldSpace(null);
         }

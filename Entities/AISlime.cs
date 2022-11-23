@@ -163,8 +163,8 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (entity.world.GetChunkManager().IsInWorldBounds(pos) &&
-							entity.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+						if (entity.world.ChunkManager2.IsInWorldBounds(pos) &&
+							entity.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 

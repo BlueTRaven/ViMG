@@ -29,8 +29,8 @@ namespace ViMG.Items
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.world.GetChunkManager().IsInWorldBounds(pos) &&
-					player.world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+				return player.world.ChunkManager2.IsInWorldBounds(pos) &&
+					player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			if (lookAtResult.hasHit)
@@ -44,18 +44,18 @@ namespace ViMG.Items
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
-						if (player.GetWorld().GetChunkManager().IsInWorldBounds(affectedPositions[i]))
+						if (player.GetWorld().ChunkManager2.IsInWorldBounds(affectedPositions[i]))
 						{
-							if (player.world.GetChunkManager().GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+							if (player.world.ChunkManager2.GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 								player.GetWorld().TryMineCube(affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 						}
 					}
 				}
 				else
 				{
-					if (player.GetWorld().GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+					if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 					{
-						if (player.world.GetChunkManager().GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (player.world.ChunkManager2.GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}

@@ -8,6 +8,7 @@ using ViMG.Cubes;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class ChunkData : IPoolable
 	{
 		public enum GenerationStep
@@ -77,207 +78,209 @@ namespace ViMG
 
 		public static int ChunkUpdate = 0;
 
-		public Cube.CubeVisualInstance GetVisual(CubePosition position, bool forceUpdate = false)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get visual for sentinel chunk data.");
-
-			if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
-				return Cube.CubeVisualInstance.CreateClean();
-
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-
-			if (forceUpdate || cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].IsDirty)
-			{
-				ChunkUpdate++;
-				DirtyCubeUpdate(position, chunk.GetWorld());
-			}
-
-			return cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
-		}
-
-		public Cube.CubeVisualInstance GetVisual(int x, int y, int z)
-		{
-			return GetVisual(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace));
-		}
-
-		public Span<ushort> GetAllAsSpan()
-		{
-			return cubes;
-		}
-
-		public ushort[] GetAll()
-		{
-			return cubes;
-		}
-
-		public Cube.CubeVisualInstance[] GetAllVisuals()
+        public Cube.CubeVisualInstance GetVisual(CubePosition position, bool forceUpdate = false)
         {
-			return cubeVisualInstances;
+            if (IsDefault)
+                throw new Exception("Cannot get visual for sentinel chunk data.");
+
+            if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
+                return Cube.CubeVisualInstance.CreateClean();
+
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position = position.InChunkSpace(chunk);
+
+            if (forceUpdate || cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].IsDirty)
+            {
+                ChunkUpdate++;
+                DirtyCubeUpdate(position, chunk.GetWorld());
+            }
+
+            return cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
         }
 
-		public ushort GetRaw(CubePosition position)
-		{
-			if (IsDefault)
-				return 0;
-
-			if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
-				return 0;
-
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-
-			return cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
-		}
-
-		public ushort GetRaw(int index)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			return cubes[index];
-		}
-
-		public ushort GetRaw(int x, int y, int z)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			return cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)];
-		}
-
-		public ushort GetRawOrAdjacent(CubePosition position, World world)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			if (IsInChunkBounds(position))
-				return GetRaw(position.X, position.Y, position.Z);
-			else return world.GetChunkManager().GetRaw(position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk));
-		}
-
-		public Optional<Cube> GetCube(CubePosition position)
-		{
-			if (IsDefault)
-				return new Optional<Cube>();
-
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-
-			if (IsInChunkBounds(position))
-				return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
-			else return new Optional<Cube>();
-		}
-
-		public Optional<Cube> GetCube(int x, int y, int z)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]));
-		}
-
-		public Optional<Cube> GetCubeOrAdjacent(int x, int y, int z, World world)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-
-			if (IsInChunkBounds(x, y, z))
-				return GetCube(x, y, z);
-			else return world.GetChunkManager().GetCube(position.InCubeSpace(chunk));
-		}
-
-		public Optional<Cube> GetCubeOrAdjacent(CubePosition position, World world)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position.InChunkSpace(chunk);
-
-			if (IsInChunkBounds(position))
-				return GetCube(position);
-			else return world.GetChunkManager().GetCube(position.InCubeSpace(chunk));
-		}
-
-		public Cube.CubeInstance GetCubeInstance(CubePosition position)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-
-			if (IsInChunkBounds(position))
-				return new Cube.CubeInstance(chunk, position, cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]);
-			else return new Cube.CubeInstance();
-		}
-
-		public Cube.CubeInstance GetCubeInstance(int x, int y, int z)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
-
-			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-
-			if (IsInChunkBounds(x, y, z))
-				return new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
-			else return new Cube.CubeInstance();
-		}
-
-		public Cube.CubeInstance GetCubeInstanceOrAdjacent(CubePosition position, World world)
+        public Cube.CubeVisualInstance GetVisual(int x, int y, int z)
         {
-			if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-				position = position.InChunkSpace(chunk);
-
-			return GetCubeInstanceOrAdjacent(position.X, position.Y, position.Z, world);
+            return GetVisual(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace));
         }
 
-		//Gets an adjacent cube instance using chunk space coordinates.
-		public Cube.CubeInstance GetCubeInstanceOrAdjacent(int x, int y, int z, World world)
-		{
-			if (IsDefault)
-				throw new Exception("Cannot get data from sentinel chunk data.");
+        public Span<ushort> GetAllAsSpan()
+        {
+            return cubes;
+        }
 
-			CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+        public ushort[] GetAll()
+        {
+            return cubes;
+        }
 
-			if (IsInChunkBounds(x, y, z))
-				return GetCubeInstance(x, y, z);//new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
-			else return world.GetChunkManager().GetCubeInstance(position.InCubeSpace(chunk));
-		}
+        public Cube.CubeVisualInstance[] GetAllVisuals()
+        {
+            return cubeVisualInstances;
+        }
 
-		public bool IsInChunkBounds(Vector3 position)
-		{
-			return IsInChunkBounds(CubePosition.FromWorldSpace(position));
-		}
+        public ushort GetRaw(CubePosition position)
+        {
+            if (IsDefault)
+                return 0;
 
-		public bool IsInChunkBounds(CubePosition position)
-		{
-			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-			{
-				return position.X >= 0 && position.X < Chunk.CHUNK_SIZE &&
-					position.Y >= 0 && position.Y < Chunk.CHUNK_SIZE &&
-					position.Z >= 0 && position.Z < Chunk.CHUNK_SIZE;
-			}
-			else
-			{
-				return position.X >= chunk.Position.X * Chunk.CHUNK_SIZE && position.X < chunk.Position.X * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
-					position.Y >= chunk.Position.Y * Chunk.CHUNK_SIZE && position.Y < chunk.Position.Y * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
-					position.Z >= chunk.Position.Z * Chunk.CHUNK_SIZE && position.Z < chunk.Position.Z * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE;
-			}
-		}
+            if (chunk.Position.X == -1 && chunk.Position.Y == -1 && chunk.Position.Z == -1)
+                return 0;
 
-		public bool IsInChunkBounds(int x, int y, int z)
-		{
-			return x >= 0 && x < Chunk.CHUNK_SIZE &&
-					y >= 0 && y < Chunk.CHUNK_SIZE &&
-					z >= 0 && z < Chunk.CHUNK_SIZE;
-		}
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position = position.InChunkSpace(chunk);
 
-		public Cube.CubeVisualInstance DirtyCubeUpdate(CubePosition position, World world)
+            return cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)];
+        }
+
+        public ushort GetRaw(int index)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            return cubes[index];
+        }
+
+        public ushort GetRaw(int x, int y, int z)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            return cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)];
+        }
+
+        public ushort GetRawOrAdjacent(CubePosition position, World world)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+			return 0;
+            /*if (IsInChunkBounds(position))
+                return GetRaw(position.X, position.Y, position.Z);
+            else return world.ChunkManager2.GetRaw(position.Coord == CubePosition.CoordinateSpace.CubeSpace ? position : position.InCubeSpace(chunk));*/
+        }
+
+        public Optional<Cube> GetCube(CubePosition position)
+        {
+            if (IsDefault)
+                return new Optional<Cube>();
+
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position = position.InChunkSpace(chunk);
+
+            if (IsInChunkBounds(position))
+                return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
+            else return new Optional<Cube>();
+        }
+
+        public Optional<Cube> GetCube(int x, int y, int z)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]));
+        }
+
+        public Optional<Cube> GetCubeOrAdjacent(int x, int y, int z, World world)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+            if (IsInChunkBounds(x, y, z))
+                return GetCube(x, y, z);
+            else return world.ChunkManager2.GetCube(position.InCubeSpace(chunk));
+        }
+
+        public Optional<Cube> GetCubeOrAdjacent(CubePosition position, World world)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position.InChunkSpace(chunk);
+
+            if (IsInChunkBounds(position))
+                return GetCube(position);
+            else return world.ChunkManager2.GetCube(position.InCubeSpace(chunk));
+        }
+
+        public Cube.CubeInstance GetCubeInstance(CubePosition position)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position = position.InChunkSpace(chunk);
+
+            if (IsInChunkBounds(position))
+                return new Cube.CubeInstance(chunk, position, cubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]);
+            else return new Cube.CubeInstance();
+        }
+
+        public Cube.CubeInstance GetCubeInstance(int x, int y, int z)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+            if (IsInChunkBounds(x, y, z))
+                return new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
+            else return new Cube.CubeInstance();
+        }
+
+        public Cube.CubeInstance GetCubeInstanceOrAdjacent(CubePosition position, World world)
+        {
+            if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
+                position = position.InChunkSpace(chunk);
+
+            return GetCubeInstanceOrAdjacent(position.X, position.Y, position.Z, world);
+        }
+
+        //Gets an adjacent cube instance using chunk space coordinates.
+        public Cube.CubeInstance GetCubeInstanceOrAdjacent(int x, int y, int z, World world)
+        {
+            if (IsDefault)
+                throw new Exception("Cannot get data from sentinel chunk data.");
+
+            CubePosition position = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+
+			return new Cube.CubeInstance();
+            /*if (IsInChunkBounds(x, y, z))
+                return GetCubeInstance(x, y, z);//new Cube.CubeInstance(chunk, position, cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)]);
+            else return world.ChunkManager2.GetCubeInstance(position.InCubeSpace(chunk));*/
+        }
+
+        public bool IsInChunkBounds(Vector3 position)
+        {
+            return IsInChunkBounds(CubePosition.FromWorldSpace(position));
+        }
+
+        public bool IsInChunkBounds(CubePosition position)
+        {
+            if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
+            {
+                return position.X >= 0 && position.X < Chunk.CHUNK_SIZE &&
+                    position.Y >= 0 && position.Y < Chunk.CHUNK_SIZE &&
+                    position.Z >= 0 && position.Z < Chunk.CHUNK_SIZE;
+            }
+            else
+            {
+                return position.X >= chunk.Position.X * Chunk.CHUNK_SIZE && position.X < chunk.Position.X * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+                    position.Y >= chunk.Position.Y * Chunk.CHUNK_SIZE && position.Y < chunk.Position.Y * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE &&
+                    position.Z >= chunk.Position.Z * Chunk.CHUNK_SIZE && position.Z < chunk.Position.Z * Chunk.CHUNK_SIZE + Chunk.CHUNK_SIZE;
+            }
+        }
+
+        public bool IsInChunkBounds(int x, int y, int z)
+        {
+            return x >= 0 && x < Chunk.CHUNK_SIZE &&
+                    y >= 0 && y < Chunk.CHUNK_SIZE &&
+                    z >= 0 && z < Chunk.CHUNK_SIZE;
+        }
+
+        public Cube.CubeVisualInstance DirtyCubeUpdate(CubePosition position, World world)
 		{
 			if (IsDefault)
 				throw new Exception("Cannot call dirty cube update from sentinel chunk data.");
@@ -304,8 +307,8 @@ namespace ViMG
 
 			cubeVisualInstances[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)].IsDirty = true;
 
-			if (markChunk)
-				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position, true);
+			/*if (markChunk)
+				chunk.GetWorld().GetChunkManager().MarkDirty(chunk.Position, true);*/
 		}
 
 		private bool IsInChunkBounds(in CubePosition position)
@@ -321,13 +324,13 @@ namespace ViMG
 
 			position = position.InCubeSpace(chunk);
 
-			if (chunk.GetWorld().GetChunkManager().IsInWorldBounds(position))
+			/*if (chunk.GetWorld().GetChunkManager().IsInWorldBounds(position))
 			{
 				Chunk offsetChunk = chunk.GetWorld().GetChunkManager().GetChunk(position);
 
 				if (offsetChunk != null && offsetChunk.Initialized)
 					offsetChunk.GetData().MarkDirty(position.InChunkSpace(offsetChunk));
-			}
+			}*/
 		}
 
 		private static CubePosition[] offsets = new CubePosition[6]
@@ -377,7 +380,7 @@ namespace ViMG
 
 					if (GetChunk().GetChunkManager().IsInWorldBounds(adjPos))
 					{
-						Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
+						/*Chunk adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
 
 						//TODO: re-enable this.
 						//BUG:
@@ -386,25 +389,25 @@ namespace ViMG
 						//In order to notify adjacent, chunk manager deserializes and loads adjacent chunk
 						//Loading adjacent chunk adds entities, throwing an error because we have modified the entity list while iterating.
 						//This needs to be fixed before this line of code can be re-enabled.
-						/*if (adjChunk == null)
+						*//*if (adjChunk == null)
 						{
 							//If the chunk is null, then that means it's probably an unloaded chunk.
 							//Try to load it.
 							chunk.GetWorld().ChunkLoadManager.LoadChunk(chunk.GetWorld(), ChunkPosition.CubeChunk(adjPos));
 							adjChunk = chunk.GetWorld().GetChunkManager().GetChunk(adjPos);
-						}*/
+						}*//*
 
 						if (adjChunk != null)
 						{
-							GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
+							//GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), adjChunk.GetData(), adjPos, this, position.InCubeSpace(chunk), updatedId);
 
 							chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
-						}
+						}*/
 					}
 				}
 				else
 				{
-					GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
+					//GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
 
 					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 				}

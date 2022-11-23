@@ -54,7 +54,7 @@ namespace ViMG.Entities
 
 		private void UpdateCollision(double deltaTime)
 		{
-			//if (world.GetChunkManager().GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+			//if (world.ChunkManager2.GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
 			{
 				Position += Velocity * (float)deltaTime;
 			}
@@ -72,7 +72,8 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
-						if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetRaw(pos) != 0)
+						//TODO: this should be a .solid check instead of a id != 0 check
+						if (world.ChunkManager2.IsInWorldBounds(pos) && world.ChunkManager2.GetCubeId(pos) != 0)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 

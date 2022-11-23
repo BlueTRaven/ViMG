@@ -28,8 +28,8 @@ namespace ViMG.Cubes
         {
             chains ??= Main.Registry.CubeRegistry.Get("ceiling_chains");
 
-            Cube aboveCube = world.GetChunkManager().GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            //Cube belowCube = world.GetChunkManager().GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = world.ChunkManager2.GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != this)
             {
@@ -40,11 +40,11 @@ namespace ViMG.Cubes
             else return base.GetSourceRect(pass, world, pos);
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
         {
-            base.PostChunkGen(world, manager, chunkData, position);
+            base.PostChunkGen(world, manager, position);
 
-            world.EntityManager.Add(new Entities.CubeLight(position.InCubeSpace(chunkData.GetChunk()), color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
+            world.EntityManager.Add(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

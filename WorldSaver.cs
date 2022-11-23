@@ -12,6 +12,7 @@ using ViMG.Entities;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class WorldSaver
 	{
 		private const string SAVE_FOLDER = "./saves/";
@@ -231,7 +232,8 @@ namespace ViMG
 			Span<byte> savedChunks = stackalloc byte[(int)ONE_CHUNK_SIZE];
 			int offset = 0;
 
-			Span<ushort> chunkData = chunks[chunkIndex].GetData().GetAll();
+			//Span<ushort> chunkData = chunks[chunkIndex].GetData().GetAll();
+			ushort[] chunkData = null;
 			int len = chunkData.Length;
 
 			for (int j = 0; j < len; j++)
@@ -571,7 +573,7 @@ namespace ViMG
 					ChunkData data = chunk.GetData();
 					chunkManager.SetChunk(chunk);
 
-					ushort[] cubes = chunk.GetData().GetAll();
+					ushort[] cubes = null;// chunk.GetData().GetAll();
 					for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
 					{
 						/*int cubeX = j % Chunk.CHUNK_SIZE;
@@ -613,7 +615,7 @@ namespace ViMG
 			Span<byte> buffer = stackalloc byte[(int)Math.Min(ONE_CHUNK_SIZE, left)];
 			fs.Read(buffer);
 
-			ushort[] allCubes = chunk.GetData().GetAll();
+			ushort[] allCubes = null;// chunk.GetData().GetAll();
 			for (int j = 0; j < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; j++)
 			{
 				const int NUM_BYTES_PER_CHUNK = 2;

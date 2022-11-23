@@ -22,7 +22,7 @@ namespace ViMG
 
 		public int Version;
 
-		private readonly ChunkManager manager;
+		//private readonly ChunkManager manager;
 		private readonly string managerName;
 
 		private readonly long numChunks;
@@ -30,12 +30,12 @@ namespace ViMG
 		private bool loaded;
 		private byte[] allBytes;
 
-		public ChunkManagerIO(ChunkManager manager, string chunkManagerName)
+		public ChunkManagerIO(int sizeInChunks, string chunkManagerName)
         {
-            this.manager = manager;
+            //this.manager = manager;
 			this.managerName = chunkManagerName;
 
-			numChunks = manager.sizeInChunksXZ * manager.sizeInChunksXZ * manager.sizeInChunksXZ;
+			numChunks = sizeInChunks * sizeInChunks * sizeInChunks;
 			allBytes = new byte[numChunks * SIZEOF_CHUNK];
         }
 
@@ -59,7 +59,7 @@ namespace ViMG
 			using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
-				fs.Write(BitConverter.GetBytes(manager.DiscoveredLayers));
+				//fs.Write(BitConverter.GetBytes(manager.DiscoveredLayers));
 
 				//Write unused remaining header bytes
 				long remainingBytes = SIZEOF_HEADER - fs.Position;
@@ -69,7 +69,7 @@ namespace ViMG
 			}
 		}
 
-		public void SerializeAll()
+		/*public void SerializeAll()
         {
 			Chunk[] chunks = manager.GetChunks();
 
@@ -120,7 +120,7 @@ namespace ViMG
             {
 				Console.WriteLine("Tried to serialize uninitialized chunk... fix me!");
             }
-		}
+		}*/
 
 		//Loads bytes from disk. Does not fill in chunks! Use Load, then Deserialize!
 		public LoadError Load(string folderName)
@@ -158,7 +158,7 @@ namespace ViMG
 		}
 
 		//Deserializes a chunk from the local byte stream into the world. This does not load anything from the disk! If nothing has been loaded yet, this will error!
-		public void DeserializeChunk(World world, ChunkPosition pos)
+		/*public void DeserializeChunk(World world, ChunkPosition pos)
         {
 			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(manager.sizeInChunksXZ, manager.sizeInChunksXZ, manager.sizeInChunksXZ), out int i);
 
@@ -217,7 +217,7 @@ namespace ViMG
 			data.GenStep = ChunkData.GenerationStep.Done;
 
 			manager.MarkDirty(pos, false);
-		}
+		}*/
 
 		private string GetFullName(string folderName)
         {

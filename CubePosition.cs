@@ -70,7 +70,30 @@ namespace ViMG
 			}
 		}
 
+		public CubePosition InCubeSpace(ChunkPosition position)
+		{
+			if (Coord == CoordinateSpace.CubeSpace)
+			{
+				return this;
+			}
+			else
+			{
+				return new CubePosition(position.X * Chunk.CHUNK_SIZE + X,
+					position.Y * Chunk.CHUNK_SIZE + Y,
+					position.Z * Chunk.CHUNK_SIZE + Z, CoordinateSpace.CubeSpace);
+			}
+		}
+
 		public Vector3 InWorldSpace(Chunk chunk)
+		{
+			CubePosition pos = this;
+			if (Coord == CoordinateSpace.ChunkSpace)
+				pos = pos.InCubeSpace(chunk);
+
+			return new Vector3(pos.X * Cube.CUBE_SCALE, pos.Y * Cube.CUBE_SCALE, pos.Z * Cube.CUBE_SCALE);
+		}
+
+		public Vector3 InWorldSpace(ChunkPosition chunk)
 		{
 			CubePosition pos = this;
 			if (Coord == CoordinateSpace.ChunkSpace)

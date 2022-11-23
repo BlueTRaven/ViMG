@@ -17,11 +17,11 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.Invisible;
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, ChunkData chunkData, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
         {
-            base.PostChunkGen(world, manager, chunkData, position);
+            base.PostChunkGen(world, manager, position);
 
-            Sapling sapling = new Sapling(position.InCubeSpace(chunkData.GetChunk()));
+            Sapling sapling = new Sapling(position);
             world.EntityManager.Add(sapling);
         }
 

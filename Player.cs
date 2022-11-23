@@ -326,7 +326,7 @@ namespace ViMG
 			//SpawnPosition got corrupted or something or is a version that doesn't have it
 			if (SpawnPosition == new CubePosition())
 			{
-				SpawnPosition = world.ChunkManager.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
+				SpawnPosition = world.ChunkManager2.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
 			}
 		}
 
@@ -373,7 +373,7 @@ namespace ViMG
 			else if (state == State.Noclip)
 				state = State.Normal;
 
-			if (!Main.Debug && world.GetChunkManager().IsInWorldBounds(Position) && (world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)) == null || !world.GetChunkManager().GetChunk(ChunkPosition.WorldSpaceChunk(Position)).Initialized))
+			if (!Main.Debug && (!world.ChunkManager2.IsInWorldBounds(Position) || !world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
 				return;
 
 			if (hurtbox == -1)
@@ -610,8 +610,8 @@ namespace ViMG
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-				bool isLooking = world.GetChunkManager().IsInWorldBounds(pos) && cube.Touchable;
+				Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				bool isLooking = world.ChunkManager2.IsInWorldBounds(pos) && cube.Touchable;
 				
 				//if we're climbing a rope, ignore the rope
 				if (inRope)
@@ -624,20 +624,20 @@ namespace ViMG
 			CanPlace = false;
 			if (lookAtResult.hasHit)
 			{
-				if (world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+				if (world.ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 				{
-					var c = world.GetChunkManager().GetCube(lookAtResult.hit);
+					var c = world.ChunkManager2.GetCube(lookAtResult.hit);
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.LookAtNormal = lookAtResult.normal;
 					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (world.GetChunkManager().IsInWorldBounds(PlaceAtPos))
+					if (world.ChunkManager2.IsInWorldBounds(PlaceAtPos))
 						CanPlace = true;
 				}
 			}
 			
-			if (world.GetChunkManager().IsInWorldBounds(lookAtResult.end))
+			if (world.ChunkManager2.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
 			//currentUI.Update(null, deltaTime);
@@ -1297,8 +1297,8 @@ namespace ViMG
 					{
 						CubePosition pos = new CubePosition(x, y, z);
 
-						Cube cube = world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						if (world.GetChunkManager().IsInWorldBounds(pos) && cube.Id != 0 && 
+						Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						if (world.ChunkManager2.IsInWorldBounds(pos) && cube.Id != 0 && 
 							(cube.Collision == Cube.CollisionValue.Collidable || 
 							cube.Collision == Cube.CollisionValue.LiquidWater || 
 							cube.Collision == Cube.CollisionValue.Rope ||
@@ -1571,7 +1571,7 @@ namespace ViMG
 				lookAtMesh.Name = "Look At Mesh";
 			}
 
-			if (lookAtResult.hasHit && world.GetChunkManager().IsInWorldBounds(lookAtResult.hit))
+			if (lookAtResult.hasHit && world.ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 			{
 				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
 				Color color = Color.Lerp(Color.White, Color.Black, s);
@@ -1583,7 +1583,7 @@ namespace ViMG
 
 					for (int i = 0; i < positions.Length; i++)
 					{
-						if (pickStats.CanPredictAir() || world.GetChunkManager().GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (pickStats.CanPredictAir() || world.ChunkManager2.GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 						{
 							Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
 								Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *

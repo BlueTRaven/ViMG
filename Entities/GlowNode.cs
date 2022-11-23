@@ -138,7 +138,8 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player)
 		{
 			//world.MineCube(TrackedPosition, true);
-			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
+			//TODO this had killtrackedentities false?
+			world.ChunkManager2.SetCube(TrackedPosition, 0);
 			world.EntityManager.Remove(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();
@@ -156,7 +157,7 @@ namespace ViMG.Entities
 
 		public void TrackingCubeDestroyed(World world, ChunkManager cm)
 		{
-			world.GetChunkManager().GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
+			//world.ChunkManager2.GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
 			world.EntityManager.Remove(this);
 		}
 

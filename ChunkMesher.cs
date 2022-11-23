@@ -18,7 +18,7 @@ namespace ViMG
 			this.device = device;
 		}
 
-		public ChunkMesh GenerateChunk(Chunk chunk, World world, Cube.RenderPass pass, bool forceUpdate = false)
+		public ChunkMesh GenerateChunk(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -28,22 +28,18 @@ namespace ViMG
 
 			ChunkData.ChunkUpdate = 0;
 
-			ChunkData data = chunk.GetData();
-			data.Density = -1;
-			ushort[] cubes = data.GetAll();
-
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 			{
 				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
 				{
 					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 					{
-						var pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-						pos = pos.InCubeSpace(chunk);
+						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+						pos = pos.InCubeSpace(position);
 
-						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), out int ci);
-						ushort id = cubes[ci];
-						Cube.CubeVisualInstance visual = data.GetVisual(pos, forceUpdate);
+						ushort id = manager.GetCubeId(pos);
+						//TODO cache these values maybe
+						Cube.CubeVisualInstance visual = new Cube.CubeVisualInstance(manager.GetClearSides(pos, world), true);
 
 						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
 						{
@@ -51,15 +47,14 @@ namespace ViMG
 								continue;
 
 							Cube cube = Main.Registry.CubeRegistry.Get(id);
-							data.SetDensity(0, cube.Id);
-
+							
 							int oldCount = vertices.Count;
 
 							cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, vertices, indices);
 
 							int count = vertices.Count - oldCount;
 
-							BakeAO(world, chunk, pos, oldCount, oldCount + count, vertices);
+							BakeAO(manager, pos, oldCount, oldCount + count, vertices);
 						}
                         else if (pass == Cube.RenderPass.Air)
                         {
@@ -72,9 +67,6 @@ namespace ViMG
 				}
 			}
 
-			if (data.Density == -1)
-				data.Density = 0;
-
 			if (vertices.Count > 0 && indices.Count > 0)
 			{
 				var mesh = new ChunkMesh(device, vertices, indices);
@@ -84,20 +76,20 @@ namespace ViMG
 			else return ChunkMesh.Empty;
 		}
 
-		private static void BakeAO(World world, Chunk chunk, CubePosition pos, int start, int end, List<VertexCube> vertices)
+		private static void BakeAO(ChunkManager2 manager, CubePosition pos, int start, int end, List<VertexCube> vertices)
         {
 			for (int i = start; i < end; i++)
 			{
 				VertexCube vertex = vertices[i];
 
 				//pos =
-				CubePosition cubePos = pos.InChunkSpace(chunk);
+				CubePosition cubePos = pos;
 				//pc =
-				CubePosition vertCubePos = CubePosition.FromWorldSpace(vertex.Position).InChunkSpace(chunk);
+				CubePosition vertCubePos = CubePosition.FromWorldSpace(vertex.Position);
 
 				CubePosition nrm = new CubePosition(cubePos.X + (int)vertex.Normal.X,
 					cubePos.Y + (int)vertex.Normal.Y,
-					cubePos.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.ChunkSpace);
+					cubePos.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.CubeSpace);
 
 				CubePosition t = new CubePosition();
 				CubePosition bt = new CubePosition();
@@ -108,24 +100,24 @@ namespace ViMG
 
 				if (vertex.Normal.X != 0)
 				{
-					t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
-					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
+					t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
+					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
 				}
 				else if (vertex.Normal.Y != 0)
 				{
-					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
-					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
+					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
+					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
 				}
 				else if (vertex.Normal.Z != 0)
 				{
-					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
-					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
+					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
+					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
 				}
 
-				int top = chunk.GetData().GetRawOrAdjacent(nrm, world);
-				int corner = chunk.GetData().GetRawOrAdjacent(nrm + t + bt, world);
-				int sideA = chunk.GetData().GetRawOrAdjacent(nrm + t, world);
-				int sideB = chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
+				int top = manager.GetCubeId(nrm);// chunk.GetData().GetRawOrAdjacent(nrm, world);
+				int corner = manager.GetCubeId(nrm + t + bt);// chunk.GetData().GetRawOrAdjacent(nrm + t + bt, world);
+				int sideA = manager.GetCubeId(nrm + t);// chunk.GetData().GetRawOrAdjacent(nrm + t, world);
+				int sideB = manager.GetCubeId(nrm + bt);// chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
 
 				if (corner > 0 && Main.Registry.CubeRegistry.noAo[corner])
 					corner = 0;

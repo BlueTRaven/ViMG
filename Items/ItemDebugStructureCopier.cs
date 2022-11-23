@@ -83,7 +83,7 @@ namespace ViMG.Items
                     {
                         for (int z = minZ; z < maxZ; z++)
                         {
-                            ushort id = player.GetWorld().GetChunkManager().GetCube(x, y, z).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+                            ushort id = player.GetWorld().ChunkManager2.GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
                             Util.ThreeDToOneD(new ValuePoint3D(x - minX, y - minY, z - minZ), new ValuePoint3D(width, height, depth), out int i);
 

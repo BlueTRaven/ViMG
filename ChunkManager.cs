@@ -13,6 +13,7 @@ using ViMG.Generation;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class ChunkManager
 	{
 		public const int NUM_CHUNK_MESH_PASSES = 5;
@@ -35,14 +36,16 @@ namespace ViMG
 
 		private readonly struct BroadChunkTaskState
 		{
+			public readonly World world;
 			public readonly int chunkStart;
 			public readonly int chunkEnd;
 			public readonly int totalChunks;
 			public readonly ManagedChunk[] chunks;
 			public readonly ChunkGenerator generator;
 
-			public BroadChunkTaskState(int chunkStart, int chunkEnd, int totalChunks, ManagedChunk[] chunks, ChunkGenerator generator)
+			public BroadChunkTaskState(World world, int chunkStart, int chunkEnd, int totalChunks, ManagedChunk[] chunks, ChunkGenerator generator)
             {
+				this.world = world;
                 this.chunkStart = chunkStart;
                 this.chunkEnd = chunkEnd;
                 this.totalChunks = totalChunks;
@@ -53,12 +56,14 @@ namespace ViMG
 
 		public readonly struct BroadGenerationState
         {
+			public readonly World world;
             public readonly Chunk chunk;
             public readonly ChunkGenerator generator;
 			public readonly Random random;
 
-            public BroadGenerationState(Chunk chunk, ChunkGenerator generator)
+            public BroadGenerationState(World world, Chunk chunk, ChunkGenerator generator)
             {
+				this.world = world;
                 this.chunk = chunk;
                 this.generator = generator;
 
@@ -195,7 +200,7 @@ namespace ViMG
 
 			Stopwatch totalWatch = Stopwatch.StartNew();
 
-			layerLookupTable[layer].generator.Initialize(this);
+			//layerLookupTable[layer].generator.Initialize(this);
 
 			Stopwatch broadWatch = Stopwatch.StartNew();
 
@@ -208,7 +213,7 @@ namespace ViMG
 				int chunkStart = i;
 				int chunkEnd = i + split;
 
-				BroadChunkTaskState state = new BroadChunkTaskState(chunkStart, chunkEnd, total, layerLookupTable[layer].chunks, layerLookupTable[layer].generator);
+				BroadChunkTaskState state = new BroadChunkTaskState(world, chunkStart, chunkEnd, total, layerLookupTable[layer].chunks, layerLookupTable[layer].generator);
 
 				for (int j = chunkStart; j < chunkEnd; j++)
                 {
@@ -243,7 +248,7 @@ namespace ViMG
 					int y = (i / sizeInChunksXZ) % sizeInChunksXZ;
 					int z = i / (sizeInChunksXZ * sizeInChunksXZ);
 
-					layerLookupTable[layer].generator.GenerateChunkDetail(this, layerLookupTable[layer].chunks[i].chunk, new ChunkPosition(x, y, z));
+					//layerLookupTable[layer].generator.GenerateChunkDetail(this, layerLookupTable[layer].chunks[i].chunk, new ChunkPosition(x, y, z));
 
 					num++;
 
@@ -251,7 +256,7 @@ namespace ViMG
 						Console.WriteLine("Detail: " + num + " / " + total);
 				}
 
-				layerLookupTable[layer].generator.PostGenerateDetail(this);
+				//layerLookupTable[layer].generator.PostGenerateDetail(this);
 				//GenerateHeightmap();
 			}
 
@@ -331,7 +336,7 @@ namespace ViMG
 
 			for (int j = state.chunkStart; j < state.chunkEnd; j++)
 			{
-				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j].chunk, state.generator));
+				//state.generator.GenerateChunkBroad(new BroadGenerationState(world, state.chunks[j].chunk, state.generator));
 
 				if (!Main.DO_DETAIL)
 					state.chunks[j].chunk.GetData().GenStep = ChunkData.GenerationStep.Done;
@@ -343,7 +348,8 @@ namespace ViMG
 
 		public Vector3 GetPlayerSpawnPos(World world)
         {
-			return layerLookupTable[0].generator.GetPlayerPosition(world, this);
+			return Vector3.Zero;
+			//return layerLookupTable[0].generator.GetPlayerPosition(world, this);
         }
 
 		public void ProcessChunkQueue(World world, int forceMode)
@@ -544,11 +550,11 @@ namespace ViMG
 
 			//First one must have forceUpdate = true,
 			//but all subsequent mesh generations should be false.
-			mc.meshes[(int)Cube.RenderPass.Opaque] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
+			/*mc.meshes[(int)Cube.RenderPass.Opaque] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Opaque, true);
 			mc.meshes[(int)Cube.RenderPass.Transparent] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Transparent, false);
 			mc.meshes[(int)Cube.RenderPass.DepthOnly] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.DepthOnly, false);
 			mc.meshes[(int)Cube.RenderPass.Fluid] = null;	//TODO fluids?
-			mc.meshes[(int)Cube.RenderPass.Air] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);
+			mc.meshes[(int)Cube.RenderPass.Air] = mesher.GenerateChunk(mc.chunk, world, Cube.RenderPass.Air, false);*/
 			mc.meshDirty = false;
 			mc.meshQueued = false;
 

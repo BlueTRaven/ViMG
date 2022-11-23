@@ -63,9 +63,7 @@ namespace ViMG.Spawners
                 {
                     if (GetRandomPosition(world, out CubePosition position))
                     {
-                        Chunk spawnChunk = world.GetChunkManager().GetChunk(position);
-
-                        if (spawnChunk != null && CanAreaSpawn(world, world.GetChunkManager(), spawnChunk, position))
+                        if (CanAreaSpawn(world, world.ChunkManager2, position))
                         {
                             Spawn(world, position);
                             break;
@@ -97,12 +95,13 @@ namespace ViMG.Spawners
             v = spawnBounds.Clamp(v);
 
             //Can't start spawning in an uninitialized chunk
-            if (world.ChunkManager.GetChunk(CubePosition.FromWorldSpace(v)).Initialized)
+            //if (world.ChunkManager.GetChunk(CubePosition.FromWorldSpace(v)).Initialized)
+            if (world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(v)))
             {
-                var cubeAtPos = world.ChunkManager.GetCube(CubePosition.FromWorldSpace(v)).Get();
+                var cubeAtPos = world.ChunkManager2.GetCube(CubePosition.FromWorldSpace(v)).Get();
                 if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
-                    CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+                    CubePosition pos = world.ChunkManager2.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 
                     position = pos;
                     return true;
@@ -115,7 +114,7 @@ namespace ViMG.Spawners
 
         protected abstract void Spawn(World world, CubePosition position);
 
-        public abstract bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position);
+        public abstract bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position);
 
         public int GetSpawnCap()
         {

@@ -347,9 +347,9 @@ namespace ViMG
 
 								drawnChunks[drawnChunksCount++] = chunkPos;
 
-								if (world.ChunkManager.IsInWorldBounds(chunkPos))
+								if (world.ChunkManager2.IsInWorldBounds(chunkPos))
 								{
-									versionSum += world.ChunkManager.GetMeshVersionCode(chunkPos);
+									versionSum += world.ChunkManager2.GetMeshVersionCode(chunkPos);
 								}
 							}
 						}
@@ -380,17 +380,17 @@ namespace ViMG
 							{
 								ChunkPosition chunkPos = drawnChunks[k];
 
-								if (world.ChunkManager.IsInWorldBounds(chunkPos))
+								if (world.ChunkManager2.IsInWorldBounds(chunkPos))
 								{
-									ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
-									Matrix transform = world.ChunkManager.GetTransform(chunkPos);
+									ChunkMesh mesh = world.ChunkManager2.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+									//Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 									if (mesh != null && !mesh.IsEmpty)
 									{
 										device.SetVertexBuffer(mesh.VBO);
 										device.Indices = mesh.IBO;
 
-										effectDepth.Parameters["World"].SetValue(transform);
+										effectDepth.Parameters["World"].SetValue(Matrix.Identity);
 
 										foreach (var pass in effectDepth.CurrentTechnique.Passes)
 										{

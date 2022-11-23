@@ -61,12 +61,12 @@ namespace ViMG.Cubes
             DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
         }
 
-        public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
+        public override bool CanPlace(World world, ChunkManager2 manager, CubePosition position)
         {
             return manager.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
         }
 
-        public virtual void OnAdjacentUpdated(World world, ChunkManager manager, ChunkData parent, CubePosition position, ChunkData updatingParent, CubePosition updating, int updatedId)
+        public override void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition position, CubePosition updating, int updatedId)
         {
             if (updating.Y == position.Y - 1)
             {
@@ -74,10 +74,10 @@ namespace ViMG.Cubes
                 Cube cube = Main.Registry.CubeRegistry.Get(updatedId);
 
                 if (cube == null || !cube.Solid)
-                    parent.SetCube(position, 0);
+                    manager.SetCube(position, 0);
             }
 
-            base.OnAdjacentUpdated(world, manager, parent, position, updatingParent, updating, updatedId);
+            base.OnAdjacentUpdated(world, manager, position, updating, updatedId);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

@@ -35,15 +35,15 @@ namespace ViMG.Spawners
                 slimes.Remove(s);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
         {
-            if (!chunk.Initialized)// || Main.camera.FrustumContains(position.InWorldSpace(null)))
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)))// || Main.camera.FrustumContains(position.InWorldSpace(null)))
                 return false;
 
             if (position.Y > 160)
                 return false;
 
-            Cube c = chunk.GetData().GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = manager.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("stone"))
                 return true;
 

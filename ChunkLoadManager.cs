@@ -16,8 +16,7 @@ namespace ViMG
 			Loaded
         }
 
-        private WorldSaver saver;
-		private readonly ChunkManager chunkManager;
+		private readonly ChunkManager2 chunkManager;
 		private readonly EntityManager entityManager;
 		private readonly ChunkManagerIO chunkIO;
         private readonly EntityManagerIO entIO;
@@ -41,9 +40,8 @@ namespace ViMG
 			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
 		}); 
 		
-		public ChunkLoadManager(WorldSaver saver, ChunkManager chunkManager, EntityManager entityManager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO chunkIO, EntityManagerIO entIO)
+		public ChunkLoadManager(ChunkManager2 chunkManager, EntityManager entityManager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
-			this.saver = saver;
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
 			this.radiusH = radiusH;
@@ -94,7 +92,7 @@ namespace ViMG
 				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 					continue;
 
-				chunkIO.DeserializeChunk(world, queuedPosition);
+				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
@@ -121,11 +119,7 @@ namespace ViMG
 				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 					continue;
 
-				//Chunk does not yet exist (typically, this means it's in a layer we haven't entered/generated yet)
-				if (chunkManager.GetChunk(queuedPosition) == null)
-					continue;
-
-				chunkIO.DeserializeChunk(world, queuedPosition);
+				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
@@ -147,7 +141,7 @@ namespace ViMG
 
 				if (chunkManager.IsInWorldBounds(pos) && (!loadedChunks.ContainsKey(pos) || loadedChunks[pos] == LoadingState.Unloaded))
                 {
-					chunkIO.DeserializeChunk(world, pos);
+					//chunkIO.DeserializeChunk(world, pos);
 					entIO.Deserialize(pos);
 					loadedChunks.Add(pos, LoadingState.Loaded);
 
@@ -160,7 +154,7 @@ namespace ViMG
         {
 			if (chunkManager.IsInWorldBounds(position) && (!loadedChunks.ContainsKey(position) || loadedChunks[position] == LoadingState.Unloaded))
 			{
-				chunkIO.DeserializeChunk(world, position);
+				//chunkIO.DeserializeChunk(world, position);
 				entIO.Deserialize(position);
 				loadedChunks.Add(position, LoadingState.Loaded);
 
@@ -173,7 +167,7 @@ namespace ViMG
         {
 			if (chunkManager.IsInWorldBounds(position) && loadedChunks.ContainsKey(position))
             {
-				chunkIO.DeserializeChunk(world, position);
+				//chunkIO.DeserializeChunk(world, position);
 				loadedChunks[position] = LoadingState.Loading;
             }
 		}
@@ -223,22 +217,17 @@ namespace ViMG
 					unloadChunks.Add(pos);
 			}
 
-			Chunk[] chunks = chunkManager.GetChunks();
-
 			foreach (ChunkPosition pos in unloadChunks)
 			{
-				Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.sizeInChunksXZ, chunkManager.sizeInChunksXZ, chunkManager.sizeInChunksXZ), out int i);
+				Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
-				if (chunks[i] != null && chunks[i].Initialized)
+				if (loadedChunks[pos] == LoadingState.Loaded)
 				{
-					if (loadedChunks[pos] == LoadingState.Loaded)
-					{
-						chunkIO.SerializeChunk(chunks, pos);
-						entIO.Serialize(pos);
+					//chunkIO.SerializeChunk(chunks, pos);
+					entIO.Serialize(pos);
 
-						entityManager.Unload(pos);
-						chunkManager.Unload(pos);
-					}
+					entityManager.Unload(pos);
+					chunkManager.UnloadMesh(pos);
 				}
 
 				loadedChunks.Remove(pos);
@@ -257,7 +246,7 @@ namespace ViMG
 		public void UnloadAll()
 		{
 			loadedChunks.Clear();
-			chunkManager.UnloadAll();
+			chunkManager.UnloadAllMeshes();
 			entityManager.UnloadAll();
 		}
 	}

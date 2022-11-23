@@ -40,7 +40,7 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            Cube c = world.ChunkManager.GetCube(Position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = world.ChunkManager2.GetCube(Position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             Rectangle3D cubeBounds;
 

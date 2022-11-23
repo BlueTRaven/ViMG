@@ -29,14 +29,12 @@ namespace ViMG.Items
 			{
 				Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 
-				Chunk chunk = player.world.GetChunkManager().GetChunk(player.PlaceAtPos);
-
-				if (chunk != null && chunk.Initialized)
+				if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
 				{
 					//chunk.GetData().SetCube(player.PlaceAtPos, cubeId);
 					player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
 					
-					player.world.ChunkLoadManager.ReloadChunk(player.world, chunk.Position);
+					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
 
 					inventory.Remove(index, 1);
 

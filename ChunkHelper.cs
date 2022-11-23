@@ -17,7 +17,7 @@ namespace ViMG
 		private static Chunk cachedSetAdjacentChunk;
 		private static ushort[] cachedSetAdjacentCubes;
 
-		public static void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
+		/*public static void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
 		{
 			if (!manager.IsInWorldBounds(pos))
 				return;
@@ -104,7 +104,7 @@ namespace ViMG
 
 			return new Optional<Cube>();
 		}
-
+*/
 		/// <summary>
 		/// Places a structure at the given position in the given base chunk.
 		/// Can be provided a blacklist of ids that it will not overwrite, and can be provided a blacklist of ids from the structure to not write to the world.
@@ -116,14 +116,9 @@ namespace ViMG
 		/// <param name="overwriteWorldBlacklist">Structure cubes will not overwrite cubes of this type in the world.</param>
 		/// <param name="dontwriteStructureBlacklist">If the structure encounters a cube of this type when placing, it will not place it.
 		/// For instance, if your structure is padded by air, you might not want to overwrite the world with that.</param>
-		public static void PlaceStructureWithBlacklist(World world, ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(ChunkManager2 manager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist)
 		{
-			Chunk realBaseChunk = baseChunk;
-
-			if (baseChunk == null)
-				realBaseChunk = manager.GetChunk(pos);
-
 			for (int x = 0; x < structure.size.X; x++)
 			{
 				for (int y = 0; y < structure.size.Y; y++)
@@ -157,22 +152,17 @@ namespace ViMG
 						}
 
 						if (canWrite)
-							ChunkHelper.SetCubeOrAdjacent(manager, realBaseChunk, realPos, structure.data[i]);
+							manager.SetCube(realPos, structure.data[i]);
 					}
 				}
 			}
 		}
 
-		public delegate bool ShouldWriteFn(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
+		public delegate bool ShouldWriteFn(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
-		public static void PlaceStructureWithBlacklist(World world, ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(World world, ChunkManager2 manager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite)
 		{
-			Chunk realBaseChunk = baseChunk;
-
-			if (baseChunk == null)
-				realBaseChunk = manager.GetChunk(pos);
-
 			for (int x = 0; x < structure.size.X; x++)
 			{
 				for (int y = 0; y < structure.size.Y; y++)
@@ -202,7 +192,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								ChunkHelper.SetCubeOrAdjacent(manager, realBaseChunk, realPos, placeId);
+								manager.SetCube(realPos, placeId);
 						}
 					}
 				}
@@ -231,22 +221,19 @@ namespace ViMG
 			}
         }
 
-		public static bool CanPlaceIfNonSolid(ChunkManager manager, CubePosition positionInCubeSpace, out Chunk offsetChunk, out Cube offsetCube)
+		public static bool CanPlaceIfNonSolid(ChunkLoadManager loadManager, ChunkManager2 manager, CubePosition positionInCubeSpace, out Cube offsetCube)
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetChunk = manager.GetChunk(positionInCubeSpace);
-
-				if (offsetChunk != null && offsetChunk.Initialized)
+				if (loadManager.IsLoaded(ChunkPosition.CubeChunk(positionInCubeSpace)))
 				{
-					offsetCube = offsetChunk.GetData().GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					offsetCube = manager.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
 					if (!offsetCube.Solid)
 					{
 						return true;
 					}
 				}
 			}
-			else offsetChunk = null;
 
 			offsetCube = null;
 			return false;
@@ -332,7 +319,7 @@ namespace ViMG
 			return positions;
 		}
 
-		public static List<CubePosition> SelectInArea(ChunkManager manager, Rectangle3DI bounds, ushort ofType)
+		public static List<CubePosition> SelectInArea(ChunkManager2 manager, Rectangle3DI bounds, ushort ofType)
         {
 			List<CubePosition> selected = new List<CubePosition>();
 

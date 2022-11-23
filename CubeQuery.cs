@@ -29,7 +29,7 @@ namespace ViMG
             chunksToSearch = new Chunk[(far.X - near.X) * (far.Y - near.Y) * (far.Z - near.Z)];
 
             int i = 0;
-            for (int x = near.X; x < far.X - near.X; x++)
+            /*for (int x = near.X; x < far.X - near.X; x++)
             {
                 for (int y = near.Y; y < far.Y - near.Y; y++)
                 {
@@ -38,7 +38,7 @@ namespace ViMG
                         chunksToSearch[i++] = world.ChunkManager.GetChunk(new ChunkPosition(x, y, z));
                     }
                 }
-            }
+            }*/
         }
 
         public void Update()
@@ -62,7 +62,7 @@ namespace ViMG
 
         private void LoopChunk(Chunk chunk)
         {
-            ushort[] data = chunk.GetData().GetAll();
+            /*ushort[] data = chunk.GetData().GetAll();
 
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
@@ -80,7 +80,7 @@ namespace ViMG
                         }
                     }
                 }
-            }
+            }*/
         }
 
         private bool IsQueriedCube(ushort id)

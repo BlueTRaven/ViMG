@@ -332,7 +332,7 @@ namespace ViMG.Entities
 							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) + 
 								new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-							if (world.GetChunkManager().IsInWorldBounds(pos) && world.GetChunkManager().GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+							if (world.ChunkManager2.IsInWorldBounds(pos) && world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 							{
 								if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position, 
 									projectiles[i].stats.collisionRadius, out Vector3 change))

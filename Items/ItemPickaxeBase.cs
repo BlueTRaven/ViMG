@@ -16,11 +16,12 @@ namespace ViMG.Items
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
 		{
 			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
-
+			
+			//TODO check solidity not id != 0
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().GetChunkManager().IsInWorldBounds(pos) && player.GetWorld().GetChunkManager().GetRaw(pos) != 0;
+				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && player.GetWorld().ChunkManager2.GetCubeId(CubePosition.FromWorldSpace(pos)) != 0;
 			});
 
 			if (lookAtResult.hasHit)
@@ -38,7 +39,7 @@ namespace ViMG.Items
 							minePos.Y += y;
 							minePos.Z += z;
 
-							if (player.GetWorld().GetChunkManager().IsInWorldBounds(minePos))
+							if (player.GetWorld().ChunkManager2.IsInWorldBounds(minePos))
 							{
 								player.GetWorld().TryMineCube(minePos, 0, 1);
 							}

@@ -41,16 +41,16 @@ namespace ViMG.Spawners
                 bigSlimes.Remove(sb);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager manager, Chunk chunk, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
         {
             //Don't spawn at night, and don't spawn when the player is looking at the given position.
-            if (!chunk.Initialized || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace(null)))
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace(null)))
                 return false;
 
             if (position.Y < 181)
                 return false;
 
-            Cube c = chunk.GetData().GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = manager.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
                 return true;
 

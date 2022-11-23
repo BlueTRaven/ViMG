@@ -67,23 +67,7 @@ namespace ViMG.Items
                             Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(pasted.structure.size.X, pasted.structure.size.Y, pasted.structure.size.Z), out int i);
                             CubePosition realPos = new CubePosition(pasted.createdAt.X + x, pasted.createdAt.Y + y, pasted.createdAt.Z + z, pasted.createdAt.Coord);
 
-                            Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(realPos);
-
-                            //We still want this to work if we move too far away and unload it
-                            //TODO this crashes the game if an entity was saved anywhere in this area
-                            if (chunk == null)
-                            {
-                                player.GetWorld().ChunkLoadManager.LoadChunk(player.GetWorld(), ChunkPosition.CubeChunk(realPos));
-
-                                chunk = player.GetWorld().GetChunkManager().GetChunk(realPos);
-                            }
-
-                            if (chunk != null)
-                            {
-                                Cube cube = chunk.GetData().GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                                chunk.GetData().SetCube(realPos.InChunkSpace(chunk), pasted.original[i]);
-                            }
+                            player.world.ChunkManager2.SetCube(realPos, pasted.original[i]);
                         }
                     }
                 }
@@ -114,15 +98,10 @@ namespace ViMG.Items
                         Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
                         CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-                        Chunk chunk = player.GetWorld().GetChunkManager().GetChunk(realPos);
+                        Cube cube = player.world.ChunkManager2.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-                        if (chunk != null)
-                        {
-                            Cube cube = chunk.GetData().GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                            pasted.original[i] = cube.Id;
-                            chunk.GetData().SetCube(realPos.InChunkSpace(chunk), structure.data[i]);
-                        }
+                        pasted.original[i] = cube.Id;
+                        player.world.ChunkManager2.SetCube(realPos, structure.data[i]);
                     }
                 }
             }

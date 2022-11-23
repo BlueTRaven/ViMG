@@ -100,7 +100,7 @@ namespace ViMG.Generation
             return structures;
         }
 
-        public static void PlaceInWorld(ChunkManager manager, Chunk baseChunk, Structure structure, CubePosition pos)
+        public static void PlaceInWorld(ChunkManager2 manager, Structure structure, CubePosition pos)
         {
             HashSet<CubePosition> touchedPositions = new HashSet<CubePosition>();
             Queue<CubePosition> waterFloodFills = new Queue<CubePosition>();
@@ -171,7 +171,7 @@ namespace ViMG.Generation
                         int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
                         if (overwritingId == stone.Id || (overwritingId == 0 && structure.data[i] == water.Id && placeWater))
-                            ChunkHelper.SetCubeOrAdjacent(manager, baseChunk, realPos, structure.data[i]);
+                            manager.SetCube(realPos, structure.data[i]);
                     }
                 }
             }
@@ -180,7 +180,7 @@ namespace ViMG.Generation
             {
                 foreach (CubePosition actualPos in actualFills)
                 {
-                    ChunkHelper.SetCubeOrAdjacent(manager, baseChunk, actualPos, water.Id);
+                    manager.SetCube(actualPos, water.Id);
                     //manager.GetChunk(actualPos).GetData().SetCube(actualPos, water.Id);
                 }
             }

@@ -250,14 +250,14 @@ namespace ViMG
 						chunkPos.Y += y;
 						chunkPos.Z += z;
 
-						if (world.ChunkManager.IsInWorldBounds(chunkPos))
+						if (world.ChunkManager2.IsInWorldBounds(chunkPos))
 						{
-							ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
-							Matrix transform = world.ChunkManager.GetTransform(chunkPos);
+							ChunkMesh mesh = world.ChunkManager2.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+							//Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
 							if (mesh != null)
 							{
-								mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), transform, viewProj);
+								mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
 							}
 						}
 					}
