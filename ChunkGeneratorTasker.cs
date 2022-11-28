@@ -117,7 +117,7 @@ namespace ViMG
 			{
 				Util.OneDToThreeD(i, new ValuePoint3D(manager.SizeInChunksXZ), out ValuePoint3D point);
 
-				PostChunkGen(manager, new ChunkPosition(point.x, point.y, point.z));
+				PostChunkGen(world, manager, new ChunkPosition(point.x, point.y, point.z));
 				num++;
 			}
 			ProfilingHelper.End("Post-detail generation done.");
@@ -132,7 +132,7 @@ namespace ViMG
 			ProfilingHelper.End("World generation done.");
 		}
 
-		private static void PostChunkGen(ChunkManager2 manager, ChunkPosition position)
+		private static void PostChunkGen(World world, ChunkManager2 manager, ChunkPosition position)
 		{
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
@@ -140,10 +140,10 @@ namespace ViMG
                 {
 					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
-						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InChunkSpace(position);
+						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
 						Cube cube = manager.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						cube.PostChunkGen(null, manager, cubePosition);
+						cube.PostChunkGen(world, manager, cubePosition);
                     }
 				}
 			}

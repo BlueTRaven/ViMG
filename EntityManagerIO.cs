@@ -388,6 +388,18 @@ namespace ViMG
 			return LoadError.Success;
 		}
 
+		public void DEBUGPrintSerialized()
+        {
+			foreach (var a in entityDatas)
+            {
+				Console.WriteLine("x {0}, y {1}, z {2}:", a.Key.X, a.Key.Y, a.Key.Z);
+				foreach (EntityData data in a.Value)
+                {
+					Console.WriteLine("	  Type: {0}", data.type);
+                }
+            }
+        }
+
 		public void DeserializePlayerChunk()
         {
 			if (playerChunkPositionLoaded)

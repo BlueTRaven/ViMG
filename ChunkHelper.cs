@@ -228,13 +228,10 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				if (loadManager.IsLoaded(ChunkPosition.CubeChunk(positionInCubeSpace)))
+				offsetCube = manager.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				if (!offsetCube.Solid)
 				{
-					offsetCube = manager.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
-					if (!offsetCube.Solid)
-					{
-						return true;
-					}
+					return true;
 				}
 			}
 

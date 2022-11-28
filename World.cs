@@ -368,6 +368,7 @@ namespace ViMG
 				//ChunkManager.InitLayer(0);
 				//ChunkManager.InitLayer(1);
 
+				entIO.DEBUGPrintSerialized();
 				entIO.DeserializePlayerChunk();
 
 				if (EntityManager.GetAll<Player>().Count > 0)
