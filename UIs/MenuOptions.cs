@@ -32,13 +32,10 @@ namespace ViMG.UIs
         private bool dropdownHDROpen;
         private UI.Button[] outputsHDR;
 
-        private World world;
         private TextHelper.FontInfo fi;
 
-        public MenuOptions(GameStateManager gsManager, World world) : base(gsManager)
+        public MenuOptions(GameStateManager gsManager) : base(gsManager)
         {
-            this.world = world;
-
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;

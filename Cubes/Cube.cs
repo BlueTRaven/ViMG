@@ -344,7 +344,7 @@ namespace ViMG.Cubes
 				List<int> indices = new List<int>();
 
 				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(CUBE_SCALE / 2.5f), 
-					new CubeVisualInstance(MeshHelper.CubeFace.ALL, false), this, vertices, indices);
+					MeshHelper.CubeFace.ALL, this, vertices, indices);
 
 				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
@@ -357,7 +357,7 @@ namespace ViMG.Cubes
 			return new RectangleF(0, 0, 1024, 1024);
         }
 
-		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
+		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
         {
 			if (Transparency == TransparencyValue.Invisible)
 				return;
@@ -378,7 +378,7 @@ namespace ViMG.Cubes
 			if (Transparency == TransparencyValue.Air && pass != RenderPass.Air)
 				return;
 
-			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, visual, this, vertices, indices);
+			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, faces, this, vertices, indices);
         }
 
 		public Color GetTintColor()

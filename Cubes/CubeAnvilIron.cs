@@ -32,7 +32,7 @@ namespace ViMG.Cubes
 			DropSelf(itemsToDrop);
 		}
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
+        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
         {
 			CubePosition cp = CubePosition.FromWorldSpace(pos);
 

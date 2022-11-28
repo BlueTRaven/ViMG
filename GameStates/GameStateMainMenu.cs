@@ -26,24 +26,9 @@ namespace ViMG.GameStates
             base.Initialize(device);
         }
 
-        public override void OnClose(GameState changingTo)
-        {
-            base.OnClose(changingTo);
-
-            if (changingTo is GameStateTheIsland island)
-                island.World = world;
-        }
-
         public override void OnOpen(GameState changingFrom)
         {
-            if (world != null)
-            {
-                world.ChunkLoadManager.UnloadAll();
-            }
-
-            world = new World(manager, device, 512);
-
-            menuMain = new MenuMain(manager, world);
+            menuMain = new MenuMain(manager);
             SetMenu(menuMain);
 
             base.OnOpen(changingFrom);
@@ -51,32 +36,32 @@ namespace ViMG.GameStates
 
         public override void Update(GraphicsDevice device, double deltaTime)
         {
-            base.Update(device, deltaTime);
-
-            if (world.LoadedFolderName != null)
+            /*if (world.LoadedFolderName != null)
             {
                 world.Update(deltaTime);
-            }
+            }*/
+
+            base.Update(device, deltaTime);
         }
 
         public override void Draw(GraphicsDevice device)
         {
             base.Draw(device);
 
-            if (world.LoadedFolderName != null)
+            /*if (world.LoadedFolderName != null)
             {
                 world.Draw(device, null);
-            }
+            }*/
         }
 
         public override void DrawUI(SpriteBatch batch)
         {
             base.DrawUI(batch);
 
-            if (world.LoadedFolderName != null)
+            /*if (world.LoadedFolderName != null)
             {
                 world.DrawUI(batch);
-            }
+            }*/
         }
     }
 }

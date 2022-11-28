@@ -31,7 +31,7 @@ namespace ViMG.Cubes
             return new CubeAnimation(0.125f, 4, 32);
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, CubeVisualInstance visual, List<VertexCube> vertices, List<int> indices)
+        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
         {
             if (pass != RenderPass.Opaque)
                 return;

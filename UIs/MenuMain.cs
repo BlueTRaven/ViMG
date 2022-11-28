@@ -27,7 +27,6 @@ namespace ViMG.UIs
         private bool clicked = false;
 
         private TextHelper.FontInfo fi;
-        private World world;
 
         //TODO remove
         private UI.LabelConstructionParameters[] options;
@@ -35,15 +34,11 @@ namespace ViMG.UIs
         private bool open;
         private UI.Button[] outputs;
 
-        public MenuMain(GameStateManager gsManager, World world) : base(gsManager)
+        public MenuMain(GameStateManager gsManager) : base(gsManager)
         {
-            this.world = world;
-
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;
-
-            saver = new WorldSaver(null, null, null);
 
             options = new UI.LabelConstructionParameters[4]
             {
@@ -98,8 +93,8 @@ namespace ViMG.UIs
                 {
                     if (Main.SessionInformation.LastLoadedSave != null)
                     {
-                        world.LoadWorld(device, Main.SessionInformation.LastLoadedSave);
                         gsManager.SetGameState(gsManager.TheIsland);
+                        gsManager.TheIsland.LoadWorld(Main.SessionInformation.LastLoadedSave);
                     }
                 }
 
@@ -107,7 +102,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager, world));
+                    gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager));
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 3, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
@@ -136,8 +131,8 @@ namespace ViMG.UIs
                             new UI.LabelConstructionParameters("Load " + directories[i], fi, 128, Vector2.Zero),
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                         {
-                            world.LoadWorld(device, directories[i]);
                             gsManager.SetGameState(gsManager.TheIsland);
+                            gsManager.TheIsland.LoadWorld(directories[i]);
                         }
                     }
 
@@ -147,8 +142,8 @@ namespace ViMG.UIs
                         new UI.LabelConstructionParameters("Create New", fi, 128, Vector2.Zero),
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                     {
-                        world.LoadWorld(device, "new" + directories.Length);
                         gsManager.SetGameState(gsManager.TheIsland);
+                        gsManager.TheIsland.LoadWorld("new" + directories.Length);
                     }
                 }
             }

@@ -7,7 +7,7 @@ using ViMG.Entities;
 
 namespace ViMG
 {
-	public class ChunkLoadManager
+	public class ChunkLoadManager : IDisposable
     {
 		private enum LoadingState
         {
@@ -94,10 +94,16 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
+				chunkManager.MeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
 			}
+
+			if (hasChanged)
+				gettableLoadedChunks = loadedChunks.Keys;
+
+			hasChanged = false;
 		}
 
 		public void ProcessLoadQueue(World world)
@@ -107,7 +113,7 @@ namespace ViMG
 				queue.Sort();
             }
 
-			const int NUM_PER_FRAME = 1;
+			const int NUM_PER_FRAME = 5;
 
 			int currentNum = 0;
 
@@ -121,6 +127,7 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
+				chunkManager.MeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
@@ -143,6 +150,7 @@ namespace ViMG
                 {
 					//chunkIO.DeserializeChunk(world, pos);
 					entIO.Deserialize(pos);
+					chunkManager.MeshChunk(world, pos);
 					loadedChunks.Add(pos, LoadingState.Loaded);
 
 					hasChanged = true;
@@ -156,6 +164,7 @@ namespace ViMG
 			{
 				//chunkIO.DeserializeChunk(world, position);
 				entIO.Deserialize(position);
+				chunkManager.MeshChunk(world, position);
 				loadedChunks.Add(position, LoadingState.Loaded);
 
 				hasChanged = true;
@@ -249,5 +258,12 @@ namespace ViMG
 			chunkManager.UnloadAllMeshes();
 			entityManager.UnloadAll();
 		}
-	}
+
+        public void Dispose()
+        {
+			UnloadAll();
+
+			loadedChunks = null;
+        }
+    }
 }

@@ -76,7 +76,7 @@ namespace ViMG.UIs
                 new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
-                gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager, world));
+                gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager));
             }
 
             y += 32 + MARGIN;

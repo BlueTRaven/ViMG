@@ -56,7 +56,7 @@ namespace ViMG
 			if (Uploaded)
 				throw new Exception("Cannot upload twice.");
 
-			Stopwatch watch = Stopwatch.StartNew();
+			//Stopwatch watch = Stopwatch.StartNew();
 
 			VBO = new VertexBuffer(device, typeof(TVert), vertices.Count, BufferUsage.WriteOnly);
 			VBO.SetData(vertices.ToArray());
@@ -67,9 +67,9 @@ namespace ViMG
 			//vertexCount = vertices.Count;
 			//indexCount = indices.Count;
 
-			watch.Stop();
+			//watch.Stop();
 
-			Console.WriteLine("Uploaded mesh in " + watch.Elapsed.TotalSeconds + "s");
+			//Console.WriteLine("Uploaded mesh in " + watch.Elapsed.TotalSeconds + "s");
 		}
 
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices, Texture2D texture) : this(device, vertices, indices)

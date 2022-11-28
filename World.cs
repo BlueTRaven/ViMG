@@ -343,10 +343,10 @@ namespace ViMG
 			}
 			else
 			{
+				ProfilingHelper.Start("Loading world...");
 				//ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 				worldInfoIO = new WorldInfoIO();
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
 				entIO = new EntityManagerIO(EntityManager);
 
 				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
@@ -375,6 +375,9 @@ namespace ViMG
 
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
+					ChunkLoadManager.FlushLoadQueue(this);
+
+					//ChunkManager2.FlushMeshQueue(this, ChunkLoadManager);
 
 					Main.camera.Position = player.Position;
 				}
@@ -397,6 +400,8 @@ namespace ViMG
 
 				LoadedFolderName = folderName;
 				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+
+				ProfilingHelper.End("World loading done.");
 			}
 
 			//Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
@@ -440,6 +445,8 @@ namespace ViMG
 			ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
 			ChunkLoadManager.LoadAroundTarget(this);    //enqueue to be loaded...
 			ChunkLoadManager.FlushLoadQueue(this);  //actually load.
+
+			//ChunkManager2.FlushMeshQueue(this, ChunkLoadManager);
 
 			ProfilingHelper.End("Done.");
 			

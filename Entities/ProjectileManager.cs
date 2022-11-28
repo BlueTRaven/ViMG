@@ -233,7 +233,7 @@ namespace ViMG.Entities
 		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
 
 		private World world;
-		private SimpleMesh<VertexCube, int> mesh;
+		private static SimpleMesh<VertexCube, int> mesh;
 
 		public ProjectileManager(World world, GraphicsDevice device)
 		{

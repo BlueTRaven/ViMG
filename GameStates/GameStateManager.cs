@@ -21,7 +21,7 @@ namespace ViMG.GameStates
         public virtual void Initialize(GraphicsDevice device)
         {
             MainMenu = new GameStateMainMenu(this, device);
-            TheIsland = new GameStateTheIsland(this);
+            TheIsland = new GameStateTheIsland(this, device);
 
             gameStates.Add(MainMenu);
             gameStates.Add(TheIsland);

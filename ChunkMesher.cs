@@ -5,18 +5,108 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using ViMG.Cubes;
 
 namespace ViMG
 {
 	public class ChunkMesher
 	{
+		public struct ChunkMeshTaskState
+		{
+			public ushort[] data;
+			public World world;
+			public ChunkManager2 manager;
+			public ChunkPosition position;
+			public Cube.RenderPass pass;
+
+			public ChunkMeshTaskState(ushort[] data, World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass)
+			{
+				this.data = data;
+				this.world = world;
+				this.manager = manager;
+				this.position = position;
+				this.pass = pass;
+			}
+		}
+
 		private GraphicsDevice device;
+
+		private const int NUM_MESH_TASKS = 8;
+
+		private ChunkMeshTaskState[] taskStates = new ChunkMeshTaskState[NUM_MESH_TASKS];
+		private Task<ChunkMesh>[] taskPool = new Task<ChunkMesh>[NUM_MESH_TASKS];
 
 		public ChunkMesher(GraphicsDevice device)
 		{
 			this.device = device;
+
+			for (int i = 0; i < NUM_MESH_TASKS; i++)
+            {
+				taskPool[i] = new Task<ChunkMesh>(PerformTask, i);
+            }
 		}
+
+		public Task<ChunkMesh> StartConcurrent(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass)
+        {
+			Task<ChunkMesh> usingTask = null;
+			int index = 0;
+
+			for (int i = 0; i < NUM_MESH_TASKS; i++)
+            {
+				Task<ChunkMesh> t = taskPool[i];
+
+				if (t.Status != TaskStatus.Running)
+                {
+					usingTask = t;
+					index = i;
+
+					break;
+                }
+            }
+
+			if (usingTask != null)
+            {
+                ushort[] data = new ushort[(Chunk.CHUNK_SIZE + 2) * (Chunk.CHUNK_SIZE + 2) * (Chunk.CHUNK_SIZE + 2)];
+
+				CubePosition start = new CubePosition(position.X * Chunk.CHUNK_SIZE - 1, position.Y * Chunk.CHUNK_SIZE - 1, position.Z * Chunk.CHUNK_SIZE - 1);
+				CubePosition end = start + new CubePosition(Chunk.CHUNK_SIZE + 2, Chunk.CHUNK_SIZE + 2, Chunk.CHUNK_SIZE + 2);
+
+				for (int x = start.X; x <= end.X; x++)
+                {
+					for (int y = start.Y - 1; y <= end.Y + 1; y++)
+                    {
+						for (int z = start.Z; z <= end.Z; z++)
+                        {
+							int rx = x - start.X;
+							int ry = y - start.Y;
+							int rz = z - start.Z;
+
+							Util.ThreeDToOneD(new ValuePoint3D(rx, ry, rz), new ValuePoint3D(Chunk.CHUNK_SIZE + 2), out int dataIndex);
+
+							data[dataIndex] = manager.GetCubeId(new CubePosition(x, y, z));
+                        }
+					}
+				}
+
+                taskStates[index] = new ChunkMeshTaskState(data, world, manager, position, pass);
+				usingTask.Start();
+            }
+
+			return usingTask;
+        }
+
+		public Task<ChunkMesh> StartTask()
+        {
+			return null; 
+        }
+
+		private ChunkMesh PerformTask(object o)
+        {
+			ChunkMeshTaskState state = taskStates[(int)o];
+			return GenerateChunk(state.world, state.manager, state.position, state.pass);
+        }
 
 		public ChunkMesh GenerateChunk(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
 		{
@@ -38,19 +128,21 @@ namespace ViMG
 						pos = pos.InCubeSpace(position);
 
 						ushort id = manager.GetCubeId(pos);
-						//TODO cache these values maybe
-						Cube.CubeVisualInstance visual = new Cube.CubeVisualInstance(manager.GetClearSides(pos, world), true);
+
+						MeshHelper.CubeFace faces = manager.GetCachedFaces(pos);
 
 						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
 						{
-							if (id == 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
+							if (id == 0 || faces == MeshHelper.CubeFace.NONE)
+							{
 								continue;
+							}
 
 							Cube cube = Main.Registry.CubeRegistry.Get(id);
 							
 							int oldCount = vertices.Count;
 
-							cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, vertices, indices);
+							cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), faces, vertices, indices);
 
 							int count = vertices.Count - oldCount;
 
@@ -58,10 +150,12 @@ namespace ViMG
 						}
                         else if (pass == Cube.RenderPass.Air)
                         {
-							if (id != 0 || visual.GetFaces() == MeshHelper.CubeFace.NONE)
+							if (id != 0 || faces == MeshHelper.CubeFace.NONE)
+							{
 								continue;
+							}
 
-							Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), visual, vertices, indices);
+							Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), faces, vertices, indices);
 						}
 					}
 				}
@@ -153,7 +247,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, Cube.CubeVisualInstance visual, Cube cube, List<VertexCube> vertices, List<int> indices)
+		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
 		{
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -164,22 +258,22 @@ namespace ViMG
 			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
 			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
+			if ((faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
 				MakeQuadVerts(pass, world, cp, l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1), MeshHelper.CubeFace.FRONT, cube, vertices, indices);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
+			if ((faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
 				MakeQuadVerts(pass, world, cp, r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0), MeshHelper.CubeFace.RIGHT, cube, vertices, indices);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
+			if ((faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
 				MakeQuadVerts(pass, world, cp, r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1), MeshHelper.CubeFace.BACK, cube, vertices, indices);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
+			if ((faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
 				MakeQuadVerts(pass, world, cp, l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0), MeshHelper.CubeFace.LEFT, cube, vertices, indices);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
+			if ((faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
 				MakeQuadVerts(pass, world, cp, l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, -1, 0), MeshHelper.CubeFace.DOWN, cube, vertices, indices);
 
-			if ((visual.GetFaces() & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
+			if ((faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
 				MakeQuadVerts(pass, world, cp, r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
 		}
 
