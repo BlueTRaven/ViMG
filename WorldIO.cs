@@ -18,5 +18,6 @@ namespace ViMG
             Other
         }
 
+        public string OtherError;
     }
 }

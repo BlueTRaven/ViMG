@@ -208,10 +208,10 @@ namespace ViMG
 					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
 				}
 
-				int top = manager.GetCubeId(nrm);// chunk.GetData().GetRawOrAdjacent(nrm, world);
-				int corner = manager.GetCubeId(nrm + t + bt);// chunk.GetData().GetRawOrAdjacent(nrm + t + bt, world);
-				int sideA = manager.GetCubeId(nrm + t);// chunk.GetData().GetRawOrAdjacent(nrm + t, world);
-				int sideB = manager.GetCubeId(nrm + bt);// chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
+				int top = GetIdSafely(manager, nrm);// chunk.GetData().GetRawOrAdjacent(nrm, world);
+				int corner = GetIdSafely(manager, nrm + t + bt);// chunk.GetData().GetRawOrAdjacent(nrm + t + bt, world);
+				int sideA = GetIdSafely(manager, nrm + t);// chunk.GetData().GetRawOrAdjacent(nrm + t, world);
+				int sideB = GetIdSafely(manager, nrm + bt);// chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
 
 				if (corner > 0 && Main.Registry.CubeRegistry.noAo[corner])
 					corner = 0;
@@ -246,6 +246,13 @@ namespace ViMG
 				}
 			}
 		}
+
+		private static ushort GetIdSafely(ChunkManager2 manager, CubePosition position)
+        {
+			if (manager.IsInWorldBounds(position))
+				return manager.GetCubeId(position);
+			return 0;
+        }
 
 		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
 		{

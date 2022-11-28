@@ -178,7 +178,7 @@ namespace ViMG.Generation
 						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
 						//TODO: 
-						state.manager.SetCube(pos.InCubeSpace(state.position), id);
+						state.manager.SetCube(pos.InCubeSpace(state.position), id, false);
 						//cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
@@ -215,15 +215,15 @@ namespace ViMG.Generation
 										var posOffset = pos;
 										posOffset.Y += i;
 
-										manager.SetCube(posOffset, 6);	//tree
+										manager.SetCube(posOffset, 6, false);	//tree
 									}
 								}
 								else if (val == 1)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id, false);    //Sapling
 								else if (val == 2)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id, false); //Fibrous plant
 								else if (val == 3)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
+									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id, false); //Azure flower
 							}
 						}
 					}
@@ -375,7 +375,7 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							manager.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
+							manager.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false);
 
 							int randomFace = GetRandom().Next();
 
@@ -451,7 +451,7 @@ namespace ViMG.Generation
 							if (which < 2)
 								ChunkHelper.PlaceStructureWithBlacklist(world, manager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar);
-							else manager.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
+							else manager.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false);
 
 							world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
 
@@ -684,7 +684,7 @@ namespace ViMG.Generation
 						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
 						{
 							used.Add(toFill);
-							manager.SetCube(toFill, 0);
+							manager.SetCube(toFill, 0, false);
 							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));

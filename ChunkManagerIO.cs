@@ -59,13 +59,24 @@ namespace ViMG
 			using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
-				//fs.Write(BitConverter.GetBytes(manager.DiscoveredLayers));
+				fs.Write(BitConverter.GetBytes(0));
 
 				//Write unused remaining header bytes
 				long remainingBytes = SIZEOF_HEADER - fs.Position;
 				fs.Write(new byte[remainingBytes]);
 
 				fs.Write(allBytes);
+			}
+
+			bool anyNotZero = false;
+
+			for (int i = 0; i < allBytes.Length; i++)
+			{
+				if (allBytes[i] != 0)
+				{
+					anyNotZero = true;
+					break;
+				}
 			}
 		}
 
@@ -153,6 +164,23 @@ namespace ViMG
 			}
 
 			loaded = true;
+
+			bool anyNotZero = false;
+
+			for (int i = 0; i < allBytes.Length; i++)
+            {
+				if (allBytes[i] != 0)
+                {
+					anyNotZero = true;
+					break;
+                }
+            }
+
+			if (!anyNotZero)
+			{
+				OtherError = "File was empty. No cube data loaded.";
+				return LoadError.Other;
+			}
 
 			return LoadError.Success;
 		}

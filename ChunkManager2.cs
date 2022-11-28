@@ -219,29 +219,34 @@ namespace ViMG
         //TODO: separate out visual stuff, not sure how yet
         private bool HasClearSide(int x, int y, int z, Cube currentCube)
         {
-            Cube adjacentCube = GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-            if (currentCube.Transparency != Cube.TransparencyValue.Air)
+            CubePosition pos = new CubePosition(x, y, z);
+            if (IsInWorldBounds(pos))
             {
-                if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent ||
-                    adjacentCube.Transparency == Cube.TransparencyValue.Invisible ||
-                    adjacentCube.Transparency == Cube.TransparencyValue.Air)
-                    return true;
-                if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+                Cube adjacentCube = GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+                if (currentCube.Transparency != Cube.TransparencyValue.Air)
+                {
+                    if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent ||
+                        adjacentCube.Transparency == Cube.TransparencyValue.Invisible ||
+                        adjacentCube.Transparency == Cube.TransparencyValue.Air)
+                        return true;
+                    if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+                    {
+                        if (currentCube == adjacentCube)
+                            return false;
+                        else return true;
+                    }
+                    else return false;
+                }
+                else if (currentCube.Transparency == Cube.TransparencyValue.Air)
                 {
                     if (currentCube == adjacentCube)
                         return false;
                     else return true;
                 }
-                else return false;
             }
-            else if (currentCube.Transparency == Cube.TransparencyValue.Air)
-            {
-                if (currentCube == adjacentCube)
-                    return false;
-                else return true;
-            }
-            else return false;
+            
+            return false;
         }
 
         private void UnloadMesh(ref ChunkMeshInfo c)
@@ -382,36 +387,40 @@ namespace ViMG
             for (int i = 0; i < 6; i++)
             {
                 CubePosition adjacentPosition = position + cubeAdjacents[i];
-                GetCubeMeshInfo(adjacentPosition).version++;
 
-                GetChunkMeshInfo(ChunkPosition.CubeChunk(adjacentPosition)).version++;
+                if (IsInWorldBounds(adjacentPosition))
+                {
+                    GetCubeMeshInfo(adjacentPosition).version++;
+
+                    GetChunkMeshInfo(ChunkPosition.CubeChunk(adjacentPosition)).version++;
+                }
             }
         }
 
         //TODO: could probably get rid of position.InChunkSpace call somehow.
-        public unsafe void SetCube(CubePosition position, ushort id)
+        public unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
             byte[] bytes = io.GetBytes();
 
-            lock (bytes)
+            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            Util.ThreeDToOneD(new ValuePoint3D(chunkPos.X, chunkPos.Y, chunkPos.Z), new ValuePoint3D(SizeInChunksXZ), out int chi);
+            int chunkOffset = Chunk.NUM_CUBES_IN_CHUNK * chi;
+            CubePosition positionChS = position.InChunkSpace(chunkPos);
+            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+            //int cbi = ci * sizeof(ushort);
+            //cbi += chunkOffset;
+
+            fixed (byte* bytesRaw = &bytes[0])
             {
-                ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-                Util.ThreeDToOneD(new ValuePoint3D(chunkPos.X, chunkPos.Y, chunkPos.Z), new ValuePoint3D(SizeInChunksXZ), out int chi);
-                int chunkOffset = Chunk.NUM_CUBES_IN_CHUNK * chi;
-                CubePosition positionChS = position.InChunkSpace(chunkPos);
-                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
-                //int cbi = ci * sizeof(ushort);
-                //cbi += chunkOffset;
+                ushort* asIds = (ushort*)bytesRaw;
 
-                fixed (byte* bytesRaw = &bytes[0])
-                {
-                    ushort* asIds = (ushort*)bytesRaw;
+                asIds[ci + chunkOffset] = id;
+            }
+            /*bytes[cbi++] = (byte)id;
+            bytes[cbi++] = (byte)(id >> 8);*/
 
-                    asIds[ci + chunkOffset] = id;
-                }
-                /*bytes[cbi++] = (byte)id;
-                bytes[cbi++] = (byte)(id >> 8);*/
-
+            if (markDirty)
+            {
                 MarkCubeMeshInfoDirty(position);
                 chunkMeshInfos[chi].version++;
 
@@ -433,13 +442,15 @@ namespace ViMG
             //as it may help later down the line of we want to, say, introduce streaming. Streaming individual cubes?
             //Pretty useless. Chunks, however, are a much more useful streamable object.
 
+            //Get chunk position...
             int chx = position.X / Chunk.CHUNK_SIZE;
             int chy = position.Y / Chunk.CHUNK_SIZE;
             int chz = position.Z / Chunk.CHUNK_SIZE;
-
+            //use it to find offset in byte array
             int chunkOffset = chx + SizeInChunksXZ * (chy + SizeInChunksXZ * chz);
-
             chunkOffset *= Chunk.NUM_CUBES_IN_CHUNK;
+
+            //Get chunk relative cube position...
             //https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
             //Faster mod when denominator is a power of 2.
             //NOTE: if Chunk.CHUNK_SIZE changes and no longer is a power of two, THIS WILL BREAK EVERYTHING!
@@ -450,6 +461,7 @@ namespace ViMG
             int cubeOffset = csx + Chunk.CHUNK_SIZE * (csy + Chunk.CHUNK_SIZE * csz);
             cubeOffset += chunkOffset;
 
+            //BitConverter is apparently faster than fixed cast of bytes to ushort
             return BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
             /*fixed (byte* bytesRaw = &bytes[0])
             {
@@ -468,6 +480,9 @@ namespace ViMG
         private Cube cachedCube;
         public Optional<Cube> GetCube(CubePosition position)
         {
+            if (!IsInWorldBounds(position))
+                return new Optional<Cube>();
+
             ushort id = GetCubeId(position);
 
             Cube cube;

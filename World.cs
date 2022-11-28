@@ -300,6 +300,7 @@ namespace ViMG
 				if (!Main.MULTITHREAD_GENERATION)
 				{
 					ChunkGenerator = new ChunkGeneratorIsland(0);
+					entIO = new EntityManagerIO(EntityManager);
 					chunkIO = new ChunkManagerIO(sizeInChunks, "test");
 					ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
 
@@ -413,8 +414,6 @@ namespace ViMG
 		private void FinishGenWorld()
         {
 			worldInfoIO = new WorldInfoIO();
-			chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-			entIO = new EntityManagerIO(EntityManager);
 
 			worldInfoIO.Save(LoadedFolderName, this, PointsOfInterest);
 

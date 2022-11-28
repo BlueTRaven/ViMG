@@ -128,31 +128,34 @@ namespace ViMG
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-						bool canWrite = true;
-						//Allow structure cube to be overwritten (rather, not written) by world.
-						if (!dontwriteStructureBlacklist.IsEmpty)
+						if (manager.IsInWorldBounds(realPos))
 						{
-							for (int j = 0; j < dontwriteStructureBlacklist.Length; j++)
+							bool canWrite = true;
+							//Allow structure cube to be overwritten (rather, not written) by world.
+							if (!dontwriteStructureBlacklist.IsEmpty)
 							{
-								if (structure.data[i] == dontwriteStructureBlacklist[j])
-									canWrite = false;
+								for (int j = 0; j < dontwriteStructureBlacklist.Length; j++)
+								{
+									if (structure.data[i] == dontwriteStructureBlacklist[j])
+										canWrite = false;
+								}
 							}
-						}
 
-						//Allow world cube to be overwritten by structure
-						if (!overwriteWorldBlacklist.IsEmpty)
-						{
-							int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
-
-							for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
+							//Allow world cube to be overwritten by structure
+							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								if (overwriteWorldBlacklist[j] == overwritingId)
-									canWrite = false;
-							}
-						}
+								int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
-						if (canWrite)
-							manager.SetCube(realPos, structure.data[i]);
+								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
+								{
+									if (overwriteWorldBlacklist[j] == overwritingId)
+										canWrite = false;
+								}
+							}
+
+							if (canWrite)
+								manager.SetCube(realPos, structure.data[i]);
+						}
 					}
 				}
 			}
@@ -330,7 +333,8 @@ namespace ViMG
 					for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
-						if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+
+						if (manager.IsInWorldBounds(pos) && manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
                         {
 							selected.Add(pos);
                         }
