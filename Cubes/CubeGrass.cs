@@ -56,7 +56,7 @@ namespace ViMG.Cubes
 					ushort id = manager.GetCubeId(offsetPosition);
 					if (id == dirt.Id)
 					{
-						//check the block above to see if 
+						//check the block above; grass cannot have a block above it
 						CubePosition abovePosition = offsetPosition + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
 						
 						if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(abovePosition)))

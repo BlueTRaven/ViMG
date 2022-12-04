@@ -14,6 +14,22 @@ namespace ViMG
     //Try to stay away from dependance on World if possible
     public class ChunkManager2 : IDisposable
     {
+        private readonly struct CubeUpdated
+        {
+            public readonly CubePosition updated;
+            public readonly CubePosition notified;
+            public readonly ushort oldId;
+            public readonly ushort newId;
+
+            public CubeUpdated(CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
+            {
+                this.updated = updated;
+                this.notified = notified;
+                this.oldId = oldId;
+                this.newId = newId;
+            }
+        }
+
         private struct CubeMeshInfo
         {
             public MeshHelper.CubeFace faces;
@@ -84,6 +100,7 @@ namespace ViMG
 
         private Queue<ChunkPosition> updatedChunkPositions = new Queue<ChunkPosition>();
         private HashSet<ChunkPosition> positionsInQueue = new HashSet<ChunkPosition>();
+        private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
         public ChunkManager2(int sizeInChunksXZ, ChunkManagerIO io, GraphicsDevice device)
         {
@@ -128,39 +145,24 @@ namespace ViMG
                     meshedInThisFrame++;
                 }
             }
-            /*IEnumerable<ChunkPosition> loadedPositions = loadManager.GetLoaded();
-            if (loadedPositions != null && loadedPositions.Count() > 0)
+
+            const int MAX_UPDATE_PER_FRAME = 20;
+            int updatedThisFrame = 0; 
+
+            while (updatedCubePositions.Count > 0 && updatedThisFrame < MAX_UPDATE_PER_FRAME)
             {
-                //ProfilingHelper.StartBatch("Starting mesh batch...");
+                CubeUpdated updated = updatedCubePositions.Dequeue();
 
-                foreach (ChunkPosition pos in loadedPositions)
+                if (updated.notified == updated.updated)
                 {
-                    ref ChunkMeshInfo c = ref GetChunkMeshInfo(pos);
-
-                    if (c.version != c.meshVersion)
-                    {
-                        bool allLoaded = true;
-                        *//*for (int i = 0; i < 6; i++)
-                        {
-                            ChunkPosition adj = pos + chunkAdjacents[i];
-
-                            if (!loadManager.IsLoaded(adj))
-                                allLoaded = false;
-                        }*//*
-
-                        if (allLoaded)
-                        {
-                            MeshChunk(world, ref c);
-                            meshedInThisFrame++;
-                        }
-                    }
-
-                    if (meshedInThisFrame > MAX_MESH_PER_FRAME)
-                        break;
+                    world.OnCubeUpdate(updated.updated, updated.newId);
+                    world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null)?.TrackingCubeUpdated(world, this, updated.newId);
                 }
+                else
+                    GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId);
 
-                //ProfilingHelper.EndBatch("Done.");
-            }*/
+                updatedThisFrame++;
+            }
         }
 
         public void MeshChunk(World world, ChunkPosition position)
@@ -380,7 +382,7 @@ namespace ViMG
             return new OptionalValue<CubePosition>();
         }
 
-        private void MarkCubeMeshInfoDirty(CubePosition position)
+        private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             GetCubeMeshInfo(position).version++;
 
@@ -393,6 +395,16 @@ namespace ViMG
                     GetCubeMeshInfo(adjacentPosition).version++;
 
                     GetChunkMeshInfo(ChunkPosition.CubeChunk(adjacentPosition)).version++;
+
+                    ChunkPosition adjacentChunkPos = ChunkPosition.CubeChunk(adjacentPosition);
+
+                    if (!positionsInQueue.Contains(adjacentChunkPos))
+                    {
+                        updatedChunkPositions.Enqueue(adjacentChunkPos);
+                        positionsInQueue.Add(adjacentChunkPos);
+                    }
+
+                    updatedCubePositions.Enqueue(new CubeUpdated(position, adjacentPosition, oldId, updatedId));
                 }
             }
         }
@@ -410,10 +422,12 @@ namespace ViMG
             //int cbi = ci * sizeof(ushort);
             //cbi += chunkOffset;
 
+            ushort oldId;
             fixed (byte* bytesRaw = &bytes[0])
             {
                 ushort* asIds = (ushort*)bytesRaw;
 
+                oldId = asIds[ci + chunkOffset];
                 asIds[ci + chunkOffset] = id;
             }
             /*bytes[cbi++] = (byte)id;
@@ -421,7 +435,7 @@ namespace ViMG
 
             if (markDirty)
             {
-                MarkCubeMeshInfoDirty(position);
+                MarkCubeMeshInfoDirty(position, oldId, id);
                 chunkMeshInfos[chi].version++;
 
                 if (!positionsInQueue.Contains(chunkPos))
@@ -429,6 +443,8 @@ namespace ViMG
                     updatedChunkPositions.Enqueue(chunkPos);
                     positionsInQueue.Add(chunkPos);
                 }
+
+                updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, id));
             }
         }
 

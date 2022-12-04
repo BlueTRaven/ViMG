@@ -454,7 +454,7 @@ namespace ViMG.Entities
 			}
 		}
 
-		public override void OnCubeUpdated(ChunkData updatingParent, CubePosition updating, int updatedId)
+		public override void OnCubeUpdated(CubePosition updating, int updatedId)
 		{
 			if (state == State.LyingInPile)
             {
@@ -469,7 +469,8 @@ namespace ViMG.Entities
 					}
 				}
             }
-			base.OnCubeUpdated(updatingParent, updating, updatedId);
+
+			base.OnCubeUpdated(updating, updatedId);
 		}
 
 		private bool SearchForNearbyBoneBlocks()

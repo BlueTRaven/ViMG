@@ -63,7 +63,7 @@ namespace ViMG.Entities
             }
         }
 
-        public void TrackingCubeDestroyed(World world, ChunkManager cm)
+        public void TrackingCubeUpdated(World world, ChunkManager2 manager, ushort updatedId)
 		{
 			world.EntityManager.Remove(this);
 		}

@@ -155,7 +155,7 @@ namespace ViMG.Entities
 			return true;
 		}
 
-		public void TrackingCubeDestroyed(World world, ChunkManager cm)
+		public void TrackingCubeUpdated(World world, ChunkManager2 manager, ushort updatedId)
 		{
 			//world.ChunkManager2.GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
 			world.EntityManager.Remove(this);

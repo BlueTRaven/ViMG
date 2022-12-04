@@ -841,12 +841,15 @@ namespace ViMG
 			player.DrawUI(batch);
 		}
 
-		public void OnCubeUpdate(ChunkData updatingParent, CubePosition updating, int updatedId)
+		public void OnCubeUpdate(CubePosition updating, int updatedId)
 		{
+			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
+			//Just every entity that could respond to this cube. 
+			//What constitutes an entity that could respond to this cube? I don't know exactly.
+			//Right now this exists as it does pretty much only so that trees and skeletons can work.
 			foreach (Entity entity in EntityManager.GetEntities())
 			{
-				//if (updatingParent.IsInChunkBounds(entity.Position))
-					entity.OnCubeUpdated(updatingParent, updating, updatedId);
+				entity.OnCubeUpdated(updating, updatedId);
 			}
 		}
 

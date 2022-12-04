@@ -409,7 +409,7 @@ namespace ViMG
 				{
 					//GetCube(newPos).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(GetChunk().GetWorld(), GetChunk().GetChunkManager(), this, newPos.InCubeSpace(chunk), this, position.InCubeSpace(chunk), updatedId);
 
-					chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
+					//chunk.GetWorld().OnCubeUpdate(this, position.InCubeSpace(chunk), updatedId);
 				}
 			}
 		}
@@ -433,8 +433,8 @@ namespace ViMG
 					{
 						var trackingEntity = chunk.GetWorld().EntityManager.GetEntityTrackingPosition(positionCubeSpace);
 
-						if (trackingEntity.HasValue())
-							trackingEntity.Get().TrackingCubeDestroyed(chunk.GetWorld(), chunk.GetChunkManager());
+						//if (trackingEntity.HasValue())
+							//trackingEntity.Get().TrackingCubeDestroyed(chunk.GetWorld(), chunk.GetChunkManager());
 					}
 				}
 
@@ -533,7 +533,7 @@ namespace ViMG
 			else return false;
 		}
 
-		public void OnGet<T>(GenericPool<T> pool) where T : IPoolable
+		public void OnGet<T>(IPool<T> pool) where T : IPoolable
 		{
 			IsUsed = true;
 			//x + WIDTH * (y + DEPTH * z)
@@ -557,7 +557,7 @@ namespace ViMG
 			}*/
 		}
 
-		public void OnReturned<T>(GenericPool<T> pool) where T : IPoolable
+		public void OnReturned<T>(IPool<T> pool) where T : IPoolable
 		{
 			IsUsed = false;
 

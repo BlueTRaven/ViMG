@@ -46,9 +46,9 @@ namespace ViMG.Entities
 			base.Update(deltaTime);
 		}
 
-		public override void OnCubeUpdated(ChunkData updatingParent, CubePosition updating, int updatedId)
+		public override void OnCubeUpdated(CubePosition updating, int updatedId)
 		{
-			base.OnCubeUpdated(updatingParent, updating, updatedId);
+			base.OnCubeUpdated(updating, updatedId);
 
 			// If we deleted the base position, we know that the entire tree is going to fall.
 			if (updating == basePosition && updatedId == 0)
