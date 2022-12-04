@@ -91,8 +91,6 @@ namespace ViMG
 			broadPhaseTasks = null;
 
 			ProfilingHelper.End("Broad phase generation done.");
-			/*Console.WriteLine("Finished Broad Phase. Generated {0} total chunks in {1} seconds. ({2} seconds elapsed since start.)",
-				total, broadWatch.Elapsed.Seconds, totalWatch.Elapsed.TotalSeconds);*/
 
 			ProfilingHelper.Start("Beginning detail phase generation...");
 			if (Main.DO_DETAIL)

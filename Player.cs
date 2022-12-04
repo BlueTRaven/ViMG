@@ -242,57 +242,21 @@ namespace ViMG
 
 		private BuffManagerPlayer buffManager;
 
+		private bool respawnInit;
+		private Player respawnPlayer;
+
 		public Player()
 		{
 			AlwaysRender = true;
-			//Position = new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
-
-			//state = State.Noclip;
-			Options.CenterMouse();
-			currentMS = Mouse.GetState();
-			previousMS = currentMS;
-			previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
-
-			Rotation = Main.camera.Rotation;
-
-			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
-			accessoryInventory = new Inventory(6);
-			gearInventory = new Inventory(10);
-			craftInventory = new Inventory(8);
-			//Start with 10 gear slots so we don't have to worry about expanding in the future.
-			//For now, we only have 3:
-			//Heart, boots, and feather artefact. 
-
-			Health = MaxHealth;
-			Magic = MaxMagic;
 		}
 
 		//Creates a new player from a dead player.
 		public Player(Player deadPlayer)
-        {
-			world = deadPlayer.world;
-
-			invulnTimer = 6f;	//6 seconds of invuln after respawning
-
-			inventory = deadPlayer.inventory;
-			accessoryInventory = deadPlayer.accessoryInventory;
-			gearInventory = deadPlayer.gearInventory;
-
-			SpawnPosition = deadPlayer.SpawnPosition;
-			Position = deadPlayer.SpawnPosition.InWorldSpace(null);
-
+		{
 			AlwaysRender = true;
 
-			Options.CenterMouse();
-			currentMS = Mouse.GetState();
-			previousMS = currentMS;
-			previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
-
-			Rotation = Main.camera.Rotation;
-
-			craftInventory = new Inventory(8);
-
-			Health = MaxHealth / 4;
+			respawnInit = true;
+			respawnPlayer = deadPlayer;
 		}
 
 		public void FirstCreated()
@@ -308,6 +272,49 @@ namespace ViMG
         public override void Initialize(World world)
         {
             base.Initialize(world);
+
+			if (!respawnInit)
+			{
+				Options.CenterMouse();
+				currentMS = Mouse.GetState();
+				previousMS = currentMS;
+				previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
+
+				Rotation = Main.camera.Rotation;
+
+				craftInventory = new Inventory(8);
+				//Start with 10 gear slots so we don't have to worry about expanding in the future.
+				//For now, we only have 3:
+				//Heart, boots, and feather artefact. 
+			}
+            else
+            {
+				invulnTimer = 6f;   //6 seconds of invuln after respawning
+
+				inventory = respawnPlayer.inventory;
+				accessoryInventory = respawnPlayer.accessoryInventory;
+				gearInventory = respawnPlayer.gearInventory;
+
+				SpawnPosition = respawnPlayer.SpawnPosition;
+				Position = respawnPlayer.SpawnPosition.InWorldSpace(null);
+
+				respawnPlayer = null;
+				respawnInit = false;
+
+				//Options.CenterMouse();
+				currentMS = Mouse.GetState();
+				previousMS = currentMS;
+				previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
+
+				Rotation = Main.camera.Rotation;
+
+				craftInventory = new Inventory(8);
+
+				Health = MaxHealth / 4;
+			}
+
+			Health = MaxHealth;
+			Magic = MaxMagic;
 
 			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();

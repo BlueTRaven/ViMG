@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ViMG
@@ -73,7 +74,8 @@ namespace ViMG
 
         public static void CenterMouse()
         {
-            Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
+            if (Thread.CurrentThread == Main.MainThread)
+                Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
         }
 
         public static void OnSave(List<byte> saveBytes)

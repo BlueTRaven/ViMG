@@ -21,6 +21,8 @@ namespace ViMG
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
 
+		public const bool CAN_MULTITHREAD_UPLOAD = true;
+
 		private const float FOV_DEGREES = 90f;
 		public const float NEAR = 0.005f;
 		public const float FAR = 12 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE;

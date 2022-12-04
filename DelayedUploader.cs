@@ -32,7 +32,7 @@ namespace ViMG
 			while (meshesToUploadLater.Count > 0)
 			{
 				var toUpload = meshesToUploadLater.Dequeue();
-				toUpload.mesh.Upload(device, toUpload.vertices, toUpload.indices);
+				//toUpload.mesh.Upload(device, toUpload.vertices, toUpload.indices);
 			}
 		}
 	}

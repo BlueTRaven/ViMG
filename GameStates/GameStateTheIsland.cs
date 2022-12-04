@@ -9,8 +9,10 @@ namespace ViMG.GameStates
 {
     public class GameStateTheIsland : GameState
     {
-        public World World;
         private readonly GraphicsDevice device;
+
+        private Task<World> worldTask;
+        private World world;
 
         public GameStateTheIsland(GameStateManager manager, GraphicsDevice device) : base(manager)
         {
@@ -19,32 +21,50 @@ namespace ViMG.GameStates
 
         public void LoadWorld(string folderName)
         {
-            World.LoadWorld(device, folderName);
+            worldTask = new Task<World>(() =>
+            {
+                World world = new World(manager, device, 512);
+                world.LoadWorld(device, folderName);
+
+                return world;
+            });
+
+            worldTask.Start();
         }
 
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
-
-            World = new World(manager, device, 512);
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
 
-            World.ChunkLoadManager.UnloadAll();
-            World.ChunkLoadManager.Dispose();
-            World.ChunkManager2.Dispose();
-            World = null;
+            if (world != null)
+            {
+                world.ChunkLoadManager.UnloadAll();
+                world.ChunkLoadManager.Dispose();
+                world.ChunkManager2.Dispose();
+                world = null;
+            }
             SetMenu(null);
         }
 
         public override void Update(GraphicsDevice device, double deltaTime)
         {
-            if (World.LoadedFolderName != null && !manager.Paused)
+            if (world == null)
             {
-                World.Update(deltaTime);
+                if (worldTask.Wait(1))
+                {
+                    world = worldTask.Result;
+                    world.Sync(device);
+                }
+            }
+
+            if (world != null && !manager.Paused)
+            {
+                world.Update(deltaTime);
             }
 
             base.Update(device, deltaTime);
@@ -54,9 +74,9 @@ namespace ViMG.GameStates
         {
             base.Draw(device);
 
-            if (World.LoadedFolderName != null)
+            if (world != null)
             {
-                World.Draw(device, null);
+                world.Draw(device, null);
             }
         }
 
@@ -64,9 +84,9 @@ namespace ViMG.GameStates
         {
             base.DrawUI(batch);
 
-            if (World.LoadedFolderName != null)
+            if (world != null)
             {
-                World.DrawUI(batch);
+                world.DrawUI(batch);
             }
         }
     }

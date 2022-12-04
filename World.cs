@@ -93,8 +93,6 @@ namespace ViMG
 		public DirectionalLight directionalLight;
 		private int currentCascadeDebug;
 
-		private Task<ChunkManager> GenerateWorldTask;
-
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
 		public World(GameStateManager gameStateManager, GraphicsDevice device, int worldSize)
@@ -297,55 +295,21 @@ namespace ViMG
 
 			if (!Directory.Exists("./saves/" + folderName + "/"))
 			{
-				if (!Main.MULTITHREAD_GENERATION)
-				{
-					ChunkGenerator = new ChunkGeneratorIsland(0);
-					entIO = new EntityManagerIO(EntityManager);
-					chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-					ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
+				ChunkGenerator = new ChunkGeneratorIsland(0);
+				entIO = new EntityManagerIO(EntityManager);
+				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
+				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
 
-					ChunkGeneratorTasker.GenerateWorld(this, ChunkManager2, ChunkGenerator);
-					//ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
+				ChunkGeneratorTasker.GenerateWorld(this, ChunkManager2, ChunkGenerator);
 
-					//ChunkManager.InitLayer(0);
-					//ChunkManager.InitLayer(1);
-					//generate island layer
-					//ChunkManager.GenerateWorld(this, 0);
-					//ChunkManager.GenerateWorld(this, 1);
+				LoadedFolderName = folderName;
+				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 
-					LoadedFolderName = folderName;
-					Main.SessionInformation.LastLoadedSave = LoadedFolderName;
-
-					FinishGenWorld();
-				}
-                else
-                {
-					//I think this needs to be moved up a level.
-					//Instead of attempting to multi-thread the ChunkManager (which has plenty of issues, namely that generation needs access to the entity manager through the world)
-					//we do it through the world instead, which is a smaller bottleneck.
-					GenerateWorldTask = new Task<ChunkManager>(() =>
-					{
-						ChunkManager manager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
-						manager.InitLayer(0);
-						manager.GenerateWorld(this, 0);
-						return manager;
-					});
-
-					LoadedFolderName = folderName;
-					Main.SessionInformation.LastLoadedSave = LoadedFolderName;
-
-					GenerateWorldTask.Start();
-					GenerateWorldTask.Wait();
-
-					//ChunkManager = GenerateWorldTask.Result;
-
-					FinishGenWorld();
-				}
+				FinishGenWorld();
 			}
 			else
 			{
 				ProfilingHelper.Start("Loading world...");
-				//ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
 				worldInfoIO = new WorldInfoIO();
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
 				entIO = new EntityManagerIO(EntityManager);
@@ -365,10 +329,7 @@ namespace ViMG
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
 				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, 6, 6, 8, chunkIO, entIO);
-				//ChunkManager.InitLayer(0);
-				//ChunkManager.InitLayer(1);
 
-				entIO.DEBUGPrintSerialized();
 				entIO.DeserializePlayerChunk();
 
 				if (EntityManager.GetAll<Player>().Count > 0)
@@ -378,8 +339,6 @@ namespace ViMG
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
 					ChunkLoadManager.FlushLoadQueue(this);
-
-					//ChunkManager2.FlushMeshQueue(this, ChunkLoadManager);
 
 					Main.camera.Position = player.Position;
 				}
@@ -457,6 +416,12 @@ namespace ViMG
 
 				Main.camera.Position = player.Position;
 			}
+		}
+
+		public void Sync(GraphicsDevice device)
+        {
+			if (!meshMaxDrawDistBottom.Uploaded)
+				meshMaxDrawDistBottom.Upload(device);
 		}
 
 		public void UnfixedUpdate()

@@ -37,6 +37,9 @@ namespace ViMG
 		public bool IsEmpty => VBO == null || VBO.VertexCount == 0;
 		public bool Uploaded => !IsEmpty;
 
+		private List<TVert> vertices;
+		private List<TIndex> indices;
+
 		public static SimpleMesh<TVert, TIndex> Empty { get; private set; }
 
 		static SimpleMesh()
@@ -46,12 +49,12 @@ namespace ViMG
 
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
-			if (Thread.CurrentThread == Main.MainThread)
+			if (Thread.CurrentThread == Main.MainThread || Main.CAN_MULTITHREAD_UPLOAD)
 				Upload(device, vertices, indices);
 			else UploadLater(vertices, indices);
 		}
 
-		public void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
+		private void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
 			if (Uploaded)
 				throw new Exception("Cannot upload twice.");
@@ -72,6 +75,13 @@ namespace ViMG
 			//Console.WriteLine("Uploaded mesh in " + watch.Elapsed.TotalSeconds + "s");
 		}
 
+		public void Upload(GraphicsDevice device)
+        {
+			Upload(device, vertices, indices);
+			vertices = null;
+			indices = null;
+        }
+
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices, Texture2D texture) : this(device, vertices, indices)
 		{
 			this.texture = texture;
@@ -83,7 +93,8 @@ namespace ViMG
 
 		protected virtual void UploadLater(List<TVert> vertices, List<TIndex> indices)
 		{
-
+			this.vertices = vertices;
+			this.indices = indices;
 		}
 
 		public bool Use(GraphicsDevice device)
