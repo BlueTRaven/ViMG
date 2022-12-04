@@ -91,6 +91,32 @@ namespace ViMG.Generation
 
                 return batches[batch].GetOutput()[inBatch];
             }
+
+            public ValuePoint3D LockAndGetMax()
+            {
+                int width = int.MinValue;
+                int height = int.MinValue;
+                int depth = int.MinValue;
+
+                int numPerBatch = num / numBatches;
+
+                for (int i = 0; i < numBatches; i++)
+                {
+                    int batch = i / numPerBatch;
+                    int inBatch = i % numPerBatch;
+
+                    Point3D size = batches[batch].GetOutput()[inBatch].size;
+
+                    if (size.X > width)
+                        width = size.X;
+                    if (size.Y > height)
+                        height = size.Y;
+                    if (size.Z > depth)
+                        depth = size.Z;
+                }
+
+                return new ValuePoint3D(width, height, depth);
+            }
         }
 
         public readonly struct StructureGeneratorBatch

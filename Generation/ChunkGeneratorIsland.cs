@@ -239,7 +239,7 @@ namespace ViMG.Generation
 
 			ChunkHelper.PlaceStructureWithBlacklist(manager, ellipsoidAtBottomOfHole, 
 				new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
-				BlacklistAir, Span<ushort>.Empty);
+				BlacklistAir, Span<ushort>.Empty, false);
 
 			//place one preset geode always located within the ellipsoid
 			Vector2 geodeAng = GetRandom().NextAngle();
@@ -248,7 +248,7 @@ namespace ViMG.Generation
 			CubePosition geodePos = new CubePosition(holeLocationX + (int)(geodeAng.X * geodeDist), layerYOffsetInCubes + 39, holeLocationY + (int)(geodeAng.Y * geodeDist));
 
 			ChunkHelper.PlaceStructureWithBlacklist(manager, geode,
-				geodePos, BlacklistNone, BlacklistNone);
+				geodePos, BlacklistNone, BlacklistNone, false);
 
 			//also place a random number of other geodes throughout the world
 			int numGeodes = GetRandom().Next(10, 15);
@@ -259,7 +259,7 @@ namespace ViMG.Generation
 				int z = GetRandom().Next(0, manager.SizeInCubes);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager, geode,
-					new CubePosition(x, layerYOffsetInCubes + 37, z), BlacklistNone, BlacklistNone);
+					new CubePosition(x, layerYOffsetInCubes + 37, z), BlacklistNone, BlacklistNone, false);
 
 				world.PointsOfInterest.Add(new PointOfInterest(new CubePosition(x, layerYOffsetInCubes + 39, z), "geode", 1));
 			}
@@ -274,7 +274,7 @@ namespace ViMG.Generation
 				Structure structure = structureBatchesGOL3DAltarCaves.Get(i % structureBatchesGOL3DAltarCaves.num);
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty, false);
 			}
 
 			for (int i = 0; i < 128; i++)
@@ -284,7 +284,7 @@ namespace ViMG.Generation
 				Structure structure = structureBatchesGOL3DShroomCaves.Get(i % structureBatchesGOL3DShroomCaves.num);
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
-				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty);
+				ChunkHelper.PlaceStructureWithBlacklist(manager, structure, randomPos, BlacklistCave, Span<ushort>.Empty, false);
 			}
 			ProfilingHelper.End("Done.");
 
@@ -314,7 +314,7 @@ namespace ViMG.Generation
 					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
-					BlacklistOre, BlacklistAir);
+					BlacklistOre, BlacklistAir, false);
 			}
 			ProfilingHelper.End("Done.");
 
@@ -326,7 +326,7 @@ namespace ViMG.Generation
 					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 16), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
-					BlacklistOre, BlacklistAir);
+					BlacklistOre, BlacklistAir, false);
 			}
 			ProfilingHelper.End("Done.");
 
@@ -338,7 +338,7 @@ namespace ViMG.Generation
 					layerYOffsetInCubes + GetRandom().Next(0, ISLAND_TOP - 24), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
-					BlacklistOre, BlacklistAir);
+					BlacklistOre, BlacklistAir, false);
 			}
 			ProfilingHelper.End("Done.");
 
@@ -350,7 +350,7 @@ namespace ViMG.Generation
 					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR - 32), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
 				ChunkHelper.PlaceStructureWithBlacklist(manager, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
-					BlacklistOre, BlacklistAir);
+					BlacklistOre, BlacklistAir, false);
 			}
 			ProfilingHelper.End("Done.");
 			ProfilingHelper.End("Done.");
@@ -407,7 +407,7 @@ namespace ViMG.Generation
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
 						ChunkHelper.PlaceStructureWithBlacklist(world, manager, dungeon[GetRandom().Next(0, 4)], pos,
-											Span<ushort>.Empty, PlaceDungeon);
+											Span<ushort>.Empty, PlaceDungeon, false);
 
 						world.PointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
 
@@ -450,7 +450,7 @@ namespace ViMG.Generation
 							positions[lastPosition++] = actualGenPos;
 							if (which < 2)
 								ChunkHelper.PlaceStructureWithBlacklist(world, manager, shrine[which], actualGenPos,
-									Span<ushort>.Empty, PlaceAltar);
+									Span<ushort>.Empty, PlaceAltar, false);
 							else manager.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false);
 
 							world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
@@ -505,7 +505,7 @@ namespace ViMG.Generation
 				if (solidPos.HasValue())
 				{
 					ChunkHelper.PlaceStructureWithBlacklist(manager, obelisk, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace), 
-						Span<ushort>.Empty, BlacklistAir);
+						Span<ushort>.Empty, BlacklistAir, false);
 
 					world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "obelisk", 1));
 					break;
@@ -526,7 +526,7 @@ namespace ViMG.Generation
 				if (solidPos.HasValue())
 				{
 				 	ChunkHelper.PlaceStructureWithBlacklist(world, manager, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
-						Span<ushort>.Empty, PlaceHouse);
+						Span<ushort>.Empty, PlaceHouse, false);
 
 					world.PointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "house", 1));
 				}

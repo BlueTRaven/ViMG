@@ -117,7 +117,7 @@ namespace ViMG
 		/// <param name="dontwriteStructureBlacklist">If the structure encounters a cube of this type when placing, it will not place it.
 		/// For instance, if your structure is padded by air, you might not want to overwrite the world with that.</param>
 		public static void PlaceStructureWithBlacklist(ChunkManager2 manager, Structure structure, CubePosition pos,
-			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist)
+			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist, bool markDirty)
 		{
 			for (int x = 0; x < structure.size.X; x++)
 			{
@@ -154,7 +154,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.SetCube(realPos, structure.data[i]);
+								manager.SetCube(realPos, structure.data[i], markDirty);
 						}
 					}
 				}
@@ -164,7 +164,7 @@ namespace ViMG
 		public delegate bool ShouldWriteFn(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
 		public static void PlaceStructureWithBlacklist(World world, ChunkManager2 manager, Structure structure, CubePosition pos,
-			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite)
+			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
 			for (int x = 0; x < structure.size.X; x++)
 			{
@@ -195,7 +195,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.SetCube(realPos, placeId);
+								manager.SetCube(realPos, placeId, markDirty);
 						}
 					}
 				}

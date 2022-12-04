@@ -9,17 +9,21 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorStructurePermutations : ChunkGenerator
     {
-        private StructureGenerator.StructureGeneratorBatchCollection structureBatchesGOL3DOrangeShroomCaves;
+        private StructureGenerator.StructureGeneratorBatchCollection batches;
 
-        public ChunkGeneratorStructurePermutations(int layer, int seed = 1337) : base(layer, seed)
+        private StructureGenerator generator;
+
+        public ChunkGeneratorStructurePermutations(int layer, StructureGenerator generator, int seed = 1337) : base(layer, seed)
         {
+            this.generator = generator;
         }
 
         public override void Initialize(int sizeInCubesXZ, int sizeInChunksY)
         {
             base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
-            structureBatchesGOL3DOrangeShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
+            batches = generator.Generate(64, 8);
+            //a = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -38,14 +42,14 @@ namespace ViMG.Generation
 
             for (int i = 0; i < 64; i++)
             {
-                Structure s = structureBatchesGOL3DOrangeShroomCaves.Get(i);
-                ChunkHelper.PlaceStructureWithBlacklist(manager, s, startPosition, Span<ushort>.Empty, Span<ushort>.Empty);
+                Structure s = batches.Get(i);
+                ChunkHelper.PlaceStructureWithBlacklist(manager, s, startPosition, Span<ushort>.Empty, Span<ushort>.Empty, true);
                 startPosition.X += s.size.X + 2;
 
                 if (startPosition.X > manager.SizeInCubes)
                 {
                     startPosition.X = 0;
-                    startPosition.Z += 40;
+                    startPosition.Z += batches.LockAndGetMax().z;
                 }
             }
         }
