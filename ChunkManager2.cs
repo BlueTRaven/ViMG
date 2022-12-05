@@ -149,7 +149,7 @@ namespace ViMG
         //Update queue of chunks to mesh
         public void Update(World world, ChunkLoadManager loadManager)
         {
-            const int MAX_MESH_PER_FRAME = 20;
+            const int MAX_MESH_PER_FRAME = 200;
             int meshedInThisFrame = 0;
 
             while (updatedChunkPositions.Count > 0 && meshedInThisFrame < MAX_MESH_PER_FRAME)
