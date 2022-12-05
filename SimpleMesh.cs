@@ -49,6 +49,9 @@ namespace ViMG
 
 		public SimpleMesh(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
+			//TODO: opengl doesn't support multithreaded uploading.
+			//IF we end up supporting opengl (not sure we will)
+			//then this will cause issues as we have to explicitly call Upload
 			if (Thread.CurrentThread == Main.MainThread || Main.CAN_MULTITHREAD_UPLOAD)
 				Upload(device, vertices, indices);
 			else UploadLater(vertices, indices);

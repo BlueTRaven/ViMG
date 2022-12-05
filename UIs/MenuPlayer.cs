@@ -120,6 +120,17 @@ namespace ViMG.UIs
 
 			UI.Start();
 
+			if (gsManager.TheIsland.IsLoading)
+			{
+				/*string message = gsManager.TheIsland.LoadMessage;
+				Size size = fi.StringSize(message);
+
+				UI.MakeLabel(new UI.LabelConstructionParameters(gsManager.TheIsland.LoadMessage, fi, Options.CurrentWindowResolution.X,
+					  new Vector2(Options.CurrentWindowResolution.X / 2f - size.Width / 2f, Options.CurrentWindowResolution.Y / 2f - size.Height / 2f)));*/
+
+				return;
+			}
+
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
 			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);

@@ -248,6 +248,9 @@ namespace ViMG
 		public Player()
 		{
 			AlwaysRender = true;
+
+			//TODO serialize this maybe?
+			buffManager = new BuffManagerPlayer(this);
 		}
 
 		//Creates a new player from a dead player.
@@ -257,6 +260,9 @@ namespace ViMG
 
 			respawnInit = true;
 			respawnPlayer = deadPlayer;
+
+			//TODO serialize this maybe?
+			buffManager = new BuffManagerPlayer(this);
 		}
 
 		public void FirstCreated()
@@ -319,9 +325,6 @@ namespace ViMG
 			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
 			world.GameStateManager.TheIsland.SetMenu(menuPlayer);
-
-			//TODO serialize this maybe?
-			buffManager = new BuffManagerPlayer(this);
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)

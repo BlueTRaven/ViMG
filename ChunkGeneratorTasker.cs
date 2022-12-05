@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Generation;
@@ -54,10 +55,12 @@ namespace ViMG
 			int offset = 0;
 
 			ProfilingHelper.Start("Beginning world generation...");
+			world.GameStateManager.TheIsland.LoadMessage = "Beginning world generation...";
 
 			generator.Initialize(manager.SizeInCubes, manager.SizeInChunksXZ);
 
-			ProfilingHelper.Start("Beginning broad phase generation...");
+			ProfilingHelper.Start("Broad phase generation...");
+			world.GameStateManager.TheIsland.LoadMessage = "Beginning broad phase generation...";
 
 			ChunkPosition[] positions = new ChunkPosition[total];
 			for (int i = 0; i < total; i++)
@@ -84,9 +87,17 @@ namespace ViMG
 
 			//Can't really begin detail phase until broad phase is finished (for now)
 			//So just wait for it all to finish.
-			broadPhaseTasks.ForEach(x => {
-				x.Wait();
-			});
+			for (int i = 0; i < broadPhaseTasks.Count; i++)
+            {
+				Task task = broadPhaseTasks[i];
+
+				while (!task.IsCompleted)
+                {
+					world.GameStateManager.TheIsland.LoadMessage = "Broad phase generation...\n" +
+						i + "/" + broadPhaseTasks.Count;
+					Thread.Sleep(100);
+                }
+            }
 
 			broadPhaseTasks = null;
 
@@ -95,6 +106,8 @@ namespace ViMG
 			ProfilingHelper.Start("Beginning detail phase generation...");
 			if (Main.DO_DETAIL)
 			{
+				world.GameStateManager.TheIsland.LoadMessage = "Detail phase generation...";
+				
 				num = 0;
 				for (int i = 0; i < total; i++)
 				{
@@ -103,13 +116,20 @@ namespace ViMG
 					generator.GenerateChunkDetail(manager, new ChunkPosition(point.x, point.y, point.z));
 
 					num++;
+
+					if (i % 8 == 0)
+						world.GameStateManager.TheIsland.LoadMessage = "Detail phase generation...\n" +
+							i + "/" + total;
 				}
 
+				world.GameStateManager.TheIsland.LoadMessage = "Post detail phase generation...\n" +
+					"(This may take a while)";
 				generator.PostGenerateDetail(world, manager);
 				//GenerateHeightmap();
 			}
 
-			ProfilingHelper.Start("Beginning post-detail generation...");
+			world.GameStateManager.TheIsland.LoadMessage = "Post generation...";
+			ProfilingHelper.Start("Beginning post generation...");
 			num = 0;
 			for (int i = 0; i < total; i++)
 			{
@@ -118,7 +138,7 @@ namespace ViMG
 				PostChunkGen(world, manager, new ChunkPosition(point.x, point.y, point.z));
 				num++;
 			}
-			ProfilingHelper.End("Post-detail generation done.");
+			ProfilingHelper.End("Post generation done.");
 
 			ProfilingHelper.End("Detail phase generation done.");
 

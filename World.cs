@@ -310,12 +310,15 @@ namespace ViMG
 			else
 			{
 				ProfilingHelper.Start("Loading world...");
+				GameStateManager.TheIsland.LoadMessage = "Loading World...";
 				worldInfoIO = new WorldInfoIO();
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
 				entIO = new EntityManagerIO(EntityManager);
 
 				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
 
+				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
+					"Reading from disk...";
 				WorldIO.LoadError error = worldInfoIO.Load(folderName, this, PointsOfInterest);
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", worldInfoIO.Version);
@@ -330,6 +333,8 @@ namespace ViMG
 
 				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, 6, 6, 8, chunkIO, entIO);
 
+				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
+					"Deserializing...";
 				entIO.DeserializePlayerChunk();
 
 				if (EntityManager.GetAll<Player>().Count > 0)
@@ -346,8 +351,8 @@ namespace ViMG
 				{
 					//Player somehow has not been created?
 					player = new Player();
-					EntityManager.Add(player);
 					player.FirstCreated();
+					EntityManager.Add(player);
 
 					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
 					ChunkLoadManager.LoadColumn(this);
@@ -386,8 +391,8 @@ namespace ViMG
 			ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, 6, 6, 8, chunkIO, entIO);
 
 			player = new Player();
-			EntityManager.Add(player);
 			player.FirstCreated();
+			EntityManager.Add(player);
 
 			Vector3 playerSpawnPosition = ChunkGenerator.GetPlayerPosition(this, ChunkManager2);
 			player.Position = playerSpawnPosition;

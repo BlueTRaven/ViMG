@@ -99,6 +99,7 @@ namespace ViMG.Generation
 
 			if (Main.DO_DETAIL)
 			{
+				
 				structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
 				structureBatchesGOL3DShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
 				structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);

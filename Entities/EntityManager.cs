@@ -56,9 +56,9 @@ namespace ViMG.Entities
 				Add(tracker as Entity);
 		}
 
-		public void Add(Entity entity)
+		public void Add(Entity entity, bool delayAdding = false)
 		{
-			if (iterating)
+			if (iterating || delayAdding)
 				toAddLater.Add(entity);
 			else ReallyAdd(entity);
 		}
