@@ -43,22 +43,6 @@ namespace ViMG
             }
         }
 
-        private readonly struct ChunkMeshResult
-        {
-            public readonly ChunkPosition position;
-            public readonly ChunkMesh chunkMesh;
-            public readonly int meshedVersion;
-            public readonly Cube.RenderPass pass;
-
-            public ChunkMeshResult(ChunkPosition position, ChunkMesh mesh, int version, Cube.RenderPass pass)
-            {
-                this.position = position;
-                this.chunkMesh = mesh;
-                this.meshedVersion = version;
-                this.pass = pass;
-            }
-        }
-
         private struct CubeMeshInfo
         {
             public MeshHelper.CubeFace faces;
@@ -87,6 +71,14 @@ namespace ViMG
                 meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
                 meshVersion = 0;
                 version = 1;
+            }
+
+            public ChunkMeshInfo(ChunkMeshInfo copy)
+            {
+                this.position = copy.position;
+                meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+                this.meshVersion = copy.meshVersion;
+                this.version = copy.version;
             }
 
             public int GetMeshVersionCode()
@@ -127,8 +119,7 @@ namespace ViMG
         private CubeMeshInfo[] cubeMeshInfos;
         private ChunkMeshInfo[] chunkMeshInfos;
 
-        private Queue<Task<ChunkMeshResult>> meshResults = new Queue<Task<ChunkMeshResult>>();
-        private Queue<Task<ChunkMeshResult>> incompleteMeshResults = new Queue<Task<ChunkMeshResult>>();
+        private Queue<Task<ChunkMeshInfo>> meshResults = new Queue<Task<ChunkMeshInfo>>();
 
         private Queue<ChunkPosition> updatedChunkPositions = new Queue<ChunkPosition>();
         private HashSet<ChunkPosition> positionsInQueue = new HashSet<ChunkPosition>();
@@ -211,26 +202,19 @@ namespace ViMG
 
                     ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
 
-                    if (meshResult.meshedVersion == c.version)
+                    if (meshResult.version == c.version)
                     {
                         //Unload the old mesh now
                         UnloadMesh(ref c);
 
                         c.meshVersion = c.version;
 
-                        if (!meshResult.chunkMesh.IsEmpty && meshResult.chunkMesh.IBO.GraphicsDevice == null)
-                            throw new Exception("???");
-
-                        c.meshes[(int)meshResult.pass] = meshResult.chunkMesh;
+                        c.meshes = meshResult.meshes;
                     }
                     else
                     {
                         //version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
-                        if (!meshResult.chunkMesh.IsEmpty && meshResult.chunkMesh.VBO != null)
-                        {
-                            meshResult.chunkMesh.VBO.Dispose();
-                            meshResult.chunkMesh.IBO.Dispose();
-                        }
+                        UnloadMesh(ref meshResult);
                     }
 
                     numMeshResultsToTryThisFrame--;
@@ -250,22 +234,25 @@ namespace ViMG
         private void MeshChunk(World world, ref ChunkMeshInfo c)
         {
             //TODO: wrapper task for proper Locking
-            Task<ChunkMeshResult> task = new Task<ChunkMeshResult>((object obj) =>
+            Task<ChunkMeshInfo> task = new Task<ChunkMeshInfo>((object obj) =>
             {
                 ChunkMeshTaskState state = (ChunkMeshTaskState)obj;
+                ChunkMeshInfo cmi = state.cmi;
+                cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
 
-                ChunkMesh mesh;
                 //Prevent setting for the duration
                 lock (state.manager)
                 {
                     state.manager.LockSet = true;
-                    mesh = mesher.GenerateChunk(world, this, state.cmi.position, Cube.RenderPass.Opaque, true);
+                    cmi.meshes[(int)Cube.RenderPass.Opaque] = mesher.GenerateChunk(world, this, state.cmi.position, Cube.RenderPass.Opaque, true);
+                    cmi.meshes[(int)Cube.RenderPass.Transparent] = mesher.GenerateChunk(world, this, state.cmi.position, Cube.RenderPass.Transparent, false);
+                    cmi.meshes[(int)Cube.RenderPass.DepthOnly] = mesher.GenerateChunk(world, this, state.cmi.position, Cube.RenderPass.DepthOnly, false);
+                    cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
+                    cmi.meshes[(int)Cube.RenderPass.Air] = mesher.GenerateChunk(world, this, state.cmi.position, Cube.RenderPass.Air, false);
                     state.manager.LockSet = false;
                 }
 
-                if (!mesh.IsEmpty && mesh.IBO.GraphicsDevice == null)
-                    throw new Exception("???");
-                return new ChunkMeshResult(state.cmi.position, mesh, state.cmi.version, Cube.RenderPass.Opaque);
+                return cmi;
             }, new ChunkMeshTaskState(c, this));
             task.Start();
 
@@ -420,8 +407,6 @@ namespace ViMG
         public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
         {
             ChunkMesh mesh = GetChunkMeshInfo(position).meshes[(int)pass];
-            if (mesh != null && !mesh.IsEmpty && mesh.IBO.IsDisposed)
-                throw new Exception("???");
             return mesh;
         }
 
@@ -505,15 +490,6 @@ namespace ViMG
 
         public bool LockSet;
         public bool LockGet;
-        public void Lock()
-        {
-            Monitor.Enter(this);
-        }
-
-        public void Unlock()
-        {
-            Monitor.Exit(this);
-        }
 
         //TODO: could probably get rid of position.InChunkSpace call somehow.
         public unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
