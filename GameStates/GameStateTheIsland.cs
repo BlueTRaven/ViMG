@@ -59,7 +59,9 @@ namespace ViMG.GameStates
                 return world;
             });
 
-            worldTask.Start();
+            if (Main.MULTITHREAD_LOADING)
+                worldTask.Start();
+            else worldTask.RunSynchronously();
         }
 
         public override void OnOpen(GameState changingFrom)

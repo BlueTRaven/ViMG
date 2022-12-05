@@ -21,8 +21,6 @@ namespace ViMG
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
 
-		public const bool CAN_MULTITHREAD_UPLOAD = true;
-
 		private const float FOV_DEGREES = 90f;
 		public const float NEAR = 0.005f;
 		public const float FAR = 12 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE;
@@ -96,10 +94,11 @@ namespace ViMG
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
 		public const bool DO_DETAIL = true;
-		public const bool MULTITHREAD_GENERATION = false;
+		public const bool MULTITHREAD_LOADING = true;
 		public const bool TRANSPARENT_ORES = false;
 		public const bool ENABLE_ENT_SPAWNING = true;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
+		public const bool CAN_MULTITHREAD_UPLOAD = true;
 
 		public static bool Exit = false;
 
