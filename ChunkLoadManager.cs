@@ -100,6 +100,9 @@ namespace ViMG
 				hasChanged = true;
 			}
 
+			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
+			chunkManager.FlushMeshQueue();
+
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
 

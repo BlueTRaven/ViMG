@@ -187,9 +187,14 @@ namespace ViMG
                 updatedThisFrame++;
             }
 
-            int numMeshResultsToTryThisFrame = meshResults.Count;
+            FlushMeshQueue(20);
+        }
 
-            while (meshResults.Count > 0 && numMeshResultsToTryThisFrame > 0)
+        public void FlushMeshQueue(int count = -1)
+        {
+            bool canExitEarly = count != -1;
+
+            while (meshResults.Count > 0 && ((canExitEarly && count > 0) || !canExitEarly))
             {
                 var task = meshResults.Dequeue();
 
@@ -216,10 +221,11 @@ namespace ViMG
                         //version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
                         UnloadMesh(ref meshResult);
                     }
-
-                    numMeshResultsToTryThisFrame--;
                 }
+                //Task isn't finished, re-queue it.
                 else meshResults.Enqueue(task);
+
+                count--;
             }
         }
 
@@ -233,7 +239,6 @@ namespace ViMG
 
         private void MeshChunk(World world, ref ChunkMeshInfo c)
         {
-            //TODO: wrapper task for proper Locking
             Task<ChunkMeshInfo> task = new Task<ChunkMeshInfo>((object obj) =>
             {
                 ChunkMeshTaskState state = (ChunkMeshTaskState)obj;
@@ -259,6 +264,7 @@ namespace ViMG
             meshResults.Enqueue(task);
             //First one must have forceUpdate = true,
             //but all subsequent mesh generations should be false.
+            //THIS IS NO LONGER TRUE
             //c.meshes[(int)Cube.RenderPass.Opaque] = mesher.GenerateChunk(world, this, c.position, Cube.RenderPass.Opaque, true);
             //c.meshes[(int)Cube.RenderPass.Transparent] = mesher.GenerateChunk(world, this, c.position, Cube.RenderPass.Transparent, false);
             //c.meshes[(int)Cube.RenderPass.DepthOnly] = mesher.GenerateChunk(world, this, c.position, Cube.RenderPass.DepthOnly, false);
