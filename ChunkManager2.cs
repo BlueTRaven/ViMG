@@ -161,8 +161,6 @@ namespace ViMG
 
                 if (c.version != c.meshVersion)
                 {
-                    c.meshVersion = c.version;
-
                     MeshChunk(world, ref c);
 
                     meshedInThisFrame++;
@@ -207,7 +205,7 @@ namespace ViMG
 
                     ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
 
-                    if (meshResult.version == c.version)
+                    if (meshResult.version >= c.version)
                     {
                         //Unload the old mesh now
                         UnloadMesh(ref c);
@@ -408,6 +406,12 @@ namespace ViMG
         public void MarkDirty(ChunkPosition position)
         {
             GetChunkMeshInfo(position).version++;
+
+            if (!positionsInQueue.Contains(position))
+            {
+                updatedChunkPositions.Enqueue(position);
+                positionsInQueue.Add(position);
+            }
         }
 
         public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
