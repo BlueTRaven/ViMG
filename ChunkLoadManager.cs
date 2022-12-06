@@ -87,7 +87,7 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
-				chunkManager.MeshChunk(world, queuedPosition);
+				chunkManager.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
@@ -109,7 +109,7 @@ namespace ViMG
 				queue.Sort();
             }
 
-			const int NUM_PER_FRAME = 5;
+			const int NUM_PER_FRAME = 200;
 
 			int currentNum = 0;
 
@@ -123,7 +123,7 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
-				chunkManager.MeshChunk(world, queuedPosition);
+				chunkManager.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
