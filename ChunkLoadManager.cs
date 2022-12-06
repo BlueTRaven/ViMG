@@ -29,10 +29,6 @@ namespace ViMG
 		private const float DISTANCE_UNLOAD_CHECK_TIME = 4;
 		private float distanceUnloadCheckTimer;
 
-		private readonly int radiusH;
-		private readonly int radiusV;
-		private readonly int unloadRadius;
-
 		private Vector3 loadTarget;
 
 		private PriorityQueue<ChunkPosition> queue = new PriorityQueue<ChunkPosition>(true, (x) =>
@@ -40,13 +36,10 @@ namespace ViMG
 			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
 		}); 
 		
-		public ChunkLoadManager(ChunkManager2 chunkManager, EntityManager entityManager, int radiusH, int radiusV, int unloadRadius, ChunkManagerIO chunkIO, EntityManagerIO entIO)
+		public ChunkLoadManager(ChunkManager2 chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
-			this.radiusH = radiusH;
-			this.radiusV = radiusV;
-			this.unloadRadius = unloadRadius;
 
 			this.chunkIO = chunkIO;
             this.entIO = entIO;
@@ -188,17 +181,17 @@ namespace ViMG
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			
-			for (int x = -radiusH; x <= radiusH; x++)
+			for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
 			{
-				for (int y = -radiusV; y <= radiusV; y++)
+				for (int y = -Options.RenderDistance; y <= Options.RenderDistance; y++)
 				{
-					for (int z = -radiusH; z < radiusH; z++)
+					for (int z = -Options.RenderDistance; z < Options.RenderDistance; z++)
 					{
 						var pos = baseChunkPos + new ChunkPosition(x, y, z);
 
 						Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
 						
-						if (distH.Length() < radiusH && chunkManager.IsInWorldBounds(pos))
+						if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
 						{
 							if (!loadedChunks.ContainsKey(pos))
 							{ 
@@ -225,7 +218,7 @@ namespace ViMG
 
 				float len = dist.Length();
 
-				if (len > unloadRadius)
+				if (len > Options.RenderDistance + 2)
 					unloadChunks.Add(pos);
 			}
 

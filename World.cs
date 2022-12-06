@@ -93,6 +93,7 @@ namespace ViMG
 		public DirectionalLight directionalLight;
 		private int currentCascadeDebug;
 
+		private float randomUpdatesTimer;
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
 		public World(GameStateManager gameStateManager, GraphicsDevice device, int worldSize)
@@ -331,7 +332,7 @@ namespace ViMG
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
-				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, 6, 6, 8, chunkIO, entIO);
+				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
 
 				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
 					"Deserializing...";
@@ -388,7 +389,7 @@ namespace ViMG
 
 			ProfilingHelper.End("Done.");
 
-			ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, 6, 6, 8, chunkIO, entIO);
+			ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
 
 			player = new Player();
 			player.FirstCreated();
@@ -517,21 +518,26 @@ namespace ViMG
 			miningUpdate.Clear();
 
 			//perform random updates
-			//There is RANDOM_UPDATES_PER_CHUNK updates per chunk every frame.
-			foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
+			//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
+			if (randomUpdatesTimer <= 0)
 			{
-				for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+				randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
+				foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
 				{
-					int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
-					Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
-					CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
+					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+					{
+						int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+						Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
+						CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
 
-					Cube cube = ChunkManager2.GetCube(randomUpdatePos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = ChunkManager2.GetCube(randomUpdatePos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-					if (cube != Main.Registry.CubeRegistry.Air)
-						cube.OnRandomUpdate(this, ChunkManager2, randomUpdatePos);
+						if (cube != Main.Registry.CubeRegistry.Air)
+							cube.OnRandomUpdate(this, ChunkManager2, randomUpdatePos);
+					}
 				}
 			}
+			else randomUpdatesTimer -= (float)deltaTime;
 
             PassiveSpawnerManager.Update(deltaTime, this);
 

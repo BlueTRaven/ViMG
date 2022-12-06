@@ -59,6 +59,10 @@ namespace ViMG
 
 		private void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
+			//don't attempt to upload if we've exited or the device is lost.
+			if (Main.Exit || device.IsDisposed)
+				return;
+
 			if (Uploaded)
 				throw new Exception("Cannot upload twice.");
 

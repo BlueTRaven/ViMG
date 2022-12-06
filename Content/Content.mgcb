@@ -127,6 +127,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/hdr.fx
 
+#begin Effects/radial_fog.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/radial_fog.fx
+
 #begin Effects/SMAA_HIGH.fx
 /importer:EffectImporter
 /processor:EffectProcessor

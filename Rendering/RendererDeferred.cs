@@ -166,6 +166,7 @@ namespace ViMG.Rendering
         public bool EffectEmptyEnabled;
         public Effect EffectEmpty;
         public Effect EffectHDR;
+        public Effect EffectRadialFog;
 
         public Effect EffectFXAA;
 
@@ -272,6 +273,7 @@ namespace ViMG.Rendering
             EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
             EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
+            EffectRadialFog = Main.assetsManager.GetAsset<Effect>("radial_fog");
 
             DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
 
@@ -304,8 +306,6 @@ namespace ViMG.Rendering
 
             bufferLightVolumeIndices = new StructuredBuffer(device, typeof(uint), lightVolumeIndices.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
             EffectLightAccumPointLight.Parameters["LightInstanceIndices"].SetValue(bufferLightVolumeIndices);
-
-
         }
 
         public void FrameStart()
@@ -454,7 +454,7 @@ namespace ViMG.Rendering
                 ConstructFXAA(Options.CurrentWindowResolution);
 
             device.SetRenderTargets(targets);
-            device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Black, device.Viewport.MaxDepth, 0);
+            device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Transparent, device.Viewport.MaxDepth, 0);
 
             if (DrawsPassGBuffer.Count > 0)
             {
@@ -856,6 +856,21 @@ namespace ViMG.Rendering
             else
             {
                 outputRT = ldrOutputPing;
+            }
+
+            if (true)
+            {
+                device.BlendState = BlendState.Additive;
+
+                device.SetRenderTarget(outputRT);
+
+                EffectRadialFog.Parameters["Position"].SetValue(position);
+                EffectRadialFog.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectRadialFog.Parameters["FogExtents"].SetValue(new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 2), Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * Options.RenderDistance));
+
+                EffectRadialFog.Parameters["FogColor"].SetValue(Color.White.ToVector4());
+
+                DrawFullscreenQuad(EffectRadialFog);
             }
 
             EffectCopy.View = Matrix.Identity;

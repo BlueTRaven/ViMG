@@ -68,6 +68,10 @@ namespace ViMG
 
         public static bool BloomEnabled;
 
+        public const int RENDER_DISTANCE_MIN = 4;
+        public const int RENDER_DISTANCE_MAX = 16;
+        public static int RenderDistance = 6;
+
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;
@@ -118,6 +122,8 @@ namespace ViMG
                         
             writer.WriteLine("instanced_light_volumes " + UseInstancedLightVolumes);
             writer.WriteLine("bloom " + BloomEnabled);
+
+            writer.WriteLine("render_dist " + RenderDistance);
         }
 
         public static void OnLoad(List<string> lines, GraphicsDeviceManager graphics)
@@ -147,6 +153,9 @@ namespace ViMG
                     bool.TryParse(split[1], out UseInstancedLightVolumes);
                 if (split[0] == "bloom")
                     bool.TryParse(split[1], out BloomEnabled);
+
+                if (split[0] == "render_dist")
+                    int.TryParse(split[1], out RenderDistance);
             }
 
             //graphics.PreferredBackBufferWidth = CurrentWindowResolution.X;

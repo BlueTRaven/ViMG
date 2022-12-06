@@ -219,6 +219,26 @@ namespace ViMG.UIs
 
             pos.Y += 32 + MARGIN;
 
+            UI.MakeLabel(new UI.LabelConstructionParameters("Render Distance", fi, 128, pos - new Vector2(128, 0)));
+
+            float range = Options.RENDER_DISTANCE_MAX - Options.RENDER_DISTANCE_MIN;
+            float rdScalar = ((float)Options.RenderDistance - Options.RENDER_DISTANCE_MIN) / range;
+
+            UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(64, 64, 32, 32), new RectangleF(96, 64, 32, 32), new RectangleF(96, 64, 32, 32)),
+                new UI.TextureConstructionParameters(new RectangleF(0, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), new RectangleF(0, 96, 128, 32)),
+                128, ref rdScalar);
+
+            Options.RenderDistance = (int)(rdScalar * range + Options.RENDER_DISTANCE_MIN);
+
+            if (Options.RenderDistance <= Options.RENDER_DISTANCE_MIN)
+                Options.RenderDistance = Options.RENDER_DISTANCE_MIN;
+
+            if (Options.RenderDistance >= Options.RENDER_DISTANCE_MAX)
+                Options.RenderDistance = Options.RENDER_DISTANCE_MAX;
+
+            UI.MakeLabel(new UI.LabelConstructionParameters(Options.RenderDistance.ToString(), fi, 128, pos + new Vector2(128, 0)));
+
             /*Options.SMAAThresholdChanged = UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(64, 64, 32, 32), new RectangleF(96, 64, 32, 32), new RectangleF(96, 64, 32, 32)),
                 new UI.TextureConstructionParameters(new RectangleF(0, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), new RectangleF(0, 96, 128, 32)),
