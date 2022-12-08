@@ -281,7 +281,7 @@ namespace ViMG
                 updatedThisFrame++;
             }
 
-            FlushMeshQueue(20);
+            FlushMeshQueue(5);
         }
 
         public void FlushMeshQueue(int count = -1)

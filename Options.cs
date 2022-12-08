@@ -72,6 +72,8 @@ namespace ViMG
         public const int RENDER_DISTANCE_MAX = 16;
         public static int RenderDistance = 6;
 
+        public static float DEBUGTimescale = 1f;
+
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;
@@ -156,6 +158,9 @@ namespace ViMG
 
                 if (split[0] == "render_dist")
                     int.TryParse(split[1], out RenderDistance);
+
+                if (split[0] == "debug_timescale")
+                    float.TryParse(split[1], out DEBUGTimescale);
             }
 
             //graphics.PreferredBackBufferWidth = CurrentWindowResolution.X;

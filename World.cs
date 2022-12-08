@@ -42,8 +42,7 @@ namespace ViMG
 		private static SimpleMesh<VertexCube, int> meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
 
-		private static (VertexBuffer VBO, IndexBuffer IBO) nightSkybox;
-		private static SimpleMesh<VertexCube, int> meshMaxDrawDistBottom;
+		private static SimpleMesh<VertexCube, int> skyboxMesh;
 		private static bool meshesLoaded;
 
 		public GameStateManager GameStateManager;
@@ -135,40 +134,24 @@ namespace ViMG
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
 
-			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE));
-			max.Y = 0;
-			Vector3 a = new Vector3(min.X, min.Y, min.Z);
-			Vector3 b = new Vector3(max.X, min.Y, min.Z);
-			Vector3 c = new Vector3(max.X, min.Y, max.Z);
-			Vector3 d = new Vector3(min.X, min.Y, max.Z);
-
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			indices.Add(0);
-			indices.Add(1);
-			indices.Add(3);
-			indices.Add(1);
-			indices.Add(2);
-			indices.Add(3);
+			Vector3 l_b_f = new Vector3(0, 0, 1);
+			Vector3 r_b_f = new Vector3(1, 0, 1);
+			Vector3 r_b_n = new Vector3(1, 0, 0);
+			Vector3 l_b_n = new Vector3(0, 0, 0);
 
-			vertices.Add(new VertexCube(a, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(b, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(c, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(d, Color.Black, Vector2.Zero, new Vector3(0, 1, 0)));
+			Vector3 l_t_n = new Vector3(0, 1, 0);
+			Vector3 r_t_n = new Vector3(1, 1, 0);
+			Vector3 r_t_f = new Vector3(1, 1, 1);
+			Vector3 l_t_f = new Vector3(0, 1, 1);
 
-			max.Y = DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-			Vector3 l_t_f = new Vector3(0, 0, 1);
-			Vector3 r_t_f = new Vector3(1, 0, 1);
-			Vector3 r_t_n = new Vector3(1, 0, 0);
-			Vector3 l_t_n = new Vector3(0, 0, 0);
+			const float SKYBOX_SIDE_SIZE = 1024f;
+			const float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * 4f;
+			const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
 
-			Vector3 l_b_n = new Vector3(0, 1, 0);
-			Vector3 r_b_n = new Vector3(1, 1, 0);
-			Vector3 r_b_f = new Vector3(1, 1, 1);
-			Vector3 l_b_f = new Vector3(0, 1, 1);
-
+			//front face
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
@@ -177,11 +160,12 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(1, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
 
+			//right face
 			offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
@@ -190,11 +174,12 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(1, 1), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, 1), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(1, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
+			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
 
+			//back face
 			offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
@@ -203,11 +188,12 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
 
+			//left face
 			offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
@@ -216,11 +202,12 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(1, 1), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(0, 1), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(0, 0), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
+			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
 
+			//top face
 			offset = vertices.Count;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
@@ -229,13 +216,27 @@ namespace ViMG
 			indices.Add(offset + 2);
 			indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 1), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 1), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
 
-			meshMaxDrawDistBottom = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
-			nightSkybox = DrawHelper3D.MakeUVSphere(device, 1, true);
+
+			//bottom face
+			offset = vertices.Count;
+			indices.Add(offset + 0);
+			indices.Add(offset + 1);
+			indices.Add(offset + 3);
+			indices.Add(offset + 1);
+			indices.Add(offset + 2);
+			indices.Add(offset + 3);
+
+			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+
+			skyboxMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
 			List<VertexCube> sunVertices = new List<VertexCube>();
 			List<int> sunIndices = new List<int>();
@@ -426,8 +427,8 @@ namespace ViMG
 
 		public void Sync(GraphicsDevice device)
         {
-			if (!meshMaxDrawDistBottom.Uploaded)
-				meshMaxDrawDistBottom.Upload(device);
+			if (!skyboxMesh.Uploaded)
+				skyboxMesh.Upload(device);
 		}
 
 		public void UnfixedUpdate()
@@ -440,7 +441,7 @@ namespace ViMG
 		{
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
-			alive += (float)deltaTime;
+			alive += (float)deltaTime * Options.DEBUGTimescale;
 
 			ChunkManager2.Update(this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);
@@ -727,16 +728,6 @@ namespace ViMG
 				float alphaDay = 1 - GetTimeOfDay();
 				float alphaNight = GetTimeOfNight();
 
-				if (alphaDay > 0)
-				{
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
-						Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateScale(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
-						Matrix.CreateTranslation(Main.camera.Position),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_day"), DrawHelper.BlackPixel,
-						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White * alphaDay));
-				}
-
 				if (alphaDay < 1)
 				{
 					const float mp = (DAY_CYCLE_TIME * 1.5f);
@@ -744,13 +735,25 @@ namespace ViMG
 					float p = MathF.Sin(MathF.PI * 2 * ((alive % mp) / mp));
 					float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
 
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
+					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateScale(DrawDistanceHoriz * 1.95f * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_night"), DrawHelper.WhitePixel,
-						meshMaxDrawDistBottom.VBO, meshMaxDrawDistBottom.IBO, null, Color.White));
+						Main.assetsManager.GetAsset<Texture2D>("skybox_night2"), DrawHelper.WhitePixel,
+						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White));
+				}
+
+				if (alphaDay > 0)
+				{
+					Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
+
+					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
+						Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						Matrix.CreateScale(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
+						Matrix.CreateTranslation(Main.camera.Position),
+						Main.assetsManager.GetAsset<Texture2D>("skybox_day"), DrawHelper.BlackPixel,
+						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
 				}
 
 				Texture2D sunTexture = DrawHelper.WhitePixel;
@@ -758,12 +761,18 @@ namespace ViMG
 				if (LoadedFolderName == "coconut")
 					sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(sunTexture,
+				Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
+					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+					Matrix.CreateTranslation(player.Position),
+					sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
+
+				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(sunTexture,
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
 					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-					Matrix.CreateTranslation(player.Position), null));
+					Matrix.CreateTranslation(player.Position), null));*/
 
 				if (Main.Debug)
 					HitboxManager.DrawDebug(device);

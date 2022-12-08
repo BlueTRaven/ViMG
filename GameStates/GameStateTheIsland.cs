@@ -87,13 +87,14 @@ namespace ViMG.GameStates
         {
             if (world == null)
             {
-                if (worldTask.Wait(1))
+                if (worldTask.IsCompleted)
                 {
                     world = worldTask.Result;
                     world.Sync(device);
 
                     IsLoading = false;
                 }
+                else System.Threading.Thread.Sleep(100);
             }
 
             if (world != null && !manager.Paused)

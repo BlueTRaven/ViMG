@@ -143,6 +143,8 @@ namespace ViMG.Rendering
         private RenderTarget2D normal;      //RGB normal data; A unused
         private RenderTarget2D ao;          //R AO data
 
+        private RenderTarget2D skybox;
+
         private RenderTarget2D preTransparencyOutput;
         private RenderTarget2D ldrOutputPing;
         private RenderTarget2D ldrOutputPong;
@@ -163,6 +165,7 @@ namespace ViMG.Rendering
         public Effect EffectLightAccumPointLight;
         public Effect EffectDeferred;
         public Effect EffectTransparent;
+        public Effect EffectSkybox;
         public bool EffectEmptyEnabled;
         public Effect EffectEmpty;
         public Effect EffectHDR;
@@ -196,6 +199,7 @@ namespace ViMG.Rendering
         public List<PointLightVolumeDraw> DrawsShadowmappedPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
+        public List<TransparentDraw> DrawsSkyboxPass = new List<TransparentDraw>();
         //Note that DEBUG markers ARE NOT RESET EVERY FRAME.
         //If you want to add a different type of data, RESET THEM YOURSELF!
         public List<DEBUGDraw> DEBUGMarkersSphere = new List<DEBUGDraw>();
@@ -270,6 +274,7 @@ namespace ViMG.Rendering
             EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
             EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
             EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
+            EffectSkybox = Main.assetsManager.GetAsset<Effect>("skybox");
             EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
             EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
@@ -279,6 +284,8 @@ namespace ViMG.Rendering
 
             EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
+
+            //EffectRadialFog.Parameters["Color"].SetValue(Main.assetsManager.GetAsset<Texture2D>("fog_colormap"));
 
             Main.WindowResizedEvent += ConstructRTs;
 
@@ -314,6 +321,7 @@ namespace ViMG.Rendering
             DrawsPointLightVolumePass.Clear();
             DrawsShadowmappedPointLightVolumePass.Clear();
             DrawsTransparentPass.Clear();
+            DrawsSkyboxPass.Clear();
             DrawsEmptyPass.Clear();
 
             NumDrawCalls = 0;
@@ -359,10 +367,12 @@ namespace ViMG.Rendering
             };
 
             preTransparencyOutput?.Dispose();
+            skybox?.Dispose();
             ldrOutputPing?.Dispose();
             ldrOutputPong?.Dispose();
 
             preTransparencyOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            skybox = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ldrOutputPing = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ldrOutputPong = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
@@ -699,6 +709,40 @@ namespace ViMG.Rendering
                 }
             }
 
+            device.SetRenderTarget(skybox);
+            device.Clear(Color.Transparent);
+
+            EffectSkybox.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+            EffectSkybox.Parameters["SeaLevel"].SetValue(Generation.ChunkGeneratorIsland.SEA_LEVEL * Cubes.Cube.CUBE_SCALE);
+
+            foreach (TransparentDraw draw in DrawsSkyboxPass)
+            {
+                device.SetVertexBuffer(draw.VBO);
+                device.Indices = draw.IBO;
+
+                EffectSkybox.Parameters["Diffuse"].SetValue(draw.Diffuse);
+                EffectSkybox.Parameters["World"].SetValue(draw.Transform);
+                EffectSkybox.Parameters["TintColor"].SetValue(draw.TintColor);
+
+                if (draw.UseSourceRect)
+                {
+                    EffectSkybox.Parameters["UseSourceRect"].SetValue(true);
+                    EffectSkybox.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
+                    EffectSkybox.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                }
+                else EffectSkybox.Parameters["UseSourceRect"].SetValue(false);
+
+                EffectSkybox.Parameters["TextureSize"].SetValue(draw.TextureSize);
+
+                foreach (var pass in EffectSkybox.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+
+                    NumDrawCalls++;
+                }
+            }
+
             foreach (DEBUGDraw draw in DEBUGMarkersSphere)
             {
                 EffectTransparent.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
@@ -860,15 +904,15 @@ namespace ViMG.Rendering
 
             if (true)
             {
-                device.BlendState = BlendState.Additive;
+                device.BlendState = BlendState.AlphaBlend;
 
                 device.SetRenderTarget(outputRT);
 
+                EffectRadialFog.CurrentTechnique = EffectRadialFog.Techniques["T2"];
                 EffectRadialFog.Parameters["Position"].SetValue(position);
+                EffectRadialFog.Parameters["Color"].SetValue(skybox);
+                EffectRadialFog.Parameters["FogExtents"].SetValue(new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3), Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1)));
                 EffectRadialFog.Parameters["CameraPosition"].SetValue(Main.camera.Position);
-                EffectRadialFog.Parameters["FogExtents"].SetValue(new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 2), Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * Options.RenderDistance));
-
-                EffectRadialFog.Parameters["FogColor"].SetValue(Color.White.ToVector4());
 
                 DrawFullscreenQuad(EffectRadialFog);
             }
