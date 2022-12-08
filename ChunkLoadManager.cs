@@ -87,14 +87,14 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
-				chunkManager.BatchMeshChunk(world, queuedPosition);
+				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
 			}
 
 			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.FlushMeshQueue();
+			chunkManager.Mesher.FlushMeshQueue();
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
@@ -123,7 +123,7 @@ namespace ViMG
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
-				chunkManager.BatchMeshChunk(world, queuedPosition);
+				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
 
 				hasChanged = true;
@@ -131,36 +131,13 @@ namespace ViMG
 			}
 		}
 
-		//Loads a 1x32x1 column. Usually used for when the player first spawns into the world, so as to guarantee a valid spawn position,
-		//if their spawn position does not yet exist.
-		//NOTE this IMMEDIATELY loads chunks without going through the queue. Can be slow.
-		public void LoadColumn(World world)
-        {
-			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
-
-			for (int y = 0; y < world.sizeInChunks; y++)
-            {
-				ChunkPosition pos = new ChunkPosition(baseChunkPos.X, y, baseChunkPos.Z);
-
-				if (chunkManager.IsInWorldBounds(pos) && (!loadedChunks.ContainsKey(pos) || loadedChunks[pos] == LoadingState.Unloaded))
-                {
-					//chunkIO.DeserializeChunk(world, pos);
-					entIO.Deserialize(pos);
-					chunkManager.MeshChunk(world, pos);
-					loadedChunks.Add(pos, LoadingState.Loaded);
-
-					hasChanged = true;
-				}
-            }
-        }
-
 		public void LoadChunk(World world, ChunkPosition position)
         {
 			if (chunkManager.IsInWorldBounds(position) && (!loadedChunks.ContainsKey(position) || loadedChunks[position] == LoadingState.Unloaded))
 			{
 				//chunkIO.DeserializeChunk(world, position);
 				entIO.Deserialize(position);
-				chunkManager.MeshChunk(world, position);
+				chunkManager.Mesher.BatchMeshChunk(world, position);
 				loadedChunks.Add(position, LoadingState.Loaded);
 
 				hasChanged = true;
@@ -232,7 +209,7 @@ namespace ViMG
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);
-					chunkManager.UnloadMesh(pos);
+					chunkManager.Unload(pos);
 				}
 
 				loadedChunks.Remove(pos);
@@ -251,7 +228,7 @@ namespace ViMG
 		public void UnloadAll()
 		{
 			loadedChunks.Clear();
-			chunkManager.UnloadAllMeshes();
+			chunkManager.Mesher.UnloadAllMeshes();
 			entityManager.UnloadAll();
 		}
 

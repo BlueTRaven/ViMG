@@ -167,7 +167,7 @@ namespace ViMG
 
 			Heightmap = new Texture2D(device, sizeInCubes, sizeInCubes, false, SurfaceFormat.Single);
 
-			mesher = new ChunkMesher(device);
+			mesher = new ChunkMesher(device, 32);
             //chunks = new ManagedChunk[sizeInChunksXZ * (layerSizeInChunksY * layerLookupTable.Length) * sizeInChunksXZ];
 		}
 

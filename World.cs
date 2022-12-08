@@ -357,7 +357,7 @@ namespace ViMG
 					EntityManager.Add(player);
 
 					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
-					ChunkLoadManager.LoadColumn(this);
+					ChunkLoadManager.LoadAroundTarget(this);
 
 					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
@@ -441,7 +441,7 @@ namespace ViMG
 		{
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
-			alive += (float)deltaTime * Options.DEBUGTimescale;
+			alive += (float)deltaTime;
 
 			ChunkManager2.Update(this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);

@@ -349,7 +349,7 @@ namespace ViMG
 
 								if (world.ChunkManager2.IsInWorldBounds(chunkPos))
 								{
-									versionSum += world.ChunkManager2.GetMeshVersionCode(chunkPos);
+									versionSum += world.ChunkManager2.Mesher.GetMeshVersionCode(chunkPos);
 								}
 							}
 						}

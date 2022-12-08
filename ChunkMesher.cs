@@ -13,100 +13,336 @@ namespace ViMG
 {
 	public class ChunkMesher
 	{
-		public struct ChunkMeshTaskState
-		{
-			public ushort[] data;
-			public World world;
-			public ChunkManager2 manager;
-			public ChunkPosition position;
-			public Cube.RenderPass pass;
+		private const int PER_BATCH_MAX = 200;
+		public const int NUM_CHUNK_MESH_PASSES = 5;
 
-			public ChunkMeshTaskState(ushort[] data, World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass)
+		//Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
+		private struct ChunkMeshBatch
+		{
+			public ChunkMeshInfo[] cmis;
+			public int num;
+
+			public readonly bool isUsed;
+
+			public ChunkMeshBatch(ChunkMeshInfo[] cmis)
 			{
-				this.data = data;
-				this.world = world;
-				this.manager = manager;
-				this.position = position;
-				this.pass = pass;
+				this.cmis = cmis;
+				this.num = 0;
+
+				isUsed = true;
 			}
 		}
 
-		private GraphicsDevice device;
-
-		private const int NUM_MESH_TASKS = 8;
-
-		private ChunkMeshTaskState[] taskStates = new ChunkMeshTaskState[NUM_MESH_TASKS];
-		private Task<ChunkMesh>[] taskPool = new Task<ChunkMesh>[NUM_MESH_TASKS];
-
-		public ChunkMesher(GraphicsDevice device)
+		//The state of a chunk batch task state.
+		private readonly struct ChunkBatchMeshTaskState
 		{
-			this.device = device;
+			public readonly ChunkMeshBatch batch;
+			public readonly World world;
+			public readonly ChunkManager2 manager;
+			public readonly ChunkMesher mesher;
 
-			for (int i = 0; i < NUM_MESH_TASKS; i++)
-            {
-				taskPool[i] = new Task<ChunkMesh>(PerformTask, i);
-            }
+			public ChunkBatchMeshTaskState(ChunkMeshBatch batch, World world, ChunkManager2 manager, ChunkMesher mesher)
+			{
+				this.batch = batch;
+				this.world = world;
+				this.manager = manager;
+				this.mesher = mesher;
+			}
 		}
 
-		public Task<ChunkMesh> StartConcurrent(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass)
+		//The result of a chunk batch task.
+		private readonly struct ChunkBatchMeshTaskResult
+		{
+			public readonly ChunkMeshInfo[] cmis;
+			//number of meshes included in the batch
+			public readonly int num;
+
+			public ChunkBatchMeshTaskResult(ChunkMeshInfo[] cmis, int num)
+			{
+				this.cmis = cmis;
+				this.num = num;
+			}
+		}
+
+		private struct CubeMeshInfo
+		{
+			public MeshHelper.CubeFace faces;
+			public byte meshVersion;
+			public byte version;
+
+			public CubeMeshInfo(MeshHelper.CubeFace faces)
+			{
+				this.faces = faces;
+
+				meshVersion = 0;
+				version = 1;
+			}
+		}
+
+		private struct ChunkMeshInfo
+		{
+			public ChunkPosition position;
+			public ChunkMesh[] meshes;
+			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
+			public byte version;
+
+			//There's a difference between having existing meshes and needing to be remeshed (being dirty) and not having meshes at all.
+			//Therefore this bool exists to determine if the given chunk has a mesh. If it doesn't, it isn't necessarily marked dirty,
+			//it just needs a mesh to be created in the first place.
+			public bool hasMeshes;
+
+			public ChunkMeshInfo(ChunkPosition position)
+			{
+				this.position = position;
+				meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+				meshVersion = 0;
+				version = 1;
+
+				hasMeshes = false;
+			}
+
+			public int GetMeshVersionCode()
+			{
+				return meshes.GetHashCode() + version;
+			}
+		};
+
+		private readonly GraphicsDevice device;
+        private readonly int sizeInChunks;
+        private ChunkMeshBatch currentBatch;
+
+		private CubeMeshInfo[] cubeMeshInfos;
+		private ChunkMeshInfo[] chunkMeshInfos;
+
+		private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
+		private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
+
+		private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
+
+		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
         {
-			Task<ChunkMesh> usingTask = null;
-			int index = 0;
+            this.device = device;
+            this.sizeInChunks = sizeInChunks;
 
-			for (int i = 0; i < NUM_MESH_TASKS; i++)
-            {
-				Task<ChunkMesh> t = taskPool[i];
+			chunkMeshInfos = new ChunkMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
+			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
+			{
+				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out ValuePoint3D point);
+				chunkMeshInfos[i] = new ChunkMeshInfo(new ChunkPosition(point.x, point.y, point.z));
+			}
+		}
 
-				if (t.Status != TaskStatus.Running)
-                {
-					usingTask = t;
-					index = i;
+		public void Update(World world, ChunkManager2 manager)
+        {
+			const int MAX_MESH_PER_FRAME = 200;
+			int meshedInThisFrame = 0;
 
-					break;
-                }
-            }
+			if (!currentBatch.isUsed)
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
 
-			if (usingTask != null)
-            {
-                ushort[] data = new ushort[(Chunk.CHUNK_SIZE + 2) * (Chunk.CHUNK_SIZE + 2) * (Chunk.CHUNK_SIZE + 2)];
+			if (currentBatch.num >= PER_BATCH_MAX)
+			{
+				MeshBatch(world, ref currentBatch);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+			}
 
-				CubePosition start = new CubePosition(position.X * Chunk.CHUNK_SIZE - 1, position.Y * Chunk.CHUNK_SIZE - 1, position.Z * Chunk.CHUNK_SIZE - 1);
-				CubePosition end = start + new CubePosition(Chunk.CHUNK_SIZE + 2, Chunk.CHUNK_SIZE + 2, Chunk.CHUNK_SIZE + 2);
+			//Note that we only attempt to mesh one batch per frame regardless of what MAX_MESH_PER_FRAME is.
+			while (dirtyChunkPositions.Count > 0 && meshedInThisFrame < MAX_MESH_PER_FRAME && currentBatch.num < PER_BATCH_MAX)
+			{
+				ChunkPosition position = dirtyChunkPositions.Dequeue();
+				dirtyChunkKnown.Remove(position);
 
-				for (int x = start.X; x <= end.X; x++)
-                {
-					for (int y = start.Y - 1; y <= end.Y + 1; y++)
-                    {
-						for (int z = start.Z; z <= end.Z; z++)
-                        {
-							int rx = x - start.X;
-							int ry = y - start.Y;
-							int rz = z - start.Z;
+				ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
 
-							Util.ThreeDToOneD(new ValuePoint3D(rx, ry, rz), new ValuePoint3D(Chunk.CHUNK_SIZE + 2), out int dataIndex);
+				if (c.version != c.meshVersion || !c.hasMeshes)
+				{
+					//place into the current batch to be meshed later.
+					currentBatch.cmis[currentBatch.num++] = c;
+					meshedInThisFrame++;
+				}
+			}
 
-							data[dataIndex] = manager.GetCubeId(new CubePosition(x, y, z));
-                        }
+			//we want to make sure to flush this regardless of whether or not we've actually filled it fully
+			//As there might be frames where we don't fully fill it, in which case it could wait a potentially arbitrary amount of time.
+			if (currentBatch.num > 0)
+			{
+				MeshBatch(world, ref currentBatch);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+			}
+
+			FlushMeshQueue(5);
+		}
+
+		public void FlushMeshQueue(int count = -1)
+		{
+			bool canExitEarly = count != -1;
+
+			int batchCount = count;
+			while (chunkMeshBatchTasks.Count > 0 && ((canExitEarly && batchCount > 0) || !canExitEarly))
+			{
+				var task = chunkMeshBatchTasks.Dequeue();
+
+				if (task.IsCompleted)
+				{
+					if (!task.IsCompletedSuccessfully)
+						throw new Exception("???");
+
+					var batchResult = task.Result;
+
+					for (int i = 0; i < batchResult.num; i++)
+					{
+						ChunkMeshInfo meshResult = batchResult.cmis[i];
+
+						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
+
+						if (meshResult.version >= c.version)
+						{
+							//Unload the old mesh now
+							UnloadMesh(ref c);
+
+							c.meshVersion = c.version;
+
+							c.meshes = meshResult.meshes;
+						}
+						else
+						{
+							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
+							UnloadMesh(ref meshResult);
+						}
+					}
+				}
+				//Task isn't finished, re-queue it.
+				else chunkMeshBatchTasks.Enqueue(task);
+
+				batchCount--;
+			}
+		}
+
+		public void BatchMeshChunk(World world, ChunkPosition position)
+		{
+			if (!currentBatch.isUsed)
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+
+			if (currentBatch.num >= PER_BATCH_MAX)
+			{
+				MeshBatch(world, ref currentBatch);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+			}
+
+			ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
+
+			if (c.version != c.meshVersion || !c.hasMeshes)
+				currentBatch.cmis[currentBatch.num++] = c;
+		}
+
+		private void MeshBatch(World world, ref ChunkMeshBatch batch)
+		{
+			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager2, this));
+			task.Start();
+
+			chunkMeshBatchTasks.Enqueue(task);
+		}
+
+		private static ChunkBatchMeshTaskResult MeshBatchTaskFn(object obj)
+		{
+			ChunkBatchMeshTaskState state = (ChunkBatchMeshTaskState)obj;
+
+			//Prevent setting for the duration
+			lock (state.manager)
+			{
+				state.manager.LockSet = true;
+				for (int i = 0; i < state.batch.num; i++)
+				{
+					ChunkMeshInfo cmi = state.batch.cmis[i];
+					cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+
+					cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
+					cmi.meshes[(int)Cube.RenderPass.Transparent] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, false);
+					cmi.meshes[(int)Cube.RenderPass.DepthOnly] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, false);
+					cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
+					cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);
+
+					state.batch.cmis[i] = cmi;
+					state.batch.cmis[i].hasMeshes = true;
+				}
+				state.manager.LockSet = false;
+			}
+
+			return new ChunkBatchMeshTaskResult(state.batch.cmis, state.batch.num);
+		}
+
+		private void UnloadMesh(ref ChunkMeshInfo c)
+		{
+			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
+			{
+				if (c.meshes[i] != null && c.meshes[i] != ChunkMesh.Empty)
+				{
+					c.meshes[i].VBO.Dispose();
+					c.meshes[i].IBO.Dispose();
+
+					c.meshes[i] = null;
+				}
+			}
+
+			c.hasMeshes = false;
+		}
+
+		public void UnloadMesh(ChunkPosition position)
+        {
+			UnloadMesh(ref GetChunkMeshInfo(position));
+        }
+
+		public void UnloadAllMeshes()
+		{
+			for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
+			{
+				for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
+				{
+					ChunkMesh mesh = chunkMeshInfos[j].meshes[k];
+					if (mesh != null && mesh != ChunkMesh.Empty)
+					{
+						mesh.VBO.Dispose();
+						mesh.IBO.Dispose();
+
+						chunkMeshInfos[j].meshes[k] = null;
 					}
 				}
 
-                taskStates[index] = new ChunkMeshTaskState(data, world, manager, position, pass);
-				usingTask.Start();
-            }
+				chunkMeshInfos[j].hasMeshes = false;
+			}
+		}
 
-			return usingTask;
-        }
+		public void MarkDirty(ChunkPosition position)
+		{
+			GetChunkMeshInfo(position).version++;
 
-		public Task<ChunkMesh> StartTask()
-        {
-			return null; 
-        }
+			if (!dirtyChunkKnown.Contains(position))
+			{
+				dirtyChunkPositions.Enqueue(position);
+				dirtyChunkKnown.Add(position);
+			}
+		}
 
-		private ChunkMesh PerformTask(object o)
-        {
-			ChunkMeshTaskState state = taskStates[(int)o];
-			return GenerateChunk(state.world, state.manager, state.position, state.pass);
-        }
+		public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
+		{
+			ChunkMesh mesh = GetChunkMeshInfo(position).meshes[(int)pass];
+
+			if (mesh != null && !mesh.IsEmpty && mesh.VBO.IsDisposed)
+				throw new Exception("??");
+
+			return mesh;
+		}
+
+		private ref ChunkMeshInfo GetChunkMeshInfo(ChunkPosition pos)
+		{
+			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(sizeInChunks), out int i);
+			return ref chunkMeshInfos[i];
+		}
+
+		public int GetMeshVersionCode(ChunkPosition position)
+		{
+			return GetChunkMeshInfo(position).GetMeshVersionCode();
+		}
 
 		public ChunkMesh GenerateChunk(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
 		{

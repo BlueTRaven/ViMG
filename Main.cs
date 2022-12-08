@@ -298,7 +298,7 @@ namespace ViMG
 			{
 				time -= FIXED_STEP;
 
-				FixedUpdate(FIXED_STEP);
+				FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
 			}
 
 			base.Update(gt);
