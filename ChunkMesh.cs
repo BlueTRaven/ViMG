@@ -3,32 +3,35 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace ViMG
 {
-	public class ChunkMesh : SimpleMesh<VertexCube, int>
+	public class ChunkMesh
 	{
-		public new static ChunkMesh Empty { get; private set; }
+		public VertexBuffer VBO;
+		public IndexBuffer IBO;
+
+		public static ChunkMesh Empty { get; private set; }
+
+		public bool IsEmpty => this == Empty;
 
 		static ChunkMesh()
 		{
 			Empty = new ChunkMesh();
 		}
 
-		private ChunkMesh() : base()
+		private ChunkMesh()
+        {
+
+        }
+
+		public ChunkMesh(GraphicsDevice device, List<VertexCube> vertices, List<int> indices)
 		{
-
-		}
-
-		public ChunkMesh(GraphicsDevice device, List<VertexCube> vertices, List<int> indices) : base(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"))
-		{
-		}
-
-		protected override void UploadLater(List<VertexCube> vertices, List<int> indices)
-		{
-			base.UploadLater(vertices, indices);
-
-			Main.DelayedUploaderChunkMesh.meshesToUploadLater.Enqueue(new DelayedUploader<VertexCube, int>.ToUploadLater(this, vertices, indices));
+			if (Thread.CurrentThread == Main.MainThread || Main.CAN_MULTITHREAD_UPLOAD)
+            {
+				(VBO, IBO) = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+            }
 		}
 	}
 }

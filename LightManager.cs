@@ -366,6 +366,7 @@ namespace ViMG
 						anyDrawn = true;
 						effectDepth.Parameters["LightPosition"].SetValue(light.position);
 						effectDepth.Parameters["FarPlane"].SetValue(light.end);
+						effectDepth.Parameters["World"].SetValue(Matrix.Identity);	//we never use anything other than Identity for chunks
 
 						for (int j = 0; j < 6; j++)
 						{
@@ -389,13 +390,11 @@ namespace ViMG
 									{
 										device.SetVertexBuffer(mesh.VBO);
 										device.Indices = mesh.IBO;
-
-										effectDepth.Parameters["World"].SetValue(Matrix.Identity);
-
+										
 										foreach (var pass in effectDepth.CurrentTechnique.Passes)
 										{
 											pass.Apply();
-											device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IndexCount / 3);
+											device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
 										}
 									}
 								}

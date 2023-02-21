@@ -64,21 +64,6 @@ namespace ViMG
 			}
 		}
 
-		private struct CubeMeshInfo
-		{
-			public MeshHelper.CubeFace faces;
-			public byte meshVersion;
-			public byte version;
-
-			public CubeMeshInfo(MeshHelper.CubeFace faces)
-			{
-				this.faces = faces;
-
-				meshVersion = 0;
-				version = 1;
-			}
-		}
-
 		private struct ChunkMeshInfo
 		{
 			public ChunkPosition position;
@@ -111,7 +96,6 @@ namespace ViMG
         private readonly int sizeInChunks;
         private ChunkMeshBatch currentBatch;
 
-		private CubeMeshInfo[] cubeMeshInfos;
 		private ChunkMeshInfo[] chunkMeshInfos;
 
 		private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();

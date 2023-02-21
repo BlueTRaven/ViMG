@@ -31,6 +31,7 @@ namespace ViMG
             }
         }
 
+        //[StructLayout(LayoutKind.Sequential, Pack = 1)]
         private struct CubeMeshInfo
         {
             public MeshHelper.CubeFace faces;
@@ -78,6 +79,9 @@ namespace ViMG
         private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
+        public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
+        public bool LockGet;    //If true, a lock on the manager must first be obtained before getting a cube.
+
         public ChunkManager2(int sizeInChunksXZ, ChunkManagerIO io, GraphicsDevice device)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
@@ -89,6 +93,8 @@ namespace ViMG
             Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
             Mesher = new ChunkMesher(device, sizeInChunksXZ);
+
+            int size = Marshal.SizeOf<CubeMeshInfo>();
         }
 
         //Update queue of chunks to mesh
@@ -113,8 +119,6 @@ namespace ViMG
 
                 updatedThisFrame++;
             }
-
-            //FlushMeshQueue(5);
         }
 
         public void Unload(ChunkPosition pos)
@@ -254,6 +258,11 @@ namespace ViMG
             return meshInfo.faces;
         }
 
+        public MeshHelper.CubeFace GetFaces(CubePosition position)
+        {
+            return GetClearSides(position);
+        }
+
         private ref CubeMeshInfo GetCubeMeshInfo(CubePosition position)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(SizeInCubes), out int i);
@@ -308,10 +317,6 @@ namespace ViMG
             }
         }
 
-        public bool LockSet;
-        public bool LockGet;
-
-        //TODO: could probably get rid of position.InChunkSpace call somehow.
         public unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
             byte[] bytes = io.GetBytes();
@@ -355,7 +360,7 @@ namespace ViMG
 
             if (markDirty)
             {
-                MarkCubeMeshInfoDirty(position, oldId, id);
+                //MarkCubeMeshInfoDirty(position, oldId, id);
 
                 MarkChunkDirty(chunkPos);
 

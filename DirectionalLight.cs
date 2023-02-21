@@ -238,6 +238,9 @@ namespace ViMG
 			//Main.WVP.SetView(camera.GetViewMatrix());
 
 			Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+			Effect effectDepth = Main.assetsManager.GetAsset<Effect>("depth");
+			effectDepth.Parameters["WorldViewProjection"].SetValue(viewProj);
+			//effectDepth.Parameters["World"].SetValue(Matrix.Identity);
 
 			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
 			{
@@ -255,9 +258,18 @@ namespace ViMG
 							ChunkMesh mesh = world.ChunkManager2.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
 							//Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
-							if (mesh != null)
+							if (mesh != null && !mesh.IsEmpty)
 							{
-								mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
+								device.SetVertexBuffer(mesh.VBO);
+								device.Indices = mesh.IBO;
+
+								foreach (var pass in effectDepth.CurrentTechnique.Passes)
+								{
+									pass.Apply();
+									device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
+								}
+
+								//mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
 							}
 						}
 					}
