@@ -361,7 +361,7 @@ namespace ViMG
             if (markDirty)
             {
                 //MarkCubeMeshInfoDirty(position, oldId, id);
-
+                GetCubeMeshInfo(position).version++;
                 MarkChunkDirty(chunkPos);
 
                 updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, id));
