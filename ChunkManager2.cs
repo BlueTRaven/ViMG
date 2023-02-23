@@ -76,6 +76,9 @@ namespace ViMG
         private readonly ChunkManagerIO io;
         public readonly ChunkMesher Mesher;
 
+        public readonly InitializerCubeView InitializerView;
+        public readonly ThreadedCubeView ThreadedView;
+
         private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
@@ -95,10 +98,13 @@ namespace ViMG
             Mesher = new ChunkMesher(device, sizeInChunksXZ);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
+
+            InitializerView = new InitializerCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
+            ThreadedView = new ThreadedCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
         }
 
         //Update queue of chunks to mesh
-        public void Update(World world, ChunkLoadManager loadManager)
+        public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
             Mesher.Update(world, this);
 
@@ -244,6 +250,7 @@ namespace ViMG
             return Mesher.GetMesh(position, pass);
         }
 
+        public delegate MeshHelper.CubeFace GetCachedFacesDel(CubePosition position);
         public MeshHelper.CubeFace GetCachedFaces(CubePosition position)
         {
             ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
@@ -317,6 +324,7 @@ namespace ViMG
             }
         }
 
+        public delegate void SetCubeDel(CubePosition position, ushort id, bool markDirty = true);
         public unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
             byte[] bytes = io.GetBytes();
@@ -369,6 +377,7 @@ namespace ViMG
 
         }
 
+        public delegate ushort GetCubeIdDel(CubePosition position);
         public ushort GetCubeId(CubePosition position)
         {
             byte[] bytes = io.GetBytes();
@@ -421,6 +430,7 @@ namespace ViMG
             }*/
         }
 
+        public delegate Optional<Cube> GetCubeDel(CubePosition position);
         public Optional<Cube> GetCube(Vector3 position)
         {
             return GetCube(CubePosition.FromWorldSpace(position));

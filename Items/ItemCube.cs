@@ -27,18 +27,15 @@ namespace ViMG.Items
 
 			if (player.IsLooking && player.CanPlace)
 			{
-				Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-
 				if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
 				{
-					//chunk.GetData().SetCube(player.PlaceAtPos, cubeId);
-					player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
-					
-					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
-
+					player.world.ChunkManager2.ThreadedView.SetCube(player.PlaceAtPos, cubeId);
 					inventory.Remove(index, 1);
-
+					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 					cube.OnPlayerPlaced(player, player.PlaceAtPos);
+					//player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
+
+					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
 
 					//cubes can be placed as fast as possible
 					itemCooldownTime = 0.25f;

@@ -94,11 +94,11 @@ namespace ViMG
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
 		public const bool DO_DETAIL = true;
-		public const bool MULTITHREAD_LOADING = true;
 		public const bool TRANSPARENT_ORES = false;
 		public const bool ENABLE_ENT_SPAWNING = true;
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
+		public const bool MULTITHREAD_LOADING = true;
 		public const bool CAN_MULTITHREAD_UPLOAD = true;
 
 		public static bool Exit = false;

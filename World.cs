@@ -297,6 +297,8 @@ namespace ViMG
 
 			if (!Directory.Exists("./saves/" + folderName + "/"))
 			{
+				//If the directory does not exist, run world generation, save, and then load.
+				//TODO: this maybe shouldn't exist here?
 				ChunkGenerator = new ChunkGeneratorIsland(0);
 				entIO = new EntityManagerIO(EntityManager);
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
@@ -337,12 +339,21 @@ namespace ViMG
 
 				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
 					"Deserializing...";
+				
+				//Deserialize this player chunk; the player entity is created.
+				//We do this this way since the player is, really, just another entity. Treating it otherwise (with its own deserialization routine)
+				//is overcomplicating the problem.
 				entIO.DeserializePlayerChunk();
 
 				if (EntityManager.GetAll<Player>().Count > 0)
 				{
+					//Update player reference. player is used as shorthand for several things, so we don't have to search for the player object every time...
+					//We might want to change this eventually.
 					player = EntityManager.GetAll<Player>().First() as Player;
 
+					//Update load target, load around the player, and then flush the load queue.
+					//This forces the game to finish loading everything that the player might see BEFORE the game actually starts running.
+					//As opposed to loading it on the fly, which, admittedly, might work fine.
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
 					ChunkLoadManager.FlushLoadQueue(this);
@@ -443,7 +454,7 @@ namespace ViMG
 
 			alive += (float)deltaTime;
 
-			ChunkManager2.Update(this, ChunkLoadManager);
+			ChunkManager2.Update(deltaTime, this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime, this);
 

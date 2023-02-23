@@ -100,7 +100,7 @@ namespace ViMG.Cubes
 
                 if (smallMushroom)
                 {
-                    manager.SetCube(abovePosition, mushroomSmall.Id);
+                    manager.ThreadedView.SetCube(abovePosition, mushroomSmall.Id);
                 }
                 else
                 {
@@ -150,21 +150,42 @@ namespace ViMG.Cubes
 
                     if (canPlaceBigMushroom)
                     {
+                        int len = size + placeOffsets.Length;
+                        Span<CubePosition> positions = stackalloc CubePosition[len];
+                        Span<ushort> ids = stackalloc ushort[len];
+                        int mi = 0;
+
                         for (int i = 1; i < size + 1; i++)
                         {
                             CubePosition offsetPosition = position + new CubePosition(0, i, 0);
 
                             if (i < size)
-                                manager.SetCube(offsetPosition, mushroomStem.Id);
-                            else manager.SetCube(offsetPosition, mushroomTop.Id);
+                            {
+                                positions[mi] = offsetPosition;
+                                ids[mi] = mushroomStem.Id;
+                                mi++;
+                            }
+                            //manager.SetCube(offsetPosition, mushroomStem.Id);
+                            else
+                            {
+                                positions[mi] = offsetPosition;
+                                ids[mi] = mushroomTop.Id;
+                                mi++;
+                            } 
+                                //manager.SetCube(offsetPosition, mushroomTop.Id);
                         }
 
                         for (int i = 0; i < placeOffsets.Length; i++)
                         {
                             CubePosition offsetPosition = position + placeOffsets[i] + new CubePosition(0, size - 1, 0);
 
-                            manager.SetCube(offsetPosition, mushroomTop.Id);
+                            positions[mi] = offsetPosition;
+                            ids[mi] = mushroomTop.Id;
+                            mi++;
+                            //manager.SetCube(offsetPosition, mushroomTop.Id);
                         }
+
+                        manager.ThreadedView.SetCubes(positions, ids);
                     }
                 }
             }
