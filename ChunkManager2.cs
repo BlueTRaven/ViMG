@@ -316,6 +316,7 @@ namespace ViMG
                 {
                     GetCubeMeshInfo(adjacentPosition).version++;
 
+                    //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
                     updatedCubePositions.Enqueue(new CubeUpdated(position, adjacentPosition, oldId, updatedId));
@@ -351,11 +352,11 @@ namespace ViMG
 
             if (markDirty)
             {
-                //MarkCubeMeshInfoDirty(position, oldId, id);
-                GetCubeMeshInfo(position).version++;
+                MarkCubeMeshInfoDirty(position, oldId, id);
+                //GetCubeMeshInfo(position).version++;
                 MarkChunkDirty(chunkPos);
 
-                updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, id));
+                //updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, id));
             }
 
         }
