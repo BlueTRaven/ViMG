@@ -336,6 +336,10 @@ namespace ViMG
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
+			int cpi = 0;
+			Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+			Span<ushort> ids = stackalloc ushort[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+			Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 			{
 				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
@@ -345,37 +349,44 @@ namespace ViMG
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 						pos = pos.InCubeSpace(position);
 
-						ushort id = manager.GetCubeId(pos);
-
-						MeshHelper.CubeFace faces = manager.GetCachedFaces(pos);
-
-						if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
-						{
-							if (id == 0 || faces == MeshHelper.CubeFace.NONE)
-							{
-								continue;
-							}
-
-							Cube cube = Main.Registry.CubeRegistry.Get(id);
-							
-							int oldCount = vertices.Count;
-
-							cube.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), faces, vertices, indices);
-
-							int count = vertices.Count - oldCount;
-
-							BakeAO(manager, pos, oldCount, oldCount + count, vertices);
-						}
-                        else if (pass == Cube.RenderPass.Air)
-                        {
-							if (id != 0 || faces == MeshHelper.CubeFace.NONE)
-							{
-								continue;
-							}
-
-							Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(null), n + pos.InWorldSpace(null), f + pos.InWorldSpace(null), faces, vertices, indices);
-						}
+						positions[cpi] = pos;
+						cpi++;
 					}
+				}
+			}
+
+			manager.ThreadedView.GetIds(positions, ids);
+			manager.ThreadedView.GetFaces(positions, faces);
+
+			for (int i = 0; i < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; i++) 
+			{
+				CubePosition pos = positions[i];
+				ushort id = ids[i];
+				MeshHelper.CubeFace face = faces[i];
+
+				if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
+				{
+					//if we're air or have no faces, ignore this cube.
+					if (id == 0 || face == MeshHelper.CubeFace.NONE)
+						continue;
+
+					Cube cube = Main.Registry.CubeRegistry.Get(id);
+
+					int oldCount = vertices.Count;
+
+					cube.MakeVerts(pass, world, pos.InWorldSpace(), n + pos.InWorldSpace(), f + pos.InWorldSpace(), face, vertices, indices);
+
+					int count = vertices.Count - oldCount;
+
+					BakeAO(manager, pos, oldCount, oldCount + count, vertices);
+				}
+				else if (pass == Cube.RenderPass.Air)
+				{
+					//Note that for air, we we do still make verts if id is 0 (though still not if no faces).
+					if (id != 0 || face == MeshHelper.CubeFace.NONE)
+						continue;
+					
+					Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(), n + pos.InWorldSpace(), f + pos.InWorldSpace(), face, vertices, indices);
 				}
 			}
 
@@ -390,6 +401,9 @@ namespace ViMG
 
 		private static void BakeAO(ChunkManager2 manager, CubePosition pos, int start, int end, List<VertexCube> vertices)
         {
+			Span<CubePosition> checkPositions = stackalloc CubePosition[4];
+			Span<ushort> checkIds = stackalloc ushort[4];
+
 			for (int i = start; i < end; i++)
 			{
 				VertexCube vertex = vertices[i];
@@ -426,10 +440,16 @@ namespace ViMG
 					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
 				}
 
-				int top = GetIdSafely(manager, nrm);// chunk.GetData().GetRawOrAdjacent(nrm, world);
-				int corner = GetIdSafely(manager, nrm + t + bt);// chunk.GetData().GetRawOrAdjacent(nrm + t + bt, world);
-				int sideA = GetIdSafely(manager, nrm + t);// chunk.GetData().GetRawOrAdjacent(nrm + t, world);
-				int sideB = GetIdSafely(manager, nrm + bt);// chunk.GetData().GetRawOrAdjacent(nrm + bt, world);
+				checkPositions[0] = nrm;
+				checkPositions[1] = nrm + t + bt;
+				checkPositions[2] = nrm + t;
+				checkPositions[3] = nrm + bt;
+				manager.ThreadedView.GetIds(checkPositions, checkIds);
+
+				int top = checkIds[0];
+				int corner = checkIds[1];
+				int sideA = checkIds[2];
+				int sideB = checkIds[3];
 
 				if (corner > 0 && Main.Registry.CubeRegistry.noAo[corner])
 					corner = 0;
@@ -464,13 +484,6 @@ namespace ViMG
 				}
 			}
 		}
-
-		private static ushort GetIdSafely(ChunkManager2 manager, CubePosition position)
-        {
-			if (manager.IsInWorldBounds(position))
-				return manager.GetCubeId(position);
-			return 0;
-        }
 
 		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
 		{

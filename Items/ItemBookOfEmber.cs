@@ -43,7 +43,7 @@ namespace ViMG.Items
 
 				magicStats.Use(player);
 
-				player.GetWorld().ChunkManager2.SetCube(placePos, cube.Id);
+				player.GetWorld().ChunkManager2.ThreadedView.SetCube(placePos, cube.Id);
 
 				cube.OnPlayerPlaced(player, placePos);
 

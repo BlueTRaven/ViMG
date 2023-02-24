@@ -39,6 +39,15 @@ namespace ViMG
 			return registry[index - 1];
 		}
 
+		public T GetOrDefault(int index, T def)
+        {
+			var g = Get(index);
+
+			if (g == null)
+				g = def;
+			return g;
+        }
+
 		public T Get(string name)
 		{
 			if (registryByName.ContainsKey(name))

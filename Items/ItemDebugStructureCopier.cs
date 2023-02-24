@@ -75,9 +75,27 @@ namespace ViMG.Items
                 int minZ = Math.Min(first.Z, second.Z);
                 int maxZ = Math.Max(first.Z, second.Z) + 1;
 
+                //TODO check
+                //this may or may not actually work
+                int pi = 0;
+                Span<CubePosition> positions = stackalloc CubePosition[width * height * depth];
                 ushort[] data = new ushort[width * height * depth];
 
                 for (int x = minX; x < maxX; x++)
+                {
+                    for (int y = minY; y < maxY; y++)
+                    {
+                        for (int z = minZ; z < maxZ; z++)
+                        {
+                            positions[pi] = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+                            pi++;
+                        }
+                    }
+                }
+
+                player.world.ChunkManager2.ThreadedView.GetIds(positions, data.AsSpan());
+            
+                /*for (int x = minX; x < maxX; x++)
                 {
                     for (int y = minY; y < maxY; y++)
                     {
@@ -90,7 +108,7 @@ namespace ViMG.Items
                             data[i] = id;
                         }
                     }
-                }
+                }*/
 
                 Structure structure = new Structure(new Point3D(width, height, depth), data);
                 List<byte> bytes = new List<byte>();

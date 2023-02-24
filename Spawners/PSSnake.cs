@@ -45,13 +45,13 @@ namespace ViMG.Spawners
 
         public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
         {
-            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace(null)))
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace()))
                 return false;
 
             if (position.Y > 160)
                 return false;
 
-            Cube c = manager.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = manager.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("stone"))
                 return true;
 

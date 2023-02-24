@@ -32,7 +32,7 @@ namespace ViMG.Entities
 		{
 			TrackedPosition = position;
 			this.radius = radius;
-			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.25f, Cube.CUBE_SCALE / 2f);
+			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.25f, Cube.CUBE_SCALE / 2f);
 		}
 
         public override void Initialize(World world)
@@ -115,7 +115,7 @@ namespace ViMG.Entities
 			int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-			Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE / 2f);
+			Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE / 2f);
 
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 		}

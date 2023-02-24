@@ -12,7 +12,7 @@ namespace ViMG
     //This should be the most commonly used view after initialization, as using other views in conjunction with this one can result in race conditions.
     public class BatchingCubeView
     {
-        public delegate void RequestFinishedCallbackDel(object arg);
+        /*public delegate void RequestFinishedCallbackDel(object arg);
 
         private enum RequestState
         {
@@ -355,6 +355,6 @@ namespace ViMG
                     }
                 }
             }
-        }
+        }*/
     }
 }

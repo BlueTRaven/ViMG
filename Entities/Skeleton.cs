@@ -221,7 +221,7 @@ namespace ViMG.Entities
 
 					if (state == State.LyingInPile)
                     {
-						if ((trackBoneBlockPosition.InWorldSpace(null) - Position).Length() > Cube.CUBE_SCALE * 4.5f)
+						if ((trackBoneBlockPosition.InWorldSpace() - Position).Length() > Cube.CUBE_SCALE * 4.5f)
 						{
 							state = State.LyingInPileKillable;
 							resurrectTimer += 4;    //additional 4 seconds if we kill the block.
@@ -259,6 +259,7 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
+		//TODO performance
 		private void UpdateCollision()
 		{
 			const int checkSize = 1;
@@ -272,7 +273,7 @@ namespace ViMG.Entities
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
 						if (world.ChunkManager2.IsInWorldBounds(pos) && 
-							world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+							world.ChunkManager2.ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -305,7 +306,7 @@ namespace ViMG.Entities
 				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 					(Vector3 pos) =>
 					{
-						Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 						return cube.Collision != Cube.CollisionValue.None;
 					});
@@ -473,6 +474,7 @@ namespace ViMG.Entities
 			base.OnCubeUpdated(updating, updatedId);
 		}
 
+		//TODO performance
 		private bool SearchForNearbyBoneBlocks()
         {
 			Cube boneBlock = Main.Registry.CubeRegistry.Get("brittle_bone_block");
@@ -487,7 +489,7 @@ namespace ViMG.Entities
                     {
 						CubePosition checkPos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (world.ChunkManager2.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
+						if (world.ChunkManager2.ThreadedView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
                         {
 							trackBoneBlockPosition = checkPos;
 

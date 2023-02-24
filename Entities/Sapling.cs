@@ -31,7 +31,7 @@ namespace ViMG.Entities
 			if (position.Y == 0)
 				throw new Exception();
 
-			this.Position = position.InWorldSpace(null);
+			this.Position = position.InWorldSpace();
 			toGrowTimer = Main.random.Next(3, 60) * 60; //any amount of time between three minutes and an hour, in intervals of a minute.
 			toGrowTime = toGrowTimer;
         }
@@ -47,18 +47,20 @@ namespace ViMG.Entities
 				Cube treeCube = Main.Registry.CubeRegistry.Get("tree");
 
 				//Destroy self
-				world.ChunkManager2.SetCube(TrackedPosition, 0);
+				world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, 0);
 
+				//TODO performance
+				//batch these SetCube calls
 				int num = Main.random.Next(3, 12);
 				for (int i = 0; i < num; i++)
 				{
 					var posOffset = TrackedPosition;
 					posOffset.Y += i;
 
-					world.ChunkManager2.SetCube(posOffset, treeCube.Id);
+					world.ChunkManager2.ThreadedView.SetCube(posOffset, treeCube.Id);
 				}
 
-				Tree tree = new Tree(TrackedPosition.InWorldSpace(null) - new Vector3(Cube.CUBE_SCALE * 1.25f, 0, Cube.CUBE_SCALE * 1.25f),
+				Tree tree = new Tree(TrackedPosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE * 1.25f, 0, Cube.CUBE_SCALE * 1.25f),
 					num, TrackedPosition);
 				world.EntityManager.Add(tree);
 			}
@@ -81,7 +83,7 @@ namespace ViMG.Entities
             base.OnLoad(loadBytes, version);
 
 			int index = 0;
-			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace(null);
+			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace();
 			toGrowTime = SaveHelper.LoadFloat32(loadBytes, ref index);
 			toGrowTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
 

@@ -303,6 +303,7 @@ namespace ViMG
 				entIO = new EntityManagerIO(EntityManager);
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
 				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
+				ChunkManager2.CreateInitializerCubeView();
 
 				ChunkGeneratorTasker.GenerateWorld(this, ChunkManager2, ChunkGenerator);
 
@@ -336,6 +337,8 @@ namespace ViMG
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
 				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
+				ChunkManager2.CreateThreadedCubeView(ChunkLoadManager);
+				ChunkManager2.CreateInitializerCubeView();
 
 				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
 					"Deserializing...";
@@ -367,10 +370,12 @@ namespace ViMG
 					player.FirstCreated();
 					EntityManager.Add(player);
 
-					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace(null));
+					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace());
 					ChunkLoadManager.LoadAroundTarget(this);
 
-					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+					//TODO this should use initializer view.
+					//Or maybe it should be removed entirely. Use the generator?
+					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace()).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
 					player.Position = playerSpawnPos;
 
@@ -402,6 +407,7 @@ namespace ViMG
 			ProfilingHelper.End("Done.");
 
 			ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
+			ChunkManager2.CreateThreadedCubeView(ChunkLoadManager);
 
 			player = new Player();
 			player.FirstCreated();
@@ -493,13 +499,17 @@ namespace ViMG
 				}
 			}
 
+			//TODO: remove allocation somehow
+			//Perhaps an expanding array
+			//Span<Cube> miningCubesUnwrapped = new Cube[miningCubes.Count];
+
 			foreach (var mined in miningCubes)
 			{
 				MinedCube mc = mined.Value;
 
 				if (ChunkLoadManager.IsLoaded(mc.chunk))
 				{
-					Cube cube = ChunkManager2.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					Cube cube = ChunkManager2.ThreadedView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 					mc.timer -= (float)deltaTime;
 					if (mc.timer <= 0)
@@ -529,6 +539,9 @@ namespace ViMG
 			miningRemove.Clear();
 			miningUpdate.Clear();
 
+			Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
+			Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK]; 
+
 			//perform random updates
 			//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
 			if (randomUpdatesTimer <= 0)
@@ -542,10 +555,17 @@ namespace ViMG
 						Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
 						CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
 
-						Cube cube = ChunkManager2.GetCube(randomUpdatePos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						rups[i] = randomUpdatePos;
+					}
+
+					ChunkManager2.ThreadedView.GetIds(rups, rupis);
+
+					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+					{
+						Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
 
 						if (cube != Main.Registry.CubeRegistry.Air)
-							cube.OnRandomUpdate(this, ChunkManager2, randomUpdatePos);
+							cube.OnRandomUpdate(this, ChunkManager2, rups[i]);
 					}
 				}
 			}
@@ -795,7 +815,7 @@ namespace ViMG
 
 			foreach (var mined in miningCubes)
 			{
-				Cube cube = ChunkManager2.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				Cube cube = ChunkManager2.ThreadedView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 				if (cube != Main.Registry.CubeRegistry.Air)
 				{
@@ -983,20 +1003,20 @@ namespace ViMG
 				timer = 2
 			};
 
-			Cube cube = ChunkManager2.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = ChunkManager2.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (cube != Main.Registry.CubeRegistry.Air && (level >= cube.MineLevelRequirement || instant))
 			{
 				if (instant)
 				{
-					ChunkManager2.SetCube(position, 0);
+					ChunkManager2.ThreadedView.SetCube(position, 0);
 
 					List<ItemInstance> items = new List<ItemInstance>();
 					cube.GetDrops(items);
 
 					foreach (ItemInstance item in items)
 					{
-						EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+						EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
 						ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 						EntityManager.Add(ent);
 					}
@@ -1012,14 +1032,14 @@ namespace ViMG
 					if (mined.progress >= cube.MineProgressToBreak)
 					{
 						miningCubes.Remove(position);
-						ChunkManager2.SetCube(position, 0);
+						ChunkManager2.ThreadedView.SetCube(position, 0);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
 							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
@@ -1036,14 +1056,14 @@ namespace ViMG
 						miningCubes.Add(position, mined);
 					else
 					{
-						ChunkManager2.SetCube(position, 0);
+						ChunkManager2.ThreadedView.SetCube(position, 0);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f), item);
+							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
 							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
 							EntityManager.Add(ent);
 						}
@@ -1065,7 +1085,7 @@ namespace ViMG
 			for (int y = 0; y < sizeInCubes; y++)
 			{
 				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-				if (ChunkManager2.IsInWorldBounds(pos) && ChunkManager2.GetCubeId(pos) != 0)
+				if (ChunkManager2.IsInWorldBounds(pos) && ChunkManager2.ThreadedView.GetId(pos) != 0)
 					return pos;
 			}
 

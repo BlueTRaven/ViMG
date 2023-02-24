@@ -15,7 +15,8 @@ namespace ViMG.Items
 
 		public T Get(ItemInstance item)
 		{
-			Item metaBaseItem = Main.Registry.ItemRegistry.Get(item.damage);
+			//fallback is item 1
+			Item metaBaseItem = Main.Registry.ItemRegistry.GetOrDefault(item.damage, Main.Registry.ItemRegistry.Get(1));
 
 			return metaBaseItem as T;
 		}

@@ -21,7 +21,7 @@ namespace ViMG.Entities
 		public EntityAnvilIron(CubePosition position)
 		{
 			this.TrackedPosition = position;
-			this.Position = position.InWorldSpace(null);
+			this.Position = position.InWorldSpace();
 
 			inventory = new Inventory(8);
 		}
@@ -53,7 +53,7 @@ namespace ViMG.Entities
 			int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-			Position = TrackedPosition.InWorldSpace(null);
+			Position = TrackedPosition.InWorldSpace();
 
 			inventory = Inventory.Load(loadBytes, ref index);
 

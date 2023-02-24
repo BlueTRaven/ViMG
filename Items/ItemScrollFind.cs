@@ -29,7 +29,7 @@ namespace ViMG.Items
 
 			foreach (var poi in player.world.PointsOfInterest)
             {
-				Vector3 distance = player.Position - poi.position.InWorldSpace(null);
+				Vector3 distance = player.Position - poi.position.InWorldSpace();
 
 				if (distance.Length() <= MIN_DISTANCE)
                 {
@@ -43,7 +43,7 @@ namespace ViMG.Items
 
 			if (point.valid) 
 			{
-				player.world.EntityManager.Add(new Entities.Line(player.Position, point.position.InWorldSpace(null), 
+				player.world.EntityManager.Add(new Entities.Line(player.Position, point.position.InWorldSpace(), 
 					DrawHelper.WhitePixel, RectangleF.Empty, Color.Red, 2f * 60f));
 
 				player.Magic -= 5;

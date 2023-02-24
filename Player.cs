@@ -302,7 +302,7 @@ namespace ViMG
 				gearInventory = respawnPlayer.gearInventory;
 
 				SpawnPosition = respawnPlayer.SpawnPosition;
-				Position = respawnPlayer.SpawnPosition.InWorldSpace(null);
+				Position = respawnPlayer.SpawnPosition.InWorldSpace();
 
 				respawnPlayer = null;
 				respawnInit = false;
@@ -620,7 +620,7 @@ namespace ViMG
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				Cube cube = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				bool isLooking = world.ChunkManager2.IsInWorldBounds(pos) && cube.Touchable;
 				
 				//if we're climbing a rope, ignore the rope
@@ -636,7 +636,7 @@ namespace ViMG
 			{
 				if (world.ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 				{
-					var c = world.ChunkManager2.GetCube(lookAtResult.hit);
+					var c = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit));
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.LookAtNormal = lookAtResult.normal;
@@ -1299,6 +1299,11 @@ namespace ViMG
 				near.Z = temp;
 			}
 
+			int checkCount = (far.X - near.X + 1) * (far.Y - near.Y + 1) * (far.Z - near.Z + 1);
+			int pi = 0;
+			Span<CubePosition> positions = stackalloc CubePosition[checkCount];
+			Span<ushort> ids = stackalloc ushort[checkCount];
+
 			for (int x = near.X; x <= far.X; x++)
 			{
 				for (int y = near.Y; y <= far.Y; y++)
@@ -1306,107 +1311,117 @@ namespace ViMG
 					for (int z = near.Z; z <= far.Z; z++)
 					{
 						CubePosition pos = new CubePosition(x, y, z);
+						positions[pi] = pos;
+						pi++;
+					}
+				}
+			}
 
-						Cube cube = world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						if (world.ChunkManager2.IsInWorldBounds(pos) && cube.Id != 0 && 
-							(cube.Collision == Cube.CollisionValue.Collidable || 
-							cube.Collision == Cube.CollisionValue.LiquidWater || 
-							cube.Collision == Cube.CollisionValue.Rope ||
-							cube.Collision == Cube.CollisionValue.Platform))
+			world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+
+			for (int j = 0; j < checkCount; j++)
+            {
+				CubePosition pos = positions[j];
+
+				Cube cube = Main.Registry.CubeRegistry.GetOrDefault(ids[j], Main.Registry.CubeRegistry.Air);
+
+				if (cube.Id != 0 &&
+					(cube.Collision == Cube.CollisionValue.Collidable ||
+					cube.Collision == Cube.CollisionValue.LiquidWater ||
+					cube.Collision == Cube.CollisionValue.Rope ||
+					cube.Collision == Cube.CollisionValue.Platform))
+				{
+					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+					for (int i = 0; i < 4; i++)
+					{
+						Vector3 segmentVelocity = (Velocity / 4f * i) * (float)deltaTime;
+
+						Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + segmentVelocity;
+						Vector3 upperCheckPos = Position + segmentVelocity;
+
+						bool collided = false;
+
+						if (cube.Collision == Cube.CollisionValue.LiquidWater)
 						{
-							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-							for (int i = 0; i < 4; i++)
+							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
 							{
-								Vector3 segmentVelocity = (Velocity / 4f * i) * (float)deltaTime;
+								inWater = true;
+								collided = true;
+							}
 
-								Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + segmentVelocity;
-								Vector3 upperCheckPos = Position + segmentVelocity;
-
-								bool collided = false;
-
-								if (cube.Collision == Cube.CollisionValue.LiquidWater)
-								{
-									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-									{
-										inWater = true;
-										collided = true;
-									}
-
-									if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-									{
-										inWater = true;
-										headUnderWater = true;
-										collided = true;
-									}
-								}
-								else if (cube.Collision == Cube.CollisionValue.Rope)
-                                {
-									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-									{
-										inRope = true;
-										collided = true;
-									}
-
-									if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-									{
-										inRope = true;
-										collided = true;
-									}
-
-									if (collided)
-										fallStartY = Position.Y;
-								}
-								else if (cube.Collision == Cube.CollisionValue.Platform)
-                                {
-									//Only perform this logic if LCtrl is not held.
-									if (!Main.inputManager.IsPressed(Keys.LeftControl) && CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-									{
-										if (lowerChange.Y > 0 && Velocity.Y <= 0)
-										{
-											Position.Y = lowerCheckPos.Y + Bounds.Size.Y - LOWER_OFFSET + lowerChange.Y;
-											LandOnGround();
-										}
-
-										collided = true;
-									}
-								}
-								else
-								{
-									if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-									{
-										Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
-
-										if (lowerChange.Y > 0 && Velocity.Y <= 0)
-											LandOnGround();
-										else if (lowerChange.Y < 0)
-											Velocity.Y = 0;
-										else if (lowerChange.X != 0)
-											Velocity.X = 0;
-										else if (lowerChange.Z != 0)
-											Velocity.Z = 0;
-
-										collided = true;
-									}
-									else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-									{
-										Position = upperCheckPos + upperChange;
-
-										if (upperChange.Y != 0)
-											Velocity.Y = 0;
-										else if (upperChange.X != 0)
-											Velocity.X = 0;
-										else if (upperChange.Z != 0)
-											Velocity.Z = 0;
-
-										collided = true;
-									}
-								}
-
-								if (collided)
-									break;
+							if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+							{
+								inWater = true;
+								headUnderWater = true;
+								collided = true;
 							}
 						}
+						else if (cube.Collision == Cube.CollisionValue.Rope)
+						{
+							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+							{
+								inRope = true;
+								collided = true;
+							}
+
+							if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+							{
+								inRope = true;
+								collided = true;
+							}
+
+							if (collided)
+								fallStartY = Position.Y;
+						}
+						else if (cube.Collision == Cube.CollisionValue.Platform)
+						{
+							//Only perform this logic if LCtrl is not held.
+							if (!Main.inputManager.IsPressed(Keys.LeftControl) && CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+							{
+								if (lowerChange.Y > 0 && Velocity.Y <= 0)
+								{
+									Position.Y = lowerCheckPos.Y + Bounds.Size.Y - LOWER_OFFSET + lowerChange.Y;
+									LandOnGround();
+								}
+
+								collided = true;
+							}
+						}
+						else
+						{
+							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
+							{
+								Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
+
+								if (lowerChange.Y > 0 && Velocity.Y <= 0)
+									LandOnGround();
+								else if (lowerChange.Y < 0)
+									Velocity.Y = 0;
+								else if (lowerChange.X != 0)
+									Velocity.X = 0;
+								else if (lowerChange.Z != 0)
+									Velocity.Z = 0;
+
+								collided = true;
+							}
+							else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
+							{
+								Position = upperCheckPos + upperChange;
+
+								if (upperChange.Y != 0)
+									Velocity.Y = 0;
+								else if (upperChange.X != 0)
+									Velocity.X = 0;
+								else if (upperChange.Z != 0)
+									Velocity.Z = 0;
+
+								collided = true;
+							}
+						}
+
+						if (collided)
+							break;
 					}
 				}
 			}
@@ -1589,17 +1604,20 @@ namespace ViMG
 				if (ExpandedMineState && 
 					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasAreaEffect pickStats)
 				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(null), lookAtResult.normal);
+					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal);
+					Span<ushort> ids = stackalloc ushort[positions.Length];
+
+					world.ChunkManager2.ThreadedView.GetIds(positions.AsSpan(), ids);
 
 					for (int i = 0; i < positions.Length; i++)
 					{
-						if (pickStats.CanPredictAir() || world.ChunkManager2.GetCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
 						{
 							Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
 								Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 								Matrix.CreateScale(1.126f) *
 								Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-								Matrix.CreateTranslation(positions[i].InWorldSpace(null)),
+								Matrix.CreateTranslation(positions[i].InWorldSpace()),
 								Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
 								lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
 						}
@@ -1611,7 +1629,7 @@ namespace ViMG
 						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateScale(1.126f) *
 						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-						Matrix.CreateTranslation(LookAtPos.InWorldSpace(null)),
+						Matrix.CreateTranslation(LookAtPos.InWorldSpace()),
 						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
 						lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
 				}
@@ -1879,7 +1897,7 @@ namespace ViMG
 
 			int index = 0;
 
-			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0);
+			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0);
 
 			Main.camera.Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
 			Rotation = Main.camera.Rotation;

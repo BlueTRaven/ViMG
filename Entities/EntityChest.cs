@@ -24,7 +24,7 @@ namespace ViMG.Entities
 		public EntityChest(CubePosition position, int rows, int columns, MeshHelper.CubeFace facing)
 		{
 			this.TrackedPosition = position;
-			this.Position = position.InWorldSpace(null);
+			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
             this.facing = facing;
@@ -36,7 +36,7 @@ namespace ViMG.Entities
 		public EntityChest(CubePosition position, Inventory inventory, int rows, int columns, MeshHelper.CubeFace facing)
         {
 			this.TrackedPosition = position;
-			this.Position = position.InWorldSpace(null);
+			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
             this.facing = facing;
@@ -87,7 +87,7 @@ namespace ViMG.Entities
 			int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-			Position = TrackedPosition.InWorldSpace(null);
+			Position = TrackedPosition.InWorldSpace();
 
 			rows = SaveHelper.LoadInt32(loadBytes, ref index);
 			columns = SaveHelper.LoadInt32(loadBytes, ref index);

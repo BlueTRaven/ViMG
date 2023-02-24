@@ -22,14 +22,14 @@ namespace ViMG.Cubes
 			int size = 0;
 
 			// don't generate a tree if there's a tree below us. We only want the base cube to care.
-			if (manager.GetCube(position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace))
+			if (manager.ThreadedView.GetCube(position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace))
 				.GetOrDefault(Main.Registry.CubeRegistry.Air) != this)
 			{
 				//List<CubePosition> listenPositions = new List<CubePosition>();
 				for (int i = 0; i < 12; i++)
 				{
 					CubePosition pos = position + new CubePosition(0, i, 0, CubePosition.CoordinateSpace.CubeSpace);
-					if (manager.GetCube(pos)
+					if (manager.ThreadedView.GetCube(pos)
 						.GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
 					{
 						size = i;
@@ -37,7 +37,7 @@ namespace ViMG.Cubes
 					else break;
 				}
 
-				Tree tree = new Tree(position.InWorldSpace(null) - new Vector3(CUBE_SCALE * 1.25f, 0, CUBE_SCALE * 1.25f), 
+				Tree tree = new Tree(position.InWorldSpace() - new Vector3(CUBE_SCALE * 1.25f, 0, CUBE_SCALE * 1.25f), 
 					size, position);
 				world.EntityManager.Add(tree);
 			}

@@ -151,6 +151,9 @@ namespace ViMG.Entities
 		{
 			const int checkSize = 1;
 
+			//TODO: try to make this work again
+			Velocity = Vector3.Zero;
+/*
 			for (int x = -checkSize; x <= checkSize; x++)
 			{
 				for (int y = -checkSize; y <= checkSize; y++)
@@ -164,7 +167,7 @@ namespace ViMG.Entities
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-							/*if (CollisionHelper.TestStaticAABBAABB(new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.25f), new Vector3(Cube.CUBE_SCALE * .5f)), 
+							*//*if (CollisionHelper.TestStaticAABBAABB(new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.25f), new Vector3(Cube.CUBE_SCALE * .5f)), 
 								cubeBounds, out CollisionHelper.Contact contact))
                             {
 								Position += contact.Normal * contact.Penetration;
@@ -188,7 +191,7 @@ namespace ViMG.Entities
 									//float velDot = Vector3.Dot(Velocity, gravityDir);
 									//Velocity += gravityDir * velDot;    //negate ground-facing axis?
 								}
-                            }*/
+                            }*//*
 
 							Vector3 offset = gravityDir * Cube.CUBE_SCALE * 0.25f;
 							Vector3 checkPos = Position + offset;
@@ -221,7 +224,7 @@ namespace ViMG.Entities
 						}
 					}
 				}
-			}
+			}*/
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)

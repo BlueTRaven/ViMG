@@ -30,9 +30,9 @@ namespace ViMG
             return getCube(position);
         }
 
-        public void SetCube(CubePosition position, ushort id)
+        public void SetCube(CubePosition position, ushort id, bool markDirty = false)
         {
-            setCube(position, id, false);
+            setCube(position, id, markDirty);
         }
     }
 }

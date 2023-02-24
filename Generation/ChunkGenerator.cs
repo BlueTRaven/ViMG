@@ -51,11 +51,6 @@ namespace ViMG.Generation
 			else return threadRandom;
         }
 
-		public Chunk MakeChunk(ChunkManager cm, ChunkPosition position)
-		{
-			return new Chunk(cm, position);
-		}
-
 		public abstract Vector3 GetPlayerPosition(World world, ChunkManager2 chunks);
 
 		public abstract void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state);
@@ -75,89 +70,5 @@ namespace ViMG.Generation
         {
 			return Vector2.Zero;
         }
-
-		protected void HandleCascaded()
-        {
-			foreach (Chunk cascadedChunk in detailCascadedChunks)
-			{
-				cascadedChunk.PostChunkGen(cascadedChunk.GetWorld());
-			}
-
-			detailCascadedChunks.Clear();
-		}
-
-		/*private void SetCubeOrAdjacent(ChunkGenerationThreadDataBus dataBus, Chunk chunk, CubePosition pos, ushort id, HashSet<Chunk> cascadedChunks)
-		{
-			if (pos.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-				throw new Exception("Cannot use chunk space");
-
-			if (!dataBus.GetManager().IsInWorldBounds(pos))
-				return;
-
-			Chunk cchunk = dataBus.GetChunk(ChunkPosition.CubeChunk(pos), this);
-
-			if (cchunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
-				GenerateChunkBroad(chunk);
-
-			cchunk.GetData().SetCube(pos.InChunkSpace(cchunk), id, false);
-
-			if (!cascadedChunks.Contains(cchunk))
-				cascadedChunks.Add(cchunk);
-
-			return;
-
-			*//*if (cchunk.GetData().IsInChunkBounds(pos))
-			{
-				chunk.GetData().SetCube(pos, id, false);
-
-				if (!cascadedChunks.Contains(chunk))
-					cascadedChunks.Add(chunk);
-			}
-			else
-			{
-				ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos.InCubeSpace(chunk));
-
-				Chunk newChunk = dataBus.GetChunk(chunkPos, this);
-
-				var posInNewChunk = pos.InChunkSpace(newChunk);
-
-				if (newChunk.GetData().GenStep == ChunkData.GenerationStep.Broad)
-					GenerateChunkBroad(newChunk, chunkPos);
-
-				newChunk.GetData().SetCube(posInNewChunk, id, false);
-
-				if (!cascadedChunks.Contains(newChunk))
-					cascadedChunks.Add(newChunk);
-			}*//*
-		}*/
-
-		private int OldGen(Chunk chunk, CubePosition position)
-		{
-			position = position.InCubeSpace(chunk);
-
-			float noiseHTop = (noise.GetNoise(position.X, position.Z) + 1f) / 2f;
-
-			const float ampNoiseHTop = 5;
-			const float top = 20;
-
-			if (position.Y < top + noiseHTop * ampNoiseHTop)
-			{
-				float noiseHStone = (noise.GetSimplex(position.X, position.Z) + 1f) / 2f;
-
-				const float ampNoiseHStone = 12;
-				const float stone = 10;
-
-				if (position.Y < stone + noiseHStone * ampNoiseHStone)
-					return 3;
-				else
-				{
-					if (position.Y == (int)(top + noiseHTop * ampNoiseHTop))
-						return 2;
-					else return 1;
-				}
-			}
-
-			return 0;
-		}
 	}
 }

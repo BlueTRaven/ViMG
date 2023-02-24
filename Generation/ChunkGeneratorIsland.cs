@@ -161,7 +161,8 @@ namespace ViMG.Generation
 			playerPos.Z = z;
 			playerPos.Y = world.sizeInCubes;
 
-			return world.GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+			//TODO this should use initializer view.
+			return world.GetFirstSolidDown(playerPos.InWorldSpace()).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
 		}
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -179,7 +180,7 @@ namespace ViMG.Generation
 						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
 						//TODO: 
-						state.manager.SetCube(pos.InCubeSpace(state.position), id, false);
+						state.manager.InitializerView.SetCube(pos.InCubeSpace(state.position), id);
 						//cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
@@ -205,7 +206,7 @@ namespace ViMG.Generation
 						{
 							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-							if (manager.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
+							if (manager.InitializerView.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
 							{
 								int val = GetRandom().Next(0, 256);
 								if (val == 0)
@@ -216,15 +217,15 @@ namespace ViMG.Generation
 										var posOffset = pos;
 										posOffset.Y += i;
 
-										manager.SetCube(posOffset, 6, false);	//tree
+										manager.InitializerView.SetCube(posOffset, 6);	//tree
 									}
 								}
 								else if (val == 1)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id, false);    //Sapling
+									manager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
 								else if (val == 2)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id, false); //Fibrous plant
+									manager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
 								else if (val == 3)
-									manager.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id, false); //Azure flower
+									manager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
 							}
 						}
 					}
@@ -366,7 +367,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
 					var solidDown = manager.GetFirstSolidDown(pos);
 
@@ -376,7 +377,7 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							manager.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false);
+							manager.InitializerView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
 
 							int randomFace = GetRandom().Next();
 
@@ -403,7 +404,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
@@ -431,7 +432,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
 					var solidDown = manager.GetFirstSolidDown(pos);
 
@@ -452,7 +453,7 @@ namespace ViMG.Generation
 							if (which < 2)
 								ChunkHelper.PlaceStructureWithBlacklist(world, manager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar, false);
-							else manager.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false);
+							else manager.InitializerView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
 
 							world.PointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
 
@@ -473,7 +474,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, manager.SizeInCubes),
 					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, manager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
 					var solidDown = manager.GetFirstSolidDown(pos);
 
@@ -489,7 +490,7 @@ namespace ViMG.Generation
 							{
 								positions[lastPosition++] = actualGenPos;
 
-								world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2f)));
+								world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f)));
 								spawnNum--;
 							}
 						}
@@ -633,14 +634,14 @@ namespace ViMG.Generation
 			/*Color color = new Color(GetRandom().NextFloat(), GetRandom().NextFloat(), GetRandom().NextFloat(), 1f);
 			Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
             {
-				Position = startPosition.InWorldSpace(null),
+				Position = startPosition.InWorldSpace(),
 				Color = color * 1.25f,
 				Scale = Vector3.One
             });
 
 			Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
 			{
-				Position = endPosition.InWorldSpace(null),
+				Position = endPosition.InWorldSpace(),
 				Color = color * 1.25f,
 				Scale = Vector3.One
 			});*/
@@ -648,7 +649,7 @@ namespace ViMG.Generation
 			{
 				/*Main.Renderer.DEBUGMarkersSphere.Add(new Rendering.RendererDeferred.DEBUGDraw()
 				{
-					Position = segments[i].InWorldSpace(null),
+					Position = segments[i].InWorldSpace(),
 					Color = color,
 					Scale = Vector3.One / 4f
 				});*/
@@ -685,7 +686,7 @@ namespace ViMG.Generation
 						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
 						{
 							used.Add(toFill);
-							manager.SetCube(toFill, 0, false);
+							manager.InitializerView.SetCube(toFill, 0);
 							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));
@@ -751,7 +752,7 @@ namespace ViMG.Generation
 			{
 				CubePosition pos = alreadyPlacedPositions[i];
 
-				float distance = (pos.InWorldSpace(null) - placeAt.InWorldSpace(null)).Length();
+				float distance = (pos.InWorldSpace() - placeAt.InWorldSpace()).Length();
 
 				if (distance < minDistance)
 					return false;

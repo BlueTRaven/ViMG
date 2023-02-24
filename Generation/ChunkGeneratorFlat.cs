@@ -25,7 +25,8 @@ namespace ViMG.Generation
             playerPos.Z = z;
             playerPos.Y = world.sizeInCubes;
 
-            return world.GetFirstSolidDown(playerPos.InWorldSpace(null)).InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+            //TODO this should use initializer view
+            return world.GetFirstSolidDown(playerPos.InWorldSpace()).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -43,7 +44,7 @@ namespace ViMG.Generation
                         if (pos.Y < 256)
                             id = 1;
 
-                        state.manager.SetCube(pos, id);
+                        state.manager.InitializerView.SetCube(pos, id);
                     }
                 }
             }
@@ -51,7 +52,6 @@ namespace ViMG.Generation
 
         public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
         {
-            HandleCascaded();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.world.ChunkManager2.IsInWorldBounds(pos) &&
-					player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+					player.world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			if (lookAtResult.hasHit)
@@ -38,24 +38,24 @@ namespace ViMG.Items
 				if (player.ExpandedMineState)
 				{
 					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal);
+					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
+
+					player.world.ChunkManager2.ThreadedView.GetIds(affectedPositions.AsSpan(), ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 					itemCooldownTime = GetStats(inventory.Get(index)).cooldownTime;
 					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
-						if (player.GetWorld().ChunkManager2.IsInWorldBounds(affectedPositions[i]))
-						{
-							if (player.world.ChunkManager2.GetCube(affectedPositions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-								player.GetWorld().TryMineCube(affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
-						}
+						if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
+							player.GetWorld().TryMineCube(affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 				else
 				{
 					if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
 					{
-						if (player.world.ChunkManager2.GetCube(lookAtResult.hit).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (player.world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}

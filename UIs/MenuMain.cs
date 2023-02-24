@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,7 +21,6 @@ namespace ViMG.UIs
         }
 
         private MenuState state;
-        private WorldSaver saver;
 
         private string[] directories;
 
@@ -83,7 +83,7 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     state = MenuState.Worlds;
-                    directories = saver.GetWorldSaveDirectories();
+                    directories = GetWorldSaveDirectories();
                     clicked = true;
                 }
 
@@ -154,6 +154,23 @@ namespace ViMG.UIs
         public override void Draw(SpriteBatch batch)
         {
             UI.Draw(batch, 1);
+        }
+
+        private string[] GetWorldSaveDirectories()
+        {
+            string[] strings;
+
+            if (Directory.Exists(WorldIO.SAVE_FOLDER))
+                strings = Directory.GetDirectories(WorldIO.SAVE_FOLDER);
+            else strings = Array.Empty<string>();
+
+            for (int i = 0; i < strings.Length; i++)
+            {
+                int ind = strings[i].LastIndexOf('/');
+                strings[i] = strings[i].Substring(ind + 1);
+            }
+
+            return strings;
         }
     }
 }

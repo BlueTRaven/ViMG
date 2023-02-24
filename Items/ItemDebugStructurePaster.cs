@@ -58,19 +58,24 @@ namespace ViMG.Items
             {
                 PastedStructure pasted = pastedStructures.Pop();
 
+                //TODO check
+                //this may or may not work
+                int pi = 0;
+                Span<CubePosition> positions = stackalloc CubePosition[pasted.structure.size.X * pasted.structure.size.Y * pasted.structure.size.Z];
+
                 for (int x = 0; x < pasted.structure.size.X; x++)
                 {
                     for (int y = 0; y < pasted.structure.size.Y; y++)
                     {
                         for (int z = 0; z < pasted.structure.size.Z; z++)
                         {
-                            Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(pasted.structure.size.X, pasted.structure.size.Y, pasted.structure.size.Z), out int i);
-                            CubePosition realPos = new CubePosition(pasted.createdAt.X + x, pasted.createdAt.Y + y, pasted.createdAt.Z + z, pasted.createdAt.Coord);
-
-                            player.world.ChunkManager2.SetCube(realPos, pasted.original[i]);
+                            positions[pi] = new CubePosition(pasted.createdAt.X + x, pasted.createdAt.Y + y, pasted.createdAt.Z + z, pasted.createdAt.Coord);
+                            pi++;
                         }
                     }
                 }
+
+                player.world.ChunkManager2.ThreadedView.SetCubes(positions, pasted.original.AsSpan());
             }
 
             Main.DEBUGPopupText = "Currently Selected Structure:\n" + assetKeysList[currentStructure] + ".\n" +
@@ -89,22 +94,25 @@ namespace ViMG.Items
                 createdAt = pos,
             };
 
+            //TODO check
+            //this may or may not work
+            //Fill in original with GetIds
+            int pi = 0;
+            Span<CubePosition> positions = stackalloc CubePosition[pasted.original.Length];
             for (int x = 0; x < structure.size.X; x++)
             {
                 for (int y = 0; y < structure.size.Y; y++)
                 {
                     for (int z = 0; z < structure.size.Z; z++)
                     {
-                        Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
-                        CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
-
-                        Cube cube = player.world.ChunkManager2.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                        pasted.original[i] = cube.Id;
-                        player.world.ChunkManager2.SetCube(realPos, structure.data[i]);
+                        positions[pi] = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
+                        pi++;
                     }
                 }
             }
+
+            player.world.ChunkManager2.ThreadedView.GetIds(positions, pasted.original.AsSpan());
+            player.world.ChunkManager2.ThreadedView.SetCubes(positions, structure.data.AsSpan());
 
             pastedStructures.Push(pasted);
 

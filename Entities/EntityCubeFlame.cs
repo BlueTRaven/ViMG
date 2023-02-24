@@ -31,7 +31,7 @@ namespace ViMG.Entities
 
         public EntityCubeFlame(CubePosition position, float worldTimeExpiration)
         {
-            this.Position = position.InWorldSpace(null);
+            this.Position = position.InWorldSpace();
             TrackedPosition = position;
 
             this.time = worldTimeExpiration;
@@ -93,7 +93,7 @@ namespace ViMG.Entities
             {
                 world.EntityManager.Remove(this);
 
-                world.ChunkManager2.SetCube(TrackedPosition, 0);
+                world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, 0);
             }
         }
 
@@ -153,7 +153,7 @@ namespace ViMG.Entities
                 timer = SaveHelper.LoadFloat32(loadBytes, ref index);
             time = SaveHelper.LoadFloat32(loadBytes, ref index);
 
-            Position = TrackedPosition.InWorldSpace(null);
+            Position = TrackedPosition.InWorldSpace();
 
             if (version == 0)
                 needsTimeFix = true;

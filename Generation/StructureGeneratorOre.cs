@@ -24,7 +24,7 @@ namespace ViMG.Generation
             new Point3D(0, 0, -1)
         };
 
-        public StructureGeneratorOre(ushort oreId, int minNum, int maxNum, int seed, ChunkManager chunkManager) : base("Ore", seed, chunkManager)
+        public StructureGeneratorOre(ushort oreId, int minNum, int maxNum, int seed, ChunkManager2 chunkManager) : base("Ore", seed, chunkManager)
         {
             this.oreId = oreId;
             this.minNum = minNum;

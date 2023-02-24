@@ -22,7 +22,7 @@ namespace ViMG.Entities
 
         public CubeTimer(CubePosition position, ushort setTo, float timer)
         {
-            this.Position = position.InWorldSpace(null);
+            this.Position = position.InWorldSpace();
             TrackedPosition = position;
 
             this.setTo = setTo;
@@ -41,7 +41,7 @@ namespace ViMG.Entities
             {
                 world.EntityManager.Remove(this);
 
-                world.ChunkManager2.SetCube(TrackedPosition, setTo);
+                world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, setTo);
             }
         }
 

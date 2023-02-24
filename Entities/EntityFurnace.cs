@@ -33,7 +33,7 @@ namespace ViMG.Entities
 			this.TrackedPosition = position;
 			this.Facing = facing;
 
-			Position = position.InWorldSpace(null);
+			Position = position.InWorldSpace();
 
 			inventory = new Inventory(5);
 		}
@@ -99,7 +99,7 @@ namespace ViMG.Entities
 			int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-			Position = TrackedPosition.InWorldSpace(null);
+			Position = TrackedPosition.InWorldSpace();
 
 			//if (version == 2)
 				Facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);

@@ -9,102 +9,11 @@ using ViMG.Generation;
 
 namespace ViMG
 {
+	//This probably needs to be broken up into two versions;
+	//one which is used for world generation (and uses InitializerView)
+	//and one that is used for threaded situations (and uses ThreadedView).
     public static class ChunkHelper
     {
-		private static Chunk cachedSetWorkingChunk;
-		private static ushort[] cachedSetWorkingCubes;
-
-		private static Chunk cachedSetAdjacentChunk;
-		private static ushort[] cachedSetAdjacentCubes;
-
-		/*public static void SetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition pos, ushort id)
-		{
-			if (!manager.IsInWorldBounds(pos))
-				return;
-
-			// Chunks that have already been fully generated can be marked as dirty
-			if (chunk.GetData().IsInChunkBounds(pos))
-			{
-				if (cachedSetWorkingChunk != chunk)
-				{
-					cachedSetWorkingChunk = chunk;
-					cachedSetWorkingCubes = chunk.GetData().GetAll();
-				}
-
-				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
-					pos = pos.InChunkSpace(chunk);
-
-				cachedSetWorkingCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
-			}
-			else
-			{
-				//Make no attempt to cache in this case. We'll likely miss
-				ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos.InCubeSpace(chunk));
-				Chunk adjacent = manager.GetChunk(chunkPos);
-
-				if (cachedSetAdjacentChunk != adjacent)
-				{
-					cachedSetAdjacentChunk = adjacent;
-					cachedSetAdjacentCubes = adjacent.GetData().GetAll();
-				}
-
-				if (pos.Coord == CubePosition.CoordinateSpace.CubeSpace)
-					pos = pos.InChunkSpace(adjacent);
-
-				//This should never actually be called with the current way of doing things, but still...
-				//if (adjacent.GetData().GenStep == ChunkData.GenerationStep.Broad)
-				//GenerateChunkBroad(adjacent);
-
-				cachedSetAdjacentCubes[pos.X + Chunk.CHUNK_SIZE * (pos.Y + Chunk.CHUNK_SIZE * pos.Z)] = id;
-			}
-		}
-
-		private static Chunk cachedGetWorkingChunk;
-		private static ushort[] cachedGetWorkingCubes;
-
-		private static Chunk cachedGetAdjacentChunk;
-		private static ushort[] cachedGetAdjacentCubes;
-
-		public static Optional<Cube> GetCubeOrAdjacent(ChunkManager manager, Chunk chunk, CubePosition position)
-        {
-			if (!manager.IsInWorldBounds(position))
-				return new Optional<Cube>();
-            else
-            {
-				if (chunk.GetData().IsInChunkBounds(position))
-				{
-					if (cachedGetWorkingChunk != chunk)
-					{
-						cachedGetWorkingChunk = chunk;
-						cachedGetWorkingCubes = chunk.GetData().GetAll();
-					}
-
-					if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-						position = position.InChunkSpace(chunk);
-
-					return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cachedGetWorkingCubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
-				}
-				else
-				{
-					ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-					Chunk adjacent = manager.GetChunk(chunkPos);
-
-					if (cachedGetAdjacentChunk != adjacent)
-					{
-						cachedGetAdjacentChunk = adjacent;
-						cachedGetAdjacentCubes = adjacent.GetData().GetAll();
-					}
-
-					if (position.Coord == CubePosition.CoordinateSpace.CubeSpace)
-						position = position.InChunkSpace(adjacent);
-
-					return new Optional<Cube>(Main.Registry.CubeRegistry.Get(cachedGetAdjacentCubes[position.X + Chunk.CHUNK_SIZE * (position.Y + Chunk.CHUNK_SIZE * position.Z)]));
-				}
-            }
-
-			return new Optional<Cube>();
-		}
-*/
 		/// <summary>
 		/// Places a structure at the given position in the given base chunk.
 		/// Can be provided a blacklist of ids that it will not overwrite, and can be provided a blacklist of ids from the structure to not write to the world.
@@ -119,6 +28,8 @@ namespace ViMG
 		public static void PlaceStructureWithBlacklist(ChunkManager2 manager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist, bool markDirty)
 		{
+			//TODO (IMPORTANT) Performance
+			//This is used often in world generation - it's important that it's fast!
 			for (int x = 0; x < structure.size.X; x++)
 			{
 				for (int y = 0; y < structure.size.Y; y++)
@@ -144,7 +55,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = manager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -154,7 +65,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.SetCube(realPos, structure.data[i], markDirty);
+								manager.InitializerView.SetCube(realPos, structure.data[i], markDirty);
 						}
 					}
 				}
@@ -185,7 +96,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = manager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -195,7 +106,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.SetCube(realPos, placeId, markDirty);
+								manager.InitializerView.SetCube(realPos, placeId, markDirty);
 						}
 					}
 				}
@@ -228,7 +139,7 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = manager.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				offsetCube = manager.ThreadedView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				if (!offsetCube.Solid)
 				{
 					return true;
@@ -243,8 +154,8 @@ namespace ViMG
 		{
 			List<CubePosition> positions = new List<CubePosition>();
 
-			Vector3 startWS = start.InWorldSpace(null);
-			Vector3 endWS = end.InWorldSpace(null);
+			Vector3 startWS = start.InWorldSpace();
+			Vector3 endWS = end.InWorldSpace();
 
 			const float ONE_CUBE = Cube.CUBE_SCALE;
 
@@ -331,7 +242,7 @@ namespace ViMG
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (manager.IsInWorldBounds(pos) && manager.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+						if (manager.IsInWorldBounds(pos) && manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
                         {
 							selected.Add(pos);
                         }

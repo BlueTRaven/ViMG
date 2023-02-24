@@ -53,14 +53,14 @@ namespace ViMG.Items
             (Vector3 pos) =>
             {
                 return player.world.ChunkManager2.IsInWorldBounds(pos) &&
-                    player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+                    player.world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
             });
 
             if (lookAtResult.hasHit)
             {
                 CubePosition pos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
-                Cube cube = player.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = player.world.ChunkManager2.ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                 bool a = cube == Main.Registry.CubeRegistry.Get("ancient_altar_placeable");
                 bool b = cube == Main.Registry.CubeRegistry.Get("ancient_altar_generated");
 
@@ -70,7 +70,7 @@ namespace ViMG.Items
 
                     itemCooldownTime = 6f;
 
-                    player.world.EntityManager.Add(new Entities.Skullhead(pos.InWorldSpace(null) - new Vector3(0, Cube.CUBE_SCALE * 16f, 0)));
+                    player.world.EntityManager.Add(new Entities.Skullhead(pos.InWorldSpace() - new Vector3(0, Cube.CUBE_SCALE * 16f, 0)));
                 }
             }
 

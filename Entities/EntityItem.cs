@@ -64,31 +64,42 @@ namespace ViMG.Entities
 			CubePosition ourBoundsNear = CubePosition.FromWorldSpace(ourBounds.Position);
 			CubePosition ourBoundsFar = CubePosition.FromWorldSpace(ourBounds.FarPosition);
 
+			int pi = 0;
+			Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
+			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
+
 			for (int x = -1; x <= 1; x++)
 			{
 				for (int y = -1; y <= 1; y++)
 				{
 					for (int z = -1; z <= 1; z++)
 					{
-						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
+						positions[pi] = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+						pi++;
+					}
+				}
+			}
 
-						//TODO: this should be a .solid check instead of a id != 0 check
-						if (world.ChunkManager2.IsInWorldBounds(pos) && world.ChunkManager2.GetCubeId(pos) != 0)
-						{
-							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+			world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
-							if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
-							{
-								Position += change;
+			for (int i = 0; i < 3 * 3 * 3; i++)
+			{
+				CubePosition pos = positions[i];
 
-								if (change.Y != 0)
-									Velocity.Y = 0;
-								else if (change.X != 0)
-									Velocity.X = 0;
-								else if (change.Z != 0)
-									Velocity.Z = 0;
-							}
-						}
+				if (world.ChunkManager2.IsInWorldBounds(pos) && Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Solid)
+				{
+					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+					if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
+					{
+						Position += change;
+
+						if (change.Y != 0)
+							Velocity.Y = 0;
+						else if (change.X != 0)
+							Velocity.X = 0;
+						else if (change.Z != 0)
+							Velocity.Z = 0;
 					}
 				}
 				//if (!anyCol)

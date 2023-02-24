@@ -27,7 +27,7 @@ namespace ViMG.Cubes
 		{
 			base.OnPlayerPlaced(player, position);
 
-			Vector3 dir = player.Position - (position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2));
+			Vector3 dir = player.Position - (position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2));
 			Vector2 dirXZ = new Vector2(dir.X, dir.Z);
 
 			MeshHelper.CubeFace face;

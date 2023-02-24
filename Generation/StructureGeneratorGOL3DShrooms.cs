@@ -31,7 +31,7 @@ namespace ViMG.Generation
         private Cube mushroomPurpleTop;
         private Cube mushroomPurpleSmall;*/
 
-        public StructureGeneratorGOL3DShrooms(int seed, ChunkManager chunkManager) : base("GOL3D Shrooms", seed, chunkManager)
+        public StructureGeneratorGOL3DShrooms(int seed, ChunkManager2 chunkManager) : base("GOL3D Shrooms", seed, chunkManager)
         {
             stone = Main.Registry.CubeRegistry.Get("stone");
             mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");

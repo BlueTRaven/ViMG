@@ -174,7 +174,7 @@ namespace ViMG.Entities
 
 				Vector3 ground = world.ChunkManager2.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
-					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace(null) +
+					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace() +
 					new Vector3(0, Cube.CUBE_SCALE * 4, 0);
 
 				Vector3 offsetPosition = targetPosition + targetOffset;
@@ -239,7 +239,7 @@ namespace ViMG.Entities
 
 				Vector3 ground = world.ChunkManager2.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
-					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace(null) +
+					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace() +
 					new Vector3(0, Cube.CUBE_SCALE * 4, 0);
 
 				Vector3 offsetPosition = targetPosition + targetOffset;

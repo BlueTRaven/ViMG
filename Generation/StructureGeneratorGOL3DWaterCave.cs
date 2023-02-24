@@ -12,7 +12,7 @@ namespace ViMG.Generation
         private static Cube water;
         private static Cube stone;
 
-        public StructureGeneratorGOL3DWaterCave(int seed, ChunkManager chunkManager) : base("GOL3DWaterCave", seed, chunkManager)
+        public StructureGeneratorGOL3DWaterCave(int seed, ChunkManager2 chunkManager) : base("GOL3DWaterCave", seed, chunkManager)
         {
             water = Main.Registry.CubeRegistry.Get("water");
             stone = Main.Registry.CubeRegistry.Get("stone");
@@ -134,7 +134,7 @@ namespace ViMG.Generation
                         break;
                     }
 
-                    if (manager.GetCube(waterPosition).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+                    if (manager.InitializerView.GetCube(waterPosition).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
                     {
                         actualFills.Add(waterPosition);
                         touchedPositions.Add(waterPosition);
@@ -168,10 +168,10 @@ namespace ViMG.Generation
                         Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
                         CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-                        int overwritingId = manager.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+                        int overwritingId = manager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
                         if (overwritingId == stone.Id || (overwritingId == 0 && structure.data[i] == water.Id && placeWater))
-                            manager.SetCube(realPos, structure.data[i]);
+                            manager.InitializerView.SetCube(realPos, structure.data[i]);
                     }
                 }
             }
@@ -180,7 +180,7 @@ namespace ViMG.Generation
             {
                 foreach (CubePosition actualPos in actualFills)
                 {
-                    manager.SetCube(actualPos, water.Id);
+                    manager.InitializerView.SetCube(actualPos, water.Id);
                     //manager.GetChunk(actualPos).GetData().SetCube(actualPos, water.Id);
                 }
             }

@@ -37,11 +37,6 @@ namespace ViMG
 
         }
 
-		public CubePosition InChunkSpace(Chunk chunk)
-		{
-			return InChunkSpace(chunk.Position);
-		}
-
 		public CubePosition InChunkSpace(ChunkPosition position)
         {
 			if (Coord == CoordinateSpace.ChunkSpace)
@@ -53,20 +48,6 @@ namespace ViMG
 				return new CubePosition(X - position.X * Chunk.CHUNK_SIZE,
 					Y - position.Y * Chunk.CHUNK_SIZE,
 					Z - position.Z * Chunk.CHUNK_SIZE, CoordinateSpace.ChunkSpace);
-			}
-		}
-
-		public CubePosition InCubeSpace(Chunk chunk)
-		{
-			if (Coord == CoordinateSpace.CubeSpace)
-			{
-				return this;
-			}
-			else
-			{
-				return new CubePosition(chunk.Position.X * Chunk.CHUNK_SIZE + X,
-					chunk.Position.Y * Chunk.CHUNK_SIZE + Y,
-					chunk.Position.Z * Chunk.CHUNK_SIZE + Z, CoordinateSpace.CubeSpace);
 			}
 		}
 
@@ -84,13 +65,10 @@ namespace ViMG
 			}
 		}
 
-		public Vector3 InWorldSpace(Chunk chunk)
+		//Assumes this is in cube-space.
+		public Vector3 InWorldSpace()
 		{
-			CubePosition pos = this;
-			if (Coord == CoordinateSpace.ChunkSpace)
-				pos = pos.InCubeSpace(chunk);
-
-			return new Vector3(pos.X * Cube.CUBE_SCALE, pos.Y * Cube.CUBE_SCALE, pos.Z * Cube.CUBE_SCALE);
+			return new Vector3(X * Cube.CUBE_SCALE, Y * Cube.CUBE_SCALE, Z * Cube.CUBE_SCALE);
 		}
 
 		public Vector3 InWorldSpace(ChunkPosition chunk)
@@ -152,7 +130,7 @@ namespace ViMG
 
 		public static Rectangle3D BoundsWorldSpace(CubePosition position)
 		{
-			return new Rectangle3D(position.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE));
+			return new Rectangle3D(position.InWorldSpace(), new Vector3(Cube.CUBE_SCALE));
 		}
 
 		public static bool operator ==(CubePosition posA, CubePosition posB)

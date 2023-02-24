@@ -27,7 +27,7 @@ namespace ViMG.Entities
         public CubeLight(CubePosition position, Vector4 lightColor, Vector2 lightExtents)
         {
             this.trackedPosition = position;
-            Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2);
+            Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2);
 
             this.lightColor = lightColor;
             this.lightExtents = lightExtents;
@@ -67,7 +67,7 @@ namespace ViMG.Entities
 
             int index = 0;
             trackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-            Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2);
+            Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2);
 
             lightColor = SaveHelper.LoadVector4(loadBytes, ref index);
             lightExtents = SaveHelper.LoadVector2(loadBytes, ref index);

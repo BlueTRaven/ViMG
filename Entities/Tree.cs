@@ -38,7 +38,7 @@ namespace ViMG.Entities
 			this.size = baseSize;
 			this.basePosition = basePosition;
 
-			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
+			bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
 		}
 
 		public override void Update(double deltaTime)
@@ -473,8 +473,8 @@ namespace ViMG.Entities
 
 			basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 
-			Position = basePosition.InWorldSpace(null) - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
-			bounds = new Rectangle3D(basePosition.InWorldSpace(null), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
+			Position = basePosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
+			bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
 		}
 	}
 }

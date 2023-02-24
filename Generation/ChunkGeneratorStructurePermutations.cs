@@ -56,7 +56,7 @@ namespace ViMG.Generation
 
         public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
         {
-            return new CubePosition(2, 256, 256).InWorldSpace(null);
+            return new CubePosition(2, 256, 256).InWorldSpace();
         }
     }
 }

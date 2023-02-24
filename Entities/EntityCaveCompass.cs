@@ -10,7 +10,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    
+    //TODO this thing's broke
     public class EntityCaveCompass : Entity, ICubeTracker
     {
 		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
@@ -18,7 +18,6 @@ namespace ViMG.Entities
         private Quaternion target;
         private Quaternion current;
 
-        private Chunk c;
         private Vector3 center;
         private float density;
 
@@ -31,7 +30,7 @@ namespace ViMG.Entities
 
         public EntityCaveCompass(CubePosition position)
         {
-            this.Position = position.InWorldSpace(null);
+            this.Position = position.InWorldSpace();
             this.TrackedPosition = position;
         }
 
@@ -39,7 +38,6 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-            c = null;
             center = Vector3.Zero;
             density = float.MaxValue;
 
@@ -81,7 +79,7 @@ namespace ViMG.Entities
 
             Vector3 dir = center - Position;
 
-            if (c != null && ChunkPosition.WorldSpaceChunk(world.player.Position) == c.Position)
+            //if (c != null && ChunkPosition.WorldSpaceChunk(world.player.Position) == c.Position)
             {
                 dir = world.player.Position - Position;
             }

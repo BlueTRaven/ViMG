@@ -76,8 +76,8 @@ namespace ViMG
         private readonly ChunkManagerIO io;
         public readonly ChunkMesher Mesher;
 
-        public readonly InitializerCubeView InitializerView;
-        public readonly ThreadedCubeView ThreadedView;
+        public InitializerCubeView InitializerView;
+        public ThreadedCubeView ThreadedView;
 
         private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
@@ -100,7 +100,6 @@ namespace ViMG
             int size = Marshal.SizeOf<CubeMeshInfo>();
 
             InitializerView = new InitializerCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
-            ThreadedView = new ThreadedCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
         }
 
         //Update queue of chunks to mesh
@@ -121,7 +120,7 @@ namespace ViMG
                     world.OnCubeUpdate(updated.updated, updated.newId);
                     world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null)?.TrackingCubeUpdated(world, this, updated.newId);
                 }
-                else GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId);
+                else ThreadedView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId);
 
                 updatedThisFrame++;
             }
@@ -135,7 +134,7 @@ namespace ViMG
         //TODO: separate out visual stuff, not sure how yet
         private MeshHelper.CubeFace GetClearSides(CubePosition position)
         {
-            Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube cube = ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             if (cube.Transparency == Cube.TransparencyValue.Invisible)
                 return MeshHelper.CubeFace.NONE;
@@ -166,7 +165,7 @@ namespace ViMG
             CubePosition pos = new CubePosition(x, y, z);
             if (IsInWorldBounds(pos))
             {
-                Cube adjacentCube = GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube adjacentCube = ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
                 if (currentCube.Transparency != Cube.TransparencyValue.Air)
                 {
@@ -251,7 +250,7 @@ namespace ViMG
         }
 
         public delegate MeshHelper.CubeFace GetCachedFacesDel(CubePosition position);
-        public MeshHelper.CubeFace GetCachedFaces(CubePosition position)
+        private MeshHelper.CubeFace GetCachedFaces(CubePosition position)
         {
             ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
 
@@ -297,7 +296,7 @@ namespace ViMG
                 CubePosition pos = new CubePosition(start.X, start.Y - y, start.Z);
 
                 //Null check here is the same as doing out of bounds check.
-                Cube cubeAtPos = GetCube(pos).Get();
+                Cube cubeAtPos = ThreadedView.GetCube(pos).Get();
                 if (cubeAtPos != null && (cubeAtPos.Touchable && cubeAtPos.Collision == Cube.CollisionValue.Collidable))
                     return new OptionalValue<CubePosition>(pos);
             }
@@ -325,7 +324,7 @@ namespace ViMG
         }
 
         public delegate void SetCubeDel(CubePosition position, ushort id, bool markDirty = true);
-        public unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
+        private unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
             byte[] bytes = io.GetBytes();
 
@@ -339,30 +338,14 @@ namespace ViMG
 
             ushort oldId;
 
-            if (LockSet)
+            fixed (byte* bytesRaw = &bytes[0])
             {
-                lock (this)
-                {
-                    fixed (byte* bytesRaw = &bytes[0])
-                    {
-                        ushort* asIds = (ushort*)bytesRaw;
+                ushort* asIds = (ushort*)bytesRaw;
 
-                        oldId = asIds[ci + chunkOffset];
-                        asIds[ci + chunkOffset] = id;
-                    }
-                }
+                oldId = asIds[ci + chunkOffset];
+                asIds[ci + chunkOffset] = id;
             }
-            else
-            {
-                fixed (byte* bytesRaw = &bytes[0])
-                {
-                    ushort* asIds = (ushort*)bytesRaw;
-
-                    oldId = asIds[ci + chunkOffset];
-                    asIds[ci + chunkOffset] = id;
-                }
-            }
-
+            
             /*bytes[cbi++] = (byte)id;
             bytes[cbi++] = (byte)(id >> 8);*/
 
@@ -378,7 +361,7 @@ namespace ViMG
         }
 
         public delegate ushort GetCubeIdDel(CubePosition position);
-        public ushort GetCubeId(CubePosition position)
+        private ushort GetCubeId(CubePosition position)
         {
             byte[] bytes = io.GetBytes();
 
@@ -409,17 +392,7 @@ namespace ViMG
 
             ushort id;
 
-            if (LockGet)
-            {
-                lock (this)
-                {
-                    id = BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
-                }
-            }
-            else
-            {
-                id = BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
-            }
+            id = BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
 
             //BitConverter is apparently faster than fixed cast of bytes to ushort
             return id;
@@ -431,15 +404,10 @@ namespace ViMG
         }
 
         public delegate Optional<Cube> GetCubeDel(CubePosition position);
-        public Optional<Cube> GetCube(Vector3 position)
-        {
-            return GetCube(CubePosition.FromWorldSpace(position));
-        }
-
         //Really minor cache speedup
         private int cachedId;
         private Cube cachedCube;
-        public Optional<Cube> GetCube(CubePosition position)
+        private Optional<Cube> GetCube(CubePosition position)
         {
             if (!IsInWorldBounds(position))
                 return new Optional<Cube>();
@@ -466,6 +434,20 @@ namespace ViMG
 
             cubeMeshInfos = null;
             //chunkMeshInfos = null;
+        }
+
+        public ThreadedCubeView CreateThreadedCubeView(ChunkLoadManager loadManager)
+        {
+            ThreadedView = new ThreadedCubeView(this, loadManager, GetCubeId, GetCube, GetCachedFaces, SetCube);
+
+            return ThreadedView;
+        }
+        
+        public InitializerCubeView CreateInitializerCubeView()
+        {
+            InitializerView = new InitializerCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
+
+            return InitializerView;
         }
     }
 }

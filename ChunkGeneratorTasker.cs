@@ -160,7 +160,7 @@ namespace ViMG
                     {
 						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-						Cube cube = manager.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = manager.InitializerView.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
 						cube.PostChunkGen(world, manager, cubePosition);
                     }
 				}

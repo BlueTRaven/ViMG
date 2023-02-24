@@ -188,34 +188,49 @@ namespace ViMG.Entities
 		{
 			const int checkSize = 1;
 
+			int total = (int)Math.Pow(checkSize * 2 + 1, 3);
+			int pi = 0;
+			Span<CubePosition> positions = stackalloc CubePosition[total];
+			Span<ushort> ids = stackalloc ushort[total];
+
 			for (int x = -checkSize; x <= checkSize; x++)
 			{
 				for (int y = -checkSize; y <= checkSize; y++)
 				{
 					for (int z = -checkSize; z <= checkSize; z++)
 					{
-						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(entity.Position);
+						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (entity.world.ChunkManager2.IsInWorldBounds(pos) &&
-							entity.world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
-						{
-							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+						positions[pi] = pos;
+						pi++;
+					}
+				}
+			}
 
-							Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
-							Vector3 checkPos = entity.Position + offset;
+			entity.world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
-							{
-								entity.Position = (checkPos - offset) + change;
+			for (int i = 0; i < total; i++)
+            {
+				CubePosition pos = positions[i];
+				ushort id = ids[i];
 
-								if (change.Y != 0)
-									Velocity.Y = -Velocity.Y * 0.5f;
-								else if (change.X != 0)
-									Velocity.X = -Velocity.X * 0.5f;
-								else if (change.Z != 0)
-									Velocity.Z = -Velocity.Z * 0.5f;
-							}
-						}
+				if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+				{
+					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+					Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+					Vector3 checkPos = entity.Position + offset;
+
+					if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
+					{
+						entity.Position = (checkPos - offset) + change;
+
+						if (change.Y != 0)
+							Velocity.Y = -Velocity.Y * 0.5f;
+						else if (change.X != 0)
+							Velocity.X = -Velocity.X * 0.5f;
+						else if (change.Z != 0)
+							Velocity.Z = -Velocity.Z * 0.5f;
 					}
 				}
 			}

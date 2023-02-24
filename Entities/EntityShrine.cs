@@ -28,7 +28,7 @@ namespace ViMG.Entities
         {
             this.TrackedPosition = position;
             this.buff = buff;
-            this.Position = position.InWorldSpace(null);
+            this.Position = position.InWorldSpace();
         }
 
         public override void Update(double deltaTime)
@@ -84,7 +84,7 @@ namespace ViMG.Entities
             int index = 0;
 
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-            Position = TrackedPosition.InWorldSpace(null);
+            Position = TrackedPosition.InWorldSpace();
 
             cooldownTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
 

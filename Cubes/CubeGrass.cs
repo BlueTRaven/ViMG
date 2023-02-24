@@ -47,13 +47,25 @@ namespace ViMG.Cubes
 			if (dirt == null)
 				dirt = Main.Registry.CubeRegistry.Get("dirt");
 
-			for (int i = 0; i < 13; i++) 
+			Span<CubePosition> positions = stackalloc CubePosition[13];
+			Span<ushort> ids = stackalloc ushort[13];
+
+			for (int i = 0; i < 13; i++)
 			{
 				CubePosition offsetPosition = position + offsets[i];
+				positions[i] = offsetPosition;
+			}
+
+			manager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.IsLoaded);
+
+			for (int i = 0; i < 13; i++)
+			{
+				CubePosition offsetPosition = positions[i];
+				ushort id = ids[i];
 
 				if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(offsetPosition)))
 				{
-					ushort id = manager.GetCubeId(offsetPosition);
+					//ushort id = manager.GetCubeId(offsetPosition);
 					if (id == dirt.Id)
 					{
 						//check the block above; grass cannot have a block above it
@@ -61,17 +73,17 @@ namespace ViMG.Cubes
 						
 						if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(abovePosition)))
 						{
-							if (!manager.GetCube(abovePosition).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+							if (!manager.ThreadedView.GetCube(abovePosition).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 							{
 								//set dirt to grass
-								manager.SetCube(offsetPosition, Id);
+								manager.ThreadedView.SetCube(offsetPosition, Id);
 
 								//if spreading UP
 								if (i == 2)
 								{
 									//Set self to dirt.
 									//We don't need to check to see if the chunk is valid as only valid chunks have random cube updates performed in them.
-									manager.SetCube(position, dirt.Id);
+									manager.ThreadedView.SetCube(position, dirt.Id);
 								}
 							}
 						}
@@ -89,7 +101,7 @@ namespace ViMG.Cubes
             {
 				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Solid)
                 {
-					manager.SetCube(position, dirt.Id);
+					manager.ThreadedView.SetCube(position, dirt.Id);
                 }
             }
         }

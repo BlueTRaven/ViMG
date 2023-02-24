@@ -40,13 +40,13 @@ namespace ViMG.Spawners
         public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
         {
             //Don't spawn during the day, and don't spawn when the player is looking at the given position.
-            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight() || Main.camera.FrustumContains(position.InWorldSpace(null)))
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight() || Main.camera.FrustumContains(position.InWorldSpace()))
                 return false;
 
             if (position.Y < 181)
                 return false;
 
-            Cube c = manager.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = manager.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass") ||
                 c == Main.Registry.CubeRegistry.Get("stone"))
                 return true;
@@ -64,7 +64,7 @@ namespace ViMG.Spawners
                 if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
                     return;
 
-                Imp imp = new Imp(position.InWorldSpace(null) + new Vector3(0, Cube.CUBE_SCALE, 0));
+                Imp imp = new Imp(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(imp);
             }
         }

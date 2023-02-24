@@ -123,11 +123,9 @@ namespace ViMG
 			}
 		}
 
-		public static void SaveCubePosition(List<byte> data, CubePosition position, Chunk chunk = null)
+		//Must be in cube space
+		public static void SaveCubePosition(List<byte> data, CubePosition position)
 		{
-			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace && chunk != null)
-				position.InCubeSpace(chunk);
-
 			SaveInt32(data, position.X);
 			SaveInt32(data, position.Y);
 			SaveInt32(data, position.Z);

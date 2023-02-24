@@ -31,7 +31,7 @@ namespace ViMG.Entities
 		public GlowNode(CubePosition position, float radius, float fade, Vector4 color)
 		{
 			TrackedPosition = position;
-			this.Position = position.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 			this.radius = radius;
 			this.fade = fade;
 			this.color = color;
@@ -139,7 +139,7 @@ namespace ViMG.Entities
 		{
 			//world.MineCube(TrackedPosition, true);
 			//TODO this had killtrackedentities false?
-			world.ChunkManager2.SetCube(TrackedPosition, 0);
+			world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, 0);
 			world.EntityManager.Remove(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();
@@ -181,7 +181,7 @@ namespace ViMG.Entities
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 			fade = SaveHelper.LoadFloat32(loadBytes, ref index);
 
-			this.Position = TrackedPosition.InWorldSpace(null) + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+			this.Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 
 		}
 	}

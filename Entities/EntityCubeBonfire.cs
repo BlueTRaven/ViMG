@@ -23,7 +23,7 @@ namespace ViMG.Entities
 
         public EntityCubeBonfire(CubePosition position)
         {
-            this.Position = position.InWorldSpace(null);
+            this.Position = position.InWorldSpace();
             TrackedPosition = position;
         }
 
@@ -89,7 +89,7 @@ namespace ViMG.Entities
 
             int index = 0;
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
-            Position = TrackedPosition.InWorldSpace(null);
+            Position = TrackedPosition.InWorldSpace();
         }
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

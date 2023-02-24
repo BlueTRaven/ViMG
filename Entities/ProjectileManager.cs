@@ -273,6 +273,9 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
+			Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
+			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
+
 			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{
 				if (!projectiles[i].active)
@@ -323,29 +326,42 @@ namespace ViMG.Entities
 						projectiles[i].visStats.lightExtents.X, projectiles[i].visStats.lightExtents.Y, 
 						projectiles[i].visStats.lightColor);
 
+				int pi = 0;
+
 				for (int x = -1; x <= 1; x++)
 				{
 					for (int y = -1; y <= 1; y++)
 					{
 						for (int z = -1; z <= 1; z++)
 						{
-							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) + 
+							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) +
 								new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-							if (world.ChunkManager2.IsInWorldBounds(pos) && world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
-							{
-								if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position, 
-									projectiles[i].stats.collisionRadius, out Vector3 change))
-								{
-									if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
-									{
-										Kill(i);
-									}	
-								}
-							}
+							positions[pi] = pos;
+							pi++;
 						}
 					}
 				}
+
+				world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+
+				for (int j = 0; j < 3 * 3 * 3; j++)
+                {
+					CubePosition pos = positions[j];
+					ushort id = ids[j];
+
+					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+                    {
+						if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position,
+															projectiles[i].stats.collisionRadius, out Vector3 change))
+						{
+							if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
+							{
+								Kill(i);
+							}
+						}
+					}
+                }
 			}
 		}
 
