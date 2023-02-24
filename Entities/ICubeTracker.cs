@@ -10,6 +10,6 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player);
 
-		public void TrackingCubeUpdated(World world, ChunkManager2 cm, ushort updatedId);
+		public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId);
 	}
 }

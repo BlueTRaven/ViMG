@@ -41,7 +41,7 @@ namespace ViMG.Entities
             {
                 world.EntityManager.Remove(this);
 
-                world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, setTo);
+                world.ChunkManager.ThreadedView.SetCube(TrackedPosition, setTo);
             }
         }
 
@@ -50,7 +50,7 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager2 manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
         {
             world.EntityManager.Remove(this);
         }

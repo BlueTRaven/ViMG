@@ -61,12 +61,12 @@ namespace ViMG.Cubes
             DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
         }
 
-        public override bool CanPlace(World world, ChunkManager2 manager, CubePosition position)
+        public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
             return manager.ThreadedView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
         }
 
-        public override void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition position, CubePosition updating, int updatedId)
+        public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId)
         {
             if (updating.Y == position.Y - 1)
             {

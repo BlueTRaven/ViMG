@@ -207,7 +207,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			entity.world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+			entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 			for (int i = 0; i < total; i++)
             {

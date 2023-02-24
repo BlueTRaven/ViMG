@@ -26,21 +26,21 @@ namespace ViMG.Items
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
+					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
 			{
-				if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
+				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
 					Cube cube = Main.Registry.CubeRegistry.Get("campfire");
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().ChunkManager2.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager2, placeAtPos)
+					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos)
 						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
-						player.GetWorld().ChunkManager2.ThreadedView.SetCube(placeAtPos, cube.Id);
+						player.GetWorld().ChunkManager.ThreadedView.SetCube(placeAtPos, cube.Id);
 
 						cube.OnPlayerPlaced(player, placeAtPos);
 

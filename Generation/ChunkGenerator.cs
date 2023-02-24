@@ -51,16 +51,16 @@ namespace ViMG.Generation
 			else return threadRandom;
         }
 
-		public abstract Vector3 GetPlayerPosition(World world, ChunkManager2 chunks);
+		public abstract Vector3 GetPlayerPosition(World world, ChunkManager chunks);
 
 		public abstract void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state);
 
 		private List<Chunk> detailCascadedChunks = new List<Chunk>();
 
 		// Main thread version
-		public abstract void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position);
+		public abstract void GenerateChunkDetail(ChunkManager manager, ChunkPosition position);
 
-		public virtual void PostGenerateDetail(World world, ChunkManager2 manager) 
+		public virtual void PostGenerateDetail(World world, ChunkManager manager) 
 		{
 			
 		}

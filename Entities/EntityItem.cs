@@ -80,13 +80,13 @@ namespace ViMG.Entities
 				}
 			}
 
-			world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+			world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 			for (int i = 0; i < 3 * 3 * 3; i++)
 			{
 				CubePosition pos = positions[i];
 
-				if (world.ChunkManager2.IsInWorldBounds(pos) && Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Solid)
+				if (world.ChunkManager.IsInWorldBounds(pos) && Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Solid)
 				{
 					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 

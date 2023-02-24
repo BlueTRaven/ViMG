@@ -14,7 +14,7 @@ namespace ViMG.Generation
         private Cube altarCube;
         private Cube stone;
 
-        public StructureGeneratorGOL3DAltar(int seed, ChunkManager2 chunkManager) : base("GOL3D", seed, chunkManager)
+        public StructureGeneratorGOL3DAltar(int seed, ChunkManager chunkManager) : base("GOL3D", seed, chunkManager)
         {
             altarBrickCube = Main.Registry.CubeRegistry.Get("altar_brick");
             altarCube = Main.Registry.CubeRegistry.Get("ancient_altar_generated");

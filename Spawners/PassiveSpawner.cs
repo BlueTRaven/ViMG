@@ -63,7 +63,7 @@ namespace ViMG.Spawners
                 {
                     if (GetRandomPosition(world, out CubePosition position))
                     {
-                        if (CanAreaSpawn(world, world.ChunkManager2, position))
+                        if (CanAreaSpawn(world, world.ChunkManager, position))
                         {
                             Spawn(world, position);
                             break;
@@ -98,10 +98,10 @@ namespace ViMG.Spawners
             //if (world.ChunkManager.GetChunk(CubePosition.FromWorldSpace(v)).Initialized)
             if (world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(v)))
             {
-                var cubeAtPos = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(v)).Get();
+                var cubeAtPos = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(v)).Get();
                 if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
-                    CubePosition pos = world.ChunkManager2.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+                    CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 
                     position = pos;
                     return true;
@@ -114,7 +114,7 @@ namespace ViMG.Spawners
 
         protected abstract void Spawn(World world, CubePosition position);
 
-        public abstract bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position);
+        public abstract bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position);
 
         public int GetSpawnCap()
         {

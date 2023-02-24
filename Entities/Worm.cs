@@ -40,7 +40,7 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            Cube c = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             Rectangle3D cubeBounds;
 

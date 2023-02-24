@@ -93,7 +93,7 @@ namespace ViMG.Items
                     }
                 }
 
-                player.world.ChunkManager2.ThreadedView.GetIds(positions, data.AsSpan());
+                player.world.ChunkManager.ThreadedView.GetIds(positions, data.AsSpan());
             
                 /*for (int x = minX; x < maxX; x++)
                 {

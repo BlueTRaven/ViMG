@@ -336,7 +336,7 @@ namespace ViMG
 			//SpawnPosition got corrupted or something or is a version that doesn't have it
 			if (SpawnPosition == new CubePosition())
 			{
-				SpawnPosition = world.ChunkManager2.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
+				SpawnPosition = world.ChunkManager.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
 			}
 		}
 
@@ -383,7 +383,7 @@ namespace ViMG
 			else if (state == State.Noclip)
 				state = State.Normal;
 
-			if (!Main.Debug && (!world.ChunkManager2.IsInWorldBounds(Position) || !world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
+			if (!Main.Debug && (!world.ChunkManager.IsInWorldBounds(Position) || !world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
 				return;
 
 			if (hurtbox == -1)
@@ -620,8 +620,8 @@ namespace ViMG
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				Cube cube = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-				bool isLooking = world.ChunkManager2.IsInWorldBounds(pos) && cube.Touchable;
+				Cube cube = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
 				
 				//if we're climbing a rope, ignore the rope
 				if (inRope)
@@ -634,20 +634,20 @@ namespace ViMG
 			CanPlace = false;
 			if (lookAtResult.hasHit)
 			{
-				if (world.ChunkManager2.IsInWorldBounds(lookAtResult.hit))
+				if (world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
-					var c = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit));
+					var c = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit));
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.LookAtNormal = lookAtResult.normal;
 					this.PlaceAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (world.ChunkManager2.IsInWorldBounds(PlaceAtPos))
+					if (world.ChunkManager.IsInWorldBounds(PlaceAtPos))
 						CanPlace = true;
 				}
 			}
 			
-			if (world.ChunkManager2.IsInWorldBounds(lookAtResult.end))
+			if (world.ChunkManager.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
 			//currentUI.Update(null, deltaTime);
@@ -1317,7 +1317,7 @@ namespace ViMG
 				}
 			}
 
-			world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+			world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 			for (int j = 0; j < checkCount; j++)
             {
@@ -1596,7 +1596,7 @@ namespace ViMG
 				lookAtMesh.Name = "Look At Mesh";
 			}
 
-			if (lookAtResult.hasHit && world.ChunkManager2.IsInWorldBounds(lookAtResult.hit))
+			if (lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
 			{
 				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
 				Color color = Color.Lerp(Color.White, Color.Black, s);
@@ -1607,7 +1607,7 @@ namespace ViMG
 					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal);
 					Span<ushort> ids = stackalloc ushort[positions.Length];
 
-					world.ChunkManager2.ThreadedView.GetIds(positions.AsSpan(), ids);
+					world.ChunkManager.ThreadedView.GetIds(positions.AsSpan(), ids);
 
 					for (int i = 0; i < positions.Length; i++)
 					{

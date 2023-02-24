@@ -15,7 +15,7 @@ namespace ViMG.Generation
 
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
+        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
             int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
             int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
@@ -50,7 +50,7 @@ namespace ViMG.Generation
             }
         }
 
-        public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
+        public override void GenerateChunkDetail(ChunkManager manager, ChunkPosition position)
         {
         }
     }

@@ -151,7 +151,7 @@ namespace ViMG.Generation
 			}
 		}
 
-		public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
+		public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
 			int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
 			int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
@@ -187,7 +187,7 @@ namespace ViMG.Generation
 			}
 		}
 
-		public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
+		public override void GenerateChunkDetail(ChunkManager manager, ChunkPosition position)
         {
 			int[,] heightMap = GenerateHeight(position);
 
@@ -233,7 +233,7 @@ namespace ViMG.Generation
 			}
 		}
 
-        public override void PostGenerateDetail(World world, ChunkManager2 manager)
+        public override void PostGenerateDetail(World world, ChunkManager manager)
         {
             base.PostGenerateDetail(world, manager);
 
@@ -535,7 +535,7 @@ namespace ViMG.Generation
 			}
 		}
 
-		private void GenerateCaveConnection(ChunkManager2 manager, List<Rectangle3DI> cavePositions)
+		private void GenerateCaveConnection(ChunkManager manager, List<Rectangle3DI> cavePositions)
 		{
 			int startCaveIndex = GetRandom().Next(0, cavePositions.Count);
 
@@ -761,7 +761,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceHouse(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
+		private bool PlaceHouse(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
 		{
 			if (id == 0)
 				return false;
@@ -785,7 +785,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceDungeon(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceDungeon(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			Util.OneDToThreeD(structureIndex, new ValuePoint3D(structure.size), out ValuePoint3D structurePosition);
 
@@ -808,7 +808,7 @@ namespace ViMG.Generation
 			return true;
         }
 
-		private bool PlaceAltar(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceAltar(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			if (id == 0)
 				return false;

@@ -12,12 +12,12 @@ namespace ViMG
     //Therefore it should only be used on contexts where multithreading may not be running or where threads cannot overlap.
     public class InitializerCubeView
     {
-        private ChunkManager2.GetCubeIdDel getCubeId;
-        private ChunkManager2.GetCubeDel getCube;
-        private ChunkManager2.GetCachedFacesDel getCachedFaces;
-        private ChunkManager2.SetCubeDel setCube;
+        private ChunkManager.GetCubeIdDel getCubeId;
+        private ChunkManager.GetCubeDel getCube;
+        private ChunkManager.GetCachedFacesDel getCachedFaces;
+        private ChunkManager.SetCubeDel setCube;
 
-        public InitializerCubeView(ChunkManager2.GetCubeIdDel getCubeId, ChunkManager2.GetCubeDel getCube, ChunkManager2.GetCachedFacesDel getCachedFaces, ChunkManager2.SetCubeDel setCube)
+        public InitializerCubeView(ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetCachedFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
         {
             this.getCubeId = getCubeId;
             this.getCube = getCube;

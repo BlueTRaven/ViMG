@@ -32,8 +32,7 @@ namespace ViMG
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
-		//public ChunkManager ChunkManager;
-		public ChunkManager2 ChunkManager2;
+		public ChunkManager ChunkManager;
 		public ChunkGenerator ChunkGenerator;
 
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
@@ -302,10 +301,10 @@ namespace ViMG
 				ChunkGenerator = new ChunkGeneratorIsland(0);
 				entIO = new EntityManagerIO(EntityManager);
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
-				ChunkManager2.CreateInitializerCubeView();
+				ChunkManager = new ChunkManager(sizeInChunks, chunkIO, device);
+				ChunkManager.CreateInitializerCubeView();
 
-				ChunkGeneratorTasker.GenerateWorld(this, ChunkManager2, ChunkGenerator);
+				ChunkGeneratorTasker.GenerateWorld(this, ChunkManager, ChunkGenerator);
 
 				LoadedFolderName = folderName;
 				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
@@ -320,7 +319,7 @@ namespace ViMG
 				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
 				entIO = new EntityManagerIO(EntityManager);
 
-				ChunkManager2 = new ChunkManager2(sizeInChunks, chunkIO, device);
+				ChunkManager = new ChunkManager(sizeInChunks, chunkIO, device);
 
 				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
 					"Reading from disk...";
@@ -336,9 +335,9 @@ namespace ViMG
 				if (error == WorldIO.LoadError.InvalidVersion)
 					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
 
-				ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
-				ChunkManager2.CreateThreadedCubeView(ChunkLoadManager);
-				ChunkManager2.CreateInitializerCubeView();
+				ChunkLoadManager = new ChunkLoadManager(ChunkManager, EntityManager, chunkIO, entIO);
+				ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
+				ChunkManager.CreateInitializerCubeView();
 
 				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
 					"Deserializing...";
@@ -406,14 +405,14 @@ namespace ViMG
 
 			ProfilingHelper.End("Done.");
 
-			ChunkLoadManager = new ChunkLoadManager(ChunkManager2, EntityManager, chunkIO, entIO);
-			ChunkManager2.CreateThreadedCubeView(ChunkLoadManager);
+			ChunkLoadManager = new ChunkLoadManager(ChunkManager, EntityManager, chunkIO, entIO);
+			ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
 
 			player = new Player();
 			player.FirstCreated();
 			EntityManager.Add(player);
 
-			Vector3 playerSpawnPosition = ChunkGenerator.GetPlayerPosition(this, ChunkManager2);
+			Vector3 playerSpawnPosition = ChunkGenerator.GetPlayerPosition(this, ChunkManager);
 			player.Position = playerSpawnPosition;
 			player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
 
@@ -460,7 +459,7 @@ namespace ViMG
 
 			alive += (float)deltaTime;
 
-			ChunkManager2.Update(deltaTime, this, ChunkLoadManager);
+			ChunkManager.Update(deltaTime, this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime, this);
 
@@ -509,7 +508,7 @@ namespace ViMG
 
 				if (ChunkLoadManager.IsLoaded(mc.chunk))
 				{
-					Cube cube = ChunkManager2.ThreadedView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					Cube cube = ChunkManager.ThreadedView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 					mc.timer -= (float)deltaTime;
 					if (mc.timer <= 0)
@@ -558,14 +557,14 @@ namespace ViMG
 						rups[i] = randomUpdatePos;
 					}
 
-					ChunkManager2.ThreadedView.GetIds(rups, rupis);
+					ChunkManager.ThreadedView.GetIds(rups, rupis);
 
 					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
 					{
 						Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
 
 						if (cube != Main.Registry.CubeRegistry.Air)
-							cube.OnRandomUpdate(this, ChunkManager2, rups[i]);
+							cube.OnRandomUpdate(this, ChunkManager, rups[i]);
 					}
 				}
 			}
@@ -589,7 +588,7 @@ namespace ViMG
 
 							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
-							if (ChunkManager2.IsInWorldBounds(chunkPos) && length < DrawRadius && 
+							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
 								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
 							{
 								CulledChunkDrawPositions.Add(chunkPos);
@@ -709,7 +708,7 @@ namespace ViMG
 				if (player.GetBuffManager().HasBuff("emissive_ores"))
 					emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores");
 
-                ChunkMesh mesh = ChunkManager2.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
+                ChunkMesh mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
                 if (mesh != null && mesh != ChunkMesh.Empty)
                 {
                     Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
@@ -717,7 +716,7 @@ namespace ViMG
                         transform, null));
                 }
 
-                mesh = ChunkManager2.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
+                mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
                 if (mesh != null && mesh != ChunkMesh.Empty)
                 {
                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
@@ -734,7 +733,7 @@ namespace ViMG
 
 				if (Main.Renderer.EffectEmptyEnabled)
 				{
-					mesh = ChunkManager2.GetMesh(pos, Cubes.Cube.RenderPass.Air);
+					mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Air);
 					if (mesh != null && mesh != ChunkMesh.Empty)
 					{
 						Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
@@ -815,7 +814,7 @@ namespace ViMG
 
 			foreach (var mined in miningCubes)
 			{
-				Cube cube = ChunkManager2.ThreadedView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				Cube cube = ChunkManager.ThreadedView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 				if (cube != Main.Registry.CubeRegistry.Air)
 				{
@@ -1003,13 +1002,13 @@ namespace ViMG
 				timer = 2
 			};
 
-			Cube cube = ChunkManager2.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = ChunkManager.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (cube != Main.Registry.CubeRegistry.Air && (level >= cube.MineLevelRequirement || instant))
 			{
 				if (instant)
 				{
-					ChunkManager2.ThreadedView.SetCube(position, 0);
+					ChunkManager.ThreadedView.SetCube(position, 0);
 
 					List<ItemInstance> items = new List<ItemInstance>();
 					cube.GetDrops(items);
@@ -1032,7 +1031,7 @@ namespace ViMG
 					if (mined.progress >= cube.MineProgressToBreak)
 					{
 						miningCubes.Remove(position);
-						ChunkManager2.ThreadedView.SetCube(position, 0);
+						ChunkManager.ThreadedView.SetCube(position, 0);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
@@ -1056,7 +1055,7 @@ namespace ViMG
 						miningCubes.Add(position, mined);
 					else
 					{
-						ChunkManager2.ThreadedView.SetCube(position, 0);
+						ChunkManager.ThreadedView.SetCube(position, 0);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
@@ -1085,7 +1084,7 @@ namespace ViMG
 			for (int y = 0; y < sizeInCubes; y++)
 			{
 				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-				if (ChunkManager2.IsInWorldBounds(pos) && ChunkManager2.ThreadedView.GetId(pos) != 0)
+				if (ChunkManager.IsInWorldBounds(pos) && ChunkManager.ThreadedView.GetId(pos) != 0)
 					return pos;
 			}
 
@@ -1103,17 +1102,17 @@ namespace ViMG
 
 			List<CubePosition> positions = new List<CubePosition>();
 
-			if (ChunkManager2.IsInWorldBounds(down))
+			if (ChunkManager.IsInWorldBounds(down))
 				positions.Add(down);
-			if (ChunkManager2.IsInWorldBounds(up))
+			if (ChunkManager.IsInWorldBounds(up))
 				positions.Add(up);
-			if (ChunkManager2.IsInWorldBounds(left))
+			if (ChunkManager.IsInWorldBounds(left))
 				positions.Add(left);
-			if (ChunkManager2.IsInWorldBounds(right))
+			if (ChunkManager.IsInWorldBounds(right))
 				positions.Add(right);
-			if (ChunkManager2.IsInWorldBounds(front))
+			if (ChunkManager.IsInWorldBounds(front))
 				positions.Add(front);
-			if (ChunkManager2.IsInWorldBounds(back))
+			if (ChunkManager.IsInWorldBounds(back))
 				positions.Add(back);
 
 			return positions;

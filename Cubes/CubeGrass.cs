@@ -40,7 +40,7 @@ namespace ViMG.Cubes
 			new CubePosition(0, 1, 1),
 			new CubePosition(0, -1, 1),
 		};
-        public override void OnRandomUpdate(World world, ChunkManager2 manager, CubePosition position)
+        public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
         {
             base.OnRandomUpdate(world, manager, position);
 
@@ -92,7 +92,7 @@ namespace ViMG.Cubes
 			}
         }
 
-		public override void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition position, CubePosition updating, int updatedId)
+		public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId)
 		{
 			base.OnAdjacentUpdated(world, manager, position, updating, updatedId);
 

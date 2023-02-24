@@ -253,9 +253,9 @@ namespace ViMG
 						chunkPos.Y += y;
 						chunkPos.Z += z;
 
-						if (world.ChunkManager2.IsInWorldBounds(chunkPos) && world.ChunkLoadManager.IsLoaded(chunkPos))
+						if (world.ChunkManager.IsInWorldBounds(chunkPos) && world.ChunkLoadManager.IsLoaded(chunkPos))
 						{
-							ChunkMesh mesh = world.ChunkManager2.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+							ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
 							//Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
 							if (mesh != null && !mesh.IsEmpty)

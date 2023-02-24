@@ -28,7 +28,7 @@ namespace ViMG.Cubes
         {
             chains ??= Main.Registry.CubeRegistry.Get("ceiling_chains");
 
-            Cube aboveCube = world.ChunkManager2.ThreadedView.GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = world.ChunkManager.ThreadedView.GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != this)
@@ -40,7 +40,7 @@ namespace ViMG.Cubes
             else return base.GetSourceRect(pass, world, pos);
         }
 
-        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
         {
             base.PostChunkGen(world, manager, position);
 

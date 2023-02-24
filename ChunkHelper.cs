@@ -25,7 +25,7 @@ namespace ViMG
 		/// <param name="overwriteWorldBlacklist">Structure cubes will not overwrite cubes of this type in the world.</param>
 		/// <param name="dontwriteStructureBlacklist">If the structure encounters a cube of this type when placing, it will not place it.
 		/// For instance, if your structure is padded by air, you might not want to overwrite the world with that.</param>
-		public static void PlaceStructureWithBlacklist(ChunkManager2 manager, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(ChunkManager manager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, Span<ushort> dontwriteStructureBlacklist, bool markDirty)
 		{
 			//TODO (IMPORTANT) Performance
@@ -72,9 +72,9 @@ namespace ViMG
 			}
 		}
 
-		public delegate bool ShouldWriteFn(World world, ChunkManager2 chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
+		public delegate bool ShouldWriteFn(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
-		public static void PlaceStructureWithBlacklist(World world, ChunkManager2 manager, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(World world, ChunkManager manager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
 			for (int x = 0; x < structure.size.X; x++)
@@ -135,7 +135,7 @@ namespace ViMG
 			}
         }
 
-		public static bool CanPlaceIfNonSolid(ChunkLoadManager loadManager, ChunkManager2 manager, CubePosition positionInCubeSpace, out Cube offsetCube)
+		public static bool CanPlaceIfNonSolid(ChunkLoadManager loadManager, ChunkManager manager, CubePosition positionInCubeSpace, out Cube offsetCube)
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
@@ -230,7 +230,7 @@ namespace ViMG
 			return positions;
 		}
 
-		public static List<CubePosition> SelectInArea(ChunkManager2 manager, Rectangle3DI bounds, ushort ofType)
+		public static List<CubePosition> SelectInArea(ChunkManager manager, Rectangle3DI bounds, ushort ofType)
         {
 			List<CubePosition> selected = new List<CubePosition>();
 

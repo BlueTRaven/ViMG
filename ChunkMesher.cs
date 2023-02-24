@@ -38,10 +38,10 @@ namespace ViMG
 		{
 			public readonly ChunkMeshBatch batch;
 			public readonly World world;
-			public readonly ChunkManager2 manager;
+			public readonly ChunkManager manager;
 			public readonly ChunkMesher mesher;
 
-			public ChunkBatchMeshTaskState(ChunkMeshBatch batch, World world, ChunkManager2 manager, ChunkMesher mesher)
+			public ChunkBatchMeshTaskState(ChunkMeshBatch batch, World world, ChunkManager manager, ChunkMesher mesher)
 			{
 				this.batch = batch;
 				this.world = world;
@@ -116,7 +116,7 @@ namespace ViMG
 			}
 		}
 
-		public void Update(World world, ChunkManager2 manager)
+		public void Update(World world, ChunkManager manager)
         {
 			const int MAX_MESH_PER_FRAME = 200;
 			int meshedInThisFrame = 0;
@@ -221,7 +221,7 @@ namespace ViMG
 
 		private void MeshBatch(World world, ref ChunkMeshBatch batch)
 		{
-			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager2, this));
+			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
 			task.Start();
 
 			chunkMeshBatchTasks.Enqueue(task);
@@ -238,15 +238,15 @@ namespace ViMG
 				for (int i = 0; i < state.batch.num; i++)
 				{
 					ChunkMeshInfo cmi = state.batch.cmis[i];
-					cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+                    cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
 
-					cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
-					cmi.meshes[(int)Cube.RenderPass.Transparent] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, false);
-					cmi.meshes[(int)Cube.RenderPass.DepthOnly] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, false);
-					cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
-					cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);
+                    /*cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
+                    cmi.meshes[(int)Cube.RenderPass.Transparent] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, false);
+                    cmi.meshes[(int)Cube.RenderPass.DepthOnly] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, false);
+                    cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
+                    cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);*/
 
-					state.batch.cmis[i] = cmi;
+                    state.batch.cmis[i] = cmi;
 					state.batch.cmis[i].hasMeshes = true;
 				}
 				state.manager.LockSet = false;
@@ -328,7 +328,7 @@ namespace ViMG
 			return GetChunkMeshInfo(position).GetMeshVersionCode();
 		}
 
-		public ChunkMesh GenerateChunk(World world, ChunkManager2 manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
+		public ChunkMesh GenerateChunk(World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -399,7 +399,7 @@ namespace ViMG
 			else return ChunkMesh.Empty;
 		}
 
-		private static void BakeAO(ChunkManager2 manager, CubePosition pos, int start, int end, List<VertexCube> vertices)
+		private static void BakeAO(ChunkManager manager, CubePosition pos, int start, int end, List<VertexCube> vertices)
         {
 			Span<CubePosition> checkPositions = stackalloc CubePosition[4];
 			Span<ushort> checkIds = stackalloc ushort[4];

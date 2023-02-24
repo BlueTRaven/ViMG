@@ -16,7 +16,7 @@ namespace ViMG
 			Loaded
         }
 
-		private readonly ChunkManager2 chunkManager;
+		private readonly ChunkManager chunkManager;
 		private readonly EntityManager entityManager;
 		private readonly ChunkManagerIO chunkIO;
         private readonly EntityManagerIO entIO;
@@ -36,7 +36,7 @@ namespace ViMG
 			return (int)(Main.camera.Position - x.InWorldSpace()).Length();
 		}); 
 		
-		public ChunkLoadManager(ChunkManager2 chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
+		public ChunkLoadManager(ChunkManager chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;

@@ -34,7 +34,7 @@ namespace ViMG.Items
 
 			Cube cube = Main.Registry.CubeRegistry.Get("flame");
 
-			if (cube.CanPlace(player.world, player.world.ChunkManager2, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
+			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
             {
 				itemCooldownTime = magicStats.attackStats.cooldownTime;
 				int damage = magicStats.attackStats.damage;
@@ -43,7 +43,7 @@ namespace ViMG.Items
 
 				magicStats.Use(player);
 
-				player.GetWorld().ChunkManager2.ThreadedView.SetCube(placePos, cube.Id);
+				player.GetWorld().ChunkManager.ThreadedView.SetCube(placePos, cube.Id);
 
 				cube.OnPlayerPlaced(player, placePos);
 

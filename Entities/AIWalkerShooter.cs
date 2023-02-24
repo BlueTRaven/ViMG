@@ -313,7 +313,7 @@ namespace ViMG.Entities
 				}
 			}
 
-			entity.world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+			entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 			for (int i = 0; i < total; i++)
 			{
@@ -353,7 +353,7 @@ namespace ViMG.Entities
 					var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 						(Vector3 pos) =>
 						{
-							Cube cube = world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							Cube cube = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 							return cube.Collision != Cube.CollisionValue.None;
 						});

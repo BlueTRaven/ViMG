@@ -17,15 +17,15 @@ namespace ViMG
         }
 
         //something to lock
-        private readonly ChunkManager2 manager;
+        private readonly ChunkManager manager;
         private readonly ChunkLoadManager loadManager;
 
-        private ChunkManager2.GetCubeIdDel getCubeId;
-        private ChunkManager2.GetCubeDel getCube;
-        private ChunkManager2.GetCachedFacesDel getCachedFaces;
-        private ChunkManager2.SetCubeDel setCube;
+        private ChunkManager.GetCubeIdDel getCubeId;
+        private ChunkManager.GetCubeDel getCube;
+        private ChunkManager.GetCachedFacesDel getCachedFaces;
+        private ChunkManager.SetCubeDel setCube;
 
-        public ThreadedCubeView(ChunkManager2 manager, ChunkLoadManager loadManager, ChunkManager2.GetCubeIdDel getCubeId, ChunkManager2.GetCubeDel getCube, ChunkManager2.GetCachedFacesDel getCachedFaces, ChunkManager2.SetCubeDel setCube)
+        public ThreadedCubeView(ChunkManager manager, ChunkLoadManager loadManager, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetCachedFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
         {
             this.manager = manager;
             this.loadManager = loadManager;

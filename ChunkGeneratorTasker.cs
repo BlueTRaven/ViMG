@@ -34,11 +34,11 @@ namespace ViMG
 		public readonly struct BroadGenerationState
 		{
 			public readonly ChunkPosition position;
-			public readonly ChunkManager2 manager;
+			public readonly ChunkManager manager;
 			public readonly ChunkGenerator generator;
 			public readonly Random random;
 
-			public BroadGenerationState(ChunkPosition position, ChunkManager2 manager, ChunkGenerator generator)
+			public BroadGenerationState(ChunkPosition position, ChunkManager manager, ChunkGenerator generator)
 			{
 				this.position = position;
                 this.manager = manager;
@@ -48,7 +48,7 @@ namespace ViMG
 			}
 		}
 
-		public static void GenerateWorld(World world, ChunkManager2 manager, ChunkGenerator generator)
+		public static void GenerateWorld(World world, ChunkManager manager, ChunkGenerator generator)
 		{
 			int num = 0;
 			int total = world.sizeInChunks * world.sizeInChunks * world.sizeInChunks;
@@ -150,7 +150,7 @@ namespace ViMG
 			ProfilingHelper.End("World generation done.");
 		}
 
-		private static void PostChunkGen(World world, ChunkManager2 manager, ChunkPosition position)
+		private static void PostChunkGen(World world, ChunkManager manager, ChunkPosition position)
 		{
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
@@ -174,7 +174,7 @@ namespace ViMG
 
 			for (int j = state.chunkStart; j < state.chunkEnd; j++)
 			{
-				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j], state.world.ChunkManager2, state.generator));
+				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j], state.world.ChunkManager, state.generator));
 			}
 		}
 	}

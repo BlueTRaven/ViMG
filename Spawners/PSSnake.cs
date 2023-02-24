@@ -43,7 +43,7 @@ namespace ViMG.Spawners
                 flyingSnakes.Remove(sf);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace()))
                 return false;

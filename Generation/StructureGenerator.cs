@@ -150,9 +150,9 @@ namespace ViMG.Generation
             public readonly StructureGeneratorBatch[] outputStructureArray;
 
             public readonly Random random;
-            public readonly ChunkManager2 chunkManager;
+            public readonly ChunkManager chunkManager;
 
-            public StructureTaskState(int sliceStart, int sliceEnd, StructureGeneratorBatch[] outputStructureArray, Random random, ChunkManager2 chunkManager)
+            public StructureTaskState(int sliceStart, int sliceEnd, StructureGeneratorBatch[] outputStructureArray, Random random, ChunkManager chunkManager)
             {
                 this.sliceStart = sliceStart;
                 this.sliceEnd = sliceEnd;
@@ -165,9 +165,9 @@ namespace ViMG.Generation
 
         public readonly string Name;
         private int seed;
-        private ChunkManager2 chunkManager;
+        private ChunkManager chunkManager;
 
-        public StructureGenerator(string name, int seed, ChunkManager2 chunkManager)
+        public StructureGenerator(string name, int seed, ChunkManager chunkManager)
         {
             this.Name = name;
             this.seed = seed;

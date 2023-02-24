@@ -296,7 +296,7 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
 		}
 
-		public virtual bool CanPlace(World world, ChunkManager2 manager, CubePosition position)
+		public virtual bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
 			return true;
         }
@@ -311,7 +311,7 @@ namespace ViMG.Cubes
 
         }
 
-		public virtual void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition notified, CubePosition updating, int updatedId)
+		public virtual void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition notified, CubePosition updating, int updatedId)
 		{
 
 		}
@@ -326,12 +326,12 @@ namespace ViMG.Cubes
 
 		}
 
-		public virtual void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
+		public virtual void PostChunkGen(World world, ChunkManager manager, CubePosition position)
 		{
 
 		}
 
-		public virtual void OnRandomUpdate(World world, ChunkManager2 manager, CubePosition position)
+		public virtual void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
         {
 
         }

@@ -17,7 +17,7 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.Invisible;
         }
 
-        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
         {
             base.PostChunkGen(world, manager, position);
 

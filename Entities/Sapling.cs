@@ -47,7 +47,7 @@ namespace ViMG.Entities
 				Cube treeCube = Main.Registry.CubeRegistry.Get("tree");
 
 				//Destroy self
-				world.ChunkManager2.ThreadedView.SetCube(TrackedPosition, 0);
+				world.ChunkManager.ThreadedView.SetCube(TrackedPosition, 0);
 
 				//TODO performance
 				//batch these SetCube calls
@@ -57,7 +57,7 @@ namespace ViMG.Entities
 					var posOffset = TrackedPosition;
 					posOffset.Y += i;
 
-					world.ChunkManager2.ThreadedView.SetCube(posOffset, treeCube.Id);
+					world.ChunkManager.ThreadedView.SetCube(posOffset, treeCube.Id);
 				}
 
 				Tree tree = new Tree(TrackedPosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE * 1.25f, 0, Cube.CUBE_SCALE * 1.25f),
@@ -96,7 +96,7 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager2 manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
 		{
 			world.EntityManager.Remove(this);
 		}

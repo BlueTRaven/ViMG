@@ -29,7 +29,7 @@ namespace ViMG.Items
 			{
 				if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
 				{
-					player.world.ChunkManager2.ThreadedView.SetCube(player.PlaceAtPos, cubeId);
+					player.world.ChunkManager.ThreadedView.SetCube(player.PlaceAtPos, cubeId);
 					inventory.Remove(index, 1);
 					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 					cube.OnPlayerPlaced(player, player.PlaceAtPos);

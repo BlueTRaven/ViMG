@@ -35,7 +35,7 @@ namespace ViMG.Spawners
                 slimes.Remove(s);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)))// || Main.camera.FrustumContains(position.InWorldSpace()))
                 return false;

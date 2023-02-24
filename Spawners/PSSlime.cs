@@ -41,7 +41,7 @@ namespace ViMG.Spawners
                 bigSlimes.Remove(sb);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
             //Don't spawn at night, and don't spawn when the player is looking at the given position.
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || world.IsNight())// || Main.camera.FrustumContains(position.InWorldSpace()))

@@ -32,7 +32,7 @@ namespace ViMG.Spawners
                 beetles.Remove(g);
         }
 
-        public override bool CanAreaSpawn(World world, ChunkManager2 manager, CubePosition position)
+        public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)))
                 return false;

@@ -343,7 +343,7 @@ namespace ViMG.Entities
 					}
 				}
 
-				world.ChunkManager2.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+				world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 				for (int j = 0; j < 3 * 3 * 3; j++)
                 {

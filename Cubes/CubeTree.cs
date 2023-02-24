@@ -15,7 +15,7 @@ namespace ViMG.Cubes
 			Transparency = TransparencyValue.Invisible;
 		}
 
-		public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
+		public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
 		{
 			base.PostChunkGen(world, manager, position);
 
@@ -50,7 +50,7 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1));
 		}
 
-		public override void OnAdjacentUpdated(World world, ChunkManager2 manager, CubePosition position, CubePosition updating, int updatedId)
+		public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId)
 		{
 			base.OnAdjacentUpdated(world, manager, position, updating, updatedId);
 

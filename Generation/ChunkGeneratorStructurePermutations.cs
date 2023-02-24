@@ -30,11 +30,11 @@ namespace ViMG.Generation
         {
         }
 
-        public override void GenerateChunkDetail(ChunkManager2 manager, ChunkPosition position)
+        public override void GenerateChunkDetail(ChunkManager manager, ChunkPosition position)
         {
         }
 
-        public override void PostGenerateDetail(World world, ChunkManager2 manager)
+        public override void PostGenerateDetail(World world, ChunkManager manager)
         {
             base.PostGenerateDetail(world, manager);
 
@@ -54,7 +54,7 @@ namespace ViMG.Generation
             }
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager2 chunks)
+        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
         {
             return new CubePosition(2, 256, 256).InWorldSpace();
         }

@@ -37,7 +37,7 @@ namespace ViMG.Items
         {
             if (player.IsLooking && player.CanPlace)
             {
-                Cube startCube = player.world.ChunkManager2.ThreadedView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube startCube = player.world.ChunkManager.ThreadedView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
                 /*Cube startCube = player.world.ChunkManager2.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
@@ -111,7 +111,7 @@ namespace ViMG.Items
                 //This doesn't have the safety checks anymore.
                 CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal);
 
-                player.world.ChunkManager2.ThreadedView.SetCubes(positions, startCube.Id);
+                player.world.ChunkManager.ThreadedView.SetCubes(positions, startCube.Id);
                 
                 /*for (int i = 0; i < MAX_PLACEABLE_BLOCKS; i++)
                 {
@@ -142,7 +142,7 @@ namespace ViMG.Items
         //Batching gets
         public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
         {
-            Cube startCube = player.world.ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube startCube = player.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             if (normal.X != 0 && normal.Y == 0 && normal.Z == 0)
             {
@@ -191,10 +191,10 @@ namespace ViMG.Items
                 {
                     visitedPositions.Add(pos);
 
-                    if (player.world.ChunkManager2.IsInWorldBounds(pos) && player.world.ChunkManager2.IsInWorldBounds(checkPos))
+                    if (player.world.ChunkManager.IsInWorldBounds(pos) && player.world.ChunkManager.IsInWorldBounds(checkPos))
                     {
-                        if (player.world.ChunkManager2.ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air && 
-                            player.world.ChunkManager2.ThreadedView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
+                        if (player.world.ChunkManager.ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air && 
+                            player.world.ChunkManager.ThreadedView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
                         {
                             validPositions[numPlaced++] = pos;
 

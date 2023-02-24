@@ -77,7 +77,7 @@ namespace ViMG.GameStates
             {
                 world.ChunkLoadManager.UnloadAll();
                 world.ChunkLoadManager.Dispose();
-                world.ChunkManager2.Dispose();
+                world.ChunkManager.Dispose();
                 world = null;
             }
             SetMenu(null);

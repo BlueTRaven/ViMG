@@ -33,7 +33,7 @@ namespace ViMG.Cubes
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is the same
-                if (world.ChunkManager2.ThreadedView.GetCube(new CubePosition(pos.X, pos.Y + 1, pos.Z)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
+                if (world.ChunkManager.ThreadedView.GetCube(new CubePosition(pos.X, pos.Y + 1, pos.Z)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
                 {
                     //use the stone texture for the sides
                     return new RectangleF(16, 0, 16, 16);
@@ -59,7 +59,7 @@ namespace ViMG.Cubes
             new CubePosition(0, 1, -1),
         };
 
-        public override void PostChunkGen(World world, ChunkManager2 manager, CubePosition position)
+        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
         {
             base.PostChunkGen(world, manager, position);
 
@@ -74,7 +74,7 @@ namespace ViMG.Cubes
                 SpawnMushrooms(world.ChunkLoadManager, manager, position, false);
         }
 
-        public override void OnRandomUpdate(World world, ChunkManager2 manager, CubePosition position)
+        public override void OnRandomUpdate(World world, ChunkManager manager, CubePosition position)
         {
             base.OnRandomUpdate(world, manager, position);
 
@@ -90,7 +90,7 @@ namespace ViMG.Cubes
                 SpawnMushrooms(world.ChunkLoadManager, manager, position, true);
         }
 
-        private void SpawnMushrooms(ChunkLoadManager loadManager, ChunkManager2 manager, CubePosition position, bool restrictBase)
+        private void SpawnMushrooms(ChunkLoadManager loadManager, ChunkManager manager, CubePosition position, bool restrictBase)
         {
             //check the block above to see if we can place a mushroom or other block there
             CubePosition abovePosition = position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);

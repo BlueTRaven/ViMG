@@ -25,20 +25,20 @@ namespace ViMG.Items
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && 
-					player.GetWorld().ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
+					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
 			{
-				if (player.GetWorld().ChunkManager2.IsInWorldBounds(lookAtResult.hit))
+				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().ChunkManager2.IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
 						Cube glowNode = Main.Registry.CubeRegistry.Get("glow_node");
-						player.world.ChunkManager2.ThreadedView.SetCube(placeAtPos, glowNode.Id);
+						player.world.ChunkManager.ThreadedView.SetCube(placeAtPos, glowNode.Id);
 						glowNode.OnPlayerPlaced(player, placeAtPos);
 						inventory.Remove(index, 1);
 

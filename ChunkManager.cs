@@ -13,7 +13,7 @@ using ViMG.Cubes;
 namespace ViMG
 {
     //Try to stay away from dependance on World if possible
-    public class ChunkManager2 : IDisposable
+    public class ChunkManager : IDisposable
     {
         private readonly struct CubeUpdated
         {
@@ -85,7 +85,7 @@ namespace ViMG
         public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
         public bool LockGet;    //If true, a lock on the manager must first be obtained before getting a cube.
 
-        public ChunkManager2(int sizeInChunksXZ, ChunkManagerIO io, GraphicsDevice device)
+        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, GraphicsDevice device)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
@@ -366,30 +366,7 @@ namespace ViMG
         {
             byte[] bytes = io.GetBytes();
 
-            //NOTE: we can't just index directly into bytes (as a ushort)
-            //This is because we store cube ids weirdly. We do not store them flat, one after another; instead, we store them as a chunk, then as another chunk, etc.
-            //This may introduce problems here, but I don't think I want to change that behavior
-            //as it may help later down the line of we want to, say, introduce streaming. Streaming individual cubes?
-            //Pretty useless. Chunks, however, are a much more useful streamable object.
-
-            //Get chunk position...
-            int chx = position.X / Chunk.CHUNK_SIZE;
-            int chy = position.Y / Chunk.CHUNK_SIZE;
-            int chz = position.Z / Chunk.CHUNK_SIZE;
-            //use it to find offset in byte array
-            int chunkOffset = chx + SizeInChunksXZ * (chy + SizeInChunksXZ * chz);
-            chunkOffset *= Chunk.NUM_CUBES_IN_CHUNK;
-
-            //Get chunk relative cube position...
-            //https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
-            //Faster mod when denominator is a power of 2.
-            //NOTE: if Chunk.CHUNK_SIZE changes and no longer is a power of two, THIS WILL BREAK EVERYTHING!
-            int csx = position.X & (Chunk.CHUNK_SIZE - 1);
-            int csy = position.Y & (Chunk.CHUNK_SIZE - 1);
-            int csz = position.Z & (Chunk.CHUNK_SIZE - 1);
-
-            int cubeOffset = csx + Chunk.CHUNK_SIZE * (csy + Chunk.CHUNK_SIZE * csz);
-            cubeOffset += chunkOffset;
+            int cubeOffset = io.GetCubeOffset(position);
 
             ushort id;
 

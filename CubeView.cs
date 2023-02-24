@@ -9,9 +9,9 @@ namespace ViMG
 {
     public abstract class CubeView
     {
-        protected readonly ChunkManager2 manager;
+        protected readonly ChunkManager manager;
 
-        public CubeView(ChunkManager2 manager)
+        public CubeView(ChunkManager manager)
         {
             this.manager = manager;
         }

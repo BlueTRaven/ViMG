@@ -21,8 +21,8 @@ namespace ViMG.Items
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				return player.GetWorld().ChunkManager2.IsInWorldBounds(pos) && 
-					player.GetWorld().ChunkManager2.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
+					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -40,7 +40,7 @@ namespace ViMG.Items
 							minePos.Y += y;
 							minePos.Z += z;
 
-							if (player.GetWorld().ChunkManager2.IsInWorldBounds(minePos))
+							if (player.GetWorld().ChunkManager.IsInWorldBounds(minePos))
 							{
 								player.GetWorld().TryMineCube(minePos, 0, 1);
 							}

@@ -12,7 +12,7 @@ namespace ViMG.Generation
         private static Cube water;
         private static Cube stone;
 
-        public StructureGeneratorGOL3DWaterCave(int seed, ChunkManager2 chunkManager) : base("GOL3DWaterCave", seed, chunkManager)
+        public StructureGeneratorGOL3DWaterCave(int seed, ChunkManager chunkManager) : base("GOL3DWaterCave", seed, chunkManager)
         {
             water = Main.Registry.CubeRegistry.Get("water");
             stone = Main.Registry.CubeRegistry.Get("stone");
@@ -100,7 +100,7 @@ namespace ViMG.Generation
             return structures;
         }
 
-        public static void PlaceInWorld(ChunkManager2 manager, Structure structure, CubePosition pos)
+        public static void PlaceInWorld(ChunkManager manager, Structure structure, CubePosition pos)
         {
             HashSet<CubePosition> touchedPositions = new HashSet<CubePosition>();
             Queue<CubePosition> waterFloodFills = new Queue<CubePosition>();

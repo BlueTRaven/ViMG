@@ -347,9 +347,9 @@ namespace ViMG
 
 								drawnChunks[drawnChunksCount++] = chunkPos;
 
-								if (world.ChunkManager2.IsInWorldBounds(chunkPos))
+								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									versionSum += world.ChunkManager2.Mesher.GetMeshVersionCode(chunkPos);
+									versionSum += world.ChunkManager.Mesher.GetMeshVersionCode(chunkPos);
 								}
 							}
 						}
@@ -381,9 +381,9 @@ namespace ViMG
 							{
 								ChunkPosition chunkPos = drawnChunks[k];
 
-								if (world.ChunkManager2.IsInWorldBounds(chunkPos))
+								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									ChunkMesh mesh = world.ChunkManager2.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+									ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
 									//Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 									if (mesh != null && !mesh.IsEmpty)

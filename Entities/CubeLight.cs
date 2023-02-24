@@ -45,7 +45,7 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager2 manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
         {
             world.LightManager.Remove(light);
             world.EntityManager.Remove(this);
