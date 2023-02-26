@@ -99,6 +99,7 @@ namespace ViMG
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
 		public const bool MULTITHREAD_LOADING = true;
+		public const bool MULTITHREAD_MESHING = true;
 		public const bool CAN_MULTITHREAD_UPLOAD = true;
 
 		public static bool Exit = false;

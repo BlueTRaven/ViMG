@@ -51,6 +51,15 @@ namespace ViMG
 			}
 		}
 
+		//Rounds to chunk space
+		public CubePosition InChunkSpace()
+        {
+			int csx = X & (Chunk.CHUNK_SIZE - 1);
+			int csy = Y & (Chunk.CHUNK_SIZE - 1);
+			int csz = Z & (Chunk.CHUNK_SIZE - 1);
+			return new CubePosition(csx, csy, csz, CoordinateSpace.ChunkSpace);
+		}
+
 		public CubePosition InCubeSpace(ChunkPosition position)
 		{
 			if (Coord == CoordinateSpace.CubeSpace)

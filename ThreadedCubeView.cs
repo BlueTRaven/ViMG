@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 
@@ -43,11 +44,14 @@ namespace ViMG
             }
         }
 
-        public void GetIds(Span<CubePosition> positions, Span<ushort> ids)
+        public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
+            if (count == -1)
+                count = positions.Length;
+
             lock (manager)
             {
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = offset; i < offset + count; i++)
                 {
                     ids[i] = getCubeId(positions[i]);
                 }
@@ -100,11 +104,14 @@ namespace ViMG
             }
         }
 
-        public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces)
+        public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces, int offset = 0, int count = -1)
         {
+            if (count == -1)
+                count = positions.Length;
+
             lock (manager)
             {
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = offset; i < offset + count; i++)
                 {
                     faces[i] = getCachedFaces(positions[i]);
                 }

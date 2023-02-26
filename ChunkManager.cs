@@ -134,7 +134,7 @@ namespace ViMG
         //TODO: separate out visual stuff, not sure how yet
         private MeshHelper.CubeFace GetClearSides(CubePosition position)
         {
-            Cube cube = ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube cube = InitializerView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             if (cube.Transparency == Cube.TransparencyValue.Invisible)
                 return MeshHelper.CubeFace.NONE;
@@ -165,28 +165,25 @@ namespace ViMG
             CubePosition pos = new CubePosition(x, y, z);
             if (IsInWorldBounds(pos))
             {
-                Cube adjacentCube = ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube adjacentCube = InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
                 if (currentCube.Transparency != Cube.TransparencyValue.Air)
                 {
-                    if (adjacentCube.Transparency == Cube.TransparencyValue.Transparent ||
-                        adjacentCube.Transparency == Cube.TransparencyValue.Invisible ||
-                        adjacentCube.Transparency == Cube.TransparencyValue.Air)
-                        return true;
-                    if (adjacentCube.Transparency == Cube.TransparencyValue.TransparentOccludesSiblings)
+                    switch (adjacentCube.Transparency)
                     {
-                        if (currentCube == adjacentCube)
+                        case (Cube.TransparencyValue.Transparent):
+                        case (Cube.TransparencyValue.Invisible):
+                        case (Cube.TransparencyValue.Air):
+                            return true;
+                        case (Cube.TransparencyValue.TransparentOccludesSiblings):
+                            return currentCube != adjacentCube;
+                        default:
                             return false;
-                        else return true;
                     }
-                    else return false;
+
                 }
                 else if (currentCube.Transparency == Cube.TransparencyValue.Air)
-                {
-                    if (currentCube == adjacentCube)
-                        return false;
-                    else return true;
-                }
+                    return currentCube != adjacentCube;
             }
             
             return false;
@@ -252,6 +249,8 @@ namespace ViMG
         public delegate MeshHelper.CubeFace GetCachedFacesDel(CubePosition position);
         private MeshHelper.CubeFace GetCachedFaces(CubePosition position)
         {
+            //return GetClearSides(position);
+
             ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
 
             if (meshInfo.version != meshInfo.meshVersion)

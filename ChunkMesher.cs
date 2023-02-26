@@ -13,7 +13,13 @@ namespace ViMG
 {
 	public class ChunkMesher
 	{
-		private const int PER_BATCH_MAX = 200;
+#if DEBUG
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 1;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 1;
+#else
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 2;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 2;
+#endif
 		public const int NUM_CHUNK_MESH_PASSES = 5;
 
 		//Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
@@ -95,13 +101,14 @@ namespace ViMG
 		private readonly GraphicsDevice device;
         private readonly int sizeInChunks;
         private ChunkMeshBatch currentBatch;
+		private Task<ChunkBatchMeshTaskResult>[] activeChunkMeshBatchTasks = new Task<ChunkBatchMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
+		private int numActiveChunkMeshBatchTasks;
+		private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
 		private ChunkMeshInfo[] chunkMeshInfos;
 
 		private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
 		private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
-
-		private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
 		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
         {
@@ -118,20 +125,19 @@ namespace ViMG
 
 		public void Update(World world, ChunkManager manager)
         {
-			const int MAX_MESH_PER_FRAME = 200;
 			int meshedInThisFrame = 0;
 
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
-			if (currentBatch.num >= PER_BATCH_MAX)
+			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				MeshBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to mesh one batch per frame regardless of what MAX_MESH_PER_FRAME is.
-			while (dirtyChunkPositions.Count > 0 && meshedInThisFrame < MAX_MESH_PER_FRAME && currentBatch.num < PER_BATCH_MAX)
+			while (dirtyChunkPositions.Count > 0 && currentBatch.num < MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
 				dirtyChunkKnown.Remove(position);
@@ -151,31 +157,31 @@ namespace ViMG
 			if (currentBatch.num > 0)
 			{
 				MeshBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			FlushMeshQueue(5);
+			FlushMeshQueue(-1);
 		}
 
 		public void FlushMeshQueue(int count = -1)
 		{
-			bool canExitEarly = count != -1;
-
-			int batchCount = count;
-			while (chunkMeshBatchTasks.Count > 0 && ((canExitEarly && batchCount > 0) || !canExitEarly))
+			//first, loop through active tasks and look for completed ones. Free up those slots.
+			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
 			{
-				var task = chunkMeshBatchTasks.Dequeue();
-
-				if (task.IsCompleted)
+				if (activeChunkMeshBatchTasks[i] != null && activeChunkMeshBatchTasks[i].IsCompleted)
 				{
+					numActiveChunkMeshBatchTasks--;
+
+					var task = activeChunkMeshBatchTasks[i];
+
 					if (!task.IsCompletedSuccessfully)
 						throw new Exception("???");
 
 					var batchResult = task.Result;
 
-					for (int i = 0; i < batchResult.num; i++)
+					for (int j = 0; j < batchResult.num; j++)
 					{
-						ChunkMeshInfo meshResult = batchResult.cmis[i];
+						ChunkMeshInfo meshResult = batchResult.cmis[j];
 
 						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
 
@@ -194,23 +200,35 @@ namespace ViMG
 							UnloadMesh(ref meshResult);
 						}
 					}
-				}
-				//Task isn't finished, re-queue it.
-				else chunkMeshBatchTasks.Enqueue(task);
 
-				batchCount--;
-			}
+					activeChunkMeshBatchTasks[i] = null;
+				}
+				
+				if (activeChunkMeshBatchTasks[i] == null && chunkMeshBatchTasks.Count > 0)
+                {
+					var task = chunkMeshBatchTasks.Dequeue();
+					activeChunkMeshBatchTasks[i] = task;
+					numActiveChunkMeshBatchTasks++;
+
+					if (task.Status == TaskStatus.Created)
+					{
+						if (Main.MULTITHREAD_MESHING)
+							task.Start();
+						else task.RunSynchronously();
+					}
+				}
+            }
 		}
 
 		public void BatchMeshChunk(World world, ChunkPosition position)
 		{
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
-			if (currentBatch.num >= PER_BATCH_MAX)
+			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				MeshBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[PER_BATCH_MAX]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
@@ -222,7 +240,8 @@ namespace ViMG
 		private void MeshBatch(World world, ref ChunkMeshBatch batch)
 		{
 			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
-			task.Start();
+			/*if (Main.MULTITHREAD_MESHING)
+				task.Start();*/
 
 			chunkMeshBatchTasks.Enqueue(task);
 		}
@@ -240,11 +259,11 @@ namespace ViMG
 					ChunkMeshInfo cmi = state.batch.cmis[i];
                     cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
 
-                    /*cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
+                    cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
                     cmi.meshes[(int)Cube.RenderPass.Transparent] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, false);
                     cmi.meshes[(int)Cube.RenderPass.DepthOnly] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, false);
                     cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
-                    cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);*/
+                    cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);
 
                     state.batch.cmis[i] = cmi;
 					state.batch.cmis[i].hasMeshes = true;
@@ -355,8 +374,15 @@ namespace ViMG
 				}
 			}
 
-			manager.ThreadedView.GetIds(positions, ids);
-			manager.ThreadedView.GetFaces(positions, faces);
+			const int NUM_SPLITS = 1;
+			int c = cpi / NUM_SPLITS;
+			
+			for (int k = 0; k < NUM_SPLITS; k++)
+			{
+				int offset = c * k;
+				manager.ThreadedView.GetIds(positions, ids, offset, c);
+				manager.ThreadedView.GetFaces(positions, faces, offset, c);
+			}
 
 			for (int i = 0; i < Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE; i++) 
 			{
