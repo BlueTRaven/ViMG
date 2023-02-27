@@ -306,6 +306,7 @@ namespace ViMG
         private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             GetCubeMeshInfo(position).version++;
+            updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
             {

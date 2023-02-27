@@ -9,7 +9,7 @@ namespace ViMG
 {
 	public class ChunkLoadManager : IDisposable
     {
-		private enum LoadingState
+		private enum LoadingState : byte
         {
 			Unloaded,
 			Loading,
@@ -20,7 +20,8 @@ namespace ViMG
 		private readonly EntityManager entityManager;
 		private readonly ChunkManagerIO chunkIO;
         private readonly EntityManagerIO entIO;
-        private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
+		private LoadingState[] loadedChunksFastLookup;
+		private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
 		private IEnumerable<ChunkPosition> gettableLoadedChunks;
 
@@ -38,6 +39,7 @@ namespace ViMG
 		
 		public ChunkLoadManager(ChunkManager chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
+			loadedChunksFastLookup = new LoadingState[chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ];
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
 
@@ -70,7 +72,9 @@ namespace ViMG
 
 		public bool IsLoaded(ChunkPosition position)
         {
-			return loadedChunks.ContainsKey(position) && loadedChunks[position] == LoadingState.Loaded;
+			Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+			return loadedChunksFastLookup[i] == LoadingState.Loaded;
+			//return loadedChunks.ContainsKey(position) && loadedChunks[position] == LoadingState.Loaded;
         }
 
 		//Loads the entirety of the loading queue at once.
@@ -82,13 +86,16 @@ namespace ViMG
 				ChunkPosition queuedPosition = queue.Dequeue();
 
 				//Chunk has been told to unload before we got to it.
-				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
 					continue;
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
+				loadedChunksFastLookup[i] = LoadingState.Loaded;
 
 				hasChanged = true;
 			}
@@ -118,13 +125,16 @@ namespace ViMG
 				ChunkPosition queuedPosition = queue.Dequeue();
 
 				//Chunk has been told to unload before we got to it.
-				if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
+				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
 					continue;
 
 				//chunkIO.DeserializeChunk(world, queuedPosition);
 				entIO.Deserialize(queuedPosition);
 				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
 				loadedChunks[queuedPosition] = LoadingState.Loaded;
+				loadedChunksFastLookup[i] = LoadingState.Loaded;
 
 				hasChanged = true;
 				currentNum++;
@@ -173,6 +183,8 @@ namespace ViMG
 							if (!loadedChunks.ContainsKey(pos))
 							{ 
 								loadedChunks.Add(pos, LoadingState.Loading);
+								Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+								loadedChunksFastLookup[i] = LoadingState.Loading;
 								queue.EnqueueWithoutSorting(pos);
 
 								hasChanged = true;
@@ -180,6 +192,8 @@ namespace ViMG
 							else if (loadedChunks[pos] == LoadingState.Unloaded)
                             {
 								loadedChunks[pos] = LoadingState.Loading;
+								Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+								loadedChunksFastLookup[i] = LoadingState.Loading;
 								queue.EnqueueWithoutSorting(pos);
 
 								hasChanged = true;
@@ -212,6 +226,7 @@ namespace ViMG
 					chunkManager.Unload(pos);
 				}
 
+				loadedChunksFastLookup[i] = LoadingState.Unloaded;
 				loadedChunks.Remove(pos);
 
 				hasChanged = true;

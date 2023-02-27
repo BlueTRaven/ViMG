@@ -37,7 +37,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal);
+					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
 
 					player.world.ChunkManager.ThreadedView.GetIds(affectedPositions.AsSpan(), ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
@@ -65,7 +65,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
@@ -184,6 +184,7 @@ namespace ViMG.Items
 				}
 			}
 
+			num = cachedAffectedPositions.Length;
 			return cachedAffectedPositions;
 		}
 

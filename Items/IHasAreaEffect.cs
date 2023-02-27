@@ -11,7 +11,7 @@ namespace ViMG.Items
     {
         ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item);
 
-        CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal);
+        CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num);
 
         bool CanPredictAir()
         {

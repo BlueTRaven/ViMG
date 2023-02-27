@@ -126,11 +126,14 @@ namespace ViMG
             }
         }
 
-        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids)
+        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
+            if (count == -1)
+                count = positions.Length;
+
             lock (manager)
             {
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = offset; i < offset + count; i++)
                 {
                     setCube(positions[i], ids[i]);
                 }
@@ -138,11 +141,14 @@ namespace ViMG
         }
 
         //sets all cubes at positions positions to id.
-        public void SetCubes(Span<CubePosition> positions, ushort id)
+        public void SetCubes(Span<CubePosition> positions, ushort id, int offset = 0, int count = -1)
         {
+            if (count == -1)
+                count = positions.Length;
+
             lock (manager)
             {
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = offset; i < offset + count; i++)
                 {
                     setCube(positions[i], id);
                 }

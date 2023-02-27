@@ -109,9 +109,9 @@ namespace ViMG.Items
 
                 //TODO safety
                 //This doesn't have the safety checks anymore.
-                CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal);
+                CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out int num);
 
-                player.world.ChunkManager.ThreadedView.SetCubes(positions, startCube.Id);
+                player.world.ChunkManager.ThreadedView.SetCubes(positions, startCube.Id, 0, num);
                 
                 /*for (int i = 0; i < MAX_PLACEABLE_BLOCKS; i++)
                 {
@@ -140,7 +140,7 @@ namespace ViMG.Items
 
         //TODO performance
         //Batching gets
-        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
             Cube startCube = player.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
@@ -208,6 +208,8 @@ namespace ViMG.Items
 
                 numIterated++;
             }
+
+            num = numPlaced;
 
             return validPositions;
         }

@@ -66,7 +66,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
@@ -185,6 +185,7 @@ namespace ViMG.Items
 				}
 			}
 
+			num = cachedAffectedPositions.Length;
 			return cachedAffectedPositions;
 		}
 

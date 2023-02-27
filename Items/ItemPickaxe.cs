@@ -45,7 +45,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal);
+					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
 
 					itemCooldownTime = metaItem.GetStats(inventory.Get(index)).cooldownTime;
 					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
@@ -82,9 +82,9 @@ namespace ViMG.Items
 			return ref Get(item).GetStats(item);
         }
 
-        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal)
+        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
-			return Get(item).GetAffectedPositions(player, item, standingPosition, hit, normal);
+			return Get(item).GetAffectedPositions(player, item, standingPosition, hit, normal, out num);
         }
     }
 }

@@ -1604,7 +1604,7 @@ namespace ViMG
 				if (ExpandedMineState && 
 					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasAreaEffect pickStats)
 				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal);
+					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[positions.Length];
 
 					world.ChunkManager.ThreadedView.GetIds(positions.AsSpan(), ids);

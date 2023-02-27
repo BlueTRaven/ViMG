@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using BrUtility.Ported;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -103,7 +104,19 @@ namespace ViMG
         private ChunkMeshBatch currentBatch;
 		private Task<ChunkBatchMeshTaskResult>[] activeChunkMeshBatchTasks = new Task<ChunkBatchMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
-		private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
+		//private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
+
+		private PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)> chunkMeshBatchTasks = new PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)>(true, (x) =>
+		{
+			Vector3 avg = Vector3.Zero;
+
+			for (int i = 0; i < MAX_CHUNKS_TO_MESH_PER_BATCH_TASK; i++)
+				avg += x.batch.cmis[i].position.InWorldSpace();
+
+			avg /= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK;
+
+			return (int)(Main.camera.Position - avg).Length();
+		});
 
 		private ChunkMeshInfo[] chunkMeshInfos;
 
@@ -165,7 +178,6 @@ namespace ViMG
 
 		public void FlushMeshQueue(int count = -1)
 		{
-			//first, loop through active tasks and look for completed ones. Free up those slots.
 			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
 			{
 				if (activeChunkMeshBatchTasks[i] != null && activeChunkMeshBatchTasks[i].IsCompleted)
@@ -206,15 +218,16 @@ namespace ViMG
 				
 				if (activeChunkMeshBatchTasks[i] == null && chunkMeshBatchTasks.Count > 0)
                 {
+					chunkMeshBatchTasks.Sort();
 					var task = chunkMeshBatchTasks.Dequeue();
-					activeChunkMeshBatchTasks[i] = task;
+					activeChunkMeshBatchTasks[i] = task.task;
 					numActiveChunkMeshBatchTasks++;
 
-					if (task.Status == TaskStatus.Created)
+					if (task.task.Status == TaskStatus.Created)
 					{
 						if (Main.MULTITHREAD_MESHING)
-							task.Start();
-						else task.RunSynchronously();
+							task.task.Start();
+						else task.task.RunSynchronously();
 					}
 				}
             }
@@ -243,7 +256,7 @@ namespace ViMG
 			/*if (Main.MULTITHREAD_MESHING)
 				task.Start();*/
 
-			chunkMeshBatchTasks.Enqueue(task);
+			chunkMeshBatchTasks.EnqueueWithoutSorting((batch, task));
 		}
 
 		private static ChunkBatchMeshTaskResult MeshBatchTaskFn(object obj)
