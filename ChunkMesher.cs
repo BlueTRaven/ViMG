@@ -173,10 +173,64 @@ namespace ViMG
 				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			FlushMeshQueue(-1);
+			StartActiveTasks();
 		}
 
-		public void FlushMeshQueue(int count = -1)
+		public void FlushMeshQueue()
+        {
+			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
+
+			while (chunkMeshBatchTasks.Count > 0)
+            {
+				var task = chunkMeshBatchTasks.Dequeue().task;
+
+				if (task.Status == TaskStatus.Created)
+				{
+					if (Main.MULTITHREAD_MESHING)
+						task.Start();
+					else task.RunSynchronously();
+				}
+				tasks.Enqueue(task);
+			}
+
+			while (tasks.Count > 0)
+            {
+				var task = tasks.Dequeue();
+
+				if (task.IsCompleted)
+				{
+					if (!task.IsCompletedSuccessfully)
+						throw new Exception("???");
+
+					var batchResult = task.Result;
+
+					for (int j = 0; j < batchResult.num; j++)
+					{
+						ChunkMeshInfo meshResult = batchResult.cmis[j];
+
+						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
+
+						if (meshResult.version >= c.version)
+						{
+							//Unload the old mesh now
+							UnloadMesh(ref c);
+
+							c.meshVersion = c.version;
+
+							c.meshes = meshResult.meshes;
+						}
+						else
+						{
+							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
+							UnloadMesh(ref meshResult);
+						}
+					}
+				}
+				else tasks.Enqueue(task);
+			}
+        }
+
+		private void StartActiveTasks()
 		{
 			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
 			{
