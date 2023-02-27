@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.GameStates;
 
 namespace ViMG.Cubes
 {
@@ -40,9 +41,9 @@ namespace ViMG.Cubes
             else return base.GetSourceRect(pass, world, pos);
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
+        public override void PostChunkGen(WorldPrototype world, CubePosition position)
         {
-            base.PostChunkGen(world, manager, position);
+            base.PostChunkGen(world, position);
 
             world.EntityManager.Add(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }

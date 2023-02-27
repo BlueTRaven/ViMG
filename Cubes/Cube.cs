@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.UIs;
 
@@ -326,7 +328,7 @@ namespace ViMG.Cubes
 
 		}
 
-		public virtual void PostChunkGen(World world, ChunkManager manager, CubePosition position)
+		public virtual void PostChunkGen(WorldPrototype world, CubePosition position)
 		{
 
 		}

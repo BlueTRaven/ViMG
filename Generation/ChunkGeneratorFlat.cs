@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.GameStates;
 
 namespace ViMG.Generation
 {
@@ -15,18 +16,19 @@ namespace ViMG.Generation
 
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+        public override Vector3 GetPlayerPosition(ChunkManager chunkManager)
         {
-            int x = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
-            int z = Main.random.Next(world.sizeInCubes / 2 - 4, world.sizeInCubes / 2 + 4);
+            int x = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
+            int z = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
 
-            CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE, world.sizeInCubes * Cube.CUBE_SCALE / 2f));
+            CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f,
+                chunkManager.SizeInCubes * Cube.CUBE_SCALE, chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f));
             playerPos.X = x;
             playerPos.Z = z;
-            playerPos.Y = world.sizeInCubes;
+            playerPos.Y = chunkManager.SizeInCubes;
 
             //TODO this should use initializer view
-            return world.GetFirstSolidDown(playerPos.InWorldSpace()).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
+            return chunkManager.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -44,13 +46,13 @@ namespace ViMG.Generation
                         if (pos.Y < 256)
                             id = 1;
 
-                        state.manager.InitializerView.SetCube(pos, id);
+                        state.world.ChunkManager.InitializerView.SetCube(pos, id);
                     }
                 }
             }
         }
 
-        public override void GenerateChunkDetail(ChunkManager manager, ChunkPosition position)
+        public override void GenerateChunkDetail(WorldPrototype world, ChunkPosition position)
         {
         }
     }

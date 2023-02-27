@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using ViMG.Cubes;
+using ViMG.GameStates;
 
 namespace ViMG.Generation
 {
@@ -51,16 +52,16 @@ namespace ViMG.Generation
 			else return threadRandom;
         }
 
-		public abstract Vector3 GetPlayerPosition(World world, ChunkManager chunks);
+		public abstract Vector3 GetPlayerPosition(ChunkManager chunkManager);
 
 		public abstract void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state);
 
 		private List<Chunk> detailCascadedChunks = new List<Chunk>();
 
 		// Main thread version
-		public abstract void GenerateChunkDetail(ChunkManager manager, ChunkPosition position);
+		public abstract void GenerateChunkDetail(WorldPrototype world, ChunkPosition position);
 
-		public virtual void PostGenerateDetail(World world, ChunkManager manager) 
+		public virtual void PostGenerateDetail(WorldPrototype world) 
 		{
 			
 		}

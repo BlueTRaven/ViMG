@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Items;
 
 namespace ViMG.Cubes
@@ -23,9 +24,9 @@ namespace ViMG.Cubes
             this.Description = description;
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
+        public override void PostChunkGen(WorldPrototype world, CubePosition position)
         {
-            base.PostChunkGen(world, manager, position);
+            base.PostChunkGen(world, position);
 
             EntityShrine shrine = new EntityShrine(position, Main.Registry.BuffRegistry.Get(buff));
             world.EntityManager.Add(shrine);

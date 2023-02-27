@@ -56,7 +56,7 @@ namespace ViMG
 			if (distanceUnloadCheckTimer <= 0)
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
-				LoadAroundTarget(world);
+				LoadAroundTarget();
 			}
 
 			if (hasChanged)
@@ -164,7 +164,7 @@ namespace ViMG
             }
 		}
 
-		public void LoadAroundTarget(World world)
+		public void LoadAroundTarget()
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			

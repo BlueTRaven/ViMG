@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Items;
 
 namespace ViMG.Cubes
@@ -16,9 +17,9 @@ namespace ViMG.Cubes
 			Collision = CollisionValue.None;
 		}
 
-        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
-        {
-            base.PostChunkGen(world, manager, position);
+		public override void PostChunkGen(WorldPrototype world, CubePosition position)
+		{
+			base.PostChunkGen(world, position);
 
 			world.EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4,
 				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));

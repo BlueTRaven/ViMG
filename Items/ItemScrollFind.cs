@@ -27,7 +27,7 @@ namespace ViMG.Items
 			float min = float.MaxValue;
 			PointOfInterest point = new PointOfInterest();
 
-			foreach (var poi in player.world.PointsOfInterest)
+			foreach (var poi in player.world.WorldInfo.pointsOfInterest)
             {
 				Vector3 distance = player.Position - poi.position.InWorldSpace();
 

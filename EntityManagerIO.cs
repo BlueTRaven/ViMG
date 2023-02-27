@@ -195,13 +195,13 @@ namespace ViMG
 			}
 		}
 
-		public void SerializeAll(World world)
+		public void SerializeAll(int sizeInChunks)
         {
-			for (int x = 0; x < world.sizeInChunks; x++)
+			for (int x = 0; x < sizeInChunks; x++)
             {
-				for (int y = 0; y < world.sizeInChunks; y++)
+				for (int y = 0; y < sizeInChunks; y++)
                 {
-					for (int z = 0; z < world.sizeInChunks; z++)
+					for (int z = 0; z < sizeInChunks; z++)
                     {
 						Serialize(new ChunkPosition(x, y, z));
                     }

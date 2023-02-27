@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.Generation;
 
 namespace ViMG
@@ -72,9 +73,9 @@ namespace ViMG
 			}
 		}
 
-		public delegate bool ShouldWriteFn(World world, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
+		public delegate bool ShouldWriteFn(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
-		public static void PlaceStructureWithBlacklist(World world, ChunkManager manager, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(EntityManager entityManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
 			for (int x = 0; x < structure.size.X; x++)
@@ -86,17 +87,17 @@ namespace ViMG
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-						if (manager.IsInWorldBounds(realPos))
+						if (chunkManager.IsInWorldBounds(realPos))
 						{
 							bool canWrite = true;
 							ushort placeId = structure.data[i];
-							if (shouldWrite != null && !shouldWrite(world, manager, realPos, structure, i, ref placeId))
+							if (shouldWrite != null && !shouldWrite(entityManager, chunkManager, realPos, structure, i, ref placeId))
 								canWrite = false;
 
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = chunkManager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -106,7 +107,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.InitializerView.SetCube(realPos, placeId, markDirty);
+								chunkManager.InitializerView.SetCube(realPos, placeId, markDirty);
 						}
 					}
 				}
@@ -135,7 +136,7 @@ namespace ViMG
 			}
         }
 
-		public static bool CanPlaceIfNonSolid(ChunkLoadManager loadManager, ChunkManager manager, CubePosition positionInCubeSpace, out Cube offsetCube)
+		public static bool CanPlaceIfNonSolid(ChunkManager manager, CubePosition positionInCubeSpace, out Cube offsetCube)
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{

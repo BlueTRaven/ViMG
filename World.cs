@@ -22,7 +22,8 @@ namespace ViMG
 {
 	public class World
 	{
-		public string LoadedFolderName;
+		public readonly string LoadedFolderName;
+		public readonly int Layer;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
 		public const float DAY_CYCLE_TIME = 60f * 10f;
@@ -46,7 +47,6 @@ namespace ViMG
 
 		public GameStateManager GameStateManager;
 		public Player player;
-		//private Vector3 playerSpawnPos;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
 		public int DrawDistanceVert = 6;
@@ -57,7 +57,7 @@ namespace ViMG
 		public EntityManager EntityManager;
 		public LightManager LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
-		public List<PointOfInterest> PointsOfInterest;
+		public WorldInfoIO.WorldInfo WorldInfo;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -94,9 +94,23 @@ namespace ViMG
 		private float randomUpdatesTimer;
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
-		public World(GameStateManager gameStateManager, GraphicsDevice device, int worldSize)
+		public World(int layer, string worldName, GameStateManager gameStateManager, WorldPrototype prototype, 
+			ChunkLoadManager chunkLoadManager, WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
 		{
+			this.Layer = layer;
+			this.LoadedFolderName = worldName;
+
 			this.GameStateManager = gameStateManager;
+
+			ChunkManager = prototype.ChunkManager;
+			EntityManager = prototype.EntityManager;
+			WorldInfo = prototype.WorldInfo;
+
+			this.ChunkLoadManager = chunkLoadManager;
+
+            worldInfoIO = winfoIO;
+			entIO = entityIO;
+			this.chunkIO = chunkIO;
 
 			//TEMP start in night time
 			//alive = DAY_CYCLE_TIME * 0.65f;
@@ -108,15 +122,11 @@ namespace ViMG
 			if (!meshesLoaded)
 				CreateMeshes(device);
 
-			//ChunkManager = new ChunkManager(device, sizeInChunks, sizeInCubes, this);
-
 			ProjectileManager = new ProjectileManager(this, device);
-			EntityManager = new EntityManager(this);
+			EntityManager.Initialize(this);
 			LightManager = new LightManager(device);
 
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
-
-			PointsOfInterest = new List<PointOfInterest>();
 
 			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
@@ -284,7 +294,7 @@ namespace ViMG
 			meshesLoaded = true;
 		}
 
-		public void LoadWorld(GraphicsDevice device, string folderName)
+		/*public void LoadWorld(GraphicsDevice device, string folderName)
 		{
 			int spawnX = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
 			int spawnZ = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
@@ -439,12 +449,40 @@ namespace ViMG
 
 				Main.camera.Position = player.Position;
 			}
-		}
+		}*/
 
-		public void Sync(GraphicsDevice device)
+		public void FinishLoading(GraphicsDevice device)
         {
 			if (!skyboxMesh.Uploaded)
 				skyboxMesh.Upload(device);
+
+			//Now we can tell the ChunkLoadManager what should be loaded.
+			ChunkLoadManager.UpdateLoadTarget(WorldInfo.playerPosition);
+			ChunkLoadManager.LoadAroundTarget();
+
+			//Finally, tell the ChunkLoadManager to actually load the things.
+			//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
+			//as it normally does.)
+			ChunkLoadManager.FlushLoadQueue(this);
+
+			player = EntityManager.GetAll<Player>().First() as Player;
+
+			//The player reference will not be set up after loading. We need to do that ourselves.
+			//TODO multiplayer
+			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
+			if (player == null)
+			{
+				//If we didn't manage to find the player using the new method, fall back to the old method.
+				//TODO obsolete
+				entIO.DeserializePlayerChunk();
+				player = EntityManager.GetAll<Player>().First() as Player;
+
+				ChunkLoadManager.UpdateLoadTarget(player.Position);
+				ChunkLoadManager.LoadAroundTarget();
+				ChunkLoadManager.FlushLoadQueue(this);
+			}
+			
+			Main.camera.Position = player.Position;
 		}
 
 		public void UnfixedUpdate()
@@ -662,6 +700,9 @@ namespace ViMG
 
 			//Deduplicate/decache serialized entity data
 			entIO.DecacheCurrentlySerialized();
+
+			WorldInfo.playerPosition = player.Position;
+            worldInfoIO.Save(LoadedFolderName, WorldInfo);
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.

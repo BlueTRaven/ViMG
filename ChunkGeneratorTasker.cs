@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Generation;
 
 namespace ViMG
@@ -13,15 +15,17 @@ namespace ViMG
     {
 		private readonly struct BroadChunkTaskState
 		{
-			public readonly World world;
+			public readonly GameStates.GameStateManager gsManager;
+			public readonly WorldPrototype world;
 			public readonly int chunkStart;
 			public readonly int chunkEnd;
 			public readonly int totalChunks;
 			public readonly ChunkPosition[] chunks;
 			public readonly ChunkGenerator generator;
 
-			public BroadChunkTaskState(World world, int chunkStart, int chunkEnd, int totalChunks, ChunkPosition[] chunks, ChunkGenerator generator)
+			public BroadChunkTaskState(GameStates.GameStateManager gsManager, WorldPrototype world, int chunkStart, int chunkEnd, int totalChunks, ChunkPosition[] chunks, ChunkGenerator generator)
 			{
+				this.gsManager = gsManager;
 				this.world = world;
 				this.chunkStart = chunkStart;
 				this.chunkEnd = chunkEnd;
@@ -34,38 +38,38 @@ namespace ViMG
 		public readonly struct BroadGenerationState
 		{
 			public readonly ChunkPosition position;
-			public readonly ChunkManager manager;
+			public readonly WorldPrototype world;
 			public readonly ChunkGenerator generator;
 			public readonly Random random;
 
-			public BroadGenerationState(ChunkPosition position, ChunkManager manager, ChunkGenerator generator)
+			public BroadGenerationState(ChunkPosition position, WorldPrototype world, ChunkGenerator generator)
 			{
 				this.position = position;
-                this.manager = manager;
+				this.world = world;
                 this.generator = generator;
 
 				random = new Random(generator.Seed);
 			}
 		}
 
-		public static void GenerateWorld(World world, ChunkManager manager, ChunkGenerator generator)
+		public static void GenerateWorld(GameStates.GameStateManager gsManager, WorldPrototype world, ChunkGenerator generator)
 		{
 			int num = 0;
-			int total = world.sizeInChunks * world.sizeInChunks * world.sizeInChunks;
+			int total = world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ;
 			int offset = 0;
 
 			ProfilingHelper.Start("Beginning world generation...");
-			world.GameStateManager.TheIsland.LoadMessage = "Beginning world generation...";
+			gsManager.TheIsland.LoadMessage = "Beginning world generation...";
 
-			generator.Initialize(manager.SizeInCubes, manager.SizeInChunksXZ);
+			generator.Initialize(world.ChunkManager.SizeInCubes, world.ChunkManager.SizeInChunksXZ);
 
 			ProfilingHelper.Start("Broad phase generation...");
-			world.GameStateManager.TheIsland.LoadMessage = "Beginning broad phase generation...";
+			gsManager.TheIsland.LoadMessage = "Beginning broad phase generation...";
 
 			ChunkPosition[] positions = new ChunkPosition[total];
 			for (int i = 0; i < total; i++)
 			{
-				Util.OneDToThreeD(i, new ValuePoint3D(manager.SizeInChunksXZ), out ValuePoint3D point);
+				Util.OneDToThreeD(i, new ValuePoint3D(world.ChunkManager.SizeInChunksXZ), out ValuePoint3D point);
 				positions[i] = new ChunkPosition(point.x, point.y, point.z);
 			}
 
@@ -78,7 +82,7 @@ namespace ViMG
 				int chunkStart = i;
 				int chunkEnd = i + split;
 
-				BroadChunkTaskState state = new BroadChunkTaskState(world, chunkStart, chunkEnd, total, positions, generator);
+				BroadChunkTaskState state = new BroadChunkTaskState(gsManager, world, chunkStart, chunkEnd, total, positions, generator);
 				Task task = new Task(GenerateChunkDetailTaskFn, state);
 
 				task.Start();
@@ -93,7 +97,7 @@ namespace ViMG
 
 				while (!task.IsCompleted)
                 {
-					world.GameStateManager.TheIsland.LoadMessage = "Broad phase generation...\n" +
+					gsManager.TheIsland.LoadMessage = "Broad phase generation...\n" +
 						i + "/" + broadPhaseTasks.Count;
 					Thread.Sleep(100);
                 }
@@ -106,36 +110,36 @@ namespace ViMG
 			ProfilingHelper.Start("Beginning detail phase generation...");
 			if (Main.DO_DETAIL)
 			{
-				world.GameStateManager.TheIsland.LoadMessage = "Detail phase generation...";
+				gsManager.TheIsland.LoadMessage = "Detail phase generation...";
 				
 				num = 0;
 				for (int i = 0; i < total; i++)
 				{
-					Util.OneDToThreeD(i, new ValuePoint3D(manager.SizeInChunksXZ), out ValuePoint3D point);
+					Util.OneDToThreeD(i, new ValuePoint3D(world.ChunkManager.SizeInChunksXZ), out ValuePoint3D point);
 
-					generator.GenerateChunkDetail(manager, new ChunkPosition(point.x, point.y, point.z));
+					generator.GenerateChunkDetail(world, new ChunkPosition(point.x, point.y, point.z));
 
 					num++;
 
 					if (i % 8 == 0)
-						world.GameStateManager.TheIsland.LoadMessage = "Detail phase generation...\n" +
+						gsManager.TheIsland.LoadMessage = "Detail phase generation...\n" +
 							i + "/" + total;
 				}
 
-				world.GameStateManager.TheIsland.LoadMessage = "Post detail phase generation...\n" +
+				gsManager.TheIsland.LoadMessage = "Post detail phase generation...\n" +
 					"(This may take a while)";
-				generator.PostGenerateDetail(world, manager);
+				generator.PostGenerateDetail(world);
 				//GenerateHeightmap();
 			}
 
-			world.GameStateManager.TheIsland.LoadMessage = "Post generation...";
+			gsManager.TheIsland.LoadMessage = "Post generation...";
 			ProfilingHelper.Start("Beginning post generation...");
 			num = 0;
 			for (int i = 0; i < total; i++)
 			{
-				Util.OneDToThreeD(i, new ValuePoint3D(manager.SizeInChunksXZ), out ValuePoint3D point);
+				Util.OneDToThreeD(i, new ValuePoint3D(world.ChunkManager.SizeInChunksXZ), out ValuePoint3D point);
 
-				PostChunkGen(world, manager, new ChunkPosition(point.x, point.y, point.z));
+				PostChunkGen(world, new ChunkPosition(point.x, point.y, point.z));
 				num++;
 			}
 			ProfilingHelper.End("Post generation done.");
@@ -150,7 +154,7 @@ namespace ViMG
 			ProfilingHelper.End("World generation done.");
 		}
 
-		private static void PostChunkGen(World world, ChunkManager manager, ChunkPosition position)
+		private static void PostChunkGen(WorldPrototype world, ChunkPosition position)
 		{
 			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
@@ -160,8 +164,8 @@ namespace ViMG
                     {
 						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-						Cube cube = manager.InitializerView.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
-						cube.PostChunkGen(world, manager, cubePosition);
+						Cube cube = world.ChunkManager.InitializerView.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						cube.PostChunkGen(world, cubePosition);
                     }
 				}
 			}
@@ -174,7 +178,7 @@ namespace ViMG
 
 			for (int j = state.chunkStart; j < state.chunkEnd; j++)
 			{
-				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j], state.world.ChunkManager, state.generator));
+				state.generator.GenerateChunkBroad(new BroadGenerationState(state.chunks[j], state.world, state.generator));
 			}
 		}
 	}

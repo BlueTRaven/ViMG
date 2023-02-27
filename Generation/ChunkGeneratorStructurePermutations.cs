@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.GameStates;
 
 namespace ViMG.Generation
 {
@@ -30,23 +31,23 @@ namespace ViMG.Generation
         {
         }
 
-        public override void GenerateChunkDetail(ChunkManager manager, ChunkPosition position)
+        public override void GenerateChunkDetail(WorldPrototype world, ChunkPosition position)
         {
         }
 
-        public override void PostGenerateDetail(World world, ChunkManager manager)
+        public override void PostGenerateDetail(WorldPrototype world)
         {
-            base.PostGenerateDetail(world, manager);
+            base.PostGenerateDetail(world);
 
             CubePosition startPosition = new CubePosition(2, 256, 256);
 
             for (int i = 0; i < 64; i++)
             {
                 Structure s = batches.Get(i);
-                ChunkHelper.PlaceStructureWithBlacklist(manager, s, startPosition, Span<ushort>.Empty, Span<ushort>.Empty, true);
+                ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, s, startPosition, Span<ushort>.Empty, Span<ushort>.Empty, true);
                 startPosition.X += s.size.X + 2;
 
-                if (startPosition.X > manager.SizeInCubes)
+                if (startPosition.X > world.ChunkManager.SizeInCubes)
                 {
                     startPosition.X = 0;
                     startPosition.Z += batches.LockAndGetMax().z;
@@ -54,7 +55,7 @@ namespace ViMG.Generation
             }
         }
 
-        public override Vector3 GetPlayerPosition(World world, ChunkManager chunks)
+        public override Vector3 GetPlayerPosition(ChunkManager chunkManager)
         {
             return new CubePosition(2, 256, 256).InWorldSpace();
         }

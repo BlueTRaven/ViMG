@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using ViMG.GameStates;
 using ViMG.Items;
 
 namespace ViMG.Cubes
@@ -17,9 +18,9 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.Invisible;
         }
 
-        public override void PostChunkGen(World world, ChunkManager manager, CubePosition position)
+        public override void PostChunkGen(WorldPrototype world, CubePosition position)
         {
-            base.PostChunkGen(world, manager, position);
+            base.PostChunkGen(world, position);
 
             Sapling sapling = new Sapling(position);
             world.EntityManager.Add(sapling);

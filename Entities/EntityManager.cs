@@ -23,7 +23,7 @@ namespace ViMG.Entities
 
 		private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
 
-		private readonly World world;
+		private World world;
 
 		public ulong GetUniqueId()
 		{
@@ -35,10 +35,14 @@ namespace ViMG.Entities
 			lastEntityId = seed;
 		}
 
-		public EntityManager(World world)
+		public EntityManager()
 		{
-			this.world = world;
 		}
+
+		public void Initialize(World world)
+        {
+			this.world = world;
+        }
 
 		public void ForceAdd(Entity entity, ulong id)
 		{

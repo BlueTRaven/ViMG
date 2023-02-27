@@ -94,7 +94,7 @@ namespace ViMG.UIs
                     if (Main.SessionInformation.LastLoadedSave != null)
                     {
                         gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.LoadWorld(Main.SessionInformation.LastLoadedSave);
+                        gsManager.TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
                     }
                 }
 
@@ -132,7 +132,7 @@ namespace ViMG.UIs
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                         {
                             gsManager.SetGameState(gsManager.TheIsland);
-                            gsManager.TheIsland.LoadWorld(directories[i]);
+                            gsManager.TheIsland.BeginLoadWorld(directories[i]);
                         }
                     }
 
@@ -143,7 +143,7 @@ namespace ViMG.UIs
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                     {
                         gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.LoadWorld("new" + directories.Length);
+                        gsManager.TheIsland.BeginLoadWorld("new" + directories.Length);
                     }
                 }
             }
