@@ -1,0 +1,182 @@
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ViMG.Cubes;
+
+namespace ViMG.WorldLogics
+{
+    public class WorldLogicIsland : WorldLogic
+    {
+		private const float SKYBOX_SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
+		private const float SUN_LIGHT_ANGLE = 5f; //rotate 5 degrees
+		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshSun;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
+
+		private float alive;
+        private DirectionalLight directionalLight;
+		//1 and last are replaced by the previous directional light color to prevent jumping colors.
+		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
+        
+		private int lavaLight;
+
+        public WorldLogicIsland(World world, GraphicsDevice device) : base(device)
+        {
+            directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f,
+                new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f });
+            directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
+
+			List<VertexCube> vertices = new List<VertexCube>();
+			List<int> indices = new List<int>();
+
+			indices.Add(0);
+			indices.Add(1);
+			indices.Add(3);
+			indices.Add(1);
+			indices.Add(2);
+			indices.Add(3);
+
+			Color sunColor = Color.White;
+			float sunVertDist = Cube.CUBE_SCALE * 12;
+
+			if (world.LoadedFolderName == "coconut")
+			{
+				sunVertDist = Cube.CUBE_SCALE * 128;
+				sunColor = Color.White;
+			}
+
+			vertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
+
+			meshSun = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+
+			vertices = new List<VertexCube>();
+			indices = new List<int>();
+
+			indices.Add(3);
+			indices.Add(1);
+			indices.Add(0);
+			indices.Add(3);
+			indices.Add(2);
+			indices.Add(1);
+
+			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
+			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
+
+			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+		}
+
+        public override void Initialize()
+        {
+            base.Initialize();
+        }
+
+        public override void Update(World world, double deltaTime)
+        {
+            base.Update(world, deltaTime);
+			alive += (float)deltaTime;
+
+			if (world.player.Position.Y / Cube.CUBE_SCALE < 140)
+			{
+				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
+
+				if (world.player.Position.Y < lavaPosition.Y)
+					world.player.Kill();
+
+				if (lavaLight == -1)
+					lavaLight = world.LightManager.Add(lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
+				else
+					world.LightManager.Update(lavaLight, lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
+			}
+			else
+			{
+				if (lavaLight != -1)
+				{
+					world.LightManager.Remove(lavaLight);
+					lavaLight = -1;
+				}
+			}
+
+			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
+			if (CubePosition.FromWorldSpace(world.player.Position).Y > 140)
+			{
+				Main.Renderer.DoCSMLight = true;
+
+				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
+				{
+					Color color = Color.White * (1 - world.GetTimeOfDay());
+
+					if (world.GetDuskTime() > 0)
+					{
+						duskColors[0] = color;  //so that we don't snap to the wrong color...
+						duskColors[^1] = color;
+						color = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
+					}
+
+					float angle = 360 * ((alive % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+					directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), color);
+
+					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
+					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+					if (!Main.inputManager.IsHeld(Keys.F6))
+						Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+					else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+					//Main.Renderer.EffectGBuffer.Parameters["Heightmap"].SetValue(ChunkManager.Heightmap);
+					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				}
+			}
+			else
+			{
+				Main.Renderer.DoCSMLight = false;
+
+				if (Main.inputManager.IsHeld(Keys.F6))
+					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+			}
+		}
+
+        public override void Draw(World world, GraphicsDevice device)
+        {
+            base.Draw(world, device);
+
+			directionalLight.DrawShadowmap(device, world);
+			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
+
+			Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
+
+			if (world.LoadedFolderName == "coconut")
+				sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
+
+			float angle = 360 * ((alive % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+
+			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
+				Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+				Matrix.CreateTranslation(world.player.Position),
+				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
+
+			if (world.player.Position.Y / Cube.CUBE_SCALE < 140)
+			{
+				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
+					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);
+
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("lava"),
+					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
+			}
+		}
+    }
+}

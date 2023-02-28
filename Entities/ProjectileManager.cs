@@ -378,7 +378,7 @@ namespace ViMG.Entities
 			projectiles[index] = new Projectile(index);
 		}
 
-		public void Draw(GraphicsDevice device, Effect effect)
+		public void Draw(GraphicsDevice device)
 		{
 			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{

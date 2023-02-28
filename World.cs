@@ -17,6 +17,7 @@ using ViMG.GameStates;
 using ViMG.Generation;
 using ViMG.Items;
 using ViMG.Spawners;
+using ViMG.WorldLogics;
 
 namespace ViMG
 {
@@ -28,8 +29,6 @@ namespace ViMG
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
 		public const float DAY_CYCLE_TIME = 60f * 10f;
 
-		private const float SUN_DISTANCE = -6 * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-		private const float SUN_ANGLE = 5f;	//rotate 5 degrees
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
 
@@ -39,8 +38,6 @@ namespace ViMG
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
 		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
 		private static SimpleMesh<VertexCube, int> meshMiningCube;
-		private static SimpleMesh<VertexCube, int> meshSun;
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
 
 		private static SimpleMesh<VertexCube, int> skyboxMesh;
 		private static bool meshesLoaded;
@@ -78,21 +75,14 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
-		private int lavaLight = -1;
-		private bool lavaLightShadowmapped;
-
 		private WorldInfoIO worldInfoIO;
 		private ChunkManagerIO chunkIO;
 		private EntityManagerIO entIO;
+		private WorldLogic logic;
 
 		public ChunkLoadManager ChunkLoadManager;
 
-		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
-		public DirectionalLight directionalLight;
-		private int currentCascadeDebug;
-
 		private float randomUpdatesTimer;
-		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
 
 		public World(int layer, string worldName, GameStateManager gameStateManager, WorldPrototype prototype, 
 			ChunkLoadManager chunkLoadManager, WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
@@ -133,9 +123,7 @@ namespace ViMG
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 
-			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f, 
-				new float[] { 1f / 50f,  1f / 25f, 1f / 10f, 1f / 2f});
-			directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
+			logic = new WorldLogicIsland(this, device);
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -247,209 +235,8 @@ namespace ViMG
 
 			skyboxMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
-			List<VertexCube> sunVertices = new List<VertexCube>();
-			List<int> sunIndices = new List<int>();
-
-			sunIndices.Add(0);
-			sunIndices.Add(1);
-			sunIndices.Add(3);
-			sunIndices.Add(1);
-			sunIndices.Add(2);
-			sunIndices.Add(3);
-
-			Color sunColor = Color.Yellow;
-			float sunVertDist = Cube.CUBE_SCALE * 4;
-
-			if (LoadedFolderName == "coconut")
-			{
-				sunVertDist = Cube.CUBE_SCALE * 128;
-				sunColor = Color.White;
-			}
-
-			sunVertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
-			sunVertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
-
-			meshSun = new SimpleMesh<VertexCube, int>(device, sunVertices, sunIndices);
-
-			vertices = new List<VertexCube>();
-			indices = new List<int>();
-
-			offset = vertices.Count;
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 0);
-			indices.Add(offset + 3);
-			indices.Add(offset + 2);
-			indices.Add(offset + 1);
-
-			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
-
-			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
-
 			meshesLoaded = true;
 		}
-
-		/*public void LoadWorld(GraphicsDevice device, string folderName)
-		{
-			int spawnX = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
-			int spawnZ = Main.random.Next(sizeInCubes / 2 - 4, sizeInCubes / 2 + 4);
-
-			CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(sizeInCubes * Cube.CUBE_SCALE / 2f, sizeInCubes * Cube.CUBE_SCALE, sizeInCubes * Cube.CUBE_SCALE / 2f));
-			playerPos.X = spawnX;
-			playerPos.Z = spawnZ;
-			playerPos.Y = sizeInCubes;
-
-			if (!Directory.Exists("./saves/" + folderName + "/"))
-			{
-				//If the directory does not exist, run world generation, save, and then load.
-				//TODO: this maybe shouldn't exist here?
-				ChunkGenerator = new ChunkGeneratorIsland(0);
-				entIO = new EntityManagerIO(EntityManager);
-				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-				ChunkManager = new ChunkManager(sizeInChunks, chunkIO, device);
-				ChunkManager.CreateInitializerCubeView();
-
-				ChunkGeneratorTasker.GenerateWorld(this, ChunkManager, ChunkGenerator);
-
-				LoadedFolderName = folderName;
-				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
-
-				FinishGenWorld();
-			}
-			else
-			{
-				ProfilingHelper.Start("Loading world...");
-				GameStateManager.TheIsland.LoadMessage = "Loading World...";
-				worldInfoIO = new WorldInfoIO();
-				chunkIO = new ChunkManagerIO(sizeInChunks, "test");
-				entIO = new EntityManagerIO(EntityManager);
-
-				ChunkManager = new ChunkManager(sizeInChunks, chunkIO, device);
-
-				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
-					"Reading from disk...";
-				WorldIO.LoadError error = worldInfoIO.Load(folderName, this, PointsOfInterest);
-				if (error == WorldIO.LoadError.InvalidVersion)
-					Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", worldInfoIO.Version);
-
-				error = chunkIO.Load(folderName);
-				if (error == WorldIO.LoadError.InvalidVersion)
-					Console.WriteLine("Chunk file could not be loaded. The current file version ({0}) is not supported.", chunkIO.Version);
-
-				error = entIO.Load(folderName);//saver.Load(device, this, folderName);
-				if (error == WorldIO.LoadError.InvalidVersion)
-					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", entIO.Version);
-
-				ChunkLoadManager = new ChunkLoadManager(ChunkManager, EntityManager, chunkIO, entIO);
-				ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
-				ChunkManager.CreateInitializerCubeView();
-
-				GameStateManager.TheIsland.LoadMessage = "Loading World...\n" +
-					"Deserializing...";
-				
-				//Deserialize this player chunk; the player entity is created.
-				//We do this this way since the player is, really, just another entity. Treating it otherwise (with its own deserialization routine)
-				//is overcomplicating the problem.
-				entIO.DeserializePlayerChunk();
-
-				if (EntityManager.GetAll<Player>().Count > 0)
-				{
-					//Update player reference. player is used as shorthand for several things, so we don't have to search for the player object every time...
-					//We might want to change this eventually.
-					player = EntityManager.GetAll<Player>().First() as Player;
-
-					//Update load target, load around the player, and then flush the load queue.
-					//This forces the game to finish loading everything that the player might see BEFORE the game actually starts running.
-					//As opposed to loading it on the fly, which, admittedly, might work fine.
-					ChunkLoadManager.UpdateLoadTarget(player.Position);
-					ChunkLoadManager.LoadAroundTarget(this);
-					ChunkLoadManager.FlushLoadQueue(this);
-
-					Main.camera.Position = player.Position;
-				}
-				else
-				{
-					//Player somehow has not been created?
-					player = new Player();
-					player.FirstCreated();
-					EntityManager.Add(player);
-
-					ChunkLoadManager.UpdateLoadTarget(playerPos.InWorldSpace());
-					ChunkLoadManager.LoadAroundTarget(this);
-
-					//TODO this should use initializer view.
-					//Or maybe it should be removed entirely. Use the generator?
-					Vector3 playerSpawnPos = GetFirstSolidDown(playerPos.InWorldSpace()).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 3, 0);
-					player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPos);
-					player.Position = playerSpawnPos;
-
-					Main.camera.Position = player.Position;
-				}
-
-				LoadedFolderName = folderName;
-				Main.SessionInformation.LastLoadedSave = LoadedFolderName;
-
-				ProfilingHelper.End("World loading done.");
-			}
-
-			//Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-			//ChunkLoadManager2 = new ChunkLoadManager(saver2, ChunkManager2, 6, 6, 8);
-
-			//EntityManager.Add(new EntityLeviathan());
-		}
-
-		private void FinishGenWorld()
-        {
-			worldInfoIO = new WorldInfoIO();
-
-			worldInfoIO.Save(LoadedFolderName, this, PointsOfInterest);
-
-			ProfilingHelper.Start("Saving Chunks...");
-			//chunkIO.SerializeAll();
-			chunkIO.Save(LoadedFolderName);
-
-			ProfilingHelper.End("Done.");
-
-			ChunkLoadManager = new ChunkLoadManager(ChunkManager, EntityManager, chunkIO, entIO);
-			ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
-
-			player = new Player();
-			player.FirstCreated();
-			EntityManager.Add(player);
-
-			Vector3 playerSpawnPosition = ChunkGenerator.GetPlayerPosition(this, ChunkManager);
-			player.Position = playerSpawnPosition;
-			player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-
-			ProfilingHelper.Start("Saving Entities...");
-			entIO.SerializeAll(this);
-			entIO.Save(LoadedFolderName);
-			ProfilingHelper.End("Done.");
-
-			ProfilingHelper.Start("Reloading...");
-			//This will unload everything, then reload only the things nearby.
-			ChunkLoadManager.UnloadAll();
-			ChunkLoadManager.UpdateLoadTarget(playerSpawnPosition);
-			ChunkLoadManager.LoadAroundTarget(this);    //enqueue to be loaded...
-			ChunkLoadManager.FlushLoadQueue(this);  //actually load.
-
-			//ChunkManager2.FlushMeshQueue(this, ChunkLoadManager);
-
-			ProfilingHelper.End("Done.");
-			
-			//This includes the player. The player is unloaded, so this.player needs to be set again. (Kinda awkward, I know.)
-			if (EntityManager.GetAll<Player>().Count > 0)
-			{
-				player = EntityManager.GetAll<Player>().First() as Player;
-
-				Main.camera.Position = player.Position;
-			}
-		}*/
 
 		public void FinishLoading(GraphicsDevice device)
         {
@@ -485,6 +272,8 @@ namespace ViMG
 			}
 			
 			Main.camera.Position = player.Position;
+
+			logic.FinishLoading(device);
 		}
 
 		public void UnfixedUpdate()
@@ -506,37 +295,7 @@ namespace ViMG
 			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
 
-			if (player.Position.Y / Cube.CUBE_SCALE < 140)
-			{
-				Vector3 lavaPosition = new Vector3(player.Position.X, Cube.CUBE_SCALE * 40.5f, player.Position.Z);
-
-				if (player.Position.Y < lavaPosition.Y)
-					player.Kill();
-
-				if (lavaLight == -1)
-					LightManager.AddShadowmapped(lavaPosition, 28 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4(), out lavaLight, out lavaLightShadowmapped);
-				else
-				{
-					if (lavaLightShadowmapped)
-						LightManager.UpdateShadowmapped(lavaLight, lavaPosition, 28 * Cube.CUBE_SCALE, 32 * Cube.CUBE_SCALE, Color.OrangeRed.ToVector4());
-                    else
-                    {
-						//try again next frame.
-						LightManager.Remove(lavaLight);
-						lavaLight = -1;
-                    }
-				}
-			}
-			else
-			{
-				if (lavaLight != -1)
-				{
-					if (lavaLightShadowmapped)
-						LightManager.RemoveShadowmapped(lavaLight);
-					else LightManager.Remove(lavaLight);
-					lavaLight = -1;
-				}
-			}
+			logic.Update(this, deltaTime);
 
 			//TODO: remove allocation somehow
 			//Perhaps an expanding array
@@ -642,46 +401,6 @@ namespace ViMG
 
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
-
-			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-			if (CubePosition.FromWorldSpace(player.Position).Y > 140)
-			{
-				Main.Renderer.DoCSMLight = true;
-
-				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
-				{
-					Color color = Color.White * (1 - GetTimeOfDay());
-
-					if (GetDuskTime() > 0)
-					{
-						duskColors[0] = color;  //so that we don't snap to the wrong color...
-						duskColors[^1] = color;
-						color = Utility.MultiLerp(GetDuskTime(), Color.Lerp, duskColors);
-					}
-
-					float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-					directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE))), color);
-
-					float ambient = 1 - GetTimeOfDay(dawnEndOffsetScale: 1.25f);
-					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
-					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
-					if (!Main.inputManager.IsHeld(Keys.F6))
-						Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
-					else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-					//Main.Renderer.EffectGBuffer.Parameters["Heightmap"].SetValue(ChunkManager.Heightmap);
-					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
-					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
-				}
-			}
-			else
-			{
-				Main.Renderer.DoCSMLight = false;
-
-				if (Main.inputManager.IsHeld(Keys.F6)) 
-					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-			}
 		}
 
 		public void SaveWorld()
@@ -716,17 +435,14 @@ namespace ViMG
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
 
-		public void Draw(GraphicsDevice device, Effect effect)
+		public void Draw(GraphicsDevice device)
 		{
 			NumChunksDrawn = 0;
 			ChunkDrawTime = 0;
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-			directionalLight.DrawShadowmap(device, this);
-			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
-
-			LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
+            LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
 			LightManager.DrawShadowmap(device, this);
 			LightManager.Draw(device);
 
@@ -796,8 +512,6 @@ namespace ViMG
 
 			if (drawSkybox)
 			{
-				float angle = 360 * ((alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME);
-
 				float alphaDay = 1 - GetTimeOfDay();
 				float alphaNight = GetTimeOfNight();
 
@@ -829,30 +543,8 @@ namespace ViMG
 						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
 				}
 
-				Texture2D sunTexture = DrawHelper.WhitePixel;
-
-				if (LoadedFolderName == "coconut")
-					sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
-
-				Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
-					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
-					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					Matrix.CreateTranslation(player.Position),
-					sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
-
-				/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(sunTexture,
-					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO,
-					Matrix.CreateTranslation(new Vector3(0, 0, SUN_DISTANCE)) *
-					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					//Matrix.CreateRotationY(MathHelper.ToRadians(SUN_ANGLE)) *
-					Matrix.CreateTranslation(player.Position), null));*/
-
 				if (Main.Debug)
 					HitboxManager.DrawDebug(device);
-				/*Main.CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-				Main.FogManager.Disable();
-
-				Main.FogManager.Enable();*/
 			}
 
 			foreach (var mined in miningCubes)
@@ -873,25 +565,13 @@ namespace ViMG
 				}
 			}
 
-			if (player.Position.Y / Cube.CUBE_SCALE < 140)
-			{
-				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
-					Matrix.CreateTranslation(player.Position.X, Cube.CUBE_SCALE * 40.5f, player.Position.Z);
-
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("lava"),
-					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
-			}
-
-			ProjectileManager.Draw(device, effect);
+			ProjectileManager.Draw(device);
 			EntityManager.Draw(device, Main.CubeLitEffect);
+
+			logic.Draw(this, device);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
-
-		}
-
-		public void DrawShadowmap(GraphicsDevice device, Effect effect)
-        {
 		}
 
 		public void DrawUI(SpriteBatch batch)
@@ -901,6 +581,8 @@ namespace ViMG
 
 		public void OnCubeUpdate(CubePosition updating, int updatedId)
 		{
+			logic.OnCubeUpdated(updating, updatedId);
+
 			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
 			//Just every entity that could respond to this cube. 
 			//What constitutes an entity that could respond to this cube? I don't know exactly.
@@ -927,7 +609,7 @@ namespace ViMG
 			alive += time;
         }
 
-		private float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1)
+		public float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1)
 		{
 			//values here are in % of day cycle time;
 			//dawn starts at the last 8% of the total cycle
@@ -968,22 +650,11 @@ namespace ViMG
 			return 0;
 		}
 
-		public float GetDawnTime()
-        {
-			//dawn starts at the last 8% of the total cycle
-			const float DAWN_START = 0.92f;
-			//dawn ends after 16% of the total cycle (8% of the day cycle)
-			const float DAWN_END = 0.16f;
-
-			return 0;
-		}
-
 		public float GetDuskTime()
         {
 			//Dusk starts at the last 8% of the day cycle.
 			const float DUSK_START = 0.42f;
-			//dusk ends after 16% of the night cycle.
-			const float DUSK_END = 0.66f;
+			const float DUSK_END = 0.56f;
 
 			float timeOfDayPercent = (alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
 
@@ -1118,47 +789,6 @@ namespace ViMG
 			}
 
 			return false;
-		}
-
-		public CubePosition GetFirstSolidDown(Vector3 start)
-		{
-			CubePosition startPos = CubePosition.FromWorldSpace(start);
-
-			for (int y = 0; y < sizeInCubes; y++)
-			{
-				CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-				if (ChunkManager.IsInWorldBounds(pos) && ChunkManager.ThreadedView.GetId(pos) != 0)
-					return pos;
-			}
-
-			return new CubePosition(-1, -1, -1);
-		}
-
-		public List<CubePosition> GetAdjacentsInWorld(CubePosition position)
-		{
-			CubePosition down = new CubePosition(position.X, position.Y - 1, position.Z);
-			CubePosition up = new CubePosition(position.X, position.Y + 1, position.Z);
-			CubePosition left = new CubePosition(position.X - 1, position.Y, position.Z);
-			CubePosition right = new CubePosition(position.X + 1, position.Y, position.Z);
-			CubePosition front = new CubePosition(position.X, position.Y, position.Z - 1);
-			CubePosition back = new CubePosition(position.X, position.Y, position.Z + 1);
-
-			List<CubePosition> positions = new List<CubePosition>();
-
-			if (ChunkManager.IsInWorldBounds(down))
-				positions.Add(down);
-			if (ChunkManager.IsInWorldBounds(up))
-				positions.Add(up);
-			if (ChunkManager.IsInWorldBounds(left))
-				positions.Add(left);
-			if (ChunkManager.IsInWorldBounds(right))
-				positions.Add(right);
-			if (ChunkManager.IsInWorldBounds(front))
-				positions.Add(front);
-			if (ChunkManager.IsInWorldBounds(back))
-				positions.Add(back);
-
-			return positions;
 		}
 
 		public struct RaycastResult 

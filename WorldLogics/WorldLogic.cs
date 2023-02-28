@@ -1,0 +1,42 @@
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ViMG.WorldLogics
+{
+    public abstract class WorldLogic
+    {
+        public WorldLogic(GraphicsDevice device)
+        {
+
+        }
+
+        public virtual void Initialize()
+        {
+
+        }
+
+        public virtual void FinishLoading(GraphicsDevice device) 
+        {
+
+        }
+
+        public virtual void Update(World world, double deltaTime)
+        {
+
+        }
+
+        public virtual void OnCubeUpdated(CubePosition updating, int updatedId)
+        {
+
+        }
+
+        public virtual void Draw(World world, GraphicsDevice device)
+        {
+
+        }
+    }
+}

@@ -268,7 +268,7 @@ namespace ViMG.GameStates
 
             if (world != null)
             {
-                world.Draw(device, null);
+                world.Draw(device);
             }
         }
 
