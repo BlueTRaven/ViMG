@@ -85,7 +85,10 @@ namespace ViMG
 				BroadChunkTaskState state = new BroadChunkTaskState(gsManager, world, chunkStart, chunkEnd, total, positions, generator);
 				Task task = new Task(GenerateChunkDetailTaskFn, state);
 
-				task.Start();
+				if (Main.MULTITHREAD_BROAD_PHASE)
+					task.Start();
+				else task.RunSynchronously();
+
 				broadPhaseTasks.Add(task);
 			}
 
@@ -99,7 +102,7 @@ namespace ViMG
                 {
 					gsManager.TheIsland.LoadMessage = "Broad phase generation...\n" +
 						i + "/" + broadPhaseTasks.Count;
-					Thread.Sleep(100);
+					Thread.Sleep(10);
                 }
             }
 

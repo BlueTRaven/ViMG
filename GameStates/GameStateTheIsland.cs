@@ -129,7 +129,7 @@ namespace ViMG.GameStates
             //If the directory does not exist, run world generation, save, and then load.
             //TODO: this maybe shouldn't exist here?
             var entityManager = new EntityManager();
-            var chunkGenerator = new ChunkGeneratorIsland(0);
+            var chunkGenerator = new ChunkGeneratorCatacombs();
             var entIO = new EntityManagerIO(entityManager);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test");
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);

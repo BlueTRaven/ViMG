@@ -28,7 +28,7 @@ namespace ViMG
 
 		public ChunkMesh(GraphicsDevice device, List<VertexCube> vertices, List<int> indices)
 		{
-			if (Thread.CurrentThread == Main.MainThread || Main.CAN_MULTITHREAD_UPLOAD)
+			if (Thread.CurrentThread == Main.MainThread || Main.MULTITHREAD_UPLOADMESH)
             {
 				(VBO, IBO) = MeshHelper.MakeSimplerMesh(device, vertices, indices);
             }
