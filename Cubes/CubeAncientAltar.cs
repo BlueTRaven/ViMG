@@ -31,7 +31,7 @@ namespace ViMG.Cubes
 		{
 			base.PostChunkGen(world, position);
 
-			world.EntityManager.Add(new AncientAltar(position, CUBE_SCALE * 10));
+			world.AddEntity(new AncientAltar(position, CUBE_SCALE * 10));
 		}
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)

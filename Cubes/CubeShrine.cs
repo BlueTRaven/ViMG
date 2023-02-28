@@ -29,7 +29,7 @@ namespace ViMG.Cubes
             base.PostChunkGen(world, position);
 
             EntityShrine shrine = new EntityShrine(position, Main.Registry.BuffRegistry.Get(buff));
-            world.EntityManager.Add(shrine);
+            world.AddEntity(shrine);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

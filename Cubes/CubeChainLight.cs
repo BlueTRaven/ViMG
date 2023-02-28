@@ -45,7 +45,7 @@ namespace ViMG.Cubes
         {
             base.PostChunkGen(world, position);
 
-            world.EntityManager.Add(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
+            world.AddEntity(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

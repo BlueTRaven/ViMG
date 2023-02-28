@@ -166,12 +166,7 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
-			foreach (Entity entity in toAddLater)
-			{
-				ReallyAdd(entity);
-			}
-
-			toAddLater.Clear();
+			AddLaterEntities();
 
 			iterating = true;
 
@@ -189,6 +184,16 @@ namespace ViMG.Entities
 			}
 
 			toDeleteLater.Clear();
+		}
+
+		public void AddLaterEntities()
+        {
+			foreach (Entity entity in toAddLater)
+			{
+				ReallyAdd(entity);
+			}
+
+			toAddLater.Clear();
 		}
 
 		private void ReallyRemove(Entity entity)

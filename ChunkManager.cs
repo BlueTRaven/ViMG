@@ -98,8 +98,6 @@ namespace ViMG
             Mesher = new ChunkMesher(device, sizeInChunksXZ);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
-
-            InitializerView = new InitializerCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
         }
 
         //Update queue of chunks to mesh
@@ -288,21 +286,6 @@ namespace ViMG
             return new OptionalValue<CubePosition>();
         }
 
-        public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start)
-        {
-            for (int y = 0; y < SizeInCubes; y++)
-            {
-                CubePosition pos = new CubePosition(start.X, start.Y - y, start.Z);
-
-                //Null check here is the same as doing out of bounds check.
-                Cube cubeAtPos = ThreadedView.GetCube(pos).Get();
-                if (cubeAtPos != null && (cubeAtPos.Touchable && cubeAtPos.Collision == Cube.CollisionValue.Collidable))
-                    return new OptionalValue<CubePosition>(pos);
-            }
-
-            return new OptionalValue<CubePosition>();
-        }
-
         private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             GetCubeMeshInfo(position).version++;
@@ -423,7 +406,7 @@ namespace ViMG
         
         public InitializerCubeView CreateInitializerCubeView()
         {
-            InitializerView = new InitializerCubeView(GetCubeId, GetCube, GetCachedFaces, SetCube);
+            InitializerView = new InitializerCubeView(this, GetCubeId, GetCube, GetCachedFaces, SetCube);
 
             return InitializerView;
         }

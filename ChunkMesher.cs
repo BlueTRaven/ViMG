@@ -537,7 +537,7 @@ namespace ViMG
 				checkPositions[1] = nrm + t + bt;
 				checkPositions[2] = nrm + t;
 				checkPositions[3] = nrm + bt;
-				manager.ThreadedView.GetIds(checkPositions, checkIds);
+				manager.ThreadedView.GetIds(checkPositions, checkIds, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
 				int top = checkIds[0];
 				int corner = checkIds[1];

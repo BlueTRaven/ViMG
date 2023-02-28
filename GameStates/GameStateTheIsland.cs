@@ -68,6 +68,7 @@ namespace ViMG.GameStates
                 {
                     world = LoadWorld(device, worldName);
                 }
+                world.FinishLoading(device);
                 //World world = new World(manager, device, 512);
                 //world.LoadWorld(device, worldName);
 
@@ -107,7 +108,6 @@ namespace ViMG.GameStates
                 if (worldTask.IsCompleted)
                 {
                     world = worldTask.Result;
-                    world.FinishLoading(device);
 
                     IsLoading = false;
                 }
@@ -134,8 +134,16 @@ namespace ViMG.GameStates
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test");
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
             chunkManager.CreateInitializerCubeView();
+            chunkManager.CreateThreadedCubeView(null);
 
-            WorldPrototype prototype = new WorldPrototype(entityManager, chunkManager, new WorldInfoIO.WorldInfo());
+            WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
+            {
+                playerPosition = new Vector3(-1),
+                time = 0,
+                pointsOfInterest = new List<PointOfInterest>(),
+            };
+
+            WorldPrototype prototype = new WorldPrototype(entityManager, chunkManager, worldInfo);
 
             ChunkGeneratorTasker.GenerateWorld(manager, prototype, chunkGenerator);
 
@@ -154,12 +162,15 @@ namespace ViMG.GameStates
 
             var player = new Player();
             player.FirstCreated();
-            prototype.EntityManager.Add(player);
+            prototype.EntityManager.Add(player, true);
 
             Vector3 playerSpawnPosition = chunkGenerator.GetPlayerPosition(prototype.ChunkManager);
             player.Position = playerSpawnPosition;
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
             prototype.WorldInfo.playerPosition = player.Position;
+
+            World world = new World(0, worldName, manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            entityManager.AddLaterEntities();
 
             ProfilingHelper.Start("Saving Entities...");
             entIO.SerializeAll(SIZE_IN_CHUNKS);
@@ -176,9 +187,9 @@ namespace ViMG.GameStates
             //So we just call the raw Unload functions.
             entityManager.UnloadAll();
             //chunkLoadManager.UnloadAll();
-
-            World world = new World(0, worldName, manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            
             worldInfoIO.Save(worldName, world.WorldInfo);
+
 
             ProfilingHelper.End("Done.");
 

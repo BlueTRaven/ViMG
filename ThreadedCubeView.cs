@@ -67,7 +67,7 @@ namespace ViMG
                     bool valid = true;
                     if ((check & SafetyCheck.InWorldBounds) == SafetyCheck.InWorldBounds && !manager.IsInWorldBounds(positions[i]))
                         valid = false;
-                    if ((check & SafetyCheck.IsLoaded) == SafetyCheck.IsLoaded && !loadManager.IsLoaded(ChunkPosition.CubeChunk(positions[i])))
+                    if (loadManager != null && (check & SafetyCheck.IsLoaded) == SafetyCheck.IsLoaded && !loadManager.IsLoaded(ChunkPosition.CubeChunk(positions[i])))
                         valid = false;
 
                     if (valid)
@@ -94,6 +94,22 @@ namespace ViMG
                     cubes[i] = getCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air);
                 }
             }
+        }
+
+        //TODO optimize
+        public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start, int searchLimit = 512)
+        {
+            for (int y = 0; y < manager.SizeInCubes; y++)
+            {
+                CubePosition pos = new CubePosition(start.X, start.Y - y, start.Z);
+
+                //Null check here is the same as doing out of bounds check.
+                Cube cubeAtPos = GetCube(pos).Get();
+                if (cubeAtPos != null && cubeAtPos.Solid)
+                    return new OptionalValue<CubePosition>(pos);
+            }
+
+            return new OptionalValue<CubePosition>();
         }
 
         public MeshHelper.CubeFace GetFace(CubePosition position)

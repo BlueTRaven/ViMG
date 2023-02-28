@@ -336,7 +336,7 @@ namespace ViMG
 			//SpawnPosition got corrupted or something or is a version that doesn't have it
 			if (SpawnPosition == new CubePosition())
 			{
-				SpawnPosition = world.ChunkManager.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
+				SpawnPosition = world.ChunkManager.ThreadedView.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
 			}
 		}
 

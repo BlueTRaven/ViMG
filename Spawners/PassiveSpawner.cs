@@ -101,7 +101,7 @@ namespace ViMG.Spawners
                 var cubeAtPos = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(v)).Get();
                 if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
-                    CubePosition pos = world.ChunkManager.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+                    CubePosition pos = world.ChunkManager.ThreadedView.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 
                     position = pos;
                     return true;

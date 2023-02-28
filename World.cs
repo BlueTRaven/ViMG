@@ -465,15 +465,17 @@ namespace ViMG
 			//as it normally does.)
 			ChunkLoadManager.FlushLoadQueue(this);
 
-			player = EntityManager.GetAll<Player>().First() as Player;
-
 			//The player reference will not be set up after loading. We need to do that ourselves.
 			//TODO multiplayer
 			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
+			player = EntityManager.GetAll<Player>().First() as Player;
+
 			if (player == null)
 			{
 				//If we didn't manage to find the player using the new method, fall back to the old method.
-				//TODO obsolete
+				//This deserializes the player manually then loads the chunks around them.
+				//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
+				//TODO obsolete/deprecated
 				entIO.DeserializePlayerChunk();
 				player = EntityManager.GetAll<Player>().First() as Player;
 

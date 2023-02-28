@@ -165,7 +165,7 @@ namespace ViMG.Generation
 			playerPos.Y = chunkManager.SizeInCubes;
 
 			//TODO this should use initializer view
-			return chunkManager.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
+			return chunkManager.InitializerView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
 		}
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -374,7 +374,7 @@ namespace ViMG.Generation
 
 				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
-					var solidDown = world.ChunkManager.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
                     {
@@ -386,7 +386,7 @@ namespace ViMG.Generation
 
 							int randomFace = GetRandom().Next();
 
-							world.EntityManager.Add(new EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+							world.EntityManager.Add(new EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()), true);
 							world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "chest", 1));
 
 							positions[lastPosition++] = actualGenPos;
@@ -439,7 +439,7 @@ namespace ViMG.Generation
 
 				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					var solidDown = world.ChunkManager.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
 					{
@@ -481,7 +481,7 @@ namespace ViMG.Generation
 
 				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					var solidDown = world.ChunkManager.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
 					{
@@ -495,7 +495,7 @@ namespace ViMG.Generation
 							{
 								positions[lastPosition++] = actualGenPos;
 
-								world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f)));
+								world.EntityManager.Add(new Entities.Heart(actualGenPos.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f)), true);
 								spawnNum--;
 							}
 						}
@@ -774,7 +774,7 @@ namespace ViMG.Generation
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
             {
 				id = Main.Registry.CubeRegistry.Get("furnace_t1").Id;
-				entityManager.Add(new Entities.EntityFurnace(position, MeshHelper.CubeFace.RIGHT));
+				entityManager.Add(new Entities.EntityFurnace(position, MeshHelper.CubeFace.RIGHT), true);
 
 				return true;
             }
@@ -782,7 +782,7 @@ namespace ViMG.Generation
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
 			{
 				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
-				entityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(), 3, 3, MeshHelper.CubeFace.RIGHT));
+				entityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(), 3, 3, MeshHelper.CubeFace.RIGHT), true);
 
 				return true;
 			}
@@ -799,7 +799,7 @@ namespace ViMG.Generation
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
 			{
 				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
-				entityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()));
+				entityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()), true);
 
 				return true;
 			}

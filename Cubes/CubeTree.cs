@@ -40,7 +40,7 @@ namespace ViMG.Cubes
 
 				Tree tree = new Tree(position.InWorldSpace() - new Vector3(CUBE_SCALE * 1.25f, 0, CUBE_SCALE * 1.25f), 
 					size, position);
-				world.EntityManager.Add(tree);
+				world.AddEntity(tree);
 			}
 		}
 

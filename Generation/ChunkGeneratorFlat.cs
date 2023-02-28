@@ -28,7 +28,7 @@ namespace ViMG.Generation
             playerPos.Y = chunkManager.SizeInCubes;
 
             //TODO this should use initializer view
-            return chunkManager.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
+            return chunkManager.InitializerView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)

@@ -20,5 +20,11 @@ namespace ViMG.GameStates
             this.ChunkManager = chunkManager;
             WorldInfo = worldInfo;
         }
+
+        public void AddEntity(Entity entity)
+        {
+            //prototype entities should delay adding since initialization relies on World and not WorldPrototype.
+            EntityManager.Add(entity, true);
+        }
     }
 }

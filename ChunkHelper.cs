@@ -140,7 +140,7 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = manager.ThreadedView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				offsetCube = manager.InitializerView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				if (!offsetCube.Solid)
 				{
 					return true;
