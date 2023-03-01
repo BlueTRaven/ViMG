@@ -79,7 +79,7 @@ namespace ViMG
         public InitializerCubeView InitializerView;
         public ThreadedCubeView ThreadedView;
 
-        private CubeMeshInfo[] cubeMeshInfos;
+        //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
         public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
@@ -91,9 +91,9 @@ namespace ViMG
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
             this.io = io;
 
-            cubeMeshInfos = new CubeMeshInfo[sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ * Chunk.NUM_CUBES_IN_CHUNK];
+            //cubeMeshInfos = new CubeMeshInfo[sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ * Chunk.NUM_CUBES_IN_CHUNK];
 
-            Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
+            //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
             Mesher = new ChunkMesher(device, sizeInChunksXZ);
 
@@ -247,9 +247,9 @@ namespace ViMG
         public delegate MeshHelper.CubeFace GetCachedFacesDel(CubePosition position);
         private MeshHelper.CubeFace GetCachedFaces(CubePosition position)
         {
-            //return GetClearSides(position);
+            return GetClearSides(position);
 
-            ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
+            /*ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
 
             if (meshInfo.version != meshInfo.meshVersion)
             {
@@ -258,7 +258,7 @@ namespace ViMG
                 meshInfo.faces = GetClearSides(position);
             }
 
-            return meshInfo.faces;
+            return meshInfo.faces;*/
         }
 
         public MeshHelper.CubeFace GetFaces(CubePosition position)
@@ -266,11 +266,11 @@ namespace ViMG
             return GetClearSides(position);
         }
 
-        private ref CubeMeshInfo GetCubeMeshInfo(CubePosition position)
+        /*private ref CubeMeshInfo GetCubeMeshInfo(CubePosition position)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(SizeInCubes), out int i);
             return ref cubeMeshInfos[i];
-        }
+        }*/
 
         public OptionalValue<CubePosition> GetFirstSolidDown(Vector3 start)
         {
@@ -288,7 +288,7 @@ namespace ViMG
 
         private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
-            GetCubeMeshInfo(position).version++;
+            //GetCubeMeshInfo(position).version++;
             updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
@@ -297,7 +297,7 @@ namespace ViMG
 
                 if (IsInWorldBounds(adjacentPosition))
                 {
-                    GetCubeMeshInfo(adjacentPosition).version++;
+                    //GetCubeMeshInfo(adjacentPosition).version++;
 
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
@@ -393,7 +393,7 @@ namespace ViMG
             Mesher.UnloadAllMeshes();
             //UnloadAllMeshes();
 
-            cubeMeshInfos = null;
+            //cubeMeshInfos = null;
             //chunkMeshInfos = null;
         }
 

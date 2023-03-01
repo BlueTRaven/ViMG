@@ -378,6 +378,9 @@ namespace ViMG
 			hasMoved = false;
 			hasRotated = false;
 
+			if (Main.inputManager.JustPressed(Keys.G))
+				Main.Debug = !Main.Debug;
+
 			if (Main.Debug)
 				state = State.Noclip;
 			else if (state == State.Noclip)
@@ -536,11 +539,6 @@ namespace ViMG
 			float factor = 1 - ((positionY - start) / (end - start));
 			factor = Math.Clamp(factor, 0, 1);
 			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(factor);*/
-
-			if (Main.inputManager.JustPressed(Keys.G))
-			{
-				Main.Debug = !Main.Debug;
-			}
 
 			if (Main.inputManager.JustPressed(Keys.F3))
 			{

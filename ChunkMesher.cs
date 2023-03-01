@@ -15,10 +15,10 @@ namespace ViMG
 	public class ChunkMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 1;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 1;
-#else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 2;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 2;
+#else
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 6;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 2;
 #endif
 		public const int NUM_CHUNK_MESH_PASSES = 5;
