@@ -85,17 +85,19 @@ namespace ViMG
 
 		private float randomUpdatesTimer;
 
-		public World(int layer, string worldName, GameStateManager gameStateManager, WorldPrototype prototype, 
-			ChunkLoadManager chunkLoadManager, WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
+		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
+			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
 		{
-			this.Layer = layer;
-			this.LoadedFolderName = worldName;
+			this.Layer = prototype.Layer;
+			this.LoadedFolderName = prototype.WorldName;
 
 			this.GameStateManager = gameStateManager;
 
 			ChunkManager = prototype.ChunkManager;
 			EntityManager = prototype.EntityManager;
 			WorldInfo = prototype.WorldInfo;
+			Skybox = prototype.Skybox;
+			logic = prototype.Logic;
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -123,10 +125,6 @@ namespace ViMG
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-
-			Skybox = new Skybox();
-			
-			logic = new WorldLogicCatacombs(device);
 		}
 
 		private void CreateMeshes(GraphicsDevice device)

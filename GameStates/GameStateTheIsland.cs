@@ -143,7 +143,8 @@ namespace ViMG.GameStates
                 pointsOfInterest = new List<PointOfInterest>(),
             };
 
-            WorldPrototype prototype = new WorldPrototype(entityManager, chunkManager, worldInfo);
+            Skybox skybox = new Skybox();
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, new WorldLogics.WorldLogicIsland(worldName, skybox, device), skybox);
 
             ChunkGeneratorTasker.GenerateWorld(manager, prototype, chunkGenerator);
 
@@ -169,7 +170,7 @@ namespace ViMG.GameStates
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
             prototype.WorldInfo.playerPosition = player.Position;
 
-            World world = new World(0, worldName, manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             entityManager.AddLaterEntities();
 
             ProfilingHelper.Start("Saving Entities...");
@@ -227,7 +228,8 @@ namespace ViMG.GameStates
             if (worldInfo.playerPosition.LengthSquared() < 0)
                 worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
-            WorldPrototype prototype = new WorldPrototype(entityManager, chunkManager, worldInfo);
+            Skybox skybox = new Skybox();
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, new WorldLogics.WorldLogicIsland(worldName, skybox, device), skybox);
 
             error = chunkIO.Load(worldName);
             if (error == WorldIO.LoadError.InvalidVersion)
@@ -253,7 +255,7 @@ namespace ViMG.GameStates
 
             ProfilingHelper.End("World loading done.");
 
-            World world = new World(0, worldName, manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            World world = new World(manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             return world;
 
             //Main.FogManager.Set(1300f, 1700f, Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), Main.assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);

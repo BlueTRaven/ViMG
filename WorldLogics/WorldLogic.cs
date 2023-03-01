@@ -14,7 +14,7 @@ namespace ViMG.WorldLogics
 
         }
 
-        public virtual void Initialize()
+        public virtual void Initialize(World world)
         {
 
         }

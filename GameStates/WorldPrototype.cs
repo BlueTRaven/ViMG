@@ -13,12 +13,22 @@ namespace ViMG.GameStates
         public ChunkManager ChunkManager;
         public EntityManager EntityManager;
         public WorldInfoIO.WorldInfo WorldInfo;
+        public WorldLogics.WorldLogic Logic;
+        public Skybox Skybox;
 
-        public WorldPrototype(EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo)
+        public string WorldName;
+        public int Layer;
+
+        public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, WorldLogics.WorldLogic logic, Skybox skybox)
         {
+            this.WorldName = worldName;
+            this.Layer = layer;
+
             this.EntityManager = entityManager;
             this.ChunkManager = chunkManager;
             WorldInfo = worldInfo;
+            Logic = logic;
+            Skybox = skybox;
         }
 
         public void AddEntity(Entity entity)

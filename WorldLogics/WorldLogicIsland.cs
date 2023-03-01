@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.GameStates;
 using ViMG.Spawners;
 
 namespace ViMG.WorldLogics
@@ -28,21 +29,14 @@ namespace ViMG.WorldLogics
         
 		private int lavaLight;
 
-        public WorldLogicIsland(World world, GraphicsDevice device) : base(device)
+        public WorldLogicIsland(string worldName, Skybox skybox, GraphicsDevice device) : base(device)
         {
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSKeleton(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSImp(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSCaveSlime(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSnake(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));
-
 			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f,
                 new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f });
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
-			world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
-			world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night2");
+			skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
+			skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night2");
 
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
@@ -57,7 +51,7 @@ namespace ViMG.WorldLogics
 			Color sunColor = Color.White;
 			float sunVertDist = Cube.CUBE_SCALE * 12;
 
-			if (world.LoadedFolderName == "coconut")
+			if (worldName == "coconut")
 			{
 				sunVertDist = Cube.CUBE_SCALE * 128;
 				sunColor = Color.White;
@@ -88,10 +82,17 @@ namespace ViMG.WorldLogics
 			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
 		}
 
-        public override void Initialize()
+        public override void Initialize(World world)
         {
-            base.Initialize();
-        }
+            base.Initialize(world);
+
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSKeleton(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSImp(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSCaveSlime(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSnake(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));
+		}
 
         public override void Update(World world, double deltaTime)
         {
