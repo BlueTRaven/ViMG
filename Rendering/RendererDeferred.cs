@@ -282,7 +282,7 @@ namespace ViMG.Rendering
 
             DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
 
-            EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
+            //EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
 
             //EffectRadialFog.Parameters["Color"].SetValue(Main.assetsManager.GetAsset<Texture2D>("fog_colormap"));
