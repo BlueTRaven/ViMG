@@ -27,6 +27,11 @@ namespace ViMG.Spawners
             }
         }
 
+        public void AddPassiveSpawner(PassiveSpawner spawner)
+        {
+            spawners.Add(spawner);
+        }
+
         public void Update(double deltaTime, World world)
         {
             spawners.ForEach(x => x.Update(deltaTime, world));

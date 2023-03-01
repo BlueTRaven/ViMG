@@ -41,6 +41,7 @@ namespace ViMG
 
 		private static SimpleMesh<VertexCube, int> skyboxMesh;
 		private static bool meshesLoaded;
+		public Skybox Skybox;
 
 		public GameStateManager GameStateManager;
 		public Player player;
@@ -123,7 +124,9 @@ namespace ViMG
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 
-			logic = new WorldLogicIsland(this, device);
+			Skybox = new Skybox();
+			
+			logic = new WorldLogicCatacombs(device);
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -527,7 +530,7 @@ namespace ViMG
 						Matrix.CreateScale(DrawDistanceHoriz * 1.95f * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_night2"), DrawHelper.WhitePixel,
+						Skybox.Night, DrawHelper.WhitePixel,
 						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White));
 				}
 
@@ -539,7 +542,7 @@ namespace ViMG
 						Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateScale(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
 						Matrix.CreateTranslation(Main.camera.Position),
-						Main.assetsManager.GetAsset<Texture2D>("skybox_day"), DrawHelper.BlackPixel,
+						Skybox.Day, DrawHelper.BlackPixel,
 						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
 				}
 
