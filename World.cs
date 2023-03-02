@@ -413,6 +413,21 @@ namespace ViMG
 
 				player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
+				ProfilingHelper.Start("Copying Layer");
+				for (int x = 0; x < sizeInCubes; x++)
+                {
+					for (int z = 0; z < sizeInCubes; z++)
+                    {
+						for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                        {
+							Cube cube = ChunkManager.InitializerView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+							w.ChunkManager.InitializerView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
+                        }
+                    }
+                }
+				ProfilingHelper.End("Done");
+
 				w.EntityManager.Add(player);
 				player.world = w;
 				w.player = player;
