@@ -407,5 +407,12 @@ namespace ViMG
 			if (anyDrawn)
 				Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
 		}
+
+		public void Dispose()
+        {
+			lightsCubemaps?.Dispose();
+			bufferLights?.Dispose();
+			bufferShadowmappedLights?.Dispose();
+        }
 	}
 }

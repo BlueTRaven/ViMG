@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ViMG
 {
-    public class DirectionalLight
+    public class DirectionalLight : IDisposable
     {
         //public CameraOrthographic camera;
 		public CameraCSM camera;
@@ -286,5 +286,13 @@ namespace ViMG
         {
 			return targetsArr;
         }
+
+        public void Dispose()
+        {
+			target?.Dispose();
+			targetsArr?.Dispose();
+
+			Main.Renderer.DoCSMLight = false;
+		}
     }
 }

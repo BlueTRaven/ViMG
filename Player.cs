@@ -319,6 +319,8 @@ namespace ViMG
 				Health = MaxHealth / 4;
 			}
 
+			hurtbox = -1;
+			hitbox = -1;
 			Health = MaxHealth;
 			Magic = MaxMagic;
 

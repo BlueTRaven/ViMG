@@ -67,6 +67,8 @@ namespace ViMG
 
 		public IEnumerable<ChunkPosition> GetLoaded()
         {
+			if (gettableLoadedChunks == null)
+				gettableLoadedChunks = loadedChunks.Keys;
 			return gettableLoadedChunks;
         }
 

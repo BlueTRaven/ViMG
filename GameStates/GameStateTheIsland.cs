@@ -66,6 +66,16 @@ namespace ViMG.GameStates
                 {
                     world = LoadWorld(device, worldName);
                 }
+                
+                //Now we can tell the ChunkLoadManager what should be loaded.
+                world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
+                world.ChunkLoadManager.LoadAroundTarget();
+
+                //Finally, tell the ChunkLoadManager to actually load the things.
+                //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
+                //as it normally does.)
+                world.ChunkLoadManager.FlushLoadQueue(world);
+
                 world.FinishLoading(device);
                 //World world = new World(manager, device, 512);
                 //world.LoadWorld(device, worldName);
@@ -111,9 +121,7 @@ namespace ViMG.GameStates
 
             if (world != null)
             {
-                world.ChunkLoadManager.UnloadAll();
-                world.ChunkLoadManager.Dispose();
-                world.ChunkManager.Dispose();
+                world.Dispose();
                 world = null;
             }
             SetMenu(null);
@@ -304,6 +312,7 @@ namespace ViMG.GameStates
             manager.TheIsland.LoadMessage = "Loading World...\n" +
                 "Reading from disk...";
             WorldIO.LoadError error = worldInfoIO.Load(worldName, out WorldInfoIO.WorldInfo worldInfo);
+            
             if (worldInfoIO.HandleError(error, worldName))
                 return null;
 
@@ -321,11 +330,13 @@ namespace ViMG.GameStates
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
+                chunkManager.CreateInitializerCubeView();
+                chunkManager.CreateThreadedCubeView(null);
 
                 Skybox skybox = new Skybox();
 
-                var generator = CreateLayerGenerator(0);
-                var logic = CreateLayerLogic(0, worldName, device);
+                var generator = CreateLayerGenerator(layer);
+                var logic = CreateLayerLogic(layer, worldName, device);
 
                 WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox);
 

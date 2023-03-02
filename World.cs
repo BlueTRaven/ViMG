@@ -85,6 +85,8 @@ namespace ViMG
 
 		private float randomUpdatesTimer;
 
+		private Task<World> nextWorld;
+
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
 		{
@@ -244,15 +246,6 @@ namespace ViMG
 			if (!skyboxMesh.Uploaded)
 				skyboxMesh.Upload(device);
 
-			//Now we can tell the ChunkLoadManager what should be loaded.
-			ChunkLoadManager.UpdateLoadTarget(WorldInfo.playerPosition);
-			ChunkLoadManager.LoadAroundTarget();
-
-			//Finally, tell the ChunkLoadManager to actually load the things.
-			//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
-			//as it normally does.)
-			ChunkLoadManager.FlushLoadQueue(this);
-
 			//The player reference will not be set up after loading. We need to do that ourselves.
 			//TODO multiplayer
 			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
@@ -406,6 +399,34 @@ namespace ViMG
 
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
+
+			if (Main.inputManager.JustPressed(Keys.H) && nextWorld == null)
+			{
+				if (Layer == 0)
+					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 1);
+				else nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 0);
+			}
+
+			if (nextWorld != null && nextWorld.IsCompleted && player.Position.Y < Cube.CUBE_SCALE * 3)
+			{
+				World w = nextWorld.Result;
+
+				player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+
+				w.EntityManager.Add(player);
+				player.world = w;
+				w.player = player;
+
+				w.ChunkLoadManager.UpdateLoadTarget(player.Position);
+				w.ChunkLoadManager.LoadAroundTarget();
+
+				//Finally, tell the ChunkLoadManager to actually load the things.
+				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
+				//as it normally does.)
+				w.ChunkLoadManager.FlushLoadQueue(w);
+
+				GameStateManager.TheIsland.SetWorld(w);
+			}
 		}
 
 		public void SaveWorld()
@@ -919,5 +940,12 @@ namespace ViMG
 
 			return Raycast(start, start + Vector3.Normalize(direction) * distance, callback);
 		}
+
+		public void Dispose()
+        {
+			ChunkLoadManager.Dispose();
+			LightManager.Dispose();
+			logic.Dispose();
+        }
 	}
 }

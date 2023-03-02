@@ -190,5 +190,12 @@ namespace ViMG.WorldLogics
 					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
 			}
 		}
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+			directionalLight.Dispose();
+        }
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ViMG.WorldLogics
 {
-    public abstract class WorldLogic
+    public abstract class WorldLogic : IDisposable
     {
         public WorldLogic(GraphicsDevice device)
         {
@@ -37,6 +37,10 @@ namespace ViMG.WorldLogics
         public virtual void Draw(World world, GraphicsDevice device)
         {
 
+        }
+
+        public virtual void Dispose()
+        {
         }
     }
 }
