@@ -202,6 +202,7 @@ namespace ViMG.GameStates
             prototype.WorldInfo.playerLayer = 0;
 
             World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
 
             ProfilingHelper.Start("Saving Entities...");
@@ -259,8 +260,8 @@ namespace ViMG.GameStates
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
 
-            Skybox skybox = new Skybox();
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, new WorldLogics.WorldLogicIsland(worldName, device), skybox);
+            var logic = CreateLayerLogic(worldInfo.playerLayer, worldName, device);
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox());
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -287,6 +288,7 @@ namespace ViMG.GameStates
             ProfilingHelper.End("World loading done.");
 
             World world = new World(manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            prototype.Logic.Initialize(world);
             return world;
 
             //EntityManager.Add(new EntityLeviathan());
@@ -353,6 +355,7 @@ namespace ViMG.GameStates
                 prototype.ChunkManager.CreateThreadedCubeView(chunkLoadManager);
 
                 World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+                prototype.Logic.Initialize(world);
                 entityManager.AddLaterEntities();
 
                 ProfilingHelper.Start("Saving Entities...");
@@ -417,6 +420,7 @@ namespace ViMG.GameStates
                 ProfilingHelper.End("World loading done.");
 
                 World world = new World(manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+                prototype.Logic.Initialize(world);
                 return world;
             }
         }
