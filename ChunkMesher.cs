@@ -366,11 +366,17 @@ namespace ViMG
 
 				cmi.meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 
-                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque));
+				(List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque);
+
+				cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
                 cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Transparent));
                 cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly));
                 cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
                 cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air));
+
+				if (opaques.verts.Count > 0)
+					cmi.collidableMesh = state.mesher.GenerateCollidableMesh(state.world, opaques.verts, opaques.indices);
+				else cmi.collidableMesh = default;
 
                 state.batch.cmis[i] = cmi;
 				state.batch.cmis[i].hasMeshes = true;
@@ -450,6 +456,29 @@ namespace ViMG
 		public int GetMeshVersionCode(ChunkPosition position)
 		{
 			return GetChunkMeshInfo(position).GetMeshVersionCode();
+		}
+
+		private BepuPhysics.Collidables.Mesh GenerateCollidableMesh(World world, List<VertexCube> vertices, List<int> indices)
+        {
+			lock (world.PhysicsBufferPool)
+			{
+				world.PhysicsBufferPool.Take<BepuPhysics.Collidables.Triangle>(indices.Count / 3, out var triangleBuffer);
+
+				for (int i = 0; i < indices.Count; i += 3)
+                {
+					int a = indices[i];
+					int b = indices[i + 1];
+					int c = indices[i + 2];
+
+					triangleBuffer[i / 3].A = vertices[a].Position.ToNumerics();
+					triangleBuffer[i / 3].B = vertices[b].Position.ToNumerics();
+					triangleBuffer[i / 3].C = vertices[c].Position.ToNumerics();
+				}
+
+				var collidableMesh = new BepuPhysics.Collidables.Mesh(triangleBuffer, System.Numerics.Vector3.One, world.PhysicsBufferPool);
+
+				return collidableMesh;
+			}
 		}
 
 		private (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
