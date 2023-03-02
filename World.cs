@@ -336,7 +336,7 @@ namespace ViMG
 			miningUpdate.Clear();
 
 			Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
-			Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK]; 
+			Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
 
 			//perform random updates
 			//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
@@ -367,7 +367,7 @@ namespace ViMG
 			}
 			else randomUpdatesTimer -= (float)deltaTime;
 
-            PassiveSpawnerManager.Update(deltaTime, this);
+			PassiveSpawnerManager.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 
@@ -385,7 +385,7 @@ namespace ViMG
 
 							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
-							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius && 
+							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius &&
 								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
 							{
 								CulledChunkDrawPositions.Add(chunkPos);
@@ -400,15 +400,27 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-			if (Main.inputManager.JustPressed(Keys.H) && nextWorld == null)
+			if (player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3 && nextWorld == null)
 			{
 				if (Layer == 0)
 					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 1);
 				else nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 0);
 			}
 
-			if (nextWorld != null && nextWorld.IsCompleted && player.Position.Y < Cube.CUBE_SCALE * 3)
+			if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 && nextWorld != null)
+            {
+				if (nextWorld.IsCompleted)
+                {
+					nextWorld.Result.Dispose();
+					nextWorld = null;
+                }
+            }
+
+			if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4)
 			{
+				if (!nextWorld.IsCompleted)
+					nextWorld.Wait();
+
 				World w = nextWorld.Result;
 
 				player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
