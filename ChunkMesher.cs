@@ -74,6 +74,7 @@ namespace ViMG
 		private struct ChunkMeshInfo
 		{
 			public ChunkPosition position;
+			public BepuPhysics.Collidables.Mesh collidableMesh;
 			public ChunkMesh[] meshes;
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
@@ -86,6 +87,7 @@ namespace ViMG
 			public ChunkMeshInfo(ChunkPosition position)
 			{
 				this.position = position;
+				collidableMesh = new BepuPhysics.Collidables.Mesh();
 				meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
 				meshVersion = 0;
 				version = 1;
@@ -118,7 +120,6 @@ namespace ViMG
         private ChunkMeshBatch currentBatch;
 		private Task<ChunkBatchMeshTaskResult>[] activeChunkMeshBatchTasks = new Task<ChunkBatchMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
-		//private Queue<Task<ChunkBatchMeshTaskResult>> chunkMeshBatchTasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
 		private PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)> chunkMeshBatchTasks = new PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)>(true, (x) =>
 		{

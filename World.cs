@@ -1,4 +1,7 @@
-﻿using BrUtility;
+﻿using BepuPhysics;
+using BepuPhysics.Constraints;
+using BepuUtilities.Memory;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,6 +19,7 @@ using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Generation;
 using ViMG.Items;
+using ViMG.Physics;
 using ViMG.Spawners;
 using ViMG.WorldLogics;
 
@@ -87,6 +91,9 @@ namespace ViMG
 
 		private Task<World> nextWorld;
 
+		public BufferPool PhysicsBufferPool;
+		public Simulation PhysicsSimulation;
+
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
 		{
@@ -127,6 +134,10 @@ namespace ViMG
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
+
+			PhysicsBufferPool = new BufferPool();
+			PhysicsSimulation = Simulation.Create(PhysicsBufferPool, new NarrowPhaseCallbacks(new SpringSettings(30, 3)), 
+				new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -978,6 +989,9 @@ namespace ViMG
 			ChunkLoadManager.Dispose();
 			LightManager.Dispose();
 			logic.Dispose();
+
+			PhysicsSimulation.Dispose();
+			PhysicsBufferPool.Clear();
         }
 	}
 }
