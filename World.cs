@@ -453,6 +453,11 @@ namespace ViMG
 				w.ChunkLoadManager.FlushLoadQueue(w);
 
 				GameStateManager.TheIsland.SetWorld(w);
+
+				EntityManager.Unload(player);
+				entIO.Save(LoadedFolderName);	//player has been moved to nextWorld, therefore we need to save to tell the world that it's gone.
+
+				Dispose();
 			}
 		}
 

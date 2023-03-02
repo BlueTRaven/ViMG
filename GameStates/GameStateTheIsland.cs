@@ -321,7 +321,7 @@ namespace ViMG.GameStates
             if (worldInfo.playerPosition.LengthSquared() < 0)
                 worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
-            if (worldInfo.furthestLayer < layer)
+            if (true || worldInfo.furthestLayer < layer)
             {
                 ProfilingHelper.Start("Creating Unvisited Layer...");
 
