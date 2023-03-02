@@ -239,7 +239,7 @@ namespace ViMG
             Mesher.MarkDirty(position);
         }
 
-        public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
+        public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
         {
             return Mesher.GetMesh(position, pass);
         }

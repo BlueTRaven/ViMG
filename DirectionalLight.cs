@@ -255,10 +255,10 @@ namespace ViMG
 
 						if (world.ChunkManager.IsInWorldBounds(chunkPos) && world.ChunkLoadManager.IsLoaded(chunkPos))
 						{
-							ChunkMesh mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+							(VertexBuffer VBO, IndexBuffer IBO) mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
 							//Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
-							if (mesh != null && !mesh.IsEmpty)
+							if (mesh.VBO != null)
 							{
 								device.SetVertexBuffer(mesh.VBO);
 								device.Indices = mesh.IBO;

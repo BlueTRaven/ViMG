@@ -115,10 +115,20 @@ namespace ViMG
 			return MakeSimplerMesh(device, vertices, indices);
 		}
 
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (List<TVertex> vertices, List<TIndex> indices) tuple)
+			where TVertex : struct
+			where TIndex : struct
+		{
+			return MakeSimplerMesh(device, tuple.vertices, tuple.indices);
+        }
+
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices) 
 			where TVertex : struct 
 			where TIndex : struct
         {
+			if (vertices.Count == 0)
+				return (null, null);
+
 			VertexBuffer VBO = new VertexBuffer(device, typeof(TVertex), vertices.Count, BufferUsage.WriteOnly);
 			IndexBuffer IBO = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
 

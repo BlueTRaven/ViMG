@@ -75,7 +75,7 @@ namespace ViMG
 		{
 			public ChunkPosition position;
 			public BepuPhysics.Collidables.Mesh collidableMesh;
-			public ChunkMesh[] meshes;
+			public (VertexBuffer VBO, IndexBuffer IBO)[] meshes;
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
 
@@ -88,7 +88,7 @@ namespace ViMG
 			{
 				this.position = position;
 				collidableMesh = new BepuPhysics.Collidables.Mesh();
-				meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+				meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 				meshVersion = 0;
 				version = 1;
 
@@ -364,13 +364,13 @@ namespace ViMG
 					state.manager.ThreadedView.GetFaces(positions, faces, offset, c);
 				}
 
-				cmi.meshes = new ChunkMesh[NUM_CHUNK_MESH_PASSES];
+				cmi.meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 
-                cmi.meshes[(int)Cube.RenderPass.Opaque] = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
-                cmi.meshes[(int)Cube.RenderPass.Transparent] = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, false);
-                cmi.meshes[(int)Cube.RenderPass.DepthOnly] = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, false);
-                cmi.meshes[(int)Cube.RenderPass.Fluid] = null;   //TODO fluids?
-                cmi.meshes[(int)Cube.RenderPass.Air] = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air, false);
+                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque));
+                cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Transparent));
+                cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly));
+                cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
+                cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air));
 
                 state.batch.cmis[i] = cmi;
 				state.batch.cmis[i].hasMeshes = true;
@@ -383,12 +383,12 @@ namespace ViMG
 		{
 			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
 			{
-				if (c.meshes[i] != null && c.meshes[i] != ChunkMesh.Empty)
+				if (c.meshes[i].VBO != null)
 				{
 					c.meshes[i].VBO.Dispose();
 					c.meshes[i].IBO.Dispose();
 
-					c.meshes[i] = null;
+					c.meshes[i] = (null, null);
 				}
 			}
 
@@ -406,13 +406,13 @@ namespace ViMG
 			{
 				for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
 				{
-					ChunkMesh mesh = chunkMeshInfos[j].meshes[k];
-					if (mesh != null && mesh != ChunkMesh.Empty)
+					(VertexBuffer VBO, IndexBuffer IBO) mesh = chunkMeshInfos[j].meshes[k];
+					if (mesh.VBO != null)
 					{
 						mesh.VBO.Dispose();
 						mesh.IBO.Dispose();
 
-						chunkMeshInfos[j].meshes[k] = null;
+						chunkMeshInfos[j].meshes[k] = (null, null);
 					}
 				}
 
@@ -431,11 +431,11 @@ namespace ViMG
 			}
 		}
 
-		public ChunkMesh GetMesh(ChunkPosition position, Cube.RenderPass pass)
+		public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
 		{
-			ChunkMesh mesh = GetChunkMeshInfo(position).meshes[(int)pass];
+			(VertexBuffer VBO, IndexBuffer IBO) mesh = GetChunkMeshInfo(position).meshes[(int)pass];
 
-			if (mesh != null && !mesh.IsEmpty && mesh.VBO.IsDisposed)
+			if (mesh.VBO != null && mesh.VBO.IsDisposed)
 				throw new Exception("??");
 
 			return mesh;
@@ -452,7 +452,7 @@ namespace ViMG
 			return GetChunkMeshInfo(position).GetMeshVersionCode();
 		}
 
-		private ChunkMesh GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass, bool forceUpdate = false)
+		private (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -492,13 +492,7 @@ namespace ViMG
 				}
 			}
 
-			if (vertices.Count > 0 && indices.Count > 0)
-			{
-				var mesh = new ChunkMesh(device, vertices, indices);
-
-				return mesh;
-			}
-			else return ChunkMesh.Empty;
+			return (vertices, indices);
 		}
 
 		private static void BakeAO(ChunkManager manager, CubePosition pos, int start, int end, List<VertexCube> vertices)

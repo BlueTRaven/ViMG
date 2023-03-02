@@ -540,8 +540,8 @@ namespace ViMG
 				if (player.GetBuffManager().HasBuff("emissive_ores"))
 					emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores");
 
-                ChunkMesh mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
-                if (mesh != null && mesh != ChunkMesh.Empty)
+                (VertexBuffer VBO, IndexBuffer IBO) mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
+                if (mesh.VBO != null)
                 {
                     Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
                         DrawHelper.BlackPixel, emissiveTexture, mesh.VBO, mesh.IBO,
@@ -549,7 +549,7 @@ namespace ViMG
                 }
 
                 mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
-                if (mesh != null && mesh != ChunkMesh.Empty)
+                if (mesh.VBO != null)
                 {
                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
                     Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
@@ -566,7 +566,7 @@ namespace ViMG
 				if (Main.Renderer.EffectEmptyEnabled)
 				{
 					mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Air);
-					if (mesh != null && mesh != ChunkMesh.Empty)
+					if (mesh.VBO != null)
 					{
 						Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
 						Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
