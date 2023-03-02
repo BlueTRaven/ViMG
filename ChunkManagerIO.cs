@@ -11,21 +11,22 @@ namespace ViMG
 {
     public class ChunkManagerIO : WorldIO
     {
-		public const string FILE_NAME_CHUNK = "chunks_";
+		public const string FILE_NAME_CHUNK_OLD = "chunks_";
+		public const string FILE_NAME_CHUNK = "chunks";
 		public const string EXT_CHUNK = ".vis";
 
 		private const long SIZEOF_HEADER = sizeof(int) * 4;
 		private const long SIZEOF_CHUNK = (sizeof(ushort) * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 
-		private const int VERSION = 2;
+		private const int VERSION = 3;
 		private const int MIN_VERSION = 1;
 
 		public int Version;
 
 		//private readonly ChunkManager manager;
 		private readonly string managerName;
-
-		private readonly int sizeInChunks;
+        private readonly int sizeInChunks;
+        private int layer;
 		private readonly long numChunks;
 
 		private bool loaded;
@@ -36,12 +37,12 @@ namespace ViMG
 		//private int offset;
 		//private FileStream fs;
 
-		public ChunkManagerIO(int sizeInChunks, string chunkManagerName)
+		public ChunkManagerIO(int sizeInChunks, string chunkManagerName, int layer)
         {
             //this.manager = manager;
 			this.managerName = chunkManagerName;
-
-			this.sizeInChunks = sizeInChunks;
+            this.layer = layer;
+            this.sizeInChunks = sizeInChunks;
 			numChunks = sizeInChunks * sizeInChunks * sizeInChunks;
 			allBytes = new byte[numChunks * SIZEOF_CHUNK];
         }
@@ -124,10 +125,10 @@ namespace ViMG
 				Directory.CreateDirectory(SAVE_FOLDER + folderName);
 
 			//FileStream is probably unnecessary since we're saving the everything all at once
-			using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+			using (FileStream fs = new FileStream(GetSaveName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
 			{
 				fs.Write(BitConverter.GetBytes(VERSION));
-				fs.Write(BitConverter.GetBytes(0));
+				fs.Write(BitConverter.GetBytes(layer));
 
 				//Write unused remaining header bytes
 				long remainingBytes = SIZEOF_HEADER - fs.Position;
@@ -150,15 +151,24 @@ namespace ViMG
 
 		public LoadError Load(string folderName)
 		{
-			using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.Open, FileAccess.Read, FileShare.None))
+			if (!File.Exists(GetLoadName(folderName)))
+				return LoadError.FileDoesntExist;
+				
+			using (FileStream fs = new FileStream(GetLoadName(folderName), FileMode.Open, FileAccess.Read, FileShare.None))
 			{
 				using (BinaryReader br = new BinaryReader(fs, Encoding.ASCII, true))
 				{
 					Version = br.ReadInt32();
 
-					int layers = 1;
 					if (Version >= 2)
-						layers = br.ReadInt32();
+					{
+						var loadedLayer = br.ReadInt32();
+						if (loadedLayer != layer)
+						{
+							OtherError = string.Format("Tried to load a chunk file as layer {0}, but it actually belongs to layer {1}!", layer, loadedLayer);
+							return LoadError.Other;
+						}
+					}
 
 					if (Version < MIN_VERSION)
 						return LoadError.InvalidVersion;
@@ -261,9 +271,36 @@ namespace ViMG
 			manager.MarkDirty(pos, false);
 		}*/
 
-		private string GetFullName(string folderName)
+		private string GetSaveName(string folderName)
         {
-			return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + managerName + EXT_CHUNK;
+			return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
 		}
+
+		private string GetLoadName(string folderName)
+        {
+			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK))
+				return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK_OLD + managerName + EXT_CHUNK;
+			else return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
+		}
+
+		public override bool HandleError(LoadError error, string folderName)
+        {
+            switch (error)
+            {
+                case LoadError.InvalidVersion:
+                    Console.WriteLine("Chunk file could not be loaded. The current file version ({0}) is not supported.", Version);
+                    return true;
+                case LoadError.FileDoesntExist:
+                    Console.WriteLine("Chunk file does not exist.", GetLoadName(folderName));
+                    return true;
+                case LoadError.Other:
+                    Console.WriteLine(OtherError);
+                    return true;
+                case LoadError.Success:
+                    return false;
+                default:
+                    return true;
+            }
+        }
 	}
 }

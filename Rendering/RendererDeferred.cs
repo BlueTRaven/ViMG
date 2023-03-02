@@ -471,7 +471,7 @@ namespace ViMG.Rendering
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
                 EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
-                EffectGBuffer.Parameters["InvViewProjection"].SetValue(Matrix.Invert(viewProjection));
+                //EffectGBuffer.Parameters["InvViewProjection"].SetValue(Matrix.Invert(viewProjection));
 
                 device.SamplerStates[1] = bilinearClampSS;
 
@@ -539,6 +539,7 @@ namespace ViMG.Rendering
                 device.BlendState = additiveBS;
                 device.DepthStencilState = depthReadNoWriteDSS;
 
+
                 EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
@@ -548,6 +549,7 @@ namespace ViMG.Rendering
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
+                //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
                 EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
                 EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(false);
 
@@ -607,6 +609,7 @@ namespace ViMG.Rendering
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
+                //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
                 EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
                 EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(true);
 

@@ -19,5 +19,8 @@ namespace ViMG
         }
 
         public string OtherError;
+
+        //returns whether or not the error is fatal.
+        public abstract bool HandleError(LoadError error, string folderName);
     }
 }

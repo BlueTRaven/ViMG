@@ -256,7 +256,7 @@ namespace ViMG
 			//The player reference will not be set up after loading. We need to do that ourselves.
 			//TODO multiplayer
 			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
-			player = EntityManager.GetAll<Player>().First() as Player;
+			player = EntityManager.GetFirst<Player>();
 
 			if (player == null)
 			{
@@ -265,14 +265,18 @@ namespace ViMG
 				//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
 				//TODO obsolete/deprecated
 				entIO.DeserializePlayerChunk();
-				player = EntityManager.GetAll<Player>().First() as Player;
+				player = EntityManager.GetFirst<Player>();
 
-				ChunkLoadManager.UpdateLoadTarget(player.Position);
-				ChunkLoadManager.LoadAroundTarget();
-				ChunkLoadManager.FlushLoadQueue(this);
+				if (player != null)
+				{
+					ChunkLoadManager.UpdateLoadTarget(player.Position);
+					ChunkLoadManager.LoadAroundTarget();
+					ChunkLoadManager.FlushLoadQueue(this);
+				}
 			}
-			
-			Main.camera.Position = player.Position;
+
+			if (player != null)
+				Main.camera.Position = player.Position;
 
 			logic.FinishLoading(device);
 		}
@@ -423,8 +427,12 @@ namespace ViMG
 			//Deduplicate/decache serialized entity data
 			entIO.DecacheCurrentlySerialized();
 
-			WorldInfo.playerPosition = player.Position;
-            worldInfoIO.Save(LoadedFolderName, WorldInfo);
+			if (player != null)
+			{
+				WorldInfo.playerPosition = player.Position;
+				WorldInfo.playerLayer = Layer;
+				worldInfoIO.Save(LoadedFolderName, WorldInfo);
+			}
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.

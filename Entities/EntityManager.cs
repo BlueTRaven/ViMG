@@ -213,6 +213,13 @@ namespace ViMG.Entities
 			OnEntityRemoved?.Invoke(entity);
 		}
 
+		public T GetFirst<T>() where T : Entity
+        {
+			var all = GetAll<T>();
+
+			return all.FirstOrDefault() as T;
+        }
+
 		private IReadOnlyList<Entity> emptyList = new List<Entity>();
 		public IReadOnlyList<Entity> GetAll<T>() where T : Entity
 		{

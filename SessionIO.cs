@@ -57,5 +57,10 @@ namespace ViMG
                 }
             }
         }
+
+        public override bool HandleError(LoadError error, string folderName)
+        {
+            return false;
+        }
     }
 }

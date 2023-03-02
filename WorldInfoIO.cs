@@ -16,6 +16,8 @@ namespace ViMG
             //TODO multiplayer
             //this will probably need to change to a list or dictionary?
             public Vector3 playerPosition;
+            public int playerLayer;
+            public int furthestLayer;   //the furthest the player has traveled - i.e. layer+1 has NOT been generated yet.
             public List<PointOfInterest> pointsOfInterest;
         }
         /*private struct WorldInfo
@@ -78,7 +80,7 @@ namespace ViMG
         public const string FILE_NAME_WINFO = "winfo";
         public const string EXT_WINFO = ".vis";
 
-        private const int VERSION = 1;
+        private const int VERSION = 2;
         private const int MIN_VERSION = 0;
 
         public int Version;
@@ -124,7 +126,9 @@ namespace ViMG
             //  v: version (int) version of worldinfo file
             //wi: worldinfo block
             //  t: world time (float)
+            //  fl: furthest layer (int)
             //  px, py, pz: player xyz (Vector3)
+            //  pl: player layer (int)
             //  pois: points of interest array block
             //      h: header block
             //          s: size (int) of data block
@@ -152,7 +156,9 @@ namespace ViMG
 
                 SaveHelper.SaveFloat32(bytes, info.time); //wi-t
 
+                SaveHelper.SaveInt32(bytes, info.furthestLayer);
                 SaveHelper.SaveVector3(bytes, info.playerPosition);
+                SaveHelper.SaveInt32(bytes, info.playerLayer);
 
                 List<byte> poisBlock = new List<byte>();    //wi-pois
 
@@ -187,6 +193,8 @@ namespace ViMG
             {
                 time = 0,
                 playerPosition = new Vector3(-1),
+                playerLayer = 0,
+                furthestLayer = -1,
                 pointsOfInterest = new List<PointOfInterest>()
             };
 
@@ -213,11 +221,21 @@ namespace ViMG
                     if (version == 0)
                         _ = reader.ReadInt32(); //idk why this is here, but there's a random 4-byte padding in between these for some reason.
 
+                    if (version >= 2)
+                    {
+                        info.furthestLayer = reader.ReadInt32();
+                    }
+
                     if (version >= 1)
                     {
                         info.playerPosition.X = reader.ReadSingle();
                         info.playerPosition.Y = reader.ReadSingle();
                         info.playerPosition.Z = reader.ReadSingle();
+                    }
+
+                    if (version >= 2)
+                    {
+                        info.playerLayer = reader.ReadInt32();
                     }
 
                     int sizePois = reader.ReadInt32();
@@ -258,6 +276,26 @@ namespace ViMG
         private string GetFullName(string folderName)
         {
             return SAVE_FOLDER + folderName + "/" + FILE_NAME_WINFO + EXT_WINFO;
+        }
+
+        public override bool HandleError(LoadError error, string folderName)
+        {
+            switch (error)
+            {
+                case LoadError.InvalidVersion:
+                    Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", Version);
+                    return true;
+                case LoadError.FileDoesntExist:
+                    Console.WriteLine("World Info file does not exist.", GetFullName(folderName));
+                    return true;
+                case LoadError.Other:
+                    Console.WriteLine(OtherError);
+                    return true;
+                case LoadError.Success:
+                    return false;
+                default:
+                    return true;
+            }
         }
     }
 }

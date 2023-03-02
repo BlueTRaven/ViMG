@@ -87,14 +87,10 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 
 float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
 {
-	float4 position = float4(screenSpace.x * 2.0 - 1.0, (1 - screenSpace.y) * 2.0 - 1.0, depth, 1.0);
-	//position.y = 1 - position.y;
+	float4 position_s = float4(screenSpace, depth, 1.0f);
+	float4 position_v = mul(InvViewProjection, position_s);
 
-	position = mul(position, InvViewProjection);
-
-	float3 positionVS = position.xyz / position.w;
-
-	return positionVS;
+	return position_v.xyz / position_v.w;
 }
 
 float linearize_depth(float d, float zNear, float zFar)

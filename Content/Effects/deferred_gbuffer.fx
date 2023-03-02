@@ -87,14 +87,13 @@ VSOutputCube MainVS(in VSInputCube input)
 
 float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
 {
-	float4 position = float4(screenSpace.x * 2.0 - 1.0, (1 - screenSpace.y) * 2.0 - 1.0, depth, 1.0);
-	//position.y = 1 - position.y;
+	float x = screenSpace.x * 2.0f - 1.0f;
+	float y = (1 - screenSpace.y) * 2.0f - 1.0f;
 
-	position = mul(position, InvViewProjection);
-
-	float3 positionVS = position.xyz / position.w;
-
-	return positionVS;
+	float4 position_s = float4(x, y, depth, 1.0f);
+	float4 position_v = mul(InvViewProjection, position_s);
+	
+	return position_v.xyz / position_v.w;
 }
 
 PSOutputGBuffer MainPS(VSOutputCube input)
@@ -121,7 +120,7 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	output.Depth = float4(depth, depth, depth, 1.0);
 	output.Position = float4(input.PositionWS, 1);
-	output.Normal = float4(normalize(input.Normal), 1);		
+	output.Normal = float4(normalize(input.Normal), 1);		//float4(-normalize(cross(ddx(input.PositionWS), ddy(input.PositionWS))), 1);
 	output.AO = float4(input.AO, input.AO, input.AO, 1);
 	
 	return output;

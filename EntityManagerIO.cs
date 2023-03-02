@@ -11,7 +11,8 @@ namespace ViMG
 {
     public class EntityManagerIO : WorldIO
     {
-        public const string FILE_NAME_ENTITIES = "world_entities.vis";
+        public const string FILE_NAME_ENTITIES = "entities";
+		public const string EXT_ENTITIES = ".vis";
 
         private struct EntityLookup
 		{
@@ -121,10 +122,13 @@ namespace ViMG
 			}
 		}
 
+		private const int VERSION = 6;
+		private const int MIN_VERSION = 4;
 		private readonly EntityManager manager;
+        private readonly int layer;
 
-		//Player datas are stored separately as they should immediately be deserialized on startup.
-		private ChunkPosition playerChunkPosition;
+        //Player datas are stored separately as they should immediately be deserialized on startup.
+        private ChunkPosition playerChunkPosition;
 		private bool playerChunkPositionLoaded;
 		private Dictionary<ChunkPosition, List<EntityLookup>> lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
         private Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
@@ -134,15 +138,17 @@ namespace ViMG
 
 		public int Version;
 
-		public EntityManagerIO(EntityManager entityManager)
+		public EntityManagerIO(EntityManager entityManager, int layer)
         {
             this.manager = entityManager;
+            this.layer = layer;
         }
 
 		public void Save(string folderName)
         {
 			//h: header block
 			//	v: version (int) overall version of the entity file
+			//	l: layer (int) layer that this entity file belongs to
 			//	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
 			//  c: count of entities
 			//e: entities data block
@@ -161,7 +167,8 @@ namespace ViMG
 			{
 				using (BinaryWriter writer = new BinaryWriter(ms, Encoding.ASCII, true))
 				{
-					writer.Write(5);						//h-v: file version
+					writer.Write(VERSION);                      //h-v: file version
+					writer.Write(layer);					//h-l: file layer
 					writer.Write(manager.GetUniqueId());	//h-emi: entity manager last saved entity id
 
 					var entities = manager.GetEntities();
@@ -188,7 +195,7 @@ namespace ViMG
 					writer.Write(entitiesDataBlock.ToArray());	//e
 				}
 
-				using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES, FileMode.OpenOrCreate, FileAccess.Write))
+				using (FileStream fs = new FileStream(GetSaveName(folderName), FileMode.OpenOrCreate, FileAccess.Write))
 				{
 					fs.Write(ms.GetBuffer());
 				}
@@ -297,20 +304,27 @@ namespace ViMG
 
 			Console.WriteLine("Loading Entities...");
 
-			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES))
-			{
-				Console.WriteLine("Could not load entities. The file world_entities.vis does not exist!");
+			if (!File.Exists(GetLoadName(folderName)))
 				return LoadError.FileDoesntExist;
-			}
 
-			using (FileStream fs = new FileStream(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES, FileMode.Open, FileAccess.Read, FileShare.None, 1024))
+			using (FileStream fs = new FileStream(GetLoadName(folderName), FileMode.Open, FileAccess.Read, FileShare.None, 1024))
 			{
 				using (BinaryReader reader = new BinaryReader(fs, Encoding.ASCII, false))
 				{
 					Version = reader.ReadInt32();
 
-					if (Version <= 4)
+					if (Version <= MIN_VERSION)
 						return LoadError.InvalidVersion;
+
+					if (Version >= 6)
+					{
+						var loadedLayer = reader.ReadInt32();
+						if (loadedLayer != layer)
+						{
+							OtherError = string.Format("Tried to load a entity file as layer {0}, but it actually belongs to layer {1}!", layer, loadedLayer);
+							return LoadError.Other;
+						}
+					}
 
 					ulong uniqueIdSeed = reader.ReadUInt64();   //unique id
 					manager.SetUniqueIdSeed(uniqueIdSeed);
@@ -425,5 +439,37 @@ namespace ViMG
 				entityDatas.Remove(pos);
 			}
 		}
-    }
+
+		private string GetSaveName(string folderName)
+        {
+			return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
+		}
+
+		private string GetLoadName(string folderName)
+        {
+			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES))
+				return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + EXT_ENTITIES;
+			else return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
+		}
+
+		public override bool HandleError(LoadError error, string folderName)
+		{
+			switch (error)
+			{
+				case LoadError.InvalidVersion:
+					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", Version);
+					return true;
+				case LoadError.FileDoesntExist:
+					Console.WriteLine("Entity file does not exist.", GetLoadName(folderName));
+					return true;
+				case LoadError.Other:
+					Console.WriteLine(OtherError);
+					return true;
+				case LoadError.Success:
+					return false;
+				default:
+					return true;
+			}
+		}
+	}
 }
