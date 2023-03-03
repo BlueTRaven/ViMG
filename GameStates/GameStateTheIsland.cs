@@ -165,7 +165,7 @@ namespace ViMG.GameStates
 
             var buffer = new BufferPool();
             var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 
             var entityManager = new EntityManager();
             var entIO = new EntityManagerIO(entityManager, 0);
@@ -271,7 +271,7 @@ namespace ViMG.GameStates
 
             var buffer = new BufferPool();
             var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
@@ -349,7 +349,7 @@ namespace ViMG.GameStates
 
                 var buffer = new BufferPool();
                 var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
@@ -410,7 +410,7 @@ namespace ViMG.GameStates
 
                 var buffer = new BufferPool();
                 var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);

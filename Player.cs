@@ -1140,8 +1140,9 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
+				world.EntityManager.Add(new PhysicsTestBall(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new LightStressTest(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-				world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
+				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
 			}
 		}
 

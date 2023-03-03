@@ -281,13 +281,6 @@ namespace ViMG
 				Main.camera.Position = player.Position;
 
 			logic.FinishLoading(device);
-
-			var capsule = new BepuPhysics.Collidables.Capsule(1, 2);
-			var capsuleShape = PhysicsSimulation.Shapes.Add(capsule);
-			//PhysicsSimulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(player.Position.ToNumerics(), 
-				//System.Numerics.Quaternion.Identity), capsule.ComputeInertia(4), capsuleShape, 100000));
-			PhysicsSimulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose(player.Position.ToNumerics(),
-				System.Numerics.Quaternion.Identity), capsuleShape, 100000));
 		}
 
 		public void UnfixedUpdate()
