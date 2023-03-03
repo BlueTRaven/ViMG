@@ -4,3 +4,6 @@
 [submodule "MonoGame"]
 	path = MonoGame
 	url = git@github.com:cpt-max/MonoGame.git
+[submodule "bepuphysics2"]
+	path = bepuphysics2
+	url = git@github.com:bepu/bepuphysics2.git

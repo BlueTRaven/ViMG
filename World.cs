@@ -107,6 +107,8 @@ namespace ViMG
 			WorldInfo = prototype.WorldInfo;
 			Skybox = prototype.Skybox;
 			logic = prototype.Logic;
+			PhysicsSimulation = prototype.PhysicsSimulation;
+			PhysicsBufferPool = prototype.PhysicsBuffer;
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -134,10 +136,6 @@ namespace ViMG
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-
-			PhysicsBufferPool = new BufferPool();
-			PhysicsSimulation = Simulation.Create(PhysicsBufferPool, new NarrowPhaseCallbacks(new SpringSettings(30, 3)), 
-				new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -274,7 +272,7 @@ namespace ViMG
 				if (player != null)
 				{
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
-					ChunkLoadManager.LoadAroundTarget();
+					ChunkLoadManager.LoadAroundTarget(this);
 					ChunkLoadManager.FlushLoadQueue(this);
 				}
 			}
@@ -283,6 +281,13 @@ namespace ViMG
 				Main.camera.Position = player.Position;
 
 			logic.FinishLoading(device);
+
+			var capsule = new BepuPhysics.Collidables.Capsule(1, 2);
+			var capsuleShape = PhysicsSimulation.Shapes.Add(capsule);
+			//PhysicsSimulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(player.Position.ToNumerics(), 
+				//System.Numerics.Quaternion.Identity), capsule.ComputeInertia(4), capsuleShape, 100000));
+			PhysicsSimulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose(player.Position.ToNumerics(),
+				System.Numerics.Quaternion.Identity), capsuleShape, 100000));
 		}
 
 		public void UnfixedUpdate()
@@ -293,6 +298,8 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
+			PhysicsSimulation.Timestep((float)deltaTime);
+
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
 			alive += (float)deltaTime;
@@ -456,7 +463,7 @@ namespace ViMG
 				w.player = player;
 
 				w.ChunkLoadManager.UpdateLoadTarget(player.Position);
-				w.ChunkLoadManager.LoadAroundTarget();
+				w.ChunkLoadManager.LoadAroundTarget(this);
 
 				//Finally, tell the ChunkLoadManager to actually load the things.
 				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background

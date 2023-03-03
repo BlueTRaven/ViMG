@@ -75,6 +75,7 @@ namespace ViMG
         public readonly int SizeInCubes;
         private readonly ChunkManagerIO io;
         public readonly ChunkMesher Mesher;
+        public readonly ChunkCollisionMesher CollisionMesher;
 
         public InitializerCubeView InitializerView;
         public ThreadedCubeView ThreadedView;
@@ -85,7 +86,7 @@ namespace ViMG
         public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
         public bool LockGet;    //If true, a lock on the manager must first be obtained before getting a cube.
 
-        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, GraphicsDevice device)
+        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, BepuPhysics.Simulation simulation, BepuUtilities.Memory.BufferPool buffer, GraphicsDevice device)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
@@ -96,6 +97,7 @@ namespace ViMG
             //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
             Mesher = new ChunkMesher(device, sizeInChunksXZ);
+            CollisionMesher = new ChunkCollisionMesher(simulation, buffer, Mesher, sizeInChunksXZ);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
         }
@@ -124,8 +126,9 @@ namespace ViMG
             }
         }
 
-        public void Unload(ChunkPosition pos)
+        public void Unload(World world, ChunkPosition pos)
         {
+            CollisionMesher.Unload(world, pos);
             Mesher.UnloadMesh(pos);
         }
 

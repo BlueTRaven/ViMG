@@ -1,4 +1,7 @@
-﻿using BrUtility;
+﻿using BepuPhysics;
+using BepuPhysics.Constraints;
+using BepuUtilities.Memory;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,6 +13,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Generation;
+using ViMG.Physics;
 using ViMG.UIs;
 
 namespace ViMG.GameStates
@@ -44,6 +48,8 @@ namespace ViMG.GameStates
                 }
             }
         }
+        public int ProgressMin;
+        public int ProgressMax;
 
         public GameStateTheIsland(GameStateManager manager, GraphicsDevice device) : base(manager)
         {
@@ -66,16 +72,19 @@ namespace ViMG.GameStates
                 {
                     world = LoadWorld(device, worldName);
                 }
-                
+
+                manager.TheIsland.LoadMessage = "Loading World...";
                 //Now we can tell the ChunkLoadManager what should be loaded.
                 world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
-                world.ChunkLoadManager.LoadAroundTarget();
+                world.ChunkLoadManager.LoadAroundTarget(world);
 
+                manager.TheIsland.LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
                 world.ChunkLoadManager.FlushLoadQueue(world);
 
+                manager.TheIsland.LoadMessage = "Loading World...\nFinishing...";
                 world.FinishLoading(device);
                 //World world = new World(manager, device, 512);
                 //world.LoadWorld(device, worldName);
@@ -154,10 +163,14 @@ namespace ViMG.GameStates
         {
             const int SIZE_IN_CHUNKS = 32;
 
+            var buffer = new BufferPool();
+            var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
+                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+
             var entityManager = new EntityManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
             chunkManager.CreateInitializerCubeView();
             chunkManager.CreateThreadedCubeView(null);
 
@@ -177,7 +190,7 @@ namespace ViMG.GameStates
             var generator = CreateLayerGenerator(0);
             var logic = CreateLayerLogic(0, worldName, device);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox);
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
 
             ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -256,12 +269,17 @@ namespace ViMG.GameStates
             if (worldInfo.playerPosition.LengthSquared() < 0)
                 worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
+            var buffer = new BufferPool();
+            var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
+                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
 
             var logic = CreateLayerLogic(worldInfo.playerLayer, worldName, device);
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox());
+
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), simulation, buffer);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -329,9 +347,13 @@ namespace ViMG.GameStates
 
                 var entityManager = new EntityManager();
 
+                var buffer = new BufferPool();
+                var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
+                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
                 chunkManager.CreateInitializerCubeView();
                 chunkManager.CreateThreadedCubeView(null);
 
@@ -340,7 +362,7 @@ namespace ViMG.GameStates
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer, worldName, device);
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
 
                 ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -386,14 +408,19 @@ namespace ViMG.GameStates
 
                 var entityManager = new EntityManager();
 
+                var buffer = new BufferPool();
+                var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
+                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, -10, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, device);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
 
                 var logic = CreateLayerLogic(layer, worldName, device);
 
                 Skybox skybox = new Skybox();
-                WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox);
+
+                WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))
@@ -489,8 +516,14 @@ namespace ViMG.GameStates
             if (IsLoading && LoadMessage != null)
             {
                 string loadMessage = LoadMessage;
+                TextHelper.DrawText(batch, fi, loadMessage, Color.White, 
+                    new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), 
+                    Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
 
-                TextHelper.DrawText(batch, fi, loadMessage, Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
+                if (ProgressMin >= 0)
+                TextHelper.DrawText(batch, fi, ProgressMin + "/" + ProgressMax, Color.White,
+                    new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), 
+                    Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
         }
     }

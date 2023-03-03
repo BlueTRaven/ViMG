@@ -56,7 +56,7 @@ namespace ViMG
 			if (distanceUnloadCheckTimer <= 0)
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
-				LoadAroundTarget();
+				LoadAroundTarget(world);
 			}
 
 			if (hasChanged)
@@ -83,8 +83,16 @@ namespace ViMG
 		//It's best practice to use this before saving, so as not to miss loading chunks!
 		public void FlushLoadQueue(World world)
 		{
+			chunkManager.Mesher.FlushMeshQueue(world);
+			chunkManager.CollisionMesher.Flush(world);
+
+			int max = queue.Count;
+			world.GameStateManager.TheIsland.ProgressMax = max;
+
 			while (queue.Count > 0)
 			{
+				world.GameStateManager.TheIsland.ProgressMin = max - queue.Count;
+
 				ChunkPosition queuedPosition = queue.Dequeue();
 
 				//Chunk has been told to unload before we got to it.
@@ -92,18 +100,27 @@ namespace ViMG
 				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
 					continue;
+				else if (loadedChunksFastLookup[i] == LoadingState.Loading)
+				{
+					//entIO.Deserialize(queuedPosition);
+					//chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
+					if (chunkManager.Mesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
+					{
+						loadedChunks[queuedPosition] = LoadingState.Loaded;
+						loadedChunksFastLookup[i] = LoadingState.Loaded;
 
-				//chunkIO.DeserializeChunk(world, queuedPosition);
-				entIO.Deserialize(queuedPosition);
-				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
-				loadedChunks[queuedPosition] = LoadingState.Loaded;
-				loadedChunksFastLookup[i] = LoadingState.Loaded;
-
-				hasChanged = true;
+						hasChanged = true;
+					}
+					else
+					{
+						//not finished loading; re-queue
+						queue.EnqueueWithoutSorting(queuedPosition);
+					}
+				}
 			}
 
 			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.Mesher.FlushMeshQueue();
+			chunkManager.Mesher.FlushMeshQueue(world);
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
@@ -130,16 +147,24 @@ namespace ViMG
 				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
-					continue;
+					throw new Exception("How did you do this??\nAttempted to load chunk, however it was never told to load!");
+				else if (loadedChunksFastLookup[i] == LoadingState.Loading)
+                {
+					if (chunkManager.Mesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
+                    {
+						loadedChunks[queuedPosition] = LoadingState.Loaded;
+						loadedChunksFastLookup[i] = LoadingState.Loaded;
 
-				//chunkIO.DeserializeChunk(world, queuedPosition);
-				entIO.Deserialize(queuedPosition);
-				chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
-				loadedChunks[queuedPosition] = LoadingState.Loaded;
-				loadedChunksFastLookup[i] = LoadingState.Loaded;
+						hasChanged = true;
+					}
+                    else
+                    {
+						//not finished loading; re-queue
+						queue.EnqueueWithoutSorting(queuedPosition);
+                    }
 
-				hasChanged = true;
-				currentNum++;
+					currentNum++;
+				}
 			}
 		}
 
@@ -147,26 +172,33 @@ namespace ViMG
         {
 			if (chunkManager.IsInWorldBounds(position) && (!loadedChunks.ContainsKey(position) || loadedChunks[position] == LoadingState.Unloaded))
 			{
-				//chunkIO.DeserializeChunk(world, position);
-				entIO.Deserialize(position);
-				chunkManager.Mesher.BatchMeshChunk(world, position);
-				loadedChunks.Add(position, LoadingState.Loaded);
+				bool shouldLoad = false;
+				if (!loadedChunks.ContainsKey(position))
+				{
+					loadedChunks.Add(position, LoadingState.Loading);
+					shouldLoad = true;
+				}
+				else if (loadedChunks[position] == LoadingState.Unloaded)
+				{
+					loadedChunks[position] = LoadingState.Loading;
+					shouldLoad = true;
+				}
 
-				hasChanged = true;
+				if (shouldLoad)
+				{
+					Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+					loadedChunksFastLookup[i] = LoadingState.Loading;
+					queue.EnqueueWithoutSorting(position);
+
+					entIO.Deserialize(position);
+					chunkManager.Mesher.BatchMeshChunk(world, position);
+
+					hasChanged = true;
+				}
 			}
 		}
 
-		//TODO this is primarily for debug purposes, I don't expect this to ever actually be used
-		public void ReloadChunk(World world, ChunkPosition position)
-        {
-			if (chunkManager.IsInWorldBounds(position) && loadedChunks.ContainsKey(position))
-            {
-				//chunkIO.DeserializeChunk(world, position);
-				loadedChunks[position] = LoadingState.Loading;
-            }
-		}
-
-		public void LoadAroundTarget()
+		public void LoadAroundTarget(World world)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 			
@@ -182,21 +214,27 @@ namespace ViMG
 						
 						if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
 						{
+							bool shouldLoad = false;
 							if (!loadedChunks.ContainsKey(pos))
-							{ 
+							{
 								loadedChunks.Add(pos, LoadingState.Loading);
+								shouldLoad = true;
+							}
+							else if (loadedChunks[pos] == LoadingState.Unloaded)
+							{
+								loadedChunks[pos] = LoadingState.Loading;
+								shouldLoad = true;
+							}
+
+							if (shouldLoad)
+							{
 								Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 								loadedChunksFastLookup[i] = LoadingState.Loading;
 								queue.EnqueueWithoutSorting(pos);
 
-								hasChanged = true;
-							}
-							else if (loadedChunks[pos] == LoadingState.Unloaded)
-                            {
-								loadedChunks[pos] = LoadingState.Loading;
-								Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-								loadedChunksFastLookup[i] = LoadingState.Loading;
-								queue.EnqueueWithoutSorting(pos);
+								entIO.Deserialize(pos);
+								chunkManager.Mesher.BatchMeshChunk(world, pos);
+								chunkManager.CollisionMesher.MarkDirty(pos);
 
 								hasChanged = true;
 							}
@@ -225,7 +263,7 @@ namespace ViMG
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);
-					chunkManager.Unload(pos);
+					chunkManager.Unload(world, pos);
 				}
 
 				loadedChunksFastLookup[i] = LoadingState.Unloaded;
@@ -245,6 +283,8 @@ namespace ViMG
 		public void UnloadAll()
 		{
 			loadedChunks.Clear();
+			//TODO: there may still be meshes in the queue.
+			//The reason why I'm not calling FlushMeshQueue here is because it needs World
 			chunkManager.Mesher.UnloadAllMeshes();
 			entityManager.UnloadAll();
 		}

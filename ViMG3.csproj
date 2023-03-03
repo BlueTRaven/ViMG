@@ -9,23 +9,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="bepuphysics2\**" />
     <Compile Remove="BrUtility\**" />
     <Compile Remove="MigrationBackup\**" />
     <Compile Remove="MonoGame\**" />
+    <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="MonoGame\**" />
+    <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="MonoGame\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BepuPhysics" Version="2.4.0" />
     <PackageReference Include="MonoGame.Content.Builder.Task.Compute" Version="3.8.1.2" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="bepuphysics2\BepuPhysics\BepuPhysics.csproj" />
+    <ProjectReference Include="bepuphysics2\BepuUtilities\BepuUtilities.csproj" />
     <ProjectReference Include="BrUtility\BrAssetsManager\BrAssetsManager.csproj" PrivateAssets="All" />
     <ProjectReference Include="BrUtility\BrNineSlice\BrNineSlice.csproj" PrivateAssets="All" />
     <ProjectReference Include="BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />

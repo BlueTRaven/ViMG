@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BepuPhysics;
+using BepuUtilities.Memory;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +17,14 @@ namespace ViMG.GameStates
         public WorldInfoIO.WorldInfo WorldInfo;
         public WorldLogics.WorldLogic Logic;
         public Skybox Skybox;
+        public Simulation PhysicsSimulation;
+        public BufferPool PhysicsBuffer;
 
         public string WorldName;
         public int Layer;
 
-        public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, WorldLogics.WorldLogic logic, Skybox skybox)
+        public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, 
+            WorldLogics.WorldLogic logic, Skybox skybox, Simulation simulation, BufferPool buffer)
         {
             this.WorldName = worldName;
             this.Layer = layer;
@@ -29,6 +34,9 @@ namespace ViMG.GameStates
             WorldInfo = worldInfo;
             Logic = logic;
             Skybox = skybox;
+
+            this.PhysicsSimulation = simulation;
+            this.PhysicsBuffer = buffer;
         }
 
         public void AddEntity(Entity entity)

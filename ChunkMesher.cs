@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuUtilities.Memory;
+using BrUtility;
 using BrUtility.Ported;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -74,7 +75,9 @@ namespace ViMG
 		private struct ChunkMeshInfo
 		{
 			public ChunkPosition position;
-			public BepuPhysics.Collidables.Mesh collidableMesh;
+			public BepuPhysics.Collidables.TypedIndex collidableShapeIndex; //TODO move elsewhere
+			public BepuPhysics.StaticHandle collidableStaticHandle;
+            public BepuPhysics.Collidables.Mesh collidableMesh;
 			public (VertexBuffer VBO, IndexBuffer IBO)[] meshes;
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
@@ -86,6 +89,8 @@ namespace ViMG
 
 			public ChunkMeshInfo(ChunkPosition position)
 			{
+				collidableShapeIndex = new BepuPhysics.Collidables.TypedIndex();
+				collidableStaticHandle = new BepuPhysics.StaticHandle();
 				this.position = position;
 				collidableMesh = new BepuPhysics.Collidables.Mesh();
 				meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
@@ -101,7 +106,7 @@ namespace ViMG
 			}
 		};
 
-		private ref struct ChunkMeshData
+		public ref struct ChunkMeshData
         {
 			public Span<CubePosition> positions;
 			public Span<ushort> ids;
@@ -138,10 +143,13 @@ namespace ViMG
 		private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
 		private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
 
+		private BufferPool buffer;
 		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
         {
             this.device = device;
             this.sizeInChunks = sizeInChunks;
+
+			this.buffer = new BufferPool();
 
 			chunkMeshInfos = new ChunkMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
 			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
@@ -153,18 +161,16 @@ namespace ViMG
 
 		public void Update(World world, ChunkManager manager)
         {
-			int meshedInThisFrame = 0;
-
 			if (!currentBatch.isUsed)
 				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				MeshBatch(world, ref currentBatch);
+				EnqueueBatch(world, ref currentBatch);
 				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			//Note that we only attempt to mesh one batch per frame regardless of what MAX_MESH_PER_FRAME is.
+			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
 			while (dirtyChunkPositions.Count > 0 && currentBatch.num < MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
@@ -176,7 +182,6 @@ namespace ViMG
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.cmis[currentBatch.num++] = c;
-					meshedInThisFrame++;
 				}
 			}
 
@@ -184,19 +189,27 @@ namespace ViMG
 			//As there might be frames where we don't fully fill it, in which case it could wait a potentially arbitrary amount of time.
 			if (currentBatch.num > 0)
 			{
-				MeshBatch(world, ref currentBatch);
+				EnqueueBatch(world, ref currentBatch);
 				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			StartActiveTasks();
+			StartActiveTasks(world);
 		}
 
-		public void FlushMeshQueue()
+		public void FlushMeshQueue(World world)
         {
 			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
+			EnqueueBatch(world, ref currentBatch);
+			currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+
+			int max = chunkMeshBatchTasks.Count;
+			world.GameStateManager.TheIsland.ProgressMax = max;
+
 			while (chunkMeshBatchTasks.Count > 0)
             {
+				world.GameStateManager.TheIsland.ProgressMin = max - chunkMeshBatchTasks.Count;
+
 				var task = chunkMeshBatchTasks.Dequeue().task;
 
 				if (task.Status == TaskStatus.Created)
@@ -208,8 +221,13 @@ namespace ViMG
 				tasks.Enqueue(task);
 			}
 
+			max = tasks.Count;
+			world.GameStateManager.TheIsland.ProgressMax = max;
+
 			while (tasks.Count > 0)
             {
+				world.GameStateManager.TheIsland.ProgressMin = max - tasks.Count;
+
 				var task = tasks.Dequeue();
 
 				if (task.IsCompleted)
@@ -239,13 +257,20 @@ namespace ViMG
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
 							UnloadMesh(ref meshResult);
 						}
-					}
+
+                        /*if (meshResult.collidableMesh.Triangles.Allocated)
+                        {
+                            meshResult.collidableShapeIndex = world.PhysicsSimulation.Shapes.Add(meshResult.collidableMesh);
+                            meshResult.collidableStaticHandle = world.PhysicsSimulation.Statics.Add(
+                                new BepuPhysics.StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, meshResult.collidableShapeIndex));
+                        }*/
+                    }
 				}
 				else tasks.Enqueue(task);
 			}
         }
 
-		private void StartActiveTasks()
+		private void StartActiveTasks(World world)
 		{
 			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
 			{
@@ -280,7 +305,14 @@ namespace ViMG
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
 							UnloadMesh(ref meshResult);
 						}
-					}
+
+                        /*if (meshResult.collidableMesh.Triangles.Allocated)
+                        {
+                            meshResult.collidableShapeIndex = world.PhysicsSimulation.Shapes.Add(meshResult.collidableMesh);
+                            meshResult.collidableStaticHandle = world.PhysicsSimulation.Statics.Add(
+                                new BepuPhysics.StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, meshResult.collidableShapeIndex));
+                        }*/
+                    }
 
 					activeChunkMeshBatchTasks[i] = null;
 				}
@@ -309,7 +341,7 @@ namespace ViMG
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				MeshBatch(world, ref currentBatch);
+				EnqueueBatch(world, ref currentBatch);
 				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
@@ -319,7 +351,7 @@ namespace ViMG
 				currentBatch.cmis[currentBatch.num++] = c;
 		}
 
-		private void MeshBatch(World world, ref ChunkMeshBatch batch)
+		private void EnqueueBatch(World world, ref ChunkMeshBatch batch)
 		{
 			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
 
@@ -374,9 +406,9 @@ namespace ViMG
                 cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
                 cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air));
 
-				if (opaques.verts.Count > 0)
-					cmi.collidableMesh = state.mesher.GenerateCollidableMesh(state.world, opaques.verts, opaques.indices);
-				else cmi.collidableMesh = default;
+                /*if (opaques.verts.Count > 0)
+                    cmi.collidableMesh = state.mesher.GenerateCollidableMesh(state.world, opaques.verts, opaques.indices);
+                else cmi.collidableMesh = default;*/
 
                 state.batch.cmis[i] = cmi;
 				state.batch.cmis[i].hasMeshes = true;
@@ -396,6 +428,15 @@ namespace ViMG
 
 					c.meshes[i] = (null, null);
 				}
+
+			}
+
+			if (c.collidableMesh.Triangles.Allocated)
+			{
+				lock (buffer)
+				{
+					c.collidableMesh.Dispose(buffer);
+				}
 			}
 
 			c.hasMeshes = false;
@@ -408,21 +449,24 @@ namespace ViMG
 
 		public void UnloadAllMeshes()
 		{
-			for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
+			lock (buffer)
 			{
-				for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
+				for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
 				{
-					(VertexBuffer VBO, IndexBuffer IBO) mesh = chunkMeshInfos[j].meshes[k];
-					if (mesh.VBO != null)
+					for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
 					{
-						mesh.VBO.Dispose();
-						mesh.IBO.Dispose();
+						(VertexBuffer VBO, IndexBuffer IBO) mesh = chunkMeshInfos[j].meshes[k];
+						if (mesh.VBO != null)
+						{
+							mesh.VBO.Dispose();
+							mesh.IBO.Dispose();
 
-						chunkMeshInfos[j].meshes[k] = (null, null);
+							chunkMeshInfos[j].meshes[k] = (null, null);
+						}
 					}
-				}
 
-				chunkMeshInfos[j].hasMeshes = false;
+					chunkMeshInfos[j].hasMeshes = false;
+				}
 			}
 		}
 
@@ -436,6 +480,12 @@ namespace ViMG
 				dirtyChunkKnown.Add(position);
 			}
 		}
+
+		public bool IsMeshed(ChunkPosition position)
+        {
+			//we know we're not meshing this chunk currently if meshVersion is equal to version.
+			return GetChunkMeshInfo(position).meshVersion == GetChunkMeshInfo(position).version;
+        }
 
 		public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
 		{
@@ -458,30 +508,7 @@ namespace ViMG
 			return GetChunkMeshInfo(position).GetMeshVersionCode();
 		}
 
-		private BepuPhysics.Collidables.Mesh GenerateCollidableMesh(World world, List<VertexCube> vertices, List<int> indices)
-        {
-			lock (world.PhysicsBufferPool)
-			{
-				world.PhysicsBufferPool.Take<BepuPhysics.Collidables.Triangle>(indices.Count / 3, out var triangleBuffer);
-
-				for (int i = 0; i < indices.Count; i += 3)
-                {
-					int a = indices[i];
-					int b = indices[i + 1];
-					int c = indices[i + 2];
-
-					triangleBuffer[i / 3].A = vertices[a].Position.ToNumerics();
-					triangleBuffer[i / 3].B = vertices[b].Position.ToNumerics();
-					triangleBuffer[i / 3].C = vertices[c].Position.ToNumerics();
-				}
-
-				var collidableMesh = new BepuPhysics.Collidables.Mesh(triangleBuffer, System.Numerics.Vector3.One, world.PhysicsBufferPool);
-
-				return collidableMesh;
-			}
-		}
-
-		private (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
+		public (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
