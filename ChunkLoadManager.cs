@@ -147,21 +147,21 @@ namespace ViMG
 				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
-					throw new Exception("How did you do this??\nAttempted to load chunk, however it was never told to load!");
+					continue;
 				else if (loadedChunksFastLookup[i] == LoadingState.Loading)
-                {
+				{
 					if (chunkManager.Mesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
-                    {
+					{
 						loadedChunks[queuedPosition] = LoadingState.Loaded;
 						loadedChunksFastLookup[i] = LoadingState.Loaded;
 
 						hasChanged = true;
 					}
-                    else
-                    {
+					else
+					{
 						//not finished loading; re-queue
 						queue.EnqueueWithoutSorting(queuedPosition);
-                    }
+					}
 
 					currentNum++;
 				}

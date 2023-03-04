@@ -91,8 +91,7 @@ namespace ViMG
 
 		private Task<World> nextWorld;
 
-		public BufferPool PhysicsBufferPool;
-		public Simulation PhysicsSimulation;
+		public PhysicsInfo PhysicsInfo;
 
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
@@ -107,8 +106,7 @@ namespace ViMG
 			WorldInfo = prototype.WorldInfo;
 			Skybox = prototype.Skybox;
 			logic = prototype.Logic;
-			PhysicsSimulation = prototype.PhysicsSimulation;
-			PhysicsBufferPool = prototype.PhysicsBuffer;
+			PhysicsInfo = prototype.PhysicsInfo;
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -291,7 +289,7 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
-			PhysicsSimulation.Timestep((float)deltaTime);
+			PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
@@ -990,8 +988,9 @@ namespace ViMG
 			LightManager.Dispose();
 			logic.Dispose();
 
-			PhysicsSimulation.Dispose();
-			PhysicsBufferPool.Clear();
+			PhysicsInfo.Simulation.Dispose();
+			PhysicsInfo.Properties.Dispose();
+			PhysicsInfo.GlobalBufferPool.Clear();
         }
 	}
 }

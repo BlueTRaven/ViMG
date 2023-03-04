@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Physics;
 
 namespace ViMG.Entities
 {
@@ -18,6 +19,8 @@ namespace ViMG.Entities
 
         private TypedIndex physicsShapeIndex;
         private BodyHandle physicsHandle;
+
+        private ContactChecker contactChecker;
 
         public PhysicsTestBall(Vector3 position)
         {
@@ -29,24 +32,38 @@ namespace ViMG.Entities
             base.Initialize(world);
 
             Sphere colSphere = new Sphere(Cube.CUBE_SCALE / 2f);
-            physicsShapeIndex = world.PhysicsSimulation.Shapes.Add(colSphere);
-            physicsHandle = world.PhysicsSimulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(this.Position.ToNumerics()), 
-                colSphere.ComputeInertia(1), physicsShapeIndex, 0.0001f));
+            physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(colSphere);
+            physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(this.Position.ToNumerics()), 
+                new BodyInertia() { InverseMass = 1 }, physicsShapeIndex, 0.0001f));
+
+            contactChecker = new ContactChecker();
         }
 
         public override void OnUnload()
         {
             base.OnUnload();
 
-            world.PhysicsSimulation.Shapes.Remove(physicsShapeIndex);
-            world.PhysicsSimulation.Bodies.Remove(physicsHandle);
+            world.PhysicsInfo.Simulation.Shapes.Remove(physicsShapeIndex);
+            world.PhysicsInfo.Simulation.Bodies.Remove(physicsHandle);
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
-            Position = world.PhysicsSimulation.Bodies.GetBodyReference(physicsHandle).Pose.Position;
+            Position = world.PhysicsInfo.Simulation.Bodies.GetBodyReference(physicsHandle).Pose.Position;
+
+            contactChecker.Update(world, physicsHandle);
+
+            if (contactChecker.OnGround)
+            {
+                if (!world.PhysicsInfo.Simulation.Bodies[physicsHandle].Awake)
+                    world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
+
+                contactChecker.OnGround = false;
+                Vector3 jumpVector = contactChecker.GroundNormal * Cube.CUBE_SCALE * 6;
+                world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = jumpVector.ToNumerics();
+            }
         }
 
         public override void Draw(GraphicsDevice device, Effect effect)
@@ -62,9 +79,9 @@ namespace ViMG.Entities
                 mesh = MeshHelper.MakeSimplerMesh(device, vertices, indices);
             }
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
                 DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.vbo, mesh.ibo,
-                Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), tintColor: Color.Red.ToVector3()));
+                Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), sourceRect: new RectangleF(0, 0, 16, 16)));
         }
     }
 }

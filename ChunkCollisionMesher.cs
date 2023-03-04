@@ -29,13 +29,11 @@ namespace ViMG
         private readonly ChunkMesher mesher;
         private readonly int sizeInChunks;
 
-        private readonly Simulation simulation;
-        private readonly BufferPool buffer;
+        private readonly Physics.PhysicsInfo physicsInfo;
 
-        public ChunkCollisionMesher(Simulation simulation, BufferPool buffer, ChunkMesher mesher, int sizeInChunks)
+        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkMesher mesher, int sizeInChunks)
         {
-            this.simulation = simulation;
-            this.buffer = buffer;
+            this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
             this.mesher = mesher;
             this.sizeInChunks = sizeInChunks;
@@ -91,7 +89,6 @@ namespace ViMG
 
         public void MeshChunk(World world, ChunkPosition position)
         {
-            ProfilingHelper.Start("Meshing one chunk...");
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
             CollisionMeshInfo meshInfo = meshes[i];
 
@@ -132,8 +129,8 @@ namespace ViMG
             {
                 meshInfo.collidableMesh = GenerateMesh(opaques.verts, opaques.indices);
 
-                meshInfo.collidableShapeIndex = simulation.Shapes.Add(meshInfo.collidableMesh);
-                meshInfo.collidableStaticHandle = simulation.Statics.Add(
+                meshInfo.collidableShapeIndex = physicsInfo.Simulation.Shapes.Add(meshInfo.collidableMesh);
+                meshInfo.collidableStaticHandle = physicsInfo.Simulation.Statics.Add(
                     new StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, meshInfo.collidableShapeIndex));
 
                 meshInfo.hasMesh = true;
@@ -143,15 +140,14 @@ namespace ViMG
             meshInfo.meshVersion = meshInfo.version;
 
             meshes[i] = meshInfo;
-            ProfilingHelper.End("Done.");
         }
 
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh
         public Mesh GenerateMesh(List<VertexCube> vertices, List<int> indices)
         {
-            lock (buffer)
+            lock (physicsInfo.GlobalBufferPool)
             {
-                buffer.Take<Triangle>(indices.Count / 3, out var triangleBuffer);
+                physicsInfo.GlobalBufferPool.Take<Triangle>(indices.Count / 3, out var triangleBuffer);
 
                 for (int i = 0; i < indices.Count; i += 3)
                 {
@@ -163,7 +159,7 @@ namespace ViMG
                         vertices[c].Position.ToNumerics());
                 }
 
-                var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, buffer);
+                var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, physicsInfo.GlobalBufferPool);
 
                 return collidableMesh;
             }
@@ -183,9 +179,9 @@ namespace ViMG
 
             if (mesh.hasMesh)
             {
-                simulation.Shapes.Remove(mesh.collidableShapeIndex);
-                simulation.Statics.Remove(mesh.collidableStaticHandle);
-                mesh.collidableMesh.Dispose(buffer);
+                physicsInfo.Simulation.Shapes.Remove(mesh.collidableShapeIndex);
+                physicsInfo.Simulation.Statics.Remove(mesh.collidableStaticHandle);
+                mesh.collidableMesh.Dispose(physicsInfo.GlobalBufferPool);
                 mesh.collidableMesh = default;
 
                 mesh.hasMesh = false;

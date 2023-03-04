@@ -13,12 +13,15 @@ namespace ViMG.Physics
 {
     public struct NarrowPhaseCallbacks : INarrowPhaseCallbacks
     {
+        private CollidableProperty<PhysicsProperties> properties;
+
         public SpringSettings ContactSpringiness;
         public float MaximumRecoveryVelocity;
         public float FrictionCoefficient;
 
-        public NarrowPhaseCallbacks(SpringSettings contactSpringiness, float maximumRecoveryVelocity = 2f, float frictionCoefficient = 1f)
+        public NarrowPhaseCallbacks(CollidableProperty<PhysicsProperties> properties, SpringSettings contactSpringiness, float maximumRecoveryVelocity = 2f, float frictionCoefficient = 1f)
         {
+            this.properties = properties;
             ContactSpringiness = contactSpringiness;
             MaximumRecoveryVelocity = maximumRecoveryVelocity;
             FrictionCoefficient = frictionCoefficient;
@@ -26,6 +29,8 @@ namespace ViMG.Physics
 
         public void Initialize(Simulation simulation)
         {
+            properties.Initialize(simulation);
+
             //Use a default if the springiness value wasn't initialized... at least until struct field initializers are supported outside of previews.
             if (ContactSpringiness.AngularFrequency == 0 && ContactSpringiness.TwiceDampingRatio == 0)
             {
@@ -38,9 +43,11 @@ namespace ViMG.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AllowContactGeneration(int workerIndex, CollidableReference a, CollidableReference b, ref float speculativeMargin)
         {
-            //While the engine won't even try creating pairs between statics at all, it will ask about kinematic-kinematic pairs.
-            //Those pairs cannot emit constraints since both involved bodies have infinite inertia. Since most of the demos don't need
-            //to collect information about kinematic-kinematic pairs, we'll require that at least one of the bodies needs to be dynamic.
+            //It's impossible for two statics to collide, and pairs are sorted such that bodies always come before statics.
+            if (b.Mobility != CollidableMobility.Static)
+            {
+                return SubgroupCollisionFilter.AllowCollision(properties[a.BodyHandle].Filter, properties[b.BodyHandle].Filter);
+            }
             return a.Mobility == CollidableMobility.Dynamic || b.Mobility == CollidableMobility.Dynamic;
         }
 

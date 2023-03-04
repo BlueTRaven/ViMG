@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using ViMG.Physics;
 
 namespace ViMG.GameStates
 {
@@ -17,14 +18,13 @@ namespace ViMG.GameStates
         public WorldInfoIO.WorldInfo WorldInfo;
         public WorldLogics.WorldLogic Logic;
         public Skybox Skybox;
-        public Simulation PhysicsSimulation;
-        public BufferPool PhysicsBuffer;
+        public PhysicsInfo PhysicsInfo;
 
         public string WorldName;
         public int Layer;
 
         public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, 
-            WorldLogics.WorldLogic logic, Skybox skybox, Simulation simulation, BufferPool buffer)
+            WorldLogics.WorldLogic logic, Skybox skybox, PhysicsInfo physicsInfo)
         {
             this.WorldName = worldName;
             this.Layer = layer;
@@ -35,8 +35,7 @@ namespace ViMG.GameStates
             Logic = logic;
             Skybox = skybox;
 
-            this.PhysicsSimulation = simulation;
-            this.PhysicsBuffer = buffer;
+            this.PhysicsInfo = physicsInfo;
         }
 
         public void AddEntity(Entity entity)

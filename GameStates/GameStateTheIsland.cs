@@ -163,14 +163,12 @@ namespace ViMG.GameStates
         {
             const int SIZE_IN_CHUNKS = 32;
 
-            var buffer = new BufferPool();
-            var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+            var physicsInfo = new PhysicsInfo();
 
             var entityManager = new EntityManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
             chunkManager.CreateInitializerCubeView();
             chunkManager.CreateThreadedCubeView(null);
 
@@ -190,7 +188,7 @@ namespace ViMG.GameStates
             var generator = CreateLayerGenerator(0);
             var logic = CreateLayerLogic(0, worldName, device);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
 
             ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -269,17 +267,15 @@ namespace ViMG.GameStates
             if (worldInfo.playerPosition.LengthSquared() < 0)
                 worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
-            var buffer = new BufferPool();
-            var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+            var physicsInfo = new PhysicsInfo();
 
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
 
             var logic = CreateLayerLogic(worldInfo.playerLayer, worldName, device);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), simulation, buffer);
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -346,14 +342,12 @@ namespace ViMG.GameStates
                 worldInfo.furthestLayer = layer;
 
                 var entityManager = new EntityManager();
-
-                var buffer = new BufferPool();
-                var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                
+                var physicsInfo = new PhysicsInfo();
 
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
                 chunkManager.CreateInitializerCubeView();
                 chunkManager.CreateThreadedCubeView(null);
 
@@ -362,7 +356,7 @@ namespace ViMG.GameStates
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer, worldName, device);
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
 
                 ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -408,19 +402,17 @@ namespace ViMG.GameStates
 
                 var entityManager = new EntityManager();
 
-                var buffer = new BufferPool();
-                var simulation = Simulation.Create(buffer, new NarrowPhaseCallbacks(new SpringSettings(30, 3)),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, World.GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+                var physicsInfo = new PhysicsInfo();
 
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, simulation, buffer, device);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
 
                 var logic = CreateLayerLogic(layer, worldName, device);
 
                 Skybox skybox = new Skybox();
 
-                WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, simulation, buffer);
+                WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))
@@ -450,6 +442,11 @@ namespace ViMG.GameStates
                 prototype.Logic.Initialize(world);
                 return world;
             }
+        }
+
+        private void CreatePhysicsInfo()
+        {
+
         }
 
         private ChunkGenerator CreateLayerGenerator(int layer)
