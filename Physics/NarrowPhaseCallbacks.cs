@@ -5,9 +5,11 @@ using BepuPhysics.Constraints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG.Physics
 {
@@ -35,8 +37,8 @@ namespace ViMG.Physics
             if (ContactSpringiness.AngularFrequency == 0 && ContactSpringiness.TwiceDampingRatio == 0)
             {
                 ContactSpringiness = new(30, 1);
-                MaximumRecoveryVelocity = 2f;
-                FrictionCoefficient = 1f;
+                MaximumRecoveryVelocity = Cube.CUBE_SCALE * 2f;
+                FrictionCoefficient = Cube.CUBE_SCALE;
             }
         }
 
@@ -60,7 +62,24 @@ namespace ViMG.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe bool ConfigureContactManifold<TManifold>(int workerIndex, CollidablePair pair, ref TManifold manifold, out PairMaterialProperties pairMaterial) where TManifold : unmanaged, IContactManifold<TManifold>
         {
-            pairMaterial.FrictionCoefficient = FrictionCoefficient;
+            Vector3 nrm = Vector3.Zero;
+            for (int i = 0; i < manifold.Count; i++)
+            {
+                nrm += manifold.GetNormal(ref manifold, i);
+            }
+
+            nrm /= manifold.Count;
+            nrm = Vector3.Normalize(nrm);
+
+            float dot = Vector3.Dot(nrm, Vector3.UnitY);
+
+            //If the collidable is colliding with the side of something, don't use friction
+            //This is not very physically correct... but whatever.
+            //The reason why we're doing this is because if the player decides to walk into a wall, because of friction they essentially get stuck in it.
+            if (dot < 0.5f)
+                pairMaterial.FrictionCoefficient = 0;
+            else 
+                pairMaterial.FrictionCoefficient = FrictionCoefficient;
             pairMaterial.MaximumRecoveryVelocity = MaximumRecoveryVelocity;
             pairMaterial.SpringSettings = ContactSpringiness;
             return true;

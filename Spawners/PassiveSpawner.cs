@@ -42,6 +42,9 @@ namespace ViMG.Spawners
 
         public virtual void Update(double deltaTime, World world)
         {
+            if (!Main.ENABLE_ENT_SPAWNING)
+                return;
+
             checkTimer -= (float)deltaTime;
 
             if (checkTimer <= 0)

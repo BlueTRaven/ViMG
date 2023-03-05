@@ -54,6 +54,8 @@ namespace ViMG
 
                     if (c.version != c.meshVersion || !c.hasMesh)
                     {
+                        if (c.hasMesh)
+                            Unload(world, position);
                         MeshChunk(world, position);
                     }
                 }
@@ -81,6 +83,8 @@ namespace ViMG
 
                     if (c.version != c.meshVersion || !c.hasMesh)
                     {
+                        if (c.hasMesh)
+                            Unload(world, position);
                         MeshChunk(world, position);
                     }
                 }

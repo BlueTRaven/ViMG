@@ -106,6 +106,7 @@ namespace ViMG
         public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
             Mesher.Update(world, this);
+            CollisionMesher.Update(world);
 
             const int MAX_UPDATE_PER_FRAME = 20;
             int updatedThisFrame = 0; 
@@ -240,6 +241,7 @@ namespace ViMG
         public void MarkChunkDirty(ChunkPosition position)
         {
             Mesher.MarkDirty(position);
+            CollisionMesher.MarkDirty(position);
         }
 
         public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)

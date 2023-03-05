@@ -1,4 +1,6 @@
-﻿using BrUtility;
+﻿using BepuPhysics;
+using BepuPhysics.Collidables;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,6 +12,7 @@ using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Items;
+using ViMG.Physics;
 using ViMG.UIs;
 
 namespace ViMG
@@ -130,9 +133,9 @@ namespace ViMG
 
 		public Vector3 Rotation;
 
-		public Vector3 Velocity;
+		//public Vector3 Velocity;
 
-		private float moveSpeed = Cube.CUBE_SCALE * 0.4f;
+		private float moveSpeed = Cube.CUBE_SCALE * 0.8f;
 		public Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
 		public Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
 		public Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
@@ -151,10 +154,14 @@ namespace ViMG
 
 		private State state;
 
-		private bool onGround;
+		//private bool onGround;
 		private bool inRope;
 		private bool inWater;
 		private bool headUnderWater;
+
+		private TypedIndex physicsShapeIndex;
+		private BodyHandle physicsHandle;
+		private ContactChecker contactChecker;
 
 		private Rectangle3D Bounds => new Rectangle3D(Position + new Vector3(-Cube.CUBE_SCALE * 0.85f / 2f, -Cube.CUBE_SCALE * 2f, -Cube.CUBE_SCALE * 0.85f / 2f),
 			new Vector3(Cube.CUBE_SCALE * 0.85f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.85f));
@@ -324,6 +331,12 @@ namespace ViMG
 			Health = MaxHealth;
 			Magic = MaxMagic;
 
+			var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
+			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
+			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
+				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 200 }, physicsShapeIndex, 0.001f));
+			contactChecker = new ContactChecker();
+
 			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
 			world.GameStateManager.TheIsland.SetMenu(menuPlayer);
@@ -370,12 +383,20 @@ namespace ViMG
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 			hitbox = -1;
+
+			world.PhysicsInfo.Simulation.Bodies.Remove(physicsHandle);
+			world.PhysicsInfo.Simulation.Shapes.Remove(physicsShapeIndex);
 		}
 
         public override void Update(double deltaTime)
 		{
 			/*if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == null)
 				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);*/
+			if (state != State.Noclip)
+			{
+				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + new Vector3(0, Cube.CUBE_SCALE * 0.6f, 0);
+				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);	//player physics shape can never fall asleep
+			}
 
 			hasMoved = false;
 			hasRotated = false;
@@ -452,10 +473,10 @@ namespace ViMG
 						UpdateMovement(deltaTime);
 					}
 				}
+
+				//UpdateCollision(deltaTime);
 				
-				UpdateCollision(deltaTime);
-				
-				Position += Velocity * (float)deltaTime;
+				//Position += Velocity * (float)deltaTime;
 			}
 			else if (state == State.Dash)
             {
@@ -464,9 +485,9 @@ namespace ViMG
 
 				UpdateDash(deltaTime);
 
-				UpdateCollision(deltaTime);
+				//UpdateCollision(deltaTime);
 
-				Position += Velocity * (float)deltaTime;
+				//Position += Velocity * (float)deltaTime;
             }
 			else if (state == State.Attack)
 			{
@@ -477,9 +498,9 @@ namespace ViMG
 
 				UpdateMovement(deltaTime);
 
-				UpdateCollision(deltaTime);
+				//UpdateCollision(deltaTime);
 
-				Position += Velocity * (float)deltaTime;
+				//Position += Velocity * (float)deltaTime;
 
 				Vector3 dir = attackStateTargetPos - Position;
 				if (dir.Length() < PUSH_RADIUS)
@@ -500,6 +521,11 @@ namespace ViMG
 				if (inputLockupTimer <= 0)
 					state = State.Normal;
 			}
+
+			contactChecker.Update(world, physicsHandle);
+
+			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
+				hasMoved = true;
 
 			damageAnimTimer -= (float)deltaTime;
 
@@ -707,7 +733,7 @@ namespace ViMG
 
 		private void UpdateMovementRope(double deltaTime)
         {
-			Vector3 actualMaxVel = MaxVelocity;
+			/*Vector3 actualMaxVel = MaxVelocity;
 
 			bool movementPressed = false;
 			Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
@@ -825,12 +851,12 @@ namespace ViMG
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 			if (Velocity.Y > actualMaxVel.Y / 4f)
-				Velocity.Y = actualMaxVel.Y / 4f;
+				Velocity.Y = actualMaxVel.Y / 4f;*/
 		}
 
 		private void UpdateMovementWater(double deltaTime)
 		{
-			Vector3 actualMaxVel = MaxVelocitySwimming;
+			/*Vector3 actualMaxVel = MaxVelocitySwimming;
 
 			bool movementPressed = false;
 			bool jumpHeld = false;
@@ -944,13 +970,16 @@ namespace ViMG
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 			if (Velocity.Y > actualMaxVel.Y)
-				Velocity.Y = actualMaxVel.Y;
+				Velocity.Y = actualMaxVel.Y;*/
 		}
 
 		private void UpdateMovement(double deltaTime)
 		{
 			if (state == State.Noclip)
 			{
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = Position.ToNumerics();
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = Vector3.Zero.ToNumerics();
+
 				const float MIN_CAM_SPEED = Cube.CUBE_SCALE / 4f;
 				const float MAX_CAM_SPEED = MIN_CAM_SPEED * 8;
 
@@ -1005,14 +1034,15 @@ namespace ViMG
 				Vector3 actualMaxVel = MaxVelocity;
 
 				bool movementPressed = false;
-				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+				//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+				Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
 
 				if (Main.inputManager.JustReleased(Keys.LeftShift))
 					IsRunning = false;
 
 				if (inputLockupTimer <= 0 && world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
 				{
-					if (onGround && Main.inputManager.IsHeld(Keys.LeftShift))
+					if (contactChecker.OnGround && Main.inputManager.IsHeld(Keys.LeftShift))
 						IsRunning = true;
 
 					if (IsRunning)
@@ -1021,45 +1051,44 @@ namespace ViMG
 					actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
 
 					float actualAcceleration = moveSpeed + stats.Acceleration;
-
+					
 					if (Main.inputManager.IsPressed(Keys.W))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+						velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.S))
 					{
-						Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+						velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.A))
 					{
-						Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+						velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
 						movementPressed = true;
 					}
 					if (Main.inputManager.IsPressed(Keys.D))
 					{
-						Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+						velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
 						movementPressed = true;
 					}
-					if ((onGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
+					if ((contactChecker.OnGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
 					{
-						if (!onGround)
+						hasMoved = true;
+						if (!contactChecker.OnGround)
 						{
-							stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref Velocity);
+							stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
 
 							currentJumps--;
 						}
 						else
 						{
-
-							Velocity.Y = JumpSpeed + stats.JumpSpeed;
-							onGround = false;
+							velocity.Y = JumpSpeed + stats.JumpSpeed;
 						}
 					}
 
 					Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-					velXY = new Vector2(Velocity.X, Velocity.Z);
+					Vector2 velXY = new Vector2(velocity.X, velocity.Z);
 
 					if (velXY.Length() > clampXY.Length())
 					{
@@ -1067,7 +1096,7 @@ namespace ViMG
 						velXY *= clampXY.Length();
 					}
 
-					//Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+					velocity = new Vector3(velXY.X, velocity.Y, velXY.Y);
 
 					if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && 
 						!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
@@ -1103,7 +1132,9 @@ namespace ViMG
 					}
 				}
 
-				if (!movementPressed)
+				if (movementPressed)
+					hasMoved = true;
+				/*if (!movementPressed)
 				{
 					if (velXY.Length() > 0)
 					{
@@ -1114,21 +1145,15 @@ namespace ViMG
 
 						velXY = Vector2.Normalize(velXY) * MathF.Max(velXY.Length() - decel, 0);
 					}
-				}
+				}*/
 
-				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-
-				if (Velocity.Length() > float.Epsilon)
+				if (velocity.Length() > float.Epsilon)
 					hasMoved = true;
 
-				if (Velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
-					Velocity.Y = Cube.CUBE_SCALE * 3.2f;
+				if (velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
+					velocity.Y = Cube.CUBE_SCALE * 3.2f;
 
-				Velocity.Y += World.GRAVITY;
-				if (Velocity.Y < -actualMaxVel.Y)
-					Velocity.Y = -actualMaxVel.Y;
-				if (Velocity.Y > actualMaxVel.Y)
-					Velocity.Y = actualMaxVel.Y;
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
 			}
 
 			UpdateMaybeDash(deltaTime);
@@ -1148,7 +1173,7 @@ namespace ViMG
 
 		private void UpdateMaybeDash(double deltaTime)
         {
-			if (onGround)
+			if (contactChecker.OnGround)
             {
 				dashResetTimer -= (float)deltaTime;
             }
@@ -1175,7 +1200,9 @@ namespace ViMG
 							{
 								state = State.Dash;
 
-								stats.DashEffect.StartDash(this, ref Velocity, out dashDirection, out dashTime, in stats);
+								Vector3 vel = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
+								stats.DashEffect.StartDash(this, ref vel, out dashDirection, out dashTime, in stats);
+								world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = vel.ToNumerics();
 								dashTimer = dashTime;
 
 								dashSubstate = 0;
@@ -1202,7 +1229,9 @@ namespace ViMG
 
 			dashTimer -= (float)deltaTime;
 
-			stats.DashEffect.DoDash(this, ref Velocity, ref dashDirection, in stats);
+			Vector3 vel = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
+			stats.DashEffect.DoDash(this, ref vel, ref dashDirection, in stats);
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = vel.ToNumerics();
 
 			hasMoved = true;
 
@@ -1265,7 +1294,10 @@ namespace ViMG
 
 		private void UpdateCollision(double deltaTime)
 		{
-			inRope = false;
+			if (contactChecker.OnGround && !contactChecker.WasOnGround)
+				LandOnGround();
+
+			/*inRope = false;
 			inWater = false;
 			onGround = false;
 			headUnderWater = false;
@@ -1425,13 +1457,13 @@ namespace ViMG
 							break;
 					}
 				}
-			}
+			}*/
 		}
 
 		private void LandOnGround()
         {
-			Velocity.Y = 0;
-			onGround = true;
+			//Velocity.Y = 0;
+			//onGround = true;
 
 			currentJumps = stats.JumpNum;
 
@@ -1538,10 +1570,10 @@ namespace ViMG
 			{
 				scale = stats.MeleeSpdScale;
 
-				if (onGround)
+				/*if (onGround)
 					Velocity.Y = -Main.camera.Forward.Y * 3.2f * Cube.CUBE_SCALE;
 				else if (Velocity.Y > Cube.CUBE_SCALE)
-					Velocity.Y = Cube.CUBE_SCALE;
+					Velocity.Y = Cube.CUBE_SCALE;*/
 			}
 			else if (damageType == DamageType.Ranged)
 				scale = stats.RangeSpdScale;
@@ -1728,16 +1760,14 @@ namespace ViMG
 				{
 					if (other.direction.Length() > 0)
 					{
-						Velocity = Vector3.Normalize(other.direction) * other.knockback;
-						if (Velocity.Y < -Cube.CUBE_SCALE)
-							Velocity.Y = -Cube.CUBE_SCALE;
+						world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = 
+							(Vector3.Normalize(other.direction) * other.knockback).ToNumerics();
 					}
                     else
                     {
 						Vector3 direction = Vector3.Normalize(other.bounds.Center - Position);
-						Velocity = direction * other.knockback;
-						if (Velocity.Y < -Cube.CUBE_SCALE)
-							Velocity.Y = -Cube.CUBE_SCALE;
+						world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = 
+							(direction * other.knockback).ToNumerics();
 					}
 
 					state = State.Hurt;

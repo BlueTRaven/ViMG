@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG.Physics
 {
     public class PhysicsInfo
     {
-        public const float SIM_GRAVITY = World.GRAVITY * 16;
+        public const float SIM_GRAVITY = World.GRAVITY * 32;
 
         public Simulation Simulation;
         public BufferPool GlobalBufferPool;
@@ -22,8 +23,8 @@ namespace ViMG.Physics
             GlobalBufferPool = new BufferPool();
             Properties = new CollidableProperty<PhysicsProperties>(GlobalBufferPool);
 
-            Simulation = Simulation.Create(GlobalBufferPool, new NarrowPhaseCallbacks(Properties, new SpringSettings(30, 3)),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, SIM_GRAVITY, 0), angularDamping: 0.2f), new SolveDescription(8, 1));
+            Simulation = Simulation.Create(GlobalBufferPool, new NarrowPhaseCallbacks(Properties, new SpringSettings(30, 1), Cube.CUBE_SCALE * 2f, 0.8f),
+                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, SIM_GRAVITY, 0), 0.8f), new SolveDescription(8, 1));
         }
     }
 }

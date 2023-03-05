@@ -12,11 +12,13 @@ namespace ViMG.Physics
 {
     public class ContactChecker
     {
+        public bool WasOnGround;
         public bool OnGround;
         public Vector3 GroundNormal;
 
         public void Update(World world, BodyHandle handle)
         {
+            WasOnGround = OnGround;
             OnGround = false;
             GroundNormal = Vector3.Zero;
             int groundCount = 0;
@@ -48,7 +50,7 @@ namespace ViMG.Physics
                         ref var contact = ref constraintContacts.Contacts[contactIndex];
 
                         float dot = Vector3.Dot(contact.Normal, Vector3.Up);
-                        if (dot > 0.9f)
+                        if (dot > 0.5f)
                         {
                             OnGround = true;
                             GroundNormal += contact.Normal;
