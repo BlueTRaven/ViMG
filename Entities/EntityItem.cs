@@ -57,7 +57,7 @@ namespace ViMG.Entities
 				BodyDescription.CreateDynamic(new RigidPose(Position.ToNumerics()), new BodyVelocity(InitialVelocity.ToNumerics(), initialAngular.ToNumerics()), 
 				box.ComputeInertia(1), physicsShapeIndex, 0.001f));
 
-			world.PhysicsInfo.Properties[physicsHandle].Filter.GroupId = FilterGroups.GROUP_ITEM;
+			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_ITEM));
 		}
 
         public override void OnUnload()
@@ -79,7 +79,12 @@ namespace ViMG.Entities
 
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 
-			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
+			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+
+			if (Item.item is ItemCube)
+				origin.Z = Cube.CUBE_SCALE / 4f;
+
+			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + origin;
 		}
 
 		public void MoveTowards(Vector3 position)

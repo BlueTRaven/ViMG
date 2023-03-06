@@ -1,4 +1,6 @@
-﻿using BrUtility;
+﻿using BepuPhysics;
+using BepuPhysics.Collidables;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,10 +18,8 @@ namespace ViMG.Entities
 
 		public Vector3 MaxVelocity = new Vector3(1.6f * Cube.CUBE_SCALE);
 		public Vector3 MaxVelocityFalling = new Vector3(1.6f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 1.6f * Cube.CUBE_SCALE);
-		public Vector3 Velocity;
+		//public Vector3 Velocity;
 		private Vector3 moveDir;
-		private bool onGround;
-		private bool wasOnGround;
 
 		private float alive;
 		private float invulnTimer;
@@ -27,7 +27,11 @@ namespace ViMG.Entities
 		private int hitbox;
 		private NoticeHandler<Player> noticeHandler;
 
-		private Vector3 gravityDir = new Vector3(0, 1, 0);
+		//private Vector3 gravityDir = new Vector3(0, 1, 0);
+
+		private TypedIndex physicsShapeIndex;
+		private BodyHandle physicsHandle;
+		private Physics.ContactChecker contactChecker;
 
 		private Vector3 target = Vector3.Zero;
 
@@ -40,6 +44,7 @@ namespace ViMG.Entities
 		public CaveSalamander(Vector3 position)
         {
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 12, false);
+			contactChecker = new Physics.ContactChecker();
 
 			this.Position = position;
 
@@ -48,18 +53,29 @@ namespace ViMG.Entities
 				Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
         }
 
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			var physicsShape = new Sphere(Cube.CUBE_SCALE / 2f);
+			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
+			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
+				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f }, physicsShapeIndex, 0.001f));
+
+			world.PhysicsInfo.Properties[physicsHandle] = new Physics.PhysicsProperties(new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_ENEMY), 0);
+		}
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
 			alive += (float)deltaTime;
 
+			contactChecker.Update(world, physicsHandle);
+
 			Vector3 actualMaxVel = MaxVelocity;
 
-			if (!onGround)
-				actualMaxVel = MaxVelocityFalling;
-
-			Velocity += gravityDir * World.GRAVITY;
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;
 
 			wanderTimer -= (float)deltaTime;
 			invulnTimer -= (float)deltaTime;
@@ -80,7 +96,7 @@ namespace ViMG.Entities
 				}
 				else target = world.player.Position;
 
-				if (onGround)
+				if (contactChecker.OnGround)
 				{
 					Vector3 distance = (target - new Vector3(0, Cube.CUBE_SCALE, 0)) - Position;
 
@@ -90,28 +106,32 @@ namespace ViMG.Entities
 
 					if (distance.Length() > stopDist)
 					{
-						Vector3 tangent = Vector3.Normalize(Vector3.Cross(gravityDir, dir));
+						Vector3 tangent = Vector3.Normalize(Vector3.Cross(-contactChecker.Normal, dir));
 
-						Matrix mat = Matrix.CreateFromAxisAngle(gravityDir, MathHelper.ToRadians(-90));
+						Matrix mat = Matrix.CreateFromAxisAngle(-contactChecker.Normal, MathHelper.ToRadians(-90));
 
 						moveDir = Vector3.Transform(tangent, mat);
-						Velocity += moveDir * (Cube.CUBE_SCALE / 4f);
+						velocity += moveDir * Cube.CUBE_SCALE;// * (Cube.CUBE_SCALE / 4f);
 					}
                     else
                     {
-						Velocity *= 0.95f;
+						velocity *= 0.95f;
                     }
 
-					if (Velocity.Length() > actualMaxVel.Length())
-					{
-						Velocity.Normalize();
-						Velocity *= actualMaxVel.Length();
-					}
-				}
+                    if (velocity.Length() > actualMaxVel.Length())
+                    {
+                        velocity.Normalize();
+                        velocity *= actualMaxVel.Length();
+                    }
+                }
                 else
                 {
+					//add gravity
+					//this will double gravity, but we remove gravity later
+					velocity.Y += (Physics.PhysicsInfo.SIM_GRAVITY * (float)deltaTime);
+
 					Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-					Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+					Vector2 velXY = new Vector2(velocity.X, velocity.Z);
 
 					if (velXY.Length() > clampXY.Length())
 					{
@@ -119,112 +139,23 @@ namespace ViMG.Entities
 						velXY *= clampXY.Length();
 					}
 
-					Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-
-					if (Velocity.Y < -actualMaxVel.Y)
-						Velocity.Y = -actualMaxVel.Y;
+					velocity = new Vector3(velXY.X, velocity.Y, velXY.Y);
 				}
+
+				if (contactChecker.Touching)
+                {
+					//try to force to the ground
+					velocity += -contactChecker.Normal * Cube.CUBE_SCALE * 8;
+                }
 			}
 
-			Position += Velocity * (float)deltaTime;
+			//negate gravity
+			velocity.Y -= (Physics.PhysicsInfo.SIM_GRAVITY * (float)deltaTime);
 
-			onGround = false;
-			UpdateCollision();
-
-			//If we were on ground last frame and not on this frame, then we're attempting to cross a corner (or other things, 
-			//but this is the most likely scenario).
-			if (!onGround && wasOnGround)
-			{
-				//Position += moveDir * (Cube.CUBE_SCALE / 8f);
-				//Position += gravityDir * (Cube.CUBE_SCALE / 4f);
-			}
-
-			if (!onGround)
-			{
-				gravityDir = Vector3.Up;
-			}
-
-			wasOnGround = onGround;
-		}
-
-		private void UpdateCollision()
-		{
-			const int checkSize = 1;
-
-			//TODO: try to make this work again
-			Velocity = Vector3.Zero;
-/*
-			for (int x = -checkSize; x <= checkSize; x++)
-			{
-				for (int y = -checkSize; y <= checkSize; y++)
-				{
-					for (int z = -checkSize; z <= checkSize; z++)
-					{
-						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
-
-						if (world.ChunkManager2.IsInWorldBounds(pos) && 
-							world.ChunkManager2.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
-						{
-							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-							*//*if (CollisionHelper.TestStaticAABBAABB(new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.25f), new Vector3(Cube.CUBE_SCALE * .5f)), 
-								cubeBounds, out CollisionHelper.Contact contact))
-                            {
-								Position += contact.Normal * contact.Penetration;
-
-								float dot = Vector3.Dot(contact.Normal, gravityDir);
-
-								if (dot < 0.25f)
-                                {
-									onGround = true;
-
-									//float velDot = Vector3.Dot(Velocity, gravityDir);
-									//Velocity += gravityDir * velDot;    //negate ground-facing axis?
-
-									gravityDir = -contact.Normal;
-								}
-
-								if (dot >= 0.95f)
-                                {
-									onGround = true;
-
-									//float velDot = Vector3.Dot(Velocity, gravityDir);
-									//Velocity += gravityDir * velDot;    //negate ground-facing axis?
-								}
-                            }*//*
-
-							Vector3 offset = gravityDir * Cube.CUBE_SCALE * 0.25f;
-							Vector3 checkPos = Position + offset;
-
-							if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
-							{
-								Vector3 changeDir = Vector3.Normalize(change);
-								Position = (checkPos - offset) + change;
-
-								float dot = Vector3.Dot(changeDir, gravityDir);
-
-								if (dot < 0.25f)
-								{
-									onGround = true;
-
-									float velDot = Vector3.Dot(Velocity, gravityDir);
-									Velocity += gravityDir * velDot;    //negate ground-facing axis?
-
-									gravityDir = -changeDir;
-								}
-
-								if (dot >= 0.95f)
-								{
-									onGround = true;
-
-									//float velDot = Vector3.Dot(Velocity, gravityDir);
-									//Velocity += gravityDir * velDot;    //negate ground-facing axis?
-								}
-							}
-						}
-					}
-				}
-			}*/
+			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
+			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
+			//Position += Velocity * (float)deltaTime;
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)

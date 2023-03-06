@@ -24,7 +24,7 @@ namespace ViMG.Physics
             Properties = new CollidableProperty<PhysicsProperties>(GlobalBufferPool);
 
             Simulation = Simulation.Create(GlobalBufferPool, new NarrowPhaseCallbacks(Properties, new SpringSettings(30, 1), Cube.CUBE_SCALE * 2f, 0.8f),
-                    new PoseIntegratorCallbacks(new System.Numerics.Vector3(0, SIM_GRAVITY, 0), 0.8f), new SolveDescription(8, 1));
+                    new PoseIntegratorCallbacks(Properties, SIM_GRAVITY, 0.8f), new SolveDescription(8, 1));
         }
     }
 }

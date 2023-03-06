@@ -35,8 +35,8 @@ namespace ViMG.Physics
         public SubgroupCollisionFilter(int groupId)
         {
             GroupId = groupId;
-            SubgroupMembership = ushort.MaxValue;
-            CollidableSubgroups = ushort.MaxValue;
+            SubgroupMembership = 0;
+            CollidableSubgroups = 0;
         }
 
         /// <summary>
@@ -82,7 +82,11 @@ namespace ViMG.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AllowCollision(in SubgroupCollisionFilter a, in SubgroupCollisionFilter b)
         {
-            return a.GroupId == b.GroupId || (a.CollidableSubgroups & b.SubgroupMembership) > 0;
+            bool groupMatches = a.GroupId == b.GroupId;
+
+            bool subgroupMatches = (a.CollidableSubgroups & b.SubgroupMembership) > 0;
+
+            return groupMatches || subgroupMatches;
         }
     }
 }

@@ -10,10 +10,14 @@ using System.Threading.Tasks;
 namespace ViMG.Physics
 {
     public struct PoseIntegratorCallbacks : IPoseIntegratorCallbacks
-    {/// <summary>
-     /// Gravity to apply to dynamic bodies in the simulation.
-     /// </summary>
-        public Vector3 Gravity;
+    {
+        private CollidableProperty<PhysicsProperties> properties;
+        private Bodies bodies;
+
+        /// <summary>
+        /// Gravity to apply to dynamic bodies in the simulation.
+        /// </summary>
+        public float Gravity;
         /// <summary>
         /// Fraction of dynamic body linear velocity to remove per unit of time. Values range from 0 to 1. 0 is fully undamped, while values very close to 1 will remove most velocity.
         /// </summary>
@@ -46,8 +50,7 @@ namespace ViMG.Physics
 
         public void Initialize(Simulation simulation)
         {
-            //In this demo, we don't need to initialize anything.
-            //If you had a simulation with per body gravity stored in a CollidableProperty<T> or something similar, having the simulation provided in a callback can be helpful.
+            bodies = simulation.Bodies;
         }
 
         /// <summary>
@@ -56,14 +59,18 @@ namespace ViMG.Physics
         /// <param name="gravity">Gravity to apply to dynamic bodies in the simulation.</param>
         /// <param name="linearDamping">Fraction of dynamic body linear velocity to remove per unit of time. Values range from 0 to 1. 0 is fully undamped, while values very close to 1 will remove most velocity.</param>
         /// <param name="angularDamping">Fraction of dynamic body angular velocity to remove per unit of time. Values range from 0 to 1. 0 is fully undamped, while values very close to 1 will remove most velocity.</param>
-        public PoseIntegratorCallbacks(Vector3 gravity, float linearDamping = .03f, float angularDamping = .03f) : this()
+        public PoseIntegratorCallbacks(CollidableProperty<PhysicsProperties> properties, float gravity, float linearDamping = .03f, float angularDamping = .03f) : this()
         {
+            this.properties = properties;
+
             Gravity = gravity;
             LinearDamping = linearDamping;
             AngularDamping = angularDamping;
         }
 
-        Vector3Wide gravityWideDt;
+        
+
+        Vector<float> gravityWideDt;
         Vector<float> linearDampingDt;
         Vector<float> angularDampingDt;
 
@@ -81,7 +88,7 @@ namespace ViMG.Physics
             //Since these callbacks don't use per-body damping values, we can precalculate everything.
             linearDampingDt = new Vector<float>(MathF.Pow(Math.Clamp(1 - LinearDamping, 0, 1), dt));
             angularDampingDt = new Vector<float>(MathF.Pow(Math.Clamp(1 - AngularDamping, 0, 1), dt));
-            gravityWideDt = Vector3Wide.Broadcast(Gravity * dt);
+            gravityWideDt = new Vector<float>(Gravity * dt);
         }
 
         /// <summary>
@@ -97,13 +104,14 @@ namespace ViMG.Physics
         /// <param name="velocity">Velocity of bodies in the bundle. Any changes to lanes which are not active by the integrationMask will be discarded.</param>
         public void IntegrateVelocity(Vector<int> bodyIndices, Vector3Wide position, QuaternionWide orientation, BodyInertiaWide localInertia, Vector<int> integrationMask, int workerIndex, Vector<float> dt, ref BodyVelocityWide velocity)
         {
+            var gravityDir = Vector3Wide.Broadcast(new Vector3(0, 1, 0));
             //This is a handy spot to implement things like position dependent gravity or per-body damping.
             //This implementation uses a single damping value for all bodies that allows it to be precomputed.
             //We don't have to check for kinematics; IntegrateVelocityForKinematics returns false, so we'll never see them in this callback.
             //Note that these are SIMD operations and "Wide" types. There are Vector<float>.Count lanes of execution being evaluated simultaneously.
             //The types are laid out in array-of-structures-of-arrays (AOSOA) format. That's because this function is frequently called from vectorized contexts within the solver.
             //Transforming to "array of structures" (AOS) format for the callback and then back to AOSOA would involve a lot of overhead, so instead the callback works on the AOSOA representation directly.
-            velocity.Linear = (velocity.Linear + gravityWideDt) * linearDampingDt;
+            velocity.Linear = (velocity.Linear + (gravityDir * gravityWideDt)) * linearDampingDt;
             velocity.Angular = velocity.Angular * angularDampingDt;
         }
     }

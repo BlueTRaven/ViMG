@@ -80,6 +80,8 @@ namespace ViMG.Physics
                 pairMaterial.FrictionCoefficient = 0;
             else 
                 pairMaterial.FrictionCoefficient = FrictionCoefficient;
+
+            pairMaterial.FrictionCoefficient *= (properties[pair.A.BodyHandle].Friction + properties[pair.A.BodyHandle].Friction) / 2f;
             pairMaterial.MaximumRecoveryVelocity = MaximumRecoveryVelocity;
             pairMaterial.SpringSettings = ContactSpringiness;
             return true;

@@ -334,8 +334,10 @@ namespace ViMG
 			var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
 			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
 			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
-				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 200 }, physicsShapeIndex, 0.001f));
+				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
 			contactChecker = new ContactChecker();
+
+			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER), 1f);
 
 			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
@@ -1167,8 +1169,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new PhysicsTestBall(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-				//world.EntityManager.Add(new LightStressTest(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
 			}
 		}
@@ -1263,7 +1264,7 @@ namespace ViMG
 		private void UpdateItemPickup()
 		{
 			const float suckRadius = Cube.CUBE_SCALE * 3f;
-			const float pickupRadius = Cube.CUBE_SCALE * 1.5f;
+			const float pickupRadius = Cube.CUBE_SCALE * 1.85f;
 
 			var items = world.EntityManager.GetAll<EntityItem>();
 			if (items != null)

@@ -14,14 +14,19 @@ namespace ViMG.Physics
     {
         public bool WasOnGround;
         public bool OnGround;
+        public bool Touching;
         public Vector3 GroundNormal;
+        public Vector3 Normal;
 
         public void Update(World world, BodyHandle handle)
         {
             WasOnGround = OnGround;
             OnGround = false;
+            Touching = false;
             GroundNormal = Vector3.Zero;
+            Normal = Vector3.Zero;
             int groundCount = 0;
+            int totalCount = 0;
 
             var sensorBody = world.PhysicsInfo.Simulation.Bodies[handle];
             var extractor = new SolverContactDataExtractor(world.PhysicsInfo.GlobalBufferPool, sensorBody.Constraints.Count);
@@ -56,13 +61,24 @@ namespace ViMG.Physics
                             GroundNormal += contact.Normal;
                             groundCount++;
                         }
+                        //Normal += contact.Normal;
+                        totalCount++;
+                        Touching = true;
                     }
+
+                    Normal = constraintContacts.Contacts.Count > 0 ? constraintContacts.Contacts[0].Normal : Vector3.Zero;
                 }
             }
             extractor.Dispose();
 
             GroundNormal /= groundCount;
             GroundNormal.Normalize();
+
+            if (totalCount > 0)
+            {
+                //Normal /= totalCount;
+                Normal.Normalize();
+            }
         }
     }
 }
