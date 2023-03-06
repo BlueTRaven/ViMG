@@ -214,7 +214,7 @@ namespace ViMG.Items
 		protected static void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, 0);
+			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
 			Vector3 b = new Vector3(min.X, min.Y, max.Z);
@@ -241,6 +241,11 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+
+			a.Z = 0;
+			b.Z = 0;
+			c.Z = 0;
+			d.Z = 0;
 
 			offset = vertices.Count;
 			indices.Add(offset + 0);

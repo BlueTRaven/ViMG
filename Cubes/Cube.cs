@@ -345,7 +345,7 @@ namespace ViMG.Cubes
 				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(CUBE_SCALE / 2.5f), 
+				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(CUBE_SCALE / 2f), 
 					MeshHelper.CubeFace.ALL, this, vertices, indices);
 
 				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));

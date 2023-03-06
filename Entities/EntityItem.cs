@@ -90,61 +90,6 @@ namespace ViMG.Entities
 			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 		}
 
-		/*private void UpdateCollision(double deltaTime)
-		{
-			//if (world.ChunkManager2.GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
-			{
-				Position += Velocity * (float)deltaTime;
-			}
-
-			Rectangle3D ourBounds = Bounds;
-
-			CubePosition ourBoundsNear = CubePosition.FromWorldSpace(ourBounds.Position);
-			CubePosition ourBoundsFar = CubePosition.FromWorldSpace(ourBounds.FarPosition);
-
-			int pi = 0;
-			Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
-			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
-
-			for (int x = -1; x <= 1; x++)
-			{
-				for (int y = -1; y <= 1; y++)
-				{
-					for (int z = -1; z <= 1; z++)
-					{
-						positions[pi] = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
-						pi++;
-					}
-				}
-			}
-
-			world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
-
-			for (int i = 0; i < 3 * 3 * 3; i++)
-			{
-				CubePosition pos = positions[i];
-
-				if (world.ChunkManager.IsInWorldBounds(pos) && Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Solid)
-				{
-					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-					if (CollisionHelper.CheckCollision(cubeBounds, Position, 8f / 20f * Cube.CUBE_SCALE, out Vector3 change))
-					{
-						Position += change;
-
-						if (change.Y != 0)
-							Velocity.Y = 0;
-						else if (change.X != 0)
-							Velocity.X = 0;
-						else if (change.Z != 0)
-							Velocity.Z = 0;
-					}
-				}
-				//if (!anyCol)
-				//Position += Velocity * (float)deltaTime;
-			}
-		}*/
-
 		public void MoveTowards(Vector3 position)
 		{
 			Vector3 dir = position - Position;
@@ -162,9 +107,14 @@ namespace ViMG.Entities
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
+			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+
+			if (Item.item is ItemCube)
+				origin.Z = Cube.CUBE_SCALE / 4f;
+
 			var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
 			Item.item.DrawInWorld(device, world, Item,
-				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 4f)) *
+				Matrix.CreateTranslation(-origin) *
 				Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
 				Matrix.CreateTranslation(reference.Pose.Position)
 				);
