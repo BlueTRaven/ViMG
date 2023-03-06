@@ -147,8 +147,10 @@ namespace ViMG.Entities
 
 			foreach (ItemInstance item in items)
 			{
-				EntityItem ent = new EntityItem(Position, item);
-				ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
+				EntityItem ent = new EntityItem(Position,
+					new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, 
+						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+					item);
 				world.EntityManager.Add(ent);
 			}
 

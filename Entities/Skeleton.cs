@@ -66,9 +66,10 @@ namespace ViMG.Entities
         {
             base.OnDelete();
 
-			EntityItem ent = new EntityItem(Position, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
-			ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-				Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5));
+			EntityItem ent = new EntityItem(Position,
+				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), 
+				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
 			world.EntityManager.Add(ent);
 		}
 

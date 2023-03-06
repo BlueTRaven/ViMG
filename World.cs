@@ -800,8 +800,9 @@ namespace ViMG
 
 					foreach (ItemInstance item in items)
 					{
-						EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
-						ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
+						EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
+							new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+								Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
 						EntityManager.Add(ent);
 					}
 
@@ -823,8 +824,9 @@ namespace ViMG
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
-							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
+							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
+								new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+									Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
 							EntityManager.Add(ent);
 						}
 
@@ -847,8 +849,9 @@ namespace ViMG
 
 						foreach (ItemInstance item in items)
 						{
-							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f), item);
-							ent.Velocity = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2), Cube.CUBE_SCALE, Main.random.NextFloat(-Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2));
+							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
+								new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+									Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
 							EntityManager.Add(ent);
 						}
 

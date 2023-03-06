@@ -363,9 +363,8 @@ namespace ViMG
 			{
 				if (craftInventory.Get(i).valid)
 				{
-					EntityItem ent = new EntityItem(Position, craftInventory.Get(i));
-					ent.Velocity = new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
-						6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE));
+					EntityItem ent = new EntityItem(Position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f,
+						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), craftInventory.Get(i));
 					world.EntityManager.Add(ent);
 				}
 			}
@@ -1045,12 +1044,15 @@ namespace ViMG
 					if (contactChecker.OnGround && Main.inputManager.IsHeld(Keys.LeftShift))
 						IsRunning = true;
 
+					float actualAcceleration = moveSpeed + stats.Acceleration;
+
 					if (IsRunning)
+					{
 						actualMaxVel *= 1 + stats.RunSpeed;
+						actualAcceleration *= 2;
+					}
 
 					actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
-
-					float actualAcceleration = moveSpeed + stats.Acceleration;
 					
 					if (Main.inputManager.IsPressed(Keys.W))
 					{
@@ -1248,9 +1250,8 @@ namespace ViMG
 			if (inventory.Get(menuPlayer.HighlightIndex).valid)
 			{
 				ItemInstance thrownInstance = new ItemInstance(inventory.Get(index), num);
-				EntityItem ent = new EntityItem(Position, thrownInstance);
+				EntityItem ent = new EntityItem(Position, -Main.camera.Forward * Cube.CUBE_SCALE * 5, thrownInstance);
 				world.EntityManager.Add(ent);
-				ent.Velocity = -Main.camera.Forward * Cube.CUBE_SCALE * 5;
 
 				inventory.Remove(index, num);
 

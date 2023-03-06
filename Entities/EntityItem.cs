@@ -1,4 +1,6 @@
-﻿using BrUtility;
+﻿using BepuPhysics;
+using BepuPhysics.Collidables;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,12 +8,14 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Items;
+using ViMG.Physics;
 
 namespace ViMG.Entities
 {
 	public class EntityItem : Entity
 	{
-		public Vector3 Velocity;
+		//public Vector3 Velocity;
+		public readonly Vector3 InitialVelocity;
 		public Vector3 MaxVelocity = new Vector3(10, 15, 10) * Cube.CUBE_SCALE;
 		
 		public readonly ItemInstance Item;
@@ -25,34 +29,68 @@ namespace ViMG.Entities
 
 		public bool CanBePickedUp => noPickupTimer <= 0;
 
-		public EntityItem(Vector3 position, ItemInstance item)
+		private Box box;
+		private TypedIndex physicsShapeIndex;
+		private BodyHandle physicsHandle;
+
+		public EntityItem(Vector3 position, Vector3 initialVelocity, ItemInstance item)
 		{
 			this.Position = position;
-			this.Item = item;
+            InitialVelocity = initialVelocity;
+            this.Item = item;
 
 			noPickupTimer = 1;
 
 			sineTimer = Main.random.NextFloat(0, 4.5f);
 		}
 
-		public override void Update(double deltaTime)
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+			if (Item.item is ItemCube)
+				box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f);
+			else box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
+
+			const float scale = MathF.PI;
+			Vector3 initialAngular = new Vector3(Main.random.NextFloat(-scale, scale), Main.random.NextFloat(-scale, scale),
+				Main.random.NextFloat(-scale, scale));
+
+			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(box);
+			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(
+				BodyDescription.CreateDynamic(new RigidPose(Position.ToNumerics()), new BodyVelocity(InitialVelocity.ToNumerics(), initialAngular.ToNumerics()), 
+				box.ComputeInertia(1), physicsShapeIndex, 0.001f));
+
+			world.PhysicsInfo.Properties[physicsHandle].Filter.GroupId = FilterGroups.GROUP_ITEM;
+		}
+
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+			world.PhysicsInfo.Simulation.Shapes.Remove(physicsShapeIndex);
+			world.PhysicsInfo.Simulation.Bodies.Remove(physicsHandle);
+        }
+
+        public override void Update(double deltaTime)
 		{
 			noPickupTimer -= (float)deltaTime;
 
-			Velocity.Y += World.GRAVITY;
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;
 
-			if (Velocity.Y < -MaxVelocity.Y)
-				Velocity.Y = -MaxVelocity.Y;
+			velocity.X = Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
+			velocity.Z = Math.Clamp(velocity.Z, -MaxVelocity.Z, MaxVelocity.Z);
 
-			Velocity.X *= 0.85f;
-			Velocity.Z *= 0.85f;
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 
-			UpdateCollision(deltaTime);
+			//UpdateCollision(deltaTime);
 
 			sineTimer += (float)deltaTime;
+
+			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 		}
 
-		private void UpdateCollision(double deltaTime)
+		/*private void UpdateCollision(double deltaTime)
 		{
 			//if (world.ChunkManager2.GetCube(CubePosition.FromWorldSpace(Position + Velocity * (float)deltaTime)).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
 			{
@@ -105,7 +143,7 @@ namespace ViMG.Entities
 				//if (!anyCol)
 				//Position += Velocity * (float)deltaTime;
 			}
-		}
+		}*/
 
 		public void MoveTowards(Vector3 position)
 		{
@@ -113,42 +151,23 @@ namespace ViMG.Entities
 			dir.Normalize();
 			dir *= Cube.CUBE_SCALE / 4f;
 
-			Velocity.X += dir.X;
-			Velocity.Y += dir.Y * 4;
-			Velocity.Z += dir.Z;
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;
+
+			velocity.X += dir.X;
+			velocity.Y += dir.Y * 4;
+			velocity.Z += dir.Z;
+
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			const float bobTime = 2f;
-			const float spinTime = 4.5f;
-
-			float bobPercent = (sineTimer % bobTime) / bobTime;
-			bobPercent = (float)Math.Sin(MathHelper.Pi * 2 * bobPercent);
-
-			float spinPercent = (sineTimer % spinTime) / spinTime;
-
-			//device.RasterizerState = Main.noCullRS;
-
-			/*float widthScale = 1;
-			float heightScale = 1;
-
-			if (Item.item.SourceRect.width > Item.item.SourceRect.height)
-            {
-				widthScale = Item.item.SourceRect.width / Item.item.SourceRect.height;
-            }
-			else if (Item.item.SourceRect.height > Item.item.SourceRect.width)
-            {
-				heightScale = Item.item.SourceRect.height / Item.item.SourceRect.width;
-            }
-
-			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);*/
-
-			Item.item.DrawInWorld(device, world, Item, Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 4f)) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(360 * spinPercent)) *
-				Matrix.CreateTranslation(new Vector3(0, (Cube.CUBE_SCALE / 4f) * bobPercent, 0)) *
-				//Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-				Matrix.CreateTranslation(Position));
+			var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
+			Item.item.DrawInWorld(device, world, Item,
+				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 4f)) *
+				Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
+				Matrix.CreateTranslation(reference.Pose.Position)
+				);
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace ViMG.Physics
         /// </summary>
         public ushort CollidableSubgroups;
         /// <summary>
-        /// Id of the owner of the object. Objects belonging to different groups always collide.
+        /// Id of the owner of the object. Objects belonging to different groups never collide.
         /// </summary>
         public int GroupId;
 
