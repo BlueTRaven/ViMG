@@ -11,7 +11,7 @@ namespace ViMG.Cubes
 	{
 		public CubeDirt() : base("dirt", new RectangleF(0, 0, 16, 16), Color.White, 2)
 		{
-
+			Name = "Dirt";
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

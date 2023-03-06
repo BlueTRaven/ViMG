@@ -13,6 +13,9 @@ namespace ViMG.Cubes
     {
         public CubeFibrousPlant() : base("fibrous_plant", new RectangleF(48, 80, 16, 16), Color.White, 1)
         {
+            Name = "Fibrous Plant";
+            Description = "A strong, hearty, and fibrous plant. Doesn't look very edible, though.";
+
             Transparency = TransparencyValue.Transparent;
 			Collision = CollisionValue.None;
         }

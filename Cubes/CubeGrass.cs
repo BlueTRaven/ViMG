@@ -12,7 +12,7 @@ namespace ViMG.Cubes
 	{
 		public CubeGrass() : base("grass", new CubeFacingLayout(new RectangleF(32, 0, 16, 16), new RectangleF(48, 0, 16, 16), new RectangleF(0, 0, 16, 16)), Color.White, 2)
 		{
-
+			Name = "Grass";
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

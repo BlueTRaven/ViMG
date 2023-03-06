@@ -1283,6 +1283,8 @@ namespace ViMG
 						{
 							world.EntityManager.Remove(ent);
 							item.Item.item.StartHold(this, inventory, index);
+
+							menuPlayer.AddPickedUpItem(item.Item);
 						}
 					}
 					else if (item.CanBePickedUp && dir.Length() < suckRadius)

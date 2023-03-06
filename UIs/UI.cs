@@ -56,12 +56,14 @@ namespace ViMG.UIs
 			public Texture2D texture;
 			public RectangleF bounds;
 			public RectangleF sourceRect;
+			public Color color;
 
-			public TextureConstructionParameters(RectangleF bounds, Texture2D texture, RectangleF sourceRect)
+			public TextureConstructionParameters(RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null)
             {
                 this.bounds = bounds;
                 this.texture = texture;
                 this.sourceRect = sourceRect;
+				this.color = color ?? Color.White;
             }
 		}
 
@@ -72,14 +74,16 @@ namespace ViMG.UIs
 			public readonly Texture2D texture;
 			public readonly RectangleF bounds;
 			public readonly RectangleF sourceRect;
+			public readonly Color color;
 
-			internal Texture(ID id, RectangleF bounds, Texture2D texture, RectangleF sourceRect)
+			internal Texture(ID id, RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null)
 			{
 				this.id = id;
 
 				this.texture = texture;
 				this.sourceRect = sourceRect;
 				this.bounds = bounds;
+				this.color = color ?? Color.White;
 			}
 		}
 
@@ -105,15 +109,17 @@ namespace ViMG.UIs
             public TextHelper.FontInfo font;
             public float width;
             public Vector2 position;
+			public Color color;
 
 			public bool valid;
 
-            public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position)
+            public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
             {
                 this.text = text;
                 this.font = font;
                 this.width = width;
                 this.position = position;
+				this.color = color ?? Color.White;
 
 				valid = true;
             }
@@ -127,8 +133,9 @@ namespace ViMG.UIs
 			public readonly TextHelper.FontInfo font;
 			public readonly float width;
 			public readonly Vector2 position;
+			public readonly Color color;
 
-			internal Label(ID id, string text, TextHelper.FontInfo font, float width, Vector2 position)
+			internal Label(ID id, string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
 			{
 				this.id = id;
 
@@ -136,6 +143,8 @@ namespace ViMG.UIs
 				this.font = font;
 				this.width = width;
 				this.position = position;
+
+				this.color = color ?? Color.White;
 			}
 		}
 
@@ -376,7 +385,7 @@ namespace ViMG.UIs
         {
 			ID id = MakeID(parameters.bounds.Position);
 			parameters.bounds = new RectangleF(id.position, parameters.bounds.Size);
-			Texture tex = new Texture(id, parameters.bounds, parameters.texture, parameters.sourceRect);
+			Texture tex = new Texture(id, parameters.bounds, parameters.texture, parameters.sourceRect, parameters.color);
 			textures.Add(tex);
 
 			return tex;
@@ -403,9 +412,9 @@ namespace ViMG.UIs
 		}
 
 		//"Craft Recipe", fi, 256, Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16)
-		public static Label MakeLabel(string text, TextHelper.FontInfo fi, float width, Vector2 position)
+		public static Label MakeLabel(string text, TextHelper.FontInfo fi, float width, Vector2 position, Color? color = null)
         {
-			return MakeLabel(new LabelConstructionParameters(text, fi, width, position));
+			return MakeLabel(new LabelConstructionParameters(text, fi, width, position, color));
         }
 
 		public static Label MakeLabel(LabelConstructionParameters parameters)
@@ -413,7 +422,7 @@ namespace ViMG.UIs
 			if (parameters.valid)
 			{
 				ID id = MakeID(parameters.position);
-				Label label = new Label(id, parameters.text, parameters.font, parameters.width, id.position);
+				Label label = new Label(id, parameters.text, parameters.font, parameters.width, id.position, parameters.color);
 				labels.Add(label);
 
 				return label;
@@ -519,7 +528,8 @@ namespace ViMG.UIs
 
 			foreach (Label label in labels)
 			{
-				TextHelper.DrawText(batch, label.font, label.text, Color.White, new RectangleF(label.position, label.width, 0).ToRectangle(), Enums.Alignment.TopLeft, (int)label.width, 1, TextHelper.OverFlowAction.None);
+				TextHelper.DrawText(batch, label.font, label.text, label.color, 
+					new RectangleF(label.position, label.width, 0).ToRectangle(), Enums.Alignment.TopLeft, (int)label.width, 1, TextHelper.OverFlowAction.None);
 			}
 
 			foreach (Panel panel in panels)
@@ -530,7 +540,7 @@ namespace ViMG.UIs
 			foreach (Texture tex in textures)
 			{
 				batch.Draw(tex.texture, tex.bounds.ToRectangle(),
-					tex.sourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, SpriteEffects.None, 0.76f);
+					tex.sourceRect.ToRectangle(), tex.color, 0, Vector2.Zero, SpriteEffects.None, 0.76f);
 			}
 		}
 

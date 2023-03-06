@@ -20,8 +20,6 @@ namespace ViMG.Entities
 		
 		public readonly ItemInstance Item;
 
-		private float sineTimer;
-
 		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE / 2f));
 		public Rectangle3D Bounds => bounds.Offset(Position);
 
@@ -40,8 +38,6 @@ namespace ViMG.Entities
             this.Item = item;
 
 			noPickupTimer = 1;
-
-			sineTimer = Main.random.NextFloat(0, 4.5f);
 		}
 
         public override void Initialize(World world)
@@ -83,15 +79,13 @@ namespace ViMG.Entities
 
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 
-			//UpdateCollision(deltaTime);
-
-			sineTimer += (float)deltaTime;
-
 			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 		}
 
 		public void MoveTowards(Vector3 position)
 		{
+			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
+
 			Vector3 dir = position - Position;
 			dir.Normalize();
 			dir *= Cube.CUBE_SCALE / 4f;

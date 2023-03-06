@@ -14,6 +14,29 @@ namespace ViMG.UIs
 {
 	public class MenuPlayer : Menu
 	{
+		private struct PickedUpItem
+        {
+			public const float DUR_HOLDMID = 0.2f;
+			public const float DUR_ANIM_TO_SIDE = 0.4f;
+			public const float DUR_HOLDSIDE = 4f;
+			public const float DUR_TOTAL = 6f;
+
+			public ItemInstance item;
+			public float timer;
+			public int currentIndex;
+			public int previousIndex;
+
+			public PickedUpItem(ItemInstance item, int index)
+            {
+				this.item = item;
+
+				timer = 0;
+
+				currentIndex = index;
+				previousIndex = index;
+            }
+        }
+
 		private const float HEALTHBAR_PADDING = 16;
 		private const float HEALTHBAR_MAX = 128;
 		private const float WIDTH_PER_HEALTH = HEALTHBAR_MAX / 20f;
@@ -55,6 +78,7 @@ namespace ViMG.UIs
 		public bool IsOpened => opened;
 
 		private ItemInstance held;
+		private FastList<PickedUpItem> pickedupItems = new FastList<PickedUpItem>();
 
 		private bool craftInventoryUpdated;
 		private Recipe currentRecipe;
@@ -452,7 +476,96 @@ namespace ViMG.UIs
 					}
 				}
 			}
+
+			float unit = (float)Options.CurrentWindowResolution.X / 80f;
+
+			for (int i = pickedupItems.Length - 1; i >= 0; i--)
+            {
+				ref PickedUpItem pu = ref pickedupItems.Buffer[i];
+
+				if (pu.timer >= PickedUpItem.DUR_TOTAL)
+				{
+					pickedupItems.Remove(pu);
+					continue;
+				}
+
+				pu.timer += (float)deltaTime;
+
+				if (pu.timer <= PickedUpItem.DUR_HOLDMID)
+				{
+					float p = pu.timer / PickedUpItem.DUR_HOLDMID;
+
+					RectangleF rect = new RectangleF(-unit * 4, -unit * 4,
+						unit * 8, unit * 8);
+					rect = rect.Offset(Options.CurrentWindowResolution.ToVector2() / 2f);
+
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Texture, pu.item.item.SourceRect, Color.White * p));
+				}
+				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE)
+                {
+					float p = (pu.timer - PickedUpItem.DUR_HOLDMID) / PickedUpItem.DUR_ANIM_TO_SIDE;
+
+					RectangleF rect = new RectangleF(
+						MathHelper.Lerp(-unit * 4, -unit, p),
+						MathHelper.Lerp(-unit * 4, -unit, p),
+						MathHelper.Lerp(unit * 8, unit * 2, p),
+						MathHelper.Lerp(unit * 8, unit * 2, p));
+					rect = rect.Offset(MathHelper.Lerp(Options.CurrentWindowResolution.X / 2f,
+						unit * 4f + unit, p), 
+						MathHelper.Lerp(Options.CurrentWindowResolution.Y / 2f, 
+							Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))), p));
+
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Texture, pu.item.item.SourceRect));
+				}
+				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE + PickedUpItem.DUR_HOLDSIDE)
+                {
+					RectangleF rect = new RectangleF(-unit, -unit, unit * 2, unit * 2);
+
+					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
+
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Texture, pu.item.item.SourceRect));
+					UI.MakeLabel(new UI.LabelConstructionParameters(
+						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128, 
+						rect.Position + new Vector2(unit, 0), Color.White));
+				}
+				else if (pu.timer <= PickedUpItem.DUR_TOTAL)
+                {
+					float min = PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE + PickedUpItem.DUR_HOLDSIDE;
+					float max = PickedUpItem.DUR_TOTAL - min;
+					float p = (pu.timer - min) / max;
+
+					RectangleF rect = new RectangleF(-unit, -unit, unit * 2, unit * 2);
+
+					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
+
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Texture, pu.item.item.SourceRect, color: Color.White * (1 - p)));
+					UI.MakeLabel(new UI.LabelConstructionParameters(
+						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128,
+						rect.Position + new Vector2(unit, 0), Color.White * (1 - p)));
+				}
+            }
 		}
+
+		public void AddPickedUpItem(ItemInstance item)
+        {
+			if (pickedupItems.Length > 8)
+				pickedupItems.RemoveAt(0);
+
+			bool found = false;
+			for (int i = 0; i < Math.Min(pickedupItems.Length, 8); i++)
+            {
+				if (pickedupItems[i].item.item == item.item)
+                {
+					pickedupItems.Buffer[i].timer = PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE;
+					pickedupItems.Buffer[i].item = new ItemInstance(pickedupItems[i].item, pickedupItems[i].item.num + item.num);
+					found = true;
+					break;
+                }
+            }
+
+			if (!found)
+				pickedupItems.Add(new PickedUpItem(item, pickedupItems.Length));
+        }
 
 		private Recipe FindRecipe(Inventory inventory)
 		{
