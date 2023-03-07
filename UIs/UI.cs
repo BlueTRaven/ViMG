@@ -22,6 +22,9 @@ namespace ViMG.UIs
 
 		private static void Input(object? sender, TextInputEventArgs args)
 		{
+			if (currentStr == null)
+				return;
+
 			character = args.Character;
 			key = args.Key;
 

@@ -21,6 +21,7 @@ using ViMG.Generation;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.Spawners;
+using ViMG.UIs;
 using ViMG.WorldLogics;
 
 namespace ViMG
@@ -62,6 +63,7 @@ namespace ViMG
 		public WorldInfoIO.WorldInfo WorldInfo;
 		public ChunkLoadManager ChunkLoadManager;
 		public PhysicsInfo PhysicsInfo;
+		public ChatManager ChatManager;
 
 		private WorldInfoIO worldInfoIO;
 		private ChunkManagerIO chunkIO;
@@ -105,6 +107,8 @@ namespace ViMG
 			Skybox = prototype.Skybox;
 			logic = prototype.Logic;
 			PhysicsInfo = prototype.PhysicsInfo;
+
+			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -292,6 +296,8 @@ namespace ViMG
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
 			alive += (float)deltaTime;
+
+			ChatManager.Update(deltaTime);
 
 			ChunkManager.Update(deltaTime, this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);
@@ -646,6 +652,8 @@ namespace ViMG
 		public void DrawUI(SpriteBatch batch)
 		{
 			player.DrawUI(batch);
+
+			ChatManager.Draw(batch);
 		}
 
 		public void OnCubeUpdate(CubePosition updating, int updatedId)
