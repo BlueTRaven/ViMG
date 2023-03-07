@@ -11,7 +11,7 @@ namespace ViMG.Entities
 		public event Action<Entity> OnEntityAdded;
 		public event Action<Entity> OnEntityRemoved;
 
-		private bool iterating;
+		private bool iteratingUpdate;
 
 		private ulong lastEntityId;
 
@@ -46,7 +46,7 @@ namespace ViMG.Entities
 
 		public void ForceAdd(Entity entity, ulong id)
 		{
-			if (iterating)
+			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
 			ReallyAdd(entity, (long)id, true);
@@ -62,14 +62,14 @@ namespace ViMG.Entities
 
 		public void Add(Entity entity, bool delayAdding = false)
 		{
-			if (iterating || delayAdding)
+			if (iteratingUpdate || delayAdding)
 				toAddLater.Add(entity);
 			else ReallyAdd(entity);
 		}
 
 		private void ReallyAdd(Entity entity, long id = -1, bool replaceCubeTracker = false)
 		{
-			if (iterating)
+			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
 			if (entity is ICubeTracker tracker)
@@ -107,9 +107,11 @@ namespace ViMG.Entities
 			entity.OnDelete();
 		}
 
-		public void Unload(Entity entity)
+		public void Unload(Entity entity, bool delay = false)
         {
-			toDeleteLater.Add(entity);
+			if (iteratingUpdate || delay)
+				toDeleteLater.Add(entity);
+			else ReallyRemove(entity);
         }
 
 		public void Unload(ChunkPosition pos)
@@ -120,7 +122,7 @@ namespace ViMG.Entities
 			foreach (Entity entity in entities)
             {
 				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos && !toDeleteLater.Contains(entity))
-					Unload(entity);
+					Unload(entity, true);
 			}
 
 			//Now remove them, and whatever else was in the queue...
@@ -149,7 +151,7 @@ namespace ViMG.Entities
 			foreach (Entity entity in entities)
 			{
 				if (!toDeleteLater.Contains(entity))
-					Unload(entity);
+					Unload(entity, true);
 			}
 
 			//Now remove them, and whatever else was in the queue...
@@ -168,7 +170,7 @@ namespace ViMG.Entities
 		{
 			AddLaterEntities();
 
-			iterating = true;
+			iteratingUpdate = true;
 
 			foreach (Entity entity in entities)
 			{
@@ -176,7 +178,7 @@ namespace ViMG.Entities
 					entity.Update(deltaTime);
 			}
 
-			iterating = false;
+			iteratingUpdate = false;
 
 			foreach (Entity entity in toDeleteLater)
 			{
@@ -198,7 +200,7 @@ namespace ViMG.Entities
 
 		private void ReallyRemove(Entity entity)
         {
-			if (iterating)
+			if (iteratingUpdate)
 				throw new Exception("Cannot remove entity while iterating");
 
 			entity.OnUnload();

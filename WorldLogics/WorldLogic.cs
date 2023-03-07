@@ -34,7 +34,7 @@ namespace ViMG.WorldLogics
 
         }
 
-        public virtual bool AllowsCreatingNextLayer(World world)
+        public virtual bool AllowsLoadingNextLayer(World world)
         {
             return true;
         }

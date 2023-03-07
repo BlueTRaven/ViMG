@@ -387,6 +387,9 @@ namespace ViMG
 
 			world.PhysicsInfo.Simulation.Bodies.Remove(physicsHandle);
 			world.PhysicsInfo.Simulation.Shapes.Remove(physicsShapeIndex);
+
+			physicsHandle = new BodyHandle();
+			physicsShapeIndex = new TypedIndex();
 		}
 
         public override void Update(double deltaTime)

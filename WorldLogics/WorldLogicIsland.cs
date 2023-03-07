@@ -161,9 +161,8 @@ namespace ViMG.WorldLogics
 			}
 		}
 
-        public override bool AllowsCreatingNextLayer(World world)
+        public override bool AllowsLoadingNextLayer(World world)
         {
-			return false;
 			return world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD);
         }
 

@@ -101,6 +101,12 @@ namespace ViMG.GameStates
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
         {
+            if (!LayerExists(layer))
+            {
+                Console.WriteLine("Tried to load layer {0} but this layer was not yet implemented.", layer);
+                return null;
+            }
+
             //Note that this version assumes the world exists.
             IsLoading = true;
             var layerTask = new Task<World>(() =>
@@ -337,7 +343,7 @@ namespace ViMG.GameStates
             if (worldInfo.playerPosition.LengthSquared() < 0)
                 worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
-            if (true || worldInfo.furthestLayer < layer)
+            if (worldInfo.furthestLayer < layer)
             {
                 ProfilingHelper.Start("Creating Unvisited Layer...");
 
@@ -414,7 +420,7 @@ namespace ViMG.GameStates
 
                 Skybox skybox = new Skybox();
 
-                WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))
@@ -446,9 +452,17 @@ namespace ViMG.GameStates
             }
         }
 
-        private void CreatePhysicsInfo()
+        private bool LayerExists(int layer)
         {
-
+            switch (layer)
+            {
+                case 0:
+                    return true;
+                case 1:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private ChunkGenerator CreateLayerGenerator(int layer)
@@ -464,7 +478,7 @@ namespace ViMG.GameStates
                     generator = new ChunkGeneratorCatacombs();
                     break;
                 default:
-                    Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!");
+                    Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
                     generator = null;
                     break;
             }
@@ -485,7 +499,7 @@ namespace ViMG.GameStates
                     logic = new WorldLogics.WorldLogicCatacombs(device);
                     break;
                 default:
-                    Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!");
+                    Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
                     logic = null;
                     break;
             }

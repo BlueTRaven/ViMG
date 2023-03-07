@@ -91,6 +91,7 @@ namespace ViMG
 
 		private float randomUpdatesTimer;
 
+		private int nextLayer;
 		private Task<World> nextWorld;
 
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
@@ -413,49 +414,71 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-			if (logic.AllowsCreatingNextLayer(this) && player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3 && nextWorld == null)
+			TryLoadNextLayer();
+		}
+
+		private void TryLoadNextLayer()
+        {
+			if (logic.AllowsLoadingNextLayer(this) && nextWorld == null)
 			{
-				if (Layer == 0)
-					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 1);
-				else nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 0);
+				if (player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
+					nextLayer = Layer + 1;
+				else if (player.Position.Y >= Cube.CUBE_SCALE * sizeInCubes - (Chunk.CHUNK_SIZE * 3 * Cube.CUBE_SCALE))
+					nextLayer = Layer - 1;
+				else nextLayer = Layer;
+
+				if (nextLayer != Layer)
+					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, nextLayer);
 			}
 
-			if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 && nextWorld != null)
-            {
+			//if in the middle 22 chunks (> 0-5 chunks && < 32-27 chunks), unload the loaded world.
+			if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
+				player.Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
+			{
 				if (nextWorld.IsCompleted)
-                {
+				{
 					nextWorld.Result.Dispose();
 					nextWorld = null;
-                }
-            }
+				}
+			}
 
-			if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4)
+			if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4 ||
+				player.Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
 			{
 				if (!nextWorld.IsCompleted)
 					nextWorld.Wait();
 
 				World w = nextWorld.Result;
 
-				player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+				if (nextLayer == Layer + 1)
+				{
+					player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
-				ProfilingHelper.Start("Copying Layer");
-				for (int x = 0; x < sizeInCubes; x++)
-                {
-					for (int z = 0; z < sizeInCubes; z++)
-                    {
-						for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                        {
-							Cube cube = ChunkManager.InitializerView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					ProfilingHelper.Start("Copying Layer");
+					for (int x = 0; x < sizeInCubes; x++)
+					{
+						for (int z = 0; z < sizeInCubes; z++)
+						{
+							for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+							{
+								Cube cube = ChunkManager.InitializerView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-							w.ChunkManager.InitializerView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
-                        }
-                    }
-                }
-				ProfilingHelper.End("Done");
+								w.ChunkManager.InitializerView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
+							}
+						}
+					}
+					ProfilingHelper.End("Done");
+				}
+				else if (nextLayer == Layer - 1)
+					player.Position.Y = player.Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
-				w.EntityManager.Add(player);
+				EntityManager.Unload(player);
 				player.world = w;
+				w.EntityManager.Add(player);
 				w.player = player;
+
+				WorldInfo.playerLayer = w.Layer;
+				WorldInfo.playerPosition = w.player.Position;
 
 				w.ChunkLoadManager.UpdateLoadTarget(player.Position);
 				w.ChunkLoadManager.LoadAroundTarget(this);
@@ -467,8 +490,10 @@ namespace ViMG
 
 				GameStateManager.TheIsland.SetWorld(w);
 
-				EntityManager.Unload(player);
-				entIO.Save(LoadedFolderName);	//player has been moved to nextWorld, therefore we need to save to tell the world that it's gone.
+				entIO.Save(LoadedFolderName);   //player has been moved to nextWorld, therefore we need to save to tell the world that it's gone.
+				worldInfoIO.Save(LoadedFolderName, WorldInfo);
+
+				w.SaveWorld();
 
 				Dispose();
 			}
