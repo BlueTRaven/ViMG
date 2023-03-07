@@ -15,7 +15,16 @@ namespace ViMG.UIs
         private struct ChatMessage
         {
             public string message;
+            public Color color;
             public float timer;
+
+            public ChatMessage(string message, Color color)
+            {
+                this.message = message;
+                this.color = color;
+
+                timer = 0;
+            }
         }
 
         private FastList<ChatMessage> messages = new FastList<ChatMessage>();
@@ -49,7 +58,7 @@ namespace ViMG.UIs
             {
                 float timer = messages.Buffer[i].timer;
 
-                Color color = Color.White;
+                Color color = messages.Buffer[i].color;
 
                 if (timer > 8f)
                 {
@@ -72,9 +81,9 @@ namespace ViMG.UIs
             }
         }
 
-        public void AddChatMessage(string message)
+        public void AddChatMessage(string message, Color? color = null)
         {
-            messages.Add(new ChatMessage() { message = message });
+            messages.Add(new ChatMessage(message, color ?? Color.White));
             latestChatMessage++;
         }
     }
