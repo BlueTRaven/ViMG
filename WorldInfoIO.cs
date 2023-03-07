@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.WorldLogics;
 
 namespace ViMG
 {
@@ -19,6 +20,8 @@ namespace ViMG
             public int playerLayer;
             public int furthestLayer;   //the furthest the player has traveled - i.e. layer+1 has NOT been generated yet.
             public List<PointOfInterest> pointsOfInterest;
+
+            public WorldFlags flags;
         }
         /*private struct WorldInfo
         {
@@ -80,7 +83,7 @@ namespace ViMG
         public const string FILE_NAME_WINFO = "winfo";
         public const string EXT_WINFO = ".vis";
 
-        private const int VERSION = 2;
+        private const int VERSION = 3;
         private const int MIN_VERSION = 0;
 
         public int Version;
@@ -129,6 +132,11 @@ namespace ViMG
             //  fl: furthest layer (int)
             //  px, py, pz: player xyz (Vector3)
             //  pl: player layer (int)
+            //  f: flags block
+            //      fh: header block
+            //          v: version (int)
+            //          s: size (int) of data block
+            //      f: flags (int)
             //  pois: points of interest array block
             //      h: header block
             //          s: size (int) of data block
@@ -159,6 +167,7 @@ namespace ViMG
                 SaveHelper.SaveInt32(bytes, info.furthestLayer);
                 SaveHelper.SaveVector3(bytes, info.playerPosition);
                 SaveHelper.SaveInt32(bytes, info.playerLayer);
+                info.flags.OnSave(bytes);
 
                 List<byte> poisBlock = new List<byte>();    //wi-pois
 
@@ -195,7 +204,8 @@ namespace ViMG
                 playerPosition = new Vector3(-1),
                 playerLayer = 0,
                 furthestLayer = -1,
-                pointsOfInterest = new List<PointOfInterest>()
+                pointsOfInterest = new List<PointOfInterest>(),
+                flags = new WorldFlags()
             };
 
             string loadName = GetLoadFileName(folderName);
@@ -236,6 +246,13 @@ namespace ViMG
                     if (version >= 2)
                     {
                         info.playerLayer = reader.ReadInt32();
+                    }
+
+                    if (version >= 3)
+                    {
+                        info.flags.Version = reader.ReadInt32();
+                        info.flags.Size = reader.ReadInt32();
+                        info.flags.Flags = (WorldFlags.FlagValues)reader.ReadInt32();
                     }
 
                     int sizePois = reader.ReadInt32();

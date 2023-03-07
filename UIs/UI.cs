@@ -11,6 +11,82 @@ namespace ViMG.UIs
 {
 	public static class UI
 	{
+		static UI()
+		{
+			Main.WindowTextInputEvent += Input;
+		}
+
+		private const string SPECIALCHARS = "~`@#$%^&*()_+-={}[]:\";\'<>,.?/|\\ ";
+		private static char character;
+		private static Keys key;
+
+		private static void Input(object? sender, TextInputEventArgs args)
+		{
+			character = args.Character;
+			key = args.Key;
+
+			if (character == '\b')
+			{
+				if (currentStr.Length > 0)
+				{
+					if (cursor > 0)
+					{
+						currentStr = currentStr[0..cursor] + currentStr[(cursor + 1)..];
+						cursor--;
+					}
+                    else
+                    {
+						currentStr = currentStr[0..cursor] + currentStr[(cursor + 1)..];
+					}
+				}
+			}
+			else if (character == '\u007f')
+			{
+				if (currentStr.Length > 0)
+				{
+					int i = currentStr.LastIndexOfAny(SPECIALCHARS.ToCharArray(), cursor);
+					if (i > 0)
+					{
+						if (i == cursor)
+						{   //we're on the special character, just delete it
+							currentStr = currentStr[0..cursor] + currentStr[(cursor + 1)..];
+							cursor--;
+						}
+						else
+						{
+							currentStr = currentStr[0..(i + 1)] + currentStr[(cursor + 1)..];
+							cursor = i;
+						}
+						/*if (i == currentStr.Length - 1)
+							currentStr = currentStr[0..^1];	
+						else currentStr = currentStr[0..(i + 1)];*/
+					}
+					else
+					{
+						currentStr = currentStr[(cursor + 1)..];   //didn't find any special characters - just delete the entire string
+						cursor = 0;
+					}
+				}
+			}
+			else
+			{
+				if (currentStr == "")
+					currentStr += character;
+				else
+				{
+					if (currentStr.Length >= 1)
+					{
+						int insertAt = cursor + 1;
+						if (cursor == 0)
+							insertAt--;
+						currentStr = currentStr.Insert(insertAt, character.ToString());
+						cursor++;
+					}
+					else currentStr = currentStr.Insert(cursor, character.ToString());
+				}
+			}
+		}
+
 		public readonly struct ID
 		{
 			public readonly int parent;
@@ -301,6 +377,7 @@ namespace ViMG.UIs
 		private static List<Panel> panels = new List<Panel>();
 		private static List<Texture> textures = new List<Texture>();
 
+		private static int iteration;
 		private static int idCounter;
 		private static Dictionary<int, ID> ids = new Dictionary<int, ID>();
 		private static ID currentParent;
@@ -309,6 +386,8 @@ namespace ViMG.UIs
 
 		public static void Start()
 		{
+			iteration++;
+
 			idCounter = 0;
 			ids.Clear();
 
@@ -430,16 +509,6 @@ namespace ViMG.UIs
 			
 			return default(Label);
 		}
-
-		/*public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect)
-		{
-			return MakeButton(bounds, texture, sourceRect, sourceRect, sourceRect);
-		}
-
-		public static Button MakeButton(RectangleF bounds, Texture2D texture, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
-        {
-			return MakeButton(bounds, texture, new LabelConstructionParameters(), sourceRect, hoveredSourceRect, clickedSourceRect);
-        }*/
 		
 		public static Button MakeButton(ButtonConstructionParameters parameters)
         {
@@ -451,6 +520,9 @@ namespace ViMG.UIs
 			bool heldLeft = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
 			bool clickedRight = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton);
 			bool heldRight = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.RightButton);
+
+			if (clickedLeft)
+				Main.inputManager.InputCaptured = false;
 
 			StartParent(parameters.bounds.Position);
 
@@ -465,31 +537,70 @@ namespace ViMG.UIs
 			return button;
 		}
 
-		/*public static Button MakeButton(RectangleF bounds, Texture2D texture, LabelConstructionParameters label, RectangleF? sourceRect, RectangleF? hoveredSourceRect, RectangleF? clickedSourceRect)
+		private static string currentStr;
+		private static bool isTextboxFocused;
+		private static ID currentFocusedId;
+		private static int cursor;
+		public static void MakeTextbox(ButtonConstructionParameters buttonParams, ref string str, TextHelper.FontInfo fontInfo)
 		{
-			ID id = MakeID(bounds.Position);
-			RectangleF mouseBounds = new RectangleF(id.position, bounds.Size);
+			var id = MakeID(buttonParams.bounds.Position);
 
-			bool hovered = mouseBounds.Contains(Main.inputManager.GetMousePosition().ToVector2()) && isEnabled;
-			bool clickedLeft = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
-			bool heldLeft = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
-			bool clickedRight = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton);
-			bool heldRight = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.RightButton);
+			StartParent(buttonParams.bounds.Position);
+			buttonParams.bounds.Position = Vector2.Zero;
 
-			RectangleF defaultSr = new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height);
+			var button = MakeButton(buttonParams);
+			var label = MakeLabel(new LabelConstructionParameters(str, fontInfo, 1000, Vector2.Zero));
 
-			StartParent(bounds.Position);
+			if (button.clickLeft)
+			{
+                currentStr = str;
+				cursor = Math.Max(0, currentStr.Length - 1);
 
-			Label constructedLabel = MakeLabel(label);
+				currentFocusedId = label.id;
+            }
+
+            if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) && !button.clickLeft && currentFocusedId.id == label.id.id)
+				currentFocusedId = new ID();
+
+			if (currentFocusedId.valid && currentFocusedId.id == label.id.id)
+			{
+				str = currentStr;
+
+				if (!Main.inputManager.IsHeld(Keys.LeftControl))
+				{
+					if (Main.inputManager.JustPressed(Keys.Left))
+						cursor--;
+					if (Main.inputManager.JustPressed(Keys.Right))
+						cursor++;
+				}
+                else
+                {
+					if (Main.inputManager.JustPressed(Keys.Left) && cursor > 0)
+					{
+						cursor = currentStr.LastIndexOfAny(SPECIALCHARS.ToCharArray(), cursor - 1);
+						//didn't find any
+						if (cursor == -1)
+							cursor = 0;
+					}
+					if (Main.inputManager.JustPressed(Keys.Right) && cursor < currentStr.Length)
+					{
+						cursor = currentStr.IndexOfAny(SPECIALCHARS.ToCharArray(), cursor + 1);
+						if (cursor == -1)
+							cursor = currentStr.Length - 1;
+					}
+				}
+
+				if (Main.inputManager.JustPressed(Keys.End))
+					cursor = currentStr.Length - 1;
+				if (Main.inputManager.JustPressed(Keys.Home))
+					cursor = 0;
+
+				if (currentStr != null)
+					cursor = MathHelper.Clamp(cursor, 0, currentStr.Length - 1);
+			}
 
 			EndParent();
-
-			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, heldRight, mouseBounds, texture, constructedLabel,
-				sourceRect.GetValueOrDefault(defaultSr), hoveredSourceRect.GetValueOrDefault(defaultSr), clickedSourceRect.GetValueOrDefault(defaultSr));
-			buttons.Add(button);
-
-			return button;
-		}*/
+		}
 
 		public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{
@@ -530,6 +641,20 @@ namespace ViMG.UIs
 			{
 				TextHelper.DrawText(batch, label.font, label.text, label.color, 
 					new RectangleF(label.position, label.width, 0).ToRectangle(), Enums.Alignment.TopLeft, (int)label.width, 1, TextHelper.OverFlowAction.None);
+
+				if (iteration % 60 < 30)
+				{
+					//Note that this doesn't really work at all if the text is wrapped...
+					//But mapping pre-wrapped text to post-wrapped text is actually pretty hard.
+					//For now I'm not even going to bother.
+					if (currentFocusedId.id == label.id.id && cursor < label.text.Length && label.text.Length > 0)
+					{
+						Vector2 leadUp = label.position + label.font.StringSize(label.text[..cursor]).ToVector2();
+						leadUp.Y -= label.font.LineSpacing;
+						Vector2 charSize = label.font.StringSize(label.text[cursor].ToString()).ToVector2();
+						batch.DrawRectangle(new Rectangle(leadUp.ToPoint(), charSize.ToPoint()), Color.White, 1);
+					}
+				}
 			}
 
 			foreach (Panel panel in panels)

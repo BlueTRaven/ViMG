@@ -17,6 +17,7 @@ namespace ViMG
     public class Main : Game
     {
 		public static event Action<Point> WindowResizedEvent;
+		public static event EventHandler<TextInputEventArgs> WindowTextInputEvent;
 
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
@@ -215,6 +216,7 @@ namespace ViMG
 
 			base.Initialize();
 
+			Window.TextInput += WindowTextInput;
 			Window.ClientSizeChanged += WindowResolutionChanged;
 			Window.AllowUserResizing = true;
 
@@ -246,6 +248,11 @@ namespace ViMG
 
 			WindowResizedEvent?.Invoke(Options.CurrentWindowResolution);
 		}
+
+		private void WindowTextInput(object? sender, TextInputEventArgs args)
+        {
+			WindowTextInputEvent?.Invoke(sender, args);
+        }
 
 		protected override void LoadContent()
         {

@@ -67,11 +67,19 @@ namespace ViMG.UIs
             Main.DrawCursor = false;
         }
 
+        private string a = "";
+        private string b = "";
         public override void Update(GraphicsDevice device, double deltaTime)
         {
             UI.Start();
 
             UI.StartParent(new Vector2(Options.CurrentWindowResolution.X / 2 - 64, Options.CurrentWindowResolution.Y / 2 - 128));
+
+            UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(-196, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref a, fi);
+
+            UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(-196, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref b, fi);
 
             if (Main.inputManager.JustReleased(A1r.Input.MouseInput.LeftButton))
                 clicked = false;

@@ -99,7 +99,7 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			if (world.player.Position.Y / Cube.CUBE_SCALE < 140)
+			if (world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
 
@@ -161,6 +161,11 @@ namespace ViMG.WorldLogics
 			}
 		}
 
+        public override bool AllowsCreatingNextLayer(World world)
+        {
+			return world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD);
+        }
+
         public override void Draw(World world, GraphicsDevice device)
         {
             base.Draw(world, device);
@@ -181,7 +186,7 @@ namespace ViMG.WorldLogics
 				Matrix.CreateTranslation(world.player.Position),
 				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
 
-			if (world.player.Position.Y / Cube.CUBE_SCALE < 140)
+			if (world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
 					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);

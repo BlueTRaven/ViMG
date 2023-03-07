@@ -60,6 +60,13 @@ namespace ViMG
 		public LightManager LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
 		public WorldInfoIO.WorldInfo WorldInfo;
+		public ChunkLoadManager ChunkLoadManager;
+		public PhysicsInfo PhysicsInfo;
+
+		private WorldInfoIO worldInfoIO;
+		private ChunkManagerIO chunkIO;
+		private EntityManagerIO entIO;
+		private WorldLogic logic;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -80,18 +87,9 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
-		private WorldInfoIO worldInfoIO;
-		private ChunkManagerIO chunkIO;
-		private EntityManagerIO entIO;
-		private WorldLogic logic;
-
-		public ChunkLoadManager ChunkLoadManager;
-
 		private float randomUpdatesTimer;
 
 		private Task<World> nextWorld;
-
-		public PhysicsInfo PhysicsInfo;
 
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)

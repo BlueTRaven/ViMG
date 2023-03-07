@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
 using ViMG.Physics;
+using ViMG.WorldLogics;
 
 namespace ViMG.GameStates
 {
@@ -16,9 +17,10 @@ namespace ViMG.GameStates
         public ChunkManager ChunkManager;
         public EntityManager EntityManager;
         public WorldInfoIO.WorldInfo WorldInfo;
-        public WorldLogics.WorldLogic Logic;
+        public WorldLogic Logic;
         public Skybox Skybox;
         public PhysicsInfo PhysicsInfo;
+        public WorldFlags Flags;
 
         public string WorldName;
         public int Layer;

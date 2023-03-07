@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,31 @@ namespace ViMG.UIs
 {
     public static class UIWidgets
     {
+        static UIWidgets()
+        {
+            Main.WindowTextInputEvent += Input;
+        }
+
+        private static char character;
+        private static Keys key;
+
+        private static void Input(object? sender, TextInputEventArgs args)
+        {
+            character = args.Character;
+            key = args.Key;
+        }
+
+        public static void MakeTextbox(UI.ButtonConstructionParameters button, ref string str, TextHelper.FontInfo fontInfo)
+        {
+            UI.StartParent(button.bounds.Position);
+            button.bounds.Position = Vector2.Zero;
+
+            UI.MakeButton(button);
+            UI.MakeLabel(new UI.LabelConstructionParameters(str, fontInfo, 1000, Vector2.Zero));
+
+            UI.EndParent();
+        }
+
         public static void MakeCheckbox(UI.ButtonConstructionParameters checkboxButton, 
             UI.TextureConstructionParameters offTexture, UI.TextureConstructionParameters onTexture, ref bool checkedValue)
         {

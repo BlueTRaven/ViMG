@@ -34,6 +34,11 @@ namespace ViMG.WorldLogics
 
         }
 
+        public virtual bool AllowsCreatingNextLayer(World world)
+        {
+            return true;
+        }
+
         public virtual void Draw(World world, GraphicsDevice device)
         {
 

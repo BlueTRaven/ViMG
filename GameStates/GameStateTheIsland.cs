@@ -179,6 +179,8 @@ namespace ViMG.GameStates
                 furthestLayer = 0,
                 time = 0,
                 pointsOfInterest = new List<PointOfInterest>(),
+
+                flags = new WorldLogics.WorldFlags()
             };
 
             var worldInfoIO = new WorldInfoIO();
