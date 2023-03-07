@@ -88,7 +88,9 @@ namespace ViMG.Entities
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
             visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(48, 128, 32, 32), Cube.CUBE_SCALE);
-        }
+
+			world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
+		}
 
         public override void OnDelete()
         {
@@ -119,6 +121,14 @@ namespace ViMG.Entities
 					Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
 				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_infused_bone"), Main.random.Next(4, 20), 1));
 			world.EntityManager.Add(ent);
+
+			if (!world.WorldInfo.flags.Flags.HasFlag(WorldLogics.WorldFlags.FlagValues.SKULLHEAD_DEAD))
+			{
+				world.WorldInfo.flags.Flags |= WorldLogics.WorldFlags.FlagValues.SKULLHEAD_DEAD;
+				world.ChatManager.AddChatMessage("The lava layer has receded.", Color.Yellow);
+			}
+			
+			world.ChatManager.AddChatMessage("Skullhead has been defeated!", Color.Orange);
 		}
 
         public override void OnUnload()

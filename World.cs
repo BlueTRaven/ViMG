@@ -413,7 +413,7 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-			if (player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3 && nextWorld == null)
+			if (logic.AllowsCreatingNextLayer(this) && player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3 && nextWorld == null)
 			{
 				if (Layer == 0)
 					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, 1);
