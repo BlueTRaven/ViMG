@@ -16,7 +16,7 @@ namespace ViMG.UIs
 			Main.WindowTextInputEvent += Input;
 		}
 
-		private const string SPECIALCHARS = "~`@#$%^&*()_+-={}[]:\";\'<>,.?/|\\ ";
+		private const string SPECIALCHARS = "~`!@#$%^&*()_+-={}[]:\";\'<>,.?/|\\ ";
 		private static char character;
 		private static Keys key;
 
@@ -70,6 +70,16 @@ namespace ViMG.UIs
 			}
 			else
 			{
+				if (!flags.HasFlag(TextInputFlags.Numerical) && char.IsNumber(character))
+					return;
+				if (!flags.HasFlag(TextInputFlags.Alphabetical) && char.IsLetter(character))
+					return;
+				if (!flags.HasFlag(TextInputFlags.Special) && SPECIALCHARS.Contains(character))
+					return;
+				//TODO fix not allowed unless special characters are allowed.
+				if (!flags.HasFlag(TextInputFlags.Special) && !flags.HasFlag(TextInputFlags.Space) && character == ' ')
+					return;
+
 				if (currentStr == "")
 					currentStr += character;
 				else
@@ -77,8 +87,6 @@ namespace ViMG.UIs
 					if (currentStr.Length >= 1)
 					{
 						int insertAt = cursor + 1;
-						if (cursor == 0)
-							insertAt--;
 						currentStr = currentStr.Insert(insertAt, character.ToString());
 						cursor++;
 					}
@@ -86,6 +94,18 @@ namespace ViMG.UIs
 				}
 			}
 		}
+
+		public enum TextInputFlags
+        {
+			None = 0,
+			Alphabetical = 1 << 0,
+			Numerical = 1 << 1,
+			Special = 1 << 2,
+			Space = 1 << 3,	//if special & space > 0, space is allowed
+			AlphaNumerical = Alphabetical | Numerical,
+			AlphaNumericalSpecial = Alphabetical | Numerical | Special,
+			All = ~0,
+        }
 
 		public readonly struct ID
 		{
@@ -538,10 +558,10 @@ namespace ViMG.UIs
 		}
 
 		private static string currentStr;
-		private static bool isTextboxFocused;
+		private static TextInputFlags flags;
 		private static ID currentFocusedId;
 		private static int cursor;
-		public static void MakeTextbox(ButtonConstructionParameters buttonParams, ref string str, TextHelper.FontInfo fontInfo)
+		public static void MakeTextbox(ButtonConstructionParameters buttonParams, ref string str, TextInputFlags flags, TextHelper.FontInfo fontInfo)
 		{
 			var id = MakeID(buttonParams.bounds.Position);
 
@@ -557,6 +577,7 @@ namespace ViMG.UIs
 				cursor = Math.Max(0, currentStr.Length - 1);
 
 				currentFocusedId = label.id;
+				UI.flags = flags;
             }
 
             if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) && !button.clickLeft && currentFocusedId.id == label.id.id)

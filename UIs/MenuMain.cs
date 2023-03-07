@@ -17,6 +17,7 @@ namespace ViMG.UIs
         { 
             Main,
             Worlds,
+            WorldCreate,
             Settings
         }
 
@@ -27,6 +28,8 @@ namespace ViMG.UIs
         private bool clicked = false;
 
         private TextHelper.FontInfo fi;
+
+        private string worldName;
 
         //TODO remove
         private UI.LabelConstructionParameters[] options;
@@ -74,12 +77,6 @@ namespace ViMG.UIs
             UI.Start();
 
             UI.StartParent(new Vector2(Options.CurrentWindowResolution.X / 2 - 64, Options.CurrentWindowResolution.Y / 2 - 128));
-
-            UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(-196, 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref a, fi);
-
-            UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(-196, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref b, fi);
 
             if (Main.inputManager.JustReleased(A1r.Input.MouseInput.LeftButton))
                 clicked = false;
@@ -150,9 +147,35 @@ namespace ViMG.UIs
                         new UI.LabelConstructionParameters("Create New", fi, 128, Vector2.Zero),
                         new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                     {
-                        gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.BeginLoadWorld("new" + directories.Length);
+                        state = MenuState.WorldCreate;
+                        clicked = true;
+
+                        worldName = "";
                     }
+                }
+            }
+            else if (state == MenuState.WorldCreate)
+            {
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(-32, 256, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                       new UI.LabelConstructionParameters("<", fi, 32, Vector2.Zero),
+                       new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32))).clickLeft)
+                {
+                    state = MenuState.Worlds;
+                    clicked = true;
+                }
+
+                UI.MakeLabel(new UI.LabelConstructionParameters("World Name:", fi, 1000, new Vector2(-108, 48)));
+                UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(0, 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref worldName, UI.TextInputFlags.AlphaNumerical, fi);
+
+                if (!clicked && UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 + 48, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Create World", fi, 196, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+                {
+                    if (worldName == "")
+                        worldName = "new" + directories.Length;
+                    gsManager.SetGameState(gsManager.TheIsland);
+                    gsManager.TheIsland.BeginLoadWorld(worldName);
                 }
             }
 
