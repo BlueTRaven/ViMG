@@ -53,8 +53,7 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position)) ||
-                !world.ChunkManager.CollisionMesher.IsMeshed(ChunkPosition.WorldSpaceChunk(Position)))
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position)))
             {
                 //don't update position - freeze in place
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = Position.ToNumerics();

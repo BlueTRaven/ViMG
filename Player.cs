@@ -394,13 +394,8 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			/*if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == null)
-				world.GameStateManager.GetCurrentGameState().SetMenu(menuPlayer);*/
 			if (state != State.Noclip)
-			{
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + new Vector3(0, Cube.CUBE_SCALE * 0.6f, 0);
-				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);	//player physics shape can never fall asleep
-			}
 
 			hasMoved = false;
 			hasRotated = false;
@@ -413,8 +408,11 @@ namespace ViMG
 			else if (state == State.Noclip)
 				state = State.Normal;
 
-			if (!Main.Debug && (!world.ChunkManager.IsInWorldBounds(Position) || !world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
-				return;
+			if (!Main.Debug && (!world.ChunkManager.IsInWorldBounds(Position) ||
+				!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
+				world.PhysicsInfo.Simulation.Sleeper.Sleep(world.PhysicsInfo.Simulation.Bodies[physicsHandle].MemoryLocation.Index);
+			else
+				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);    //player physics shape can never fall asleep
 
 			if (hurtbox == -1)
 				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f, invulnTimer <= 0);
