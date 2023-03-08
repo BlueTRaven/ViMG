@@ -42,7 +42,7 @@ namespace ViMG
         public void Update(World world)
         {
             int currentNum = 0;
-            while (dirtyChunkPositions.Count > 0 && currentNum < 1)
+            while (dirtyChunkPositions.Count > 0 && currentNum < 4)
             {
                 ChunkPosition position = dirtyChunkPositions.Dequeue();
 

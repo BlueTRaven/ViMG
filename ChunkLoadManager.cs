@@ -192,6 +192,7 @@ namespace ViMG
 
 					entIO.Deserialize(position);
 					chunkManager.Mesher.BatchMeshChunk(world, position);
+					chunkManager.CollisionMesher.MarkDirty(position);
 
 					hasChanged = true;
 				}

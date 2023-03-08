@@ -14,7 +14,8 @@ namespace ViMG.WorldLogics
         public enum FlagValues
         {
             NONE = 0,
-            SKULLHEAD_DEAD = 1 << 0
+            SKULLHEAD_DEAD = 1 << 0,
+            MERCHANT_SPAWNED = 1 << 1,
         }
 
         public int Version;
