@@ -481,7 +481,7 @@ namespace ViMG
 				WorldInfo.playerPosition = w.player.Position;
 
 				w.ChunkLoadManager.UpdateLoadTarget(player.Position);
-				w.ChunkLoadManager.LoadAroundTarget(this);
+				w.ChunkLoadManager.LoadAroundTarget(w);
 
 				//Finally, tell the ChunkLoadManager to actually load the things.
 				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
@@ -495,6 +495,8 @@ namespace ViMG
 
 				w.SaveWorld();
 
+				//TODO: why are we disposing this when we haven't even exited the load boundary?
+				//We should be reusing this so we can reload super fast
 				Dispose();
 			}
 		}

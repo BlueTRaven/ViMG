@@ -191,6 +191,7 @@ namespace ViMG
 			StartActiveTasks(world);
 		}
 
+		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
 		public void Flush(World world)
         {
 			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
@@ -252,13 +253,6 @@ namespace ViMG
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
 							UnloadMesh(ref meshResult);
 						}
-
-                        /*if (meshResult.collidableMesh.Triangles.Allocated)
-                        {
-                            meshResult.collidableShapeIndex = world.PhysicsSimulation.Shapes.Add(meshResult.collidableMesh);
-                            meshResult.collidableStaticHandle = world.PhysicsSimulation.Statics.Add(
-                                new BepuPhysics.StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, meshResult.collidableShapeIndex));
-                        }*/
                     }
 				}
 				else tasks.Enqueue(task);
