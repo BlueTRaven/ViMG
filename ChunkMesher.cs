@@ -75,9 +75,6 @@ namespace ViMG
 		private struct ChunkMeshInfo
 		{
 			public ChunkPosition position;
-			public BepuPhysics.Collidables.TypedIndex collidableShapeIndex; //TODO move elsewhere
-			public BepuPhysics.StaticHandle collidableStaticHandle;
-            public BepuPhysics.Collidables.Mesh collidableMesh;
 			public (VertexBuffer VBO, IndexBuffer IBO)[] meshes;
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
@@ -89,10 +86,7 @@ namespace ViMG
 
 			public ChunkMeshInfo(ChunkPosition position)
 			{
-				collidableShapeIndex = new BepuPhysics.Collidables.TypedIndex();
-				collidableStaticHandle = new BepuPhysics.StaticHandle();
 				this.position = position;
-				collidableMesh = new BepuPhysics.Collidables.Mesh();
 				meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 				meshVersion = 0;
 				version = 1;
@@ -144,6 +138,7 @@ namespace ViMG
 		private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
 
 		private BufferPool buffer;
+
 		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
         {
             this.device = device;
@@ -196,7 +191,7 @@ namespace ViMG
 			StartActiveTasks(world);
 		}
 
-		public void FlushMeshQueue(World world)
+		public void Flush(World world)
         {
 			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
@@ -429,14 +424,6 @@ namespace ViMG
 					c.meshes[i] = (null, null);
 				}
 
-			}
-
-			if (c.collidableMesh.Triangles.Allocated)
-			{
-				lock (buffer)
-				{
-					c.collidableMesh.Dispose(buffer);
-				}
 			}
 
 			c.hasMeshes = false;

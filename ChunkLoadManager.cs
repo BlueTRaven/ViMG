@@ -83,7 +83,7 @@ namespace ViMG
 		//It's best practice to use this before saving, so as not to miss loading chunks!
 		public void FlushLoadQueue(World world)
 		{
-			chunkManager.Mesher.FlushMeshQueue(world);
+			chunkManager.Mesher.Flush(world);
 			chunkManager.CollisionMesher.Flush(world);
 
 			int max = queue.Count;
@@ -120,7 +120,7 @@ namespace ViMG
 			}
 
 			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.Mesher.FlushMeshQueue(world);
+			chunkManager.Mesher.Flush(world);
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
