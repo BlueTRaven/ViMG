@@ -1170,8 +1170,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-				//world.ChatManager.AddChatMessage(string.Format("A figure washes up on the island's shore..."), Color.Purple);
+				world.EntityManager.Add(new DoorWood(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
 			}
