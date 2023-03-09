@@ -46,17 +46,21 @@ namespace ViMG.Entities
                 SpringSettings = new SpringSettings(30, 1) 
             };
 
-            //mountShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shapeMount);
+            mountShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shapeMount);
             doorShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shapeDoor);
-            /*mountHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose((Position - new Vector3(Cube.CUBE_SCALE * 1.1f, 0, 0)).ToNumerics()),
-                mountShapeIndex, 0.001f));*/
+            mountHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose((Position - new Vector3(Cube.CUBE_SCALE * 1.1f, 0, 0)).ToNumerics()),
+                mountShapeIndex, 0.001f));
             doorHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(Position.ToNumerics(), 
                 shapeDoor.ComputeInertia(1), doorShapeIndex, 0.001f));
          
-            //hingeHandle = world.PhysicsInfo.Simulation.Solver.Add(mountHandle, doorHandle, hinge);
-            
-            world.PhysicsInfo.Properties[mountHandle] = new Physics.PhysicsProperties(new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER));
-            world.PhysicsInfo.Properties[doorHandle] = new Physics.PhysicsProperties(new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER));
+            hingeHandle = world.PhysicsInfo.Simulation.Solver.Add(mountHandle, doorHandle, hinge);
+
+            var mountFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 0);
+            var doorFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 1);
+            mountFilter.DisableCollision(1);
+            doorFilter.DisableCollision(0);
+            world.PhysicsInfo.Properties[mountHandle] = new Physics.PhysicsProperties(mountFilter);
+            world.PhysicsInfo.Properties[doorHandle] = new Physics.PhysicsProperties(doorFilter);
         }
 
         public override void Update(double deltaTime)
