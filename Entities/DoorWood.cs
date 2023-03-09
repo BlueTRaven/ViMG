@@ -13,7 +13,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
-    public class DoorWood : Entity
+    public class DoorWood : Entity, ICubeTracker
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mountMesh;
         private static (VertexBuffer VBO, IndexBuffer IBO) doorMesh;
@@ -26,11 +26,13 @@ namespace ViMG.Entities
         private ConstraintHandle hingeHandle;
         private readonly MeshHelper.CubeFace facing;
 
+        public CubePosition TrackedPosition { get; set; }
+
         public DoorWood()
         {
         }
 
-        public DoorWood(Vector3 position, MeshHelper.CubeFace facing)
+        public DoorWood(CubePosition position, MeshHelper.CubeFace facing)
         {
             if (facing == MeshHelper.CubeFace.UP || facing == MeshHelper.CubeFace.DOWN)
             {
@@ -38,7 +40,8 @@ namespace ViMG.Entities
                 facing = MeshHelper.CubeFace.LEFT;
             }
 
-            this.Position = position;
+            this.TrackedPosition = position;
+            this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
             this.facing = facing;
         }
 
@@ -50,16 +53,16 @@ namespace ViMG.Entities
             switch (facing)
             {
                 case MeshHelper.CubeFace.LEFT:
-                    rotation = 180;
+                    rotation = 270;
                     break;
                 case MeshHelper.CubeFace.FRONT:
-                    rotation = 90;
+                    rotation = 180;
                     break;
                 case MeshHelper.CubeFace.RIGHT:
-                    rotation = 0;
+                    rotation = 90;
                     break;
                 case MeshHelper.CubeFace.BACK:
-                    rotation = 270;
+                    rotation = 0;
                     break;
                 default:
                     break;
@@ -136,6 +139,16 @@ namespace ViMG.Entities
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
                 Matrix.CreateTranslation(position)));
 
+        }
+
+        public bool OnInteract(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId)
+        {
+            throw new NotImplementedException();
         }
     }
 }
