@@ -18,13 +18,25 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.Invisible;
         }
 
+        public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
+        {
+            var above = manager.ThreadedView.GetCube(position + new CubePosition(0, 1, 0));
+
+            if (above.GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+                return true;
+            else return false;
+        }
+
         public override void OnPlayerPlaced(Player player, CubePosition position)
         {
             base.OnPlayerPlaced(player, position);
 
+            CubePosition top = position + new CubePosition(0, 1, 0);
+            player.world.ChunkManager.ThreadedView.SetCube(top, Id);
+
             MeshHelper.CubeFace face = CubeHelper.GetFaceFromPlayerPos(player, position, false);
 
-            player.GetWorld().EntityManager.Add(new DoorWood(position, face));
+            player.GetWorld().EntityManager.Add(new Door((position, top), face));
         }
     }
 }

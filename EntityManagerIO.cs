@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrUtility;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -429,10 +430,27 @@ namespace ViMG
             {
 				foreach (EntityData entData in entityDatas[pos])
                 {
-					Entity ent = Activator.CreateInstance(Assembly.GetExecutingAssembly().GetName().Name, entData.type).Unwrap() as Entity;
-					ent.OnLoad(entData.data, entData.version);
+					Type entityType = Utility.GetType(Assembly.GetExecutingAssembly().GetName().Name, entData.type);
 
-					manager.ForceAdd(ent, entData.id);
+					if (entityType == null)
+					{
+						Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
+					}
+					else
+					{
+						var created = Activator.CreateInstance(entityType);
+
+						if (created != null && created is Entity ent)
+						{
+							ent.OnLoad(entData.data, entData.version);
+
+							manager.ForceAdd(ent, entData.id);
+						}
+						else
+						{
+							Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+						}
+					}
 				}
 
 				//Remove so we don't end up saving duplicate entities.

@@ -47,7 +47,7 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			Optional<ICubeTracker> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
+			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
 			if (!tracker.HasValue() || tracker.Get() != this)
 				world.EntityManager.Remove(this);

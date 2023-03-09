@@ -1008,26 +1008,7 @@ namespace ViMG
 				if (Position != oldPos)
 					hasMoved = true;
 
-				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && 
-					!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
-						Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-						Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
-				{
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-					{
-						if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
-					{
-						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
-						if (tracker.HasValue() && tracker.Get().OnInteract(this))
-							PerformAction();
-						else if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-				}
+				UpdatePerformAction();
 
 				fallStartY = Position.Y;	//so we don't immediately die sometimes
 			}
@@ -1103,26 +1084,7 @@ namespace ViMG
 
 					velocity = new Vector3(velXY.X, velocity.Y, velXY.Y);
 
-					if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && 
-						!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
-						Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-						Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
-					{
-						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-						{
-							if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-								PerformAction();
-						}
-
-						if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
-						{
-							var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
-							if (tracker.HasValue() && tracker.Get().OnInteract(this))
-								PerformAction();
-							else if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-								PerformAction();
-						}
-					}
+					UpdatePerformAction();
 
 					if (Main.inputManager.JustPressed(Keys.Q))
 					{
@@ -1170,23 +1132,55 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				rot = (rot + 1) % 4;
-				MeshHelper.CubeFace face = MeshHelper.CubeFace.LEFT;
-				if (rot == 0)
-					face = MeshHelper.CubeFace.LEFT;
-				else if (rot == 1)
-					face = MeshHelper.CubeFace.FRONT;
-				else if (rot == 2)
-					face = MeshHelper.CubeFace.RIGHT;
-				else if (rot == 3)
-					face = MeshHelper.CubeFace.BACK;
-				world.EntityManager.Add(new DoorWood(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, face));
 				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
 			}
 		}
 
-		private int rot = 0;
+		private void UpdatePerformAction()
+		{
+            if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
+                    !menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+                        Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
+                        Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+            {
+                if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+                {
+                    if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+                        PerformAction();
+                }
+
+                if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+                {
+                    bool performedAction = false;
+                    var entityTracking = world.EntityManager.GetEntityTrackingPosition(LookAtPos).GetOrDefault(null);
+
+                    if (entityTracking != null)
+                    {
+                        if (entityTracking is ICubeTracker tracker)
+                        {
+                            if (tracker.OnInteract(this))
+                            {
+                                PerformAction();
+                                performedAction = true;
+                            }
+                        }
+                        else if (entityTracking is IMultiCubeTracker multiTracker)
+                        {
+                            if (multiTracker.OnInteract(this))
+                            {
+                                PerformAction();
+                                performedAction = true;
+                            }
+                        }
+                    }
+
+                    if (!performedAction && inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item
+                        .RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
+                        PerformAction();
+                }
+            }
+        }
 
 		private void UpdateMaybeDash(double deltaTime)
         {

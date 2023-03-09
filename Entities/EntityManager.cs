@@ -22,6 +22,7 @@ namespace ViMG.Entities
 		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
 		private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
+		private Dictionary<CubePosition, IMultiCubeTracker> multiCubeTrackers = new Dictionary<CubePosition, IMultiCubeTracker>();
 
 		private World world;
 
@@ -49,7 +50,7 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			ReallyAdd(entity, (long)id, true);
+			ReallyAdd(entity, (long)id);
 		}
 
 		public void AddTileEntity(ICubeTracker tracker)
@@ -67,7 +68,7 @@ namespace ViMG.Entities
 			else ReallyAdd(entity);
 		}
 
-		private void ReallyAdd(Entity entity, long id = -1, bool replaceCubeTracker = false)
+		private void ReallyAdd(Entity entity, long id = -1)
 		{
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
@@ -76,15 +77,18 @@ namespace ViMG.Entities
 			{
 				//If entity is already present, then replace it
 				if (cubeTrackers.ContainsKey(tracker.TrackedPosition))
-				{
-					if (replaceCubeTracker)
-					{
-						Remove(cubeTrackers[tracker.TrackedPosition] as Entity);
-						cubeTrackers[tracker.TrackedPosition] = tracker;
-					}
-					else return;	//don't add the entity.
-				}
+					return;	//don't add the entity.
 				else cubeTrackers.Add(tracker.TrackedPosition, tracker);
+			}
+
+			if (entity is IMultiCubeTracker multiTracker)
+			{
+				foreach (CubePosition position in multiTracker.TrackedPositions)
+				{
+					if (multiCubeTrackers.ContainsKey(position))
+						return;
+					else multiCubeTrackers.Add(position, multiTracker);
+				}
 			}
 
 			entities.Add(entity);
@@ -212,6 +216,15 @@ namespace ViMG.Entities
 			if (entity is ICubeTracker tracker && cubeTrackers.ContainsKey(tracker.TrackedPosition))
 				cubeTrackers.Remove(tracker.TrackedPosition);
 
+			if (entity is IMultiCubeTracker multiTracker)
+			{
+				foreach (CubePosition pos in multiTracker.TrackedPositions)
+				{
+					if (multiCubeTrackers.ContainsKey(pos))
+						multiCubeTrackers.Remove(pos);
+				}
+			}
+
 			OnEntityRemoved?.Invoke(entity);
 		}
 
@@ -235,11 +248,13 @@ namespace ViMG.Entities
 			return entities;
 		}
 
-		public Optional<ICubeTracker> GetEntityTrackingPosition(CubePosition position)
+		public Optional<Entity> GetEntityTrackingPosition(CubePosition position)
 		{
 			if (cubeTrackers.ContainsKey(position))
-				return new Optional<ICubeTracker>(cubeTrackers[position]);
-			else return new Optional<ICubeTracker>();
+				return new Optional<Entity>(cubeTrackers[position] as Entity);
+			else if (multiCubeTrackers.ContainsKey(position))
+				return new Optional<Entity>(multiCubeTrackers[position] as Entity);
+			else return new Optional<Entity>();
 		}
 
 		public void Draw(GraphicsDevice device, Effect effect)

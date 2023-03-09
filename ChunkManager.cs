@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities;
 
 namespace ViMG
 {
@@ -119,7 +120,15 @@ namespace ViMG
                 if (updated.notified == updated.updated)
                 {
                     world.OnCubeUpdate(updated.updated, updated.newId);
-                    world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null)?.TrackingCubeUpdated(world, this, updated.newId);
+                    var entityTracking = world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null);
+
+                    if (entityTracking != null)
+                    {
+                        if (entityTracking is ICubeTracker tracker)
+                            tracker.TrackingCubeUpdated(world, this, updated.newId);
+                        else if (entityTracking is IMultiCubeTracker multiTracker)
+                            multiTracker.TrackingCubeUpdated(world, this, updated.newId);
+                    }
                 }
                 else ThreadedView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId);
 
