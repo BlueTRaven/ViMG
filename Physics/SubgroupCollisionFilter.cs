@@ -86,7 +86,7 @@ namespace ViMG.Physics
 
             bool subgroupMatches = (a.CollidableSubgroups & b.SubgroupMembership) > 0;
 
-            return groupMatches || subgroupMatches;
+            return groupMatches && subgroupMatches;
         }
     }
 }

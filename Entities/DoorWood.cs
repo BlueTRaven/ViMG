@@ -15,7 +15,8 @@ namespace ViMG.Entities
 {
     public class DoorWood : Entity
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mountMesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) doorMesh;
 
         private TypedIndex mountShapeIndex;
         private TypedIndex doorShapeIndex;
@@ -23,42 +24,76 @@ namespace ViMG.Entities
         private BodyHandle doorHandle;
 
         private ConstraintHandle hingeHandle;
+        private readonly MeshHelper.CubeFace facing;
 
         public DoorWood()
         {
         }
 
-        public DoorWood(Vector3 position)
+        public DoorWood(Vector3 position, MeshHelper.CubeFace facing)
         {
+            if (facing == MeshHelper.CubeFace.UP || facing == MeshHelper.CubeFace.DOWN)
+            {
+                Console.WriteLine("Can't facce up or down! Defaulting to LEFT");
+                facing = MeshHelper.CubeFace.LEFT;
+            }
+
             this.Position = position;
+            this.facing = facing;
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
+            float rotation = 0;
+            switch (facing)
+            {
+                case MeshHelper.CubeFace.LEFT:
+                    rotation = 180;
+                    break;
+                case MeshHelper.CubeFace.FRONT:
+                    rotation = 90;
+                    break;
+                case MeshHelper.CubeFace.RIGHT:
+                    rotation = 0;
+                    break;
+                case MeshHelper.CubeFace.BACK:
+                    rotation = 270;
+                    break;
+                default:
+                    break;
+            }
+
+            Matrix rot = Matrix.CreateRotationY(MathHelper.ToRadians(rotation));
+            Vector3 offsetMount = new Vector3(Cube.CUBE_SCALE * 0.05f, 0, 0);
+            Vector3 offsetDoor = new Vector3(-Cube.CUBE_SCALE / 2f, 0, 0);
+            Vector3 mountPos = Vector3.Transform(new Vector3(-Cube.CUBE_SCALE * 0.6f, 0, 0), rot);
+
             var shapeMount = new Box(Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f);
             var shapeDoor = new Box(Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 0.25f);
-            var hinge = new AngularHinge() 
+            var hinge = new Hinge()
             {
-                LocalHingeAxisA = Vector3.Up.ToNumerics(),  //not sure what to put here actually
+                LocalOffsetA = offsetMount.ToNumerics(),
+                LocalOffsetB = offsetDoor.ToNumerics(),
+                LocalHingeAxisA = Vector3.Up.ToNumerics(),  
                 LocalHingeAxisB = Vector3.Up.ToNumerics(), 
                 SpringSettings = new SpringSettings(30, 1) 
             };
 
             mountShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shapeMount);
             doorShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shapeDoor);
-            mountHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose((Position - new Vector3(Cube.CUBE_SCALE * 1.1f, 0, 0)).ToNumerics()),
-                mountShapeIndex, 0.001f));
-            doorHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(Position.ToNumerics(), 
-                shapeDoor.ComputeInertia(1), doorShapeIndex, 0.001f));
+            mountHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateKinematic(new RigidPose((Position + mountPos).ToNumerics(), 
+                System.Numerics.Quaternion.CreateFromRotationMatrix(rot.ToNumerics())), mountShapeIndex, 0.001f));
+            doorHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(Position.ToNumerics(), 
+                System.Numerics.Quaternion.CreateFromRotationMatrix(rot.ToNumerics())), shapeDoor.ComputeInertia(1), doorShapeIndex, 0.001f));
          
             hingeHandle = world.PhysicsInfo.Simulation.Solver.Add(mountHandle, doorHandle, hinge);
 
-            var mountFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 0);
-            var doorFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 1);
-            mountFilter.DisableCollision(1);
-            doorFilter.DisableCollision(0);
+            var mountFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 1);
+            var doorFilter = new Physics.SubgroupCollisionFilter(Physics.FilterGroups.GROUP_PLAYER, 2);
+            mountFilter.DisableCollision(2);
+            doorFilter.DisableCollision(1);
             world.PhysicsInfo.Properties[mountHandle] = new Physics.PhysicsProperties(mountFilter);
             world.PhysicsInfo.Properties[doorHandle] = new Physics.PhysicsProperties(doorFilter);
         }
@@ -70,6 +105,8 @@ namespace ViMG.Entities
             world.PhysicsInfo.Simulation.Awakener.AwakenBody(mountHandle);
             world.PhysicsInfo.Simulation.Awakener.AwakenBody(doorHandle);
 
+            //Disallow movement
+            //world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position = Position.ToNumerics();
             Position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position;
         }
 
@@ -77,16 +114,27 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
+            if (doorMesh.VBO == null)
+            {
+                mountMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f);
+                doorMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
+            }
 
-            var orientation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation;
+            var position = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Position;
+            var orientation = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Orientation;
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
-                Matrix.CreateTranslation(-new Vector3(0, Cube.CUBE_SCALE, 0)) *
+                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mountMesh.VBO, mountMesh.IBO,
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
-                Matrix.CreateTranslation(Position)));
+                Matrix.CreateTranslation(position)));
+
+            position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position;
+            orientation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation;
+
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+                DrawHelper.BlackPixel, DrawHelper.BlackPixel, doorMesh.VBO, doorMesh.IBO,
+                Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
+                Matrix.CreateTranslation(position)));
 
         }
     }

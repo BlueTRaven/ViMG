@@ -337,7 +337,7 @@ namespace ViMG
 				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
 			contactChecker = new ContactChecker();
 
-			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER), 1f);
+			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
 			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
@@ -1170,11 +1170,23 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new DoorWood(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				rot = (rot + 1) % 4;
+				MeshHelper.CubeFace face = MeshHelper.CubeFace.LEFT;
+				if (rot == 0)
+					face = MeshHelper.CubeFace.LEFT;
+				else if (rot == 1)
+					face = MeshHelper.CubeFace.FRONT;
+				else if (rot == 2)
+					face = MeshHelper.CubeFace.RIGHT;
+				else if (rot == 3)
+					face = MeshHelper.CubeFace.BACK;
+				world.EntityManager.Add(new DoorWood(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, face));
 				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
 			}
 		}
+
+		private int rot = 0;
 
 		private void UpdateMaybeDash(double deltaTime)
         {
