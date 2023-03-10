@@ -23,23 +23,23 @@ namespace ViMG.Cubes
             DropSelf(itemsToDrop);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             if (world == null)
-                return base.GetSourceRect(pass, world, pos, face);
+                return base.GetSourceRect(pass, world, parameters, face);
 
             //we're meshing one of the sides.
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is a mushroom block
-                if (world.ChunkManager.ThreadedView.GetCube(new CubePosition(pos.X, pos.Y - 1, pos.Z)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
+                if (world.ChunkManager.ThreadedView.GetCube(parameters.position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
                 {
                     //use the same top texture instead of the ordinary side texture.
                     return new RectangleF(48, 96, 16, 16);
                 }
             }
 
-            return base.GetSourceRect(pass, world, pos, face);
+            return base.GetSourceRect(pass, world, parameters, face);
         }
     }
 }

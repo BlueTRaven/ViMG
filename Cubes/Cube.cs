@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.UIs;
+using static ViMG.Cubes.Cube.CubeVisualInstance;
 
 namespace ViMG.Cubes
 {
@@ -248,12 +250,12 @@ namespace ViMG.Cubes
 			Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)
+		public virtual RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
 		{
 			return sourceRect;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
+		public virtual RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
 		{
 			if (cubeFaceLookup[(int)face] != -1)
 			{
@@ -283,7 +285,7 @@ namespace ViMG.Cubes
 			return RectangleF.Empty;
 		}
 
-		public virtual CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
+		public virtual CubeAnimation GetAnimation(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			return new CubeAnimation();
         }
@@ -345,8 +347,16 @@ namespace ViMG.Cubes
 				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.MakeCubeVerts(0, null, new CubePosition(), Vector3.Zero, new Vector3(CUBE_SCALE / 2f), 
-					MeshHelper.CubeFace.ALL, this, vertices, indices);
+				ChunkMesher.CubeMeshingParameters parameters = new ChunkMesher.CubeMeshingParameters()
+				{
+					cube = this,
+					id = Id,
+					faces = MeshHelper.CubeFace.ALL,
+					position = new CubePosition(),
+					positionWS = new Vector3()
+				};
+
+				MakeCubeVerts(RenderPass.Opaque, null, parameters, vertices, indices);
 
 				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
@@ -359,28 +369,172 @@ namespace ViMG.Cubes
 			return new RectangleF(0, 0, 1024, 1024);
         }
 
-		public virtual void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+		public virtual bool ShouldMeshPass(RenderPass pass)
+		{
+            if (Transparency == TransparencyValue.Invisible)
+                return false;
+
+            if (pass == RenderPass.DepthOnly && (Transparency & TransparencyValue.InvisibleOnDepth) > 0)
+                return false;
+
+            //Opaque cubes only generate a mesh in the opaque pass.
+            if (Transparency == TransparencyValue.Opaque && pass == RenderPass.Transparent)
+                return false;
+            //Transparent cubes may generate a mesh in both the opaque and the transparent pass.
+            //however, by default, assume we only want to generate in the opaque pass. The overwhelming majority of cubes will use
+            //boolean alpha.
+            //Transparent cubes with both opaque and transparent components may override MakeVerts to generate.
+            if ((Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings) && pass == RenderPass.Transparent)
+                return false;
+
+            if (Transparency == TransparencyValue.Air && pass != RenderPass.Air)
+                return false;
+
+			return true;
+        }
+
+		public virtual void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
         {
-			if (Transparency == TransparencyValue.Invisible)
-				return;
+			if ((parameters.faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
+				MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices);
 
-			if (pass == RenderPass.DepthOnly && (Transparency & TransparencyValue.InvisibleOnDepth) > 0)
-				return;
+            if ((parameters.faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
+                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.RIGHT), MeshHelper.CubeFace.RIGHT, vertices, indices);
 
-			//Opaque cubes only generate a mesh in the opaque pass.
-			if (Transparency == TransparencyValue.Opaque && pass == RenderPass.Transparent)
-				return;
-			//Transparent cubes may generate a mesh in both the opaque and the transparent pass.
-			//however, by default, assume we only want to generate in the opaque pass. The overwhelming majority of cubes will use
-			//boolean alpha.
-			//Transparent cubes with both opaque and transparent components may override MakeVerts to generate.
-			if ((Transparency == TransparencyValue.Transparent || Transparency == TransparencyValue.TransparentOccludesSiblings) && pass == RenderPass.Transparent)
-				return;
+            if ((parameters.faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
+                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.BACK), MeshHelper.CubeFace.BACK, vertices, indices);
 
-			if (Transparency == TransparencyValue.Air && pass != RenderPass.Air)
-				return;
+            if ((parameters.faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
+                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.LEFT), MeshHelper.CubeFace.LEFT, vertices, indices);
 
-			ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, faces, this, vertices, indices);
+            if ((parameters.faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
+                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.DOWN), MeshHelper.CubeFace.DOWN, vertices, indices);
+
+            if ((parameters.faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
+                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.UP), MeshHelper.CubeFace.UP, vertices, indices);
+        }
+
+		public virtual void MakeCubeFaceVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, ChunkMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, List<VertexCube> vertices, List<int> indices)
+		{
+            int offset = vertices.Count;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            const int textureWidth = 1024;
+            const int textureHeight = 1024;
+
+            const float cubeSideWidth = 1f / textureWidth;
+            const float cubeSideHeight = 1f / textureHeight;
+
+            RectangleF sourceRect = GetSourceRect(pass, world, parameters, face);
+
+            Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
+            Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
+
+            vertices.Add(new VertexCube(quad.a, GetTintColor(), new Vector2(uvFar.X, uvFar.Y), quad.n));
+            vertices.Add(new VertexCube(quad.b, GetTintColor(), new Vector2(uvNear.X, uvFar.Y), quad.n));
+            vertices.Add(new VertexCube(quad.c, GetTintColor(), new Vector2(uvNear.X, uvNear.Y), quad.n));
+            vertices.Add(new VertexCube(quad.d, GetTintColor(), new Vector2(uvFar.X, uvNear.Y), quad.n));
+
+            var anim = GetAnimation(pass, world, parameters, face);
+
+            if (anim.Valid)
+            {
+                for (int i = offset; i < 4; i++)
+                {
+                    var vertex = vertices[i];
+
+                    vertex.AnimFrameTime = anim.FrameTime;
+                    vertex.NumAnimFrames = anim.NumFrames;
+                    vertex.AnimFrameSize = anim.FrameWidth;
+
+                    vertices[i] = vertex;
+                }
+            }
+        }
+
+		public ChunkMesher.CubeMeshingQuad GetQuadForFace(ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		{
+            Vector3 min = parameters.positionWS;
+            Vector3 max = parameters.positionWS + new Vector3(Cube.CUBE_SCALE);
+
+            Vector3 a;
+            Vector3 b;
+            Vector3 c;
+            Vector3 d;
+            Vector3 n;
+
+            switch (face)
+            {
+                case MeshHelper.CubeFace.LEFT:
+                    //l_t_f, l_t_n, l_b_n, l_b_f
+                    a = new Vector3(min.X, min.Y, max.Z);
+                    b = new Vector3(min.X, min.Y, min.Z);
+                    c = new Vector3(min.X, max.Y, min.Z);
+                    d = new Vector3(min.X, max.Y, max.Z);
+                    n = new Vector3(-1, 0, 0);
+                    break;
+                case MeshHelper.CubeFace.RIGHT:
+                    //r_t_n, r_t_f, r_b_f, r_b_n
+                    a = new Vector3(max.X, min.Y, min.Z);
+                    b = new Vector3(max.X, min.Y, max.Z);
+                    c = new Vector3(max.X, max.Y, max.Z);
+                    d = new Vector3(max.X, max.Y, min.Z);
+                    n = new Vector3(1, 0, 0);
+                    break;
+                case MeshHelper.CubeFace.UP:
+                    //r_b_f, l_b_f, l_b_n, r_b_n
+                    a = new Vector3(max.X, max.Y, max.Z);
+                    b = new Vector3(min.X, max.Y, max.Z);
+                    c = new Vector3(min.X, max.Y, min.Z);
+                    d = new Vector3(max.X, max.Y, min.Z);
+                    n = new Vector3(0, 1, 0);
+                    break;
+                case MeshHelper.CubeFace.DOWN:
+                    //l_t_f, r_t_f, r_t_n, l_t_n
+                    a = new Vector3(min.X, min.Y, max.Z);
+                    b = new Vector3(max.X, min.Y, max.Z);
+                    c = new Vector3(max.X, min.Y, min.Z);
+                    d = new Vector3(min.X, min.Y, min.Z);
+                    n = new Vector3(0, -1, 0);
+                    break;
+                case MeshHelper.CubeFace.FRONT:
+                    //l_t_n, r_t_n, r_b_n, l_b_n
+                    a = new Vector3(min.X, min.Y, min.Z);
+                    b = new Vector3(max.X, min.Y, min.Z);
+                    c = new Vector3(max.X, max.Y, min.Z);
+                    d = new Vector3(min.X, max.Y, min.Z);
+                    n = new Vector3(0, 0, -1);
+                    break;
+                case MeshHelper.CubeFace.BACK:
+                    //r_t_f, l_t_f, l_b_f, r_b_f
+                    a = new Vector3(max.X, min.Y, max.Z);
+                    b = new Vector3(min.X, min.Y, max.Z);
+                    c = new Vector3(min.X, max.Y, max.Z);
+                    d = new Vector3(max.X, max.Y, max.Z);
+                    n = new Vector3(0, 0, 1);
+                    break;
+                default:
+                    a = Vector3.Zero;
+                    b = Vector3.Zero;
+                    c = Vector3.Zero;
+                    d = Vector3.Zero;
+                    n = Vector3.Zero;
+                    break;
+            }
+
+			return new ChunkMesher.CubeMeshingQuad()
+			{
+				a = a,
+				b = b,
+				c = c,
+				d = d,
+				n = n
+			};
         }
 
 		public Color GetTintColor()

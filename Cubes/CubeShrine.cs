@@ -40,28 +40,23 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(shrine);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
         {
             if (world != null)
             {
-                var ent = world.EntityManager.GetEntityTrackingPosition(pos);
+                var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
                 if (ent.HasValue() && ent.Get() is EntityShrine shrine)
                 {
                     if (shrine.CooldownTimer > 0)
                     {
-                        RectangleF sourceRect = base.GetSourceRect(pass, world, pos);
+                        RectangleF sourceRect = base.GetSourceRect(pass, world, parameters);
                         sourceRect.y += 16;
                         return sourceRect;
                     }
                 }
             }
 
-            return base.GetSourceRect(pass, world, pos);
-        }
-
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
-        {
-            return GetSourceRect(pass, world, pos);
+            return base.GetSourceRect(pass, world, parameters);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -53,14 +53,6 @@ namespace ViMG.Cubes
             return new RectangleF((int)(t * 3) * 16f + 192, 16f, 16f, 16f);
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
-        {
-			if (pass != RenderPass.Opaque)
-				return;
-
-            DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
-        }
-
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
             return manager.ThreadedView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
@@ -96,7 +88,18 @@ namespace ViMG.Cubes
             //world.EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
 
-        public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
+        public override bool ShouldMeshPass(RenderPass pass)
+        {
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, Vector3.One, vertices, indices);
+        }
+
+        public override CubeAnimation GetAnimation(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             return new CubeAnimation(0.125f, 3, 16);
         }

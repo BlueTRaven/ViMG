@@ -16,13 +16,13 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.TransparentOccludesSiblings;
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
         {
             if (pass == RenderPass.Transparent)
-                ChunkMesher.MakeCubeVerts(pass, world, CubePosition.FromWorldSpace(pos), min, max, faces, this, vertices, indices);
+                base.MakeCubeVerts(pass, world, parameters, vertices, indices);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
         {
             if (pass == RenderPass.Transparent)
                 return new RectangleF(0, 32, 16, 16);
@@ -30,11 +30,6 @@ namespace ViMG.Cubes
                 //return new RectangleF(16, 32, 16, 16);
 
             return new RectangleF(24, 36, 0, 0);
-        }
-
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
-        {
-            return this.GetSourceRect(pass, world, pos);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -79,6 +79,7 @@ namespace ViMG.Cubes
 			Register(new CubeSeaStone());
 			Register(new CubeSeaStuddedStone());
 			Register(new CubeDoor());
+			Register(new CubeThorn());
 		}
 
         protected override void PostRegistration()

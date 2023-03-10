@@ -58,11 +58,11 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityChest(position, rows, columns, face));
 		}
 
-		public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
-		{
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
 			if (world != null)
 			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(pos);
+				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
 				if (ent.GetOrDefault(null) != null)
 				{
 					EntityChest chest = ent.Get() as EntityChest;
@@ -72,8 +72,8 @@ namespace ViMG.Cubes
 				}
 			}
 
-			return base.GetSourceRect(pass, world, pos, face);
-		}
+			return base.GetSourceRect(pass, world, parameters, face);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

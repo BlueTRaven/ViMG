@@ -32,9 +32,14 @@ namespace ViMG.Cubes
 			DropSelf(itemsToDrop);
 		}
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-			CubePosition cp = CubePosition.FromWorldSpace(pos);
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
+			/*CubePosition cp = CubePosition.FromWorldSpace(pos);
 
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -64,9 +69,10 @@ namespace ViMG.Cubes
 			max.Y -= PIXEL_SCALE;
 
 			ChunkMesher.MakeQuadVerts(pass, world, cp, new Vector3(min.X, max.Y, max.Z), new Vector3(max.X, max.Y, max.Z),
-				new Vector3(max.X, max.Y, min.Z), new Vector3(min.X, max.Y, min.Z), new Vector3(0, -1, 0), MeshHelper.CubeFace.UP, this, vertices, indices);
+				new Vector3(max.X, max.Y, min.Z), new Vector3(min.X, max.Y, min.Z), new Vector3(0, -1, 0), MeshHelper.CubeFace.UP, this, vertices, indices);*/
 
-			DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
-		}
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, Vector3.One, vertices, indices);
+        }
     }
 }

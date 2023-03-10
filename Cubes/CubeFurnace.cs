@@ -27,11 +27,11 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			if (world != null)
 			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(pos);
+				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
 				if (ent.GetOrDefault(null) != null)
                 {
 					EntityFurnace furnace = ent.Get() as EntityFurnace;
@@ -41,14 +41,14 @@ namespace ViMG.Cubes
                 }
 			}
 
-            return base.GetSourceRect(pass, world, pos, face);
+			return base.GetSourceRect(pass, world, parameters, face);
         }
 
-        public override CubeAnimation GetAnimation(MeshHelper.CubeFace face, RenderPass pass, World world, CubePosition pos)
+        public override CubeAnimation GetAnimation(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			if (world != null)
 			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(pos);
+				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
 				if (ent.GetOrDefault(null) != null)
 				{
 					EntityFurnace furnace = ent.Get() as EntityFurnace;
@@ -58,7 +58,7 @@ namespace ViMG.Cubes
 				}
 			}
 
-			return base.GetAnimation(face, pass, world, pos);
+			return base.GetAnimation(pass, world, parameters, face);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -18,10 +18,10 @@ namespace ViMG.Cubes
             Name = "Rusted Steel Chains";
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, CubePosition pos)
+        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
         {
-            Cube aboveCube = world.ChunkManager.ThreadedView.GetCube(pos + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            Cube belowCube = world.ChunkManager.ThreadedView.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = world.ChunkManager.ThreadedView.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube belowCube = world.ChunkManager.ThreadedView.GetCube(parameters.position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != this && aboveCube.Solid)
                 return new RectangleF(80, 64, 16, 16);
@@ -30,10 +30,15 @@ namespace ViMG.Cubes
             else return new RectangleF(64, 64, 16, 16);
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            if (pass == RenderPass.Opaque)
-                DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), Vector3.One, vertices, indices);
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, Vector3.One, vertices, indices);
         }
     }
 }

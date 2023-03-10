@@ -13,7 +13,7 @@ namespace ViMG.Items
 		private ushort cubeId;
 
 		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
-			cube.GetSourceRect(Cube.RenderPass.Opaque, null, new CubePosition(), MeshHelper.CubeFace.FRONT))
+			cube.GetSourceRect(Cube.RenderPass.Opaque, null, new ChunkMesher.CubeMeshingParameters() { cube = cube, id = cube.Id, faces = MeshHelper.CubeFace.FRONT }, MeshHelper.CubeFace.FRONT))
 		{
 			this.cubeId = cubeId;
 
@@ -54,8 +54,9 @@ namespace ViMG.Items
 			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
 			var mesh = cube.GetHeldMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-				mesh.VBO, mesh.IBO, transform, cube.GetHeldSourceRect(world)));
+			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+				mesh.VBO, mesh.IBO, scaled, cube.GetHeldSourceRect(world)));
 		}
 	}
 }

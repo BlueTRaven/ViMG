@@ -18,12 +18,15 @@ namespace ViMG.Cubes
             Description = "A motley pile of bones.";
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            if (pass == RenderPass.Opaque)
-            {
-                DrawHelper3D.MakeXMeshVerts(pass, this, world, pos + new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f), new Vector3(2f, 1f, 2f), vertices, indices);
-            }
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, new Vector3(2f, 1f, 2f), vertices, indices);
         }
     }
 }

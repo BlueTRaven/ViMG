@@ -23,10 +23,10 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(new EntityCaveCompass(position));
         }
 
-        public override void MakeVerts(RenderPass pass, World world, Vector3 pos, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
         {
             if (pass == RenderPass.Transparent)
-                DrawHelper3D.MakeUVSphereRaw(vertices, indices, pos + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, world, CubePosition.FromWorldSpace(pos)), CUBE_SCALE / 2f);
+                DrawHelper3D.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, world, parameters), CUBE_SCALE / 2f);
             //base.MakeVerts(pass, world, pos, min, max, visual, cube, vertices, indices);
         }
     }

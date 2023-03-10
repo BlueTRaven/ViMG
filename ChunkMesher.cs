@@ -2,6 +2,7 @@
 using BrUtility;
 using BrUtility.Ported;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -489,6 +490,33 @@ namespace ViMG
 			return GetChunkMeshInfo(position).GetMeshVersionCode();
 		}
 
+		public struct CubeMeshingQuad
+		{
+			public Vector3 a;
+			public Vector3 b;
+			public Vector3 c;
+			public Vector3 d;
+			public Vector3 n;
+
+			public CubeMeshingQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 n)
+			{
+				this.a = a;
+				this.b = b;
+				this.c = c;
+				this.d = d;
+				this.n = n;
+			}
+		}
+
+		public struct CubeMeshingParameters
+		{
+			public CubePosition position;
+			public Vector3 positionWS;
+			public ushort id;
+			public Cube cube;
+			public MeshHelper.CubeFace faces;
+		}
+		
 		public (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
@@ -501,31 +529,52 @@ namespace ViMG
 			{
 				CubePosition pos = data.positions[i];
 				ushort id = data.ids[i];
-				MeshHelper.CubeFace face = data.faces[i];
+				MeshHelper.CubeFace faces = data.faces[i];
 
 				if (pass == Cube.RenderPass.Transparent || pass == Cube.RenderPass.Opaque || pass == Cube.RenderPass.Fluid || pass == Cube.RenderPass.DepthOnly)
 				{
 					//if we're air or have no faces, ignore this cube.
-					if (id == 0 || face == MeshHelper.CubeFace.NONE)
+					if (id == 0 || faces == MeshHelper.CubeFace.NONE)
 						continue;
 
 					Cube cube = Main.Registry.CubeRegistry.Get(id);
 
-					int oldCount = vertices.Count;
+					if (cube.ShouldMeshPass(pass))
+					{
+						CubeMeshingParameters parameters = new CubeMeshingParameters()
+						{
+							cube = cube,
+							id = id,
+							positionWS = pos.InWorldSpace(),
+							position = pos,
+							faces = faces
+						};
 
-					cube.MakeVerts(pass, world, pos.InWorldSpace(), n + pos.InWorldSpace(), f + pos.InWorldSpace(), face, vertices, indices);
+						int oldCount = vertices.Count;
 
-					int count = vertices.Count - oldCount;
+						cube.MakeCubeVerts(pass, world, parameters, vertices, indices);
 
-					BakeAO(manager, pos, oldCount, oldCount + count, vertices);
+						int count = vertices.Count - oldCount;
+
+						BakeAO(manager, pos, oldCount, oldCount + count, vertices);
+					}
 				}
 				else if (pass == Cube.RenderPass.Air)
 				{
 					//Note that for air, we we do still make verts if id is 0 (though still not if no faces).
-					if (id != 0 || face == MeshHelper.CubeFace.NONE)
+					if (id != 0 || faces == MeshHelper.CubeFace.NONE)
 						continue;
-					
-					Main.Registry.CubeRegistry.Air.MakeVerts(pass, world, pos.InWorldSpace(), n + pos.InWorldSpace(), f + pos.InWorldSpace(), face, vertices, indices);
+
+                    CubeMeshingParameters parameters = new CubeMeshingParameters()
+                    {
+                        cube = Main.Registry.CubeRegistry.Air,
+                        id = id,
+                        positionWS = pos.InWorldSpace(),
+                        position = pos,
+                        faces = faces
+                    };
+
+					Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, world, parameters, vertices, indices);
 				}
 			}
 
@@ -618,7 +667,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
+		/*public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
 		{
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -646,9 +695,9 @@ namespace ViMG
 
 			if ((faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
 				MakeQuadVerts(pass, world, cp, r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
-		}
+		}*/
 
-		public static void MakeQuadVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, MeshHelper.CubeFace face, Cube cube, 
+		/*public static void MakeQuadVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, MeshHelper.CubeFace face, Cube cube, 
 			List<VertexCube> vertices, List<int> indices)
 		{
 			int offset = vertices.Count;
@@ -690,6 +739,6 @@ namespace ViMG
 					vertices[i] = vertex;
 				}
 			}
-		}
+		}*/
 	}
 }
