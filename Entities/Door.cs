@@ -89,14 +89,15 @@ namespace ViMG.Entities
             world.PhysicsInfo.Properties[mountHandle] = new Physics.PhysicsProperties(mountFilter);
             world.PhysicsInfo.Properties[doorHandle] = new Physics.PhysicsProperties(doorFilter);
 
-            bool validFront = world.HousingTasker.DetermineIfValidHousing(world.ChunkManager, TrackedPositions.ElementAt(0) + 
+            HousingValidity validFront = world.HousingManager.DetermineIfValidHousing(world, TrackedPositions.ElementAt(0) + 
                 new CubePosition((int)dir.X, (int)dir.Y, (int)dir.Z), out Housing housingFront);
-            bool validBack = world.HousingTasker.DetermineIfValidHousing(world.ChunkManager, TrackedPositions.ElementAt(0) - 
+            HousingValidity validBack = world.HousingManager.DetermineIfValidHousing(world, TrackedPositions.ElementAt(0) - 
                 new CubePosition((int)dir.X, (int)dir.Y, (int)dir.Z), out Housing housingBack);
 
-            if (validFront || validBack)
-            {
-            }
+            if (validFront == HousingValidity.Valid)
+                world.HousingManager.AddHousing(ref world.WorldInfo, ref housingFront);
+            if (validBack == HousingValidity.Valid)
+                world.HousingManager.AddHousing(ref world.WorldInfo, ref housingBack);
         }
 
         public override void OnUnload()

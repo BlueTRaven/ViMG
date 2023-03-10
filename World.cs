@@ -70,7 +70,7 @@ namespace ViMG
 		private EntityManagerIO entIO;
 		private WorldLogic logic;
 
-		public HousingTasker HousingTasker;
+		public HousingManager HousingManager;
 
 		public Color SkyColor = new Color(94, 107, 154);
 
@@ -111,6 +111,8 @@ namespace ViMG
 			logic = prototype.Logic;
 			PhysicsInfo = prototype.PhysicsInfo;
 
+			HousingManager = prototype.HousingManager;
+
 			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
 
 			this.ChunkLoadManager = chunkLoadManager;
@@ -139,8 +141,6 @@ namespace ViMG
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-
-			HousingTasker = new HousingTasker();
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -662,6 +662,9 @@ namespace ViMG
 
 				if (Main.Debug)
 					HitboxManager.DrawDebug(device);
+
+				if (Main.Debug)
+					HousingManager.DrawDebug(this, device);
 			}
 
 			foreach (var mined in miningCubes)
@@ -698,10 +701,11 @@ namespace ViMG
 			ChatManager.Draw(batch);
 		}
 
-		public void OnCubeUpdate(CubePosition updating, int updatedId)
+		public void OnCubeUpdate(CubePosition updating, ushort updatedId)
 		{
 			logic.OnCubeUpdated(updating, updatedId);
 
+			HousingManager.OnCubeUpdate(this, updating, updatedId);
 			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
 			//Just every entity that could respond to this cube. 
 			//What constitutes an entity that could respond to this cube? I don't know exactly.

@@ -358,7 +358,8 @@ namespace ViMG.Cubes
 
 				MakeCubeVerts(RenderPass.Opaque, null, parameters, vertices, indices);
 
-				mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+				if (vertices.Count > 0)
+					mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
 
 			return mesh;

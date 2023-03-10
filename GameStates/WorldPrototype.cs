@@ -21,12 +21,13 @@ namespace ViMG.GameStates
         public Skybox Skybox;
         public PhysicsInfo PhysicsInfo;
         public WorldFlags Flags;
+        public HousingManager HousingManager;
 
         public string WorldName;
         public int Layer;
 
         public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, 
-            WorldLogics.WorldLogic logic, Skybox skybox, PhysicsInfo physicsInfo)
+            WorldLogics.WorldLogic logic, Skybox skybox, PhysicsInfo physicsInfo, HousingManager housingManager)
         {
             this.WorldName = worldName;
             this.Layer = layer;
@@ -38,6 +39,8 @@ namespace ViMG.GameStates
             Skybox = skybox;
 
             this.PhysicsInfo = physicsInfo;
+
+            this.HousingManager = housingManager;
         }
 
         public void AddEntity(Entity entity)

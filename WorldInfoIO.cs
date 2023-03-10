@@ -85,7 +85,7 @@ namespace ViMG
         public const string FILE_NAME_WINFO = "winfo";
         public const string EXT_WINFO = ".vis";
 
-        private const int VERSION = 3;
+        private const int VERSION = 4;
         private const int MIN_VERSION = 0;
 
         public int Version;
@@ -200,7 +200,7 @@ namespace ViMG
                 SaveHelper.SaveBytesFlat(bytes, poisHeaderBlock.ToArray());
                 SaveHelper.SaveBytesFlat(bytes, poisBlock.ToArray());
 
-                /*List<byte> housingsDataBlock = new List<byte>();
+                List<byte> housingsDataBlock = new List<byte>();
 
                 foreach (Housing housing in info.housings)
                     housing.OnSave(housingsDataBlock);
@@ -210,8 +210,8 @@ namespace ViMG
                 SaveHelper.SaveInt32(housingsHeaderBlock, info.housings.Count);
 
                 SaveHelper.SaveBytesFlat(bytes, housingsHeaderBlock);
-                SaveHelper.SaveBytesFlat(bytes, housingsDataBlock);*/
-                
+                SaveHelper.SaveBytesFlat(bytes, housingsDataBlock);
+
                 fs.Write(bytes.ToArray());
             }
         }
@@ -225,7 +225,9 @@ namespace ViMG
                 playerLayer = 0,
                 furthestLayer = -1,
                 pointsOfInterest = new List<PointOfInterest>(),
-                flags = new WorldFlags()
+                flags = new WorldFlags(),
+
+                housings = new List<Housing>(),
             };
 
             string loadName = GetLoadFileName(folderName);
@@ -297,7 +299,7 @@ namespace ViMG
                         }
                     }
 
-                    /*if (version >= 4)
+                    if (version >= 4)
                     {
                         //  hs: housing block
                         //      h:
@@ -316,8 +318,10 @@ namespace ViMG
                         {
                             Housing housing = new Housing();
                             housing.OnLoad(bytes, ref offset);
+
+                            info.housings.Add(housing);
                         }
-                    }*/
+                    }
                 }
             }
             

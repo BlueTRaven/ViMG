@@ -15,6 +15,7 @@ using ViMG.Entities;
 using ViMG.Generation;
 using ViMG.Physics;
 using ViMG.UIs;
+using static ViMG.WorldInfoIO;
 
 namespace ViMG.GameStates
 {
@@ -186,7 +187,9 @@ namespace ViMG.GameStates
                 time = 0,
                 pointsOfInterest = new List<PointOfInterest>(),
 
-                flags = new WorldLogics.WorldFlags()
+                flags = new WorldLogics.WorldFlags(),
+
+                housings = new List<Housing>()
             };
 
             var worldInfoIO = new WorldInfoIO();
@@ -196,7 +199,7 @@ namespace ViMG.GameStates
             var generator = CreateLayerGenerator(0);
             var logic = CreateLayerLogic(0, worldName, device);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
             ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -280,10 +283,12 @@ namespace ViMG.GameStates
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
+            var housingManager = new HousingManager();
+            housingManager.FinishLoading(worldInfo);
 
             var logic = CreateLayerLogic(worldInfo.playerLayer, worldName, device);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo);
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -364,7 +369,7 @@ namespace ViMG.GameStates
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer, worldName, device);
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
                 ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
 
@@ -416,11 +421,14 @@ namespace ViMG.GameStates
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
 
+                var housingManager = new HousingManager();
+                housingManager.FinishLoading(worldInfo);
+
                 var logic = CreateLayerLogic(layer, worldName, device);
 
                 Skybox skybox = new Skybox();
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, housingManager);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))
