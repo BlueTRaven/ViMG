@@ -118,17 +118,6 @@ namespace ViMG.Cubes
             else if (left || right && !(above || below))
                 return new RectangleF(32, 144, 16, 16);
             else return new RectangleF();
-
-            /*if ((obscuredFaces & (MeshHelper.CubeFace.LEFT | MeshHelper.CubeFace.RIGHT)) > 0 &&
-                (obscuredFaces & (MeshHelper.CubeFace.FRONT | MeshHelper.CubeFace.BACK)) == 0)
-                return GetSrcRectHorizontalOpposing(pass, world, parameters, face, false);
-            else if ((obscuredFaces & (MeshHelper.CubeFace.FRONT | MeshHelper.CubeFace.BACK)) > 0 &&
-                (obscuredFaces & (MeshHelper.CubeFace.LEFT | MeshHelper.CubeFace.RIGHT)) == 0)
-                return GetSrcRectHorizontalOpposing(pass, world, parameters, face, true);
-            else if ((obscuredFaces & MeshHelper.CubeFace.SIDES) == 0)
-                return GetSrcRectNoneOrTopOrBottom(pass, world, parameters, face);
-
-            return new RectangleF();*/
         }
 
         public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
