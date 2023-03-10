@@ -152,9 +152,9 @@ namespace ViMG
 
             MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
 
-            if (HasClearSide(position.X - 1, position.Y, position.Z, cube))
-                faces |= MeshHelper.CubeFace.LEFT;
             if (HasClearSide(position.X + 1, position.Y, position.Z, cube))
+                faces |= MeshHelper.CubeFace.LEFT;
+            if (HasClearSide(position.X - 1, position.Y, position.Z, cube))
                 faces |= MeshHelper.CubeFace.RIGHT;
 
             if (HasClearSide(position.X, position.Y - 1, position.Z, cube))

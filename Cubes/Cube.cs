@@ -470,7 +470,7 @@ namespace ViMG.Cubes
 
             switch (face)
             {
-                case MeshHelper.CubeFace.LEFT:
+                case MeshHelper.CubeFace.RIGHT:
                     //l_t_f, l_t_n, l_b_n, l_b_f
                     a = new Vector3(min.X, min.Y, max.Z);
                     b = new Vector3(min.X, min.Y, min.Z);
@@ -478,7 +478,7 @@ namespace ViMG.Cubes
                     d = new Vector3(min.X, max.Y, max.Z);
                     n = new Vector3(-1, 0, 0);
                     break;
-                case MeshHelper.CubeFace.RIGHT:
+                case MeshHelper.CubeFace.LEFT:
                     //r_t_n, r_t_f, r_b_f, r_b_n
                     a = new Vector3(max.X, min.Y, min.Z);
                     b = new Vector3(max.X, min.Y, max.Z);
@@ -488,10 +488,10 @@ namespace ViMG.Cubes
                     break;
                 case MeshHelper.CubeFace.UP:
                     //r_b_f, l_b_f, l_b_n, r_b_n
-                    a = new Vector3(max.X, max.Y, max.Z);
-                    b = new Vector3(min.X, max.Y, max.Z);
-                    c = new Vector3(min.X, max.Y, min.Z);
-                    d = new Vector3(max.X, max.Y, min.Z);
+                    a = new Vector3(min.X, max.Y, min.Z);
+                    b = new Vector3(max.X, max.Y, min.Z);
+                    c = new Vector3(max.X, max.Y, max.Z);
+                    d = new Vector3(min.X, max.Y, max.Z);
                     n = new Vector3(0, 1, 0);
                     break;
                 case MeshHelper.CubeFace.DOWN:

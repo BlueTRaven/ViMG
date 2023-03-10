@@ -258,6 +258,11 @@ namespace ViMG
 			ALL = LEFT | RIGHT | UP | DOWN | FRONT | BACK
 		}
 
+		public static bool HasFlagFast(this CubeFace face, CubeFace hasFace)
+		{
+			return (face & hasFace) > 0;
+		}
+
 		public static CubeFace RandomHorizontalFace(this Random random)
         {
 			int val = random.Next(0, 4);
