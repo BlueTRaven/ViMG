@@ -16,7 +16,7 @@ namespace ViMG.Cubes
         private const float RES = 16;
         private const float ONE_PIXEL = Cube.CUBE_SCALE / RES;
 
-        public CubeThorn() : base("thorn", new CubeFacingLayout(new RectangleF(32, 128, 16, 16), new RectangleF(32, 144, 16, 16)), Color.White, 1, 0)
+        public CubeThorn() : base("thorn", new CubeFacingLayout(new RectangleF(32, 128, 16, 16), new RectangleF(32, 144, 16, 16)), Color.White, 16, 4)
         {
             Name = "Thorn";
 

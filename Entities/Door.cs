@@ -57,6 +57,7 @@ namespace ViMG.Entities
             float rotation = GetFacingRotation();
 
             Matrix rot = Matrix.CreateRotationY(MathHelper.ToRadians(rotation));
+            Vector3 dir = Vector3.Transform(new Vector3(0, 0, 1), rot);
             Vector3 offsetMount = new Vector3(Cube.CUBE_SCALE * 0.05f, 0, 0);
             Vector3 offsetDoor = new Vector3(-Cube.CUBE_SCALE * 0.55f, 0, 0);
             Vector3 mountPos = Vector3.Transform(new Vector3(-Cube.CUBE_SCALE * 0.6f, 0, 0), rot);
@@ -87,6 +88,15 @@ namespace ViMG.Entities
             doorFilter.DisableCollision(1);
             world.PhysicsInfo.Properties[mountHandle] = new Physics.PhysicsProperties(mountFilter);
             world.PhysicsInfo.Properties[doorHandle] = new Physics.PhysicsProperties(doorFilter);
+
+            bool validFront = world.HousingTasker.DetermineIfValidHousing(world.ChunkManager, TrackedPositions.ElementAt(0) + 
+                new CubePosition((int)dir.X, (int)dir.Y, (int)dir.Z), out Housing housingFront);
+            bool validBack = world.HousingTasker.DetermineIfValidHousing(world.ChunkManager, TrackedPositions.ElementAt(0) - 
+                new CubePosition((int)dir.X, (int)dir.Y, (int)dir.Z), out Housing housingBack);
+
+            if (validFront || validBack)
+            {
+            }
         }
 
         public override void OnUnload()

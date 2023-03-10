@@ -70,6 +70,8 @@ namespace ViMG
 		private EntityManagerIO entIO;
 		private WorldLogic logic;
 
+		public HousingTasker HousingTasker;
+
 		public Color SkyColor = new Color(94, 107, 154);
 
 		public List<ChunkPosition> CulledChunkDrawPositions = new List<ChunkPosition>();
@@ -137,6 +139,8 @@ namespace ViMG
 			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
 			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
+
+			HousingTasker = new HousingTasker();
 		}
 
 		private void CreateMeshes(GraphicsDevice device)

@@ -22,6 +22,8 @@ namespace ViMG
             public List<PointOfInterest> pointsOfInterest;
 
             public WorldFlags flags;
+
+            public List<Housing> housings;
         }
         /*private struct WorldInfo
         {
@@ -149,6 +151,12 @@ namespace ViMG
             //              cx, cy, cz: cube x,y,z (CubePosition) of poi
             //              n: name (string) of point of interest
             //              w: weight (int)
+            //  hs: housing block
+            //      h:
+            //          s: size (int) of data block
+            //          n: number of elements
+            //      h: housing data blocks
+            //          See HousingTasker.cs for serialization info
 
             if (!Directory.Exists(SAVE_FOLDER + folderName))
                 Directory.CreateDirectory(SAVE_FOLDER + folderName);
@@ -191,6 +199,18 @@ namespace ViMG
 
                 SaveHelper.SaveBytesFlat(bytes, poisHeaderBlock.ToArray());
                 SaveHelper.SaveBytesFlat(bytes, poisBlock.ToArray());
+
+                /*List<byte> housingsDataBlock = new List<byte>();
+
+                foreach (Housing housing in info.housings)
+                    housing.OnSave(housingsDataBlock);
+
+                List<byte> housingsHeaderBlock = new List<byte>();
+                SaveHelper.SaveInt32(housingsHeaderBlock, housingsDataBlock.Count);
+                SaveHelper.SaveInt32(housingsHeaderBlock, info.housings.Count);
+
+                SaveHelper.SaveBytesFlat(bytes, housingsHeaderBlock);
+                SaveHelper.SaveBytesFlat(bytes, housingsDataBlock);*/
                 
                 fs.Write(bytes.ToArray());
             }
@@ -276,6 +296,28 @@ namespace ViMG
                             info.pointsOfInterest.Add(poi);
                         }
                     }
+
+                    /*if (version >= 4)
+                    {
+                        //  hs: housing block
+                        //      h:
+                        //          s: size (int) of data block
+                        //          n: number of elements
+                        //      h: housing data blocks
+                        //          See HousingTasker.cs for serialization info
+                        int size = reader.ReadInt32();
+                        int num = reader.ReadInt32();
+
+                        byte[] bytes = new byte[size];
+                        reader.Read(bytes, 0, size);
+
+                        int offset = 0;
+                        for (int i = 0; i < num; i++)
+                        {
+                            Housing housing = new Housing();
+                            housing.OnLoad(bytes, ref offset);
+                        }
+                    }*/
                 }
             }
             
