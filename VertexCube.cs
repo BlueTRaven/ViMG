@@ -17,8 +17,7 @@ namespace ViMG
 		public Vector3 Position;
 		public Color Color;
 		public Vector2 TextureCoordinate;
-		public Vector3 Normal;
-		public float AO;
+		public SharpDX.Half4 NormalAO;
 
 		public float AnimFrameTime;
 		public float NumAnimFrames;
@@ -29,8 +28,7 @@ namespace ViMG
 			Position = position;
 			Color = color;
 			TextureCoordinate = textureCoordinate;
-			Normal = normal;
-			AO = 1;
+			NormalAO = new SharpDX.Half4(normal.X, normal.Y, normal.Z, 1);
 
 			AnimFrameTime = 0;
 			NumAnimFrames = 0;
@@ -79,8 +77,7 @@ namespace ViMG
 			hashCode = hashCode * -1521134295 + EqualityComparer<Vector3>.Default.GetHashCode(Position);
 			hashCode = hashCode * -1521134295 + EqualityComparer<Color>.Default.GetHashCode(Color);
 			hashCode = hashCode * -1521134295 + EqualityComparer<Vector2>.Default.GetHashCode(TextureCoordinate);
-			hashCode = hashCode * -1521134295 + EqualityComparer<Vector3>.Default.GetHashCode(Normal);
-			hashCode = hashCode * -1521134295 + EqualityComparer<float>.Default.GetHashCode(AO);
+			hashCode = hashCode * -1521134295 + EqualityComparer<SharpDX.Half4>.Default.GetHashCode(NormalAO);
 			return hashCode;
 		}
 
@@ -91,11 +88,10 @@ namespace ViMG
 				new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
 				new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0),
 				new VertexElement(12 + 4, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
-				new VertexElement(12 + 4 + 8, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-				new VertexElement(12 + 4 + 8 + 12, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-				new VertexElement(12 + 4 + 8 + 12 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
-				new VertexElement(12 + 4 + 8 + 12 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
-				new VertexElement(12 + 4 + 8 + 12 + 4 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
+				new VertexElement(12 + 4 + 8, VertexElementFormat.HalfVector4, VertexElementUsage.Normal, 0),
+				new VertexElement(12 + 4 + 8 + 8, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
+				new VertexElement(12 + 4 + 8 + 8 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
+				new VertexElement(12 + 4 + 8 + 8 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
 			};
 			VertexDeclaration = new VertexDeclaration(elements);
 		}

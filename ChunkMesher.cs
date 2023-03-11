@@ -595,9 +595,9 @@ namespace ViMG
 				//pc =
 				CubePosition vertCubePos = CubePosition.FromWorldSpace(vertex.Position);
 
-				CubePosition nrm = new CubePosition(cubePos.X + (int)vertex.Normal.X,
-					cubePos.Y + (int)vertex.Normal.Y,
-					cubePos.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.CubeSpace);
+				CubePosition nrm = new CubePosition(cubePos.X + (int)vertex.NormalAO.X,
+					cubePos.Y + (int)vertex.NormalAO.Y,
+					cubePos.Z + (int)vertex.NormalAO.Z, CubePosition.CoordinateSpace.CubeSpace);
 
 				CubePosition t = new CubePosition();
 				CubePosition bt = new CubePosition();
@@ -606,17 +606,17 @@ namespace ViMG
 				int sY = vertCubePos.Y == cubePos.Y ? -1 : 1;
 				int sZ = vertCubePos.Z == cubePos.Z ? -1 : 1;
 
-				if (vertex.Normal.X != 0)
+				if (vertex.NormalAO.X != 0)
 				{
 					t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
 					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
 				}
-				else if (vertex.Normal.Y != 0)
+				else if (vertex.NormalAO.Y != 0)
 				{
 					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
 					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
 				}
-				else if (vertex.Normal.Z != 0)
+				else if (vertex.NormalAO.Z != 0)
 				{
 					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
 					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
@@ -661,7 +661,7 @@ namespace ViMG
 						ao /= 3;
 					}
 
-					vertex.AO = 1 - ao;
+					vertex.NormalAO.W = 1 - ao;
 					vertices[i] = vertex;
 				}
 			}

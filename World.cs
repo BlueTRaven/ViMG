@@ -51,9 +51,9 @@ namespace ViMG
 		public GameStateManager GameStateManager;
 		public Player player;
 
-		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
-		public int DrawDistanceVert = 6;
-		public int DrawRadius = 6;
+		public int DrawDistanceHoriz = 4;   //radius in chunks that we should be able to see
+		public int DrawDistanceVert = 4;
+		public int DrawRadius = 4;
 
 		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
@@ -136,14 +136,9 @@ namespace ViMG
 			LightManager = new LightManager(device);
 
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
+        }
 
-			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
-			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
-			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-		}
-
-		private void CreateMeshes(GraphicsDevice device)
+        private void CreateMeshes(GraphicsDevice device)
         {
 			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 			meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
@@ -686,7 +681,7 @@ namespace ViMG
 			}
 
 			ProjectileManager.Draw(device);
-			EntityManager.Draw(device, Main.CubeLitEffect);
+			EntityManager.Draw(device, null);
 
 			logic.Draw(this, device);
 

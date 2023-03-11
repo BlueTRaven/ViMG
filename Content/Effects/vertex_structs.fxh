@@ -7,12 +7,11 @@ struct VSInputCube
 	float4 Position : POSITION0;
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
-	float3 Normal : NORMAL0;
-	float AO : TEXCOORD1;
+	half4 NormalAO : NORMAL0;
 
-	float AnimFrameTime : TEXCOORD2;
-	float NumAnimFrames : TEXCOORD3;
-	float AnimFrameSize : TEXCOORD4;
+	float AnimFrameTime : TEXCOORD1;
+	float NumAnimFrames : TEXCOORD2;
+	float AnimFrameSize : TEXCOORD3;
 };
 
 struct VSOutputCube

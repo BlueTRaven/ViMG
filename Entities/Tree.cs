@@ -77,9 +77,6 @@ namespace ViMG.Entities
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
 			//Don't draw in depth buffer.
-			if (effect.Name == "Effects/depth")
-				return;
-
 			base.Draw(device, effect);
 
 			if (meshTrunk == null)

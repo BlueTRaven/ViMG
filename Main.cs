@@ -29,8 +29,6 @@ namespace ViMG
 		public static BasicEffect BasicEffect;
 		public static Effect VertexPositionColorDebugEffect;
 		public static Effect VertexPositionTextureDebugEffect;
-		public static Effect CubeLitEffect;
-		public static Effect CubeUnlitEffect;
 
 		//private World world;
 		private GameStateManager gameStateManager;
@@ -102,7 +100,7 @@ namespace ViMG
 		public const bool MULTITHREADING = true;
 		public const bool MULTITHREAD_BROAD_PHASE = MULTITHREADING && true;
 		public const bool MULTITHREAD_LOADING = MULTITHREADING && true;
-		public const bool MULTITHREAD_MESHING = MULTITHREADING && false;
+		public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
 		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
 
 		public static bool Exit = false;
@@ -259,31 +257,12 @@ namespace ViMG
 			batch = new SpriteBatch(GraphicsDevice);
 			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
 
-			CubeLitEffect = assetsManager.GetAsset<Effect>("cube_lit");
-			CubeUnlitEffect = assetsManager.GetAsset<Effect>("cube_unlit");
-			FogManager = new FogManager(CubeLitEffect, CubeUnlitEffect);
-
-			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
-			CubeLitEffect.Parameters["AmbientStrength"].SetValue(0f);
-			CubeLitEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["SpecularStrength"].SetValue(1f);
-			CubeLitEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["EnableFog"].SetValue(false);
-
-			CubeLitEffect.Parameters["EnableShadows"].SetValue(ENABLE_SHADOWS);
-			//CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
-
 			VertexPositionColorDebugEffect = assetsManager.GetAsset<Effect>("debug_vpc");
 			VertexPositionColorDebugEffect.Name = "VertexPositionColorDebugEffect";
 			VertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
 			VertexPositionTextureDebugEffect = assetsManager.GetAsset<Effect>("debug_vpt");
 			VertexPositionTextureDebugEffect.Name = "VertexPositionTextureDebugEffect";
 			VertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
-
-			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-
-			//ui = new MenuMain(world);
 		}
 
 		protected override void Update(GameTime gt)
@@ -341,10 +320,6 @@ namespace ViMG
 
 			Renderer.Update(deltaTime);
 
-			CubeLitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
-			CubeUnlitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
-			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
-
 			if (IsActive && !paused && !MouseControl)
 				Options.CenterMouse();
 		}
@@ -361,7 +336,6 @@ namespace ViMG
 			Matrix view = camera.GetViewMatrix();
 
 			WVP.SetView(view);
-			CubeLitEffect.Parameters["View"].SetValue(view);
 
 			BasicEffect.View = view;
 
