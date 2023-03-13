@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 
 namespace ViMG
 {
@@ -96,11 +97,20 @@ namespace ViMG
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
             CollisionMeshInfo meshInfo = meshes[i];
 
+            if (!Main.DO_COLLISION_MESHING)
+            {
+                meshInfo.meshVersion = meshInfo.version;
+
+                meshes[i] = meshInfo;
+
+                return;
+            }
+
             int cpi = 0;
             Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
             Span<ushort> ids = stackalloc ushort[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
             Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-            ChunkMesher.ChunkMeshData data = new ChunkMesher.ChunkMeshData(positions, ids, faces);
+            ChunkMeshData data = new ChunkMeshData(positions, ids, faces);
 
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {

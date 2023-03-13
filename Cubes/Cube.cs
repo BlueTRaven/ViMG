@@ -548,59 +548,6 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
 		}
 
-		public static SimpleMesh<VertexCube, int> MakeCubeWithCorrectedTextureCoordinates(GraphicsDevice device, Color color, Texture2D texture)
-		{
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
-
-			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(CUBE_SCALE);
-
-			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
-			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
-			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
-			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
-			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
-			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
-			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
-			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
-
-			MakeQuad(l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, 1), color, vertices, indices, texture);
-
-			MakeQuad(r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(-1, 0, 0), color, vertices, indices, texture);
-
-			MakeQuad(r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, -1), color, vertices, indices, texture);
-
-			MakeQuad(l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(1, 0, 0), color, vertices, indices, texture);
-
-			MakeQuad(l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, 1, 0), color, vertices, indices, texture);
-
-			MakeQuad(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices, texture);
-
-			return new SimpleMesh<VertexCube, int>(device, vertices, indices, texture);
-		}
-
-		private static void MakeQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, Texture2D texture)
-		{
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			float xmin = 0;
-			float xmax = 1f / ((float)texture.Width / 16f);
-			float ymin = 0;
-			float ymax = 1f / ((float)texture.Height / 16f);
-
-			vertices.Add(new VertexCube(a, color, new Vector2(xmin, ymin), normal));
-			vertices.Add(new VertexCube(b, color, new Vector2(xmax, ymin), normal));
-			vertices.Add(new VertexCube(c, color, new Vector2(xmax, ymax), normal));
-			vertices.Add(new VertexCube(d, color, new Vector2(xmin, ymax), normal));
-		}
-
 		public static Item GetItem(Cube cube)
         {
 			return Main.Registry.ItemRegistry.Get("item_" + cube.Identifier);

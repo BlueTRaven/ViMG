@@ -99,10 +99,12 @@ namespace ViMG
 		public const bool ENABLE_ENT_SPAWNING = true;
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
+		public const bool DO_RENDER_MESHING = true;
+		public const bool DO_COLLISION_MESHING = false;
 		public const bool MULTITHREADING = true;
 		public const bool MULTITHREAD_BROAD_PHASE = MULTITHREADING && true;
 		public const bool MULTITHREAD_LOADING = MULTITHREADING && true;
-		public const bool MULTITHREAD_MESHING = MULTITHREADING && false;
+		public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
 		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
 
 		public static bool Exit = false;

@@ -10,7 +10,9 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.Cubes;
+using ViMG.Entities;
 
 namespace ViMG
 {
@@ -29,13 +31,15 @@ namespace ViMG
 		private struct ChunkMeshBatch
 		{
 			public ChunkMeshInfo[] cmis;
+			public CopiedChunkData[] copies;
 			public int num;
 
 			public readonly bool isUsed;
 
-			public ChunkMeshBatch(ChunkMeshInfo[] cmis)
+			public ChunkMeshBatch(ChunkMeshInfo[] cmis, CopiedChunkData[] copies)
 			{
 				this.cmis = cmis;
+				this.copies = copies;
 				this.num = 0;
 
 				isUsed = true;
@@ -99,23 +103,9 @@ namespace ViMG
 			{
 				return meshes.GetHashCode() + version;
 			}
-		};
+		}
 
-		public ref struct ChunkMeshData
-        {
-			public Span<CubePosition> positions;
-			public Span<ushort> ids;
-			public Span<MeshHelper.CubeFace> faces;
-
-			public ChunkMeshData(Span<CubePosition> positions, Span<ushort> ids, Span<MeshHelper.CubeFace> faces)
-            {
-				this.positions = positions;
-				this.ids = ids;
-				this.faces = faces;
-            }
-        }
-
-		private readonly GraphicsDevice device;
+        private readonly GraphicsDevice device;
         private readonly int sizeInChunks;
         private ChunkMeshBatch currentBatch;
 		private Task<ChunkBatchMeshTaskResult>[] activeChunkMeshBatchTasks = new Task<ChunkBatchMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
@@ -158,12 +148,12 @@ namespace ViMG
 		public void Update(World world, ChunkManager manager)
         {
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				EnqueueBatchLocking(world, ref currentBatch);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -177,7 +167,9 @@ namespace ViMG
 				if (c.version != c.meshVersion || !c.hasMeshes)
 				{
 					//place into the current batch to be meshed later.
-					currentBatch.cmis[currentBatch.num++] = c;
+					currentBatch.cmis[currentBatch.num] = c;
+					currentBatch.copies[currentBatch.num] = MakeCopy(world, position);
+					currentBatch.num++;
 				}
 			}
 
@@ -185,8 +177,8 @@ namespace ViMG
 			//As there might be frames where we don't fully fill it, in which case it could wait a potentially arbitrary amount of time.
 			if (currentBatch.num > 0)
 			{
-				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				EnqueueBatchLocking(world, ref currentBatch);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			StartActiveTasks(world);
@@ -197,8 +189,8 @@ namespace ViMG
         {
 			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
 
-			EnqueueBatch(world, ref currentBatch);
-			currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+            EnqueueBatch(world, ref currentBatch);
+			currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			int max = chunkMeshBatchTasks.Count;
 			world.GameStateManager.TheIsland.ProgressMax = max;
@@ -327,28 +319,132 @@ namespace ViMG
 		public void BatchMeshChunk(World world, ChunkPosition position)
 		{
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
 
 			if (c.version != c.meshVersion || !c.hasMeshes)
-				currentBatch.cmis[currentBatch.num++] = c;
+			{
+				currentBatch.cmis[currentBatch.num] = c;
+				currentBatch.copies[currentBatch.num] = MakeCopy(world, position);
+				currentBatch.num++;
+			}
 		}
 
-		private void EnqueueBatch(World world, ref ChunkMeshBatch batch)
+		private CopiedChunkData MakeCopy(World world, ChunkPosition position)
 		{
-			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchTaskFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
+			ProfilingHelper.Start("Making copy of chunk...");
+
+            CubePosition basePosition = position.InCubeSpace();
+			CopiedChunkData copied = new CopiedChunkData()
+			{
+				ids = new ushort[CopiedChunkData.SIZE],
+				entityMeshingDatas = new object[CopiedChunkData.SIZE],
+				basePosition = basePosition,
+            };
+
+            for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
+            {
+                for (int y = -1; y <= Chunk.CHUNK_SIZE; y++)
+                {
+                    for (int z = -1; z <= Chunk.CHUNK_SIZE; z++)
+                    {
+                        Util.ThreeDToOneD(new ValuePoint3D(x + 1, y + 1, z + 1), new ValuePoint3D(CopiedChunkData.WHD), out int i);
+                        CubePosition pos = basePosition + new CubePosition(x, y, z);
+
+						if (world.ChunkManager.IsInWorldBounds(pos))
+						{
+							copied.ids[i] = world.ChunkManager.InitializerView.GetId(pos);
+                            Entities.Entity tracking = world.EntityManager.GetEntityTrackingPosition(pos).Get();
+
+							if (tracking is ICubeTracker tracker)
+								copied.entityMeshingDatas[i] = tracker.GetMeshingData(); 
+						}
+                    }
+                }
+            }
+
+			ProfilingHelper.End("Done.");
+
+			return copied;
+        }
+
+        private void EnqueueBatch(World world, ref ChunkMeshBatch batch)
+        {
+            Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
+
+            chunkMeshBatchTasks.EnqueueWithoutSorting((batch, task));
+        }
+
+        private void EnqueueBatchLocking(World world, ref ChunkMeshBatch batch)
+		{
+			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(LockingMeshBatchFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
 
 			chunkMeshBatchTasks.EnqueueWithoutSorting((batch, task));
 		}
 
-		private static ChunkBatchMeshTaskResult MeshBatchTaskFn(object obj)
+        private static ChunkBatchMeshTaskResult MeshBatchFn(object obj)
+        {
+            ChunkBatchMeshTaskState state = (ChunkBatchMeshTaskState)obj;
+
+            Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+            Span<ushort> ids = stackalloc ushort[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+            Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+            ChunkMeshData data = new ChunkMeshData(positions, ids, faces);
+
+            for (int i = 0; i < state.batch.num; i++)
+            {
+                ChunkMeshInfo cmi = state.batch.cmis[i];
+                int cpi = 0;
+                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                {
+                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                    {
+                        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                        {
+                            CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+                            pos = pos.InCubeSpace(cmi.position);
+
+                            positions[cpi] = pos;
+                            cpi++;
+                        }
+                    }
+                }
+
+                const int NUM_SPLITS = 1;
+                int c = cpi / NUM_SPLITS;
+
+                for (int k = 0; k < NUM_SPLITS; k++)
+                {
+                    int offset = c * k;
+                    state.manager.InitializerView.GetIds(positions, ids, offset, c);
+                    state.manager.InitializerView.GetFaces(positions, faces, offset, c);
+                }
+
+                cmi.meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
+
+                (List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque);
+
+                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
+                cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Transparent));
+                cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly));
+                cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
+                cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air));
+
+                state.batch.cmis[i] = cmi;
+                state.batch.cmis[i].hasMeshes = true;
+            }
+
+            return new ChunkBatchMeshTaskResult(state.batch.cmis, state.batch.num);
+        }
+
+        private static ChunkBatchMeshTaskResult LockingMeshBatchFn(object obj)
 		{
 			ChunkBatchMeshTaskState state = (ChunkBatchMeshTaskState)obj;
 
@@ -388,17 +484,16 @@ namespace ViMG
 
 				cmi.meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 
-				(List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque);
+				(List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Opaque, true);
 
 				cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
-                cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Transparent));
-                cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly));
+                cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, 
+					state.world, state.manager, cmi.position, Cube.RenderPass.Transparent, true));
+                cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, 
+					state.world, state.manager, cmi.position, Cube.RenderPass.DepthOnly, true));
                 cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
-                cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, state.world, state.manager, cmi.position, Cube.RenderPass.Air));
-
-                /*if (opaques.verts.Count > 0)
-                    cmi.collidableMesh = state.mesher.GenerateCollidableMesh(state.world, opaques.verts, opaques.indices);
-                else cmi.collidableMesh = default;*/
+                cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(in data, 
+					state.world, state.manager, cmi.position, Cube.RenderPass.Air, true));
 
                 state.batch.cmis[i] = cmi;
 				state.batch.cmis[i].hasMeshes = true;
@@ -517,7 +612,7 @@ namespace ViMG
 			public MeshHelper.CubeFace faces;
 		}
 		
-		public (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass)
+		public (List<VertexCube> vertices, List<int> indices) GenerateChunk(in ChunkMeshData data, World world, ChunkManager manager, ChunkPosition position, Cube.RenderPass pass, bool threaded = false)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -556,7 +651,7 @@ namespace ViMG
 
 						int count = vertices.Count - oldCount;
 
-						BakeAO(manager, pos, oldCount, oldCount + count, vertices);
+						BakeAO(manager, pos, oldCount, oldCount + count, vertices, threaded);
 					}
 				}
 				else if (pass == Cube.RenderPass.Air)
@@ -581,7 +676,7 @@ namespace ViMG
 			return (vertices, indices);
 		}
 
-		private static void BakeAO(ChunkManager manager, CubePosition pos, int start, int end, List<VertexCube> vertices)
+		private static void BakeAO(ChunkManager manager, CubePosition pos, int start, int end, List<VertexCube> vertices, bool threaded = false)
         {
 			Span<CubePosition> checkPositions = stackalloc CubePosition[4];
 			Span<ushort> checkIds = stackalloc ushort[4];
@@ -626,7 +721,9 @@ namespace ViMG
 				checkPositions[1] = nrm + t + bt;
 				checkPositions[2] = nrm + t;
 				checkPositions[3] = nrm + bt;
-				manager.ThreadedView.GetIds(checkPositions, checkIds, ThreadedCubeView.SafetyCheck.InWorldBounds);
+				if (threaded)
+					manager.ThreadedView.GetIds(checkPositions, checkIds);
+				else manager.InitializerView.GetIds(checkPositions, checkIds);
 
 				int top = checkIds[0];
 				int corner = checkIds[1];
@@ -666,79 +763,5 @@ namespace ViMG
 				}
 			}
 		}
-
-		/*public static void MakeCubeVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 min, Vector3 max, MeshHelper.CubeFace faces, Cube cube, List<VertexCube> vertices, List<int> indices)
-		{
-			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
-			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
-			Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
-			Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
-			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
-			Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
-			Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
-			Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
-
-			if ((faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
-				MakeQuadVerts(pass, world, cp, l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1), MeshHelper.CubeFace.FRONT, cube, vertices, indices);
-
-			if ((faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
-				MakeQuadVerts(pass, world, cp, r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0), MeshHelper.CubeFace.RIGHT, cube, vertices, indices);
-
-			if ((faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
-				MakeQuadVerts(pass, world, cp, r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1), MeshHelper.CubeFace.BACK, cube, vertices, indices);
-
-			if ((faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
-				MakeQuadVerts(pass, world, cp, l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0), MeshHelper.CubeFace.LEFT, cube, vertices, indices);
-
-			if ((faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
-				MakeQuadVerts(pass, world, cp, l_t_f, r_t_f, r_t_n, l_t_n, new Vector3(0, -1, 0), MeshHelper.CubeFace.DOWN, cube, vertices, indices);
-
-			if ((faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
-				MakeQuadVerts(pass, world, cp, r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, 1, 0), MeshHelper.CubeFace.UP, cube, vertices, indices);
-		}*/
-
-		/*public static void MakeQuadVerts(Cube.RenderPass pass, World world, CubePosition cp, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, MeshHelper.CubeFace face, Cube cube, 
-			List<VertexCube> vertices, List<int> indices)
-		{
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			const int textureWidth = 1024;
-			const int textureHeight = 1024;
-
-			const float cubeSideWidth = 1f / textureWidth;
-			const float cubeSideHeight = 1f / textureHeight;
-
-			RectangleF sourceRect = cube.GetSourceRect(pass, world, cp, face);
-
-			Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
-			Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
-
-			vertices.Add(new VertexCube(a, cube.GetTintColor(), new Vector2(uvFar.X, uvFar.Y), normal));
-			vertices.Add(new VertexCube(b, cube.GetTintColor(), new Vector2(uvNear.X, uvFar.Y), normal));
-			vertices.Add(new VertexCube(c, cube.GetTintColor(), new Vector2(uvNear.X, uvNear.Y), normal));
-			vertices.Add(new VertexCube(d, cube.GetTintColor(), new Vector2(uvFar.X, uvNear.Y), normal));
-
-			var anim = cube.GetAnimation(face, pass, world, cp);
-
-			if (anim.Valid)
-			{
-				for (int i = offset; i < 4; i++)
-				{
-					var vertex = vertices[i];
-
-					vertex.AnimFrameTime = anim.FrameTime;
-					vertex.NumAnimFrames = anim.NumFrames;
-					vertex.AnimFrameSize = anim.FrameWidth;
-
-					vertices[i] = vertex;
-				}
-			}
-		}*/
 	}
 }

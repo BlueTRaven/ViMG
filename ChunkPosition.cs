@@ -26,6 +26,11 @@ namespace ViMG
 			this.Z = z;
 		}
 
+		public CubePosition InCubeSpace()
+		{
+			return new CubePosition(X * Chunk.CHUNK_SIZE, Y * Chunk.CHUNK_SIZE, Z * Chunk.CHUNK_SIZE);
+		}
+
 		public Vector3 InWorldSpace()
 		{
 			return new Vector3(X, Y, Z) * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;

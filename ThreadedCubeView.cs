@@ -23,10 +23,10 @@ namespace ViMG
 
         private ChunkManager.GetCubeIdDel getCubeId;
         private ChunkManager.GetCubeDel getCube;
-        private ChunkManager.GetCachedFacesDel getCachedFaces;
+        private ChunkManager.GetFacesDel getCachedFaces;
         private ChunkManager.SetCubeDel setCube;
 
-        public ThreadedCubeView(ChunkManager manager, ChunkLoadManager loadManager, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetCachedFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
+        public ThreadedCubeView(ChunkManager manager, ChunkLoadManager loadManager, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
         {
             this.manager = manager;
             this.loadManager = loadManager;

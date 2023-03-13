@@ -11,5 +11,7 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player);
 
 		public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId);
+
+		public object GetMeshingData() { return null; }
 	}
 }

@@ -258,7 +258,7 @@ namespace ViMG
             return Mesher.GetMesh(position, pass);
         }
 
-        public delegate MeshHelper.CubeFace GetCachedFacesDel(CubePosition position);
+        public delegate MeshHelper.CubeFace GetFacesDel(CubePosition position);
         private MeshHelper.CubeFace GetCachedFaces(CubePosition position)
         {
             return GetClearSides(position);
