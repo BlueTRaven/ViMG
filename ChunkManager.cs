@@ -380,8 +380,6 @@ namespace ViMG
 
         public delegate Optional<Cube> GetCubeDel(CubePosition position);
         //Really minor cache speedup
-        private int cachedId;
-        private Cube cachedCube;
         private Optional<Cube> GetCube(CubePosition position)
         {
             if (!IsInWorldBounds(position))
@@ -389,17 +387,7 @@ namespace ViMG
 
             ushort id = GetCubeId(position);
 
-            Cube cube;
-            if (id == cachedId)
-                cube = cachedCube;
-            else
-            {
-                cachedCube = Main.Registry.CubeRegistry.Get(id);
-                cube = cachedCube;
-                cachedId = id;
-            }
-
-            return new Optional<Cube>(cube);
+            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
         }
 
         public void Dispose()
