@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Recipes;
@@ -27,38 +28,36 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (world != null)
+			if (data.valid)
 			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
-				if (ent.GetOrDefault(null) != null)
+				var meshingData = data.GetEntityMeshingData(parameters.position);
+				if (meshingData != null)
                 {
-					EntityFurnace furnace = ent.Get() as EntityFurnace;
-
-					if (face == furnace.Facing)
+					EntityFurnace.MeshingData castedMeshingData = (EntityFurnace.MeshingData)meshingData;
+					if (face == castedMeshingData.facing)
 						return new RectangleF(176, 32, 16, 16);
                 }
 			}
 
-			return base.GetSourceRect(pass, world, parameters, face);
+			return base.GetSourceRect(pass, data, parameters, face);
         }
 
-        public override CubeAnimation GetAnimation(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (world != null)
-			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
-				if (ent.GetOrDefault(null) != null)
-				{
-					EntityFurnace furnace = ent.Get() as EntityFurnace;
-
-					if (face == furnace.Facing)
-						return new CubeAnimation(0.125f, 3, 16);
+            if (data.valid)
+            {
+                var meshingData = data.GetEntityMeshingData(parameters.position);
+                if (meshingData != null)
+                {
+                    EntityFurnace.MeshingData castedMeshingData = (EntityFurnace.MeshingData)meshingData;
+                    if (face == castedMeshingData.facing)
+                        return new CubeAnimation(0.125f, 3, 16);
 				}
 			}
 
-			return base.GetAnimation(pass, world, parameters, face);
+			return base.GetAnimation(pass, data, parameters, face);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

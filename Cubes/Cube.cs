@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
@@ -250,12 +251,12 @@ namespace ViMG.Cubes
 			Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
+		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
 		{
 			return sourceRect;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
 		{
 			if (cubeFaceLookup[(int)face] != -1)
 			{
@@ -285,7 +286,7 @@ namespace ViMG.Cubes
 			return RectangleF.Empty;
 		}
 
-		public virtual CubeAnimation GetAnimation(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			return new CubeAnimation();
         }
@@ -356,7 +357,7 @@ namespace ViMG.Cubes
 					positionWS = new Vector3()
 				};
 
-				MakeCubeVerts(RenderPass.Opaque, null, parameters, vertices, indices);
+				MakeCubeVerts(RenderPass.Opaque, default, parameters, vertices, indices);
 
 				if (vertices.Count > 0)
 					mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
@@ -394,28 +395,28 @@ namespace ViMG.Cubes
 			return true;
         }
 
-		public virtual void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+		public virtual void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
         {
 			if ((parameters.faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
-				MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices);
+				MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices);
 
             if ((parameters.faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
-                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.RIGHT), MeshHelper.CubeFace.RIGHT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.RIGHT), MeshHelper.CubeFace.RIGHT, vertices, indices);
 
             if ((parameters.faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
-                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.BACK), MeshHelper.CubeFace.BACK, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.BACK), MeshHelper.CubeFace.BACK, vertices, indices);
 
             if ((parameters.faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
-                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.LEFT), MeshHelper.CubeFace.LEFT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.LEFT), MeshHelper.CubeFace.LEFT, vertices, indices);
 
             if ((parameters.faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
-                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.DOWN), MeshHelper.CubeFace.DOWN, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.DOWN), MeshHelper.CubeFace.DOWN, vertices, indices);
 
             if ((parameters.faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
-                MakeCubeFaceVerts(pass, world, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.UP), MeshHelper.CubeFace.UP, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.UP), MeshHelper.CubeFace.UP, vertices, indices);
         }
 
-		public virtual void MakeCubeFaceVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, ChunkMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, List<VertexCube> vertices, List<int> indices)
+		public virtual void MakeCubeFaceVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, ChunkMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, List<VertexCube> vertices, List<int> indices)
 		{
             int offset = vertices.Count;
             indices.Add(offset + 0);
@@ -431,7 +432,7 @@ namespace ViMG.Cubes
             const float cubeSideWidth = 1f / textureWidth;
             const float cubeSideHeight = 1f / textureHeight;
 
-            RectangleF sourceRect = GetSourceRect(pass, world, parameters, face);
+            RectangleF sourceRect = GetSourceRect(pass, data, parameters, face);
 
             Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
             Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
@@ -441,7 +442,7 @@ namespace ViMG.Cubes
             vertices.Add(new VertexCube(quad.c, GetTintColor(), new Vector2(uvNear.X, uvNear.Y), quad.n));
             vertices.Add(new VertexCube(quad.d, GetTintColor(), new Vector2(uvFar.X, uvNear.Y), quad.n));
 
-            var anim = GetAnimation(pass, world, parameters, face);
+            var anim = GetAnimation(pass, data, parameters, face);
 
             if (anim.Valid)
             {

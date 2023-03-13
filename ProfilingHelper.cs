@@ -89,8 +89,13 @@ namespace ViMG
                 median = (intervals[intervals.Count / 2] + intervals[intervals.Count / 2 - 1]) / 2.0;
             else median = intervals[intervals.Count / 2];
 
-            Console.WriteLine("{0} Performed batch of {1} in {2:0.00} seconds. Min: {3:0.0000}s, max: {4:0.0000}s, mean: {5:0.0000}s, median: {6:0.0000}s", 
-                log, b.count, b.watch.Elapsed.TotalSeconds, min, max, mean, median);
+            Console.WriteLine("{0} Performed batch of {1} in {2:0.00} seconds.\n" +
+                "Min: {3:0.0000}s ({7:0.0000} frames)\n" +
+                "Max: {4:0.0000}s ({8:0.0000} frames)\n" +
+                "Mean: {5:0.0000}s ({9:0.0000} frames)\n" +
+                "Median: {6:0.0000}s ({10:0.0000} frames)", 
+                log, b.count, b.watch.Elapsed.TotalSeconds, min, max, mean, median, 
+                min / Main.FIXED_STEP, max / Main.FIXED_STEP, mean / Main.FIXED_STEP, median / Main.FIXED_STEP);
         }
     }
 }

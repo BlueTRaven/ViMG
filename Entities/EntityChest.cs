@@ -5,16 +5,20 @@ using ViMG.UIs;
 
 namespace ViMG.Entities
 {
-	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(2, 1)]
 	public class EntityChest : Entity, ICubeTracker
 	{
+		public struct MeshingData
+		{
+            public MeshHelper.CubeFace facing;
+        }
 		public CubePosition TrackedPosition { get; private set; }
 
 		private Inventory inventory;
 		private int rows, columns;
-        private MeshHelper.CubeFace facing;
-		public MeshHelper.CubeFace Facing => facing;
+		private MeshingData meshingData;
+		public MeshHelper.CubeFace Facing => meshingData.facing;
 
         public EntityChest()
         {
@@ -27,7 +31,10 @@ namespace ViMG.Entities
 			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
-            this.facing = facing;
+			meshingData = new MeshingData()
+			{
+				facing = facing
+			};
 
             inventory = new Inventory(rows * columns);
 		}
@@ -39,8 +46,11 @@ namespace ViMG.Entities
 			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
-            this.facing = facing;
-            this.inventory = inventory;
+            meshingData = new MeshingData()
+            {
+                facing = facing
+            };
+			this.inventory = inventory;
 		}
 
 		public override void Initialize(World world)
@@ -75,7 +85,7 @@ namespace ViMG.Entities
 			SaveHelper.SaveInt32(saveBytes, rows);
 			SaveHelper.SaveInt32(saveBytes, columns);
 
-			SaveHelper.SaveInt32(saveBytes, (int)facing);
+			SaveHelper.SaveInt32(saveBytes, (int)meshingData.facing);
 
 			inventory.Save(saveBytes);
 		}
@@ -93,9 +103,14 @@ namespace ViMG.Entities
 			columns = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			if (version >= 2)
-				facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
+                meshingData.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 
 			inventory = Inventory.Load(loadBytes, ref index);
 		}
-	}
+
+        public object GetMeshingData() 
+		{
+			return meshingData; 
+		}
+    }
 }

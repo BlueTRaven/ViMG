@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.GameStates;
 
 namespace ViMG.Cubes
@@ -39,11 +40,11 @@ namespace ViMG.Cubes
             player.world.EntityManager.Add(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
         {
             chains ??= Main.Registry.CubeRegistry.Get("ceiling_chains");
 
-            Cube aboveCube = world.ChunkManager.ThreadedView.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != this)
@@ -52,7 +53,7 @@ namespace ViMG.Cubes
                     return new RectangleF(80, 80, 16, 16);
                 else return new RectangleF(96, 80, 16, 16);
             }
-            else return base.GetSourceRect(pass, world, parameters);
+            else return base.GetSourceRect(pass, data, parameters);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)
@@ -60,10 +61,10 @@ namespace ViMG.Cubes
             return pass == RenderPass.Opaque;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
         {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, Vector3.One, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices);
         }
     }
 }

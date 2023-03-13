@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.GameStates;
 using ViMG.Items;
 
@@ -25,23 +26,23 @@ namespace ViMG.Cubes
             itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1));
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (world == null)
-                return base.GetSourceRect(pass, world, parameters, face);
+            if (!data.valid)
+                return base.GetSourceRect(pass, data, parameters, face);
 
             //we're meshing one of the sides.
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is the same
-                if (world.ChunkManager.ThreadedView.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
+                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
                 {
                     //use the stone texture for the sides
                     return new RectangleF(16, 0, 16, 16);
                 }
             }
 
-            return base.GetSourceRect(pass, world, parameters, face);
+            return base.GetSourceRect(pass, data, parameters, face);
         }
 
         private Cube mushroomStem;

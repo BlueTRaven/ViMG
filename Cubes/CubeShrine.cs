@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
+using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
@@ -40,23 +41,24 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(shrine);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
         {
-            if (world != null)
+            if (data.valid)
             {
-                var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
-                if (ent.HasValue() && ent.Get() is EntityShrine shrine)
+                var meshingData = data.GetEntityMeshingData(parameters.position);
+                if (meshingData != null)
                 {
-                    if (shrine.CooldownTimer > 0)
+                    EntityShrine.MeshingData castedMeshingData = (EntityShrine.MeshingData)meshingData;
+                    if (castedMeshingData.cooldownTimer > 0)
                     {
-                        RectangleF sourceRect = base.GetSourceRect(pass, world, parameters);
+                        RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
                         sourceRect.y += 16;
                         return sourceRect;
                     }
                 }
             }
 
-            return base.GetSourceRect(pass, world, parameters);
+            return base.GetSourceRect(pass, data, parameters);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

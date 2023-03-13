@@ -83,9 +83,6 @@ namespace ViMG.Entities
 		private int sizeInCubes;
 		private Dictionary<ChunkPosition, CubeTrackers> cubeTrackers = new Dictionary<ChunkPosition, CubeTrackers>();
 
-		//private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
-		//private Dictionary<CubePosition, IMultiCubeTracker> multiCubeTrackers = new Dictionary<CubePosition, IMultiCubeTracker>();
-
 		private World world;
 
 		public ulong GetUniqueId()

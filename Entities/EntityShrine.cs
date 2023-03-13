@@ -11,6 +11,11 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class EntityShrine : Entity, ICubeTracker
     {
+        public struct MeshingData
+        {
+            public float cooldownTimer;
+        }
+
         public CubePosition TrackedPosition { get; private set; }
         private Buff buff;
 
@@ -89,6 +94,14 @@ namespace ViMG.Entities
             cooldownTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
 
             buff = Main.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
+        }
+
+        public object GetMeshingData() 
+        {
+            return new MeshingData()
+            {
+                cooldownTimer = cooldownTimer
+            };
         }
     }
 }

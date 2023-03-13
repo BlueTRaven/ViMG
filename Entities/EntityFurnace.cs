@@ -11,6 +11,11 @@ namespace ViMG.Entities
 	[EntityMeta(2, 0)]
 	public class EntityFurnace : Entity, ICubeTracker
 	{
+		public struct MeshingData
+		{
+            public MeshHelper.CubeFace facing;
+        }
+
 		public CubePosition TrackedPosition 
 		{
 			get;
@@ -18,7 +23,7 @@ namespace ViMG.Entities
 		}
 
 		private Inventory inventory;
-		public MeshHelper.CubeFace Facing;
+		public MeshingData MeshingDataInstance;
 
 		private float craftTimer;
 		private int light = -1;
@@ -31,7 +36,10 @@ namespace ViMG.Entities
 		public EntityFurnace(CubePosition position, MeshHelper.CubeFace facing)
 		{
 			this.TrackedPosition = position;
-			this.Facing = facing;
+			MeshingDataInstance = new MeshingData()
+			{
+				facing = facing
+			};
 
 			Position = position.InWorldSpace();
 
@@ -88,7 +96,7 @@ namespace ViMG.Entities
 			base.OnSave(saveBytes);
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
-			SaveHelper.SaveInt32(saveBytes, (int)Facing);
+			SaveHelper.SaveInt32(saveBytes, (int)MeshingDataInstance.facing);
 			inventory.Save(saveBytes);
 		}
 
@@ -101,10 +109,15 @@ namespace ViMG.Entities
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace();
 
-			//if (version == 2)
-				Facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
+            //if (version == 2)
+            MeshingDataInstance.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 			
 			inventory = Inventory.Load(loadBytes, ref index);
 		}
-	}
+
+        public object GetMeshingData() 
+		{
+			return MeshingDataInstance; 
+		}
+    }
 }

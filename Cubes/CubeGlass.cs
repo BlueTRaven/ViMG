@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.Items;
 
 namespace ViMG.Cubes
@@ -16,20 +17,18 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.TransparentOccludesSiblings;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            if (pass == RenderPass.Transparent)
-                base.MakeCubeVerts(pass, world, parameters, vertices, indices);
+            return pass == RenderPass.Transparent || pass == RenderPass.Opaque;
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
         {
             if (pass == RenderPass.Transparent)
                 return new RectangleF(0, 32, 16, 16);
-            //else if (pass == RenderPass.Transparent)
-                //return new RectangleF(16, 32, 16, 16);
-
-            return new RectangleF(24, 36, 0, 0);
+            else if (pass == RenderPass.Opaque)
+                return new RectangleF(24, 36, 0, 0);
+            else return new RectangleF();
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

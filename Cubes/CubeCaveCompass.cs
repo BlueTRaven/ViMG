@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.Entities;
 
 namespace ViMG.Cubes
@@ -23,10 +24,14 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(new EntityCaveCompass(position));
         }
 
-        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            if (pass == RenderPass.Transparent)
-                DrawHelper3D.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, world, parameters), CUBE_SCALE / 2f);
+            return pass == RenderPass.Transparent;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
+            DrawHelper3D.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, data, parameters), CUBE_SCALE / 2f);
             //base.MakeVerts(pass, world, pos, min, max, visual, cube, vertices, indices);
         }
     }

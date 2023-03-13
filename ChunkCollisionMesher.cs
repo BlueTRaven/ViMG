@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
+using ViMG.Cubes;
 
 namespace ViMG
 {
@@ -92,6 +93,33 @@ namespace ViMG
             }
         }
 
+        private CopiedChunkData MakeCopy(World world, ChunkPosition position)
+        {
+            CubePosition basePosition = position.InCubeSpace();
+            CopiedChunkData copied = new CopiedChunkData(basePosition);
+
+            Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
+            Span<ushort> resultIds = stackalloc ushort[CopiedChunkData.SIZE];
+
+            for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
+            {
+                for (int y = -1; y <= Chunk.CHUNK_SIZE; y++)
+                {
+                    for (int z = -1; z <= Chunk.CHUNK_SIZE; z++)
+                    {
+                        Util.ThreeDToOneD(new ValuePoint3D(x + 1, y + 1, z + 1), new ValuePoint3D(CopiedChunkData.WHD), out int i);
+                        CubePosition pos = basePosition + new CubePosition(x, y, z);
+                        queryPositions[i] = pos;
+                    }
+                }
+            }
+
+            world.ChunkManager.InitializerView.GetIds(queryPositions, copied.ids);
+            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.entityMeshingDatas);
+
+            return copied;
+        }
+
         public void MeshChunk(World world, ChunkPosition position)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
@@ -106,12 +134,12 @@ namespace ViMG
                 return;
             }
 
-            int cpi = 0;
-            Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-            Span<ushort> ids = stackalloc ushort[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-            Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-            ChunkMeshData data = new ChunkMeshData(positions, ids, faces);
+            CopiedChunkData copy = MakeCopy(world, position);
 
+            Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+            Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+
+            int cpi = 0;
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
@@ -119,7 +147,7 @@ namespace ViMG
                     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
                         CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-                        pos = pos.InCubeSpace(position);
+                        //pos = pos.InCubeSpace(cmi.position);
 
                         positions[cpi] = pos;
                         cpi++;
@@ -127,17 +155,9 @@ namespace ViMG
                 }
             }
 
-            const int NUM_SPLITS = 1;
-            int c = cpi / NUM_SPLITS;
+            copy.GetFaces(positions, faces);
 
-            for (int k = 0; k < NUM_SPLITS; k++)
-            {
-                int offset = c * k;
-                world.ChunkManager.ThreadedView.GetIds(positions, ids, offset, c);
-                world.ChunkManager.ThreadedView.GetFaces(positions, faces, offset, c);
-            }
-
-            (List<VertexCube> verts, List<int> indices) opaques = mesher.GenerateChunk(in data, world, world.ChunkManager, position, Cubes.Cube.RenderPass.Opaque);
+            (List<VertexCube> verts, List<int> indices) opaques = mesher.GenerateChunk(copy, faces, position, Cube.RenderPass.Opaque);
 
             if (opaques.verts.Count > 0)
             {

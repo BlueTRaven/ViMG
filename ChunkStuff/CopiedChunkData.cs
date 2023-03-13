@@ -18,6 +18,17 @@ namespace ViMG.ChunkStuff
         //I.e. padding left, front, top is -1.
         public CubePosition basePosition;
 
+        public bool valid;
+
+        public CopiedChunkData(CubePosition basePosition)
+        {
+            this.basePosition = basePosition;
+            ids = new ushort[SIZE];
+            entityMeshingDatas = new object[SIZE];
+
+            valid = true;
+        }
+
         public object GetEntityMeshingData(CubePosition position)
         {
             //Add one since padding is -1
@@ -32,14 +43,14 @@ namespace ViMG.ChunkStuff
             return ids[i];
         }
 
-        public void GetIds(Span<CubePosition> positions, Span<ushort> faces, int offset = 0, int count = -1)
+        public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
             if (count == -1)
                 count = positions.Length;
 
             for (int i = offset; i < offset + count; i++)
             {
-                faces[i] = GetId(positions[i]);
+                ids[i] = GetId(positions[i]);
             }
         }
 
@@ -54,7 +65,8 @@ namespace ViMG.ChunkStuff
         {
             Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-            if (cube.Transparency == Cube.TransparencyValue.Invisible)
+            //TODO re-enable air
+            if (cube.Transparency == Cube.TransparencyValue.Invisible || cube.Transparency == Cube.TransparencyValue.Air)
                 return MeshHelper.CubeFace.NONE;
 
             MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
@@ -110,6 +122,7 @@ namespace ViMG.ChunkStuff
 
             for (int i = offset; i < offset + count; i++)
             {
+                //TODO remove
                 faces[i] = GetFace(positions[i]);
             }
         }

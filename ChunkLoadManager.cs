@@ -202,7 +202,9 @@ namespace ViMG
 		public void LoadAroundTarget(World world)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
-			
+
+			ProfilingHelper.StartBatch("Beginning load around target...");
+
 			for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
 			{
 				for (int y = -Options.RenderDistance; y <= Options.RenderDistance; y++)
@@ -236,6 +238,7 @@ namespace ViMG
 								entIO.Deserialize(pos);
 								chunkManager.Mesher.BatchMeshChunk(world, pos);
 								chunkManager.CollisionMesher.MarkDirty(pos);
+								ProfilingHelper.AddBatch();
 
 								hasChanged = true;
 							}
@@ -243,6 +246,8 @@ namespace ViMG
 					}
 				}
 			}
+
+			ProfilingHelper.EndBatch("Done.");
 
 			foreach (ChunkPosition pos in loadedChunks.Keys)
 			{

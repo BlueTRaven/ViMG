@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.Items;
 
@@ -44,18 +45,20 @@ namespace ViMG.Cubes
             return heldMesh;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            if (pass != RenderPass.Opaque)
-                return;
+            return pass == RenderPass.Opaque;
+        }
 
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, world, parameters, Vector3.One, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices);
         }
 
         public override RectangleF GetHeldSourceRect(World world)
         {
-            return GetSourceRect(RenderPass.Transparent, world, new ChunkMesher.CubeMeshingParameters() { id = Id, cube = this, faces = MeshHelper.CubeFace.ALL });
+            return GetSourceRect(RenderPass.Transparent, default, new ChunkMesher.CubeMeshingParameters() { id = Id, cube = this, faces = MeshHelper.CubeFace.ALL });
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

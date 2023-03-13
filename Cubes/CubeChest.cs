@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Items;
 
@@ -58,21 +59,22 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityChest(position, rows, columns, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (world != null)
+			if (data.valid)
 			{
-				var ent = world.EntityManager.GetEntityTrackingPosition(parameters.position);
-				if (ent.GetOrDefault(null) != null)
-				{
-					EntityChest chest = ent.Get() as EntityChest;
+				var meshingData = data.GetEntityMeshingData(parameters.position);
 
-					if (face == chest.Facing)
+				if (meshingData != null)
+				{
+					EntityChest.MeshingData castedMeshingData = (EntityChest.MeshingData)meshingData;
+
+					if (face == castedMeshingData.facing)
 						return new RectangleF(128, 16, 16, 16);
 				}
 			}
 
-			return base.GetSourceRect(pass, world, parameters, face);
+			return base.GetSourceRect(pass, data, parameters, face);
         }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

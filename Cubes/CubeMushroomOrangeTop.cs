@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BrUtility;
 using ViMG.Items;
+using ViMG.ChunkStuff;
 
 namespace ViMG.Cubes
 {
@@ -23,23 +24,23 @@ namespace ViMG.Cubes
             DropSelf(itemsToDrop);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (world == null)
-                return base.GetSourceRect(pass, world, parameters, face);
+            if (!data.valid)
+                return base.GetSourceRect(pass, data, parameters, face);
 
             //we're meshing one of the sides.
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is a mushroom block
-                if (world.ChunkManager.ThreadedView.GetCube(parameters.position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
+                if (data.GetCube(parameters.position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
                 {
                     //use the same top texture instead of the ordinary side texture.
                     return new RectangleF(48, 96, 16, 16);
                 }
             }
 
-            return base.GetSourceRect(pass, world, parameters, face);
+            return base.GetSourceRect(pass, data, parameters, face);
         }
     }
 }

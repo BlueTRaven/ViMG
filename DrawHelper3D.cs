@@ -48,7 +48,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeXMeshVerts(Cube.RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, Vector3 scale, List<VertexCube> vertices, List<int> indices)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, Vector3 scale, List<VertexCube> vertices, List<int> indices)
         {
 			int verticesStart = vertices.Count;
 
@@ -59,7 +59,7 @@ namespace ViMG
 			const float texelY = 1f / textureHeight;
 
 			//face doesn't matter, any works
-			RectangleF sourceRect = parameters.cube.GetSourceRect(pass, world, parameters);
+			RectangleF sourceRect = parameters.cube.GetSourceRect(pass, data, parameters);
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
@@ -67,7 +67,7 @@ namespace ViMG
 
 			int verticesEnd = vertices.Count;
 
-			ApplyCubeAnim(pass, world, parameters, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
+			ApplyCubeAnim(pass, data, parameters, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
 		}
 
 		public static void MakeXMeshRaw(List<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect)
@@ -253,9 +253,9 @@ namespace ViMG
 			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
 		}
 
-		public static void ApplyCubeAnim(Cube.RenderPass pass, World world, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, List<VertexCube> vertices, int verticesStart, int verticesEnd)
+		public static void ApplyCubeAnim(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, List<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
-			Cube.CubeAnimation anim = parameters.cube.GetAnimation(pass, world, parameters, parameters.faces);
+			Cube.CubeAnimation anim = parameters.cube.GetAnimation(pass, data, parameters, parameters.faces);
 			if (anim.Valid)
 			{
 				for (int i = verticesStart; i < verticesEnd; i++)
