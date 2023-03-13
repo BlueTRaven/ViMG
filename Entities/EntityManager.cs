@@ -21,8 +21,70 @@ namespace ViMG.Entities
 		private List<Entity> toAddLater = new List<Entity>();
 		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
-		private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
-		private Dictionary<CubePosition, IMultiCubeTracker> multiCubeTrackers = new Dictionary<CubePosition, IMultiCubeTracker>();
+		private struct CubeTrackers
+		{
+			public ICubeTracker[] cubeTrackers;
+			public IMultiCubeTracker[] multiCubeTrackers;
+
+			public int count;
+
+			public void Add(CubePosition chunkSpacePosition, Entity entity)
+			{
+				Util.ThreeDToOneD(new ValuePoint3D(chunkSpacePosition.X, chunkSpacePosition.Y, chunkSpacePosition.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+
+				if (entity is ICubeTracker tracker)
+				{
+					if (cubeTrackers == null)
+						cubeTrackers = new ICubeTracker[Chunk.NUM_CUBES_IN_CHUNK];
+					cubeTrackers[i] = tracker;
+				}
+				else if (entity is IMultiCubeTracker multiTracker)
+				{
+					if (multiCubeTrackers == null)
+						multiCubeTrackers = new IMultiCubeTracker[Chunk.NUM_CUBES_IN_CHUNK];
+					multiCubeTrackers[i] = multiTracker;
+				}
+
+				count++;
+			}
+
+			public void Remove(CubePosition chunkSpacePosition)
+			{
+                Util.ThreeDToOneD(new ValuePoint3D(chunkSpacePosition.X, chunkSpacePosition.Y, chunkSpacePosition.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+
+                bool isSingle = cubeTrackers != null && cubeTrackers[i] != null;
+				bool isMulti = multiCubeTrackers != null && multiCubeTrackers[i] != null;
+
+				if (isSingle && isMulti)
+					throw new Exception("???");
+
+                if (isSingle)
+					cubeTrackers[i] = null;
+				else if (isMulti)
+					multiCubeTrackers[i] = null;
+
+				count--;
+            }
+
+			public Entity Get(CubePosition chunkSpacePosition)
+			{
+                Util.ThreeDToOneD(new ValuePoint3D(chunkSpacePosition.X, chunkSpacePosition.Y, chunkSpacePosition.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+
+                bool isSingle = cubeTrackers != null && cubeTrackers[i] != null;
+                bool isMulti = multiCubeTrackers != null && multiCubeTrackers[i] != null;
+
+				if (isSingle)
+					return cubeTrackers[i] as Entity;
+				else if (isMulti)
+					return multiCubeTrackers[i] as Entity;
+				else return null;
+            }
+		}
+		private int sizeInCubes;
+		private Dictionary<ChunkPosition, CubeTrackers> cubeTrackers = new Dictionary<ChunkPosition, CubeTrackers>();
+
+		//private Dictionary<CubePosition, ICubeTracker> cubeTrackers = new Dictionary<CubePosition, ICubeTracker>();
+		//private Dictionary<CubePosition, IMultiCubeTracker> multiCubeTrackers = new Dictionary<CubePosition, IMultiCubeTracker>();
 
 		private World world;
 
@@ -43,6 +105,8 @@ namespace ViMG.Entities
 		public void Initialize(World world)
         {
 			this.world = world;
+
+			this.sizeInCubes = world.sizeInCubes;
         }
 
 		public void ForceAdd(Entity entity, ulong id)
@@ -51,14 +115,6 @@ namespace ViMG.Entities
 				throw new Exception("Cannot add while iterating");
 
 			ReallyAdd(entity, (long)id);
-		}
-
-		public void AddTileEntity(ICubeTracker tracker)
-		{
-			if (cubeTrackers.ContainsKey(tracker.TrackedPosition))
-				return;
-			else
-				Add(tracker as Entity);
 		}
 
 		public void Add(Entity entity, bool delayAdding = false)
@@ -75,19 +131,36 @@ namespace ViMG.Entities
 
 			if (entity is ICubeTracker tracker)
 			{
-				//If entity is already present, then replace it
-				if (cubeTrackers.ContainsKey(tracker.TrackedPosition))
-					return;	//don't add the entity.
-				else cubeTrackers.Add(tracker.TrackedPosition, tracker);
+                CubePosition position = tracker.TrackedPosition;
+
+				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+				if (cubeTrackers.ContainsKey(chunkPos))
+					cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+				else
+				{
+					CubeTrackers ts = new CubeTrackers();
+					ts.Add(position.InChunkSpace(chunkPos), entity);
+
+                    cubeTrackers.Add(chunkPos, ts);
+				}
 			}
 
 			if (entity is IMultiCubeTracker multiTracker)
 			{
 				foreach (CubePosition position in multiTracker.TrackedPositions)
 				{
-					if (multiCubeTrackers.ContainsKey(position))
-						return;
-					else multiCubeTrackers.Add(position, multiTracker);
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                    if (cubeTrackers.ContainsKey(chunkPos))
+                        cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+                    else
+                    {
+                        CubeTrackers ts = new CubeTrackers();
+                        ts.Add(position.InChunkSpace(chunkPos), entity);
+
+                        cubeTrackers.Add(chunkPos, ts);
+                    }
 				}
 			}
 
@@ -213,16 +286,36 @@ namespace ViMG.Entities
 			if (entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType[entity.GetType()].Remove(entity);
 
-			if (entity is ICubeTracker tracker && cubeTrackers.ContainsKey(tracker.TrackedPosition))
-				cubeTrackers.Remove(tracker.TrackedPosition);
+			if (entity is ICubeTracker tracker)
+            {
+				CubePosition position = tracker.TrackedPosition;
+				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+				if (cubeTrackers.ContainsKey(chunkPos))
+				{
+					CubeTrackers ts = cubeTrackers[chunkPos];
+					ts.Remove(position.InChunkSpace(chunkPos));
+
+					if (ts.count <= 0)
+						cubeTrackers.Remove(chunkPos);
+				}
+            }
 
 			if (entity is IMultiCubeTracker multiTracker)
 			{
-				foreach (CubePosition pos in multiTracker.TrackedPositions)
+				foreach (CubePosition position in multiTracker.TrackedPositions)
 				{
-					if (multiCubeTrackers.ContainsKey(pos))
-						multiCubeTrackers.Remove(pos);
-				}
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                    if (cubeTrackers.ContainsKey(chunkPos))
+                    {
+                        CubeTrackers ts = cubeTrackers[chunkPos];
+                        ts.Remove(position.InChunkSpace(chunkPos));
+
+                        if (ts.count <= 0)
+                            cubeTrackers.Remove(chunkPos);
+                    }
+                }
 			}
 
 			OnEntityRemoved?.Invoke(entity);
@@ -250,12 +343,71 @@ namespace ViMG.Entities
 
 		public Optional<Entity> GetEntityTrackingPosition(CubePosition position)
 		{
-			if (cubeTrackers.ContainsKey(position))
-				return new Optional<Entity>(cubeTrackers[position] as Entity);
-			else if (multiCubeTrackers.ContainsKey(position))
-				return new Optional<Entity>(multiCubeTrackers[position] as Entity);
-			else return new Optional<Entity>();
+			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+			Entity ent = null;
+			if (cubeTrackers.ContainsKey(chunkPos))
+				ent = cubeTrackers[chunkPos].Get(position.InChunkSpace(chunkPos));
+
+			return new Optional<Entity>(ent);
 		}
+
+		public void GetEntitiesTrackingPositions(Span<CubePosition> positions, Span<Entity> entities, int offset = 0, int count = -1)
+		{
+			if (count == -1)
+				count = positions.Length;
+
+			ChunkPosition previousChunkPos = new ChunkPosition();
+			CubeTrackers ts = new CubeTrackers();
+
+			for (int i = offset; i < offset + count; i++)
+			{
+				ChunkPosition chunkPos = ChunkPosition.CubeChunk(positions[i]);
+				if (i == offset || chunkPos != previousChunkPos)
+					ts = cubeTrackers[chunkPos];
+
+				entities[i] = ts.Get(positions[i].InChunkSpace(chunkPos));
+			}
+		}
+
+		public void GetEntityMeshingDatas(Span<CubePosition> positions, Span<object> meshingDatas, int offset = 0, int count = -1)
+		{
+            if (count == -1)
+                count = positions.Length;
+
+			ChunkPosition previousEmptyChunk = new ChunkPosition();
+            ChunkPosition previousChunkPos = new ChunkPosition(-1, -1, -1);
+            CubeTrackers ts = new CubeTrackers();
+
+            for (int i = offset; i < offset + count; i++)
+            {
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(positions[i]);
+				//hold onto the previous empty chunk to reduce number of lookups (since we have to look up the tracker in order to see if it's empty first, which is slow.)
+				if (previousEmptyChunk == chunkPos)
+					continue;
+                
+				if (i == offset || chunkPos != previousChunkPos)
+				{
+					if (cubeTrackers.ContainsKey(chunkPos))
+					{
+						ts = cubeTrackers[chunkPos];
+						previousChunkPos = chunkPos;
+					}
+					else
+					{
+						previousEmptyChunk = chunkPos;
+						meshingDatas[i] = null;
+						continue;
+					}
+                }
+
+				Entity ent = ts.Get(positions[i].InChunkSpace(chunkPos));
+
+				if (ent != null && ent is ICubeTracker tracker)
+					meshingDatas[i] = tracker.GetMeshingData();
+				else meshingDatas[i] = null;
+            }
+        }
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
