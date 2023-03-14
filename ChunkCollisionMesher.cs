@@ -281,7 +281,7 @@ namespace ViMG
 
                         ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
 
-                        if (batchResult.versions[j] > meshInfoOld.version || !meshInfoOld.hasMesh)
+                        if (batchResult.versions[j] >= meshInfoOld.version || !meshInfoOld.hasMesh)
                         {
                             //Unload the old mesh now
                             Unload(ref meshInfoOld);
