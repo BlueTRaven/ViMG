@@ -83,7 +83,7 @@ namespace ViMG
 		//It's best practice to use this before saving, so as not to miss loading chunks!
 		public void FlushLoadQueue(World world)
 		{
-			chunkManager.Mesher.Flush(world);
+			chunkManager.RenderMesher.Flush(world);
 			chunkManager.CollisionMesher.Flush(world);
 
 			int max = queue.Count;
@@ -104,7 +104,7 @@ namespace ViMG
 				{
 					//entIO.Deserialize(queuedPosition);
 					//chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
-					if (chunkManager.Mesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
+					if (chunkManager.RenderMesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
 					{
 						loadedChunks[queuedPosition] = LoadingState.Loaded;
 						loadedChunksFastLookup[i] = LoadingState.Loaded;
@@ -120,7 +120,7 @@ namespace ViMG
 			}
 
 			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.Mesher.Flush(world);
+			chunkManager.RenderMesher.Flush(world);
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
@@ -150,7 +150,7 @@ namespace ViMG
 					continue;
 				else if (loadedChunksFastLookup[i] == LoadingState.Loading)
 				{
-					if (chunkManager.Mesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
+					if (chunkManager.RenderMesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
 					{
 						loadedChunks[queuedPosition] = LoadingState.Loaded;
 						loadedChunksFastLookup[i] = LoadingState.Loaded;
@@ -191,8 +191,8 @@ namespace ViMG
 					queue.EnqueueWithoutSorting(position);
 
 					entIO.Deserialize(position);
-					chunkManager.Mesher.BatchMeshChunk(world, position);
-					chunkManager.CollisionMesher.MarkDirty(position);
+					chunkManager.RenderMesher.AddToNextBatch(world, position);
+					chunkManager.CollisionMesher.AddToNextBatch(world, position);
 
 					hasChanged = true;
 				}
@@ -203,7 +203,7 @@ namespace ViMG
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 
-			ProfilingHelper.StartBatch("Beginning load around target...");
+			//ProfilingHelper.StartBatch("Beginning load around target...");
 
 			for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
 			{
@@ -236,9 +236,12 @@ namespace ViMG
 								queue.EnqueueWithoutSorting(pos);
 
 								entIO.Deserialize(pos);
-								chunkManager.Mesher.BatchMeshChunk(world, pos);
-								chunkManager.CollisionMesher.MarkDirty(pos);
-								ProfilingHelper.AddBatch();
+								//Note that we add to the next batch directly instead of simply marking dirty
+								//This is because marking dirty isn't guaranteed to be finished any time soon,
+								//and will only ever enqueue one batch per frame.
+								chunkManager.RenderMesher.AddToNextBatch(world, pos);
+								chunkManager.CollisionMesher.AddToNextBatch(world, pos);
+								//ProfilingHelper.AddBatch();
 
 								hasChanged = true;
 							}
@@ -247,7 +250,7 @@ namespace ViMG
 				}
 			}
 
-			ProfilingHelper.EndBatch("Done.");
+			//ProfilingHelper.EndBatch("Done.");
 
 			foreach (ChunkPosition pos in loadedChunks.Keys)
 			{
@@ -269,7 +272,7 @@ namespace ViMG
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);
-					chunkManager.Unload(world, pos);
+					chunkManager.Unload(pos);
 				}
 
 				loadedChunksFastLookup[i] = LoadingState.Unloaded;
@@ -291,7 +294,7 @@ namespace ViMG
 			loadedChunks.Clear();
 			//TODO: there may still be meshes in the queue.
 			//The reason why I'm not calling FlushMeshQueue here is because it needs World
-			chunkManager.Mesher.UnloadAllMeshes();
+			chunkManager.RenderMesher.UnloadAll();
 			entityManager.UnloadAll();
 		}
 

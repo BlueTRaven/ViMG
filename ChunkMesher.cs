@@ -22,8 +22,8 @@ namespace ViMG
 	public class ChunkMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 2;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 10;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
@@ -31,17 +31,17 @@ namespace ViMG
 		public const int NUM_CHUNK_MESH_PASSES = 5;
 
 		//Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
-		private struct ChunkMeshBatch
+		private struct RenderMeshBatch
 		{
-			public ChunkMeshInfo[] cmis;
+			public RenderMeshInfo[] meshInfos;
 			public CopiedChunkData[] copies;
 			public int num;
 
 			public readonly bool isUsed;
 
-			public ChunkMeshBatch(ChunkMeshInfo[] cmis, CopiedChunkData[] copies)
+			public RenderMeshBatch(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies)
 			{
-				this.cmis = cmis;
+				this.meshInfos = meshInfos;
 				this.copies = copies;
 				this.num = 0;
 
@@ -50,39 +50,35 @@ namespace ViMG
 		}
 
 		//The state of a chunk batch task state.
-		private readonly struct ChunkBatchMeshTaskState
+		private readonly struct BatchRenderMeshTaskState
 		{
-			public readonly ChunkMeshBatch batch;
-			public readonly World world;
-			public readonly ChunkManager manager;
+			public readonly RenderMeshBatch batch;
 			public readonly ChunkMesher mesher;
 
-			public ChunkBatchMeshTaskState(ChunkMeshBatch batch, World world, ChunkManager manager, ChunkMesher mesher)
+			public BatchRenderMeshTaskState(RenderMeshBatch batch, ChunkMesher mesher)
 			{
 				this.batch = batch;
-				this.world = world;
-				this.manager = manager;
 				this.mesher = mesher;
 			}
 		}
 
 		//The result of a chunk batch task.
-		private readonly struct ChunkBatchMeshTaskResult
+		private readonly struct BatchRenderMeshTaskResult
 		{
-			public readonly ChunkMeshInfo[] cmis;
+			public readonly RenderMeshInfo[] meshInfos;
 			public readonly CopiedChunkData[] copies;
 			//number of meshes included in the batch
 			public readonly int num;
 
-			public ChunkBatchMeshTaskResult(ChunkMeshInfo[] cmis, CopiedChunkData[] copies, int num)
+			public BatchRenderMeshTaskResult(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies, int num)
 			{
-				this.cmis = cmis;
+				this.meshInfos = meshInfos;
 				this.copies = copies;
 				this.num = num;
 			}
 		}
 
-		private struct ChunkMeshInfo
+		private struct RenderMeshInfo
 		{
 			public ChunkPosition position;
 			public (VertexBuffer VBO, IndexBuffer IBO)[] meshes;
@@ -94,7 +90,7 @@ namespace ViMG
 			//it just needs a mesh to be created in the first place.
 			public bool hasMeshes;
 
-			public ChunkMeshInfo(ChunkPosition position)
+			public RenderMeshInfo(ChunkPosition position)
 			{
 				this.position = position;
 				meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
@@ -112,53 +108,60 @@ namespace ViMG
 
 		private readonly GraphicsDevice device;
 		private readonly int sizeInChunks;
-		private ChunkMeshBatch currentBatch;
-		private Task<ChunkBatchMeshTaskResult>[] activeChunkMeshBatchTasks = new Task<ChunkBatchMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
+
+		//In terms of granularity, this system works like so:
+		//Marking something dirty adds it to the next frame's batch. (Only one batch will be started a frame via this method).
+		//Adding something to a batch allows it to be enqueued to the task queue. N amounts of chunks are allowed to in a batch at once.
+		//This queue is unlimited in size, but does not start its tasks immediately.
+		//Queued batch tasks are pulled off the queue (sorted by distance from the camera), are started, and then are added to the active tasks.
+		//There may only be a certain amount of active tasks at once.
+		//Active tasks are checked once per frame to see if their thread has finished. If it has, then all of its data is copied over to the main thread
+		//Meshes are uploaded to the gpu, etc.
+		//If a mesh is updated during the time it is in the queue or is active, then the thread is not stopped. Instead, it is run to completion
+		//and the resulting mesh is immediately unloaded. The chunk may be re-added to the queue at any point in this process.
+        private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
+        private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
+
+        private RenderMeshBatch currentBatch;
+        private PriorityQueue<(RenderMeshBatch batch, Task<BatchRenderMeshTaskResult> task)> meshBatchTasksQueue = new PriorityQueue<(RenderMeshBatch batch, Task<BatchRenderMeshTaskResult> task)>(true, (x) =>
+        {
+            Vector3 avg = Vector3.Zero;
+
+            for (int i = 0; i < MAX_CHUNKS_TO_MESH_PER_BATCH_TASK; i++)
+                avg += x.batch.meshInfos[i].position.InWorldSpace();
+
+            avg /= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK;
+
+            return (int)(Main.camera.Position - avg).Length();
+        });
+        //The 'active' batch mesh tasks.
+        private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
-		private PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)> chunkMeshBatchTasks = new PriorityQueue<(ChunkMeshBatch batch, Task<ChunkBatchMeshTaskResult> task)>(true, (x) =>
-		{
-			Vector3 avg = Vector3.Zero;
-
-			for (int i = 0; i < MAX_CHUNKS_TO_MESH_PER_BATCH_TASK; i++)
-				avg += x.batch.cmis[i].position.InWorldSpace();
-
-			avg /= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK;
-
-			return (int)(Main.camera.Position - avg).Length();
-		});
-
-		private ChunkMeshInfo[] chunkMeshInfos;
-
-		private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
-		private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
-
-		private BufferPool buffer;
+		private RenderMeshInfo[] chunkMeshInfos;
 
 		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
 		{
 			this.device = device;
 			this.sizeInChunks = sizeInChunks;
 
-			this.buffer = new BufferPool();
-
-			chunkMeshInfos = new ChunkMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
+			chunkMeshInfos = new RenderMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
 			for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
 			{
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out ValuePoint3D point);
-				chunkMeshInfos[i] = new ChunkMeshInfo(new ChunkPosition(point.x, point.y, point.z));
+				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
 		}
 
-		public void Update(World world, ChunkManager manager)
+		public void Update(World world)
 		{
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				EnqueueBatch(ref currentBatch);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -167,13 +170,13 @@ namespace ViMG
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
 				dirtyChunkKnown.Remove(position);
 
-				ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
+				ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
 				if (c.version != c.meshVersion || !c.hasMeshes)
 				{
 					//place into the current batch to be meshed later.
-					currentBatch.cmis[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = MakeCopy(world, position);
+					currentBatch.meshInfos[currentBatch.num] = c;
+					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
 					currentBatch.num++;
 				}
 			}
@@ -182,8 +185,8 @@ namespace ViMG
 			//As there might be frames where we don't fully fill it, in which case it could wait a potentially arbitrary amount of time.
 			if (currentBatch.num > 0)
 			{
-				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				EnqueueBatch(ref currentBatch);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			StartActiveTasks(world);
@@ -192,19 +195,19 @@ namespace ViMG
 		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
 		public void Flush(World world)
 		{
-			Queue<Task<ChunkBatchMeshTaskResult>> tasks = new Queue<Task<ChunkBatchMeshTaskResult>>();
+			Queue<Task<BatchRenderMeshTaskResult>> tasks = new Queue<Task<BatchRenderMeshTaskResult>>();
 
-			EnqueueBatch(world, ref currentBatch);
-			currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			EnqueueBatch(ref currentBatch);
+			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
-			int max = chunkMeshBatchTasks.Count;
+			int max = meshBatchTasksQueue.Count;
 			world.GameStateManager.TheIsland.ProgressMax = max;
 
-			while (chunkMeshBatchTasks.Count > 0)
+			while (meshBatchTasksQueue.Count > 0)
 			{
-				world.GameStateManager.TheIsland.ProgressMin = max - chunkMeshBatchTasks.Count;
+				world.GameStateManager.TheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
 
-				var task = chunkMeshBatchTasks.Dequeue().task;
+				var task = meshBatchTasksQueue.Dequeue().task;
 
 				if (task.Status == TaskStatus.Created)
 				{
@@ -229,19 +232,19 @@ namespace ViMG
 					if (!task.IsCompletedSuccessfully)
 						throw new Exception("???");
 
-                    ChunkBatchMeshTaskResult batchResult = task.Result;
+                    BatchRenderMeshTaskResult batchResult = task.Result;
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
 						batchResult.copies[j].Return();
-						ChunkMeshInfo meshResult = batchResult.cmis[j];
+						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
-						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
+						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
 
 						if (meshResult.version >= c.version)
 						{
 							//Unload the old mesh now
-							UnloadMesh(ref c);
+							Unload(ref c);
 
 							c.meshVersion = c.version;
 
@@ -250,7 +253,7 @@ namespace ViMG
 						else
 						{
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
-							UnloadMesh(ref meshResult);
+							Unload(ref meshResult);
 						}
 					}
 				}
@@ -261,13 +264,13 @@ namespace ViMG
 		private void StartActiveTasks(World world)
 		{
 			//First, check for complete tasks.
-			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
+			for (int i = 0; i < activeMeshBatchTasks.Length; i++)
 			{
-				if (activeChunkMeshBatchTasks[i] != null && activeChunkMeshBatchTasks[i].IsCompleted)
+				if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
 				{
 					numActiveChunkMeshBatchTasks--;
 
-					var task = activeChunkMeshBatchTasks[i];
+					var task = activeMeshBatchTasks[i];
 
 					if (!task.IsCompletedSuccessfully)
 						throw new Exception("???");
@@ -278,14 +281,14 @@ namespace ViMG
 					{
 						batchResult.copies[j].Return();
 
-						ChunkMeshInfo meshResult = batchResult.cmis[j];
+						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
-						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
+						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
 
 						if (meshResult.version >= c.version)
 						{
 							//Unload the old mesh now
-							UnloadMesh(ref c);
+							Unload(ref c);
 
 							c.meshVersion = c.version;
 
@@ -294,18 +297,18 @@ namespace ViMG
 						else
 						{
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
-							UnloadMesh(ref meshResult);
+							Unload(ref meshResult);
 						}
 					}
 
-					activeChunkMeshBatchTasks[i] = null;
+					activeMeshBatchTasks[i] = null;
 				}
 
-				if (activeChunkMeshBatchTasks[i] == null && chunkMeshBatchTasks.Count > 0)
+				if (activeMeshBatchTasks[i] == null && meshBatchTasksQueue.Count > 0)
 				{
-					chunkMeshBatchTasks.Sort();
-					var task = chunkMeshBatchTasks.Dequeue();
-					activeChunkMeshBatchTasks[i] = task.task;
+					meshBatchTasksQueue.Sort();
+					var task = meshBatchTasksQueue.Dequeue();
+					activeMeshBatchTasks[i] = task.task;
 					numActiveChunkMeshBatchTasks++;
 
 					if (task.task.Status == TaskStatus.Created)
@@ -318,109 +321,45 @@ namespace ViMG
 			}
 		}
 
-		public void BatchMeshChunk(World world, ChunkPosition position)
+		//Adds a position in the current batch. 
+		public void AddToNextBatch(World world, ChunkPosition position)
 		{
 			if (!currentBatch.isUsed)
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				EnqueueBatch(world, ref currentBatch);
-				currentBatch = new ChunkMeshBatch(new ChunkMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				EnqueueBatch(ref currentBatch);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			ref ChunkMeshInfo c = ref GetChunkMeshInfo(position);
+			ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
 			if (c.version != c.meshVersion || !c.hasMeshes)
 			{
-				currentBatch.cmis[currentBatch.num] = c;
-				currentBatch.copies[currentBatch.num] = MakeCopy(world, position);
+				currentBatch.meshInfos[currentBatch.num] = c;
+				currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
 				currentBatch.num++;
 			}
 		}
 
-		//FastList has an expanding buffer that makes it ideal for pools
-		private FastList<CopiedChunkData> pooledCopies = new FastList<CopiedChunkData>(MAX_CHUNKS_TO_MESH_PER_BATCH_TASK * MAX_ACTIVE_MESH_BATCH_TASKS);
-		private int lastUsedCopy;
-
-		private CopiedChunkData TakeFromPool(CubePosition basePosition)
+		private void EnqueueBatch(ref RenderMeshBatch batch)
 		{
-            CopiedChunkData copied = null;
+			Task<BatchRenderMeshTaskResult> task = new Task<BatchRenderMeshTaskResult>(MeshBatchFn, new BatchRenderMeshTaskState(batch, this));
 
-            for (int i = 0; i < pooledCopies.Length; i++)
-            {
-                int ri = (lastUsedCopy + i) % pooledCopies.Length;
-
-                if (pooledCopies.Buffer[ri] == null)
-                    pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
-
-                if (!pooledCopies[ri].GetValid())
-                {
-                    copied = pooledCopies[ri];
-                    lastUsedCopy = ri;
-
-                    copied.Take(basePosition);
-
-					break;
-                }
-            }
-
-            //just allocate one in case I guess
-            if (copied == null || !copied.GetValid())
-            {
-                copied = new CopiedChunkData(pooledCopies.Length);
-                copied.Take(basePosition);
-
-				pooledCopies.Add(copied);
-            }
-
-			return copied;
-        }
-
-		private CopiedChunkData MakeCopy(World world, ChunkPosition position)
-		{
-			CubePosition basePosition = position.InCubeSpace();
-
-			CopiedChunkData copied = TakeFromPool(basePosition);
-
-            Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
-
-			for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
-			{
-				for (int y = -1; y <= Chunk.CHUNK_SIZE; y++)
-				{
-					for (int z = -1; z <= Chunk.CHUNK_SIZE; z++)
-					{
-						Util.ThreeDToOneD(new ValuePoint3D(x + 1, y + 1, z + 1), new ValuePoint3D(CopiedChunkData.WHD), out int i);
-						CubePosition pos = basePosition + new CubePosition(x, y, z);
-						queryPositions[i] = pos;
-					}
-				}
-			}
-
-			world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
-			world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas);
-
-			return copied;
+			meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
 		}
 
-		private void EnqueueBatch(World world, ref ChunkMeshBatch batch)
+		private static BatchRenderMeshTaskResult MeshBatchFn(object obj)
 		{
-			Task<ChunkBatchMeshTaskResult> task = new Task<ChunkBatchMeshTaskResult>(MeshBatchFn, new ChunkBatchMeshTaskState(batch, world, world.ChunkManager, this));
-
-			chunkMeshBatchTasks.EnqueueWithoutSorting((batch, task));
-		}
-
-		private static ChunkBatchMeshTaskResult MeshBatchFn(object obj)
-		{
-			ChunkBatchMeshTaskState state = (ChunkBatchMeshTaskState)obj;
+			BatchRenderMeshTaskState state = (BatchRenderMeshTaskState)obj;
 
 			Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 			Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 
 			for (int i = 0; i < state.batch.num; i++)
 			{
-				ChunkMeshInfo cmi = state.batch.cmis[i];
+				RenderMeshInfo cmi = state.batch.meshInfos[i];
 				for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 				{
 					for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
@@ -451,14 +390,14 @@ namespace ViMG
 				cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(
 					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air));
 
-				state.batch.cmis[i] = cmi;
-				state.batch.cmis[i].hasMeshes = true;
+				state.batch.meshInfos[i] = cmi;
+				state.batch.meshInfos[i].hasMeshes = true;
 			}
 
-			return new ChunkBatchMeshTaskResult(state.batch.cmis, state.batch.copies, state.batch.num);
+			return new BatchRenderMeshTaskResult(state.batch.meshInfos, state.batch.copies, state.batch.num);
 		}
 
-		private void UnloadMesh(ref ChunkMeshInfo c)
+		private void Unload(ref RenderMeshInfo c)
 		{
 			for (int i = 0; i < NUM_CHUNK_MESH_PASSES; i++)
 			{
@@ -475,31 +414,28 @@ namespace ViMG
 			c.hasMeshes = false;
 		}
 
-		public void UnloadMesh(ChunkPosition position)
+		public void Unload(ChunkPosition position)
 		{
-			UnloadMesh(ref GetChunkMeshInfo(position));
+			Unload(ref GetChunkMeshInfo(position));
 		}
 
-		public void UnloadAllMeshes()
+		public void UnloadAll()
 		{
-			lock (buffer)
+			for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
 			{
-				for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
+				for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
 				{
-					for (int k = 0; k < NUM_CHUNK_MESH_PASSES; k++)
+					(VertexBuffer VBO, IndexBuffer IBO) mesh = chunkMeshInfos[j].meshes[k];
+					if (mesh.VBO != null)
 					{
-						(VertexBuffer VBO, IndexBuffer IBO) mesh = chunkMeshInfos[j].meshes[k];
-						if (mesh.VBO != null)
-						{
-							mesh.VBO.Dispose();
-							mesh.IBO.Dispose();
+						mesh.VBO.Dispose();
+						mesh.IBO.Dispose();
 
-							chunkMeshInfos[j].meshes[k] = (null, null);
-						}
+						chunkMeshInfos[j].meshes[k] = (null, null);
 					}
-
-					chunkMeshInfos[j].hasMeshes = false;
 				}
+
+				chunkMeshInfos[j].hasMeshes = false;
 			}
 		}
 
@@ -530,7 +466,7 @@ namespace ViMG
 			return mesh;
 		}
 
-		private ref ChunkMeshInfo GetChunkMeshInfo(ChunkPosition pos)
+		private ref RenderMeshInfo GetChunkMeshInfo(ChunkPosition pos)
 		{
 			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(sizeInChunks), out int i);
 			return ref chunkMeshInfos[i];

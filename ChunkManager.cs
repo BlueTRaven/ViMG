@@ -75,7 +75,7 @@ namespace ViMG
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
         private readonly ChunkManagerIO io;
-        public readonly ChunkMesher Mesher;
+        public readonly ChunkMesher RenderMesher;
         public readonly ChunkCollisionMesher CollisionMesher;
 
         public InitializerCubeView InitializerView;
@@ -97,8 +97,8 @@ namespace ViMG
 
             //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
-            Mesher = new ChunkMesher(device, sizeInChunksXZ);
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, Mesher, sizeInChunksXZ);
+            RenderMesher = new ChunkMesher(device, sizeInChunksXZ);
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
         }
@@ -106,7 +106,7 @@ namespace ViMG
         //Update queue of chunks to mesh
         public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
-            Mesher.Update(world, this);
+            RenderMesher.Update(world);
             CollisionMesher.Update(world);
 
             const int MAX_UPDATE_PER_FRAME = 20;
@@ -136,10 +136,10 @@ namespace ViMG
             }
         }
 
-        public void Unload(World world, ChunkPosition pos)
+        public void Unload(ChunkPosition pos)
         {
-            CollisionMesher.Unload(world, pos);
-            Mesher.UnloadMesh(pos);
+            CollisionMesher.Unload(pos);
+            RenderMesher.Unload(pos);
         }
 
         //TODO: separate out visual stuff, not sure how yet
@@ -249,13 +249,13 @@ namespace ViMG
 
         public void MarkChunkDirty(ChunkPosition position)
         {
-            Mesher.MarkDirty(position);
+            RenderMesher.MarkDirty(position);
             CollisionMesher.MarkDirty(position);
         }
 
         public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
         {
-            return Mesher.GetMesh(position, pass);
+            return RenderMesher.GetMesh(position, pass);
         }
 
         public delegate MeshHelper.CubeFace GetFacesDel(CubePosition position);
@@ -392,7 +392,8 @@ namespace ViMG
 
         public void Dispose()
         {
-            Mesher.UnloadAllMeshes();
+            RenderMesher.UnloadAll();
+            CollisionMesher.UnloadAll();
             //UnloadAllMeshes();
 
             //cubeMeshInfos = null;
