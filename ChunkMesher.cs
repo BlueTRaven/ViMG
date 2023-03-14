@@ -25,8 +25,8 @@ namespace ViMG
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
 #else
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 6;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 2;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
 #endif
 		public const int NUM_CHUNK_MESH_PASSES = 5;
 
@@ -296,13 +296,6 @@ namespace ViMG
 							//version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
 							UnloadMesh(ref meshResult);
 						}
-
-						/*if (meshResult.collidableMesh.Triangles.Allocated)
-                        {
-                            meshResult.collidableShapeIndex = world.PhysicsSimulation.Shapes.Add(meshResult.collidableMesh);
-                            meshResult.collidableStaticHandle = world.PhysicsSimulation.Statics.Add(
-                                new BepuPhysics.StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, meshResult.collidableShapeIndex));
-                        }*/
 					}
 
 					activeChunkMeshBatchTasks[i] = null;
@@ -406,7 +399,7 @@ namespace ViMG
 			}
 
 			world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
-			//world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.entityMeshingDatas);
+			world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas);
 
 			return copied;
 		}

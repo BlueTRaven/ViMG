@@ -28,6 +28,8 @@ namespace ViMG.ChunkStuff
         {
             valid = false;
             this.Index = index;
+
+            ThreadBufferPool = new BepuUtilities.Memory.BufferPool();
         }
 
         public void Take(CubePosition position)

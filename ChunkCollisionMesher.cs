@@ -142,7 +142,6 @@ namespace ViMG
             CopiedChunkData copied = TakeFromPool(basePosition);
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
-            Span<ushort> resultIds = stackalloc ushort[CopiedChunkData.SIZE];
 
             for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
             {
@@ -182,7 +181,6 @@ namespace ViMG
             Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
             Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 
-            int cpi = 0;
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
@@ -190,10 +188,9 @@ namespace ViMG
                     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
                         CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-                        //pos = pos.InCubeSpace(cmi.position);
+                        Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
 
-                        positions[cpi] = pos;
-                        cpi++;
+                        positions[j] = pos;
                     }
                 }
             }
