@@ -43,7 +43,7 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
         {
-            if (data.valid)
+            if (data.GetValid())
             {
                 var meshingData = data.GetEntityMeshingData(parameters.position);
                 if (meshingData != null)

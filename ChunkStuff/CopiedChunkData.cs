@@ -7,40 +7,63 @@ using ViMG.Cubes;
 
 namespace ViMG.ChunkStuff
 {
-    public struct CopiedChunkData
+    public class CopiedChunkData
     {
         public const int WHD = Chunk.CHUNK_SIZE + 2;
         public const int SIZE = WHD * WHD * WHD;
-        public ushort[] ids;
-        public object[] entityMeshingDatas;
+        public ushort[] Ids;
+        public object[] EntityMeshingDatas;
 
         //Note that this represents the topleftfront of the Chunk. It does NOT include the padding.
         //I.e. padding left, front, top is -1.
-        public CubePosition basePosition;
+        public CubePosition BasePosition;
 
-        public bool valid;
+        public BepuUtilities.Memory.BufferPool ThreadBufferPool;
 
-        public CopiedChunkData(CubePosition basePosition)
+        private bool valid;
+
+        public readonly int Index;
+
+        public CopiedChunkData(int index)
         {
-            this.basePosition = basePosition;
-            ids = new ushort[SIZE];
-            entityMeshingDatas = new object[SIZE];
+            valid = false;
+            this.Index = index;
+        }
+
+        public void Take(CubePosition position)
+        {
+            this.BasePosition = position;
+
+            if (Ids == null)
+                Ids = new ushort[SIZE];
+            if (EntityMeshingDatas == null)
+                EntityMeshingDatas = new object[SIZE];
 
             valid = true;
+        }
+
+        public void Return()
+        {
+            valid = false;
+        }
+
+        public bool GetValid()
+        {
+            return valid;
         }
 
         public object GetEntityMeshingData(CubePosition position)
         {
             //Add one since padding is -1
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
-            return entityMeshingDatas[i];
+            return EntityMeshingDatas[i];
         }
 
         public ushort GetId(CubePosition position)
         {
             //Add one since padding is -1
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
-            return ids[i];
+            return Ids[i];
         }
 
         public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
@@ -58,7 +81,7 @@ namespace ViMG.ChunkStuff
         {
             //Add one since padding is -1
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(ids[i]));
+            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(Ids[i]));
         }
 
         public MeshHelper.CubeFace GetFace(CubePosition position)

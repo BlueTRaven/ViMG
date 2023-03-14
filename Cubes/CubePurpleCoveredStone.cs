@@ -28,7 +28,7 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (!data.valid)
+            if (data == null || !data.GetValid())
                 return base.GetSourceRect(pass, data, parameters, face);
 
             //we're meshing one of the sides.

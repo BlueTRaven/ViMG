@@ -104,7 +104,7 @@ namespace ViMG
 		public const bool MULTITHREADING = true;
 		public const bool MULTITHREAD_BROAD_PHASE = MULTITHREADING && true;
 		public const bool MULTITHREAD_LOADING = MULTITHREADING && true;
-		public const bool MULTITHREAD_MESHING = MULTITHREADING && false;
+		public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
 		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
 
 		public static bool Exit = false;

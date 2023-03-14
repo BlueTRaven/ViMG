@@ -7,10 +7,12 @@ using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.Entities;
@@ -20,8 +22,8 @@ namespace ViMG
 	public class ChunkMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 8;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 6;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 2;
@@ -68,12 +70,14 @@ namespace ViMG
 		private readonly struct ChunkBatchMeshTaskResult
 		{
 			public readonly ChunkMeshInfo[] cmis;
+			public readonly CopiedChunkData[] copies;
 			//number of meshes included in the batch
 			public readonly int num;
 
-			public ChunkBatchMeshTaskResult(ChunkMeshInfo[] cmis, int num)
+			public ChunkBatchMeshTaskResult(ChunkMeshInfo[] cmis, CopiedChunkData[] copies, int num)
 			{
 				this.cmis = cmis;
+				this.copies = copies;
 				this.num = num;
 			}
 		}
@@ -225,10 +229,11 @@ namespace ViMG
 					if (!task.IsCompletedSuccessfully)
 						throw new Exception("???");
 
-					var batchResult = task.Result;
+                    ChunkBatchMeshTaskResult batchResult = task.Result;
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
+						batchResult.copies[j].Return();
 						ChunkMeshInfo meshResult = batchResult.cmis[j];
 
 						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -255,6 +260,7 @@ namespace ViMG
 
 		private void StartActiveTasks(World world)
 		{
+			//First, check for complete tasks.
 			for (int i = 0; i < activeChunkMeshBatchTasks.Length; i++)
 			{
 				if (activeChunkMeshBatchTasks[i] != null && activeChunkMeshBatchTasks[i].IsCompleted)
@@ -270,6 +276,8 @@ namespace ViMG
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
+						batchResult.copies[j].Return();
+
 						ChunkMeshInfo meshResult = batchResult.cmis[j];
 
 						ref ChunkMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -338,13 +346,51 @@ namespace ViMG
 			}
 		}
 
+		//FastList has an expanding buffer that makes it ideal for pools
+		private FastList<CopiedChunkData> pooledCopies = new FastList<CopiedChunkData>(MAX_CHUNKS_TO_MESH_PER_BATCH_TASK * MAX_ACTIVE_MESH_BATCH_TASKS);
+		private int lastUsedCopy;
+
+		private CopiedChunkData TakeFromPool(CubePosition basePosition)
+		{
+            CopiedChunkData copied = null;
+
+            for (int i = 0; i < pooledCopies.Length; i++)
+            {
+                int ri = (lastUsedCopy + i) % pooledCopies.Length;
+
+                if (pooledCopies.Buffer[ri] == null)
+                    pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
+
+                if (!pooledCopies[ri].GetValid())
+                {
+                    copied = pooledCopies[ri];
+                    lastUsedCopy = ri;
+
+                    copied.Take(basePosition);
+
+					break;
+                }
+            }
+
+            //just allocate one in case I guess
+            if (copied == null || !copied.GetValid())
+            {
+                copied = new CopiedChunkData(pooledCopies.Length);
+                copied.Take(basePosition);
+
+				pooledCopies.Add(copied);
+            }
+
+			return copied;
+        }
+
 		private CopiedChunkData MakeCopy(World world, ChunkPosition position)
 		{
 			CubePosition basePosition = position.InCubeSpace();
-			CopiedChunkData copied = new CopiedChunkData(basePosition);
 
-			Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
-			Span<ushort> resultIds = stackalloc ushort[CopiedChunkData.SIZE];
+			CopiedChunkData copied = TakeFromPool(basePosition);
+
+            Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
 
 			for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
 			{
@@ -359,8 +405,8 @@ namespace ViMG
 				}
 			}
 
-			world.ChunkManager.ThreadedView.GetIds(queryPositions, copied.ids);
-			world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.entityMeshingDatas);
+			world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
+			//world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.entityMeshingDatas);
 
 			return copied;
 		}
@@ -416,7 +462,7 @@ namespace ViMG
 				state.batch.cmis[i].hasMeshes = true;
 			}
 
-			return new ChunkBatchMeshTaskResult(state.batch.cmis, state.batch.num);
+			return new ChunkBatchMeshTaskResult(state.batch.cmis, state.batch.copies, state.batch.num);
 		}
 
 		private void UnloadMesh(ref ChunkMeshInfo c)
@@ -567,8 +613,8 @@ namespace ViMG
 								{
 									cube = cube,
 									id = id,
-									positionWS = (data.basePosition + cubePosition).InWorldSpace(),
-									positionCS = data.basePosition + cubePosition,
+									positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
+									positionCS = data.BasePosition + cubePosition,
 									position = cubePosition,
 									faces = renderingFaces
 								};
@@ -592,8 +638,8 @@ namespace ViMG
 							{
 								cube = Main.Registry.CubeRegistry.Air,
 								id = id,
-								positionWS = (data.basePosition + cubePosition).InWorldSpace(),
-								positionCS = data.basePosition + cubePosition,
+								positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
+								positionCS = data.BasePosition + cubePosition,
 								position = cubePosition,
 								faces = renderingFaces
 							};
@@ -623,7 +669,7 @@ namespace ViMG
 
 				CubePosition nrm = new CubePosition(cubePos.X + (int)vertex.Normal.X,
 					cubePos.Y + (int)vertex.Normal.Y,
-					cubePos.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.CubeSpace);
+					cubePos.Z + (int)vertex.Normal.Z);
 
 				CubePosition t = new CubePosition();
 				CubePosition bt = new CubePosition();
@@ -634,18 +680,18 @@ namespace ViMG
 
 				if (vertex.Normal.X != 0)
 				{
-					t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
-					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
+					t = new CubePosition(0, sY, 0);
+					bt = new CubePosition(0, 0, sZ);
 				}
 				else if (vertex.Normal.Y != 0)
 				{
-					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-					bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.CubeSpace);
+					t = new CubePosition(sX, 0, 0);
+					bt = new CubePosition(0, 0, sZ);
 				}
 				else if (vertex.Normal.Z != 0)
 				{
-					t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
-					bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.CubeSpace);
+					t = new CubePosition(sX, 0, 0);
+					bt = new CubePosition(0, sY, 0);
 				}
 
 				checkPositions[0] = nrm;
@@ -659,13 +705,6 @@ namespace ViMG
 				int corner = checkIds[1];
 				int sideA = checkIds[2];
 				int sideB = checkIds[3];
-
-				if (corner > 0 && Main.Registry.CubeRegistry.noAo[corner])
-					corner = 0;
-				if (sideA > 0 && Main.Registry.CubeRegistry.noAo[sideA])
-					sideA = 0;
-				if (sideB > 0 && Main.Registry.CubeRegistry.noAo[sideB])
-					sideB = 0;
 
 				if (top > 0)
 				{

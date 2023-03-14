@@ -168,6 +168,11 @@ namespace ViMG.Items
 			if (cachedAffectedPositions == null)
 				cachedAffectedPositions = new CubePosition[rangeX * rangeY * rangeZ];
 
+			if (rangeX * rangeY * rangeZ > cachedAffectedPositions.Length)
+			{
+				Console.WriteLine("What?");
+			}
+
 			int i = 0;
 			for (int x = minx; x <= maxx; x++)
 			{

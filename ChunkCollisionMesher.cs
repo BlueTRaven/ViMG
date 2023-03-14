@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuUtilities.Memory;
+using BrUtility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,9 @@ namespace ViMG
 {
     public class ChunkCollisionMesher
     {
+        private const int MAX_ACTIVE_MESH_BATCH_TASKS = 8;
+        private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
+
         private struct CollisionMeshInfo
         {
             public TypedIndex collidableShapeIndex; //TODO move elsewhere
@@ -93,10 +97,49 @@ namespace ViMG
             }
         }
 
+        //FastList has an expanding buffer that makes it ideal for pools
+        private FastList<CopiedChunkData> pooledCopies = new FastList<CopiedChunkData>(MAX_CHUNKS_TO_MESH_PER_BATCH_TASK * MAX_ACTIVE_MESH_BATCH_TASKS);
+        private int lastUsedCopy;
+
+        private CopiedChunkData TakeFromPool(CubePosition basePosition)
+        {
+            CopiedChunkData copied = null;
+
+            for (int i = 0; i < pooledCopies.Length; i++)
+            {
+                int ri = (lastUsedCopy + i) % pooledCopies.Length;
+
+                if (pooledCopies.Buffer[ri] == null)
+                    pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
+
+                if (!pooledCopies[ri].GetValid())
+                {
+                    copied = pooledCopies[ri];
+                    lastUsedCopy = ri;
+
+                    copied.Take(basePosition);
+
+                    break;
+                }
+            }
+
+            //just allocate one in case I guess
+            if (copied == null || !copied.GetValid())
+            {
+                copied = new CopiedChunkData(pooledCopies.Length);
+                copied.Take(basePosition);
+
+                pooledCopies.Add(copied);
+            }
+
+            return copied;
+        }
+
         private CopiedChunkData MakeCopy(World world, ChunkPosition position)
         {
             CubePosition basePosition = position.InCubeSpace();
-            CopiedChunkData copied = new CopiedChunkData(basePosition);
+
+            CopiedChunkData copied = TakeFromPool(basePosition);
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
             Span<ushort> resultIds = stackalloc ushort[CopiedChunkData.SIZE];
@@ -114,8 +157,8 @@ namespace ViMG
                 }
             }
 
-            world.ChunkManager.InitializerView.GetIds(queryPositions, copied.ids);
-            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.entityMeshingDatas);
+            world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
+            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas);
 
             return copied;
         }
@@ -174,6 +217,8 @@ namespace ViMG
             meshInfo.meshVersion = meshInfo.version;
 
             meshes[i] = meshInfo;
+
+            copy.Return();
         }
 
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh

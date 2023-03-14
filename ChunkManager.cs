@@ -367,7 +367,7 @@ namespace ViMG
 
             ushort id;
 
-            id = BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
+            id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]); //BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
 
             //BitConverter is apparently faster than fixed cast of bytes to ushort
             return id;

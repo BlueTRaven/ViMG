@@ -30,7 +30,7 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (data.valid)
+			if (data != null && data.GetValid())
 			{
 				var meshingData = data.GetEntityMeshingData(parameters.position);
 				if (meshingData != null)
@@ -46,7 +46,7 @@ namespace ViMG.Cubes
 
         public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (data.valid)
+            if (data != null && data.GetValid())
             {
                 var meshingData = data.GetEntityMeshingData(parameters.position);
                 if (meshingData != null)
