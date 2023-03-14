@@ -15,6 +15,8 @@ namespace ViMG.Cubes
         public CubeGlass() : base("glass", RectangleF.Empty, Color.White, 4)
         {
             Transparency = TransparencyValue.TransparentOccludesSiblings;
+
+            Name = "Glass";
         }
 
         public override bool ShouldMeshPass(RenderPass pass)
@@ -22,12 +24,17 @@ namespace ViMG.Cubes
             return pass == RenderPass.Transparent || pass == RenderPass.Opaque;
         }
 
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            return base.GetSourceRect(pass, data, parameters, face);
+        }
+
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
         {
             if (pass == RenderPass.Transparent)
-                return new RectangleF(0, 32, 16, 16);
-            else if (pass == RenderPass.Opaque)
                 return new RectangleF(24, 36, 0, 0);
+            else if (pass == RenderPass.Opaque)
+                return new RectangleF(0, 32, 16, 16);
             else return new RectangleF();
         }
 

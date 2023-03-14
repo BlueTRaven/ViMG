@@ -222,7 +222,7 @@ namespace ViMG.Cubes
 			this.Identifier = identifier;
 
 			this.sourceRect = sourceRect;
-			layout = new CubeFacingLayout(sourceRect);
+			//layout = new CubeFacingLayout(sourceRect);
 			//Array.Fill(sourceRectSides, sourceRect);
 			this.tintColor = color;
 			this.MineProgressToBreak = mineProgressToBreak;
@@ -258,32 +258,37 @@ namespace ViMG.Cubes
 
 		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
 		{
-			if (cubeFaceLookup[(int)face] != -1)
-			{
-				switch (face)
-				{
-					case MeshHelper.CubeFace.NONE:
-						return RectangleF.Empty;
-					case MeshHelper.CubeFace.LEFT:
-						return layout.Left;
-					case MeshHelper.CubeFace.RIGHT:
-						return layout.Right;
-					case MeshHelper.CubeFace.UP:
-						return layout.Top;
-					case MeshHelper.CubeFace.DOWN:
-						return layout.Bottom;
-					case MeshHelper.CubeFace.FRONT:
-						return layout.Front;
-					case MeshHelper.CubeFace.BACK:
-						return layout.Back;
-					case MeshHelper.CubeFace.ALL:
-						return RectangleF.Empty;
-						//return sourceRectSides[cubeFaceLookup[(int)face]];
-				}
+			if (layout == null)
+				return GetSourceRect(pass, data, parameters);
 
+			switch (face)
+			{
+				case MeshHelper.CubeFace.NONE:
+					return RectangleF.Empty;
+				case MeshHelper.CubeFace.LEFT:
+					return layout.Left;
+				case MeshHelper.CubeFace.RIGHT:
+					return layout.Right;
+				case MeshHelper.CubeFace.UP:
+					return layout.Top;
+				case MeshHelper.CubeFace.DOWN:
+					return layout.Bottom;
+				case MeshHelper.CubeFace.FRONT:
+					return layout.Front;
+				case MeshHelper.CubeFace.BACK:
+					return layout.Back;
+				case MeshHelper.CubeFace.ALL:
+					return RectangleF.Empty;
 			}
-			
+
 			return RectangleF.Empty;
+		}
+
+		public virtual RectangleF GetHeldSourceRect()
+		{
+			if (layout == null)
+				return sourceRect;
+			else return layout.Front;
 		}
 
 		public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)

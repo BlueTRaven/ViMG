@@ -16,8 +16,8 @@ namespace ViMG
 {
     public class ChunkCollisionMesher
     {
-        private const int MAX_ACTIVE_MESH_BATCH_TASKS = 2;
-        private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 10;
+        private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
+        private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
 
         //Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
         private struct CollisionMeshBatch
