@@ -363,7 +363,7 @@ namespace ViMG
         {
             byte[] bytes = io.GetBytes();
 
-            int cubeOffset = io.GetCubeOffset(position);
+            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
 
             ushort id;
 
@@ -409,7 +409,7 @@ namespace ViMG
         
         public InitializerCubeView CreateInitializerCubeView()
         {
-            InitializerView = new InitializerCubeView(this, GetCubeId, GetCube, GetCachedFaces, SetCube);
+            InitializerView = new InitializerCubeView(this, io, GetCubeId, GetCube, GetCachedFaces, SetCube);
 
             return InitializerView;
         }

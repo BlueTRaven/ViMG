@@ -14,10 +14,16 @@ namespace ViMG.Cubes
 {
 	public class CubeFurnace : Cube, IRecipeCatalyst
 	{
+		private UI.ButtonConstructionParameters buttonParameters;
+
 		public CubeFurnace() : base("furnace_t1", new CubeFacingLayout(new RectangleF(144, 32, 16, 16), new RectangleF(160, 32, 16, 16), new RectangleF(160, 32, 16, 16)), Color.White, 6)
 		{
 			Main.Registry.RecipeRegistry.RegisterCatalyst(this);
-		}
+
+			buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), 
+				Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+        }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
 		{
@@ -107,27 +113,25 @@ namespace ViMG.Cubes
 		{
 			RectangleF bounds = new RectangleF(Vector2.Zero, UIConstants.SIZE, UIConstants.SIZE);
 
-			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-				recipe.Layout[0]);
+			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), recipe.Layout[0]);
 
-			bounds.x += UIConstants.SIZE;
+			UI.StartParent(new Vector2(18f * 2f));
 
 			ItemInstance item = new ItemInstance();
 			if (recipe.Layout.Length > 1)
 				item = recipe.Layout[1];
 
-			itemSlots[1] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-				item);
+			itemSlots[1] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), item);
 
-			bounds.x -= UIConstants.SIZE;
-
-			bounds.y += UIConstants.SIZE;
+			UI.EndParent();
+			UI.StartParent(new Vector2(0, 18 * 4));
 
 			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
 
-			bounds.y += UIConstants.SIZE;
+            UI.EndParent();
+            UI.StartParent(new Vector2(0, 18 * 6));
+
+			int xOff = 0;
 
 			for (int i = 0; i < recipe.Outputs.Length; i++)
 			{
@@ -136,50 +140,15 @@ namespace ViMG.Cubes
 					instance = recipe.Outputs[i];
 				else instance = new ItemInstance();
 
-				itemSlots[2 + i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-					instance);
+				itemSlots[2 + i] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), instance);
 
-				bounds.x += UIConstants.SIZE;
-			}
-		}
+				xOff += 18 * 2;
 
-		public void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale)
-		{
-			RectangleF bounds = new RectangleF(Vector2.Zero, textureSize, textureSize);
-
-			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								recipe.Layout[0]);
-
-			bounds.x += textureSize;
-
-			ItemInstance item = new ItemInstance();
-			if (recipe.Layout.Length > 1)
-				item = recipe.Layout[1];
-
-			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-									item);
-
-			bounds.x -= textureSize;
-
-			bounds.y += textureSize * 1.25f;
-
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
-
-			bounds.y += textureSize * 1.25f;
-
-			for (int i = 0; i < recipe.Outputs.Length; i++)
-			{
-				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-									recipe.Outputs[i]);
-
-				bounds.x += textureSize;
+				UI.EndParent();
+				UI.StartParent(new Vector2(xOff, 18 * 6));
 			}
 
-			size = new Size(textureSize * 2, bounds.y + bounds.height);
+			UI.EndParent();
 		}
 
 		public string GetName()

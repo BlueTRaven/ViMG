@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BrNineSlice;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -121,8 +122,16 @@ namespace ViMG.UIs
             }
         }
 
+		private static UI.ButtonConstructionParameters buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16),
+			Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+
+		private static NineSlice panelNs = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+
         public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, int rows = 4, int columns = 8, float size = 16, float padding = 8)
 		{
+			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), panelNs);
+
+			UI.StartParent(new Vector2(16));
 			for (int y = 0; y < rows; y++)
 			{
 				for (int x = 0; x < columns; x++)
@@ -130,11 +139,11 @@ namespace ViMG.UIs
 					int i = y * columns + x;
 
 					Vector2 pos = new Vector2(x * size + x * padding, y * size + y * padding);
-					RectangleF bounds = new RectangleF(pos, size, size);
+					//RectangleF bounds = new RectangleF(pos, size, size);
+					buttonParameters.bounds.Size = new Size(32);
+					buttonParameters.bounds.Position = pos;
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-						new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-						inventory.Get(i));
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
 
 					var oldItem = inventory.Get(i);
 
@@ -154,7 +163,13 @@ namespace ViMG.UIs
 					}
 				}
 			}
+			UI.EndParent();
 		}
+
+		public static Size GetInventorySize(int rows, int columns, float size, float padding)
+        {
+			return new Size(columns * size + columns * padding + 32, rows * size + rows * padding + 32);
+        }
 
 		public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot)
 		{

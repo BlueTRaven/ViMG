@@ -19,7 +19,5 @@ namespace ViMG.Recipes
 		Size GetSize();
 
 		void DoRecipeUI2(UI.ItemSlot[] itemSlots, Recipe recipe);
-
-		void DoRecipeUI(out Size size, Recipe recipe, float textureSize, float textureScale);
 	}
 }

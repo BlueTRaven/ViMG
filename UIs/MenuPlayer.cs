@@ -158,7 +158,7 @@ namespace ViMG.UIs
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
 			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
-			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, SIZE, PADDING);
+			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f);
 
 			if (preHighlightedHotbar.valid && preHighlightedHotbar.item != inventory.Get(HighlightIndex).item)
             {
@@ -236,16 +236,12 @@ namespace ViMG.UIs
 
 				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
-				UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN));
+				UI.StartParent(new Vector2(MARGIN + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
 
 				Vector2 pos = new Vector2();
 				RectangleF bounds = new RectangleF();
 
 				pos = new Vector2(16 * 3.5f * SCALE, 0);
-
-				UI.EndParent();
-
-				UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + 32));
 
 				UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
 

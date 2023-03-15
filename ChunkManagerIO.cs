@@ -88,7 +88,7 @@ namespace ViMG
 			return chunkOffset;
 		}
 
-		public int GetCubeOffset(CubePosition position)
+		public static int GetCubeOffset(CubePosition position, int sizeInChunks = 32)
         {
 			//NOTE: we can't just index directly into bytes (as a ushort)
 			//This is because we store cube ids weirdly. We do not store them flat, one after another; instead, we store them as a chunk, then as another chunk, etc.

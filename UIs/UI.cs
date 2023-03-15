@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BrNineSlice;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -192,6 +193,7 @@ namespace ViMG.UIs
 
 			public readonly Color color;
 			public readonly RectangleF bounds;
+			public readonly NineSlice nineslice;
 
 			internal Panel(ID id, Color color, RectangleF bounds)
 			{
@@ -199,6 +201,18 @@ namespace ViMG.UIs
 
 				this.color = color;
 				this.bounds = bounds;
+
+				this.nineslice = null;
+            }
+
+            internal Panel(ID id, Color color, RectangleF bounds, NineSlice nineslice)
+            {
+                this.id = id;
+
+                this.color = color;
+                this.bounds = bounds;
+
+                this.nineslice = nineslice;
             }
         }
 
@@ -503,11 +517,11 @@ namespace ViMG.UIs
 			return tex;
 		}
 
-		public static Panel MakePanel(Color color, RectangleF bounds)
+		public static Panel MakePanel(Color color, RectangleF bounds, NineSlice nineslice = null)
 		{
 			ID id = MakeID(bounds.Position);
 			bounds = new RectangleF(id.position, bounds.Size);
-			Panel panel = new Panel(id, color, bounds);
+			Panel panel = new Panel(id, color, bounds, nineslice);
 			panels.Add(panel);
 
 			return panel;
@@ -683,7 +697,9 @@ namespace ViMG.UIs
 
 			foreach (Panel panel in panels)
 			{
-				batch.DrawRectangle(panel.bounds, panel.color, 0.5f);
+				if (panel.nineslice == null)
+					batch.DrawRectangle(panel.bounds, panel.color, 0.5f);
+				else panel.nineslice.Draw(batch, panel.color, panel.bounds, scale, 0.5f);
 			}
 
 			foreach (Texture tex in textures)

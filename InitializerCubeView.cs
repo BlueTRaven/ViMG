@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
@@ -14,15 +15,16 @@ namespace ViMG
     public class InitializerCubeView
     {
         private readonly ChunkManager chunkManager;
-
+        private readonly ChunkManagerIO io;
         private ChunkManager.GetCubeIdDel getCubeId;
         private ChunkManager.GetCubeDel getCube;
         private ChunkManager.GetFacesDel getCachedFaces;
         private ChunkManager.SetCubeDel setCube;
 
-        public InitializerCubeView(ChunkManager chunkManager, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
+        public InitializerCubeView(ChunkManager chunkManager, ChunkManagerIO io, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
         {
             this.chunkManager = chunkManager;
+            this.io = io;
             this.getCubeId = getCubeId;
             this.getCube = getCube;
             this.getCachedFaces = getCachedFaces;
@@ -39,9 +41,12 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
+            byte[] idBytes = io.GetBytes();
+
             for (int i = offset; i < offset + count; i++)
             {
-                ids[i] = getCubeId(positions[i]);
+                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
+                ids[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
             }
         }
 
@@ -55,9 +60,15 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
+            byte[] idBytes = io.GetBytes();
+            var registry = Main.Registry.CubeRegistry.GetIterable();
+
             for (int i = offset; i < offset + count; i++)
             {
-                cubes[i] = getCube(positions[i]).GetOrDefault(def);
+                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
+                ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+
+                cubes[i] = registry[id];
             }
         }
 
@@ -66,14 +77,71 @@ namespace ViMG
             return getCachedFaces(position);
         }
 
+        private static CubePosition[] adjacentOffsets = new CubePosition[6]
+        {
+            new CubePosition(-1, 0, 0),
+            new CubePosition(1, 0, 0),
+            new CubePosition(0, -1, 0),
+            new CubePosition(0, 1, 0),
+            new CubePosition(0, 0, -1),
+            new CubePosition(0, 0, 1)
+        };
+
+        private static MeshHelper.CubeFace[] adjacentFaces = new MeshHelper.CubeFace[6]
+        {
+            MeshHelper.CubeFace.RIGHT,
+            MeshHelper.CubeFace.LEFT,
+            MeshHelper.CubeFace.DOWN,
+            MeshHelper.CubeFace.UP,
+            MeshHelper.CubeFace.FRONT,
+            MeshHelper.CubeFace.BACK
+        };
+
         public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces, int offset = 0, int count = -1)
         {
             if (count == -1)
                 count = positions.Length;
 
+            byte[] idBytes = io.GetBytes();
+            var registry = Main.Registry.CubeRegistry.GetIterable();
+
             for (int i = offset; i < offset + count; i++)
             {
-                faces[i] = getCachedFaces(positions[i]);
+                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
+                ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+
+                Cube cube = registry[id];
+
+                faces[i] = MeshHelper.CubeFace.NONE;
+
+                for (int j = 0; j < 6; j++)
+                {
+                    int adjacentOffset = ChunkManagerIO.GetCubeOffset(positions[i] + adjacentOffsets[j]);
+                    ushort adjacentId = Unsafe.ReadUnaligned<ushort>(ref idBytes[adjacentOffset * sizeof(ushort)]);
+
+                    Cube adjacentCube = registry[adjacentId];
+
+                    if (cube.Transparency != Cube.TransparencyValue.Air)
+                    {
+                        switch (adjacentCube.Transparency)
+                        {
+                            case (Cube.TransparencyValue.Transparent):
+                            case (Cube.TransparencyValue.Invisible):
+                            case (Cube.TransparencyValue.Air):
+                                faces[i] |= adjacentFaces[j];
+                                break;
+                            case (Cube.TransparencyValue.TransparentOccludesSiblings):
+                                if (cube != adjacentCube)
+                                    faces[i] |= adjacentFaces[j];
+                                break;
+                            default:
+                                break;
+                        }
+
+                    }
+                    else if (cube.Transparency == Cube.TransparencyValue.Air && cube != adjacentCube)
+                        faces[i] |= adjacentFaces[j];
+                }
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
@@ -140,15 +141,74 @@ namespace ViMG.ChunkStuff
             return false;
         }
 
+        private static CubePosition[] adjacentOffsets = new CubePosition[6]
+        {
+            new CubePosition(-1, 0, 0),
+            new CubePosition(1, 0, 0),
+            new CubePosition(0, -1, 0),
+            new CubePosition(0, 1, 0),
+            new CubePosition(0, 0, -1),
+            new CubePosition(0, 0, 1)
+        };
+
+        private static MeshHelper.CubeFace[] adjacentFaces = new MeshHelper.CubeFace[6]
+        {
+            MeshHelper.CubeFace.RIGHT,
+            MeshHelper.CubeFace.LEFT,
+            MeshHelper.CubeFace.DOWN,
+            MeshHelper.CubeFace.UP,
+            MeshHelper.CubeFace.FRONT,
+            MeshHelper.CubeFace.BACK
+        };
+
         public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces, int offset = 0, int count = -1)
         {
             if (count == -1)
                 count = positions.Length;
 
+            //var registry = Main.Registry.CubeRegistry.GetIterable();
+
             for (int i = offset; i < offset + count; i++)
             {
-                //TODO remove
                 faces[i] = GetFace(positions[i]);
+                /*Util.ThreeDToOneD(new ValuePoint3D(positions[i].X + 1, positions[i].Y + 1, positions[i].Z + 1), new ValuePoint3D(WHD), out int posIndex);
+                Cube cube;
+                if (Ids[posIndex] == 0)
+                    cube = Main.Registry.CubeRegistry.Air;
+                else cube = registry[Ids[posIndex] - 1];
+
+                faces[i] = MeshHelper.CubeFace.NONE;
+
+                for (int k = 0; k < 6; k++)
+                {
+                    CubePosition adjacentPosition = positions[i] + adjacentOffsets[k];
+                    Util.ThreeDToOneD(new ValuePoint3D(adjacentPosition.X + 1, adjacentPosition.Y + 1, adjacentPosition.Z + 1), new ValuePoint3D(WHD), out int adjPosIndex);
+                    Cube adjacentCube;
+                    if (Ids[adjPosIndex] == 0)
+                        adjacentCube = Main.Registry.CubeRegistry.Air;
+                    else adjacentCube = registry[Ids[adjPosIndex] - 1];
+
+                    if (cube.Transparency != Cube.TransparencyValue.Air)
+                    {
+                        switch (adjacentCube.Transparency)
+                        {
+                            case (Cube.TransparencyValue.Transparent):
+                            case (Cube.TransparencyValue.Invisible):
+                            case (Cube.TransparencyValue.Air):
+                                faces[i] |= adjacentFaces[k];
+                                break;
+                            case (Cube.TransparencyValue.TransparentOccludesSiblings):
+                                if (cube != adjacentCube)
+                                    faces[i] |= adjacentFaces[k];
+                                break;
+                            default:
+                                break;
+                        }
+
+                    }
+                    else if (cube.Transparency == Cube.TransparencyValue.Air && cube != adjacentCube)
+                        faces[i] |= adjacentFaces[k];
+                }*/
             }
         }
     }

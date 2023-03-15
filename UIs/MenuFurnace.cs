@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BrNineSlice;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,8 +14,13 @@ using ViMG.Recipes;
 namespace ViMG.UIs
 {
 	public class MenuFurnace : Menu
-	{
-		private Player player;
+    {
+        private UI.ButtonConstructionParameters buttonParameters;
+		private UI.ButtonConstructionParameters actionButtonParameters;
+
+		private NineSlice panelNs;
+
+        private Player player;
 		private Inventory playerInventory;
 		private Inventory furnaceInventory;
 		private bool furnaceInventoryUpdated;
@@ -31,7 +37,17 @@ namespace ViMG.UIs
 			this.furnaceInventory = furnaceInventory;
 
 			this.furnace = furnace;
-		}
+
+            buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2),
+                Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+                new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+
+            actionButtonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2),
+                Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+                new RectangleF(92, 18, 18, 18), new RectangleF(110, 18, 18, 18), new RectangleF(110, 18, 18, 18));
+
+			panelNs = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+        }
 
 		public override void OnOpen()
 		{
@@ -59,36 +75,32 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			MenuHelper.DoPlayerInventory(player, playerInventory, ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, SIZE, PADDING);
+			MenuHelper.DoPlayerInventory(player, playerInventory, ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2);
 
 			UI.EndParent();
 
-			UI.StartParent(new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE));
+			UI.StartParent(new Vector2(MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width + 18 * 2f, MARGIN + 32));
 
-			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 4.5f, SIZE * 3 + MARGIN * 2));
+			UI.MakePanel(Color.White, new RectangleF(0, 0, 18 * 2 * 4.5f, 18 * 2 * 3 + 16 * 2), panelNs);
 
 			UI.StartParent(new Vector2(MARGIN));
 
-			Vector2 pos = Vector2.Zero;
-			RectangleF bounds = new RectangleF(pos, SIZE, SIZE);
+			RectangleF bounds = new RectangleF(Vector2.Zero, SIZE, SIZE);
 
-			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								furnaceInventory.Get(0));
+			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(buttonParameters), furnaceInventory.Get(0));
 
-			bounds.x += SIZE;
+			UI.StartParent(new Vector2(18 * 2, 0));
+			//bounds.x += SIZE;
 
-			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								furnaceInventory.Get(1));
+			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(buttonParameters), furnaceInventory.Get(1));
 
-			bounds.x += SIZE + MARGIN;
+            UI.StartParent(new Vector2(18 * 2 + 16, 0));
+            //bounds.x += SIZE + MARGIN;
 
-			var itemSlotFuel = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								furnaceInventory.Get(2));
+			var itemSlotFuel = UI.MakeItemSlot(UI.MakeButton(buttonParameters), furnaceInventory.Get(2));
 
-			bounds.x -= SIZE + MARGIN;
+			UI.EndParent();
+			//bounds.x -= SIZE + MARGIN;
 
 			MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
 			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 0, itemSlotA, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None);
@@ -133,25 +145,27 @@ namespace ViMG.UIs
 				}
 			}
 
-			bounds.x -= SIZE;
-			bounds.y += SIZE;
+			UI.EndParent();
+
+			UI.StartParent(new Vector2(0, 18 * 2));
+			//bounds.x -= SIZE;
+			//bounds.y += SIZE;
 			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
-			bounds.y += SIZE;
+            UI.StartParent(new Vector2(0, 18 * 2));
+            //bounds.y += SIZE;
 
-			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-				furnaceInventory.Get(3));
+			UI.MakeItemSlot(UI.MakeButton(buttonParameters), furnaceInventory.Get(3));
 
-			bounds.x += SIZE;
+            UI.StartParent(new Vector2(18 * 2, 0));
+            //bounds.x += SIZE;
 
-			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-				furnaceInventory.Get(4));
+            UI.MakeItemSlot(UI.MakeButton(buttonParameters), furnaceInventory.Get(4));
 
-			bounds.x += SIZE;
+            UI.StartParent(new Vector2(18 * 2, 0));
+            //bounds.x += SIZE;
 
-			UI.Button craftRecipeButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
-				new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16)));
+            UI.Button craftRecipeButton = UI.MakeButton(actionButtonParameters);
+			UI.MakeTexture(new RectangleF(1, 1, 16, 16).Scale(2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16));
 
 			if (craftRecipeButton.clickLeft)
 			{
@@ -170,10 +184,16 @@ namespace ViMG.UIs
 
 			UI.EndParent();
 
-			bounds.x = MARGIN;
-			bounds.y += SIZE * 2 + MARGIN;
+            UI.EndParent();
+            UI.EndParent();
+            UI.EndParent();
+            UI.EndParent();
 
-			UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+            //bounds.x = MARGIN;
+			//bounds.y += SIZE * 2 + MARGIN;
+
+			UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(16, 18 * 2 * 4.5f, 16 * 2, 16 * 2), 
+				Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
 				new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 
 			if (recipeBookButton.hovered)

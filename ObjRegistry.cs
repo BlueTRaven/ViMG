@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrUtility;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,9 +7,9 @@ namespace ViMG
 {
 	public class ObjRegistry<T> where T : class, IRegisterable
 	{
-		private List<T> registry = new List<T>();
+		private FastList<T> registry = new FastList<T>();
 		private Dictionary<string, int> registryByName = new Dictionary<string, int>();
-		public int Count => registry.Count;
+		public int Count => registry.Length;
 
 		public void RegisterAll()
 		{
@@ -28,7 +29,7 @@ namespace ViMG
 
 		protected virtual void Register(T obj)
 		{
-			registryByName.Add(obj.Identifier, registry.Count + 1);
+			registryByName.Add(obj.Identifier, registry.Length + 1);
 			registry.Add(obj);
 		}
 
@@ -61,7 +62,7 @@ namespace ViMG
 
 		public IReadOnlyList<T> GetIterable()
 		{
-			return registry;
+			return registry.Buffer;
 		}
 	}
 }
