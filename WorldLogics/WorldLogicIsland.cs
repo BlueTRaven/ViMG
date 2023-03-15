@@ -87,12 +87,12 @@ namespace ViMG.WorldLogics
 			world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night2");
 
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSMerchant(world.PassiveSpawnerManager, world.EntityManager));
-			/*world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSKeleton(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSImp(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSCaveSlime(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSnake(world.PassiveSpawnerManager, world.EntityManager));
-			world.PassiveSpawnerManager.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));*/
+			world.PassiveSpawnerManager.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));
 		}
 
         public override void Update(World world, double deltaTime)

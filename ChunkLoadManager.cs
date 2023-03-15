@@ -295,6 +295,7 @@ namespace ViMG
 			//TODO: there may still be meshes in the queue.
 			//The reason why I'm not calling FlushMeshQueue here is because it needs World
 			chunkManager.RenderMesher.UnloadAll();
+			chunkManager.CollisionMesher.UnloadAll();
 			entityManager.UnloadAll();
 		}
 

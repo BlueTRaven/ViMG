@@ -1,5 +1,4 @@
-﻿#define SM4
-
+﻿
 #define FXAA_PC 1
 #ifdef SM4 // shader model 4.0 (DX11)
 #define FXAA_HLSL_4_MG 1
