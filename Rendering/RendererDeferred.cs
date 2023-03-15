@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.MediaFoundation;
 using SMAADemo;
 using System;
 using System.Collections.Generic;
@@ -760,7 +761,11 @@ namespace ViMG.Rendering
             DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
             EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+            EffectTransparent.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+            EffectTransparent.Parameters["FogExtents"].SetValue(new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3),
+                    Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1)));
 
+            EffectTransparent.CurrentTechnique = EffectTransparent.Techniques["T1"];
             //device.RasterizerState = Main.noCullRS;
             foreach (TransparentDraw draw in DrawsTransparentPass)
             {

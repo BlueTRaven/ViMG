@@ -69,20 +69,18 @@ float4 PSFog(VSOutputCube input) : SV_TARGET
 {
 	float ambientWorldheight = WorldheightMapAmb.Sample(Sampler, float2(0.5, 1 - (input.PositionWS.y / (512.0 * 0.1)))).r;
 
-	float4 skybox = Skybox.Sample(Sampler, input.TexCoord);
+	//float4 skybox = Skybox.Sample(Sampler, input.TexCoord);
 
 	float distance = length(input.PositionWS - CameraPosition);
 	float fogFactor = (distance - FogExtents.x) / (FogExtents.y - FogExtents.x);
-	fogFactor = saturate(fogFactor);
-
-	float4 fogColor = skybox * fogFactor;
+	fogFactor = 1 - saturate(fogFactor);
 
 	float4 diffuse = Diffuse.Sample(Sampler, input.TexCoord);
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb;
 	float4 emissiveColor = (diffuse * input.Color) * float4(emissive.rgb, 0);
 	float4 finalColor = float4(diffuse.rgb * AmbientStrength * ambientWorldheight, diffuse.a) * input.Color;
 
-	float4 output = (finalColor + emissiveColor) * fogColor;
+	float4 output = (finalColor + emissiveColor) * fogFactor;
 
 	return output;
 }
