@@ -6,6 +6,7 @@
 // as taken from Call Of Duty method, presented at ACM Siggraph 2014.
 
 float FilterRadius;
+float Strength;
 
 // Remember to add bilinear minification filter for this texture!
 // Remember to use a floating-point texture format (for HDR)!

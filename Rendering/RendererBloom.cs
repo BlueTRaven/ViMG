@@ -93,6 +93,7 @@ namespace ViMG.Rendering
                     RenderTarget2D nextMip = mips[i - 1];
 
                     upsampleEffect.Parameters["Texture"].SetValue(mip);
+                    upsampleEffect.Parameters["Strength"].SetValue(((float)i / (float)NUM_MIPS));
 
                     device.SetRenderTarget(nextMip);
 
@@ -104,6 +105,7 @@ namespace ViMG.Rendering
                     RenderTarget2D nextMip = sourceTexture;
 
                     upsampleEffect.Parameters["Texture"].SetValue(mip);
+                    upsampleEffect.Parameters["Strength"].SetValue(((float)i / (float)NUM_MIPS));
 
                     device.SetRenderTarget(nextMip);
 

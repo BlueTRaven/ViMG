@@ -582,7 +582,7 @@ namespace ViMG
 			return (vertices, indices);
 		}
 
-		private static void BakeAO(CopiedChunkData data, CubePosition pos, int start, int end, List<VertexCube> vertices, bool threaded = false)
+		private static void BakeAO(CopiedChunkData data, CubePosition cubePosition, int start, int end, List<VertexCube> vertices)
         {
 			Span<CubePosition> checkPositions = stackalloc CubePosition[4];
 			Span<ushort> checkIds = stackalloc ushort[4];
@@ -591,21 +591,19 @@ namespace ViMG
 			{
 				VertexCube vertex = vertices[i];
 
-				//pos =
-				CubePosition cubePos = pos;
 				//pc =
-				CubePosition vertCubePos = CubePosition.FromWorldSpace(vertex.Position);
+				CubePosition vertCubePos = CubePosition.FromWorldSpace(vertex.Position).InChunkSpace();
 
-				CubePosition nrm = new CubePosition(cubePos.X + (int)vertex.Normal.X,
-					cubePos.Y + (int)vertex.Normal.Y,
-					cubePos.Z + (int)vertex.Normal.Z);
+				CubePosition nrm = new CubePosition(cubePosition.X + (int)vertex.Normal.X,
+                    cubePosition.Y + (int)vertex.Normal.Y,
+                    cubePosition.Z + (int)vertex.Normal.Z);
 
 				CubePosition t = new CubePosition();
 				CubePosition bt = new CubePosition();
 
-				int sX = vertCubePos.X == cubePos.X ? -1 : 1;
-				int sY = vertCubePos.Y == cubePos.Y ? -1 : 1;
-				int sZ = vertCubePos.Z == cubePos.Z ? -1 : 1;
+				int sX = vertCubePos.X == cubePosition.X ? -1 : 1;
+				int sY = vertCubePos.Y == cubePosition.Y ? -1 : 1;
+				int sZ = vertCubePos.Z == cubePosition.Z ? -1 : 1;
 
 				if (vertex.Normal.X != 0)
 				{
@@ -649,9 +647,12 @@ namespace ViMG
 					else
 					{
 						// Only up to two of these will get hit
-						if (corner > 0) ao++;
-						if (sideA > 0) ao++;
-						if (sideB > 0) ao++;
+						if (corner > 0) 
+							ao++;
+						if (sideA > 0) 
+							ao++;
+						if (sideB > 0) 
+							ao++;
 
 						ao /= 3;
 					}
