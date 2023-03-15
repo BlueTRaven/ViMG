@@ -661,6 +661,38 @@ namespace ViMG
 					vertices[i] = vertex;
 				}
 			}
+
+            //We always want a triangle touching both two side blocks contributing to AO.
+            //Sometimes we may have:
+            //c2222	  2222c
+            //1a--b	  a--b1
+            //1|\ |	  |\ |1
+            //1| \|	  | \|1
+            //1c--d	  c--d1
+            //Where 1 and 2 are the two contributing sides. In certain orientations these sides do not have the same triangle touching both side's faces
+            //which can produce odd AO results.
+            //Instead we always want:
+            //c2222	  2222c
+            //1b--c	  a--b1
+            //1| /|	  |\ |1
+            //1|/ |	  | \|1
+            //1d--a	  c--d1
+			//We can accomplish this by checking the AO of our quad. Vertices c and b or a and d should have equivalent AO. If they don't, rotate the quad by 90 degrees.
+            for (int i = start; i < end; i += 4)
+			{
+				var vertex00 = vertices[i + 0];
+				var vertex10 = vertices[i + 1];
+				var vertex11 = vertices[i + 2];
+				var vertex01 = vertices[i + 3];
+
+				if (vertex00.AO + vertex11.AO > vertex01.AO + vertex10.AO)
+				{
+                    vertices[i + 0] = vertex10;
+                    vertices[i + 1] = vertex11;
+                    vertices[i + 2] = vertex01;
+                    vertices[i + 3] = vertex00;
+                }
+			}
 		}
 	}
 }

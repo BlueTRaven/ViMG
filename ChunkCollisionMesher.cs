@@ -371,30 +371,33 @@ namespace ViMG
 
             Mesh[] meshes = new Mesh[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK];
 
-            for (int i = 0; i < state.batch.num; i++)
+            if (Main.DO_COLLISION_MESHING)
             {
-                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                for (int i = 0; i < state.batch.num; i++)
                 {
-                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                     {
-                        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                        for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                         {
-                            CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-                            Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                            //pos = pos.InCubeSpace(cmi.position);
+                            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                            {
+                                CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+                                Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                                //pos = pos.InCubeSpace(cmi.position);
 
-                            positions[j] = pos;
+                                positions[j] = pos;
+                            }
                         }
                     }
+
+                    state.batch.copies[i].GetFaces(positions, faces);
+
+                    (List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
+
+                    if (opaques.verts.Count > 0)
+                        meshes[i] = GenerateMesh(state.batch.pools[i], opaques.verts, opaques.indices);
+                    //else meshes[i] = default;
                 }
-
-                state.batch.copies[i].GetFaces(positions, faces);
-
-                (List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
-
-                if (opaques.verts.Count > 0)
-                    meshes[i] = GenerateMesh(state.batch.pools[i], opaques.verts, opaques.indices);
-                else meshes[i] = default;
             }
 
             return new BatchCollisionMeshTaskResult(state.batch.positions, meshes, state.batch.pools, state.batch.versions, state.batch.copies, state.batch.num);
