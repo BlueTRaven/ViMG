@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.UIs.UI;
 
 namespace ViMG.UIs
 {
@@ -122,26 +123,32 @@ namespace ViMG.UIs
             }
         }
 
-		private static UI.ButtonConstructionParameters buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16),
-			Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+		public static UI.ButtonConstructionParameters ButtonParameters = new UI.ButtonConstructionParameters(
+			new RectangleF(0, 0, 18, 18), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+			new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+        public static UI.ButtonConstructionParameters ActionButtonParameters = new UI.ButtonConstructionParameters(
+			new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+            new RectangleF(92, 18, 18, 18), new RectangleF(110, 18, 18, 18), new RectangleF(110, 18, 18, 18));
 
-		private static NineSlice panelNs = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+        public static NineSlice MainPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+        public static NineSlice SecondaryPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
         public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, int rows = 4, int columns = 8, float size = 16, float padding = 8)
 		{
-			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), panelNs);
+			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
 
 			UI.StartParent(new Vector2(16));
-			for (int y = 0; y < rows; y++)
+
+			UI.ButtonConstructionParameters buttonParameters = ButtonParameters;
+			buttonParameters.bounds.Size = new Size(size);
+
+            for (int y = 0; y < rows; y++)
 			{
 				for (int x = 0; x < columns; x++)
 				{
 					int i = y * columns + x;
 
-					Vector2 pos = new Vector2(x * size + x * padding, y * size + y * padding);
-					//RectangleF bounds = new RectangleF(pos, size, size);
-					buttonParameters.bounds.Size = new Size(32);
-					buttonParameters.bounds.Position = pos;
+					UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
 
 					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
 
@@ -161,6 +168,8 @@ namespace ViMG.UIs
 							inventory.Remove(i, item.num);
 						}
 					}
+
+					UI.EndParent();
 				}
 			}
 			UI.EndParent();
@@ -388,7 +397,7 @@ namespace ViMG.UIs
 		{
 			if (held.valid)
 			{
-				var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+				var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black);
 
 				Vector2 pos = Main.inputManager.GetMousePosition().ToVector2();
 				RectangleF bounds = new RectangleF(pos, size, size);
@@ -396,8 +405,16 @@ namespace ViMG.UIs
 				held.item.DrawInInventory(batch, held, pos, scale);
 				//batch.Draw(held.item.Texture, pos, held.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.99f);
 
-				TextHelper.DrawText(batch, fi,
-					held.num.ToString(), Color.White, bounds.ToRectangle(), Enums.Alignment.BottomRight, (int)bounds.width, 1, TextHelper.OverFlowAction.None);
+				int num = held.num;
+				string numString;
+
+                if (num > 1000)
+                    numString = string.Format("{0:0.0}k", (float)num / 1000f);
+                else numString = num.ToString();
+
+                TextHelper.DrawText(batch, fi,
+                    numString, Color.White, bounds.ToRectangle(), Enums.Alignment.BottomRight,
+                    64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
 			}
 		}
 	}

@@ -158,12 +158,15 @@ namespace ViMG.UIs
 			public RectangleF sourceRect;
 			public Color color;
 
-			public TextureConstructionParameters(RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null)
+			public bool below;
+
+			public TextureConstructionParameters(RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null, bool below = false)
             {
                 this.bounds = bounds;
                 this.texture = texture;
                 this.sourceRect = sourceRect;
 				this.color = color ?? Color.White;
+				this.below = below;
             }
 		}
 
@@ -175,8 +178,9 @@ namespace ViMG.UIs
 			public readonly RectangleF bounds;
 			public readonly RectangleF sourceRect;
 			public readonly Color color;
+            public readonly bool below;
 
-			internal Texture(ID id, RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null)
+            internal Texture(ID id, RectangleF bounds, Texture2D texture, RectangleF sourceRect, Color? color = null, bool below = false)
 			{
 				this.id = id;
 
@@ -184,6 +188,8 @@ namespace ViMG.UIs
 				this.sourceRect = sourceRect;
 				this.bounds = bounds;
 				this.color = color ?? Color.White;
+
+				this.below = below;
 			}
 		}
 
@@ -501,7 +507,7 @@ namespace ViMG.UIs
         {
 			ID id = MakeID(parameters.bounds.Position);
 			parameters.bounds = new RectangleF(id.position, parameters.bounds.Size);
-			Texture tex = new Texture(id, parameters.bounds, parameters.texture, parameters.sourceRect, parameters.color);
+			Texture tex = new Texture(id, parameters.bounds, parameters.texture, parameters.sourceRect, parameters.color, parameters.below);
 			textures.Add(tex);
 
 			return tex;
@@ -705,7 +711,7 @@ namespace ViMG.UIs
 			foreach (Texture tex in textures)
 			{
 				batch.Draw(tex.texture, tex.bounds.ToRectangle(),
-					tex.sourceRect.ToRectangle(), tex.color, 0, Vector2.Zero, SpriteEffects.None, 0.76f);
+					tex.sourceRect.ToRectangle(), tex.color, 0, Vector2.Zero, SpriteEffects.None, tex.below ? 0.74f : 0.76f);
 			}
 		}
 
@@ -756,8 +762,17 @@ namespace ViMG.UIs
 				itemSlot.item.item.DrawInInventory(batch, itemSlot.item, itemSlot.button.bounds.Position, scale);
 				//batch.Draw(itemSlot.item.item.Texture, itemSlot.button.bounds.Position, itemSlot.item.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 
-				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black),
-					itemSlot.item.num.ToString(), Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, (int)itemSlot.button.bounds.width, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
+				int num = itemSlot.item.num;
+
+				string numString;
+
+				if (num > 1000)
+					numString = string.Format("{0:0.0}k", (float)num / 1000f);
+				else numString = num.ToString();
+
+				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
+					numString, Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, 
+					64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
 			}
 		}
 	}

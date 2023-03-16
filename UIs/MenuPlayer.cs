@@ -236,30 +236,34 @@ namespace ViMG.UIs
 
 				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
-				UI.StartParent(new Vector2(MARGIN + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
+				UI.StartParent(new Vector2(MARGIN * 2f + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
 
 				Vector2 pos = new Vector2();
 				RectangleF bounds = new RectangleF();
 
 				pos = new Vector2(16 * 3.5f * SCALE, 0);
 
-				UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
+				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(0, 16, 123 * SCALE, 55 * SCALE), 
+					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					new RectangleF(128, 0, 123, 55), below: true));
+				//UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
 
-				UI.StartParent(new Vector2(MARGIN));
+				UI.StartParent(new Vector2(MARGIN, 18 + MARGIN));
 
+				UI.ButtonConstructionParameters buttonParameters = MenuHelper.ButtonParameters;
+				UI.ButtonConstructionParameters actionButtonParameters = MenuHelper.ActionButtonParameters;
 				for (int y = 0; y < 2; y++)
 				{
 					for (int x = 0; x < 3; x++)
 					{
 						int i = y * 3 + x;
 
-						pos = new Vector2(x * SIZE, y * SIZE);
-						bounds = new RectangleF(pos, SIZE, SIZE);
+						pos = new Vector2(x * 18 * 2 + x * 2f, y * 18 * 2 + y * 2f);
+						bounds = new RectangleF(pos, 18 * 2, 18 * 2);
 
-						var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-							craftInventory.Get(i));
+						buttonParameters.bounds = bounds;
 
+						var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(i));
 
 						var output = MenuHelper.ItemSlotClickOutput.None;
 						if ((output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
@@ -294,26 +298,30 @@ namespace ViMG.UIs
 					craftInventoryUpdated = false;
 				}
 
-				bounds = new RectangleF(3 * SIZE, 0, SIZE, SIZE);
+				bounds = new RectangleF(16 * 2 * 4.125f, 2, SIZE, SIZE);
 
 				UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
 
-				bounds.x += SIZE;
+				bounds.x += 29 * 2f;
+				bounds.y -= 2;
 
-				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				buttonParameters.bounds.Position = bounds.Position;
+				UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(6));
+
+				//bounds.x += SIZE;
+                //buttonParameters.bounds.Position = bounds.Position;
+
+                /*UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								craftInventory.Get(6));
+								craftInventory.Get(7));*/
 
-				bounds.x += SIZE;
+				bounds.y += 24 * SCALE;
+                actionButtonParameters.bounds.Position = bounds.Position;
 
-				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-								craftInventory.Get(7));
+                UI.Button craftRecipeButton = UI.MakeButton(actionButtonParameters);
+				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(bounds.x + 1, bounds.y + 1, 16 * SCALE, 16 * SCALE),
+					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16)));
 
-				bounds.y += SIZE;
-
-				UI.Button craftRecipeButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
-					new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16)));
 				if (craftRecipeButton.clickLeft)
 				{
 					if (currentRecipe != null)
@@ -326,11 +334,10 @@ namespace ViMG.UIs
 					UI.EnableParent();
 				}
 
-				pos = new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2);
-				bounds = new RectangleF(pos, SIZE, SIZE);
-
-				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+				UI.StartParent(new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2));
+				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
 					new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
+				UI.EndParent();
 
 				if (recipeBookButton.hovered)
 				{
@@ -348,23 +355,22 @@ namespace ViMG.UIs
 
 				UI.EndParent();
 
-				UI.StartParent(new Vector2(MARGIN, 192));
+				UI.StartParent(new Vector2(MARGIN,
+					MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * SCALE, 2f).Height + MARGIN * 4));
 
-				for (int i = 0; i < 6; i++)
+				UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * SCALE, 2f)), MenuHelper.MainPanelNS);
+
+				UI.StartParent(new Vector2(16, 16));
+
+				buttonParameters.bounds.Position = Vector2.Zero;
+				for (int i = 0; i < 3; i++)
 				{
-					pos = new Vector2(i * SIZE, 0);
+					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
 
-					if (i >= 3)
-						pos.X += MARGIN;
-
-					bounds = new RectangleF(pos, SIZE, SIZE);
-
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-									accessoryInventory.Get(i), 1);
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i), 1);
 
 					if (!accessoryInventory.Get(i).valid)
-						UI.MakeTexture(new RectangleF(pos, SIZE, SIZE), 
+						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE), 
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
@@ -376,23 +382,66 @@ namespace ViMG.UIs
 							MenuHelper.SwapInventory(accessoryInventory, inventory, i);
 						}
 					}
+
+					UI.EndParent();
 				}
 
-				pos.X = 0;
-				pos.Y += SIZE + MARGIN;
+                UI.EndParent();
+
+                UI.StartParent(new Vector2(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).Width + MARGIN, 0));
+
+                UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
+
+				UI.StartParent(new Vector2(16));
+
+                buttonParameters.bounds.Position = Vector2.Zero;
+                for (int i = 0; i < 3; i++)
+                {
+					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
+
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i + 3), 1);
+
+                    if (!accessoryInventory.Get(i + 3).valid)
+                        UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
+                            Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
+
+                    var output = MenuHelper.ItemSlotClickOutput.None;
+                    if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, ref held,
+                        new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i + 3]))) != MenuHelper.ItemSlotClickOutput.None)
+                    {
+                        if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
+                        {
+                            MenuHelper.SwapInventory(accessoryInventory, inventory, i + 3);
+                        }
+                    }
+
+					UI.EndParent();
+                }
+
+				UI.EndParent();
+                UI.EndParent();
+
+				UI.StartParent(new Vector2(0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).Height + MARGIN));
+
+                UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
+
+				UI.StartParent(new Vector2(16));
+
+				buttonParameters.bounds.Position = Vector2.Zero;
 
 				for (int i = 0; i < 3; i++)
-                {
-					pos.X = i * SIZE;
+				{
+					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2, 0));
+					//pos = new Vector2(i * 18 * SCALE, 0);
 
-					bounds = new RectangleF(pos, SIZE, SIZE);
+					//bounds = new RectangleF(pos, SIZE, SIZE);
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-									gearInventory.Get(i), 1);
+					//buttonParameters.bounds.Position = pos;
+
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i), 1);
 
 					if (!gearInventory.Get(i).valid)
-						UI.MakeTexture(new RectangleF(pos, SIZE, SIZE),
+						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
@@ -404,13 +453,23 @@ namespace ViMG.UIs
 							MenuHelper.SwapInventory(gearInventory, inventory, i);
 						}
 					}
+
+					UI.EndParent();
 				}
 
 				UI.EndParent();
+                UI.EndParent();
+
+                UI.EndParent();
+
+                pos = new Vector2(3 * 18 * SCALE + MARGIN, 0);
+
+                pos.X = 0;
+				pos.Y += SIZE + MARGIN;
 
 				if (Main.Debug)
 				{
-					UI.StartParent(new Vector2(MARGIN, 256 + 64));
+					UI.StartParent(new Vector2(MARGIN, 256 + 96));
 
 					var allItems = Main.Registry.ItemRegistry.GetIterable();
 

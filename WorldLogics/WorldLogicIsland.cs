@@ -84,7 +84,7 @@ namespace ViMG.WorldLogics
             base.Initialize(world);
 
 			world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
-			world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night2");
+			world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
 
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSMerchant(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
