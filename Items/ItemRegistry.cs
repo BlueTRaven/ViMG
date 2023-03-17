@@ -112,7 +112,11 @@ namespace ViMG.Items
 			Register(new ItemDebugPlaceBlockWand());
 			Register(new ItemRustedSword());
 			Register(new ItemOrnamentalSword());
-			RegisterItemCubes();
+			Register(new ItemCoin("copper", 1, new BrUtility.RectangleF(128, 0, 16, 16)));
+            Register(new ItemCoin("bronze", 10, new BrUtility.RectangleF(128 + 16, 0, 16, 16)));
+            Register(new ItemCoin("silver", 100, new BrUtility.RectangleF(128 + 32, 0, 16, 16)));
+            Register(new ItemCoin("gold", 1000, new BrUtility.RectangleF(128 + 48, 0, 16, 16)));
+            RegisterItemCubes();
 		}
 
 		private void RegisterItemCubes()

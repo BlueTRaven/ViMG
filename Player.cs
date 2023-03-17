@@ -1132,9 +1132,10 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				//world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-				//world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
-			}
+				ItemHelper.DropCoins(world.EntityManager, Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, Main.random.Next(0, 3000));
+                //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+                //world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
+            }
 		}
 
 		private void UpdatePerformAction()
