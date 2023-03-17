@@ -469,7 +469,7 @@ namespace ViMG.UIs
 
 				if (Main.Debug)
 				{
-					UI.StartParent(new Vector2(MARGIN, 256 + 96));
+					UI.StartParent(new Vector2(MARGIN, 256 + 128));
 
 					var allItems = Main.Registry.ItemRegistry.GetIterable();
 
