@@ -18,6 +18,11 @@ namespace ViMG.Items
         {
 
         }
+
+        public virtual string GetDescription()
+        {
+            return "";
+        }
     }
 
     public class SetBonusMaterial : SetBonus

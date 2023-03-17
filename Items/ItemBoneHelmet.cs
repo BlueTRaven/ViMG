@@ -22,6 +22,12 @@ namespace ViMG.Items
                 stats.MeleeAtkScale += 0.25f;
                 stats.HPFlat += 10;
             }
+
+            public override string GetDescription()
+            {
+                return "+ 25% Melee damage\n" +
+                    "+ 10 HP";
+            }
         }
 
         public ItemBoneHelmet() : base("helmet_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 80, 16, 16))

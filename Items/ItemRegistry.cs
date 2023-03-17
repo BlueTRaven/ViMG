@@ -15,10 +15,16 @@ namespace ViMG.Items
 			Color colorCopper = new Color(220, 187, 146);
 			Color colorBronze = new Color(233, 81, 23);
 
+			Color colorBone = new Color(191, 191, 139);
+			Color colorOldIron = new Color(104, 76, 84);
+
 			SetBonusMaterial setBonusIron = new SetBonusMaterial("iron", new Player.AccumulatedStats() { DefenseFlat = 3 });
 			SetBonusMaterial setBonusTin = new SetBonusMaterial("tin", new Player.AccumulatedStats() { DefenseFlat = 1 });
 			SetBonusMaterial setBonusCopper = new SetBonusMaterial("copper", new Player.AccumulatedStats() { DefenseFlat = 1 });
 			SetBonusMaterial setBonusBronze = new SetBonusMaterial("bronze", new Player.AccumulatedStats() { DefenseFlat = 2 });
+
+			SetBonusMaterial setBonusBone = new SetBonusMaterial("bone", new Player.AccumulatedStats() { MeleeAtkScale = 0.05f });
+			SetBonusMaterial setBonusOldIron = new SetBonusMaterial("oldiron", new Player.AccumulatedStats() { RangeAtkScale = 0.15f });
 
 			Register(new ItemSwordBase());
 			Register(new ItemPickaxeBase());
@@ -116,6 +122,9 @@ namespace ViMG.Items
             Register(new ItemCoin("bronze", 10, new BrUtility.RectangleF(128 + 16, 0, 16, 16)));
             Register(new ItemCoin("silver", 100, new BrUtility.RectangleF(128 + 32, 0, 16, 16)));
             Register(new ItemCoin("gold", 1000, new BrUtility.RectangleF(128 + 48, 0, 16, 16)));
+			Register(new ItemMetalHelmet("oldiron", colorOldIron, new Player.AccumulatedStats() { RangeAtkScale = 0.05f, DefenseFlat = 0 }, setBonusOldIron));
+            Register(new ItemMetalChestplate("oldiron", colorOldIron, new Player.AccumulatedStats() { RangeAtkScale = 0.02f, DefenseFlat = 2 }, setBonusOldIron));
+            Register(new ItemMetalLegs("oldiron", colorOldIron, new Player.AccumulatedStats() {DefenseFlat = 2 }, setBonusOldIron));
             RegisterItemCubes();
 		}
 
