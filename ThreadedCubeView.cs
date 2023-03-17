@@ -38,10 +38,7 @@ namespace ViMG
 
         public ushort GetId(CubePosition position)
         {
-            lock (manager)
-            {
-                return getCubeId(position);
-            }
+            return getCubeId(position);
         }
 
         public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
@@ -49,50 +46,38 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
-            lock (manager)
+            for (int i = offset; i < offset + count; i++)
             {
-                for (int i = offset; i < offset + count; i++)
-                {
-                    ids[i] = getCubeId(positions[i]);
-                }
+                ids[i] = getCubeId(positions[i]);
             }
         }
 
         public void GetIds(Span<CubePosition> positions, Span<ushort> ids, SafetyCheck check)
         {
-            lock (manager)
+            for (int i = 0; i < positions.Length; i++)
             {
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    bool valid = true;
-                    if ((check & SafetyCheck.InWorldBounds) == SafetyCheck.InWorldBounds && !manager.IsInWorldBounds(positions[i]))
-                        valid = false;
-                    if (loadManager != null && (check & SafetyCheck.IsLoaded) == SafetyCheck.IsLoaded && !loadManager.IsLoaded(ChunkPosition.CubeChunk(positions[i])))
-                        valid = false;
+                bool valid = true;
+                if ((check & SafetyCheck.InWorldBounds) == SafetyCheck.InWorldBounds && !manager.IsInWorldBounds(positions[i]))
+                    valid = false;
+                if (loadManager != null && (check & SafetyCheck.IsLoaded) == SafetyCheck.IsLoaded && !loadManager.IsLoaded(ChunkPosition.CubeChunk(positions[i])))
+                    valid = false;
 
-                    if (valid)
-                        ids[i] = getCubeId(positions[i]);
-                    else ids[i] = 0;
-                }
+                if (valid)
+                    ids[i] = getCubeId(positions[i]);
+                else ids[i] = 0;
             }
         }
 
         public Optional<Cube> GetCube(CubePosition position)
         {
-            lock (manager)
-            {
-                return getCube(position);
-            }
+            return getCube(position);
         }
 
         public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes)
         {
-            lock (manager)
+            for (int i = 0; i < positions.Length; i++)
             {
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    cubes[i] = getCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air);
-                }
+                cubes[i] = getCube(positions[i]).GetOrDefault(Main.Registry.CubeRegistry.Air);
             }
         }
 
@@ -114,10 +99,7 @@ namespace ViMG
 
         public MeshHelper.CubeFace GetFace(CubePosition position)
         {
-            lock (manager)
-            {
-                return getCachedFaces(position);
-            }
+            return getCachedFaces(position);
         }
 
         public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces, int offset = 0, int count = -1)
@@ -125,21 +107,15 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
-            lock (manager)
+            for (int i = offset; i < offset + count; i++)
             {
-                for (int i = offset; i < offset + count; i++)
-                {
-                    faces[i] = getCachedFaces(positions[i]);
-                }
+                faces[i] = getCachedFaces(positions[i]);
             }
         }
 
         public void SetCube(CubePosition position, ushort id)
         {
-            lock (manager)
-            {
-                setCube(position, id);
-            }
+            setCube(position, id);
         }
 
         public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
@@ -147,12 +123,9 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
-            lock (manager)
+            for (int i = offset; i < offset + count; i++)
             {
-                for (int i = offset; i < offset + count; i++)
-                {
-                    setCube(positions[i], ids[i]);
-                }
+                setCube(positions[i], ids[i]);
             }
         }
 
@@ -162,12 +135,9 @@ namespace ViMG
             if (count == -1)
                 count = positions.Length;
 
-            lock (manager)
+            for (int i = offset; i < offset + count; i++)
             {
-                for (int i = offset; i < offset + count; i++)
-                {
-                    setCube(positions[i], id);
-                }
+                setCube(positions[i], id);
             }
         }
     }

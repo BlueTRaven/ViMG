@@ -22,8 +22,8 @@ namespace ViMG.Cubes
                 {
                     //facing left or right
                     if (dirXZ.X > 0)
-                        face = MeshHelper.CubeFace.RIGHT;
-                    else face = MeshHelper.CubeFace.LEFT;
+                        face = MeshHelper.CubeFace.LEFT;
+                    else face = MeshHelper.CubeFace.RIGHT;
                 }
                 else
                 {
