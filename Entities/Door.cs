@@ -137,13 +137,13 @@ namespace ViMG.Entities
             switch (facing)
             {
                 case MeshHelper.CubeFace.LEFT:
-                    rotation = 270;
+                    rotation = 90;
                     break;
                 case MeshHelper.CubeFace.FRONT:
                     rotation = 180;
                     break;
                 case MeshHelper.CubeFace.RIGHT:
-                    rotation = 90;
+                    rotation = 270;
                     break;
                 case MeshHelper.CubeFace.BACK:
                     rotation = 0;

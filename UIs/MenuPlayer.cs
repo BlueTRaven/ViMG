@@ -83,7 +83,7 @@ namespace ViMG.UIs
 		private bool craftInventoryUpdated;
 		private Recipe currentRecipe;
 
-		private int DEBUGItemListScrollRow = 0;
+		private int DEBUGItemListPage = 0;
 
 		private TextHelper.FontInfo fi;
 
@@ -473,39 +473,49 @@ namespace ViMG.UIs
 
 					var allItems = Main.Registry.ItemRegistry.GetIterable();
 
-					for (int i = DEBUGItemListScrollRow * 8; i < allItems.Count; i++)
+					for (int i = 0; i < 8 * 8; i++)
 					{
+						int offsetI = (DEBUGItemListPage * (8 * 8)) + i;
+
+						if (offsetI > allItems.Count - 1) 
+							offsetI = allItems.Count - 1;
+
 						int x = i % 8;
 						int y = i / 8;
-						RectangleF b = new RectangleF(x * SIZE, (y - DEBUGItemListScrollRow) * SIZE , SIZE, SIZE);
 
-						var cheatSlot = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-									new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
-									new ItemInstance(allItems[i], 999, 1));
+						UI.StartParent(new Vector2(x * 18, y * 18) * SCALE);
 
-						if (cheatSlot.button.clickLeft)
-						{
-							inventory.Add(new ItemInstance(allItems[i], 999, 1));
-						}
-						else if (cheatSlot.button.clickRight)
-						{
-							inventory.Add(new ItemInstance(allItems[i], 1, 1));
-						}
+                        var cheatSlot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), new ItemInstance(allItems[offsetI], 999, 1));
 
-						if (cheatSlot.button.hovered)
+                        if (cheatSlot.button.clickLeft)
                         {
-							int scroll = -Main.inputManager.GetMouseScroll();
+                            inventory.Add(new ItemInstance(allItems[offsetI], 999, 1));
+                        }
+                        else if (cheatSlot.button.clickRight)
+                        {
+                            inventory.Add(new ItemInstance(allItems[offsetI], 1, 1));
+                        }
 
-							int maxScroll = (int)Math.Ceiling((double)allItems.Count / 8.0) - 7;	//7 is the maximum number of rows on screen at a time.
+                        if (cheatSlot.button.hovered)
+                        {
+                            int scroll = -Main.inputManager.GetMouseScroll();
 
-							if (scroll != 0)
+                            if (Main.inputManager.JustPressed(Keys.PageUp))
+                                scroll--;
+                            else if (Main.inputManager.JustPressed(Keys.PageDown))
+                                scroll++;
+
+                            int maxScroll = (int)Math.Round(allItems.Count / (8.0 * 8.0), MidpointRounding.AwayFromZero);
+
+                            if (scroll != 0)
                             {
-								DEBUGItemListScrollRow += scroll;
+                                DEBUGItemListPage += scroll;
 
-								DEBUGItemListScrollRow = Math.Clamp(DEBUGItemListScrollRow, 0, maxScroll);
+                                DEBUGItemListPage = Math.Clamp(DEBUGItemListPage, 0, maxScroll);
                             }
+                        }
 
-						}
+                        UI.EndParent();
 					}
 
 					UI.EndParent();
