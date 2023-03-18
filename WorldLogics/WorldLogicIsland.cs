@@ -138,7 +138,7 @@ namespace ViMG.WorldLogics
 					}
 
 					float angle = 360 * ((alive % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
-					directionalLight.UpdateCameras(Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+					directionalLight.UpdateCameras(world, Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), color);
 

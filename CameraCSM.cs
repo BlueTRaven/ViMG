@@ -99,11 +99,11 @@ namespace ViMG
             var shadowMatrixTemp = ourView * ourProj;
             var shadowOrigin = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
             shadowOrigin = Vector4.Transform(shadowOrigin, shadowMatrixTemp);
-            shadowOrigin = shadowOrigin * (1024f / 2.0f);
+            shadowOrigin = shadowOrigin * ((float)DirectionalLight.RT_SIZE / 2.0f);
 
             var roundedOrigin = new Vector4((float)Math.Round(shadowOrigin.X), (float)Math.Round(shadowOrigin.Y), (float)Math.Round(shadowOrigin.Z), (float)Math.Round(shadowOrigin.W));
             var roundOffset = roundedOrigin - shadowOrigin;
-            roundOffset = roundOffset * (2.0f / 1024f);
+            roundOffset = roundOffset * (2.0f / (float)DirectionalLight.RT_SIZE);
             roundOffset.Z = 0.0f;
             roundOffset.W = 0.0f;
 
@@ -114,6 +114,11 @@ namespace ViMG
             shadowProj.M43 += roundOffset.Z;
             shadowProj.M44 += roundOffset.W;
             ourProj = shadowProj;
+        }
+
+        public Vector3[] GetCorners()
+        {
+            return corners;
         }
 
         private Vector3[] corners = new Vector3[8];
@@ -141,6 +146,7 @@ namespace ViMG
                 corners[i + 4] = corners[i] + farCornerRay;
                 corners[i] = corners[i] + nearCornerRay;
             }
+
             //corners = mainCamera.GetFrustum().GetCorners();
 
             /*int ci = 0;

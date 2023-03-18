@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuUtilities.Collections;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,11 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG
 {
     public class DirectionalLight : IDisposable
     {
+		public const int RT_SIZE = 512;
+
         //public CameraOrthographic camera;
 		public CameraCSM camera;
 		public CameraCSM[] cameras;
@@ -38,10 +42,17 @@ namespace ViMG
 		private int version;
 		private int lastUpdatedVersion;
 
+		private FastList<ChunkPosition>[] cameraCachedChunks;
+
 		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] splitDistances)
         {
 			int num = splitDistances.Length + 1;
-			this.splitDistances = new float[num];
+
+			cameraCachedChunks = new FastList<ChunkPosition>[num];
+			for (int i = 0; i < num; i++)
+				cameraCachedChunks[i] = new FastList<ChunkPosition>();
+
+            this.splitDistances = new float[num];
 			for (int i = 0; i < num - 1; i++)
 				this.splitDistances[i] = splitDistances[i];
 			this.splitDistances[num - 1] = 1.0f;
@@ -61,7 +72,7 @@ namespace ViMG
 			lightViewProjections = new Matrix[num];
 			cascadeOffsets = new Vector4[num];
 			cascadeScales = new Vector4[num];
-			targetsArr = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 
+			targetsArr = new RenderTarget2D(device, RT_SIZE, RT_SIZE, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 
 				1, RenderTargetUsage.PreserveContents, false, num);
 			for (int i = 0; i < num; i++)
             {
@@ -72,7 +83,7 @@ namespace ViMG
 				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], mainCamera.Far, splitDistances[i - 1], 1f);
 			}
 
-			target = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+			target = new RenderTarget2D(device, RT_SIZE, RT_SIZE, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
 			//Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
 			//Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
@@ -95,20 +106,51 @@ namespace ViMG
 			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
-		public void UpdateCameras(Vector3 direction, Color color, float clampY = -1)
+		public void UpdateCameras(World world, Vector3 direction, Color color, float clampY = -1)
         {
 			this.lightDirection = Vector3.Normalize(direction);
 			this.lightColor = color.ToVector3();
 
+			ChunkPosition cameraPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
+
 			for (int i = 0; i < cameras.Length; i++)
             {
 				cameras[i].Update(Vector3.Normalize(direction), clampY - (0.001f * i));
+
+				cameraCachedChunks[i].Clear();
+
+				for (int x = (int)Math.Max(0, cameraPos.X - world.DrawDistanceHoriz); 
+					x <= (int)Math.Min(world.sizeInChunks, cameraPos.X + world.DrawDistanceHoriz); x++)
+				{
+					for (int y = (int)Math.Max(0, cameraPos.Y - world.DrawDistanceVert); 
+						y <= (int)Math.Min(world.sizeInChunks, cameraPos.Y + world.DrawDistanceVert); y++)
+					{
+                        for (int z = (int)Math.Max(0, cameraPos.Z - world.DrawDistanceHoriz); 
+							z <= (int)Math.Min(world.sizeInChunks, cameraPos.Z + world.DrawDistanceHoriz); z++)
+						{
+							ChunkPosition chunkPos = new ChunkPosition(x, y, z);
+
+							if (world.ChunkManager.IsInWorldBounds(chunkPos) && world.ChunkLoadManager.IsLoaded(chunkPos))
+							{
+								/*if (cameras[i].GetFrustum().Contains(new BoundingBox(chunkPos.InWorldSpace(),
+									chunkPos.InWorldSpace() + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))) == ContainmentType.Intersects)*/
+									cameraCachedChunks[i].Add(chunkPos);
+							}
+						}
+					}
+                }
             }
-
-			//camera.Update(Vector3.Normalize(direction), clampY);
-
+			
 			version++;
         }
+
+		//Try to test for intersection by using the precomputed points in CameraCSM instead of using BoundingFrustum (which appears to be incorrect)
+		private void CorrectTestFor(CameraCSM camera)
+		{
+			Vector3[] corners = camera.GetCorners();
+
+
+		}
 
         public void DrawShadowmap(GraphicsDevice device, World world)
 		{
@@ -139,7 +181,7 @@ namespace ViMG
 				device.SetRenderTarget(targetsArr, i);
 				device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
-				DrawOneCamera(device, camera, world);
+				DrawOneCamera(device, camera, cameraCachedChunks[i], world);
 
 				//lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
@@ -178,7 +220,7 @@ namespace ViMG
 			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
 
 			effect.Parameters["NumCascades"].SetValue(farPlanes.Length);
-			effect.Parameters["LightResolution"].SetValue(new Vector2(1024));
+			effect.Parameters["LightResolution"].SetValue(new Vector2(RT_SIZE));
 
 			effect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
 			effect.Parameters["LightViewProjection"].SetValue(globalShadowMatrix);
@@ -232,7 +274,7 @@ namespace ViMG
 			return (shadowView * shadowProj) * texScaleBias;
 		}
 
-		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, World world)
+		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, FastList<ChunkPosition> cachedChunkPositions, World world)
         {
 			//Main.WVP.SetProjection(camera.GetProjectionMatrix());
 			//Main.WVP.SetView(camera.GetViewMatrix());
@@ -242,7 +284,26 @@ namespace ViMG
 			effectDepth.Parameters["WorldViewProjection"].SetValue(viewProj);
 			//effectDepth.Parameters["World"].SetValue(Matrix.Identity);
 
-			for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
+			for (int i = 0; i < cachedChunkPositions.Length; i++)
+			{
+                (VertexBuffer VBO, IndexBuffer IBO) mesh = world.ChunkManager.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
+                //Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
+
+                if (mesh.VBO != null)
+                {
+                    device.SetVertexBuffer(mesh.VBO);
+                    device.Indices = mesh.IBO;
+
+                    foreach (var pass in effectDepth.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
+                    }
+
+                    //mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
+                }
+            }
+			/*for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
 			{
 				for (int y = -world.DrawDistanceVert; y <= world.DrawDistanceVert; y++)
 				{
@@ -274,7 +335,7 @@ namespace ViMG
 						}
 					}
 				}
-			}
+			}*/
 		}
 
 		public RenderTarget2D GetShadowmapBuffer()
