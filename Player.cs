@@ -1498,10 +1498,33 @@ namespace ViMG
 			}
 		}
 
-		private void UpdateMouse()
+		private unsafe void UpdateMouse()
 		{
 			if (hasMoved)
-				Main.camera.Position = Position;
+			{
+				//Works fine, not geometry-aware
+				//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
+
+				const float distance = Cube.CUBE_SCALE * 2f;
+				int intersectionCount = 0;
+
+				RayHit hit = new RayHit();
+				//camera.Forward is inverted, Forward is towards camera (i.e. backward). Whoopsie
+				SweepHitHandler handler = new SweepHitHandler(&hit, physicsHandle, &intersectionCount);
+
+				world.PhysicsInfo.Simulation.Sweep(new Sphere(Cube.CUBE_SCALE * 0.55f), new RigidPose(Position.ToNumerics()),
+					new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), distance, 
+					world.PhysicsInfo.GlobalBufferPool, ref handler);
+
+				float min = distance;
+                if (intersectionCount > 0)
+				{
+					if (handler.Hit->Hit)
+						min = float.Min(handler.Hit->T, min);
+				}
+
+				Main.camera.Position = Position + Main.camera.Forward * min;
+			}
 
 			if (menuPlayer.IsOpened || world.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
 				return;
