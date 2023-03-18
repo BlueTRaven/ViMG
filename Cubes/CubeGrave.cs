@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
+using ViMG.Entities;
 using ViMG.Items;
 
 namespace ViMG.Cubes
@@ -49,6 +50,7 @@ namespace ViMG.Cubes
 
             if (numNearby <= 0)
             {
+                player.world.EntityManager.Add(new Ghost(position.InWorldSpaceCenter()));
                 //spawn ghost entity
             }
         }

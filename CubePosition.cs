@@ -80,6 +80,11 @@ namespace ViMG
 			return new Vector3(X * Cube.CUBE_SCALE, Y * Cube.CUBE_SCALE, Z * Cube.CUBE_SCALE);
 		}
 
+		public Vector3 InWorldSpaceCenter()
+		{
+			return InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f);
+		}
+
 		public Vector3 InWorldSpace(ChunkPosition chunk)
 		{
 			CubePosition pos = this;

@@ -13,9 +13,9 @@ namespace ViMG.Entities
     {
 		public enum State
 		{
-			Normal,
-			Attack,
-			AttackStun,
+			Normal,			//walking/idling/moving towards player/etc
+			Attack,			//attacking player
+			AttackStun,		//stun after attacking player
 		}
 
 		private State state;
@@ -48,6 +48,8 @@ namespace ViMG.Entities
 		public int AttackDamage = 4;
 		private Rectangle3D attackHitboxBounds;
 		private int attackHitbox = -1;
+
+		public Vector3 Facing;
 
 		private BuffManager buffManager;
 		private NoticeHandler<Player> noticeHandler;
@@ -110,8 +112,10 @@ namespace ViMG.Entities
 						{
 							//Initial first acceleration (we start with 0 velocity, and that results in NaNs, so we kinda have to seed it)
 							Velocity += playerDir * Acceleration;
-						}
-					}
+                        }
+
+                        Facing = Vector3.Normalize(Velocity);
+                    }
 					else
 					{
 						//slow down very fast.
@@ -261,29 +265,9 @@ namespace ViMG.Entities
 				{
 					Vector3 direction = Vector3.Normalize(other.direction);
 
-					Velocity = new Vector3(direction.X * Cube.CUBE_SCALE * other.knockback, direction.Y * Cube.CUBE_SCALE * other.knockback, direction.Z * Cube.CUBE_SCALE * other.knockback);
-
-					Health -= other.damage;
-
-					if (Health <= 0)
-					{
-						Health = 0;
-						entity.world.EntityManager.Remove(entity);
-
-						if (touchHitbox != -1)
-							entity.world.HitboxManager.Remove(touchHitbox);
-					}
+					Hurt(direction, other.knockback, other.damage);
 
 					buffManager.AddBuffs(other.applyBuffs);
-
-					InvulnTimer = 0.25f;
-
-					//interrupt current attack
-					if (state == State.Attack || state == State.AttackStun)
-						state = State.Normal;
-
-					attackTimer = 0;    //immediately attempt to attack?
-
 					noticeHandler.OnTakeDamage(other.owner);
 				}
 				else if ((us.group & HitboxManager.Group.ENEMYHOSTILE_DEAL) == HitboxManager.Group.ENEMYHOSTILE_DEAL && other.group == HitboxManager.Group.PLAYER_TAKE &&
@@ -294,6 +278,31 @@ namespace ViMG.Entities
 				}
 			}
 		}
+
+		public void Hurt(Vector3 hitDirection, float knockback, int damage)
+		{
+            Velocity = new Vector3(hitDirection.X * Cube.CUBE_SCALE * knockback, 
+				hitDirection.Y * Cube.CUBE_SCALE * knockback, hitDirection.Z * Cube.CUBE_SCALE * knockback);
+
+            Health -= damage;
+
+            if (Health <= 0)
+            {
+                Health = 0;
+                entity.world.EntityManager.Remove(entity);
+
+                if (touchHitbox != -1)
+                    entity.world.HitboxManager.Remove(touchHitbox);
+            }
+
+            InvulnTimer = 0.25f;
+
+            //interrupt current attack
+            if (state == State.Attack || state == State.AttackStun)
+                state = State.Normal;
+
+            attackTimer = 0;    //immediately attempt to attack?
+        }
 
 		public State GetState()
         {
