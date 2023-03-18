@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Microsoft.VisualBasic.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -209,7 +210,13 @@ namespace ViMG
 		public Vector3 LookAtNormal;
 		//likewise, this is the position the player will place a cube if they right clicked the LookAtPos
 		//with a cube item in hand.
-		public CubePosition PlaceAtPos;	
+		public CubePosition PlaceAtPos;
+		private float desiredThirdPersonDistance;
+		private float currentThirdPersonDistance;
+		private const float THIRDPERSON_MAX_DISTANCE = Cube.CUBE_SCALE * 4f;
+		private const float THIRDPERSON_FADEOUT_START = Cube.CUBE_SCALE * 0.9f;
+		private const float THIRDPERSON_FADEOUT_END = Cube.CUBE_SCALE * 1.5f;
+
 		private float alive = 0;
 
 		private const float PULL_RADIUS = 3.25f * Cube.CUBE_SCALE;
@@ -217,6 +224,7 @@ namespace ViMG
 		private const float PUSH_RADIUS = 1.75f * Cube.CUBE_SCALE;
 		private Vector3 attackStateTargetPos;
 
+		private (VertexBuffer VBO, IndexBuffer IBO) mesh;
 		private SimpleMesh<VertexCube, int> lookAtMesh;
 
 		public const int INVENTORY_ROWS = 4;
@@ -528,6 +536,30 @@ namespace ViMG
 
 			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
 				hasMoved = true;
+
+			int scroll = Main.inputManager.GetMouseScroll();
+
+            if (scroll != 0)
+			{
+				int sign = Math.Sign(scroll);
+
+				desiredThirdPersonDistance += sign;
+
+				desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+			}
+
+			if (Main.inputManager.JustPressed(Keys.PageDown))
+			{
+				desiredThirdPersonDistance += Cube.CUBE_SCALE;
+
+                desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+            }
+			if (Main.inputManager.JustPressed(Keys.PageUp))
+			{
+                desiredThirdPersonDistance -= Cube.CUBE_SCALE;
+
+                desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+            }
 
 			damageAnimTimer -= (float)deltaTime;
 
@@ -1305,174 +1337,6 @@ namespace ViMG
 			}
 		}
 
-		private void UpdateCollision(double deltaTime)
-		{
-			if (contactChecker.OnGround && !contactChecker.WasOnGround)
-				LandOnGround();
-
-			/*inRope = false;
-			inWater = false;
-			onGround = false;
-			headUnderWater = false;
-
-			const float RADIUS = Cube.CUBE_SCALE * 0.4f;
-
-			const float LOWER_OFFSET = Cube.CUBE_SCALE * 0.75f;
-
-			Vector3 realVelocity = Velocity * (float)deltaTime;
-
-			CubePosition near = CubePosition.FromWorldSpace(Bounds.Position + (realVelocity + realVelocity * RADIUS));
-			CubePosition far = CubePosition.FromWorldSpace(Bounds.FarPosition + (realVelocity + realVelocity * RADIUS));
-
-			if (far.X < near.X)
-            {
-				var temp = far.X;
-				far.X = near.X;
-				near.X = temp;
-            }
-
-			if (far.Y < near.Y)
-			{
-				var temp = far.Y;
-				far.Y = near.Y;
-				near.Y = temp;
-			}
-
-			if (far.Z < near.Z)
-			{
-				var temp = far.Z;
-				far.Z = near.Z;
-				near.Z = temp;
-			}
-
-			int checkCount = (far.X - near.X + 1) * (far.Y - near.Y + 1) * (far.Z - near.Z + 1);
-			int pi = 0;
-			Span<CubePosition> positions = stackalloc CubePosition[checkCount];
-			Span<ushort> ids = stackalloc ushort[checkCount];
-
-			for (int x = near.X; x <= far.X; x++)
-			{
-				for (int y = near.Y; y <= far.Y; y++)
-				{
-					for (int z = near.Z; z <= far.Z; z++)
-					{
-						CubePosition pos = new CubePosition(x, y, z);
-						positions[pi] = pos;
-						pi++;
-					}
-				}
-			}
-
-			world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
-
-			for (int j = 0; j < checkCount; j++)
-            {
-				CubePosition pos = positions[j];
-
-				Cube cube = Main.Registry.CubeRegistry.GetOrDefault(ids[j], Main.Registry.CubeRegistry.Air);
-
-				if (cube.Id != 0 &&
-					(cube.Collision == Cube.CollisionValue.Collidable ||
-					cube.Collision == Cube.CollisionValue.LiquidWater ||
-					cube.Collision == Cube.CollisionValue.Rope ||
-					cube.Collision == Cube.CollisionValue.Platform))
-				{
-					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-					for (int i = 0; i < 4; i++)
-					{
-						Vector3 segmentVelocity = (Velocity / 4f * i) * (float)deltaTime;
-
-						Vector3 lowerCheckPos = Position - new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + segmentVelocity;
-						Vector3 upperCheckPos = Position + segmentVelocity;
-
-						bool collided = false;
-
-						if (cube.Collision == Cube.CollisionValue.LiquidWater)
-						{
-							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-							{
-								inWater = true;
-								collided = true;
-							}
-
-							if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-							{
-								inWater = true;
-								headUnderWater = true;
-								collided = true;
-							}
-						}
-						else if (cube.Collision == Cube.CollisionValue.Rope)
-						{
-							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-							{
-								inRope = true;
-								collided = true;
-							}
-
-							if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-							{
-								inRope = true;
-								collided = true;
-							}
-
-							if (collided)
-								fallStartY = Position.Y;
-						}
-						else if (cube.Collision == Cube.CollisionValue.Platform)
-						{
-							//Only perform this logic if LCtrl is not held.
-							if (!Main.inputManager.IsPressed(Keys.LeftControl) && CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-							{
-								if (lowerChange.Y > 0 && Velocity.Y <= 0)
-								{
-									Position.Y = lowerCheckPos.Y + Bounds.Size.Y - LOWER_OFFSET + lowerChange.Y;
-									LandOnGround();
-								}
-
-								collided = true;
-							}
-						}
-						else
-						{
-							if (CollisionHelper.CheckCollision(cubeBounds, lowerCheckPos, RADIUS, out Vector3 lowerChange))
-							{
-								Position = lowerCheckPos + new Vector3(0, Bounds.Size.Y - LOWER_OFFSET, 0) + lowerChange;
-
-								if (lowerChange.Y > 0 && Velocity.Y <= 0)
-									LandOnGround();
-								else if (lowerChange.Y < 0)
-									Velocity.Y = 0;
-								else if (lowerChange.X != 0)
-									Velocity.X = 0;
-								else if (lowerChange.Z != 0)
-									Velocity.Z = 0;
-
-								collided = true;
-							}
-							else if (CollisionHelper.CheckCollision(cubeBounds, upperCheckPos, RADIUS, out Vector3 upperChange))
-							{
-								Position = upperCheckPos + upperChange;
-
-								if (upperChange.Y != 0)
-									Velocity.Y = 0;
-								else if (upperChange.X != 0)
-									Velocity.X = 0;
-								else if (upperChange.Z != 0)
-									Velocity.Z = 0;
-
-								collided = true;
-							}
-						}
-
-						if (collided)
-							break;
-					}
-				}
-			}*/
-		}
-
 		private void LandOnGround()
         {
 			//Velocity.Y = 0;
@@ -1505,7 +1369,6 @@ namespace ViMG
 				//Works fine, not geometry-aware
 				//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
 
-				const float distance = Cube.CUBE_SCALE * 2f;
 				int intersectionCount = 0;
 
 				RayHit hit = new RayHit();
@@ -1513,17 +1376,22 @@ namespace ViMG
 				SweepHitHandler handler = new SweepHitHandler(&hit, physicsHandle, &intersectionCount);
 
 				world.PhysicsInfo.Simulation.Sweep(new Sphere(Cube.CUBE_SCALE * 0.55f), new RigidPose(Position.ToNumerics()),
-					new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), distance, 
+					new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), desiredThirdPersonDistance, 
 					world.PhysicsInfo.GlobalBufferPool, ref handler);
 
-				float min = distance;
+				float min = desiredThirdPersonDistance;
                 if (intersectionCount > 0)
 				{
 					if (handler.Hit->Hit)
 						min = float.Min(handler.Hit->T, min);
 				}
 
-				Main.camera.Position = Position + Main.camera.Forward * min;
+				currentThirdPersonDistance = min;
+
+				const float maxToSide = Cube.CUBE_SCALE * 0.65f;
+				float pToSide = currentThirdPersonDistance / THIRDPERSON_MAX_DISTANCE;
+
+				Main.camera.Position = Position + Main.camera.Forward * currentThirdPersonDistance + Main.camera.Right * (maxToSide * pToSide);
 			}
 
 			if (menuPlayer.IsOpened || world.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
@@ -1658,12 +1526,38 @@ namespace ViMG
 				inventory.Get(menuPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(menuPlayer.HighlightIndex), this, -Main.camera.Forward);
 			}
 
+			if (mesh.VBO == null)
+				mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
+
 			if (lookAtMesh == null)
 			{
 				lookAtMesh = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				lookAtMesh.Name = "Look At Mesh";
 			}
+
+			if (currentThirdPersonDistance > THIRDPERSON_FADEOUT_START)
+			{
+				float p = ((currentThirdPersonDistance - THIRDPERSON_FADEOUT_START) / 
+					(THIRDPERSON_FADEOUT_END - THIRDPERSON_FADEOUT_START));
+
+				Color color = Color.White * p;
+
+				Matrix worldMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+					Matrix.CreateTranslation(world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position);
+
+                if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
+				{
+					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(currentThirdPersonDistance,
+                        worldMat, DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, color));
+				}
+				else
+				{
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
+				}
+            }
 
 			if (lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
 			{
