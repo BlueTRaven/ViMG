@@ -205,11 +205,11 @@ namespace ViMG
 
 			//ProfilingHelper.StartBatch("Beginning load around target...");
 
-			for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
+			for (int z = -Options.RenderDistance; z < Options.RenderDistance; z++)
 			{
 				for (int y = -Options.RenderDistance; y <= Options.RenderDistance; y++)
 				{
-					for (int z = -Options.RenderDistance; z < Options.RenderDistance; z++)
+					for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
 					{
 						var pos = baseChunkPos + new ChunkPosition(x, y, z);
 

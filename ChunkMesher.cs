@@ -360,11 +360,12 @@ namespace ViMG
 			for (int i = 0; i < state.batch.num; i++)
 			{
 				RenderMeshInfo cmi = state.batch.meshInfos[i];
-				for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+
+				for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 				{
 					for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
 					{
-						for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+						for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 						{
 							CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 							Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
@@ -516,11 +517,11 @@ namespace ViMG
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
-			for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+			for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
 			{
 				for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
 				{
-					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+					for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 					{
 						CubePosition cubePosition = new CubePosition(x, y, z);
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);

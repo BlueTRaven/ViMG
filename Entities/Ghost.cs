@@ -26,6 +26,8 @@ namespace ViMG.Entities
         private Color tintColor;
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
+        private float despawnTimer = 20;
+
         public Ghost()
         {
         }
@@ -67,6 +69,14 @@ namespace ViMG.Entities
             Vector3 nearestDir = Vector3.Zero;
             IReadOnlyList<Entity> altars = world.EntityManager.GetAll<AncientAltar>();
 
+            if (noticeHandler.Noticed)
+            {
+                despawnTimer = 20f;
+
+                if (noticeHandler.Target.Dead)
+                    despawnTimer = -1;
+            }
+
             for (int i = 0; i < altars.Count; i++)
             {
                 Vector3 dir = altars[i].Position - Position;
@@ -80,6 +90,8 @@ namespace ViMG.Entities
 
             if (nearest != null && nearestDir.Length() < Cube.CUBE_SCALE * 4)
             {
+                despawnTimer = 20f;
+
                 //unset target
                 noticeHandler.Target = null;
 
@@ -99,6 +111,10 @@ namespace ViMG.Entities
                 //make invulnerable
                 ai.InvulnTimer = 1f;
             }
+
+            if (despawnTimer <= 0)
+                world.EntityManager.Remove(this);
+            else despawnTimer -= (float)deltaTime;
         }
 
         public override void Draw(GraphicsDevice device, Effect effect)
@@ -148,7 +164,9 @@ namespace ViMG.Entities
 
             Vector3 offset = Vector3.Zero;
 
-            offset.Y = MathF.Sin(MathF.PI * 2 * (alive % 4f) / 4f) * Cube.CUBE_SCALE;
+            offset.Y = MathF.Sin(MathF.PI * 2 * (alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
+
+            tintColor = Color.White;
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("grave_ghost"),
                 DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,

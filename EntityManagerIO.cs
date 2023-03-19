@@ -205,11 +205,11 @@ namespace ViMG
 
 		public void SerializeAll(int sizeInChunks)
         {
-			for (int x = 0; x < sizeInChunks; x++)
+			for (int z = 0; z < sizeInChunks; z++)
             {
 				for (int y = 0; y < sizeInChunks; y++)
                 {
-					for (int z = 0; z < sizeInChunks; z++)
+					for (int x = 0; x < sizeInChunks; x++)
                     {
 						Serialize(new ChunkPosition(x, y, z));
                     }

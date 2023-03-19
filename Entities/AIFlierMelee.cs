@@ -144,7 +144,7 @@ namespace ViMG.Entities
 						Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
 						if (attackHitbox == -1)
 							attackHitbox = entity.world.HitboxManager.Add(this, attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
-								Vector3.Normalize(Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, AttackDamage, 1);
+								Vector3.Normalize(Facing), HitboxManager.Group.ENEMYHOSTILE_BOTH, AttackDamage, 1);
 
 						state = State.AttackStun;
 						attackTimer = AttackStunTime;

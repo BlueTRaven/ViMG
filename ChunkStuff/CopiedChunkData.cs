@@ -47,6 +47,10 @@ namespace ViMG.ChunkStuff
 
         public void Return()
         {
+            //remove references, since they might stick around for too long otherwise
+            for (int i = 0; i < EntityMeshingDatas.Length; i++)
+                EntityMeshingDatas[i] = null;
+
             valid = false;
         }
 

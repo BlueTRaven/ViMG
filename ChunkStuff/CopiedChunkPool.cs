@@ -55,14 +55,29 @@ namespace ViMG.ChunkStuff
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
 
-            for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
+            for (int z = -1; z <= Chunk.CHUNK_SIZE; z++)
             {
                 for (int y = -1; y <= Chunk.CHUNK_SIZE; y++)
                 {
-                    for (int z = -1; z <= Chunk.CHUNK_SIZE; z++)
+                    for (int x = -1; x <= Chunk.CHUNK_SIZE; x++)
                     {
                         Util.ThreeDToOneD(new ValuePoint3D(x + 1, y + 1, z + 1), new ValuePoint3D(CopiedChunkData.WHD), out int i);
                         CubePosition pos = basePosition + new CubePosition(x, y, z);
+
+                        if (pos.X < 0)
+                            pos.X = 0;
+                        if (pos.Y < 0)
+                            pos.Y = 0;
+                        if (pos.Z < 0)
+                            pos.Z = 0;
+
+                        if (pos.X >= world.sizeInCubes)
+                            pos.X = world.sizeInCubes - 1;
+                        if (pos.Y >= world.sizeInCubes)
+                            pos.Y = world.sizeInCubes - 1;
+                        if (pos.Z >= world.sizeInCubes)
+                            pos.Z = world.sizeInCubes - 1;
+
                         queryPositions[i] = pos;
                     }
                 }

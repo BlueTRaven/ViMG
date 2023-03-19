@@ -4,6 +4,7 @@ using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
 using Microsoft.Xna.Framework;
+using SharpDX.MediaFoundation.DirectX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -124,8 +125,12 @@ namespace ViMG
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
+        private BufferPool theOneBufferPool;
+
         public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkMesher mesher, int sizeInChunks)
         {
+            theOneBufferPool = new BufferPool();
+
             this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
             this.mesher = mesher;
@@ -156,7 +161,7 @@ namespace ViMG
                     //place into the current batch to be meshed later.
                     currentBatch.positions[currentBatch.num] = meshInfo.position;
                     currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
-                    currentBatch.versions[currentBatch.num] = meshInfo.version;
+                    currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
                     currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
                     currentBatch.num++;
                 }
@@ -223,13 +228,14 @@ namespace ViMG
 
                         ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
 
-                        if (batchResult.versions[j] > meshInfoOld.version || !meshInfoOld.hasMesh)
+                        if (batchResult.versions[j] != meshInfoOld.version || !meshInfoOld.hasMesh)
                         {
                             //Unload the old mesh now
                             Unload(ref meshInfoOld);
 
                             //Then paste the result stuff over
                             meshInfoOld.meshVersion = batchResult.versions[j];
+                            meshInfoOld.version = batchResult.versions[j];
 
                             meshInfoOld.collidableMesh = batchResult.meshes[j];
 
@@ -281,13 +287,14 @@ namespace ViMG
 
                         ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
 
-                        if (batchResult.versions[j] >= meshInfoOld.version || !meshInfoOld.hasMesh)
+                        if (batchResult.versions[j] != meshInfoOld.version || !meshInfoOld.hasMesh)
                         {
                             //Unload the old mesh now
                             Unload(ref meshInfoOld);
 
                             //Then paste the result stuff over
                             meshInfoOld.meshVersion = batchResult.versions[j];
+                            meshInfoOld.version = batchResult.versions[j];
 
                             meshInfoOld.collidableMesh = batchResult.meshes[j];
 
@@ -349,7 +356,7 @@ namespace ViMG
             {
                 currentBatch.positions[currentBatch.num] = meshInfo.position;
                 currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
-                currentBatch.versions[currentBatch.num] = meshInfo.version;
+                currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
                 currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
                 currentBatch.num++;
             }
@@ -375,11 +382,11 @@ namespace ViMG
             {
                 for (int i = 0; i < state.batch.num; i++)
                 {
-                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
                         for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                         {
-                            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                             {
                                 CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
                                 Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
@@ -406,21 +413,24 @@ namespace ViMG
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh
         public static Mesh GenerateMesh(BufferPool bufferPool, List<VertexCube> vertices, List<int> indices)
         {
-            bufferPool.Take<Triangle>(indices.Count / 3, out var triangleBuffer);
-
-            for (int i = 0; i < indices.Count; i += 3)
+            lock (bufferPool)
             {
-                int a = indices[i];
-                int b = indices[i + 1];
-                int c = indices[i + 2];
+                bufferPool.Take<Triangle>(indices.Count / 3, out var triangleBuffer);
 
-                triangleBuffer[i / 3] = new Triangle(vertices[a].Position.ToNumerics(), vertices[b].Position.ToNumerics(),
-                    vertices[c].Position.ToNumerics());
+                for (int i = 0; i < indices.Count; i += 3)
+                {
+                    int a = indices[i];
+                    int b = indices[i + 1];
+                    int c = indices[i + 2];
+
+                    triangleBuffer[i / 3] = new Triangle(vertices[a].Position.ToNumerics(), vertices[b].Position.ToNumerics(),
+                        vertices[c].Position.ToNumerics());
+                }
+
+                var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, bufferPool);
+
+                return collidableMesh;
             }
-
-            var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, bufferPool);
-
-            return collidableMesh;
         }
 
         public bool IsMeshed(ChunkPosition position)
@@ -441,7 +451,8 @@ namespace ViMG
                     meshInfo.hasSimReferences = false;
                 }
 
-                meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
+                lock (meshInfo.bufferPool)
+                    meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
                 meshInfo.collidableMesh = default;
 
                 meshInfo.hasMesh = false;
@@ -473,7 +484,9 @@ namespace ViMG
                         meshes[j].hasSimReferences = false;
                     }
 
-                    meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
+                    lock (meshes[j].bufferPool)
+                        meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
+
                     meshes[j].collidableMesh = default;
 
                     meshes[j].hasMesh = false;
@@ -499,7 +512,7 @@ namespace ViMG
             meshInfo.position = pos;
 
             if (meshInfo.bufferPool == null)
-                meshInfo.bufferPool = new BufferPool();
+                meshInfo.bufferPool = theOneBufferPool;
 
             return ref meshInfo;
         }

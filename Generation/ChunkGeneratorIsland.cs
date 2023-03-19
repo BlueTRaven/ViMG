@@ -426,7 +426,49 @@ namespace ViMG.Generation
 			}
 			ProfilingHelper.End("Done.");
 
-			const int NUM_SHRINES = 300;
+			const int NUM_GRAVES = 400;
+			spawnNum = NUM_GRAVES;
+			lastPosition = 0;
+
+			positions = stackalloc CubePosition[NUM_GRAVES];
+
+			ProfilingHelper.Start("Generating Graves...");
+            while (spawnNum > 0)
+            {
+                CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
+                    layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
+
+                if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+                {
+                    var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
+
+                    if (solidDown.HasValue())
+                    {
+						CubePosition actualGenPos = solidDown.Get();
+
+                        int which = GetRandom().Next(0, 2);
+
+                        if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
+                        {
+                            positions[lastPosition++] = actualGenPos;
+                            
+							world.ChunkManager.InitializerView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id);
+                            world.ChunkManager.InitializerView.SetCube(actualGenPos + new CubePosition(0, 1, 0), 
+								Main.Registry.CubeRegistry.Get("grave").Id);
+							if (which == 1)
+								world.ChunkManager.InitializerView.SetCube(actualGenPos + new CubePosition(0, 2, 0), 
+									Main.Registry.CubeRegistry.Get("grave").Id);
+
+                            world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "grave", 1));
+
+                            spawnNum--;
+                        }
+                    }
+                }
+            }
+			ProfilingHelper.End("Done.");
+
+            const int NUM_SHRINES = 300;
 			spawnNum = NUM_SHRINES;
 			lastPosition = 0;
 

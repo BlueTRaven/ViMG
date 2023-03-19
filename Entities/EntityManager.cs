@@ -21,7 +21,7 @@ namespace ViMG.Entities
 		private List<Entity> toAddLater = new List<Entity>();
 		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
-		private struct CubeTrackers
+		private class CubeTrackers
 		{
 			public ICubeTracker[] cubeTrackers;
 			public IMultiCubeTracker[] multiCubeTrackers;
@@ -36,13 +36,19 @@ namespace ViMG.Entities
 				{
 					if (cubeTrackers == null)
 						cubeTrackers = new ICubeTracker[Chunk.NUM_CUBES_IN_CHUNK];
-					cubeTrackers[i] = tracker;
-				}
+
+					if (cubeTrackers[i] == null)
+						cubeTrackers[i] = tracker;
+                    else throw new Exception("???");
+                }
 				else if (entity is IMultiCubeTracker multiTracker)
 				{
 					if (multiCubeTrackers == null)
 						multiCubeTrackers = new IMultiCubeTracker[Chunk.NUM_CUBES_IN_CHUNK];
-					multiCubeTrackers[i] = multiTracker;
+
+					if (multiCubeTrackers[i] == null)
+						multiCubeTrackers[i] = multiTracker;
+					else throw new Exception("???");
 				}
 
 				count++;
@@ -55,7 +61,7 @@ namespace ViMG.Entities
                 bool isSingle = cubeTrackers != null && cubeTrackers[i] != null;
 				bool isMulti = multiCubeTrackers != null && multiCubeTrackers[i] != null;
 
-				if (isSingle && isMulti)
+				if (isSingle && isMulti || (cubeTrackers?[i] == null && multiCubeTrackers?[i] == null))
 					throw new Exception("???");
 
                 if (isSingle)
@@ -190,16 +196,28 @@ namespace ViMG.Entities
 
 		public void Unload(ChunkPosition pos)
         {
-			//TODO: better method of determining which entities are in this chunk for unloading
+			if (pos == new ChunkPosition(11, 8, 16))
+				Console.WriteLine("aaa");
+            //TODO: better method of determining which entities are in this chunk for unloading
 
-			//queue all entities in chunk to be unloaded
-			foreach (Entity entity in entities)
+			//Initial flush to remove entities that are already queued to be deleted.
+			//This is so that we don't have to check for entities that are already queued when trying to unload.
+            foreach (Entity entity in toDeleteLater)
             {
-				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos && !toDeleteLater.Contains(entity))
+                ReallyRemove(entity);
+            }
+
+			toDeleteLater.Clear();
+
+            //queue all entities in chunk to be unloaded
+            foreach (Entity entity in entities)
+            {
+				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
 					Unload(entity, true);
 			}
 
-			//Now remove them, and whatever else was in the queue...
+			//Another flush, to remove any entities that are newly added to the queue...
+			//(aka any entity with a position inside the chunk.)
 			foreach (Entity entity in toDeleteLater)
 			{
 				ReallyRemove(entity);
@@ -207,7 +225,37 @@ namespace ViMG.Entities
 
 			toDeleteLater.Clear();
 
-			//...and toAddLater, since we don't want to unload the chunk, then spawn it.
+			//Some entities may track a cube inside a given chunk while not being in the chunk themselves.
+			//(For instance, at the time of writing, AncientAltar's y position is + 1.25 blocks above the tracked position. If this
+			//is on a chunk boundary, then it isn't within the same chunk as the cube it's tracking!)
+			if (cubeTrackers.ContainsKey(pos))
+			{
+				CubeTrackers tracker = cubeTrackers[pos];
+				if (tracker.cubeTrackers != null)
+				{
+					for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+						if (tracker.cubeTrackers[i] != null)
+							Unload(tracker.cubeTrackers[i] as Entity, true);
+				}
+
+				if (tracker.multiCubeTrackers != null)
+				{
+                    for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+                        if (tracker.multiCubeTrackers[i] != null)
+                            Unload(tracker.multiCubeTrackers[i] as Entity, true);
+                }
+
+				//flush the queue again
+				//we do these in separate flushes.
+                foreach (Entity entity in toDeleteLater)
+                {
+                    ReallyRemove(entity);
+                }
+				
+				toDeleteLater.Clear();
+            }
+
+			//...and flush toAddLater, since we don't want to unload the chunk, then spawn it.
 			for (int i = toAddLater.Count - 1; i >= 0; i--)
             {
 				Entity entity = toAddLater[i];

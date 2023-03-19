@@ -119,14 +119,14 @@ namespace ViMG
 
 				cameraCachedChunks[i].Clear();
 
-				for (int x = (int)Math.Max(0, cameraPos.X - world.DrawDistanceHoriz); 
-					x <= (int)Math.Min(world.sizeInChunks, cameraPos.X + world.DrawDistanceHoriz); x++)
+                for (int z = (int)Math.Max(0, cameraPos.Z - world.DrawDistanceHoriz); 
+					z <= (int)Math.Min(world.sizeInChunks, cameraPos.Z + world.DrawDistanceHoriz); z++)
 				{
 					for (int y = (int)Math.Max(0, cameraPos.Y - world.DrawDistanceVert); 
 						y <= (int)Math.Min(world.sizeInChunks, cameraPos.Y + world.DrawDistanceVert); y++)
 					{
-                        for (int z = (int)Math.Max(0, cameraPos.Z - world.DrawDistanceHoriz); 
-							z <= (int)Math.Min(world.sizeInChunks, cameraPos.Z + world.DrawDistanceHoriz); z++)
+						for (int x = (int)Math.Max(0, cameraPos.X - world.DrawDistanceHoriz); 
+							x <= (int)Math.Min(world.sizeInChunks, cameraPos.X + world.DrawDistanceHoriz); x++)
 						{
 							ChunkPosition chunkPos = new ChunkPosition(x, y, z);
 

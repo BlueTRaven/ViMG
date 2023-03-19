@@ -31,11 +31,11 @@ namespace ViMG
 		{
 			//TODO (IMPORTANT) Performance
 			//This is used often in world generation - it's important that it's fast!
-			for (int x = 0; x < structure.size.X; x++)
+			for (int z = 0; z < structure.size.Z; z++)
 			{
 				for (int y = 0; y < structure.size.Y; y++)
 				{
-					for (int z = 0; z < structure.size.Z; z++)
+					for (int x = 0; x < structure.size.X; x++)
 					{
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
@@ -78,11 +78,11 @@ namespace ViMG
 		public static void PlaceStructureWithBlacklist(EntityManager entityManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
-			for (int x = 0; x < structure.size.X; x++)
+			for (int z = 0; z < structure.size.Z; z++)
 			{
 				for (int y = 0; y < structure.size.Y; y++)
 				{
-					for (int z = 0; z < structure.size.Z; z++)
+					for (int x = 0; x < structure.size.X; x++)
 					{
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
 						CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
@@ -235,11 +235,11 @@ namespace ViMG
         {
 			List<CubePosition> selected = new List<CubePosition>();
 
-			for (int x = bounds.Position.X; x <= bounds.FarPosition.X; x++)
+			for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
             {
 				for (int y = bounds.Position.Y; y <= bounds.FarPosition.Y; y++)
                 {
-					for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
+					for (int x = bounds.Position.X; x <= bounds.FarPosition.X; x++)
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
