@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BepuUtilities.Memory;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.UIs;
@@ -108,9 +109,12 @@ namespace ViMG.Entities
 			inventory = Inventory.Load(loadBytes, ref index);
 		}
 
-        public object GetMeshingData() 
-		{
-			return meshingData; 
-		}
+        public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
+        {
+            bufferPool.Take(1, out Buffer<MeshingData> md);
+            md.Memory->facing = meshingData.facing;
+
+            return md.As<byte>();
+        }
     }
 }

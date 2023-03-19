@@ -37,15 +37,10 @@ namespace ViMG.Cubes
         {
             if (data != null && data.GetValid())
             {
-				var meshingData = data.GetEntityMeshingData(parameters.position);
+				var meshingData = data.GetEntityMeshingData<EntityChest.MeshingData>(parameters.position);
 
-				if (meshingData != null)
-				{
-					EntityChest.MeshingData castedMeshingData = (EntityChest.MeshingData)meshingData;
-
-					if (face == castedMeshingData.facing)
-						return new RectangleF(128, 16, 16, 16);
-				}
+				if (face == meshingData.facing)
+					return new RectangleF(128, 16, 16, 16);
 			}
 
 			return base.GetSourceRect(pass, data, parameters, face);

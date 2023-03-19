@@ -1,6 +1,8 @@
-﻿using System;
+﻿using BepuUtilities.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
@@ -14,6 +16,7 @@ namespace ViMG.Entities
         public struct MeshingData
         {
             public float cooldownTimer;
+            public bool test;
         }
 
         public CubePosition TrackedPosition { get; private set; }
@@ -96,12 +99,12 @@ namespace ViMG.Entities
             buff = Main.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
         }
 
-        public object GetMeshingData() 
+        public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool) 
         {
-            return new MeshingData()
-            {
-                cooldownTimer = cooldownTimer
-            };
+            bufferPool.Take(1, out Buffer<MeshingData> md);
+            md.Memory->cooldownTimer = cooldownTimer;
+
+            return md.As<byte>();
         }
     }
 }

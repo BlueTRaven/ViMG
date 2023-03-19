@@ -45,16 +45,13 @@ namespace ViMG.Cubes
         {
             if (data.GetValid())
             {
-                var meshingData = data.GetEntityMeshingData(parameters.position);
-                if (meshingData != null)
+                var meshingData = data.GetEntityMeshingData<EntityShrine.MeshingData>(parameters.position);
+             
+                if (meshingData.cooldownTimer > 0)
                 {
-                    EntityShrine.MeshingData castedMeshingData = (EntityShrine.MeshingData)meshingData;
-                    if (castedMeshingData.cooldownTimer > 0)
-                    {
-                        RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
-                        sourceRect.y += 16;
-                        return sourceRect;
-                    }
+                    RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
+                    sourceRect.y += 16;
+                    return sourceRect;
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using BepuUtilities.Memory;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -413,43 +414,47 @@ namespace ViMG.Entities
 			}
 		}
 
-		public void GetEntityMeshingDatas(Span<CubePosition> positions, Span<object> meshingDatas, int offset = 0, int count = -1)
+		public void GetEntityMeshingDatas(Span<CubePosition> positions, Span<BepuUtilities.Memory.Buffer<byte>> meshingDatas, BufferPool bufferPool,
+			int offset = 0, int count = -1)
 		{
-            if (count == -1)
-                count = positions.Length;
+			lock (bufferPool)
+			{
+				if (count == -1)
+					count = positions.Length;
 
-			ChunkPosition previousEmptyChunk = new ChunkPosition();
-            ChunkPosition previousChunkPos = new ChunkPosition(-1, -1, -1);
-            CubeTrackers ts = new CubeTrackers();
+				ChunkPosition previousEmptyChunk = new ChunkPosition();
+				ChunkPosition previousChunkPos = new ChunkPosition(-1, -1, -1);
+				CubeTrackers ts = new CubeTrackers();
 
-            for (int i = offset; i < offset + count; i++)
-            {
-                ChunkPosition chunkPos = ChunkPosition.CubeChunk(positions[i]);
-				//hold onto the previous empty chunk to reduce number of lookups (since we have to look up the tracker in order to see if it's empty first, which is slow.)
-				if (previousEmptyChunk == chunkPos)
-					continue;
-                
-				if (i == offset || chunkPos != previousChunkPos)
+				for (int i = offset; i < offset + count; i++)
 				{
-					if (cubeTrackers.ContainsKey(chunkPos))
-					{
-						ts = cubeTrackers[chunkPos];
-						previousChunkPos = chunkPos;
-					}
-					else
-					{
-						previousEmptyChunk = chunkPos;
-						meshingDatas[i] = null;
+					ChunkPosition chunkPos = ChunkPosition.CubeChunk(positions[i]);
+					//hold onto the previous empty chunk to reduce number of lookups (since we have to look up the tracker in order to see if it's empty first, which is slow.)
+					if (previousEmptyChunk == chunkPos)
 						continue;
+
+					if (i == offset || chunkPos != previousChunkPos)
+					{
+						if (cubeTrackers.ContainsKey(chunkPos))
+						{
+							ts = cubeTrackers[chunkPos];
+							previousChunkPos = chunkPos;
+						}
+						else
+						{
+							previousEmptyChunk = chunkPos;
+							meshingDatas[i] = default;
+							continue;
+						}
 					}
-                }
 
-				Entity ent = ts.Get(positions[i].InChunkSpace(chunkPos));
+					Entity ent = ts.Get(positions[i].InChunkSpace(chunkPos));
 
-				if (ent != null && ent is ICubeTracker tracker)
-					meshingDatas[i] = tracker.GetMeshingData();
-				else meshingDatas[i] = null;
-            }
+					if (ent != null && ent is ICubeTracker tracker)
+						meshingDatas[i] = tracker.GetMeshingData(bufferPool);
+					else meshingDatas[i] = default;
+				}
+			}
         }
 
 		public void Draw(GraphicsDevice device, Effect effect)

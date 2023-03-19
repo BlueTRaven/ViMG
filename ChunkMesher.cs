@@ -139,6 +139,8 @@ namespace ViMG
         private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
+		private BufferPool bufferPool;
+
 		private RenderMeshInfo[] chunkMeshInfos;
 
 		public ChunkMesher(GraphicsDevice device, int sizeInChunks)
@@ -152,6 +154,8 @@ namespace ViMG
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out ValuePoint3D point);
 				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
+
+			bufferPool = new BufferPool();
 		}
 
 		public void Update(World world)
@@ -177,7 +181,7 @@ namespace ViMG
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
+					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
 					currentBatch.num++;
 				}
 			}
@@ -237,7 +241,9 @@ namespace ViMG
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						batchResult.copies[j].Return();
+						lock (bufferPool)
+							batchResult.copies[j].Return(bufferPool);
+
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
 						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -280,7 +286,8 @@ namespace ViMG
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						batchResult.copies[j].Return();
+						lock (bufferPool)
+							batchResult.copies[j].Return(bufferPool);
 
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
@@ -339,7 +346,7 @@ namespace ViMG
 			if (c.version != c.meshVersion || !c.hasMeshes)
 			{
 				currentBatch.meshInfos[currentBatch.num] = c;
-				currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
+				currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
 				currentBatch.num++;
 			}
 		}
@@ -439,6 +446,9 @@ namespace ViMG
 
 				chunkMeshInfos[j].hasMeshes = false;
 			}
+
+			bufferPool.AssertEmpty();
+			bufferPool.Clear();
 		}
 
 		public void MarkDirty(ChunkPosition position)

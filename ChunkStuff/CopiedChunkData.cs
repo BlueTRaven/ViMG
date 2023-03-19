@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BepuUtilities.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,7 +14,7 @@ namespace ViMG.ChunkStuff
         public const int WHD = Chunk.CHUNK_SIZE + 2;
         public const int SIZE = WHD * WHD * WHD;
         public ushort[] Ids;
-        public object[] EntityMeshingDatas;
+        public Buffer<byte>[] EntityMeshingDatas;
 
         //Note that this represents the topleftfront of the Chunk. It does NOT include the padding.
         //I.e. padding left, front, top is -1.
@@ -36,16 +37,17 @@ namespace ViMG.ChunkStuff
             if (Ids == null)
                 Ids = new ushort[SIZE];
             if (EntityMeshingDatas == null)
-                EntityMeshingDatas = new object[SIZE];
+                EntityMeshingDatas = new Buffer<byte>[SIZE];
 
             valid = true;
         }
 
-        public void Return()
+        public void Return(BufferPool pool)
         {
             //remove references, since they might stick around for too long otherwise
             for (int i = 0; i < EntityMeshingDatas.Length; i++)
-                EntityMeshingDatas[i] = null;
+                if (EntityMeshingDatas[i].Allocated)
+                    pool.Return(ref EntityMeshingDatas[i]);
 
             valid = false;
         }
@@ -55,11 +57,13 @@ namespace ViMG.ChunkStuff
             return valid;
         }
 
-        public object GetEntityMeshingData(CubePosition position)
+        public unsafe T GetEntityMeshingData<T>(CubePosition position) where T : unmanaged
         {
             //Add one since padding is -1
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
-            return EntityMeshingDatas[i];
+            if (!EntityMeshingDatas[i].Allocated)
+                return default;
+            else return *EntityMeshingDatas[i].As<T>().Memory;
         }
 
         public ushort GetId(CubePosition position)

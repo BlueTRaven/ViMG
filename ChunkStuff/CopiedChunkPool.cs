@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuUtilities.Memory;
+using BrUtility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +48,7 @@ namespace ViMG.ChunkStuff
             return copied;
         }
 
-        public static CopiedChunkData MakeCopy(World world, ChunkPosition position)
+        public static CopiedChunkData MakeCopy(World world, BufferPool bufferPool, ChunkPosition position)
         {
             CubePosition basePosition = position.InCubeSpace();
 
@@ -84,7 +85,7 @@ namespace ViMG.ChunkStuff
             }
 
             world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
-            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas);
+            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
 
             return copied;
         }

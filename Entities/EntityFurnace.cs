@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BepuUtilities.Memory;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -115,9 +116,12 @@ namespace ViMG.Entities
 			inventory = Inventory.Load(loadBytes, ref index);
 		}
 
-        public object GetMeshingData() 
-		{
-			return MeshingDataInstance; 
-		}
+        public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
+        {
+            bufferPool.Take(1, out Buffer<MeshingData> md);
+            md.Memory->facing = MeshingDataInstance.facing;
+
+            return md.As<byte>();
+        }
     }
 }

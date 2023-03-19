@@ -163,7 +163,7 @@ namespace ViMG
                     currentBatch.positions[currentBatch.num] = meshInfo.position;
                     currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                     currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                    currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
+                    currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
                     currentBatch.num++;
                 }
             }
@@ -223,7 +223,8 @@ namespace ViMG
 
                     for (int j = 0; j < batchResult.num; j++)
                     {
-                        batchResult.copies[j].Return();
+                        lock (bufferPool)
+                            batchResult.copies[j].Return(bufferPool);
 
                         //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
@@ -282,7 +283,8 @@ namespace ViMG
 
                     for (int j = 0; j < batchResult.num; j++)
                     {
-                        batchResult.copies[j].Return();
+                        lock (bufferPool)
+                            batchResult.copies[j].Return(bufferPool);
 
                         //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
@@ -358,7 +360,7 @@ namespace ViMG
                 currentBatch.positions[currentBatch.num] = meshInfo.position;
                 currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                 currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, position);
+                currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
                 currentBatch.num++;
             }
         }

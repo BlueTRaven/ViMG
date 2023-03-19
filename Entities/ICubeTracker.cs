@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BepuUtilities.Memory;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,6 +13,6 @@ namespace ViMG.Entities
 
 		public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId);
 
-		public object GetMeshingData() { return null; }
+		public Buffer<byte> GetMeshingData(BufferPool bufferPool) { return default; }
 	}
 }

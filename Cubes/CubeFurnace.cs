@@ -38,13 +38,9 @@ namespace ViMG.Cubes
         {
 			if (data != null && data.GetValid())
 			{
-				var meshingData = data.GetEntityMeshingData(parameters.position);
-				if (meshingData != null)
-                {
-					EntityFurnace.MeshingData castedMeshingData = (EntityFurnace.MeshingData)meshingData;
-					if (face == castedMeshingData.facing)
-						return new RectangleF(176, 32, 16, 16);
-                }
+				var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+				if (face == meshingData.facing)
+					return new RectangleF(176, 32, 16, 16);
 			}
 
 			return base.GetSourceRect(pass, data, parameters, face);
@@ -52,15 +48,11 @@ namespace ViMG.Cubes
 
         public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (data != null && data.GetValid())
-            {
-                var meshingData = data.GetEntityMeshingData(parameters.position);
-                if (meshingData != null)
-                {
-                    EntityFurnace.MeshingData castedMeshingData = (EntityFurnace.MeshingData)meshingData;
-                    if (face == castedMeshingData.facing)
-                        return new CubeAnimation(0.125f, 3, 16);
-				}
+			if (data != null && data.GetValid())
+			{
+				var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+				if (face == meshingData.facing)
+					return new CubeAnimation(0.125f, 3, 16);
 			}
 
 			return base.GetAnimation(pass, data, parameters, face);
