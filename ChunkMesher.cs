@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.GameStates;
 
 namespace ViMG
 {
@@ -193,7 +194,7 @@ namespace ViMG
 		}
 
 		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
-		public void Flush(World world)
+		public void Flush()
 		{
 			Queue<Task<BatchRenderMeshTaskResult>> tasks = new Queue<Task<BatchRenderMeshTaskResult>>();
 
@@ -201,11 +202,11 @@ namespace ViMG
 			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			int max = meshBatchTasksQueue.Count;
-			world.GameStateManager.TheIsland.ProgressMax = max;
+			GameStateTheIsland.ProgressMax = max;
 
 			while (meshBatchTasksQueue.Count > 0)
 			{
-				world.GameStateManager.TheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
+                GameStateTheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
 
 				var task = meshBatchTasksQueue.Dequeue().task;
 
@@ -219,11 +220,11 @@ namespace ViMG
 			}
 
 			max = tasks.Count;
-			world.GameStateManager.TheIsland.ProgressMax = max;
+			GameStateTheIsland.ProgressMax = max;
 
 			while (tasks.Count > 0)
 			{
-				world.GameStateManager.TheIsland.ProgressMin = max - tasks.Count;
+                GameStateTheIsland.ProgressMin = max - tasks.Count;
 
 				var task = tasks.Dequeue();
 

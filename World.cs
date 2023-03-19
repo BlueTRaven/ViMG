@@ -278,7 +278,7 @@ namespace ViMG
 				{
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
-					ChunkLoadManager.FlushLoadQueue(this);
+					ChunkLoadManager.FlushLoadQueue();
 				}
 			}
 
@@ -449,11 +449,11 @@ namespace ViMG
 			if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4 ||
 				player.Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
 			{
-				GameStateManager.TheIsland.LoadMessage = "Waiting for world to finish loading...";
+                GameStateTheIsland.LoadMessage = "Waiting for world to finish loading...";
 				if (!nextWorld.IsCompleted)
 					nextWorld.Wait();
 
-				GameStateManager.TheIsland.LoadMessage = "Moving to new world...";
+                GameStateTheIsland.LoadMessage = "Moving to new world...";
 				World loadedWorld = nextWorld.Result;
 
 				if (nextLayer == Layer + 1)
@@ -492,11 +492,11 @@ namespace ViMG
 				//Finally, tell the ChunkLoadManager to actually load the things.
 				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
 				//as it normally does.)
-				loadedWorld.ChunkLoadManager.FlushLoadQueue(loadedWorld);
+				loadedWorld.ChunkLoadManager.FlushLoadQueue();
 
 				GameStateManager.TheIsland.SetWorld(loadedWorld);
 
-				GameStateManager.TheIsland.LoadMessage = "Saving...";
+                GameStateTheIsland.LoadMessage = "Saving...";
 				//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
 				//Note that we don't save chunks because they shouldn't be modified by any operation here.
 				entIO.Save(LoadedFolderName);   
@@ -523,7 +523,7 @@ namespace ViMG
 
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
-			ChunkLoadManager.FlushLoadQueue(this);
+			ChunkLoadManager.FlushLoadQueue();
 			//Serialize all the chunks that are currently loaded
 			//chunkIO.Serialize(ChunkLoadManager.GetLoaded());
 			entIO.Serialize(ChunkLoadManager.GetLoaded());

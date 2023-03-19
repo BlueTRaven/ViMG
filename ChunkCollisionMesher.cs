@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
+using ViMG.GameStates;
 
 namespace ViMG
 {
@@ -125,11 +126,11 @@ namespace ViMG
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
-        private BufferPool theOneBufferPool;
+        private BufferPool bufferPool;
 
         public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkMesher mesher, int sizeInChunks)
         {
-            theOneBufferPool = new BufferPool();
+            bufferPool = new BufferPool();
 
             this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
@@ -179,7 +180,7 @@ namespace ViMG
         }
 
         //Flushes all actively enqueued chunks, blocking until they have all been meshed.
-        public void Flush(World world)
+        public void Flush()
         {
             Queue<Task<BatchCollisionMeshTaskResult>> tasks = new Queue<Task<BatchCollisionMeshTaskResult>>();
 
@@ -187,11 +188,11 @@ namespace ViMG
             currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
             int max = meshBatchTasksQueue.Count;
-            world.GameStateManager.TheIsland.ProgressMax = max;
+            GameStateTheIsland.ProgressMax = max;
 
             while (meshBatchTasksQueue.Count > 0)
             {
-                world.GameStateManager.TheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
+                GameStateTheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
 
                 var task = meshBatchTasksQueue.Dequeue().task;
 
@@ -205,11 +206,11 @@ namespace ViMG
             }
 
             max = tasks.Count;
-            world.GameStateManager.TheIsland.ProgressMax = max;
+            GameStateTheIsland.ProgressMax = max;
 
             while (tasks.Count > 0)
             {
-                world.GameStateManager.TheIsland.ProgressMin = max - tasks.Count;
+                GameStateTheIsland.ProgressMin = max - tasks.Count;
 
                 var task = tasks.Dequeue();
 
@@ -413,20 +414,23 @@ namespace ViMG
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh
         public static Mesh GenerateMesh(BufferPool bufferPool, List<VertexCube> vertices, List<int> indices)
         {
+            Buffer<Triangle> triangleBuffer;
+
+            lock (bufferPool)
+                bufferPool.Take(indices.Count / 3, out triangleBuffer);
+
+            for (int i = 0; i < indices.Count; i += 3)
+            {
+                int a = indices[i];
+                int b = indices[i + 1];
+                int c = indices[i + 2];
+
+                triangleBuffer[i / 3] = new Triangle(vertices[a].Position.ToNumerics(), vertices[b].Position.ToNumerics(),
+                    vertices[c].Position.ToNumerics());
+            }
+
             lock (bufferPool)
             {
-                bufferPool.Take<Triangle>(indices.Count / 3, out var triangleBuffer);
-
-                for (int i = 0; i < indices.Count; i += 3)
-                {
-                    int a = indices[i];
-                    int b = indices[i + 1];
-                    int c = indices[i + 2];
-
-                    triangleBuffer[i / 3] = new Triangle(vertices[a].Position.ToNumerics(), vertices[b].Position.ToNumerics(),
-                        vertices[c].Position.ToNumerics());
-                }
-
                 var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, bufferPool);
 
                 return collidableMesh;
@@ -456,6 +460,11 @@ namespace ViMG
                 meshInfo.collidableMesh = default;
 
                 meshInfo.hasMesh = false;
+            }
+            else if (meshInfo.collidableMesh.Triangles.Allocated)
+            {
+                //hasMesh is false but triangles are allocated?
+                Console.WriteLine("Leaked chunk collision mesh at {0}", meshInfo.position.ToString());
             }
         }
 
@@ -491,7 +500,14 @@ namespace ViMG
 
                     meshes[j].hasMesh = false;
                 }
+                else if (meshes[j].collidableMesh.Triangles.Allocated)
+                {
+                    Console.WriteLine("Leaked chunk collision mesh at {0}", meshes[j].position);
+                }
             }
+
+            bufferPool.AssertEmpty();
+            bufferPool.Clear();
         }
 
         public void MarkDirty(ChunkPosition position)
@@ -512,7 +528,7 @@ namespace ViMG
             meshInfo.position = pos;
 
             if (meshInfo.bufferPool == null)
-                meshInfo.bufferPool = theOneBufferPool;
+                meshInfo.bufferPool = bufferPool;
 
             return ref meshInfo;
         }

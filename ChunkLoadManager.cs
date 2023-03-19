@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Entities;
+using ViMG.GameStates;
 
 namespace ViMG
 {
@@ -81,17 +82,17 @@ namespace ViMG
 
 		//Loads the entirety of the loading queue at once.
 		//It's best practice to use this before saving, so as not to miss loading chunks!
-		public void FlushLoadQueue(World world)
+		public void FlushLoadQueue()
 		{
-			chunkManager.RenderMesher.Flush(world);
-			chunkManager.CollisionMesher.Flush(world);
+			chunkManager.RenderMesher.Flush();
+			chunkManager.CollisionMesher.Flush();
 
 			int max = queue.Count;
-			world.GameStateManager.TheIsland.ProgressMax = max;
+            GameStateTheIsland.ProgressMax = max;
 
 			while (queue.Count > 0)
 			{
-				world.GameStateManager.TheIsland.ProgressMin = max - queue.Count;
+                GameStateTheIsland.ProgressMin = max - queue.Count;
 
 				ChunkPosition queuedPosition = queue.Dequeue();
 
@@ -119,8 +120,8 @@ namespace ViMG
 				}
 			}
 
-			world.GameStateManager.TheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.RenderMesher.Flush(world);
+            GameStateTheIsland.LoadMessage = "Flushing mesh queue...";
+			chunkManager.RenderMesher.Flush();
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
@@ -294,6 +295,10 @@ namespace ViMG
 			loadedChunks.Clear();
 			//TODO: there may still be meshes in the queue.
 			//The reason why I'm not calling FlushMeshQueue here is because it needs World
+
+			chunkManager.RenderMesher.Flush();
+			chunkManager.CollisionMesher.Flush();
+
 			chunkManager.RenderMesher.UnloadAll();
 			chunkManager.CollisionMesher.UnloadAll();
 			entityManager.UnloadAll();

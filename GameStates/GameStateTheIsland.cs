@@ -27,13 +27,13 @@ namespace ViMG.GameStates
         private World world;
 
         public bool IsLoading;
-        private string loadMessage;
-        public string LoadMessage 
+        private static object lockObj = new object();
+        private static string loadMessage;
+        public static string LoadMessage 
         {
             get 
             {
-                object toLock = loadMessage == null ? device : loadMessage;
-                lock (toLock) 
+                lock (lockObj) 
                 {
                     //return a COPY since we might be modifying this value.
                     //This is slow, but whatever, we're only using this during loading.
@@ -42,15 +42,14 @@ namespace ViMG.GameStates
             }
             set 
             {
-                object toLock = loadMessage == null ? device : loadMessage;
-                lock (toLock) 
+                lock (lockObj) 
                 {
                     loadMessage = value; 
                 }
             }
         }
-        public int ProgressMin;
-        public int ProgressMax;
+        public static int ProgressMin;
+        public static int ProgressMax;
 
         public GameStateTheIsland(GameStateManager manager, GraphicsDevice device) : base(manager)
         {
@@ -74,18 +73,18 @@ namespace ViMG.GameStates
                     world = LoadWorld(device, worldName);
                 }
 
-                manager.TheIsland.LoadMessage = "Loading World...";
+                LoadMessage = "Loading World...";
                 //Now we can tell the ChunkLoadManager what should be loaded.
                 world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
                 world.ChunkLoadManager.LoadAroundTarget(world);
 
-                manager.TheIsland.LoadMessage = "Loading World...\nFlushing queue...";
+                LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
-                world.ChunkLoadManager.FlushLoadQueue(world);
+                world.ChunkLoadManager.FlushLoadQueue();
 
-                manager.TheIsland.LoadMessage = "Loading World...\nFinishing...";
+                LoadMessage = "Loading World...\nFinishing...";
                 world.FinishLoading(device);
                 //World world = new World(manager, device, 512);
                 //world.LoadWorld(device, worldName);
@@ -150,6 +149,7 @@ namespace ViMG.GameStates
                 if (worldTask.IsCompleted)
                 {
                     world = worldTask.Result;
+                    worldTask = null;
                 }
             }
 
@@ -265,11 +265,11 @@ namespace ViMG.GameStates
             defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
 
             ProfilingHelper.Start("Loading world...");
-            manager.TheIsland.LoadMessage = "Loading World...";
+            LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
             var worldInfoIO = new WorldInfoIO();
 
-            manager.TheIsland.LoadMessage = "Loading World...\n" +
+            LoadMessage = "Loading World...\n" +
                 "Reading from disk...";
             WorldIO.LoadError error = worldInfoIO.Load(worldName, out WorldInfoIO.WorldInfo worldInfo);
             if (worldInfoIO.HandleError(error, worldName))
@@ -302,7 +302,7 @@ namespace ViMG.GameStates
             prototype.ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
             prototype.ChunkManager.CreateInitializerCubeView();
 
-            manager.TheIsland.LoadMessage = "Loading World...\n" +
+            LoadMessage = "Loading World...\n" +
                 "Deserializing...";
 
             //Deserialize this player chunk; the player entity is created.
@@ -335,10 +335,10 @@ namespace ViMG.GameStates
             defaultPlayerSpawnLocation.Z = spawnZ;
             defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
 
-            manager.TheIsland.LoadMessage = "Loading World...";
+            LoadMessage = "Loading World...";
             var worldInfoIO = new WorldInfoIO();
 
-            manager.TheIsland.LoadMessage = "Loading World...\n" +
+            LoadMessage = "Loading World...\n" +
                 "Reading from disk...";
             WorldIO.LoadError error = worldInfoIO.Load(worldName, out WorldInfoIO.WorldInfo worldInfo);
             
@@ -442,7 +442,7 @@ namespace ViMG.GameStates
                 prototype.ChunkManager.CreateThreadedCubeView(ChunkLoadManager);
                 prototype.ChunkManager.CreateInitializerCubeView();
 
-                manager.TheIsland.LoadMessage = "Loading World...\n" +
+                LoadMessage = "Loading World...\n" +
                     "Deserializing...";
 
                 //Deserialize this player chunk; the player entity is created.

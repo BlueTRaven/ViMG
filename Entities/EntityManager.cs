@@ -196,8 +196,6 @@ namespace ViMG.Entities
 
 		public void Unload(ChunkPosition pos)
         {
-			if (pos == new ChunkPosition(11, 8, 16))
-				Console.WriteLine("aaa");
             //TODO: better method of determining which entities are in this chunk for unloading
 
 			//Initial flush to remove entities that are already queued to be deleted.

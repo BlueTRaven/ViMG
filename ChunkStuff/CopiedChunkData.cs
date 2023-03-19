@@ -19,8 +19,6 @@ namespace ViMG.ChunkStuff
         //I.e. padding left, front, top is -1.
         public CubePosition BasePosition;
 
-        public BepuUtilities.Memory.BufferPool ThreadBufferPool;
-
         private bool valid;
 
         public readonly int Index;
@@ -29,8 +27,6 @@ namespace ViMG.ChunkStuff
         {
             valid = false;
             this.Index = index;
-
-            ThreadBufferPool = new BepuUtilities.Memory.BufferPool();
         }
 
         public void Take(CubePosition position)

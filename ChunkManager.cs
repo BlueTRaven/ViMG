@@ -138,8 +138,8 @@ namespace ViMG
 
         public void Unload(ChunkPosition pos)
         {
-            CollisionMesher.Unload(pos);
             RenderMesher.Unload(pos);
+            CollisionMesher.Unload(pos);
         }
 
         //TODO: separate out visual stuff, not sure how yet

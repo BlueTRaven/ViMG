@@ -59,12 +59,12 @@ namespace ViMG
 			int offset = 0;
 
 			ProfilingHelper.Start("Beginning world generation...");
-			gsManager.TheIsland.LoadMessage = "Beginning world generation...";
+            GameStateTheIsland.LoadMessage = "Beginning world generation...";
 
 			generator.Initialize(world.ChunkManager.SizeInCubes, world.ChunkManager.SizeInChunksXZ);
 
 			ProfilingHelper.Start("Broad phase generation...");
-			gsManager.TheIsland.LoadMessage = "Beginning broad phase generation...";
+            GameStateTheIsland.LoadMessage = "Beginning broad phase generation...";
 
 			ChunkPosition[] positions = new ChunkPosition[total];
 			for (int i = 0; i < total; i++)
@@ -100,7 +100,7 @@ namespace ViMG
 
 				while (!task.IsCompleted)
                 {
-					gsManager.TheIsland.LoadMessage = "Broad phase generation...\n" +
+                    GameStateTheIsland.LoadMessage = "Broad phase generation...\n" +
 						i + "/" + broadPhaseTasks.Count;
 					Thread.Sleep(10);
                 }
@@ -113,7 +113,7 @@ namespace ViMG
 			ProfilingHelper.Start("Beginning detail phase generation...");
 			if (Main.DO_DETAIL)
 			{
-				gsManager.TheIsland.LoadMessage = "Detail phase generation...";
+                GameStateTheIsland.LoadMessage = "Detail phase generation...";
 				
 				num = 0;
 				for (int i = 0; i < total; i++)
@@ -125,17 +125,17 @@ namespace ViMG
 					num++;
 
 					if (i % 8 == 0)
-						gsManager.TheIsland.LoadMessage = "Detail phase generation...\n" +
+                        GameStateTheIsland.LoadMessage = "Detail phase generation...\n" +
 							i + "/" + total;
 				}
 
-				gsManager.TheIsland.LoadMessage = "Post detail phase generation...\n" +
+                GameStateTheIsland.LoadMessage = "Post detail phase generation...\n" +
 					"(This may take a while)";
 				generator.PostGenerateDetail(world);
 				//GenerateHeightmap();
 			}
 
-			gsManager.TheIsland.LoadMessage = "Post generation...";
+            GameStateTheIsland.LoadMessage = "Post generation...";
 			ProfilingHelper.Start("Beginning post generation...");
 			num = 0;
 			for (int i = 0; i < total; i++)
