@@ -11,7 +11,7 @@ namespace ViMG.Spawners
 {
     public class PSGhoul : PassiveSpawner
     {
-        private List<Ghoul> beetles = new List<Ghoul>();
+        private List<Ghoul> entities = new List<Ghoul>();
 
         public PSGhoul(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 3f, 1f / 5f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
@@ -23,13 +23,13 @@ namespace ViMG.Spawners
         private void OnEntityAdded(Entity entity)
         {
             if (entity is Ghoul s)
-                beetles.Add(s);
+                entities.Add(s);
         }
 
         private void OnEntityRemoved(Entity entity)
         {
             if (entity is Ghoul g)
-                beetles.Remove(g);
+                entities.Remove(g);
         }
 
         public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
@@ -49,10 +49,10 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (beetles.Count < GetSpawnCap())
+            if (entities.Count < GetSpawnCap())
             {
-                StoneBeetle snake = new StoneBeetle(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
-                world.EntityManager.Add(snake);
+                Ghoul ghoul = new Ghoul(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
+                world.EntityManager.Add(ghoul);
             }
         }
     }

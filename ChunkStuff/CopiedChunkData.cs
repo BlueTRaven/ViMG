@@ -44,7 +44,6 @@ namespace ViMG.ChunkStuff
 
         public void Return(BufferPool pool)
         {
-            //remove references, since they might stick around for too long otherwise
             for (int i = 0; i < EntityMeshingDatas.Length; i++)
                 if (EntityMeshingDatas[i].Allocated)
                     pool.Return(ref EntityMeshingDatas[i]);
