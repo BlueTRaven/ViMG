@@ -557,7 +557,7 @@ namespace ViMG.Rendering
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-Main.camera.Position);
 
                 Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
 

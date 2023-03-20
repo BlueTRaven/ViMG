@@ -13,7 +13,7 @@ namespace ViMG.Spawners
     {
         private List<Ghoul> entities = new List<Ghoul>();
 
-        public PSGhoul(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 3f, 1f / 5f,
+        public PSGhoul(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 3f, 1f / 9f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
         {
             entityManager.OnEntityAdded += OnEntityAdded;
