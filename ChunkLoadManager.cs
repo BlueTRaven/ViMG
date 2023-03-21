@@ -75,6 +75,9 @@ namespace ViMG
 
 		public bool IsLoaded(ChunkPosition position)
         {
+			if (!chunkManager.IsInWorldBounds(position))
+				return false;
+
 			Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 			return loadedChunksFastLookup[i] == LoadingState.Loaded;
 			//return loadedChunks.ContainsKey(position) && loadedChunks[position] == LoadingState.Loaded;

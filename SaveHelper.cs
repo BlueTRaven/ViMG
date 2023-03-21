@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using ViMG.Items;
 
@@ -8,6 +9,23 @@ namespace ViMG
 {
 	public static class SaveHelper
 	{
+		//Saves a struct.
+		//I don't really recommend using this method. Manually saving/loading is a better approach
+		//since you can manually handle error cases. For instance, if you add a new float in the middle of a struct,
+		//LoadStruct will behave weird.
+		public static void SaveStruct<T>(List<byte> data, T obj) where T : struct
+		{
+            var len = Marshal.SizeOf<T>();
+            byte[] bytes = new byte[len];
+
+            nint ptr = Marshal.AllocHGlobal(len);
+            Marshal.StructureToPtr(obj, ptr, false);
+            Marshal.Copy(ptr, bytes, 0, len);
+            Marshal.FreeHGlobal(ptr);
+
+            data.AddRange(bytes);
+        }
+
 		public static void SaveBool(List<byte> data, bool b)
         {
 			data.Add((byte)(b ? 0 : 1));
@@ -137,6 +155,19 @@ namespace ViMG
 			SaveInt32(data, item.num);
 			SaveInt32(data, item.damage);
 		}
+
+		//Note that this assumes the WHOLE of `data` contains the data for the struct.
+		public static T LoadStruct<T>(byte[] data) where T : struct
+		{
+            var len = Marshal.SizeOf<T>();
+
+            var ptr = Marshal.AllocHGlobal(len);
+            Marshal.Copy(data, 0, ptr, len);
+            T obj = Marshal.PtrToStructure<T>(ptr);
+            Marshal.FreeHGlobal(ptr);
+
+			return obj;
+        }
 
 		public static bool LoadBool(byte[] data, ref int index)
         {
