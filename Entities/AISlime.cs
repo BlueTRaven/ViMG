@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
+using BepuPhysics.CollisionDetection;
 
 namespace ViMG.Entities
 {
@@ -117,17 +118,6 @@ namespace ViMG.Entities
 				}
 			}
 
-			Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-			Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-			if (velXY.Length() > clampXY.Length())
-			{
-				velXY.Normalize();
-				velXY *= clampXY.Length();
-			}
-
-			Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-
 			if (Velocity.Y < -actualMaxVel.Y)
 				Velocity.Y = -actualMaxVel.Y;
 
@@ -229,28 +219,31 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
+					EntityHelper.CalculateKnockback(ref Velocity, other);
 
-					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
-
-					Health -= other.damage;
-
-					if (Health <= 0)
-					{
-						Health = 0;
-						entity.world.EntityManager.Remove(entity);
-
-						if (touchHitbox != -1)
-							entity.world.HitboxManager.Remove(touchHitbox);
-					}
+					Hurt(other.damage);
 
 					buffManager.AddBuffs(other.applyBuffs);
-
-					InvulnTimer = 0.25f;
 
 					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}
+
+		public void Hurt(int damage)
+		{
+            Health -= damage;
+
+            if (Health <= 0)
+            {
+                Health = 0;
+                entity.world.EntityManager.Remove(entity);
+
+                if (touchHitbox != -1)
+                    entity.world.HitboxManager.Remove(touchHitbox);
+            }
+
+            InvulnTimer = 0.25f;
+        }
 	}
 }

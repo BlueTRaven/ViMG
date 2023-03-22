@@ -15,7 +15,8 @@ namespace ViMG.Items
     {
         private Buff.BuffInstance[] applyBuffs;
 
-        private static MeleeAttackStats meleeStats = new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 0.85f, 5, 0.5f), Cube.CUBE_SCALE * 1f);
+        private static MeleeAttackStats meleeStats = 
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 0.85f, 5, Cube.CUBE_SCALE * 0.5f), Cube.CUBE_SCALE * 1f);
 
         public ItemRustedSword() : base("sword_rusted", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 128, 16, 16))
         {

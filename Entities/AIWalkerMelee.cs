@@ -140,8 +140,7 @@ namespace ViMG.Entities
 
 						if (distance > MoveTowardsTargetDistance)
 						{
-							Velocity.X += dir.X;
-							Velocity.Z += dir.Z;
+							EntityHelper.AddCappedVelocityHorizontal(ref Velocity, dir, actualMaxVel);
 						}
 						else
 						{
@@ -244,8 +243,7 @@ namespace ViMG.Entities
 
 					if (idleTimer <= 0)
 					{
-						Velocity.X += idleDirection.X;
-						Velocity.Z += idleDirection.Y;
+                        EntityHelper.AddCappedVelocityHorizontal(ref Velocity, idleDirection, actualMaxVel);
 					}
 					else
 					{
@@ -253,17 +251,6 @@ namespace ViMG.Entities
 						Velocity.Z *= 0.85f;
 					}
 				}
-
-				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-				if (velXY.Length() > clampXY.Length())
-				{
-					velXY.Normalize();
-					velXY *= clampXY.Length();
-				}
-
-				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 			}
 
 			if (Velocity.Y < -actualMaxVel.Y)
@@ -376,36 +363,39 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
+                    EntityHelper.CalculateKnockback(ref Velocity, other);
 
-					Velocity = direction * Cube.CUBE_SCALE * 3f * other.knockback;
+					Hurt(other.damage);
 
-					Health -= other.damage;
-
-					if (Health <= 0)
-					{
-						Health = 0;
-						entity.world.EntityManager.Remove(entity);
-
-						if (touchHitbox != -1)
-							entity.world.HitboxManager.Remove(touchHitbox);
-					}
-
-					shouldJumpLockTimer = 1f;
 					buffManager.AddBuffs(other.applyBuffs);
-
-					InvulnTimer = 0.25f;
-					
-					//interrupt current attack
-					if (state == State.Attack || state == State.AttackStun)
-						state = State.Normal;
-
-					attackTimer = 0;    //immediately attempt to attack?
 
 					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}
+
+		public void Hurt(int damage)
+		{
+            Health -= damage;
+
+            if (Health <= 0)
+            {
+                Health = 0;
+                entity.world.EntityManager.Remove(entity);
+
+                if (touchHitbox != -1)
+                    entity.world.HitboxManager.Remove(touchHitbox);
+            }
+
+            shouldJumpLockTimer = 1f;
+            InvulnTimer = 0.25f;
+
+            //interrupt current attack
+            if (state == State.Attack || state == State.AttackStun)
+                state = State.Normal;
+
+            attackTimer = 0;    //immediately attempt to attack?
+        }
 
 		public State GetState()
 		{

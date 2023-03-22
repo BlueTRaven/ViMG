@@ -23,6 +23,7 @@ namespace ViMG.Entities
 
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
+		public Vector3 Facing;
         private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
         private readonly World world;
@@ -45,6 +46,7 @@ namespace ViMG.Entities
 
 		private bool onGround;
 		private bool shouldJump;
+		public float shouldJumpLockTimer;
 
 		public int Health;
 		public int MaxHealth;
@@ -131,13 +133,15 @@ namespace ViMG.Entities
 
 			if (InvulnTimer <= 0 && onGround)
 			{
-				if (shouldJump)
-				{
-					Velocity.Y = Cube.CUBE_SCALE * 10;
-					shouldJump = false;
-				}
+                shouldJumpLockTimer -= (float)deltaTime;
 
-				if (noticeHandler.Noticed)
+                if (shouldJump && shouldJumpLockTimer <= 0)
+                {
+                    Velocity.Y = Cube.CUBE_SCALE * 10;
+                    shouldJump = false;
+                }
+
+                if (noticeHandler.Noticed)
 				{
 					idleMovements = 0;
 
@@ -149,8 +153,8 @@ namespace ViMG.Entities
 
 						if (distance > MoveTowardsTargetDistance)
 						{
-							Velocity.X += dir.X;
-							Velocity.Z += dir.Z;
+                            EntityHelper.AddCappedVelocityHorizontal(ref Velocity, dir, actualMaxVel);
+							Facing = Vector3.Normalize(dir);
 						}
 						else
 						{
@@ -197,6 +201,8 @@ namespace ViMG.Entities
 									shotProjectileBatchStats, shotProjectileVisStats, shotProjectileStats,
 									new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
                             }
+
+							Facing = Vector3.Normalize(dir);
 
 							state = State.AttackStun;
 							attackTimer = AttackStunTime;
@@ -255,26 +261,15 @@ namespace ViMG.Entities
 
 					if (idleTimer <= 0)
 					{
-						Velocity.X += idleDirection.X;
-						Velocity.Z += idleDirection.Y;
-					}
+                        EntityHelper.AddCappedVelocityHorizontal(ref Velocity, idleDirection, actualMaxVel);
+                        Facing = Vector3.Normalize(new Vector3(idleDirection.X, 0, idleDirection.Y));
+                    }
 					else
 					{
 						Velocity.X *= 0.85f;
 						Velocity.Z *= 0.85f;
 					}
 				}
-
-				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-				if (velXY.Length() > clampXY.Length())
-				{
-					velXY.Normalize();
-					velXY *= clampXY.Length();
-				}
-
-				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
 			}
 
 			if (Velocity.Y < -actualMaxVel.Y)
@@ -387,35 +382,43 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
+					EntityHelper.CalculateKnockback(ref Velocity, other);
 
-					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
+					Hurt(other.damage);
 
-					Health -= other.damage;
+					//Kind of hacky - but we can assume that we want to face the source of knockback,
+					//and we can do that by just using the negative velocity.
+                    Facing = Vector3.Normalize(-Velocity);
 
-					if (Health <= 0)
-					{
-						Health = 0;
-						world.EntityManager.Remove(entity);
-
-						if (touchHitbox != -1)
-							world.HitboxManager.Remove(touchHitbox);
-					}
-
-					buffManager.AddBuffs(other.applyBuffs);
-
-					InvulnTimer = 0.25f;
-
-					//interrupt current attack
-					if (state == State.Attack || state == State.AttackStun)
-						state = State.Normal;
-
-					attackTimer = 0;    //immediately attempt to attack?
+                    buffManager.AddBuffs(other.applyBuffs);
 
 					noticeHandler.OnTakeDamage(other.owner);
 				}
 			}
 		}
+
+		public void Hurt(int damage)
+		{
+            Health -= damage;
+
+            if (Health <= 0)
+            {
+                Health = 0;
+                world.EntityManager.Remove(entity);
+
+                if (touchHitbox != -1)
+                    world.HitboxManager.Remove(touchHitbox);
+            }
+
+            shouldJumpLockTimer = 1f;
+            InvulnTimer = 0.25f;
+
+            //interrupt current attack
+            if (state == State.Attack || state == State.AttackStun)
+                state = State.Normal;
+
+            attackTimer = 0;    //immediately attempt to attack?
+        }
 
 		public State GetState()
         {

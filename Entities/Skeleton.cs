@@ -160,10 +160,8 @@ namespace ViMG.Entities
 					{
 						idleMovements = 0;
 
-						Vector3 dir = Vector3.Normalize(noticeHandler.GetNoticedEntity().Position - Position) * Cube.CUBE_SCALE;
-
-						Velocity.X += dir.X;
-						Velocity.Z += dir.Z;
+                        Vector3 dir = Vector3.Normalize(noticeHandler.GetNoticedEntity().Position - Position) * Cube.CUBE_SCALE;
+						EntityHelper.AddCappedVelocityHorizontal(ref Velocity, dir, actualMaxVel);
 					}
 					else
 					{
@@ -199,8 +197,7 @@ namespace ViMG.Entities
 
 						if (idleTimer <= 0)
 						{
-							Velocity.X += idleDirection.X;
-							Velocity.Z += idleDirection.Y;
+							EntityHelper.AddCappedVelocityHorizontal(ref Velocity, idleDirection, actualMaxVel);
 						}
 						else
 						{
@@ -234,7 +231,7 @@ namespace ViMG.Entities
 					Velocity.X *= 0.85f;
 					Velocity.Z *= 0.85f;
 				}
-
+/*
 				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
 				Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
 
@@ -244,7 +241,7 @@ namespace ViMG.Entities
 					velXY *= clampXY.Length();
 				}
 
-				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
+				Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);*/
 			}
 
 			if (Velocity.Y < -actualMaxVel.Y)
@@ -430,9 +427,7 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
-
-					Velocity = new Vector3(direction.X * 3.2f * Cube.CUBE_SCALE, 6.4f * Cube.CUBE_SCALE, direction.Z * 3.2f * Cube.CUBE_SCALE);
+					EntityHelper.CalculateKnockback(ref Velocity, other);
 
 					health -= other.damage;
 

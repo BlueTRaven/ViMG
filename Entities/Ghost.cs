@@ -103,7 +103,7 @@ namespace ViMG.Entities
                 {
                     hurtTimer = 1f;
 
-                    ai.Hurt(Vector3.Normalize(nearestDir), 1f, 2);
+                    ai.Hurt(2);
                 }
             }
             else

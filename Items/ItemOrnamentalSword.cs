@@ -12,7 +12,8 @@ namespace ViMG.Items
 {
     public class ItemOrnamentalSword : Item
     {
-        private static MeleeAttackStats meleeStats = new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.5f, 8, 2f), Cube.CUBE_SCALE * 2.5f);
+        private static MeleeAttackStats meleeStats = 
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.5f, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
         public ItemOrnamentalSword() : base("sword_ornamental", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 128, 16, 16))
         {

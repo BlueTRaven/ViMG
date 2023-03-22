@@ -16,6 +16,7 @@ namespace ViMG.Entities
 			Normal,			//walking/idling/moving towards player/etc
 			Attack,			//attacking player
 			AttackStun,		//stun after attacking player
+			Stun
 		}
 
 		private State state;
@@ -97,22 +98,28 @@ namespace ViMG.Entities
 				{
 					if (distance > MoveTowardsTargetDistance)
 					{
+						//this guy might have a bit more complicated of a velocity calculation since it uses all 3 axes
 						if (Velocity.Length() > 0)
 						{
 							Vector3 velocityDir = Vector3.Normalize(Velocity);
 							float velocityLen = Velocity.Length();
 
+							//Instead of simply adding/moving in a given direction, we instead attempt to rotate our movement velocity.
+							//This leads to more interesting movement patterns - in general, strafing has more of an effect this way.
 							Vector3 cross = Vector3.Cross(velocityDir, playerDir);
 							Matrix mat = Matrix.CreateFromAxisAngle(cross, MathHelper.ToRadians(5));
 
 							Vector3 rotated = Vector3.Normalize(Vector3.Transform(velocityDir, mat));
-							Velocity = rotated * (velocityLen + Acceleration);
+
+							if (velocityLen + Acceleration > MaxVelocity)
+								Velocity = rotated * (velocityLen - Acceleration);
+							else Velocity = rotated * (velocityLen + Acceleration);
 						}
 						else
 						{
 							//Initial first acceleration (we start with 0 velocity, and that results in NaNs, so we kinda have to seed it)
 							Velocity += playerDir * Acceleration;
-                        }
+						}
 
                         Facing = Vector3.Normalize(Velocity);
                     }
@@ -171,14 +178,22 @@ namespace ViMG.Entities
 						attackTimer = AttackCooldownTime;
 					}
 				}
+				else if (state == State.Stun)
+				{
+					if (InvulnTimer <= 0)
+					{
+						state = State.Normal;
+						attackTimer = AttackCooldownTime;
+					}
+				}
 			}
 			else
 			{
 				//TODO wander behavior
 			}
 
-			if (Velocity.Length() > MaxVelocity)
-				Velocity = Vector3.Normalize(Velocity) * MaxVelocity;
+			/*if (Velocity.Length() > MaxVelocity)
+				Velocity = Vector3.Normalize(Velocity) * MaxVelocity;*/
 
 			entity.Position += Velocity * (float)deltaTime;
 
@@ -263,9 +278,9 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
+					EntityHelper.CalculateKnockback(ref Velocity, other);
 
-					Hurt(direction, other.knockback, other.damage);
+                    Hurt(other.damage);
 
 					buffManager.AddBuffs(other.applyBuffs);
 					noticeHandler.OnTakeDamage(other.owner);
@@ -279,11 +294,8 @@ namespace ViMG.Entities
 			}
 		}
 
-		public void Hurt(Vector3 hitDirection, float knockback, int damage)
+		public void Hurt(int damage)
 		{
-            Velocity = new Vector3(hitDirection.X * Cube.CUBE_SCALE * knockback, 
-				hitDirection.Y * Cube.CUBE_SCALE * knockback, hitDirection.Z * Cube.CUBE_SCALE * knockback);
-
             Health -= damage;
 
             if (Health <= 0)

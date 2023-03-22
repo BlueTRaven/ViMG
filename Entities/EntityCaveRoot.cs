@@ -82,7 +82,7 @@ namespace ViMG.Entities
 
                 sourceRect.x = currentStage * 16;
             }
-            else sourceRect.x = 3 * 16;
+            else sourceRect.x = 2 * 16;
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
                 Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel, DrawHelper.WhitePixel, 

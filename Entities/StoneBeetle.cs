@@ -24,6 +24,13 @@ namespace ViMG.Entities
 
         private AIWalkerShooter<StoneBeetle> ai;
 
+        private EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
+        {
+            front = new RectangleF(0, 0, 16, 16),
+            sides = new RectangleF(0, 16, 16, 16),
+            back = new RectangleF(0, 32, 16, 16)
+        };
+
         public StoneBeetle()
         {
         }
@@ -74,18 +81,7 @@ namespace ViMG.Entities
                 mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
             }
 
-            RectangleF sourceRect = new RectangleF(0, 0, 16, 16);
-
-            Vector3 velXZ = new Vector3(ai.Velocity.X, 0, ai.Velocity.Z);
-            velXZ.Normalize();
-
-            float facingDotCamera = Vector3.Dot(velXZ, -Main.camera.Forward);
-
-            //Facing within 45 degrees of the camera.
-            if (facingDotCamera < MathHelper.ToRadians(45))
-            {
-                sourceRect.y += 16;
-            }
+            RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, directionalSourceRect);
 
             if (ai.GetState() == AIWalkerShooter<StoneBeetle>.State.Normal)
             {
@@ -101,7 +97,7 @@ namespace ViMG.Entities
             
             if (ai.IsInRangeOfTarget)
             {
-                sourceRect = new RectangleF(0, 32, 16, 16);
+                sourceRect = new RectangleF(0, 48, 16, 16);
             }
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();

@@ -12,7 +12,8 @@ namespace ViMG.Items
 {
     public class ItemBookWinds : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 2f, 0, 8), 2);
+        private static MagicAttackStats magicStats = 
+            new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
 
         public ItemBookWinds() : base("book_spell_winds", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 32, 16, 16))
         {

@@ -16,7 +16,8 @@ namespace ViMG.Items
         private static ProjectileManager.ProjectileStats stats;
         private static ProjectileManager.ProjectileVisStats visStats;
         private static ProjectileManager.ProjectileBatchStats batchStats;
-        private static MeleeAttackStats meleeStats = new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.85f, 16, 1), Cube.CUBE_SCALE * 1.75f);
+        private static MeleeAttackStats meleeStats = 
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.85f, 16, Cube.CUBE_SCALE * 1.25f), Cube.CUBE_SCALE * 1.75f);
 
         public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
         {
