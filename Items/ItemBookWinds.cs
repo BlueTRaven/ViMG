@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,17 +28,20 @@ namespace ViMG.Items
             flipXInHand = true;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
-            bool val = base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+            bool val = base.LeftClick(player, inventory, index, facing, out actionStats);
 
             if (player.Magic < 2)
+            {
+                actionStats = new Player.ActionStats();
                 return false;
+            }
 
-            itemCooldownTime = magicStats.attackStats.cooldownTime;
+            actionStats = new Player.ActionStats(magicStats.attackStats);
             int damage = magicStats.attackStats.damage;
             float knockback = magicStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+            player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
             player.Magic -= 2;
             player.SpawnHitbox(index, damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);

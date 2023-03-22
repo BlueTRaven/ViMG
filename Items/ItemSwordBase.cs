@@ -13,14 +13,14 @@ namespace ViMG.Items
 		{
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
-			itemCooldownTime = 0.35f;
+            actionStats = new Player.ActionStats(0.35f);
 			int damage = 1;
 			float knockback = 1f;
-			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+			player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
 			player.SpawnHitbox(index, 1, Player.DamageType.Melee, -Main.camera.Forward, 1f);
 

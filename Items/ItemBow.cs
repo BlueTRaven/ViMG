@@ -24,15 +24,15 @@ namespace ViMG.Items
 			this.rangedAttackStats = stats;
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
 			if (inventory.FindTag("ammo_arrow", out int ammoIndex).valid)
 			{
-				itemCooldownTime = this.rangedAttackStats.attackStats.cooldownTime;
+                actionStats = new Player.ActionStats(rangedAttackStats.attackStats);
 
 				int damage = rangedAttackStats.attackStats.damage;
 				float knockback = rangedAttackStats.attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+				player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 
 				var visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"), new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 				var stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, damage, knockback,
@@ -49,7 +49,7 @@ namespace ViMG.Items
 				}
 			}
 
-			itemCooldownTime = 0;
+			actionStats = new Player.ActionStats();
 			return false;
 		}
 

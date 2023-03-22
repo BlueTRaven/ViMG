@@ -32,15 +32,15 @@ namespace ViMG.Items
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
 			var item = inventory.FindTag("ammo_arrow", out int ammoIndex);
 			if (item.valid && item.num >= 2)
 			{
-				itemCooldownTime = attackStats.cooldownTime;
+                actionStats = new Player.ActionStats(attackStats);
 				int damage = attackStats.damage;
 				float knockback = attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+				player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 				stats.damage = damage;
 				stats.knockback = knockback;
 
@@ -51,7 +51,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			itemCooldownTime = 0;
+			actionStats = new Player.ActionStats();
 			return false;
 		}
 	}

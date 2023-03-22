@@ -99,6 +99,8 @@ namespace ViMG
             public bool hasSimReferences;
         }
 
+        private Queue<Task<BatchCollisionMeshTaskResult>> flushTaskQueue = new Queue<Task<BatchCollisionMeshTaskResult>>();
+
         private Queue<ChunkPosition> dirtyChunkPositions = new Queue<ChunkPosition>();
         private HashSet<ChunkPosition> dirtyChunkKnown = new HashSet<ChunkPosition>();
 
@@ -179,21 +181,13 @@ namespace ViMG
             StartActiveTasks(world);
         }
 
-        //Flushes all actively enqueued chunks, blocking until they have all been meshed.
-        public void Flush()
+        public void BeginFlush()
         {
-            Queue<Task<BatchCollisionMeshTaskResult>> tasks = new Queue<Task<BatchCollisionMeshTaskResult>>();
-
             EnqueueBatch(ref currentBatch);
             currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
-            int max = meshBatchTasksQueue.Count;
-            GameStateTheIsland.ProgressMax = max;
-
             while (meshBatchTasksQueue.Count > 0)
             {
-                GameStateTheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
-
                 var task = meshBatchTasksQueue.Dequeue().task;
 
                 if (task.Status == TaskStatus.Created)
@@ -202,17 +196,21 @@ namespace ViMG
                         task.Start();
                     else task.RunSynchronously();
                 }
-                tasks.Enqueue(task);
+                flushTaskQueue.Enqueue(task);
             }
+        }
 
-            max = tasks.Count;
+        //Flushes all actively enqueued chunks, blocking until they have all been meshed.
+        public void FinishFlush()
+        {
+            int max = flushTaskQueue.Count;
             GameStateTheIsland.ProgressMax = max;
 
-            while (tasks.Count > 0)
+            while (flushTaskQueue.Count > 0)
             {
-                GameStateTheIsland.ProgressMin = max - tasks.Count;
+                GameStateTheIsland.ProgressMin = max - flushTaskQueue.Count;
 
-                var task = tasks.Dequeue();
+                var task = flushTaskQueue.Dequeue();
 
                 if (task.IsCompleted)
                 {
@@ -261,7 +259,8 @@ namespace ViMG
                         }
                     }
                 }
-                else tasks.Enqueue(task);
+                //if a task is not finished, re-enqueue it at the back of the queue.
+                else flushTaskQueue.Enqueue(task);
             }
         }
 

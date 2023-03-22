@@ -35,9 +35,9 @@ namespace ViMG.Items
 			else return base.GetDescription(item);
 		}
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			var metaItem = Get(inventory.Get(index));
 
@@ -47,10 +47,13 @@ namespace ViMG.Items
 				{
 					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
 
-					itemCooldownTime = metaItem.GetStats(inventory.Get(index)).cooldownTime;
-					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
+                    float useTime = GetStats(inventory.Get(index)).cooldownTime;
+                    useTime -= useTime * (player.GetStats().MiningScale);
 
-					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
+                    actionStats.useTime = useTime;
+                    actionStats.useAnimTime = useTime;
+
+                    Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
 					player.world.ChunkManager.ThreadedView.GetIds(affectedPositions.AsSpan(), ids);
 
 					for (int i = 0; i < affectedPositions.Length; i++)

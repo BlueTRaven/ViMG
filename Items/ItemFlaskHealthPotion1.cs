@@ -15,13 +15,13 @@ namespace ViMG.Items
 			description = "A health potion. It smells surprisingly nice.";
 		}
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
 			player.Heal(10);
 
 			inventory.Remove(index, 1);
 
-			return base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			return base.RightClick(player, inventory, index, facing, out actionStats);
         }
     }
 }

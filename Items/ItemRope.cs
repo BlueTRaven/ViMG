@@ -23,9 +23,9 @@ namespace ViMG.Items
 			cube = Main.Registry.CubeRegistry.Get("rope");
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			//TODO check touch not id != 0
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
@@ -69,7 +69,8 @@ namespace ViMG.Items
 									cube.OnPlayerPlaced(player, nextPos);
 
 									//cubes can be placed as fast as possible
-									itemCooldownTime = 0.25f;
+									actionStats.useTime = 0.25f;
+									actionStats.useAnimTime = 0.25f;
 
 									return true;
 								}
@@ -89,10 +90,11 @@ namespace ViMG.Items
 
 								cube.OnPlayerPlaced(player, placeAtPos);
 
-								//cubes can be placed as fast as possible
-								itemCooldownTime = 0.25f;
+                                //cubes can be placed as fast as possible
+                                actionStats.useTime = 0.25f;
+                                actionStats.useAnimTime = 0.25f;
 
-								return true;
+                                return true;
 							}
 						}
 					}

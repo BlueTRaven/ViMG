@@ -83,7 +83,7 @@ namespace ViMG.Items
                 "Press rmb to place the structure. This can then be undone with ctrl+z. Note that undoing doesn't guarantee that tile entities will be re-created if they were destroyed!";
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             CubePosition pos = CubePosition.FromWorldSpace(player.Position);
             Structure structure = Main.assetsManager.GetAsset<Structure>(assetKeysList[currentStructure]);
@@ -116,7 +116,8 @@ namespace ViMG.Items
 
             pastedStructures.Push(pasted);
 
-            itemCooldownTime = 3f;
+            actionStats.useTime = 3f;
+            actionStats.useAnimTime = 3f;
 
             return true;
         }

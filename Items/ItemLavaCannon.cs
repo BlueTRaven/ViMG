@@ -32,15 +32,15 @@ namespace ViMG.Items
 			flipXInHand = true;
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
 			var bulletItem = inventory.FindTag("ammo_bullet", out int ammoIndex);
 			if (bulletItem.valid && bulletItem.num >= 4)
 			{
-				itemCooldownTime = rangeAttackStats.attackStats.cooldownTime;
+                actionStats = new Player.ActionStats(rangeAttackStats.attackStats);
 				int damage = rangeAttackStats.attackStats.damage;
 				float knockback = rangeAttackStats.attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+				player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 				stats.damage = damage;
 				stats.knockback = knockback;
 
@@ -53,7 +53,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			itemCooldownTime = 0;
+			actionStats = new Player.ActionStats();
 			return false;
 		}
 

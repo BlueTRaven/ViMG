@@ -45,9 +45,9 @@ namespace ViMG.Items
             }
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
-            bool valid = base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+            bool valid = base.RightClick(player, inventory, index, facing, out actionStats);
 
             var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
             (Vector3 pos) =>
@@ -68,7 +68,7 @@ namespace ViMG.Items
                 {
                     inventory.Remove(index, 1);
 
-                    itemCooldownTime = 6f;
+                    actionStats = new Player.ActionStats(6f);
 
                     player.world.EntityManager.Add(new Entities.Skullhead(pos.InWorldSpace() - new Vector3(0, Cube.CUBE_SCALE * 16f, 0)));
                 }

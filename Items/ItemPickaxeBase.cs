@@ -13,9 +13,9 @@ namespace ViMG.Items
 		{
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 			
 			//TODO check solidity not id != 0
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,

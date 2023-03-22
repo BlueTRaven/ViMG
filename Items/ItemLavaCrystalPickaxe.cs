@@ -22,9 +22,9 @@ namespace ViMG.Items
 			flipXInHand = true;
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position + facing * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
@@ -42,8 +42,11 @@ namespace ViMG.Items
 
 					player.world.ChunkManager.ThreadedView.GetIds(affectedPositions.AsSpan(), ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
 
-					itemCooldownTime = GetStats(inventory.Get(index)).cooldownTime;
-					itemCooldownTime -= itemCooldownTime * (player.GetStats().MiningScale);
+					float useTime =  GetStats(inventory.Get(index)).cooldownTime;
+					useTime -= useTime * (player.GetStats().MiningScale);
+
+					actionStats.useTime = useTime;
+					actionStats.useAnimTime = useTime;
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{

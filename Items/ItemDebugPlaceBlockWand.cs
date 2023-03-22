@@ -33,104 +33,24 @@ namespace ViMG.Items
         private static CubePosition[] useOffsets = new CubePosition[4];
         private static CubePosition[] validPositions = new CubePosition[MAX_PLACEABLE_BLOCKS];
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             if (player.IsLooking && player.CanPlace)
             {
                 Cube startCube = player.world.ChunkManager.ThreadedView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                /*Cube startCube = player.world.ChunkManager2.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                if (player.LookAtNormal.X != 0 && player.LookAtNormal.Y == 0 && player.LookAtNormal.Z == 0)
-                {
-                    //looking at left or right
-                    //Offsets are up, down, fwd, bwd
-                    useOffsets[0] = allOffsets[2];
-                    useOffsets[1] = allOffsets[3];
-                    useOffsets[2] = allOffsets[4];
-                    useOffsets[3] = allOffsets[5];
-                }
-                else if (player.LookAtNormal.X == 0 && player.LookAtNormal.Y != 0 && player.LookAtNormal.Z == 0)
-                {
-                    //looking at up or down
-                    //Offsets are left, right, fwd, bwd
-                    useOffsets[0] = allOffsets[0];
-                    useOffsets[1] = allOffsets[1];
-                    useOffsets[2] = allOffsets[4];
-                    useOffsets[3] = allOffsets[5];
-                }
-                else if (player.LookAtNormal.X == 0 && player.LookAtNormal.Y == 0 && player.LookAtNormal.Z != 0)
-                {
-                    //looking at fwd or bwd
-                    //Offsets are left, right, up, down
-                    useOffsets[0] = allOffsets[0];
-                    useOffsets[1] = allOffsets[1];
-                    useOffsets[2] = allOffsets[2];
-                    useOffsets[3] = allOffsets[3];
-                }
-
-                List<CubePosition> validPositions = new List<CubePosition>();
-                Queue<CubePosition> positions = new Queue<CubePosition>();
-                HashSet<CubePosition> visitedPositions = new HashSet<CubePosition>();
-
-                positions.Enqueue(player.PlaceAtPos);
-
-                int num = 0; ;
-                while (positions.Count > 0 && num <= 80)
-                {
-                    CubePosition pos = positions.Dequeue();
-                    CubePosition checkPos = pos - CubePosition.FromWorldSpace(player.LookAtNormal * Cube.CUBE_SCALE);
-
-                    if (!visitedPositions.Contains(pos))
-                    {
-                        visitedPositions.Add(pos);
-
-                        if (player.world.ChunkManager2.IsInWorldBounds(pos) && player.world.ChunkManager2.IsInWorldBounds(checkPos))
-                        {
-                            if (player.world.ChunkManager2.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
-                            {
-                                Chunk c = player.world.ChunkManager2.GetChunk(pos);
-
-                                if (c != null && c.Initialized)
-                                {
-                                    c.GetData().SetCube(pos, startCube.Id);
-                                }
-
-                                for (int i = 0; i < 4; i++)
-                                {
-                                    positions.Enqueue(pos + useOffsets[i]);
-                                }
-                            }
-                        }
-                    }
-
-                    num++;
-                }*/
 
                 //TODO safety
                 //This doesn't have the safety checks anymore.
                 CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out int num);
 
                 player.world.ChunkManager.ThreadedView.SetCubes(positions, startCube.Id, 0, num);
-                
-                /*for (int i = 0; i < MAX_PLACEABLE_BLOCKS; i++)
-                {
-                    CubePosition pos = positions[i];
 
-                    if (player.world.ChunkManager2.IsInWorldBounds(pos))
-                    {
-                        if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(pos)))
-                        {
-                            player.world.ChunkManager2.SetCube(pos, startCube.Id);
-                        }
-                    }
-                }*/
-
-                itemCooldownTime = 0.25f;
+                actionStats.useTime = 0.25f;
+                actionStats.useAnimTime = 0.25f;
                 return true;
             }
 
-            return base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+            return base.RightClick(player, inventory, index, facing, out actionStats);
         }
 
         public ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item)

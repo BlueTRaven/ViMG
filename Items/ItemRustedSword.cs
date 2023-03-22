@@ -28,19 +28,19 @@ namespace ViMG.Items
             scale = 1f;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
-            base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+            base.LeftClick(player, inventory, index, facing, out actionStats);
 
             if (applyBuffs == null)
             {
                 applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("bleeding"), 7) };
             }
 
-            itemCooldownTime = meleeStats.attackStats.cooldownTime;
+            actionStats = new Player.ActionStats(meleeStats.attackStats);
             int damage = meleeStats.attackStats.damage;
             float knockback = meleeStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
             player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
 

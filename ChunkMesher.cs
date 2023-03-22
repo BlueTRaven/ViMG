@@ -110,6 +110,8 @@ namespace ViMG
 		private readonly GraphicsDevice device;
 		private readonly int sizeInChunks;
 
+		private Queue<Task<BatchRenderMeshTaskResult>> flushTaskQueue = new Queue<Task<BatchRenderMeshTaskResult>>();
+
 		//In terms of granularity, this system works like so:
 		//Marking something dirty adds it to the next frame's batch. (Only one batch will be started a frame via this method).
 		//Adding something to a batch allows it to be enqueued to the task queue. N amounts of chunks are allowed to in a batch at once.
@@ -197,40 +199,36 @@ namespace ViMG
 			StartActiveTasks(world);
 		}
 
-		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
-		public void Flush()
+		public void BeginFlush()
 		{
-			Queue<Task<BatchRenderMeshTaskResult>> tasks = new Queue<Task<BatchRenderMeshTaskResult>>();
+            EnqueueBatch(ref currentBatch);
+            currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
-			EnqueueBatch(ref currentBatch);
-			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+            while (meshBatchTasksQueue.Count > 0)
+            {
+                var task = meshBatchTasksQueue.Dequeue().task;
 
-			int max = meshBatchTasksQueue.Count;
+                if (task.Status == TaskStatus.Created)
+                {
+                    if (Main.MULTITHREAD_MESHING)
+                        task.Start();
+                    else task.RunSynchronously();
+                }
+                flushTaskQueue.Enqueue(task);
+            }
+        }
+
+		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
+		public void FinishFlush()
+		{
+            int max = flushTaskQueue.Count;
 			GameStateTheIsland.ProgressMax = max;
 
-			while (meshBatchTasksQueue.Count > 0)
+			while (flushTaskQueue.Count > 0)
 			{
-                GameStateTheIsland.ProgressMin = max - meshBatchTasksQueue.Count;
+                GameStateTheIsland.ProgressMin = max - flushTaskQueue.Count;
 
-				var task = meshBatchTasksQueue.Dequeue().task;
-
-				if (task.Status == TaskStatus.Created)
-				{
-					if (Main.MULTITHREAD_MESHING)
-						task.Start();
-					else task.RunSynchronously();
-				}
-				tasks.Enqueue(task);
-			}
-
-			max = tasks.Count;
-			GameStateTheIsland.ProgressMax = max;
-
-			while (tasks.Count > 0)
-			{
-                GameStateTheIsland.ProgressMin = max - tasks.Count;
-
-				var task = tasks.Dequeue();
+				var task = flushTaskQueue.Dequeue();
 
 				if (task.IsCompleted)
 				{
@@ -264,7 +262,8 @@ namespace ViMG
 						}
 					}
 				}
-				else tasks.Enqueue(task);
+				//if a task is not finished, re-enqueue it at the back of the queue.
+				else flushTaskQueue.Enqueue(task);
 			}
 		}
 

@@ -21,9 +21,9 @@ namespace ViMG.Items
 			description = Main.Registry.CubeRegistry.Get(cubeId).Description;
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			if (player.IsLooking && player.CanPlace)
 			{
@@ -38,7 +38,8 @@ namespace ViMG.Items
 					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
 
 					//cubes can be placed as fast as possible
-					itemCooldownTime = 0.25f;
+					actionStats.useTime = 0.25f;
+					actionStats.useAnimTime = 0.25f;
 
 					return true;
 				}

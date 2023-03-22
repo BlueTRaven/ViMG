@@ -12,8 +12,12 @@ namespace ViMG.Items
 {
     public class ItemOrnamentalSword : Item
     {
-        private static MeleeAttackStats meleeStats = 
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.5f, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
+        private static MeleeAttackStats meleeStats =
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats()
+            {
+                useTime = 1.5f,
+                useAnimTime = 16f / 60f,
+            }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
         public ItemOrnamentalSword() : base("sword_ornamental", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 128, 16, 16))
         {
@@ -24,14 +28,14 @@ namespace ViMG.Items
             scale = 1f;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
-        {
-            base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        { 
+            base.LeftClick(player, inventory, index, facing, out actionStats);
 
-            itemCooldownTime = meleeStats.attackStats.cooldownTime;
+            actionStats = new Player.ActionStats(meleeStats.attackStats);
             int damage = meleeStats.attackStats.damage;
             float knockback = meleeStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
             player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
 

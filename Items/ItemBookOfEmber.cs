@@ -23,12 +23,15 @@ namespace ViMG.Items
 			flipXInHand = true;
         }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			if (!magicStats.CanUse(player))
+			{
+				actionStats = new Player.ActionStats();
 				return false;
+			}
 
 			CubePosition placePos = player.IsLooking && player.CanPlace ? player.PlaceAtPos : player.LookAtEnd;
 
@@ -36,10 +39,10 @@ namespace ViMG.Items
 
 			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
             {
-				itemCooldownTime = magicStats.attackStats.cooldownTime;
+                actionStats = new Player.ActionStats(magicStats.attackStats);
 				int damage = magicStats.attackStats.damage;
 				float knockback = magicStats.attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+				player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
 				magicStats.Use(player);
 

@@ -29,15 +29,15 @@ namespace ViMG.Items
                 magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             if (magicStats.CanUse(player))
             {
                 magicStats.Use(player);
-                itemCooldownTime = magicStats.attackStats.cooldownTime;
+                actionStats = new Player.ActionStats(magicStats.attackStats);
                 int damage = magicStats.attackStats.damage;
                 float knockback = magicStats.attackStats.knockback;
-                player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+                player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
                 stats.damage = damage;
                 stats.knockback = knockback;
 
@@ -48,7 +48,7 @@ namespace ViMG.Items
                 return true;
             }
 
-            itemCooldownTime = 0;
+            actionStats = new Player.ActionStats();
             return false;
         }
     }

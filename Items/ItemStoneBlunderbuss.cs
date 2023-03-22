@@ -38,7 +38,7 @@ namespace ViMG.Items
 			flipXInHand = true;
         }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
 			ItemInstance ammo = inventory.FindTag("ammo_bullet", out int ammoIndex);
 
@@ -48,10 +48,10 @@ namespace ViMG.Items
 				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
 				if (ammo.item == Main.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
                 {
-					itemCooldownTime = attackStatsWithMusketballs.cooldownTime;
+                    actionStats = new Player.ActionStats(attackStatsWithMusketballs);
 					int damage = attackStatsWithMusketballs.damage;
 					float knockback = attackStatsWithMusketballs.knockback;
-					player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+					player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 					statsWithMusketballs.damage = damage;
 					statsWithMusketballs.knockback = knockback;
 
@@ -60,10 +60,10 @@ namespace ViMG.Items
                 }
                 else
                 {
-					itemCooldownTime = attackStats.cooldownTime;
-					int damage = attackStats.damage;
+                    actionStats = new Player.ActionStats(attackStats);
+                    int damage = attackStats.damage;
 					float knockback = attackStats.knockback;
-					player.PerformAttack(Player.DamageType.Ranged, ref itemCooldownTime, ref damage, ref knockback);
+					player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 					stats.damage = damage;
 					stats.knockback = knockback;
 
@@ -75,7 +75,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			itemCooldownTime = 0;
+			actionStats = new Player.ActionStats();
 			return false;
 		}
 	}

@@ -10,6 +10,9 @@ namespace ViMG.Items
 {
 	public abstract class Item : IRegisterable
 	{
+		public const float DEFAULT_USE_TIME = 0.5f;
+		public const float DEFAULT_USE_ANIM_TIME = 0.5f;
+
 		public struct RangedAttackStats
 		{
 			public float projectileSpeed;
@@ -79,18 +82,30 @@ namespace ViMG.Items
 		public struct AttackStats
 		{
 			public Player.DamageType damageType;
-			public float cooldownTime;
+			public Player.ActionStats actionStats;
 			public int damage;
 			public float knockback;
 			//float size;
 
-			public AttackStats(Player.DamageType damageType, float cooldownTime, int damage, float knockback)
+			public AttackStats(Player.DamageType damageType, float useTime, int damage, float knockback)
 			{
 				this.damageType = damageType;
-				this.cooldownTime = cooldownTime;
+				this.actionStats = new Player.ActionStats()
+				{
+					useTime = useTime,
+					useAnimTime = useTime
+				};
 				this.damage = damage;
 				this.knockback = knockback;
 			}
+
+			public AttackStats(Player.DamageType damageType, Player.ActionStats actionStats, int damage, float knockback)
+			{
+                this.damageType = damageType;
+				this.actionStats = actionStats;
+                this.damage = damage;
+                this.knockback = knockback;
+            }
 
 			public string GetTooltip()
             {
@@ -98,14 +113,15 @@ namespace ViMG.Items
 					"Damage: {1}\n" +
 					"Knockback: {2}%\n" +
 					"{3} Speed\n", 
-					damageType.ToString(), damage, knockback * 100, Util.CooldownToString(cooldownTime));
+					damageType.ToString(), damage, knockback * 100, Util.CooldownToString(actionStats.useTime));
             }
 		}
 
 		public readonly Texture2D Texture;
 		public readonly RectangleF SourceRect;
 		protected float scale = 1f;
-
+		protected const float MESH_SIZE = Cube.CUBE_SCALE / 2f;
+		protected Vector2 origin = new Vector2(MESH_SIZE / Cube.PIXELS_PER_CUBE * 4);
 		protected bool flipXInHand;
 
 		public string Identifier { get; private set; }
@@ -140,16 +156,24 @@ namespace ViMG.Items
 			this.Id = id;
 		}
 
-		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public virtual bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			itemCooldownTime = 0.5f;
+			actionStats = new Player.ActionStats()
+			{
+				useTime = DEFAULT_USE_TIME,
+				useAnimTime = DEFAULT_USE_ANIM_TIME
+			};
 			return false;
 		}
 
-		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public virtual bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			itemCooldownTime = 0.5f;
-			return false;
+            actionStats = new Player.ActionStats()
+            {
+                useTime = DEFAULT_USE_TIME,
+                useAnimTime = DEFAULT_USE_ANIM_TIME
+            };
+            return false;
 		}
 
 		public virtual void StartHold(Player player, Inventory inventory, int index) { }
@@ -180,7 +204,7 @@ namespace ViMG.Items
 
 			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
 
-			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, 
+			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix(origin, 
 				correctedScale * new Vector3(scale, scale, 1)));
 		}
 
@@ -207,27 +231,25 @@ namespace ViMG.Items
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
 				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, 
 				transform, sourceRect));
-
-			//mesh.Draw(device, Main.CubeLitEffect, transform, Texture, SourceRect);
 		}
 
 		protected static void MakeMesh(GraphicsDevice device)
 		{
 			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
+			Vector3 max = new Vector3(MESH_SIZE, MESH_SIZE, 0);
 
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
+			Vector3 a = new Vector3(min.X, min.Y, 0);
+			Vector3 b = new Vector3(min.X, max.Y, 0);
+			Vector3 c = new Vector3(max.X, max.Y, 0);
+			Vector3 d = new Vector3(max.X, min.Y, 0);
 
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
+			Vector2 btx = new Vector2(0, 0);
 			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
+			Vector2 dtx = new Vector2(1, 1);
 
 			int offset = vertices.Count;
 			indices.Add(offset + 0);
@@ -242,7 +264,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			a.Z = 0;
+			/*a.Z = 0;
 			b.Z = 0;
 			c.Z = 0;
 			d.Z = 0;
@@ -258,7 +280,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));*/
 
 			meshItemQuadInWorld = new SimpleMesh<VertexCube, int>(device, vertices, indices);
 		}

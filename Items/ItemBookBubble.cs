@@ -26,9 +26,9 @@ namespace ViMG.Items
             flipXInHand = true;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
-            bool valid = base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+            bool valid = base.LeftClick(player, inventory, index, facing, out actionStats);
 
             if (magicStats.CanUse(player))
             {
@@ -45,7 +45,7 @@ namespace ViMG.Items
 
                 int damage = magicStats.attackStats.damage;
                 float knockback = magicStats.attackStats.knockback;
-                player.PerformAttack(Player.DamageType.Magic, ref itemCooldownTime, ref damage, ref knockback);
+                player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
                 player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset, damage, knockback, index));
 
                 magicStats.Use(player);
@@ -53,7 +53,7 @@ namespace ViMG.Items
                 return true;
             }
 
-            itemCooldownTime = 0;
+            actionStats = new Player.ActionStats();
             return false;
         }
     }

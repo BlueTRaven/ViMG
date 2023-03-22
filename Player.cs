@@ -30,6 +30,24 @@ namespace ViMG
 			Magic,
         }
 
+		public struct ActionStats
+		{
+			public float useTime;
+			public float useAnimTime;
+
+			public ActionStats(Item.AttackStats attackStats)
+			{
+				useTime = attackStats.actionStats.useTime;
+				useAnimTime = attackStats.actionStats.useAnimTime;
+			}
+
+			public ActionStats(float time)
+			{
+				useTime = time;
+				useAnimTime = time;
+			}
+		}
+
 		public struct AccumulatedStats
         {
 			public float HPScale;			//% hp increase.
@@ -182,9 +200,11 @@ namespace ViMG
 		private float attackStateTimer;
 		private float attackStateMoveTimer;
 		private int attackStateInitiatedWeapon;	//the weapon that initiated the attack state.
-		private float itemUseCooldownTimer;
+		//private float itemUseCooldownTimer;
 		private float useTimer;
-		private const float ATTACK_TIME = 0.5f;
+		private float useAnimTimer;
+		private ActionStats currentActionStats;
+		private const float ATTACK_TIME = 8f / 60f;
 
 		private int numDashes;
 		private float dashResetTimer;
@@ -716,7 +736,7 @@ namespace ViMG
 			hitboxTimer -= (float)deltaTime;
 
 			useTimer -= (float)deltaTime;
-			itemUseCooldownTimer -= (float)deltaTime;
+			useAnimTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
 		}
@@ -1173,14 +1193,16 @@ namespace ViMG
 		private void UpdatePerformAction()
 		{
             if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
-                    !menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
+                    !menuPlayer.IsOpened && (useTimer <= 0 ||
                         Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
                         Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
             {
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
                 {
-                    if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-                        PerformAction();
+                    if (inventory.Get(menuPlayer.HighlightIndex).item != null && 
+						inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, 
+						-Main.camera.Forward, out ActionStats actionStats))
+                        PerformAction(actionStats);
                 }
 
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
@@ -1194,7 +1216,7 @@ namespace ViMG
                         {
                             if (tracker.OnInteract(this))
                             {
-                                PerformAction();
+                                PerformAction(new ActionStats() { useTime = Item.DEFAULT_USE_TIME, useAnimTime = Item.DEFAULT_USE_ANIM_TIME });
                                 performedAction = true;
                             }
                         }
@@ -1202,15 +1224,15 @@ namespace ViMG
                         {
                             if (multiTracker.OnInteract(this))
                             {
-                                PerformAction();
+                                PerformAction(new ActionStats() { useTime = Item.DEFAULT_USE_TIME, useAnimTime = Item.DEFAULT_USE_ANIM_TIME });
                                 performedAction = true;
                             }
                         }
                     }
 
                     if (!performedAction && inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item
-                        .RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-                        PerformAction();
+                        .RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out ActionStats actionStats))
+                        PerformAction(actionStats);
                 }
             }
         }
@@ -1428,61 +1450,24 @@ namespace ViMG
 			}
 		}
 
-		public void PerformAction()
+		public void PerformAction(ActionStats actionStats)
 		{
-			useTimer = itemUseCooldownTimer;
-			//useTimer = state == State.Noclip ? 0.05f : ATTACK_TIME;
+			this.useTimer = actionStats.useTime;
+			this.useAnimTimer = actionStats.useAnimTime;
+
+			currentActionStats = actionStats;
 		}
 
-		public void PerformAttack(DamageType damageType, ref float cooldownTimer, ref int damage, ref float knockback)
+		public void PerformAttack(DamageType damageType, ref ActionStats actionStats, ref int damage, ref float knockback)
 		{
-			//Velocity.X = -Main.camera.Forward.X * 512f;
-
-			//Velocity.Z = -Main.camera.Forward.Z * 512f;
-
-			/*var hitboxes = world.HitboxManager.GetAll();
-
-			HitboxManager.Hitbox nearestHitbox = new HitboxManager.Hitbox();
-			float nearestDot = float.MinValue;
-
-			foreach (var hitbox in hitboxes)
-			{
-				if (hitbox.index == this.hitbox || hitbox.group != 1)
-					continue;
-
-				Vector3 dir = hitbox.bounds.Center - Position;
-				if (dir.Length() < PULL_RADIUS + Cube.CUBE_SCALE)
-				{
-					float dot = Vector3.Dot(-Main.camera.Forward, Vector3.Normalize(dir));
-
-					if (dot > nearestDot)
-					{
-						nearestDot = dot;
-						nearestHitbox = hitbox;
-					}
-				}
-			}
-
-			if (nearestHitbox.active)
-			{
-				attackStateTargetPos = nearestHitbox.bounds.Center;
-			}*/
-
-			float scale = 0;
+			float speedScale = 0;
 
 			if (damageType == DamageType.Melee)
-			{
-				scale = stats.MeleeSpdScale;
-
-				/*if (onGround)
-					Velocity.Y = -Main.camera.Forward.Y * 3.2f * Cube.CUBE_SCALE;
-				else if (Velocity.Y > Cube.CUBE_SCALE)
-					Velocity.Y = Cube.CUBE_SCALE;*/
-			}
+				speedScale = stats.MeleeSpdScale;
 			else if (damageType == DamageType.Ranged)
-				scale = stats.RangeSpdScale;
+				speedScale = stats.RangeSpdScale;
 			else if (damageType == DamageType.Magic)
-				scale = stats.MagicSpdScale;
+				speedScale = stats.MagicSpdScale;
 
 			damage = DealDamageCalculation(damageType, damage);
 
@@ -1492,8 +1477,9 @@ namespace ViMG
 					accessoryInventory.Get(i).item.OnAttack(this, inventory, menuPlayer.HighlightIndex);
             }
 
-			cooldownTimer -= (cooldownTimer * scale);
-			this.attackStateTimer = cooldownTimer;
+			actionStats.useTime -= (actionStats.useTime * speedScale);
+			actionStats.useAnimTime -= (actionStats.useAnimTime * speedScale);
+			this.attackStateTimer = actionStats.useTime;
 			this.attackStateMoveTimer = 1f / Main.FIXED_FPS;
 
 			state = State.Attack;
@@ -1515,8 +1501,6 @@ namespace ViMG
 				applyBuffs: applyBuffs, inventorySlot: inventorySlot);
 
 			hitboxTimer = HITBOX_TIME;
-
-			useTimer = ATTACK_TIME;
 		}
 
 		public override void Draw(GraphicsDevice device, Effect effect)
@@ -1643,32 +1627,40 @@ namespace ViMG
 			return accessoryInventory;
         }
 
-		public Matrix GetHeldMatrix(float originX, float originY, Vector3 scale)
+		public Matrix GetHeldMatrix(Vector2 origin, Vector3 scale)
 		{
-			float percent = useTimer / ATTACK_TIME;
+			float percent = useAnimTimer / currentActionStats.useAnimTime;
 
-			if (useTimer <= 0)
+			if (percent <= 0)
 				percent = 0;
 
-			float ox = Cube.CUBE_SCALE / 4f - originX;
-			float oy = Cube.CUBE_SCALE / 4f - originY;
-
-            Matrix mat =
-				Matrix.CreateTranslation(-originX, -originY, 0) *
-				Matrix.CreateScale(0.5f * scale) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
-				Matrix.CreateRotationX(-Main.camera.Rotation.X) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f + Main.camera.Right * Cube.CUBE_SCALE / 4f - Main.camera.Up * Cube.CUBE_SCALE / 6f);
-
-			return mat;
-
-			/*return Matrix.CreateTranslation(Vector3.Forward * Cube.CUBE_SCALE * 2 + Vector3.Down * Cube.CUBE_SCALE * 1.25f + Vector3.Right * Cube.CUBE_SCALE * 0.85f) *
-				Matrix.CreateRotationX(-Main.camera.Rotation.X - MathHelper.ToRadians(35) * percent) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y - MathHelper.ToRadians(35) * percent) *
-					Matrix.CreateRotationZ(-Main.camera.Rotation.Z) *
-					Matrix.CreateTranslation(Position);*/
+			if (state != State.Attack || hitboxDamageType != DamageType.Melee)
+			{
+                return
+                    Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+					Matrix.CreateScale(0.5f * scale) *
+					Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
+					Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
+					Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+					Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f +
+					Main.camera.Right * Cube.CUBE_SCALE / 4f -
+					Main.camera.Up * Cube.CUBE_SCALE / 6f);
+			}
+			else
+			{
+				float ang = 180 * percent;
+				return
+					Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+					Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+					Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
+					Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
+					Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+					Matrix.CreateTranslation(Position - 
+					Main.camera.Forward * Cube.CUBE_SCALE / 4f - 
+					Main.camera.Up * Cube.CUBE_SCALE / 4f);
+			}
 		}
 
 		public void DrawDebug(GraphicsDevice device)

@@ -36,16 +36,16 @@ namespace ViMG.Items
             return base.GetDescription(item);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			ItemSwordBlade meta = Get(inventory.Get(index));
 
-			itemCooldownTime = meta.GetStats().attackStats.cooldownTime;
+            actionStats = new Player.ActionStats(meta.GetStats().attackStats);
 			int damage = meta.GetStats().attackStats.damage;
 			float knockback = meta.GetStats().attackStats.knockback;
-			player.PerformAttack(Player.DamageType.Melee, ref itemCooldownTime, ref damage, ref knockback);
+			player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
 			player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
 

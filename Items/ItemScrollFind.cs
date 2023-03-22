@@ -16,9 +16,9 @@ namespace ViMG.Items
         {
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			if (player.Magic < 5)
 				return false;
@@ -48,7 +48,8 @@ namespace ViMG.Items
 
 				player.Magic -= 5;
 
-				itemCooldownTime = 0.25f;
+				actionStats.useTime = 0.25f;
+				actionStats.useAnimTime = 0.25f;
 
 				return true;
 			}

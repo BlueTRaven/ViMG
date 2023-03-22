@@ -35,7 +35,7 @@ namespace ViMG.Items
                 "Press shift+right click to reset at any point.";
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             if (player.IsLooking)
             {
@@ -57,10 +57,10 @@ namespace ViMG.Items
                 }
             }
 
-            return base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+            return base.RightClick(player, inventory, index, facing, out actionStats);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             if (state == State.SecondClick && Main.inputManager.IsHeld(Microsoft.Xna.Framework.Input.Keys.LeftShift))
             {
@@ -116,7 +116,7 @@ namespace ViMG.Items
                 File.WriteAllBytes("./STRUCTURE_OUTPUT.struct", bytes.ToArray());
             }
 
-            return base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+            return base.LeftClick(player, inventory, index, facing, out actionStats);
         }
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)

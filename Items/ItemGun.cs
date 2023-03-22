@@ -30,9 +30,9 @@ namespace ViMG.Items
 			};
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			int bulletIndex = -1;
 			ItemInstance item = inventory.FindType(Main.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
@@ -46,7 +46,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			return base.LeftClick(player, inventory, index, facing, out itemCooldownTime);
+			return base.LeftClick(player, inventory, index, facing, out actionStats);
 		}
 	}
 }

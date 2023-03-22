@@ -17,9 +17,9 @@ namespace ViMG.Items
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
 		{
-			base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			//TODO check solidity not id != 0
 			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,

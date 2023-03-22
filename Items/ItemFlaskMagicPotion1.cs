@@ -17,7 +17,7 @@ namespace ViMG.Items
             description = "A potion that restores magic power. It smells like chalk and tastes like it too.";
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out float itemCooldownTime)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
         {
             player.Magic += 5;
 
@@ -26,7 +26,7 @@ namespace ViMG.Items
 
             inventory.Remove(index, 1);
 
-            return base.RightClick(player, inventory, index, facing, out itemCooldownTime);
+            return base.RightClick(player, inventory, index, facing, out actionStats);
         }
     }
 }
