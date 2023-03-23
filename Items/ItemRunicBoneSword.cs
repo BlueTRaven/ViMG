@@ -17,7 +17,12 @@ namespace ViMG.Items
         private static ProjectileManager.ProjectileVisStats visStats;
         private static ProjectileManager.ProjectileBatchStats batchStats;
         private static MeleeAttackStats meleeStats = 
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 1.85f, 16, Cube.CUBE_SCALE * 1.25f), Cube.CUBE_SCALE * 1.75f);
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats() 
+            {
+                useTime = 1.85f,
+                useAnimTime = 20f / 60f,
+                preUseTime = 12f / 60f
+            }, 16, Cube.CUBE_SCALE * 1.25f), Cube.CUBE_SCALE * 1.75f);
 
         public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
         {
@@ -45,7 +50,7 @@ namespace ViMG.Items
             float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
+            player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
 
             return true;
         }

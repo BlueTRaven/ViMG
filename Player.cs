@@ -1223,9 +1223,7 @@ namespace ViMG
 		private void UpdatePerformAction()
 		{
             if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
-                    !menuPlayer.IsOpened && (useTimer <= 0 ||
-                        Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-                        Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
+                !menuPlayer.IsOpened && useTimer <= 0)
             {
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
                 {
@@ -1517,7 +1515,7 @@ namespace ViMG
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, 
+		/*public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, 
 			float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)
 		{
 			if (hitbox != -1)
@@ -1535,7 +1533,7 @@ namespace ViMG
 				applyBuffs: applyBuffs, inventorySlot: inventorySlot);
 
 			hitboxTimer = HITBOX_TIME;
-		}
+		}*/
 
 		public void SpawnHitboxLater(int inventorySlot, int damage, DamageType damageType, Vector3 direction,
             float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)

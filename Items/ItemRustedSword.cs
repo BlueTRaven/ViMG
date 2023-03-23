@@ -15,8 +15,13 @@ namespace ViMG.Items
     {
         private Buff.BuffInstance[] applyBuffs;
 
-        private static MeleeAttackStats meleeStats = 
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, 0.85f, 5, Cube.CUBE_SCALE * 0.5f), Cube.CUBE_SCALE * 1f);
+        private static MeleeAttackStats meleeStats =
+            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats()
+            {
+                useTime = 0.85f,
+                useAnimTime = 8f / 60f,
+                preUseTime = 6f / 60f,
+            }, 5, Cube.CUBE_SCALE * 0.5f), Cube.CUBE_SCALE * 1f);
 
         public ItemRustedSword() : base("sword_rusted", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 128, 16, 16))
         {
@@ -42,7 +47,7 @@ namespace ViMG.Items
             float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitbox(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
+            player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
 
             return true;
         }

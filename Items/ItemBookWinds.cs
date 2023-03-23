@@ -44,7 +44,7 @@ namespace ViMG.Items
             player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
             player.Magic -= 2;
-            player.SpawnHitbox(index, damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
+            player.SpawnHitboxLater(index, damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
             
             return val;
         }
