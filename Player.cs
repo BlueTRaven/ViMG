@@ -752,7 +752,25 @@ namespace ViMG
 			//currentUI.Update(null, deltaTime);
 			UpdateMouse();
 
-			hitboxTimer -= (float)deltaTime;
+            if (Main.inputManager.JustPressed(Keys.Q))
+            {
+                int inventorySlot = 0;
+
+                if (menuPlayer.HoverIndex == -1)
+                    inventorySlot = menuPlayer.HighlightIndex;
+                else inventorySlot = menuPlayer.HoverIndex;
+
+                if (inventory.Get(inventorySlot).valid)
+                {
+                    int num = 1;
+                    if (Main.inputManager.IsPressed(Keys.LeftControl))
+                        num = inventory.Get(inventorySlot).num;
+
+                    ThrowItem(inventory, inventorySlot, num);
+                }
+            }
+
+            hitboxTimer -= (float)deltaTime;
 
 			if (preUseTimer <= 0)
 			{
@@ -1167,18 +1185,6 @@ namespace ViMG
 					velocity = new Vector3(velXY.X, velocity.Y, velXY.Y);
 
 					UpdatePerformAction();
-
-					if (Main.inputManager.JustPressed(Keys.Q))
-					{
-						if (inventory.Get(menuPlayer.HighlightIndex).valid)
-						{
-							int num = 1;
-							if (Main.inputManager.IsPressed(Keys.LeftControl))
-								num = inventory.Get(menuPlayer.HighlightIndex).num;
-
-							ThrowItem(inventory, menuPlayer.HighlightIndex, num);
-						}
-					}
 				}
 
 				if (movementPressed)

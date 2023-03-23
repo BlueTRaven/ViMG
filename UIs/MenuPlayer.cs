@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Text;
 using ViMG.Buffs;
 using ViMG.GameStates;
@@ -138,6 +139,7 @@ namespace ViMG.UIs
 			else Open();
         }
 
+		private UI.ItemSlot[] inventoryItemSlots = new UI.ItemSlot[Player.INVENTORY_ROWS * Player.INVENTORY_COLUMNS];
 		public override void Update(GraphicsDevice device, double deltaTime)
 		{
 			base.Update(device, deltaTime);
@@ -158,7 +160,19 @@ namespace ViMG.UIs
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
 			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
-			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f);
+
+			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
+
+			int s = Player.INVENTORY_COLUMNS;
+			if (opened)
+				s *= Player.INVENTORY_ROWS;
+
+			HoverIndex = -1;
+			for (int i = 0; i < s; i++)
+			{
+				if (inventoryItemSlots[i].button.hovered)
+					HoverIndex = i;
+			}
 
 			if (preHighlightedHotbar.valid && preHighlightedHotbar.item != inventory.Get(HighlightIndex).item)
             {

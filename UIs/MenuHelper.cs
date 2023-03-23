@@ -133,7 +133,8 @@ namespace ViMG.UIs
         public static NineSlice MainPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
         public static NineSlice SecondaryPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
-        public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, int rows = 4, int columns = 8, float size = 16, float padding = 8)
+        public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, 
+			int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
 		{
 			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
 
@@ -151,6 +152,7 @@ namespace ViMG.UIs
 					UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
 
 					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
+					itemSlots[i] = itemslot;
 
 					var oldItem = inventory.Get(i);
 
