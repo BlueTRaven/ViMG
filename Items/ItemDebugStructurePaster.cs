@@ -116,8 +116,7 @@ namespace ViMG.Items
 
             pastedStructures.Push(pasted);
 
-            actionStats.useTime = 3f;
-            actionStats.useAnimTime = 3f;
+            actionStats = new Player.ActionStats(3);
 
             return true;
         }

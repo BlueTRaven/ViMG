@@ -30,8 +30,7 @@ namespace ViMG.Items
 
                 inventory.Remove(index, 1);
 
-                actionStats.useTime = 0.5f;
-                actionStats.useAnimTime = 0.5f;
+                actionStats = new Player.ActionStats(0.5f);
 
                 return true;
             }

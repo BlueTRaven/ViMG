@@ -15,6 +15,7 @@ using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.UIs;
+using static ViMG.Player;
 
 namespace ViMG
 {
@@ -34,21 +35,37 @@ namespace ViMG
 		{
 			public float useTime;
 			public float useAnimTime;
+			public float preUseTime;
 
 			public ActionStats(Item.AttackStats attackStats)
 			{
 				useTime = attackStats.actionStats.useTime;
 				useAnimTime = attackStats.actionStats.useAnimTime;
+
+				preUseTime = attackStats.actionStats.preUseTime;
 			}
 
 			public ActionStats(float time)
 			{
 				useTime = time;
 				useAnimTime = time;
+
+				preUseTime = 0;
 			}
 		}
 
-		public struct AccumulatedStats
+        private struct HitboxToSpawnLater
+        {
+            public int inventorySlot;
+            public int damage;
+            public DamageType damageType;
+            public Vector3 direction;
+            public float knockback;
+            public float hitboxSize;
+            public Buff.BuffInstance[] applyBuffs;
+        }
+
+        public struct AccumulatedStats
         {
 			public float HPScale;			//% hp increase.
 			public int HPFlat;          //flat hp increase. Applied AFTER, unmodified by scale.
@@ -192,6 +209,7 @@ namespace ViMG
 		private const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
+		private HitboxToSpawnLater hitboxToSpawnLater;
 		private DamageType hitboxDamageType = DamageType.Unspecified;
 		private Vector3 hitboxOffset;
 		private float hitboxTimer;
@@ -199,8 +217,9 @@ namespace ViMG
 		private const float HITBOX_TIME = 3f / Main.FIXED_FPS;
 		private float attackStateTimer;
 		private float attackStateMoveTimer;
-		private int attackStateInitiatedWeapon;	//the weapon that initiated the attack state.
-		//private float itemUseCooldownTimer;
+		private int attackStateInitiatedWeapon; //the weapon that initiated the attack state.
+									
+		private float preUseTimer;
 		private float useTimer;
 		private float useAnimTimer;
 		private ActionStats currentActionStats;
@@ -735,8 +754,19 @@ namespace ViMG
 
 			hitboxTimer -= (float)deltaTime;
 
-			useTimer -= (float)deltaTime;
-			useAnimTimer -= (float)deltaTime;
+			if (preUseTimer <= 0)
+			{
+				if (hitboxToSpawnLater.damage > 0)
+				{
+					SpawnHitbox(hitboxToSpawnLater);
+
+					hitboxToSpawnLater = new HitboxToSpawnLater();
+				}
+
+				useTimer -= (float)deltaTime;
+				useAnimTimer -= (float)deltaTime;
+			}
+			else preUseTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
 		}
@@ -1455,6 +1485,8 @@ namespace ViMG
 			this.useTimer = actionStats.useTime;
 			this.useAnimTimer = actionStats.useAnimTime;
 
+			this.preUseTimer = actionStats.preUseTime;
+
 			currentActionStats = actionStats;
 		}
 
@@ -1479,13 +1511,14 @@ namespace ViMG
 
 			actionStats.useTime -= (actionStats.useTime * speedScale);
 			actionStats.useAnimTime -= (actionStats.useAnimTime * speedScale);
-			this.attackStateTimer = actionStats.useTime;
+			this.attackStateTimer = actionStats.useTime + actionStats.preUseTime;
 			this.attackStateMoveTimer = 1f / Main.FIXED_FPS;
 
 			state = State.Attack;
 		}
 
-		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)
+		public void SpawnHitbox(int inventorySlot, int damage, DamageType damageType, Vector3 direction, 
+			float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)
 		{
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -1497,11 +1530,46 @@ namespace ViMG
 			Rectangle3D rect = new Rectangle3D(Position + hitboxOffset, new Vector3(hitboxSize));
 			this.hitboxSize = hitboxSize;
 
-			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, DealDamageCalculation(damageType, damage), knockback, 
+			hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL, 
+				DealDamageCalculation(damageType, damage), knockback, 
 				applyBuffs: applyBuffs, inventorySlot: inventorySlot);
 
 			hitboxTimer = HITBOX_TIME;
 		}
+
+		public void SpawnHitboxLater(int inventorySlot, int damage, DamageType damageType, Vector3 direction,
+            float knockback = 1, float hitboxSize = Cube.CUBE_SCALE * 1.75f, Buff.BuffInstance[] applyBuffs = null)
+		{
+			hitboxToSpawnLater = new HitboxToSpawnLater()
+			{
+				inventorySlot = inventorySlot,
+				damage = damage,
+				damageType = damageType,
+				direction = direction,
+				knockback = knockback,
+				hitboxSize = hitboxSize,
+				applyBuffs = applyBuffs
+			};
+		}
+
+		private void SpawnHitbox(HitboxToSpawnLater toSpawnLater)
+		{
+            if (hitbox != -1)
+                world.HitboxManager.Remove(hitbox);
+            this.hitboxDamageType = toSpawnLater.damageType;
+
+            float offset = hitboxSize + (Cube.CUBE_SCALE / 2f) - (hitboxSize / 2f);
+            hitboxOffset = toSpawnLater.direction * offset;
+
+            Rectangle3D rect = new Rectangle3D(Position + hitboxOffset, new Vector3(hitboxSize));
+            this.hitboxSize = toSpawnLater.hitboxSize;
+
+            hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL,
+                DealDamageCalculation(toSpawnLater.damageType, toSpawnLater.damage), toSpawnLater.knockback,
+                applyBuffs: toSpawnLater.applyBuffs, inventorySlot: toSpawnLater.inventorySlot);
+
+            hitboxTimer = HITBOX_TIME;
+        }
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{

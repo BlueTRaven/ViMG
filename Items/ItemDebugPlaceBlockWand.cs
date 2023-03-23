@@ -45,8 +45,7 @@ namespace ViMG.Items
 
                 player.world.ChunkManager.ThreadedView.SetCubes(positions, startCube.Id, 0, num);
 
-                actionStats.useTime = 0.25f;
-                actionStats.useAnimTime = 0.25f;
+                actionStats = new Player.ActionStats(0.25f);
                 return true;
             }
 

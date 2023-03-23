@@ -49,9 +49,10 @@ namespace ViMG.Items
 			Register(new ItemSwordBlade("iron", colorIron, new Item.MeleeAttackStats(new Item.AttackStats(Player.DamageType.Melee, 
 				new Player.ActionStats() 
 				{ 
-					useTime = 0.85f, 
-					useAnimTime = 8f / 60f 
-				}, 7, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2f)));
+					useTime = 0.85f,
+                    useAnimTime = 8f / 60f,
+                    preUseTime = 8f / 60f,
+                }, 7, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2f)));
 			Register(new ItemBow("iron", colorIron, new Item.RangedAttackStats(new Item.AttackStats(Player.DamageType.Ranged, 
 				0.85f, 6, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 23f, 0.85f)));
 			Register(new ItemPickaxeHead("tin", colorTin, new ItemPickaxeHead.PickaxeStats(0.5f, 0, 1, 0, 0, 0)));
@@ -59,8 +60,9 @@ namespace ViMG.Items
 				new Player.ActionStats()
 				{
 					useTime = 1f,
-					useAnimTime = 8f / 60f
-				}, 3, Cube.CUBE_SCALE * 8), Cube.CUBE_SCALE * 1.45f)));
+					useAnimTime = 8f / 60f,
+                    preUseTime = 8f / 60f,
+                }, 3, Cube.CUBE_SCALE * 8), Cube.CUBE_SCALE * 1.45f)));
 			Register(new ItemBow("tin", colorTin, new Item.RangedAttackStats(new Item.AttackStats(Player.DamageType.Ranged, 1, 2, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 15f, 1f)));
 			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.475f, 0, 1, 0, 0, 0)));
 			Register(new ItemSwordBlade("copper", colorCopper, new Item.MeleeAttackStats(new Item.AttackStats(Player.DamageType.Melee,
@@ -68,7 +70,8 @@ namespace ViMG.Items
 				{
 					useTime = 0.95f,
 					useAnimTime = 8f / 60f,
-				}, 3, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 1.55f)));
+                    preUseTime = 8f / 60f,
+                }, 3, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 1.55f)));
 			Register(new ItemBow("copper", colorCopper, new Item.RangedAttackStats(new Item.AttackStats(Player.DamageType.Ranged, 1, 2, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 15f, 1f)));
 			Register(new ItemPickaxeHead("bronze", colorBronze, new ItemPickaxeHead.PickaxeStats(0.575f, 0, 1, 1, 1, 0)));
 			Register(new ItemSwordBlade("bronze", colorBronze, new Item.MeleeAttackStats(new Item.AttackStats(Player.DamageType.Melee, 
@@ -76,7 +79,8 @@ namespace ViMG.Items
 				{
 					useTime = 0.9f,
 					useAnimTime = 8f / 60f,
-				}, 4, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 1.85f)));
+                    preUseTime = 8f / 60f,
+                }, 4, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 1.85f)));
 			Register(new ItemBow("bronze", colorBronze, new Item.RangedAttackStats(new Item.AttackStats(Player.DamageType.Ranged, 0.95f, 3, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 18f, 0.85f)));
 			Register(new ItemPickaxe());
 			Register(new ItemSword());

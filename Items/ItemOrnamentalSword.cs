@@ -17,6 +17,7 @@ namespace ViMG.Items
             {
                 useTime = 1.5f,
                 useAnimTime = 16f / 60f,
+                preUseTime = 10f / 60f,
             }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
         public ItemOrnamentalSword() : base("sword_ornamental", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 128, 16, 16))
