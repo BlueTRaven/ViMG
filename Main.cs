@@ -90,6 +90,8 @@ namespace ViMG
 		public static bool MouseControl;
 		public static bool DrawCursor;
 
+		public static RectangleF CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
+
 		//Debugging purposes only. Sometimes we want to run (semi)headless for profiling reasons.
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
@@ -387,7 +389,7 @@ namespace ViMG
 			else ui.Draw(batch);*/
 
 			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8, 
-				Options.CurrentWindowResolution.Y / 2 - 8), null, Color.White);
+				Options.CurrentWindowResolution.Y / 2 - 8), CrosshairSourceRect.ToRectangle(), Color.White);
 
 			batch.End();
 
@@ -428,7 +430,7 @@ namespace ViMG
 
 				TextHelper.DrawText(batch, font, DEBUGPopupText,
 					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.Center, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+					Enums.Alignment.Left, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 			}
 
 

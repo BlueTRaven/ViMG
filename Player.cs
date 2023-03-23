@@ -1345,7 +1345,7 @@ namespace ViMG
 
 		public void ThrowItem(Inventory inventory, int index, int num)
 		{
-			if (inventory.Get(menuPlayer.HighlightIndex).valid)
+			if (inventory.Get(index).valid)
 			{
 				ItemInstance thrownInstance = new ItemInstance(inventory.Get(index), num);
 				EntityItem ent = new EntityItem(Position, -Main.camera.Forward * Cube.CUBE_SCALE * 5, thrownInstance);

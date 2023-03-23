@@ -11,7 +11,7 @@ namespace ViMG.Cubes
 {
     public class CubeObelisk : Cube
     {
-        public CubeObelisk() : base("obelisk", new CubeFacingLayout(new RectangleF(64, 32, 16, 16), new RectangleF(64, 16, 16, 16)), Color.White, -1)
+        public CubeObelisk() : base("obelisk", new CubeFacingLayout(new RectangleF(64, 32, 16, 16), new RectangleF(64, 16, 16, 16)), Color.White, 0, 4)
         {
         }
 

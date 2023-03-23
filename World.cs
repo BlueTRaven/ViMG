@@ -831,6 +831,10 @@ namespace ViMG
 
         public bool TryMineCube(CubePosition position, int level, int num, bool instant = false)
 		{
+			//debug mode mines instantly
+			if (Main.Debug)
+				instant = true;
+
 			MinedCube mined = new MinedCube()
 			{
 				position = position,
