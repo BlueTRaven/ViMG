@@ -1220,7 +1220,11 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
+				world.DialogueManager.StartDialogue("Here is some text dialogue. " +
+					"There is a good chance it will not work right out of the gate, and if it does, " +
+					"it'll probably be pretty glitchy... here's some more text to force a newline, it's pretty cool." +
+					"No idea how this'll act out.");
+				//world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
                 //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
                 //world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
             }

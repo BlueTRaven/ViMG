@@ -73,7 +73,7 @@ namespace ViMG.UIs
 
                 Rectangle bounds = new Rectangle((int)position.X, (int)(Options.CurrentWindowResolution.Y - yPos), 512, 512);
                 TextHelper.WrappedText wrappedText = TextHelper.GetWrappedText(fi, messages[i].message, 512);
-                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(fi, messages[i].message, bounds, Enums.Alignment.TopLeft);
+                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(fi, messages[i].message, 0, messages[i].message.Length, bounds, Enums.Alignment.TopLeft);
                 yPos += fi.StringHeight(wrappedText.text);
                 bounds.Y = (int)(Options.CurrentWindowResolution.Y - yPos);
 

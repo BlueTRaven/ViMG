@@ -64,6 +64,7 @@ namespace ViMG
 		public ChunkLoadManager ChunkLoadManager;
 		public PhysicsInfo PhysicsInfo;
 		public ChatManager ChatManager;
+		public DialogueManager DialogueManager;
 
 		private WorldInfoIO worldInfoIO;
 		private ChunkManagerIO chunkIO;
@@ -114,6 +115,7 @@ namespace ViMG
 			HousingManager = prototype.HousingManager;
 
 			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
+			DialogueManager = new DialogueManager();
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -303,6 +305,7 @@ namespace ViMG
 			alive += (float)deltaTime;
 
 			ChatManager.Update(deltaTime);
+			DialogueManager.Update(deltaTime);
 
 			ChunkManager.Update(deltaTime, this, ChunkLoadManager);
 			//ChunkManager.ProcessChunkQueue(this, 0);
@@ -699,6 +702,7 @@ namespace ViMG
 			player.DrawUI(batch);
 
 			ChatManager.Draw(batch);
+			DialogueManager.Draw(batch);
 		}
 
 		public void OnCubeUpdate(CubePosition updating, ushort updatedId)

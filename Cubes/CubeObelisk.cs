@@ -201,6 +201,7 @@ namespace ViMG.Cubes
             //four connections, four corners 
             else if (above && right && below && left && aboveLeft && aboveRight && belowLeft && belowRight)
                 return new RectangleF(192, 208, 16, 16);
+
             //no connections
             else if (!(above || right || below || left))
                 return new RectangleF(160, 208, 16, 16);
