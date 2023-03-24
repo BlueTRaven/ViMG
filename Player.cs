@@ -749,6 +749,14 @@ namespace ViMG
 			if (world.ChunkManager.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
+			if (lookAtResult.hasHit && world.ChunkManager.InitializerView.GetCube(LookAtPos)
+				.GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(world, LookAtPos))
+			{
+				//? crosshair
+				Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
+			}
+			else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
+
 			//currentUI.Update(null, deltaTime);
 			UpdateMouse();
 
@@ -1220,7 +1228,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.DialogueManager.StartDialogue("Here is some text dialogue. " +
+				world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+				world.MenuDialogue.StartDialogue("Here is some text dialogue. " +
 					"There is a good chance it will not work right out of the gate, and if it does, " +
 					"it'll probably be pretty glitchy... here's some more text to force a newline, it's pretty cool." +
 					"No idea how this'll act out.");
@@ -1241,6 +1250,11 @@ namespace ViMG
 						inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, 
 						-Main.camera.Forward, out ActionStats actionStats))
                         PerformAction(actionStats);
+					else
+					{
+                        Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                        cube.OnLeftClick(world, LookAtPos);
+                    }
                 }
 
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
@@ -1268,9 +1282,20 @@ namespace ViMG
                         }
                     }
 
-                    if (!performedAction && inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item
-                        .RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out ActionStats actionStats))
-                        PerformAction(actionStats);
+					if (!performedAction && inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item
+						.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out ActionStats actionStats))
+					{
+						PerformAction(actionStats);
+						performedAction = true;
+					}
+
+					if (!performedAction)
+					{
+						Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+						if (cube.CanRightClick(world, LookAtPos))
+							cube.OnRightClick(world, LookAtPos);
+					}
                 }
             }
         }

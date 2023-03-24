@@ -15,6 +15,25 @@ namespace ViMG.Cubes
         {
         }
 
+        public override bool CanRightClick(World world, CubePosition position)
+        {
+            return true;
+        }
+
+        public override void OnRightClick(World world, CubePosition position)
+        {
+            base.OnRightClick(world, position);
+
+            world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+
+            world.MenuDialogue.StartDialogue("Here lies our sins\r\n" +
+                "Wicked were we, and so our guilt lies\r\n" +
+                "Buried deep below in vast vaults\r\n" +
+                "Do not delve deeper; heed our warning\r\n" +
+                "Do not speak His Name\r\n" +
+                "For underneath is buried death");
+        }
+
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             CubePosition opposite;
@@ -40,7 +59,7 @@ namespace ViMG.Cubes
             if (data != null && data.GetId(parameters.position + opposite) == Main.Registry.CubeRegistry.Get("obelisk").Id)
                 return new RectangleF(64, 176, 16, 16);
 
-            return new RectangleF(48, 192, 16, 16);
+            return new RectangleF(160, 208, 16, 16);
         }
     }
 }
