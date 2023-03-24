@@ -1240,32 +1240,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				MenuDialogue.OptionsInput[] inputs = new MenuDialogue.OptionsInput[4]
-				{
-					new MenuDialogue.OptionsInput()
-					{
-						optionText = "Option 1",
-						text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-					},
-					new MenuDialogue.OptionsInput()
-					{
-						optionText = "Option 2",
-						text = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-					},
-					new MenuDialogue.OptionsInput()
-					{
-						optionText = "Opt 3",
-						text = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-					},
-					new MenuDialogue.OptionsInput()
-					{
-						optionText = "Really Long Option 4 This is Super Long",
-						text = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
-					},
-				};
-
-				world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
-				world.MenuDialogue.StartOptions(inputs);
+				world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 
 				//world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
                 //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));

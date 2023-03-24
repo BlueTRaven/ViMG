@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.UIs;
 
 namespace ViMG.Entities
 {
@@ -16,7 +17,33 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.World)]
     public class TestNPC : Entity
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static string firstTimeRightClick = "Well, I'll be. Someone came to save me.\r\n" +
+            "I'm soaked to the bone and exhausted. You wouldn't happen to have a place to stay, " +
+            "would you? I'll sell you goods, if you're willing.";
+
+        private static MenuDialogue.OptionsInput[] options = new MenuDialogue.OptionsInput[]
+        {
+            new MenuDialogue.OptionsInput()
+            {
+                optionText = "Who are you?",
+                text = "Me? Name's Wick. I'm a merchant. The lousiest damn merchant in the third sea, I tell you what.\r\n" +
+                    "See, I heard of this boat leaving for the island of Meldri a few weeks back. Not many go by that place, " +
+                    "but there's good business there, I'll have you know. So I thought, why not ask them to take me along?\r\n" +
+                    "Turns out before heading to Meldri, they're taking prisoners to Vi. This island. This damn island.\r\n" +
+                    "In my infinite wisdom, I still chose to board that boat. It was cheap, y'see, and heading to where I was going...\r\n" +
+                    "Some decision that turned out to be. The boat's a wreck. Didn't last long after we dumped you prisoners here in an " +
+                    "attempt to appease the sea. I suspect you and I are the only survivors.\r\n" +
+                    "Well, you're one of those dangerous prisoners they was carrying, so I hope you'll let me live. " +
+                    "If you do that, I'll sell you my wares, as I said."
+            },
+            new MenuDialogue.OptionsInput()
+            {
+                optionText = "Your Wares",
+                text = "Lucky me! Or you, I suppose. Most of my wares survived the trip. Might be a bit damp, though."
+            }
+        };
+
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
         private TypedIndex physicsShapeIndex;
         private BodyHandle physicsHandle;
@@ -74,6 +101,31 @@ namespace ViMG.Entities
 
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
             }
+
+            if (world.GameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+            {
+                Ray ray = new Ray(world.player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
+
+                BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
+                    Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
+
+                if (bb.Intersects(ray).HasValue)
+                {
+                    OnRightClick();
+                }
+            }
+        }
+
+        public void OnRightClick()
+        {
+            if (!world.WorldInfo.flags.HasFlag(WorldLogics.WorldFlags.FlagValues.MERCHANT_SAVED))
+            {
+                world.MenuDialogue.StartText(firstTimeRightClick);
+                world.WorldInfo.flags.Flags |= WorldLogics.WorldFlags.FlagValues.MERCHANT_SAVED;
+            }
+            else world.MenuDialogue.StartOptions(options);
+
+            world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
         }
 
         public override void Draw(GraphicsDevice device, Effect effect)

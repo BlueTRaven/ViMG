@@ -168,6 +168,7 @@ namespace ViMG.UIs
                     }
                     else
                     {
+                        Console.WriteLine("finishing");
                         instance.currentLineCharacter = currentText.lines[instance.currentLine].Length - 1;
                     }
                 }
@@ -183,7 +184,9 @@ namespace ViMG.UIs
 
                 if (instance.currentLine > 0)
                     UI.MakeLabel(new UI.LabelConstructionParameters(currentText.lines[instance.currentLine - 1], fi, bounds.width, Vector2.Zero));
-                UI.MakeLabel(new UI.LabelConstructionParameters(currentText.lines[instance.currentLine], fi, bounds.width, new Vector2(0, fi.LineSpacing)));
+                //TODO get rid of allocation
+                UI.MakeLabel(new UI.LabelConstructionParameters(currentText.lines[instance.currentLine]
+                    .Substring(0, instance.currentLineCharacter), fi, bounds.width, new Vector2(0, fi.LineSpacing)));
 
                 UI.EndParent();
             }

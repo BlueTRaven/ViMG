@@ -11,16 +11,23 @@ namespace ViMG.WorldLogics
         public const int VERSION = 0;
         public const int MIN_VERSION = 0;
 
+        [Flags]
         public enum FlagValues
         {
             NONE = 0,
             SKULLHEAD_DEAD = 1 << 0,
             MERCHANT_SPAWNED = 1 << 1,
+            MERCHANT_SAVED = 1 << 2,
         }
 
         public int Version;
         public int Size;
         public FlagValues Flags;
+
+        public bool HasFlag(FlagValues flag)
+        {
+            return (Flags & flag) == flag;
+        }
 
         public void OnSave(List<byte> bytes)
         {
