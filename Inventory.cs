@@ -171,10 +171,18 @@ namespace ViMG
 
 		public void Remove(int index, int num)
 		{
-			items[index] = new ItemInstance(items[index], items[index].num - num);
+			if (num == -1)
+			{
+				items[index] = new ItemInstance();
+				return;
+			}
+			else
+			{
+				items[index] = new ItemInstance(items[index], items[index].num - num);
 
-			if (items[index].num <= 0)
-				items[index] = ItemInstance.Empty;
+				if (items[index].num <= 0)
+					items[index] = ItemInstance.Empty;
+			}
 		}
 
 		public ref readonly ItemInstance Get(int index)

@@ -20,7 +20,7 @@ using static ViMG.Player;
 namespace ViMG
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(9, 0)]
+	[EntityMeta(10, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
 		public enum DamageType
@@ -273,6 +273,7 @@ namespace ViMG
 		private Inventory craftInventory;
 		private Inventory gearInventory;
 		private Inventory accessoryInventory;
+		public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
 		private MenuPlayer menuPlayer;
 
@@ -354,6 +355,7 @@ namespace ViMG
 				inventory = respawnPlayer.inventory;
 				accessoryInventory = respawnPlayer.accessoryInventory;
 				gearInventory = respawnPlayer.gearInventory;
+				Currency = respawnPlayer.Currency;
 
 				SpawnPosition = respawnPlayer.SpawnPosition;
 				Position = respawnPlayer.SpawnPosition.InWorldSpace();
@@ -371,6 +373,16 @@ namespace ViMG
 				craftInventory = new Inventory(8);
 
 				Health = MaxHealth / 4;
+			}
+
+			//if any coins are in the player's inventory, convert them into currency value.
+			for (int i = 0; i < inventory.NumSlots; i++)
+			{
+				if (inventory.Get(i).item is ItemCoin coin)
+				{
+					Currency += coin.Value * inventory.Get(i).num;
+					inventory.Remove(i, -1);
+				}
 			}
 
 			hurtbox = -1;
@@ -1228,11 +1240,33 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
+				MenuDialogue.OptionsInput[] inputs = new MenuDialogue.OptionsInput[4]
+				{
+					new MenuDialogue.OptionsInput()
+					{
+						optionText = "Option 1",
+						text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+					},
+					new MenuDialogue.OptionsInput()
+					{
+						optionText = "Option 2",
+						text = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+					},
+					new MenuDialogue.OptionsInput()
+					{
+						optionText = "Opt 3",
+						text = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+					},
+					new MenuDialogue.OptionsInput()
+					{
+						optionText = "Really Long Option 4 This is Super Long",
+						text = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+					},
+				};
+
 				world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
-				world.MenuDialogue.StartDialogue("Here is some text dialogue. " +
-					"There is a good chance it will not work right out of the gate, and if it does, " +
-					"it'll probably be pretty glitchy... here's some more text to force a newline, it's pretty cool." +
-					"No idea how this'll act out.");
+				world.MenuDialogue.StartOptions(inputs);
+
 				//world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
                 //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
                 //world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
@@ -1406,12 +1440,25 @@ namespace ViMG
 
 					if (item.CanBePickedUp && dir.Length() < pickupRadius)
 					{
-						if (inventory.Add(item.Item, out int index))
+						//coins are handled manually due to the fact that they should add themselves to the player currency value
+						//instead of to the inventory.
+						if (item.Item.item is ItemCoin coin)
 						{
-							world.EntityManager.Remove(ent);
-							item.Item.item.StartHold(this, inventory, index);
+                            world.EntityManager.Remove(ent);
 
-							menuPlayer.AddPickedUpItem(item.Item);
+                            Currency += item.Item.num * coin.Value;
+
+                            menuPlayer.AddPickedUpItem(item.Item);
+                        }
+						else
+						{
+							if (inventory.Add(item.Item, out int index))
+							{
+								world.EntityManager.Remove(ent);
+								item.Item.item.StartHold(this, inventory, index);
+
+								menuPlayer.AddPickedUpItem(item.Item);
+							}
 						}
 					}
 					else if (item.CanBePickedUp && dir.Length() < suckRadius)
@@ -1941,6 +1988,8 @@ namespace ViMG
 			accessoryInventory.Save(saveBytes);
 			gearInventory.Save(saveBytes);
 
+			SaveHelper.SaveInt32(saveBytes, Currency);
+
 			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 		}
@@ -1977,6 +2026,9 @@ namespace ViMG
 
 			if (version >= 9)
 				gearInventory = Inventory.Load(loadBytes, ref index);
+
+			if (version >= 10)
+				Currency = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			/*menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();*/

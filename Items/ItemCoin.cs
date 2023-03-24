@@ -11,14 +11,14 @@ namespace ViMG.Items
     public class ItemCoin : Item
     {
         private readonly string resource;
-        private readonly int value;
+        public readonly int Value;
 
         private readonly string realResourceName;
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
             base("coin_" + resource, Main.assetsManager.GetAsset<Texture2D>("swrod"), sourceRect)
         {
             this.resource = resource;
-            this.value = value;
+            this.Value = value;
             this.realResourceName = resource.Substring(0, 1).ToUpper() + resource.Substring(1, resource.Length - 1);
         }
 
@@ -32,7 +32,7 @@ namespace ViMG.Items
         public override string GetDescription(ItemInstance item)
         {
             return "A " + realResourceName + " Assarius coin.\n" +
-                "It is worth " + value + " copper Assarii.";
+                "It is worth " + Value + " copper Assarii.";
         }
     }
 }

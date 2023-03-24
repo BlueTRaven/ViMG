@@ -252,7 +252,7 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(MARGIN * 2f + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
 
-				Vector2 pos = new Vector2();
+                Vector2 pos = new Vector2();
 				RectangleF bounds = new RectangleF();
 
 				pos = new Vector2(16 * 3.5f * SCALE, 0);
@@ -372,7 +372,10 @@ namespace ViMG.UIs
 				UI.StartParent(new Vector2(MARGIN,
 					MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * SCALE, 2f).Height + MARGIN * 4));
 
-				UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * SCALE, 2f)), MenuHelper.MainPanelNS);
+				Vector2 accessoryInventorySize = MenuHelper.GetInventorySize(1, 3, 18 * SCALE, 2f).ToVector2() * 
+					new Vector2(2, 2) + new Vector2(MARGIN, MARGIN);
+
+                UI.MakePanel(Color.White, new RectangleF(0, 0, accessoryInventorySize), MenuHelper.MainPanelNS);
 
 				UI.StartParent(new Vector2(16, 16));
 
@@ -404,7 +407,7 @@ namespace ViMG.UIs
 
                 UI.StartParent(new Vector2(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).Width + MARGIN, 0));
 
-                UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
+                //UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
 
 				UI.StartParent(new Vector2(16));
 
@@ -437,7 +440,7 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).Height + MARGIN));
 
-                UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
+                //UI.MakePanel(Color.White, new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f)), MenuHelper.MainPanelNS);
 
 				UI.StartParent(new Vector2(16));
 
@@ -473,6 +476,28 @@ namespace ViMG.UIs
 
 				UI.EndParent();
                 UI.EndParent();
+
+                UI.StartParent(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).ToVector2() + new Vector2(MARGIN));
+				UI.StartParent(new Vector2(8, 16));
+                
+				ItemHelper.GetCoins(player.Currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
+				Vector2 coinCurrencyOffset = new Vector2(0, 12 * SCALE);
+
+				RectangleF rect = new RectangleF(0, 0, 16 * SCALE, 16 * SCALE);
+                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
+				UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+				rect = new RectangleF(16 * SCALE, 0, 16 * SCALE, 16 * SCALE);
+                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
+                UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+                rect = new RectangleF(32 * SCALE, 0, 16 * SCALE, 16 * SCALE);
+                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
+                UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+                rect = new RectangleF(48 * SCALE, 0, 16 * SCALE, 16 * SCALE);
+                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
+                UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+
+				UI.EndParent();
+				UI.EndParent();
 
                 UI.EndParent();
 

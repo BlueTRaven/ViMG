@@ -273,6 +273,9 @@ namespace ViMG.UIs
 
 			public LabelConstructionParameters label;
 			public Texture2D texture;
+			public Color color;
+			public Color hoveredColor;
+			public Color clickedColor;
 			public RectangleF sourceRect;
 			public RectangleF hoveredSourceRect;
 			public RectangleF clickedSourceRect;
@@ -284,6 +287,9 @@ namespace ViMG.UIs
 			{
 				this.bounds = bounds;
 				this.texture = texture;
+				this.color = Color.White;
+				this.hoveredColor = Color.White;
+				this.clickedColor = Color.White;
 				this.label = new LabelConstructionParameters();
 
 				RectangleF sr = sourceRect.GetValueOrDefault(new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height));
@@ -301,7 +307,10 @@ namespace ViMG.UIs
             {
 				this.bounds = bounds;
 				this.texture = texture;
-				this.label = label;
+                this.color = Color.White;
+                this.hoveredColor = Color.White;
+                this.clickedColor = Color.White;
+                this.label = label;
 				
 				RectangleF sr = sourceRect.GetValueOrDefault(new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height));
 
@@ -317,7 +326,10 @@ namespace ViMG.UIs
 			{
 				this.bounds = bounds;
 				this.texture = texture;
-				this.label = new LabelConstructionParameters();
+                this.color = Color.White;
+                this.hoveredColor = Color.White;
+                this.clickedColor = Color.White;
+                this.label = new LabelConstructionParameters();
 				this.sourceRect = sourceRect;
 				this.hoveredSourceRect = hoveredSourceRect;
 				this.clickedSourceRect = clickedSourceRect;
@@ -331,6 +343,9 @@ namespace ViMG.UIs
             {
                 this.bounds = bounds;
                 this.texture = texture;
+                this.color = Color.White;
+                this.hoveredColor = Color.White;
+                this.clickedColor = Color.White;
                 this.label = label;
                 this.sourceRect = sourceRect;
                 this.hoveredSourceRect = hoveredSourceRect;
@@ -344,7 +359,10 @@ namespace ViMG.UIs
             {
 				this.bounds = bounds;
 				this.texture = texture;
-				this.label = label;
+                this.color = Color.White;
+                this.hoveredColor = Color.White;
+                this.clickedColor = Color.White;
+                this.label = label;
 
 				RectangleF defaultSR = new RectangleF(texture.Bounds.X, texture.Bounds.Y, texture.Bounds.Width, texture.Bounds.Height);
 
@@ -354,6 +372,21 @@ namespace ViMG.UIs
 
 				valid = true;
 			}
+
+			public ButtonConstructionParameters(RectangleF bounds, Color color, Color hoveredColor, Color clickedColor)
+			{
+                this.bounds = bounds;
+                this.texture = DrawHelper.WhitePixel;
+                this.color = color;
+                this.hoveredColor = hoveredColor;
+                this.clickedColor = clickedColor;
+                this.label = new LabelConstructionParameters();
+                this.sourceRect = new RectangleF();
+                this.hoveredSourceRect = new RectangleF();
+                this.clickedSourceRect = new RectangleF();
+
+                valid = true;
+            }
 		}
 
 		public readonly struct Button
@@ -370,13 +403,17 @@ namespace ViMG.UIs
 
 			public readonly Label label;
 			public readonly Texture2D texture;
-			public readonly RectangleF sourceRect;
+			public readonly Color color;
+            public readonly Color hoveredColor;
+            public readonly Color clickedColor;
+            public readonly RectangleF sourceRect;
 			public readonly RectangleF hoveredSourceRect;
 			public readonly RectangleF clickedSourceRect;
 
 			internal Button(ID id, bool hovered, 
 				bool clickLeft, bool heldLeft, bool clickRight, bool heldRight,
-				RectangleF bounds, Texture2D texture, Label label,
+				RectangleF bounds, Texture2D texture, Color color, Color hoveredColor,
+				Color clickedColor, Label label,
 				RectangleF sourceRect, RectangleF hoveredSourceRect, RectangleF clickedSourceRect)
 			{
 				this.id = id;
@@ -388,6 +425,9 @@ namespace ViMG.UIs
 				this.heldRight = heldRight;
 				this.bounds = bounds;
 				this.texture = texture;
+				this.color = color;
+				this.hoveredColor = hoveredColor;
+				this.clickedColor = clickedColor;
 				this.label = label;
 				this.sourceRect = sourceRect;
 				this.hoveredSourceRect = hoveredSourceRect;
@@ -573,8 +613,10 @@ namespace ViMG.UIs
 
 			EndParent();
 
-			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, heldRight, mouseBounds, parameters.texture, constructedLabel,
-				parameters.sourceRect, parameters.hoveredSourceRect, parameters.clickedSourceRect);
+			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, 
+				heldRight, mouseBounds, parameters.texture, parameters.color, parameters.hoveredColor, 
+				parameters.clickedColor, constructedLabel, parameters.sourceRect, parameters.hoveredSourceRect, 
+				parameters.clickedSourceRect);
 			buttons.Add(button);
 
 			return button;
@@ -667,13 +709,24 @@ namespace ViMG.UIs
 			foreach (Button button in buttons)
 			{
 				RectangleF sourceRect = button.sourceRect;
+				Color color = button.color;
 
 				if (button.hovered)
+				{
 					sourceRect = button.hoveredSourceRect;
+					color = button.hoveredColor;
+				}
 				else if (button.clickLeft)
+				{
 					sourceRect = button.clickedSourceRect;
+					color = button.clickedColor;
+				}
 
-				batch.Draw(button.texture, button.bounds.Position, sourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.75f);
+				Vector2 s = new Vector2(scale);
+				if (button.texture == DrawHelper.WhitePixel)
+					s *= button.bounds.Size.ToVector2();
+
+				batch.Draw(button.texture, button.bounds.Position, sourceRect.ToRectangle(), color, 0, Vector2.Zero, s, SpriteEffects.None, 0.75f);
 				
 				/*if (button.label.text != null)
 					TextHelper.DrawText(batch, button.label.font, button.label.text, Color.White, 

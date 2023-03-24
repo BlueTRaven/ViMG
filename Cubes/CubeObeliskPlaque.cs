@@ -26,11 +26,11 @@ namespace ViMG.Cubes
 
             world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
-            world.MenuDialogue.StartDialogue("Here lies our sins\r\n" +
-                "Wicked were we, and so our guilt lies\r\n" +
+            world.MenuDialogue.StartText("Here lies our sins\r\n" +
+                "Wicked were we, and so here our guilt lies\r\n" +
                 "Buried deep below in vast vaults\r\n" +
                 "Do not delve deeper; heed our warning\r\n" +
-                "Do not speak His Name\r\n" +
+                "Do not speak His name\r\n" +
                 "For underneath is buried death");
         }
 
