@@ -31,7 +31,7 @@ struct PSOutputGBuffer
 	//float4 Position				: COLOR1;
 };
 
-VSOutputCube MainVS(in VSInputCube input)
+VSOutputCube MainVS(in VSInputTransparent input)
 {
 	VSOutputCube output = (VSOutputCube)0;
 

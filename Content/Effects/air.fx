@@ -12,7 +12,7 @@ float4 TintColor;
 
 float4 PositionRadius;	//xyz position, w radius
 
-VSOutputCube MainVS(in VSInputCube input)
+VSOutputCube MainVS(in VSInputAir input)
 {
 	VSOutputCube output = (VSOutputCube)0;
 

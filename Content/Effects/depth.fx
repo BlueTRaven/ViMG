@@ -1,11 +1,7 @@
 #include "platform_defines.fxh"
+#include "vertex_structs.fxh"
 
 float4x4 WorldViewProjection;
-
-struct VertexShaderInput
-{
-	float4 Position : POSITION;
-};
 
 struct VertexShaderOutput
 {
@@ -13,7 +9,7 @@ struct VertexShaderOutput
 	float2 Depth : TEXCOORD0;
 };
 
-VertexShaderOutput MainVS(in VertexShaderInput input)
+VertexShaderOutput MainVS(in VSInputDepth input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
 	

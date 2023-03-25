@@ -15,6 +15,25 @@ struct VSInputCube
 	float AnimFrameSize : TEXCOORD4;
 };
 
+struct VSInputTransparent
+{
+    float4 Position : POSITION0;
+    float4 Color	: COLOR0;
+    float2 TexCoord : TEXCOORD0;
+};
+
+struct VSInputDepth
+{
+    float4 Position : POSITION0;
+    float4 TexCoord : TEXCOORD0;
+};
+
+struct VSInputAir
+{
+    float4 Position : POSITION0;
+    float4 Color	: COLOR0;
+};
+
 struct VSOutputCube
 {
 	float4 Position : SV_Position;

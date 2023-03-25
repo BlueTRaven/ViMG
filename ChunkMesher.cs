@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct2D1.Effects;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -17,6 +18,7 @@ using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.GameStates;
+using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
@@ -388,15 +390,21 @@ namespace ViMG
 				cmi.meshes = new (VertexBuffer VBO, IndexBuffer IBO)[NUM_CHUNK_MESH_PASSES];
 
 				(List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Opaque);
+				(List<VertexCube> verts, List<int> indices) transparents = state.mesher.GenerateChunk(
+					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent);
+				(List<VertexCube> verts, List<int> indices) shadows = state.mesher.GenerateChunk(
+					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly);
+				(List<VertexCube> verts, List<int> indices) empties = state.mesher.GenerateChunk(
+					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air);
 
-				cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
-				cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent));
-				cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly));
+                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
+				cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
+					transparents.verts.ToVertexTransparentPass(), transparents.indices);
+				cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
+					shadows.verts.ToVertexShadowPass(), shadows.indices);
 				cmi.meshes[(int)Cube.RenderPass.Fluid] = (null, null);   //TODO fluids?
-				cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air));
+				cmi.meshes[(int)Cube.RenderPass.Air] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
+					empties.verts.ToVertexEmptyPass(), empties.indices);
 
 				state.batch.meshInfos[i] = cmi;
 				state.batch.meshInfos[i].hasMeshes = true;
