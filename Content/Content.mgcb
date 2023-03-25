@@ -291,6 +291,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/axes.png
 
+#begin Textures/bars.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/bars.png
+
 #begin Textures/bubble.png
 /importer:TextureImporter
 /processor:TextureProcessor

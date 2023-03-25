@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BrNineSlice;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -202,7 +203,9 @@ namespace ViMG.UIs
 
 				if (button.hovered)
                 {
-					UI.DisableParent();
+					UIWidgets.MakeTooltip(position, string.Format("{0} x{1} - {2:0.00}s", buff.buff.Name, 1, buff.duration), buff.buff.Description);
+
+					/*UI.DisableParent();
 
 					const int minW = 128;
 					const int minH = 16;
@@ -235,7 +238,7 @@ namespace ViMG.UIs
 					bounds.y += fi.StringHeight(name);
 					bounds.y += 8;
 					UI.MakeLabel(description, fi, bounds.width, bounds.Position);
-					UI.EnableParent();
+					UI.EnableParent();*/
                 }
 
 				index++;
@@ -703,7 +706,10 @@ namespace ViMG.UIs
 			}
 		}
 
-		public override void Draw(SpriteBatch batch)
+		private NineSlice healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
+        private NineSlice healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 5, 1, 1);
+
+        public override void Draw(SpriteBatch batch)
 		{
 			base.Draw(batch);
 
@@ -714,11 +720,22 @@ namespace ViMG.UIs
 				MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 			}
 
-			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING, HEALTHBAR_PADDING);
-			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
-			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Red, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.Health, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
+			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
+				WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_PADDING);
+			RectangleF hbRect = new RectangleF(healthBarPos,
+                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 16));
 
-			healthBarPos.Y += HEALTHBAR_HEIGHT + HEALTHBAR_PADDING;
+			float health = player.Health;
+			float lostHealth = player.GetRealMaxHealth() - player.Health;
+
+            healthbarLowerNS.Draw(batch, Color.White, hbRect, 2, 0);
+            healthbarUpperNS.Draw(batch, Color.White, new RectangleF(healthBarPos + 
+				new Vector2(WIDTH_PER_HEALTH * lostHealth, 0), 
+				new Vector2(WIDTH_PER_HEALTH * health, 16)), 2, 0);
+            //batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
+            //batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Red, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.Health, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
+
+            healthBarPos.Y += HEALTHBAR_HEIGHT + HEALTHBAR_PADDING;
 			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
 			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Blue, 0, Vector2.Zero, new Vector2(-WIDTH_PER_MAGIC * player.Magic, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
 		}

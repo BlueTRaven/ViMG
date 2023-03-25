@@ -23,8 +23,8 @@ namespace ViMG.Buffs
             base.Update(deltaTime, ref buffInstance, ref stats);
 
             stats.HPFlat += 10;
-            stats.HPRegenAmt = 1;
-            stats.HPRegenTime = 8f;
+            stats.HPRegenAmt += 1;
+            stats.HPRegenTime += 8f;
         }
     }
 }

@@ -487,13 +487,14 @@ namespace ViMG
 
 				if (healthRegenTimer <= 0)
                 {
-					healthRegenTimer = 10 - (5 * stats.HPRegenTime);
+					healthRegenTimer = stats.HPRegenTime;
 					Heal(stats.HPRegenAmt);	//minimum of 0 hpregen; we will never regen unless stats have been increased
                 }
 
 				if (magicRegenTimer <= 0)
                 {
-					magicRegenTimer = 10 - (5 * stats.MPRegenTime);
+					magicRegenTimer = 10 - stats.MPRegenTime;
+
 					Magic += stats.MPRegenAmt + 1;	//minimum of 1 mana regen; we will always regen even if stats are unaffected
 
 					if (Magic > MaxMagic)
