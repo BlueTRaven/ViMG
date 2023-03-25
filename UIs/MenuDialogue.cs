@@ -143,7 +143,11 @@ namespace ViMG.UIs
                 //clamp to bounds
                 if (instance.currentLineCharacter >= currentText.lines[instance.currentLine].Length)
                 {
-                    instance.currentLineCharacter = currentText.lines[instance.currentLine].Length - 1;
+                    if (currentText.lines[instance.currentLine].Length == 0)
+                        instance.currentLineCharacter = 0;
+                    else
+                        instance.currentLineCharacter = currentText.lines[instance.currentLine].Length - 1;
+
                     textFinished = true;
                 }
 

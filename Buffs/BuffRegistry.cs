@@ -25,6 +25,7 @@ namespace ViMG.Buffs
             Register(new BuffAratBlessing());
             Register(new BuffHeartEnemySpawnRateIncrease());
             Register(new DebuffBleeding());
+            Register(new BuffWellFed());
         }
     }
 }

@@ -580,6 +580,11 @@ namespace ViMG.UIs
 			isEnabled = true;
         }
 
+		public static Vector2 GetParentPosition()
+		{
+			return currentParent.position;
+		}
+
 		public static Texture MakeTexture(TextureConstructionParameters parameters)
         {
 			ID id = MakeID(parameters.bounds.Position);

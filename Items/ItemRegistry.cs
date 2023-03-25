@@ -151,6 +151,8 @@ namespace ViMG.Items
             Register(new ItemMetalChestplate("oldiron", colorOldIron, new Player.AccumulatedStats() { RangeAtkScale = 0.02f, DefenseFlat = 2 }, setBonusOldIron));
             Register(new ItemMetalLegs("oldiron", colorOldIron, new Player.AccumulatedStats() {DefenseFlat = 2 }, setBonusOldIron));
 			Register(new ItemSwingTest());
+			Register(new ItemLoreIsland1());
+			Register(new ItemBread());
 
             RegisterItemCubes();
 		}

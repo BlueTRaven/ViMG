@@ -63,10 +63,14 @@ namespace ViMG.UIs
             float width = float.Max(minWidth, float.Max(nameSize.Width, descSize.Width));
             float height = float.Max(minHeight, nameSize.Height + descSize.Height);
 
-            if (position.X + width > Options.CurrentWindowResolution.X)
-                position.X = Options.CurrentWindowResolution.X - width;
-            if (position.Y + height > Options.CurrentWindowResolution.Y)
-                position.Y = Options.CurrentWindowResolution.Y - height;
+            Vector2 realPos = UI.GetParentPosition() + position;
+
+            if (realPos.X + width > Options.CurrentWindowResolution.X)
+                realPos.X = Options.CurrentWindowResolution.X - width;
+            if (realPos.Y + height > Options.CurrentWindowResolution.Y)
+                realPos.Y = Options.CurrentWindowResolution.Y - height;
+
+            position = realPos - UI.GetParentPosition();
 
             RectangleF bounds = new RectangleF(position, width, height);
 

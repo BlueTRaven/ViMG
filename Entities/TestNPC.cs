@@ -65,6 +65,16 @@ namespace ViMG.Entities
                 item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("rope"), -1, 0),
                 value = 25,
             },
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_lore_island1"), -1, 0),
+                value = 500,
+            },
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_bread1"), -1, 0),
+                value = 235,
+            },
         };
 
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
