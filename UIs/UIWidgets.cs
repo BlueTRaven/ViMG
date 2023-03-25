@@ -1,5 +1,7 @@
-﻿using BrUtility;
+﻿using BrNineSlice;
+using BrUtility;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SharpDX.Direct2D1.Effects;
 using System;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Items;
+using static ViMG.UIs.UI;
 
 namespace ViMG.UIs
 {
@@ -38,28 +41,70 @@ namespace ViMG.UIs
             UI.EndParent();
         }
 
-        public static void MakeCoinCounter(Player player, float scale, TextHelper.FontInfo fi)
+        private static NineSlice tooltipPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+            new RectangleF(256, 64, 64, 64), 16);
+        private static TextHelper.FontInfo tooltipLabelTitleFI = new TextHelper.FontInfo(
+            Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+        private static TextHelper.FontInfo tooltipLabelDescFI = new TextHelper.FontInfo(
+            Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true);
+        public static void MakeTooltip(Vector2 position, string title, string description)
+        {
+            const float minWidth = 256;
+            const float maxWidth = 512;
+
+            const float minHeight = 48;
+
+            var nameWrapped = TextHelper.GetWrappedText(tooltipLabelTitleFI, title, maxWidth);
+            var descWrapped = TextHelper.GetWrappedText(tooltipLabelDescFI, description, maxWidth);
+
+            Size nameSize = tooltipLabelTitleFI.StringSize(nameWrapped.text);
+            Size descSize = tooltipLabelDescFI.StringSize(descWrapped.text);
+
+            float width = float.Max(minWidth, float.Max(nameSize.Width, descSize.Width));
+            float height = float.Max(minHeight, nameSize.Height + descSize.Height);
+
+            if (position.X + width > Options.CurrentWindowResolution.X)
+                position.X = Options.CurrentWindowResolution.X - width;
+            if (position.Y + height > Options.CurrentWindowResolution.Y)
+                position.Y = Options.CurrentWindowResolution.Y - height;
+
+            RectangleF bounds = new RectangleF(position, width, height);
+
+            MakePanel(new PanelConstructionParameters(bounds.Expand(8), Color.White, tooltipPanelNS, true));
+            MakeLabel(new LabelConstructionParameters(nameWrapped, tooltipLabelTitleFI, width, bounds.Position));
+            MakeLabel(new LabelConstructionParameters(descWrapped, tooltipLabelDescFI, width, bounds.Position + new Vector2(0, nameSize.Height)));
+        }
+
+        public static void MakeCoinCounter(int currency, float scale, TextHelper.FontInfo fi)
         {
             UI.StartParent(new Vector2(8, 16));
 
-            ItemHelper.GetCoins(player.Currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
+            ItemHelper.GetCoins(currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
             Vector2 coinCurrencyOffset = new Vector2(0, 12 * scale);
 
             RectangleF rect = new RectangleF(0, 0, 16 * scale, 16 * scale);
-            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
+            Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-            
+            if (button.hovered)
+                MakeTooltip(rect.Position, coinsCopper.item.GetName(coinsCopper) + " x" + coinsCopper.num, coinsCopper.item.GetDescription(coinsCopper));
+
             rect = new RectangleF(16 * scale, 0, 16 * scale, 16 * scale);
-            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-            
+            if (button.hovered)
+                MakeTooltip(rect.Position, coinsBronze.item.GetName(coinsBronze) + " x" + coinsBronze.num, coinsBronze.item.GetDescription(coinsBronze));
+
             rect = new RectangleF(32 * scale, 0, 16 * scale, 16 * scale);
-            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-            
+            if (button.hovered)
+                MakeTooltip(rect.Position, coinsSilver.item.GetName(coinsSilver) + " x" + coinsSilver.num, coinsSilver.item.GetDescription(coinsSilver));
+
             rect = new RectangleF(48 * scale, 0, 16 * scale, 16 * scale);
-            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            if (button.hovered)
+                MakeTooltip(rect.Position, coinsGold.item.GetName(coinsGold) + " x" + coinsGold.num, coinsGold.item.GetDescription(coinsGold));
 
             UI.EndParent();
         }

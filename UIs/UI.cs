@@ -491,23 +491,8 @@ namespace ViMG.UIs
             }
 		}
 
-		public readonly struct Tooltip
-		{
-			public readonly Panel panel;
-			public readonly string title;
-			public readonly string description;
-
-			public Tooltip(Panel panel, string title, string description)
-			{
-                this.panel = panel;
-                this.title = title;
-                this.description = description;
-            }
-		}
-
 		private static List<Button> buttons = new List<Button>();
 		private static List<ItemSlot> itemSlots = new List<ItemSlot>();
-		private static List<Tooltip> tooltips = new List<Tooltip>();
 		private static List<Label> labels = new List<Label>();
 		private static List<Panel> panels = new List<Panel>();
 		private static List<Texture> textures = new List<Texture>();
@@ -751,13 +736,6 @@ namespace ViMG.UIs
 			EndParent();
 		}
 
-		private static NineSlice itemSlotPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
-			new RectangleF(256, 64, 64, 64), 16);
-		private static TextHelper.FontInfo itemSlotLabelTitleFI = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"),
-			1, true);
-        private static TextHelper.FontInfo itemSlotLabelDescFI = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"),
-            1, true);
-
         public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{
 			bool lookForInputs = button.hovered && Main.inputManager.JustPressed(Keys.U);
@@ -766,46 +744,12 @@ namespace ViMG.UIs
 
 			if (item.item != null && button.hovered)
 			{
-				const float minWidth = 256;
-				const float maxWidth = 512;
-
-				const float minHeight = 48;
-
-				var nameWrapped = TextHelper.GetWrappedText(itemSlotLabelTitleFI, item.item.GetName(item), maxWidth);
-                var descWrapped = TextHelper.GetWrappedText(itemSlotLabelDescFI, item.item.GetDescription(item), maxWidth);
-
-				Size nameSize = itemSlotLabelTitleFI.StringSize(nameWrapped.text);
-				Size descSize = itemSlotLabelDescFI.StringSize(descWrapped.text);
-
-				float width = float.Max(minWidth, float.Max(nameSize.Width, descSize.Width));
-				float height = float.Max(minHeight, nameSize.Height + descSize.Height);
-
-				Vector2 mousePos = Vector2.Zero;//Main.inputManager.GetMousePosition().ToVector2();
-
-				if (mousePos.X + width > Options.CurrentWindowResolution.X)
-					mousePos.X = Options.CurrentWindowResolution.X - width;
-				if (mousePos.Y + height > Options.CurrentWindowResolution.Y)
-					mousePos.Y = Options.CurrentWindowResolution.Y - height;
-
-				RectangleF bounds = new RectangleF(mousePos, width, height);
-
-				MakePanel(new PanelConstructionParameters(bounds.Expand(8), Color.White, itemSlotPanelNS, true));
-				MakeLabel(new LabelConstructionParameters(nameWrapped, itemSlotLabelTitleFI, width, bounds.Position));
-				MakeLabel(new LabelConstructionParameters(descWrapped, itemSlotLabelDescFI, width, bounds.Position + new Vector2(0, nameSize.Height)));
+				UIWidgets.MakeTooltip(Vector2.Zero, item.item.GetName(item), item.item.GetDescription(item));
 			}
 
 			itemSlots.Add(itemSlot);
 
 			return itemSlot;
-		}
-
-		public static Tooltip MakeTooltip(Panel panel, string title, string description)
-		{
-			Tooltip tooltip = new Tooltip(panel, title, description);
-
-            tooltips.Add(tooltip);
-
-			return tooltip; 
 		}
 
 		public static void Draw(SpriteBatch batch, float scale)
@@ -882,7 +826,7 @@ namespace ViMG.UIs
 					baseLayer = 0.90f;
 				
 				RectangleF bounds = panel.bounds;
-;
+
 				float layer = baseLayer + 0.1f * (i / (float)panels.Count);
 
                 if (panel.nineslice == null)
