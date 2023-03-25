@@ -52,6 +52,8 @@ namespace ViMG.UIs
         private OptionsInput[] selectableOptions;
         private DialogueInstance instance;
 
+        public int SelectedOption;
+
         private PlayingType playingType;
         private bool textFinished;
         private bool playing;
@@ -212,6 +214,7 @@ namespace ViMG.UIs
 
                     if (button.clickLeft)
                     {
+                        SelectedOption = i;
                         StartText(input.text);
                     }
 

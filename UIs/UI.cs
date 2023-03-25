@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Items;
+using static ViMG.UIs.UI;
 
 namespace ViMG.UIs
 {
@@ -193,6 +194,22 @@ namespace ViMG.UIs
 			}
 		}
 
+		public struct PanelConstructionParameters
+		{
+            public Color color;
+            public RectangleF bounds;
+            public NineSlice nineslice;
+            public bool appearAboveItemSlots;
+
+			public PanelConstructionParameters(RectangleF bounds, Color color, NineSlice nineslice = null, bool appearAboveItemSlots = false)
+			{
+				this.color = color;
+				this.bounds = bounds;
+				this.nineslice = nineslice;
+				this.appearAboveItemSlots = appearAboveItemSlots;
+			}
+        }
+
 		public readonly struct Panel
 		{
 			internal readonly ID id;
@@ -200,8 +217,17 @@ namespace ViMG.UIs
 			public readonly Color color;
 			public readonly RectangleF bounds;
 			public readonly NineSlice nineslice;
+            public readonly bool appearAboveItemSlots;
 
-			internal Panel(ID id, Color color, RectangleF bounds)
+			internal Panel(ID id, PanelConstructionParameters parameters)
+			{
+				color = parameters.color;
+				bounds = parameters.bounds;
+				nineslice = parameters.nineslice;
+				appearAboveItemSlots = parameters.appearAboveItemSlots;
+			}
+
+            internal Panel(ID id, Color color, RectangleF bounds)
 			{
 				this.id = id;
 
@@ -224,7 +250,7 @@ namespace ViMG.UIs
 
         public struct LabelConstructionParameters 
 		{
-            public string text;
+            public TextHelper.WrappedText text;
             public TextHelper.FontInfo font;
             public float width;
             public Vector2 position;
@@ -234,7 +260,7 @@ namespace ViMG.UIs
 
             public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
             {
-                this.text = text;
+				this.text = TextHelper.GetWrappedText(font, text, width);
                 this.font = font;
                 this.width = width;
                 this.position = position;
@@ -242,19 +268,30 @@ namespace ViMG.UIs
 
 				valid = true;
             }
-		}
+
+            public LabelConstructionParameters(TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
+            {
+				this.text = text;
+                this.font = font;
+                this.width = width;
+                this.position = position;
+                this.color = color ?? Color.White;
+
+                valid = true;
+            }
+        }
 
         public readonly struct Label
 		{
 			internal readonly ID id;
 
-			public readonly string text;
+			public readonly TextHelper.WrappedText text;
 			public readonly TextHelper.FontInfo font;
 			public readonly float width;
 			public readonly Vector2 position;
 			public readonly Color color;
 
-			internal Label(ID id, string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
+			internal Label(ID id, TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
 			{
 				this.id = id;
 
@@ -454,8 +491,23 @@ namespace ViMG.UIs
             }
 		}
 
+		public readonly struct Tooltip
+		{
+			public readonly Panel panel;
+			public readonly string title;
+			public readonly string description;
+
+			public Tooltip(Panel panel, string title, string description)
+			{
+                this.panel = panel;
+                this.title = title;
+                this.description = description;
+            }
+		}
+
 		private static List<Button> buttons = new List<Button>();
 		private static List<ItemSlot> itemSlots = new List<ItemSlot>();
+		private static List<Tooltip> tooltips = new List<Tooltip>();
 		private static List<Label> labels = new List<Label>();
 		private static List<Panel> panels = new List<Panel>();
 		private static List<Texture> textures = new List<Texture>();
@@ -562,6 +614,17 @@ namespace ViMG.UIs
 
 			return tex;
 		}
+
+		public static Panel MakePanel(PanelConstructionParameters parameters)
+		{
+            ID id = MakeID(parameters.bounds.Position);
+            parameters.bounds = new RectangleF(id.position, parameters.bounds.Size);
+
+			Panel panel = new Panel(id, parameters);
+			panels.Add(panel);
+
+			return panel;
+        }
 
 		public static Panel MakePanel(Color color, RectangleF bounds, NineSlice nineslice = null)
 		{
@@ -688,15 +751,61 @@ namespace ViMG.UIs
 			EndParent();
 		}
 
-		public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
+		private static NineSlice itemSlotPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+			new RectangleF(256, 64, 64, 64), 16);
+		private static TextHelper.FontInfo itemSlotLabelTitleFI = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"),
+			1, true);
+        private static TextHelper.FontInfo itemSlotLabelDescFI = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"),
+            1, true);
+
+        public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
 		{
 			bool lookForInputs = button.hovered && Main.inputManager.JustPressed(Keys.U);
 			bool lookForOutputs = button.hovered && Main.inputManager.JustPressed(Keys.R);
 			ItemSlot itemSlot = new ItemSlot(button, item, lookForInputs, lookForOutputs, maxStackSize);
 
+			if (item.item != null && button.hovered)
+			{
+				const float minWidth = 256;
+				const float maxWidth = 512;
+
+				const float minHeight = 48;
+
+				var nameWrapped = TextHelper.GetWrappedText(itemSlotLabelTitleFI, item.item.GetName(item), maxWidth);
+                var descWrapped = TextHelper.GetWrappedText(itemSlotLabelDescFI, item.item.GetDescription(item), maxWidth);
+
+				Size nameSize = itemSlotLabelTitleFI.StringSize(nameWrapped.text);
+				Size descSize = itemSlotLabelDescFI.StringSize(descWrapped.text);
+
+				float width = float.Max(minWidth, float.Max(nameSize.Width, descSize.Width));
+				float height = float.Max(minHeight, nameSize.Height + descSize.Height);
+
+				Vector2 mousePos = Vector2.Zero;//Main.inputManager.GetMousePosition().ToVector2();
+
+				if (mousePos.X + width > Options.CurrentWindowResolution.X)
+					mousePos.X = Options.CurrentWindowResolution.X - width;
+				if (mousePos.Y + height > Options.CurrentWindowResolution.Y)
+					mousePos.Y = Options.CurrentWindowResolution.Y - height;
+
+				RectangleF bounds = new RectangleF(mousePos, width, height);
+
+				MakePanel(new PanelConstructionParameters(bounds.Expand(8), Color.White, itemSlotPanelNS, true));
+				MakeLabel(new LabelConstructionParameters(nameWrapped, itemSlotLabelTitleFI, width, bounds.Position));
+				MakeLabel(new LabelConstructionParameters(descWrapped, itemSlotLabelDescFI, width, bounds.Position + new Vector2(0, nameSize.Height)));
+			}
+
 			itemSlots.Add(itemSlot);
 
 			return itemSlot;
+		}
+
+		public static Tooltip MakeTooltip(Panel panel, string title, string description)
+		{
+			Tooltip tooltip = new Tooltip(panel, title, description);
+
+            tooltips.Add(tooltip);
+
+			return tooltip; 
 		}
 
 		public static void Draw(SpriteBatch batch, float scale)
@@ -705,6 +814,11 @@ namespace ViMG.UIs
 			{
 				DrawItemSlot(batch, itemSlot, scale);
 			}
+
+			/*foreach (Tooltip tooltip in tooltips) 
+			{
+				DrawTooltip(batch, tooltip, scale);
+			}*/
 
 			foreach (Button button in buttons)
 			{
@@ -736,29 +850,44 @@ namespace ViMG.UIs
 
 			foreach (Label label in labels)
 			{
-				TextHelper.DrawText(batch, label.font, label.text, label.color, 
-					new RectangleF(label.position, label.width, 0).ToRectangle(), Enums.Alignment.TopLeft, (int)label.width, 1, TextHelper.OverFlowAction.None);
+				Rectangle bounds = new RectangleF(label.position, label.width, 0).ToRectangle();
 
+                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length,
+					bounds, Enums.Alignment.TopLeft);
+
+				TextHelper.DrawText(batch, label.font, label.text, alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
+
+				//This is exclusively here for drawing textInput's cursor, since textInput uses a label.
 				if (iteration % 60 < 30)
 				{
 					//Note that this doesn't really work at all if the text is wrapped...
 					//But mapping pre-wrapped text to post-wrapped text is actually pretty hard.
 					//For now I'm not even going to bother.
-					if (currentFocusedId.id == label.id.id && cursor < label.text.Length && label.text.Length > 0)
+					if (currentFocusedId.id == label.id.id && cursor < label.text.offset + label.text.length && label.text.length > 0)
 					{
-						Vector2 leadUp = label.position + label.font.StringSize(label.text[..cursor]).ToVector2();
+						Vector2 leadUp = label.position + label.font.StringSize(label.text.text[..cursor]).ToVector2();
 						leadUp.Y -= label.font.LineSpacing;
-						Vector2 charSize = label.font.StringSize(label.text[cursor].ToString()).ToVector2();
+						Vector2 charSize = label.font.StringSize(label.text.text[cursor].ToString()).ToVector2();
 						batch.DrawRectangle(new Rectangle(leadUp.ToPoint(), charSize.ToPoint()), Color.White, 1);
 					}
 				}
 			}
 
-			foreach (Panel panel in panels)
+            for (int i = 0; i < panels.Count; i++)
 			{
-				if (panel.nineslice == null)
-					batch.DrawRectangle(panel.bounds, panel.color, 0.5f);
-				else panel.nineslice.Draw(batch, panel.color, panel.bounds, scale, 0.5f);
+                Panel panel = panels[i];
+
+				float baseLayer = 0.5f;
+				if (panel.appearAboveItemSlots)
+					baseLayer = 0.90f;
+				
+				RectangleF bounds = panel.bounds;
+;
+				float layer = baseLayer + 0.1f * (i / (float)panels.Count);
+
+                if (panel.nineslice == null)
+					batch.DrawRectangle(panel.bounds, panel.color, layer);
+				else panel.nineslice.Draw(batch, panel.color, bounds, scale, layer);
 			}
 
 			foreach (Texture tex in textures)
@@ -768,11 +897,47 @@ namespace ViMG.UIs
 			}
 		}
 
+		//private static TextHelper.FontInfo tooltipFontLabel;
+		/*private static void DrawTooltip(SpriteBatch batch, Tooltip tooltip, float scale)
+		{
+            var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+
+            Vector2 mousePos = Main.inputManager.GetMousePosition().ToVector2();
+
+            const int minH = 16;
+
+            int minW = Options.CurrentWindowResolution.X / 10;
+            int maxW = Options.CurrentWindowResolution.X / 5;
+
+            
+			float widthName = fi.StringWidth(tooltip.title);
+            Size sizeDescription = fi.StringSize(TextHelper.WrapText(fi, tooltip.description, maxW));
+
+            float textWidthMax = Math.Max(minW, Math.Max(widthName, sizeDescription.Width));
+
+            float height = fi.StringHeight(tooltip.title);
+            height += sizeDescription.Height;
+            height += 8;    //for padding
+
+            RectangleF bounds = new RectangleF(mousePos + new Vector2(16), textWidthMax, float.Max(height, minH));
+            //batch.DrawRectangle(bounds, new Color(139, 139, 139, 255), 0.89f);
+
+            batch.DrawRectangle(bounds.ToRectangle(), new Color(139, 139, 139), 0.899f);
+
+            bounds.x += 8;
+            bounds.width -= 16;
+            TextHelper.DrawText(batch, fi, tooltip.title, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
+
+            bounds.y += fi.StringHeight(tooltip.title);
+            bounds.y += 8;
+            TextHelper.DrawText(batch, fi, tooltip.description, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
+        }*/
+
 		private static void DrawItemSlot(SpriteBatch batch, ItemSlot itemSlot, float scale)
 		{
 			Vector2 mousePos = Main.inputManager.GetMousePosition().ToVector2();
 
-			if (itemSlot.button.hovered)
+			/*if (itemSlot.button.hovered)
 			{
 				if (itemSlot.item.item != null)
 				{
@@ -808,7 +973,7 @@ namespace ViMG.UIs
 					bounds.y += 8;
 					TextHelper.DrawText(batch, fi, description, Color.White, bounds.ToRectangle(), Enums.Alignment.TopLeft, (int)bounds.width, 0.90f, overflowAction: TextHelper.OverFlowAction.None);
 				}
-			}
+			}*/
 
 			if (itemSlot.item.item != null)
 			{

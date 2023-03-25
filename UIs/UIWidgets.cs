@@ -1,11 +1,13 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.UIs
 {
@@ -32,6 +34,32 @@ namespace ViMG.UIs
 
             UI.MakeButton(button);
             UI.MakeLabel(new UI.LabelConstructionParameters(str, fontInfo, 1000, Vector2.Zero));
+
+            UI.EndParent();
+        }
+
+        public static void MakeCoinCounter(Player player, float scale, TextHelper.FontInfo fi)
+        {
+            UI.StartParent(new Vector2(8, 16));
+
+            ItemHelper.GetCoins(player.Currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
+            Vector2 coinCurrencyOffset = new Vector2(0, 12 * scale);
+
+            RectangleF rect = new RectangleF(0, 0, 16 * scale, 16 * scale);
+            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            
+            rect = new RectangleF(16 * scale, 0, 16 * scale, 16 * scale);
+            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            
+            rect = new RectangleF(32 * scale, 0, 16 * scale, 16 * scale);
+            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            
+            rect = new RectangleF(48 * scale, 0, 16 * scale, 16 * scale);
+            UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
 
             UI.EndParent();
         }

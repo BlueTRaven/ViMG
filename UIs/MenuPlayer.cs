@@ -478,25 +478,9 @@ namespace ViMG.UIs
                 UI.EndParent();
 
                 UI.StartParent(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).ToVector2() + new Vector2(MARGIN));
-				UI.StartParent(new Vector2(8, 16));
-                
-				ItemHelper.GetCoins(player.Currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
-				Vector2 coinCurrencyOffset = new Vector2(0, 12 * SCALE);
 
-				RectangleF rect = new RectangleF(0, 0, 16 * SCALE, 16 * SCALE);
-                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
-				UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-				rect = new RectangleF(16 * SCALE, 0, 16 * SCALE, 16 * SCALE);
-                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
-                UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-                rect = new RectangleF(32 * SCALE, 0, 16 * SCALE, 16 * SCALE);
-                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
-                UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
-                rect = new RectangleF(48 * SCALE, 0, 16 * SCALE, 16 * SCALE);
-                UI.MakeTexture(new UI.TextureConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
-                UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+				UIWidgets.MakeCoinCounter(player, SCALE, fi);
 
-				UI.EndParent();
 				UI.EndParent();
 
                 UI.EndParent();
