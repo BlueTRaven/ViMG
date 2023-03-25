@@ -732,7 +732,7 @@ namespace ViMG.UIs
 		private NineSlice healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
         private NineSlice healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
         private NineSlice magicbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
-        private NineSlice magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 272, 24, 8), 7, 7, 1, 1);
+        private NineSlice magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
 
         public override void Draw(SpriteBatch batch)
 		{
