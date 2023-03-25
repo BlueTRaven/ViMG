@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
@@ -28,6 +29,10 @@ namespace ViMG.UIs
         private TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         private UI.ItemSlot[] inventoryItemSlots = new UI.ItemSlot[Player.INVENTORY_ROWS * Player.INVENTORY_COLUMNS];
 
+        private int holdingItemSlot;
+        private float holdingTimer;
+        private float holdingPickupTimer;
+
         public MenuShop(GameStateManager gsManager, Player player, ShopStockedItem[] stock) : base(gsManager)
         {
             this.player = player;
@@ -50,12 +55,24 @@ namespace ViMG.UIs
         {
             base.Update(device, deltaTime);
 
+            holdingTimer += (float)deltaTime;
+            holdingPickupTimer -= (float)deltaTime;
+
             UI.Start();
 
             UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
             
             MenuHelper.DoPlayerInventory(player, player.GetInventory(), ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
-            
+
+            UI.StartParent(new Vector2(0, MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Height + MARGIN));
+
+            UI.MakePanel(new UI.PanelConstructionParameters(new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 4, 
+                18 * 2f, 2f)), Color.White, MenuHelper.MainPanelNS));
+
+            UIWidgets.MakeCoinCounter(new Vector2(16), player.Currency, SCALE, fi);
+
+            UI.EndParent();
+
             UI.EndParent();
             
             float width = Options.CurrentWindowResolution.X / 2f;
@@ -76,10 +93,55 @@ namespace ViMG.UIs
                 UI.StartParent(new Vector2(0, i * 18 * SCALE + i * 2f));
 
                 ShopStockedItem stocked = stock[i];
-                UI.MakeItemSlot(UI.MakeButton(buttonParameters), stocked.item);
+                UI.Button button = UI.MakeButton(buttonParameters);
+                UI.MakeItemSlot(button, stocked.item);
                 UIWidgets.MakeCoinCounter(new Vector2(18 * SCALE + 2f, 0), stocked.value, SCALE, fi);
 
+                if (button.clickLeft && (!held.valid || held.item == stocked.item.item))
+                {
+                    //TODO: maybe change MenuHelper.HandleItemSlot? For right now, handle things manually.
+                    //Both buttons should pull one item out and put it into the held slot.
+                    if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) && player.Currency >= stocked.value)
+                    {
+                        holdingItemSlot = i;
+                        holdingTimer = 0;
+                        holdingPickupTimer = 20f / 60f;
+
+                        if (!held.valid)
+                            held = new ItemInstance(stocked.item, 1);
+                        else held = new ItemInstance(held, held.num + 1);
+
+                        player.Currency -= stocked.value;
+                    }
+                }
+                
                 UI.EndParent();
+            }
+
+            if (holdingItemSlot != -1)
+            {
+                if (Main.inputManager.JustReleased(A1r.Input.MouseInput.LeftButton))
+                {
+                    holdingItemSlot = -1;
+                }
+
+                if (Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton))
+                {
+                    if (holdingPickupTimer <= 0)
+                    {
+                        if (holdingTimer > 4f)
+                            holdingPickupTimer = 3f / 60f;
+                        else if (holdingTimer > 2f)
+                            holdingPickupTimer = 6f / 60f;
+                        else if (holdingTimer > 1f)
+                            holdingPickupTimer = 12f / 60;
+                        else holdingPickupTimer = 24f / 60f;
+
+                        held = new ItemInstance(held, held.num + 1);
+
+                        player.Currency -= stock[holdingItemSlot].value;
+                    }
+                }
             }
 
             UI.EndParent();

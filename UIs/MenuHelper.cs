@@ -188,7 +188,8 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, null, inventory.Get(index)));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, 
+					null, inventory.Get(index)));
 
 				return ItemSlotClickOutput.FilterRecipe;
 			}
@@ -326,6 +327,7 @@ namespace ViMG.UIs
 			}
 			else if (itemSlot.button.clickRight)
 			{
+				//right clicking picks up one item from the slot's stack and puts it 
 				if (!held.valid && itemSlot.item.valid)
 				{
 					//Pick up the item - put it in the held item instance
@@ -416,7 +418,7 @@ namespace ViMG.UIs
 
                 TextHelper.DrawText(batch, fi,
                     numString, Color.White, bounds.ToRectangle(), Enums.Alignment.BottomRight,
-                    64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
+                    64, 1f, overflowAction: TextHelper.OverFlowAction.None);
 			}
 		}
 	}
