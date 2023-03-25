@@ -127,20 +127,25 @@ namespace ViMG.UIs
 
                 if (Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton))
                 {
-                    if (holdingPickupTimer <= 0)
+                    if (player.Currency >= stock[holdingItemSlot].value)
                     {
-                        if (holdingTimer > 4f)
-                            holdingPickupTimer = 3f / 60f;
-                        else if (holdingTimer > 2f)
-                            holdingPickupTimer = 6f / 60f;
-                        else if (holdingTimer > 1f)
-                            holdingPickupTimer = 12f / 60;
-                        else holdingPickupTimer = 24f / 60f;
+                        if (holdingPickupTimer <= 0)
+                        {
+                            if (holdingTimer > 4f)
+                                holdingPickupTimer = 3f / 60f;
+                            else if (holdingTimer > 2f)
+                                holdingPickupTimer = 6f / 60f;
+                            else if (holdingTimer > 1f)
+                                holdingPickupTimer = 12f / 60;
+                            else holdingPickupTimer = 24f / 60f;
 
-                        held = new ItemInstance(held, held.num + 1);
+                            held = new ItemInstance(held, held.num + 1);
 
-                        player.Currency -= stock[holdingItemSlot].value;
+                            player.Currency -= stock[holdingItemSlot].value;
+                        }
                     }
+                    //we can no longer afford the item, so stop buying it.
+                    else holdingItemSlot = -1;
                 }
             }
 
