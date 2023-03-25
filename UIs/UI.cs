@@ -930,6 +930,8 @@ namespace ViMG.UIs
 
 				if (num > 1000)
 					numString = string.Format("{0:0.0}k", (float)num / 1000f);
+				else if (num == -1)
+					numString = "\u221E";
 				else numString = num.ToString();
 
 				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),

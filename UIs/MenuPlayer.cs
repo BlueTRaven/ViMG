@@ -479,7 +479,7 @@ namespace ViMG.UIs
 
                 UI.StartParent(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).ToVector2() + new Vector2(MARGIN));
 
-				UIWidgets.MakeCoinCounter(player.Currency, SCALE, fi);
+				UIWidgets.MakeCoinCounter(Vector2.Zero, player.Currency, SCALE, fi);
 
 				UI.EndParent();
 

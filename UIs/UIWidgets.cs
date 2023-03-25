@@ -75,38 +75,34 @@ namespace ViMG.UIs
             MakeLabel(new LabelConstructionParameters(descWrapped, tooltipLabelDescFI, width, bounds.Position + new Vector2(0, nameSize.Height)));
         }
 
-        public static void MakeCoinCounter(int currency, float scale, TextHelper.FontInfo fi)
+        public static void MakeCoinCounter(Vector2 position, int currency, float scale, TextHelper.FontInfo fi)
         {
-            UI.StartParent(new Vector2(8, 16));
-
             ItemHelper.GetCoins(currency, out ItemInstance coinsCopper, out ItemInstance coinsBronze, out ItemInstance coinsSilver, out ItemInstance coinsGold, out _);
-            Vector2 coinCurrencyOffset = new Vector2(0, 12 * scale);
+            Vector2 labelOffset = new Vector2(0, 12 * scale);
 
-            RectangleF rect = new RectangleF(0, 0, 16 * scale, 16 * scale);
+            RectangleF rect = new RectangleF(position, 16 * scale, 16 * scale);
             Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
-            UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsCopper.item.GetName(coinsCopper) + " x" + coinsCopper.num, coinsCopper.item.GetDescription(coinsCopper));
 
-            rect = new RectangleF(16 * scale, 0, 16 * scale, 16 * scale);
+            rect = new RectangleF(position.X + 16 * scale, position.Y, 16 * scale, 16 * scale);
             button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
-            UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsBronze.item.GetName(coinsBronze) + " x" + coinsBronze.num, coinsBronze.item.GetDescription(coinsBronze));
 
-            rect = new RectangleF(32 * scale, 0, 16 * scale, 16 * scale);
+            rect = new RectangleF(position.X + 32 * scale, position.Y, 16 * scale, 16 * scale);
             button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
-            UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsSilver.item.GetName(coinsSilver) + " x" + coinsSilver.num, coinsSilver.item.GetDescription(coinsSilver));
 
-            rect = new RectangleF(48 * scale, 0, 16 * scale, 16 * scale);
+            rect = new RectangleF(position.X + 48 * scale, position.Y, 16 * scale, 16 * scale);
             button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
-            UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + coinCurrencyOffset));
+            UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsGold.item.GetName(coinsGold) + " x" + coinsGold.num, coinsGold.item.GetDescription(coinsGold));
-
-            UI.EndParent();
         }
 
         public static void MakeCheckbox(UI.ButtonConstructionParameters checkboxButton, 

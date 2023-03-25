@@ -1240,7 +1240,26 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				world.GameStateManager.TheIsland.PushMenu(new MenuShop(world.GameStateManager, this, new
+					MenuShop.ShopStockedItem[]
+				{
+					new MenuShop.ShopStockedItem()
+					{
+						item = new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), -1, 0),
+						value = 100,
+					},
+                    new MenuShop.ShopStockedItem()
+                    {
+                        item = new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), -1, 0),
+                        value = 200,
+                    },
+                    new MenuShop.ShopStockedItem()
+                    {
+                        item = new ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
+                        value = 10,
+                    },
+                }));
+				//world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 
 				//world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
                 //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
