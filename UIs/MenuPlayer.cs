@@ -39,8 +39,9 @@ namespace ViMG.UIs
             }
         }
 
-		private const float HEALTHBAR_PADDING = 16;
-		private const float HEALTHBAR_MAX = 128;
+		private const int HEALTHBAR_SCALE = 4;
+        private const float HEALTHBAR_PADDING = 8 * HEALTHBAR_SCALE;
+		private const float HEALTHBAR_MAX = 256;
 		private const float WIDTH_PER_HEALTH = HEALTHBAR_MAX / 20f;
 		private const float WIDTH_PER_MAGIC = HEALTHBAR_MAX / 20f;
 
@@ -568,7 +569,29 @@ namespace ViMG.UIs
 				}
 			}
 
-			float unit = (float)Options.CurrentWindowResolution.X / 80f;
+            Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
+                WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_PADDING);
+            RectangleF hbRect = new RectangleF(hbPos,
+                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 8 * HEALTHBAR_SCALE));
+
+			if (hbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
+			{
+				UIWidgets.MakeTooltip(hbPos, "Health", string.Format("{0}/{1}\n" +
+					"Your health. If this is reduced to zero, you die. So don't let that happen.", player.Health, player.GetRealMaxHealth()));
+			}
+
+            Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
+                WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+            RectangleF mbRect = new RectangleF(mbPos,
+                new Vector2(WIDTH_PER_MAGIC * player.MaxMagic, 8 * HEALTHBAR_SCALE));
+
+            if (mbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
+            {
+                UIWidgets.MakeTooltip(mbPos, "Magic", string.Format("{0}/{1}\n" +
+                    "Your magic. Used to cast magical spells.", player.Magic, player.MaxMagic));
+            }
+
+            float unit = (float)Options.CurrentWindowResolution.X / 80f;
 
 			for (int i = pickedupItems.Length - 1; i >= 0; i--)
             {
@@ -707,7 +730,9 @@ namespace ViMG.UIs
 		}
 
 		private NineSlice healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
-        private NineSlice healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 5, 1, 1);
+        private NineSlice healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
+        private NineSlice magicbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
+        private NineSlice magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 272, 24, 8), 7, 7, 1, 1);
 
         public override void Draw(SpriteBatch batch)
 		{
@@ -720,24 +745,43 @@ namespace ViMG.UIs
 				MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 			}
 
-			Vector2 healthBarPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
+			Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
 				WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_PADDING);
-			RectangleF hbRect = new RectangleF(healthBarPos,
-                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 16));
+			RectangleF hbRect = new RectangleF(hbPos,
+                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 8 * HEALTHBAR_SCALE));
 
 			float health = player.Health;
 			float lostHealth = player.GetRealMaxHealth() - player.Health;
 
-            healthbarLowerNS.Draw(batch, Color.White, hbRect, 2, 0);
-            healthbarUpperNS.Draw(batch, Color.White, new RectangleF(healthBarPos + 
-				new Vector2(WIDTH_PER_HEALTH * lostHealth, 0), 
-				new Vector2(WIDTH_PER_HEALTH * health, 16)), 2, 0);
-            //batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
-            //batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Red, 0, Vector2.Zero, new Vector2(-WIDTH_PER_HEALTH * player.Health, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
+            healthbarLowerNS.Draw(batch, Color.White, hbRect, HEALTHBAR_SCALE, 0);
 
-            healthBarPos.Y += HEALTHBAR_HEIGHT + HEALTHBAR_PADDING;
-			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Gray, 0, Vector2.Zero, new Vector2(-WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_HEIGHT), SpriteEffects.None, 0);
-			batch.Draw(DrawHelper.WhitePixel, healthBarPos, null, Color.Blue, 0, Vector2.Zero, new Vector2(-WIDTH_PER_MAGIC * player.Magic, HEALTHBAR_HEIGHT), SpriteEffects.None, 0.1f);
+			if (WIDTH_PER_HEALTH * health > (healthbarUpperNS.distLeft + healthbarUpperNS.distRight) * HEALTHBAR_SCALE)
+			{
+				healthbarUpperNS.Draw(batch, Color.White, new RectangleF(hbPos +
+					new Vector2(WIDTH_PER_HEALTH * lostHealth, 0),
+					new Vector2(WIDTH_PER_HEALTH * health, 8 * HEALTHBAR_SCALE)), HEALTHBAR_SCALE, 0);
+			}
+
+            Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
+                WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+            RectangleF mbRect = new RectangleF(mbPos,
+                new Vector2(WIDTH_PER_MAGIC * player.MaxMagic, 8 * HEALTHBAR_SCALE));
+
+            float magic = player.Magic;
+			float lostMagic = player.MaxMagic - player.Magic;
+
+			magicbarLowerNS.Draw(batch, Color.White, mbRect, HEALTHBAR_SCALE, 0);
+		
+			//Since this is done using a nineslice, we get problems if the left and right segments begin to overlap
+			//(which occurs when the width < the dist of both sides).
+			//To rememdy this we pretty much have to draw manual versions of these textures at smaller sizes.
+			//TODO draw smaller sized versions of bars when slices overlap
+			if (WIDTH_PER_MAGIC * magic > (magicbarUpperNS.distRight + magicbarUpperNS.distLeft) * HEALTHBAR_SCALE)
+			{
+				magicbarUpperNS.Draw(batch, Color.White, new RectangleF(mbPos +
+					new Vector2(WIDTH_PER_MAGIC * lostMagic, 0),
+					new Vector2(WIDTH_PER_MAGIC * magic, 8 * HEALTHBAR_SCALE)), HEALTHBAR_SCALE, 0);
+			}
 		}
 	}
 }
