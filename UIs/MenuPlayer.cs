@@ -18,9 +18,9 @@ namespace ViMG.UIs
 		private struct PickedUpItem
         {
 			public const float DUR_HOLDMID = 0.2f;
-			public const float DUR_ANIM_TO_SIDE = 0.4f;
+			public const float DUR_ANIM_TO_SIDE = 0.6f;
 			public const float DUR_HOLDSIDE = 4f;
-			public const float DUR_TOTAL = 6f;
+			public const float DUR_TOTAL = 6.2f;
 
 			public ItemInstance item;
 			public float timer;
@@ -592,6 +592,7 @@ namespace ViMG.UIs
 				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE)
                 {
 					float p = (pu.timer - PickedUpItem.DUR_HOLDMID) / PickedUpItem.DUR_ANIM_TO_SIDE;
+					p = Easings.EaseInOutElastic(p);
 
 					RectangleF rect = new RectangleF(
 						MathHelper.Lerp(-unit * 4, -unit, p),

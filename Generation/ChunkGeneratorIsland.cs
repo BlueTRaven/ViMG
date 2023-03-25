@@ -965,7 +965,7 @@ namespace ViMG.Generation
 				{
 					float percent = (float)cubeSpacePos.Y / ((float)heightMap[chunkSpacePos.X, chunkSpacePos.Z]);
 
-					if (dir.Length() < MathHelper.Lerp(minHoleRadius, holeRadius, Easings.Ease(percent)))
+					if (dir.Length() < MathHelper.Lerp(minHoleRadius, holeRadius, Easings.EaseInExpo(percent)))
 						return true;
 				}
 			}
