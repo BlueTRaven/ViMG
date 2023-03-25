@@ -43,7 +43,33 @@ namespace ViMG.Entities
             }
         };
 
+        private static MenuShop.ShopStockedItem[] stockedItems = new MenuShop.ShopStockedItem[]
+        {
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
+                value = 50,
+            },
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_magicpotion1"), -1, 0),
+                value = 50,
+            },
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_blank"), -1, 0),
+                value = 120,
+            },
+            new MenuShop.ShopStockedItem()
+            {
+                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("rope"), -1, 0),
+                value = 25,
+            },
+        };
+
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+
+        private bool shouldFollowUpMenu;
 
         private TypedIndex physicsShapeIndex;
         private BodyHandle physicsHandle;
@@ -114,6 +140,15 @@ namespace ViMG.Entities
                     OnRightClick();
                 }
             }
+
+            //When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
+            if (world.GameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
+            {
+                if (world.MenuDialogue.SelectedOption == 1)
+                    world.GameStateManager.TheIsland.PushMenu(new MenuShop(world.GameStateManager, world.player, stockedItems));
+
+                shouldFollowUpMenu = false;
+            }
         }
 
         public void OnRightClick()
@@ -126,6 +161,8 @@ namespace ViMG.Entities
             else world.MenuDialogue.StartOptions(options);
 
             world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+
+            shouldFollowUpMenu = true;
         }
 
         public override void Draw(GraphicsDevice device, Effect effect)

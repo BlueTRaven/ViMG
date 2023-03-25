@@ -23,13 +23,13 @@ namespace ViMG.UIs
         }
 
         private Player player;
-        private ItemInstance held;
+        private ItemInstance held = new ItemInstance();
         private ShopStockedItem[] stock;
 
         private TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         private UI.ItemSlot[] inventoryItemSlots = new UI.ItemSlot[Player.INVENTORY_ROWS * Player.INVENTORY_COLUMNS];
 
-        private int holdingItemSlot;
+        private int holdingItemSlot = -1;
         private float holdingTimer;
         private float holdingPickupTimer;
 
