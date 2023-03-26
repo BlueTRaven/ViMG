@@ -1241,11 +1241,14 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				//world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 
-				//world.EntityManager.Add(new StoneBeetle(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
-                //world.EntityManager.Add(new CaveSalamander(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-                //world.EntityManager.Add(new GenericExplosion(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, HitboxManager.Group.PLAYER_DEAL, 1, 1, Cube.CUBE_SCALE * 2f));
+				Vector3 startPos = Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f;
+				Vector3 endPos = startPos + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f),
+                    Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f),
+                    Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f));
+
+                world.EntityManager.Add(new Line(startPos, endPos, DrawHelper.WhitePixel, RectangleF.Empty, Color.White, 30f));
             }
 		}
 
