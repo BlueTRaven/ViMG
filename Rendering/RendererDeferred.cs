@@ -173,6 +173,7 @@ namespace ViMG.Rendering
         public Effect EffectEmpty;
         public Effect EffectHDR;
         public Effect EffectRadialFog;
+        public Effect EffectAurora;
 
         public Effect EffectFXAA;
 
@@ -282,6 +283,7 @@ namespace ViMG.Rendering
             EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
             EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
             EffectRadialFog = Main.assetsManager.GetAsset<Effect>("radial_fog");
+            EffectAurora = Main.assetsManager.GetAsset<Effect>("aurora");
 
             DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
 
@@ -702,6 +704,18 @@ namespace ViMG.Rendering
                     NumDrawCalls++;
                 }
             }
+
+            /*EffectAurora.Parameters["Time"].SetValue(alive);
+            EffectAurora.Parameters["Resolution"].SetValue(Options.CurrentWindowResolution.ToVector2());
+            EffectAurora.Parameters["CameraPosition"].SetValue(new Vector3(-Main.camera.Rotation.Y, Main.camera.Rotation.X, 0));
+            EffectAurora.Parameters["Mat"].SetValue(
+                    Matrix.CreateRotationX(Main.camera.Rotation.X) *
+                    Matrix.CreateRotationY(-Main.camera.Rotation.Y)
+                    );
+
+            device.SetVertexBuffer(vboQuad);
+            device.Indices = iboQuad;
+            DrawFullscreenQuad(EffectAurora);*/
             //===============================================================================================================================================
 
             //Diffuse Composite

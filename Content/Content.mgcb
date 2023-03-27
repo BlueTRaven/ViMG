@@ -19,6 +19,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/air.fx
 
+#begin Effects/aurora.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/aurora.fx
+
 #begin Effects/bloom_downsample.fx
 /importer:EffectImporter
 /processor:EffectProcessor
