@@ -332,6 +332,56 @@ namespace ViMG
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(position), null));
 		}
+		
+		//Draws a line that is tiled along the vertical axis.
+		public static void DrawLineTiled(Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
+			(VertexBuffer VBO, IndexBuffer IBO) mesh, Texture2D texture, RectangleF sourceRectangle, Color color)
+		{
+			Vector3 axis = endPosition - startPosition;
+			float distance = axis.Length();
+			axis.Normalize();
+
+			Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+
+			int tileTimes = (int)(distance / tileHeight);
+			float tileLastBit = distance % tileHeight;
+
+			for (int i = 0; i < tileTimes; i++)
+			{
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
+					DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
+					sourceRectangle, color.ToVector3()));
+			}
+
+			//The "last bit" is the part that can't be tiled.
+			//In order for this not to be squished, we have to fix the source rectangle.
+			//Its height needs to be calculated, and then we need to offset its y position. This is due to the fact that Y is up in world space, but down in texture space.
+			float fixedHeight = (tileLastBit / tileHeight) * sourceRectangle.height;
+			Vector2 fixedPosition = sourceRectangle.Position;
+			fixedPosition.Y += sourceRectangle.height - fixedHeight;
+
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
+				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
+				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
+				color.ToVector3()));
+		}
+
+		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
+            (VertexBuffer VBO, IndexBuffer IBO) mesh, Texture2D texture, RectangleF sourceRectangle, Color color)
+		{
+            Vector3 axis = endPosition - startPosition;
+            float distance = axis.Length();
+            axis.Normalize();
+
+            Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
+                DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+                Matrix.CreateScale(width, distance, width) * mat,
+                sourceRectangle, color.ToVector3()));
+        }
 
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius, bool flip = false)
         {
