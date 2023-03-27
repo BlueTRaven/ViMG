@@ -976,121 +976,106 @@ namespace ViMG
 
 		private void UpdateMovementWater(double deltaTime)
 		{
-			/*Vector3 actualMaxVel = MaxVelocitySwimming;
+            Vector3 actualMaxVel = MaxVelocitySwimming;
 
-			bool movementPressed = false;
-			bool jumpHeld = false;
-			bool swimmingFast = false;
+            bool movementPressed = false;
+            //Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+            Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
 
-			fallStartY = Position.Y;
-
-			if (inputLockupTimer <= 0 && !menuPlayer.IsOpened)
+			if (Main.inputManager.IsHeld(Keys.LeftShift))
 			{
-				if (Main.inputManager.IsHeld(Keys.LeftShift))
-					swimmingFast = true;
-
-				if (swimmingFast)
-					actualMaxVel = MaxVelocitySwimmingFast;
-
-				actualMaxVel += new Vector3(stats.Speed, 0, stats.Speed);
-
-				float actualAcceleration = moveSpeed + stats.Acceleration;
-
-				if (Main.inputManager.IsPressed(Keys.W))
-				{
-					Velocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.S))
-				{
-					Velocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.A))
-				{
-					Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.D))
-				{
-					Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.Space))
-				{
-					Velocity.Y += moveSpeed;
-					movementPressed = true;
-					jumpHeld = true;
-				}
-
-				if (Velocity.Length() > actualMaxVel.Length())
-				{
-					Velocity.Normalize();
-					Velocity *= actualMaxVel.Length();
-				}
-
-				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && 
-					!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
-				{
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-					{
-						if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
-					{
-						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
-						if (tracker.HasValue() && tracker.Get().OnInteract(this))
-							PerformAction();
-						else if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-				}
-
-				if (Main.inputManager.JustPressed(Keys.Q))
-				{
-					if (inventory.Get(menuPlayer.HighlightIndex).valid)
-					{
-						int num = 1;
-						if (Main.inputManager.IsPressed(Keys.LeftControl))
-							num = inventory.Get(menuPlayer.HighlightIndex).num;
-
-						ThrowItem(inventory, menuPlayer.HighlightIndex, num);
-					}
-				}
+				IsRunning = true;
+				actualMaxVel = MaxVelocitySwimmingFast;
 			}
 
-			if (!movementPressed)
-			{
-				if (Velocity.Length() > 0)
-				{
-					float decel = Cube.CUBE_SCALE / 8f;
+			float actualAcceleration = moveSpeed + stats.Acceleration;
 
-					Velocity = Vector3.Normalize(Velocity) * MathF.Max(Velocity.Length() - decel, 0);
-				}
+			if (IsRunning)
+			{
+				actualMaxVel *= 1 + stats.RunSpeed;
+				actualAcceleration *= 2;
 			}
 
-			if (Velocity.Length() > float.Epsilon)
-				hasMoved = true;
+			actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
 
-			if (Velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
-				Velocity.Y = Cube.CUBE_SCALE * 3.2f;
+			Vector3 toAddToVelocity = Vector3.Zero;
+			if (Main.inputManager.IsPressed(Keys.W))
+			{
+				toAddToVelocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (Main.inputManager.IsPressed(Keys.S))
+			{
+				toAddToVelocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (Main.inputManager.IsPressed(Keys.A))
+			{
+				toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (Main.inputManager.IsPressed(Keys.D))
+			{
+				toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				movementPressed = true;
+			}
 
-			if (!jumpHeld)
-				Velocity.Y += World.GRAVITY;
-
-			if (!onGround && Velocity.Y > 0)
-            {
-				fallStartY = Position.Y;
+			if (Main.inputManager.IsPressed(Keys.Space))
+			{
+				toAddToVelocity += Vector3.Normalize(Vector3.Up) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (Main.inputManager.IsPressed(Keys.LeftControl))
+			{
+                toAddToVelocity -= Vector3.Normalize(Vector3.Up) * actualAcceleration;
+                movementPressed = true;
             }
 
-			if (Velocity.Y < -actualMaxVel.Y)
-				Velocity.Y = -actualMaxVel.Y;
-			if (Velocity.Y > actualMaxVel.Y)
-				Velocity.Y = actualMaxVel.Y;*/
+			if ((contactChecker.OnGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
+			{
+				hasMoved = true;
+				if (!contactChecker.OnGround)
+				{
+					stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
+
+					currentJumps--;
+				}
+				else
+				{
+					velocity.Y = JumpSpeed + stats.JumpSpeed;
+				}
+			}
+
+			Vector3 velXZ = velocity;
+			float maxVelXZ = actualMaxVel.Length();
+
+			if (velXZ.Length() > maxVelXZ)
+			{
+				//already above max velocity
+				//in this scenario just subtract some velocity.
+				Vector3 xz = velXZ;
+				xz -= Vector3.Normalize(xz) * actualAcceleration;
+				velocity = xz;
+			}
+			if ((velocity + toAddToVelocity).Length() > maxVelXZ)
+			{
+				//not above max velocity; set velocity to max velocity.
+				velXZ = Vector3.Normalize((velocity + toAddToVelocity)) * maxVelXZ;
+				velocity = velXZ;
+			}
+			else
+			{
+				velocity += toAddToVelocity;
+			}
+
+            if (movementPressed || velocity.Length() > float.Epsilon)
+                hasMoved = true;
+
+			velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime;
+
+            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
+
+            UpdatePerformAction();
 		}
 
 		private void UpdateMovementNoclip(double deltaTime)
@@ -1214,34 +1199,11 @@ namespace ViMG
 					velocity += toAddToVelocity;
 				}
 
-				/*Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-				Vector2 velXY = new Vector2(velocity.X, velocity.Z);
-
-				if (velXY.Length() > clampXY.Length())
-				{
-					velXY.Normalize();
-					velXY *= clampXY.Length();
-				}
-
-				velocity = new Vector3(velXY.X, velocity.Y, velXY.Y);*/
-
 				UpdatePerformAction();
 			}
 
 			if (movementPressed)
 				hasMoved = true;
-			/*if (!movementPressed)
-			{
-				if (velXY.Length() > 0)
-				{
-					float decel = Cube.CUBE_SCALE / 2f;
-
-					if (!onGround)
-						decel = Cube.CUBE_SCALE / 8f;
-
-					velXY = Vector2.Normalize(velXY) * MathF.Max(velXY.Length() - decel, 0);
-				}
-			}*/
 
 			if (velocity.Length() > float.Epsilon)
 				hasMoved = true;
