@@ -125,8 +125,8 @@ namespace ViMG
 				}
 			}
 
-            GameStateTheIsland.LoadMessage = "Flushing mesh queue...";
-			chunkManager.RenderMesher.FinishFlush();
+            //GameStateTheIsland.LoadMessage = "Flushing mesh queue...";
+			//chunkManager.RenderMesher.FinishFlush();
 
 			if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;

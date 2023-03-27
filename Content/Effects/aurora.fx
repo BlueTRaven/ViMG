@@ -1,5 +1,5 @@
 ﻿#include "platform_defines.fxh"
-//To be rendered additively
+//https://www.shadertoy.com/view/XtGGRt
 float Time;
 float2 Resolution;
 float3 CameraPosition;
