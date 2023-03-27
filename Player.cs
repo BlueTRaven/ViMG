@@ -1241,14 +1241,7 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
             {
-				//world.EntityManager.Add(new TestNPC(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
-
-				Vector3 startPos = Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f;
-				Vector3 endPos = startPos + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f),
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f),
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 5f, Cube.CUBE_SCALE * 5f));
-
-                world.EntityManager.Add(new Line(startPos, endPos, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), new RectangleF(0, 0, 16, 16), Color.White, 30f));
+				world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
             }
 		}
 
