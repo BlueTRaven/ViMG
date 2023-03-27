@@ -7,6 +7,7 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using static ViMG.LightManager;
 
 namespace ViMG
 {
@@ -111,7 +112,26 @@ namespace ViMG
 				this.data = data;
 			}
 
-			public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
+            public Hitbox(int index, HitboxParameters parameters)
+            {
+                this.index = index;
+                active = true;
+                this.owner = parameters.owner;
+                this.manager = parameters.manager;
+                this.bounds = parameters.bounds;
+                this.direction = parameters.direction;
+                this.group = parameters.stats.group;
+                this.damage = parameters.stats.damage;
+                this.knockback = parameters.stats.knockback;
+
+                this.canInteract = parameters.canInteract;
+
+                this.applyBuffs = parameters.stats.applyBuffs;
+                this.inventorySlot = parameters.stats.inventorySlot;
+                this.data = parameters.stats.data;
+            }
+
+            public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
 			{
 				this.index = old.index;
 				active = true;
@@ -132,6 +152,32 @@ namespace ViMG
 
 			public static Hitbox Invalid = new Hitbox();
 		}
+
+		public record struct HitboxParameters
+		{
+            public Rectangle3D bounds;
+            public Vector3 direction;
+
+            public required IHitboxOwner owner;
+            public IHitboxOwner manager;    //The entity that manages this hitbox, which might be different from the owner (in the case of Projectiles).
+
+			public HitboxStats stats;
+
+            public bool canInteract;
+        }
+
+		public record struct HitboxStats 
+		{
+            public Group group;
+
+            public int damage;
+            public float knockback;
+
+            public Buff.BuffInstance[] applyBuffs;
+
+            public int data;
+            public int inventorySlot;
+        }
 
 		private Hitbox[] hitboxes;
 
@@ -164,6 +210,24 @@ namespace ViMG
 			Grow();
 			return Add(owner, bounds, direction, group, damage, knockback);
 		}
+
+		public int Add(HitboxParameters parameters)
+		{
+            for (int i = 0; i < capacity; i++)
+            {
+                ref Hitbox hitbox = ref hitboxes[i];
+
+                if (!hitbox.active)
+                {
+                    hitbox = new Hitbox(i, parameters);
+
+                    return i;
+                }
+            }
+
+            Grow();
+            return Add(parameters);
+        }
 
 		private void Grow()
 		{

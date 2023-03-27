@@ -13,7 +13,7 @@ namespace ViMG.Entities
     public class Lightning : Entity
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
-        private static Color lightningColor = new Color(255, 253, 141);
+        public static Color LightningColor = new Color(255, 253, 141);
 
         private Vector3 bottomPosition;
 
@@ -21,10 +21,14 @@ namespace ViMG.Entities
 
         private int light = -1;
 
+        private float timer;
+
         public Lightning(Vector3 position)
         {
             this.Position = position;
             AlwaysRender = true;
+
+            timer = 5f / 60f;
         }
 
         public override void Initialize(World world)
@@ -51,7 +55,7 @@ namespace ViMG.Entities
 
             positions[numSplits] = bottomPosition;
 
-            world.LightManager.Add(bottomPosition, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, lightningColor.ToVector4(), false);
+            world.LightManager.Add(bottomPosition, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, LightningColor.ToVector4(), false);
         }
 
         public override void OnUnload()
@@ -60,6 +64,16 @@ namespace ViMG.Entities
 
             if (light != -1)
                 world.LightManager.Remove(light);
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+            timer -= (float)deltaTime;
+
+            if (timer <= 0)
+                world.EntityManager.Remove(this);
         }
 
         public override void Draw(GraphicsDevice device, Effect effect)
@@ -78,7 +92,7 @@ namespace ViMG.Entities
 
                 Vector3 current = positions[i];
 
-                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, lightningColor);
+                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, LightningColor);
             }
 
             //DrawHelper3D.DrawLine(Position, bottomPosition, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, Color.Yellow);

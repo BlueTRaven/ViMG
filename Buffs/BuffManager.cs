@@ -62,9 +62,12 @@ namespace ViMG.Buffs
 
         public void AddBuffs(Buff.BuffInstance[] buffs)
         {
-            for (int i = 0; i < buffs.Length; i++)
+            if (buffs != null)
             {
-                AddBuff(buffs[i]);
+                for (int i = 0; i < buffs.Length; i++)
+                {
+                    AddBuff(buffs[i]);
+                }
             }
         }
 

@@ -25,7 +25,10 @@ namespace ViMG
 
 		public Vector3 Center => Position + (Size / 2f);
 
-		public Rectangle3D(Vector3 position, Vector3 size)
+		private static Rectangle3D empty = new Rectangle3D();
+		public static Rectangle3D Empty => empty;
+
+        public Rectangle3D(Vector3 position, Vector3 size)
 		{
 			this.Position = position;
 			this.Size = size;
@@ -56,7 +59,23 @@ namespace ViMG
 
 			return vec;
 		}
-	}
+
+        public static Rectangle3D FromTwoPositions(Vector3 A, Vector3 B)
+		{
+			float minX = float.Min(A.X, B.X);
+			float maxX = float.Max(A.X, B.X);
+
+            float minY = float.Min(A.Y, B.Y);
+            float maxY = float.Max(A.Y, B.Y);
+
+            float minZ = float.Min(A.Z, B.Z);
+            float maxZ = float.Max(A.Z, B.Z);
+
+			Vector3 size = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
+
+            return new Rectangle3D(new Vector3(minX, minY, minZ), size);
+		}
+    }
 
 	public struct Rectangle3DI
 	{

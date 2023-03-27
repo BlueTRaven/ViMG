@@ -153,7 +153,7 @@ namespace ViMG.Items
 			Register(new ItemSwingTest());
 			Register(new ItemLoreIsland1());
 			Register(new ItemBread());
-
+			Register(new ItemRodOfShock());
             RegisterItemCubes();
 		}
 
