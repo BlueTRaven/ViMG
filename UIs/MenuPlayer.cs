@@ -204,7 +204,7 @@ namespace ViMG.UIs
 
 				if (button.hovered)
                 {
-					UIWidgets.MakeTooltip(position, string.Format("{0} x{1} - {2:0.00}s", buff.buff.Name, 1, buff.duration), buff.buff.Description);
+					UIWidgets.MakeTooltip(position, string.Format("{0} x{1} - {2:0.00}s", buff.buff.Name, buff.stack, buff.duration), buff.buff.Description);
 
 					/*UI.DisableParent();
 

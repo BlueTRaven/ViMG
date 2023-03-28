@@ -28,6 +28,7 @@ namespace ViMG.Buffs
             Register(new BuffWellFed());
             Register(new DebuffOnFire());
             Register(new BuffFireResist());
+            Register(new BuffStrUp());
         }
     }
 }

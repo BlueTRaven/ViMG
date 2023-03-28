@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace ViMG.Buffs
 {
+    //actual effect is done in DebuffOnFire.
     public class BuffFireResist : Buff
     {
         public BuffFireResist() : base("fire_resist", 999f, 0, Main.assetsManager.GetAsset<Texture2D>("skill"), new RectangleF(176, 224, 16, 16))

@@ -33,6 +33,11 @@ namespace ViMG.Buffs
 
                 valid = true;
             }
+
+            public BuffInstance(Buff buff, float duration, int stack) : this(buff, duration)
+            {
+                this.stack = stack;
+            }
         }
 
         public string Name;
@@ -101,9 +106,10 @@ namespace ViMG.Buffs
 
         }
 
+        //Default behavior: increase stack size by 1.
         public virtual void OnApplyOfSameType(BuffInstance instance)
         {
-
+            instance.stack++;
         }
     }
 }

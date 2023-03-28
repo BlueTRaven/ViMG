@@ -156,6 +156,7 @@ namespace ViMG.Items
 			Register(new ItemRodOfShock());
 			Register(new ItemCaveRoot());
 			Register(new ItemPinkPepper());
+			Register(new ItemPotato());
             RegisterItemCubes();
 		}
 

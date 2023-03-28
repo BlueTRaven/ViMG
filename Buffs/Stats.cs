@@ -12,6 +12,7 @@ namespace ViMG.Buffs
         public int HP;
         public int MaximumHP;
         public float AttackSpeed;
+        public int Damage;
         public int Defense;
 
         public Color TintColor;
