@@ -15,9 +15,9 @@ namespace ViMG.Buffs
         {
         }
 
-        public override void Tick(double deltaTime, ref BuffInstance buffInstance, ref Stats stats)
+        public override void Tick(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)
         {
-            base.Tick(deltaTime, ref buffInstance, ref stats);
+            base.Tick(deltaTime, manager, ref buffInstance, ref stats);
 
             stats.HP -= 1;
             stats.TintColor = Color.DarkRed;

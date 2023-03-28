@@ -52,7 +52,31 @@ namespace ViMG.Entities
         //adds velocity if it would not put the velocity over the velocity cap.
         public static void AddCappedVelocityHorizontal(ref Vector3 velocity, in Vector3 addVelocity, in Vector3 maxVelocity)
         {
-            Vector2 currentxz = velocity.XZ();
+            Vector2 velXZ = velocity.XZ();
+            float maxVelXZ = maxVelocity.XZ().Length();
+
+            if ((velocity + addVelocity).XZ().Length() > maxVelXZ)
+            {
+                //not above max velocity; set velocity to max velocity.
+                velXZ = Vector2.Normalize((velocity + addVelocity).XZ()) * maxVelXZ;
+                velocity = new Vector3(velXZ.X, velocity.Y, velXZ.Y);
+            }
+            else if (velXZ.Length() > maxVelXZ)
+            {
+                //already above max velocity
+                //in this scenario just subtract some velocity.
+                //Note that addVelocity can be in the direction we want to go in (which would add velocity)
+                //so we just subtract the length from velocity.
+                Vector2 xz = velXZ;
+                xz -= Vector2.Normalize(xz) * addVelocity.XZ().Length();
+                velocity = new Vector3(xz.X, velocity.Y, xz.Y);
+            }
+            else
+            {
+                velocity += addVelocity;
+            }
+
+            /*Vector2 currentxz = velocity.XZ();
             Vector2 addingxz = addVelocity.XZ();
 
             float maxLen = maxVelocity.XZ().Length();
@@ -77,35 +101,31 @@ namespace ViMG.Entities
 
                 velocity.X = currentxz.X;
                 velocity.Z = currentxz.Y;
-            }
+            }*/
         }
 
         public static void AddCappedVelocityHorizontal(ref Vector3 velocity, in Vector2 addVelocity, in Vector3 maxVelocity)
         {
-            Vector2 currentxz = velocity.XZ();
+            Vector2 velXZ = velocity.XZ();
+            float maxVelXZ = maxVelocity.XZ().Length();
 
-            float maxLen = maxVelocity.XZ().Length();
-
-            //adding velocity would not put us over the maximum (or would decrease it)
-            if ((currentxz + addVelocity).Length() < maxLen)
+            if ((velXZ + addVelocity).Length() > maxVelXZ)
             {
-                velocity.X += addVelocity.X;
-                velocity.Z += addVelocity.Y;
+                //not above max velocity; set velocity to max velocity.
+                velXZ = Vector2.Normalize(velXZ + addVelocity) * maxVelXZ;
+                velocity = new Vector3(velXZ.X, velocity.Y, velXZ.Y);
             }
-            //adding velocity would decrease length
-            else if ((currentxz + addVelocity).Length() < currentxz.Length())
+            else if (velXZ.Length() > maxVelXZ)
             {
-                velocity.X += addVelocity.X;
-                velocity.Z += addVelocity.Y;
+                //already above max velocity
+                //in this scenario just subtract some velocity.
+                Vector2 xz = velXZ;
+                xz -= addVelocity;
+                velocity = new Vector3(xz.X, velocity.Y, xz.Y);
             }
-            //if adding to the current velocity would put us from under to over the maximum
-            else if (currentxz.Length() < maxLen && (currentxz + addVelocity).Length() >= maxLen)
+            else
             {
-                //just set to the direction
-                currentxz = Vector2.Normalize(currentxz + addVelocity) * maxLen;
-
-                velocity.X = currentxz.X;
-                velocity.Z = currentxz.Y;
+                velocity += new Vector3(addVelocity.X, 0, addVelocity.Y);
             }
         }
 

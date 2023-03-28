@@ -14,9 +14,9 @@ namespace ViMG.Buffs
             Description = "Attack speed increased by 10%.";
         }
 
-        public override void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
-            base.Update(deltaTime, ref buffInstance, ref stats);
+            base.Update(deltaTime, manager, player, ref buffInstance, ref stats);
 
             //10 seconds = cd time
             if (buffInstance.duration > 10f)

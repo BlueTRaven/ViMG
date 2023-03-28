@@ -18,9 +18,9 @@ namespace ViMG.Buffs
                 "Regenerating Health Slowly.";
         }
 
-        public override void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
-            base.Update(deltaTime, ref buffInstance, ref stats);
+            base.Update(deltaTime, manager, player, ref buffInstance, ref stats);
 
             stats.HPFlat += 10;
             stats.HPRegenAmt += 1;

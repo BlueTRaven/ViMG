@@ -19,9 +19,9 @@ namespace ViMG.Buffs
             Tags.Add("emissive_ores");
         }
 
-        public override void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
-            base.Update(deltaTime, ref buffInstance, ref stats);
+            base.Update(deltaTime, manager, player, ref buffInstance, ref stats);
 
             stats.MiningScale += 0.2f;
         }

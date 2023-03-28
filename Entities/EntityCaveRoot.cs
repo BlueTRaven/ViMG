@@ -16,7 +16,7 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class EntityCaveRoot : Entity, ICubeTracker
     {
-        private unsafe struct Save
+        private record struct Save
         {
             public CubePosition trackedPosition;
             public float creationTime;
@@ -44,11 +44,27 @@ namespace ViMG.Entities
             base.Initialize(world);
 
             save.creationTime = world.GetTime();
-            save.grownTime = world.GetTime() + Main.random.NextFloat(6, 8); //TODO actual growth time
+            save.grownTime = GetGrownTime(world);
+        }
+
+        private static float GetGrownTime(World world)
+        {
+            return world.GetTime() + Main.random.NextFloat(6, 8); //TODO actual growth time
         }
 
         public bool OnInteract(Player player)
         {
+            if (player.world.GetTime() > save.grownTime)
+            {
+                save = save with
+                {
+                    creationTime = player.world.GetTime(),
+                    grownTime = GetGrownTime(world)
+                };
+
+                world.EntityManager.Add(new EntityItem(player.Position, Vector3.Zero, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_root1"), 1, 1)));
+                return true;
+            }
             return false;
         }
 

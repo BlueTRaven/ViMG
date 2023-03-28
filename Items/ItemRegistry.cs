@@ -62,7 +62,7 @@ namespace ViMG.Items
 					useTime = 1f,
 					useAnimTime = 8f / 60f,
                     preUseTime = 8f / 60f,
-                }, 3, Cube.CUBE_SCALE * 8), Cube.CUBE_SCALE * 1.45f)));
+                }, 3, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 1.45f)));
 			Register(new ItemBow("tin", colorTin, new Item.RangedAttackStats(new Item.AttackStats(Player.DamageType.Ranged, 1, 2, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 15f, 1f)));
 			Register(new ItemPickaxeHead("copper", colorCopper, new ItemPickaxeHead.PickaxeStats(0.475f, 0, 1, 0, 0, 0)));
 			Register(new ItemSwordBlade("copper", colorCopper, new Item.MeleeAttackStats(new Item.AttackStats(Player.DamageType.Melee,
@@ -154,6 +154,8 @@ namespace ViMG.Items
 			Register(new ItemLoreIsland1());
 			Register(new ItemBread());
 			Register(new ItemRodOfShock());
+			Register(new ItemCaveRoot());
+			Register(new ItemPinkPepper());
             RegisterItemCubes();
 		}
 

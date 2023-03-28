@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
@@ -18,12 +19,16 @@ namespace ViMG.Buffs
             public float duration;
             public float tickInterval;
 
+            public int stack;
+
             public bool valid;
 
             public BuffInstance(Buff buff, float duration = -1)
             {
                 this.buff = buff;
                 this.duration = duration <= -1 ? buff.durationMax : duration;
+
+                stack = 1;
                 tickInterval = buff.tickIntervalMax;
 
                 valid = true;
@@ -50,7 +55,7 @@ namespace ViMG.Buffs
             this.sourceRect = sourceRect ?? new RectangleF(0, 0, 16, 16);
         }
 
-        public virtual void Update(double deltaTime, ref BuffInstance buffInstance, ref Stats stats)
+        public virtual void Update(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)
         {
             buffInstance.duration -= (float)deltaTime;
             buffInstance.tickInterval -= (float)deltaTime;
@@ -59,16 +64,16 @@ namespace ViMG.Buffs
             {
                 buffInstance.tickInterval += tickIntervalMax;
 
-                Tick(deltaTime, ref buffInstance, ref stats);
+                Tick(deltaTime, manager, ref buffInstance, ref stats);
             }
         }
 
-        public virtual void Tick(double deltaTime, ref BuffInstance buffInstance, ref Stats stats)
+        public virtual void Tick(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)
         {
 
         }
 
-        public virtual void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public virtual void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
             buffInstance.duration -= (float)deltaTime;
             buffInstance.tickInterval -= (float)deltaTime;
@@ -77,7 +82,7 @@ namespace ViMG.Buffs
             {
                 buffInstance.tickInterval += tickIntervalMax;
 
-                Tick(deltaTime, ref buffInstance, ref stats);
+                Tick(deltaTime, manager, player, ref buffInstance, ref stats);
             }
 
             if (buffInstance.duration <= 0)
@@ -86,7 +91,7 @@ namespace ViMG.Buffs
             }
         }
 
-        public virtual void Tick(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public virtual void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
 
         }

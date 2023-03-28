@@ -6,19 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 
 namespace ViMG.Items
 {
-    public class ItemBread : Item
+    public class ItemCaveRoot : Item
     {
-        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 60f * 5f);
+        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 30f);
 
-        public ItemBread() : base("food_bread1", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 96, 16, 16))
+        public ItemCaveRoot() : base("food_root1", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 96, 16, 16))
         {
-            name = "Agaldam Bread";
-            description = "A thick, dry, brick-like loaf of bread. If your teeth survive eating this, " +
-                "it's said one slice provides enough nutrients for a single meal.\n" +
-                "Grants Well Fed for 5 minutes.";
+            name = "Cave Root Tuber";
+            description = "The tuber of a Cave Root. Hardy and nutrituous, but bitter tasting.\n" +
+                "Grants Well Fed for 30 seconds.";
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)

@@ -22,9 +22,9 @@ namespace ViMG.Buffs
             Tags.Add("noheal");
         }
 
-        public override void Update(double deltaTime, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
         {
-            base.Update(deltaTime, ref buffInstance, ref stats);
+            base.Update(deltaTime, manager, player, ref buffInstance, ref stats);
 
             stats.DefenseScale += 0.5f;
             stats.HPScale += 0.5f;

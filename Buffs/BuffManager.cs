@@ -27,7 +27,7 @@ namespace ViMG.Buffs
 
                 Stats currentStats = stats.GetStats();
 
-                instance.buff.Update(deltaTime, ref instance, ref currentStats);
+                instance.buff.Update(deltaTime, this, ref instance, ref currentStats);
 
                 stats.SetStats(currentStats);
 

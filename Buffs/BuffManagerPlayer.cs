@@ -29,7 +29,7 @@ namespace ViMG.Buffs
             {
                 Buff.BuffInstance instance = buffs[i];
 
-                instance.buff.Update(deltaTime, ref instance, ref stats);
+                instance.buff.Update(deltaTime, this, player, ref instance, ref stats);
 
                 if (instance.duration <= 0 || !instance.valid)
                 {
