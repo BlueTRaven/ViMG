@@ -31,11 +31,21 @@ namespace ViMG
 			Magic,
         }
 
-		public struct ActionStats
+		public enum UseAnimationType
+		{
+			Use,
+			SwingHorizontal,
+			SwingVertical,
+			Jab
+		}
+
+		public record struct ActionStats
 		{
 			public float useTime;
 			public float useAnimTime;
 			public float preUseTime;
+
+			public UseAnimationType animationType = UseAnimationType.Use;
 
 			public ActionStats(Item.AttackStats attackStats)
 			{
@@ -209,6 +219,7 @@ namespace ViMG
 		private const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
+		
 		private HitboxToSpawnLater hitboxToSpawnLater;
 		private DamageType hitboxDamageType = DamageType.Unspecified;
 		private Vector3 hitboxOffset;
@@ -218,10 +229,11 @@ namespace ViMG
 		private float attackStateTimer;
 		private float attackStateMoveTimer;
 		private int attackStateInitiatedWeapon; //the weapon that initiated the attack state.
-									
-		private float preUseTimer;
+
+        private float preUseTimer;
 		private float useTimer;
 		private float useAnimTimer;
+		private UseAnimationType useAnimType;
 		private ActionStats currentActionStats;
 		private const float ATTACK_TIME = 8f / 60f;
 
@@ -790,6 +802,9 @@ namespace ViMG
 
 				useTimer -= (float)deltaTime;
 				useAnimTimer -= (float)deltaTime;
+
+				if (useAnimTimer <= 0 && useTimer <= 0)
+					useAnimType = UseAnimationType.Use;
 			}
 			else preUseTimer -= (float)deltaTime;
 
@@ -1541,12 +1556,16 @@ namespace ViMG
 
 			this.preUseTimer = actionStats.preUseTime;
 
+			this.useAnimType = actionStats.animationType;
+
 			currentActionStats = actionStats;
 		}
 
 		public void PerformAttack(DamageType damageType, ref ActionStats actionStats, ref int damage, ref float knockback)
 		{
 			float speedScale = 0;
+
+			this.hitboxDamageType = DamageType.Unspecified;
 
 			if (damageType == DamageType.Melee)
 				speedScale = stats.MeleeSpdScale;
@@ -1756,32 +1775,48 @@ namespace ViMG
 			if (percent <= 0)
 				percent = 0;
 
-			if (state != State.Attack || hitboxDamageType != DamageType.Melee)
+
+			switch (useAnimType)
 			{
-                return
-                    Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
-					Matrix.CreateScale(0.5f * scale) *
-					Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
-					Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
-					Matrix.CreateRotationX(-Main.camera.Rotation.X) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-					Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f +
-					Main.camera.Right * Cube.CUBE_SCALE / 4f -
-					Main.camera.Up * Cube.CUBE_SCALE / 6f);
-			}
-			else
-			{
-				float ang = 180 * percent;
-				return
-					Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
-					Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
-					Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-					Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
-					Matrix.CreateRotationX(-Main.camera.Rotation.X) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-					Matrix.CreateTranslation(Position - 
-					Main.camera.Forward * Cube.CUBE_SCALE / 4f - 
-					Main.camera.Up * Cube.CUBE_SCALE / 4f);
+				case UseAnimationType.SwingHorizontal:
+					{
+						float ang = 180 * percent;
+						return
+							Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+							Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+							Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
+							Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
+							Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+							Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+							Matrix.CreateTranslation(Position -
+							Main.camera.Forward * Cube.CUBE_SCALE / 4f -
+							Main.camera.Up * Cube.CUBE_SCALE / 4f);
+					}
+				case UseAnimationType.SwingVertical:
+					{
+						float ang = 180 * (1 - percent);
+						return Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+							Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+							Matrix.CreateRotationY(MathHelper.ToRadians(-90)) *
+							Matrix.CreateRotationX(MathHelper.ToRadians(-ang)) *
+							Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+							Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+							Matrix.CreateTranslation(Position -
+							Main.camera.Forward * Cube.CUBE_SCALE / 2 +
+							Main.camera.Right * Cube.CUBE_SCALE / 4 -
+							Main.camera.Up * Cube.CUBE_SCALE / 4);
+					}
+                case UseAnimationType.Use:
+				default:
+					return Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+						Matrix.CreateScale(0.5f * scale) *
+						Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
+						Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
+						Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+						Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+						Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f +
+						Main.camera.Right * Cube.CUBE_SCALE / 4f -
+						Main.camera.Up * Cube.CUBE_SCALE / 6f);
 			}
 		}
 

@@ -24,7 +24,9 @@ namespace ViMG.Items
 
 			player.SpawnHitboxLater(index, 1, Player.DamageType.Melee, -Main.camera.Forward, 1f);
 
-			return true;
+            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+
+            return true;
 		}
 	}
 }

@@ -23,11 +23,8 @@ namespace ViMG.Items
 
             actionStats.useTime = 0.5f;
             actionStats.useAnimTime = 0.5f;
-            int damage = 1;
-            float knockback = Cube.CUBE_SCALE;
-            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, Cube.CUBE_SCALE * 4f);
+            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
 
             return true;
         }
