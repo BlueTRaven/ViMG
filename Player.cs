@@ -178,8 +178,7 @@ namespace ViMG
 		private float loadedTimeOfDay = -1;
 
 		public Vector3 Rotation;
-
-		//public Vector3 Velocity;
+		public Vector3 Facing;	//The direction the player is facing.
 
 		private float moveSpeed = Cube.CUBE_SCALE * 0.8f;
 		public Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
@@ -1217,11 +1216,12 @@ namespace ViMG
 				UpdatePerformAction();
 			}
 
-			if (movementPressed)
+			if (movementPressed || velocity.Length() > float.Epsilon)
+			{
 				hasMoved = true;
+				Facing = Vector3.Normalize(velocity);
+			}
 
-			if (velocity.Length() > float.Epsilon)
-				hasMoved = true;
 
 			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
 				velocity.Y = Cube.CUBE_SCALE * 3.2f;
@@ -1256,6 +1256,8 @@ namespace ViMG
 					{
                         Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                         cube.OnLeftClick(world, LookAtPos);
+
+						PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
                     }
                 }
 
@@ -1270,7 +1272,7 @@ namespace ViMG
                         {
                             if (tracker.OnInteract(this))
                             {
-                                PerformAction(new ActionStats() { useTime = Item.DEFAULT_USE_TIME, useAnimTime = Item.DEFAULT_USE_ANIM_TIME });
+                                PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
                                 performedAction = true;
                             }
                         }
@@ -1278,7 +1280,7 @@ namespace ViMG
                         {
                             if (multiTracker.OnInteract(this))
                             {
-                                PerformAction(new ActionStats() { useTime = Item.DEFAULT_USE_TIME, useAnimTime = Item.DEFAULT_USE_ANIM_TIME });
+                                PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
                                 performedAction = true;
                             }
                         }
@@ -1296,7 +1298,11 @@ namespace ViMG
 						Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 						if (cube.CanRightClick(world, LookAtPos))
+						{
 							cube.OnRightClick(world, LookAtPos);
+
+							PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
+						}
 					}
                 }
             }

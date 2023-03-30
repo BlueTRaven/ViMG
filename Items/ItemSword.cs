@@ -49,6 +49,8 @@ namespace ViMG.Items
 
 			player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
 
+			actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+
 			return true;
 		}
 

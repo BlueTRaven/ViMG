@@ -157,6 +157,7 @@ namespace ViMG.Items
 			Register(new ItemCaveRoot());
 			Register(new ItemPinkPepper());
 			Register(new ItemPotato());
+			Register(new ItemIronAxe());
             RegisterItemCubes();
 		}
 
