@@ -169,6 +169,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/SMAA_ULTRA.fx
 
+#begin Effects/stars.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/stars.fx
+
 #begin Effects/t.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -620,6 +626,30 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/leviathan.png
+
+#begin Textures/mana_star.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/mana_star.png
+
+#begin Textures/mana_star_emissive.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/mana_star_emissive.png
 
 #begin Textures/mine.png
 /importer:TextureImporter

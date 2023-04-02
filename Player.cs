@@ -88,9 +88,9 @@ namespace ViMG
 			public float MeleeAtkScale;	//added to base scale value (1).
 			public float RangeAtkScale;
 			public float MagicAtkScale;
-			public float MeleeFlat;		//flat damage added on top of scale value. Added AFTER - unmodified by scale.
-			public float RangeFlat;
-			public float MagicFlat;
+			public float MeleeAtkFlat;		//flat damage added on top of scale value. Added AFTER - unmodified by scale.
+			public float RangeAtkFlat;
+			public float MagicAtkFlat;
 			public float MeleeSpdScale;
 			public float RangeSpdScale;
 			public float MagicSpdScale;
@@ -141,9 +141,9 @@ namespace ViMG
 					MeleeAtkScale = a.MeleeAtkScale + b.MeleeAtkScale,
 					RangeAtkScale = a.RangeAtkScale + b.RangeAtkScale,
 					MagicAtkScale = a.MagicAtkScale + b.MagicAtkScale,
-					MeleeFlat = a.MeleeFlat + b.MeleeFlat,
-					RangeFlat = a.RangeFlat + b.RangeFlat,
-					MagicFlat = a.MagicFlat + b.MagicFlat,
+					MeleeAtkFlat = a.MeleeAtkFlat + b.MeleeAtkFlat,
+					RangeAtkFlat = a.RangeAtkFlat + b.RangeAtkFlat,
+					MagicAtkFlat = a.MagicAtkFlat + b.MagicAtkFlat,
 					MeleeSpdScale = a.MeleeSpdScale + b.MeleeSpdScale,
 					RangeSpdScale = a.RangeSpdScale + b.RangeSpdScale,
 					MagicSpdScale = a.MagicSpdScale + b.MagicSpdScale,
@@ -508,8 +508,8 @@ namespace ViMG
 
 					Magic += stats.MPRegenAmt + 1;	//minimum of 1 mana regen; we will always regen even if stats are unaffected
 
-					if (Magic > MaxMagic)
-						Magic = MaxMagic;
+					if (Magic > GetCalculatedMaxMagic())
+						Magic = GetCalculatedMaxMagic();
                 }
 			}
 
@@ -1237,9 +1237,10 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				//world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
-			}
-		}
+                world.EntityManager.Add(new ManaStar(new Vector2(Main.random.NextFloat(-70, 70), Main.random.NextFloat(-180, 180))));
+                //world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
+            }
+        }
 
 		private void UpdatePerformAction()
 		{
@@ -1459,7 +1460,7 @@ namespace ViMG
 				{
 					float t = (fallDistance - FALL_HEIGHT_DAMAGE_START) / (FALL_HEIGHT_FATAL - FALL_HEIGHT_DAMAGE_START);
 
-					int damage = (int)((float)GetRealMaxHealth() * t);
+					int damage = (int)((float)GetCalculatedMaxHealth() * t);
 
 					Damage(damage);
 				}
@@ -1943,17 +1944,17 @@ namespace ViMG
 			if (damageType == DamageType.Melee)
 			{
 				calculatedDamage *= startScale + stats.MeleeAtkScale;
-				calculatedDamage += stats.MeleeFlat;
+				calculatedDamage += stats.MeleeAtkFlat;
 			}
 			else if (damageType == DamageType.Magic)
 			{
 				calculatedDamage *= startScale + stats.MagicAtkScale;
-				calculatedDamage += stats.MagicFlat;
+				calculatedDamage += stats.MagicAtkFlat;
 			}
 			else if (damageType == DamageType.Ranged)
 			{
 				calculatedDamage *= startScale + stats.RangeAtkScale;
-				calculatedDamage += stats.RangeFlat;
+				calculatedDamage += stats.RangeAtkFlat;
 			}
 			else calculatedDamage *= startScale;
 
@@ -1964,8 +1965,8 @@ namespace ViMG
         {
 			Health += amt;
 
-			if (Health > GetRealMaxHealth())
-				Health = GetRealMaxHealth();
+			if (Health > GetCalculatedMaxHealth())
+				Health = GetCalculatedMaxHealth();
         }
 
 		public BuffManagerPlayer GetBuffManager()
@@ -1978,7 +1979,7 @@ namespace ViMG
 			return ref stats;
         }
 
-		public int GetRealMaxHealth()
+		public int GetCalculatedMaxHealth()
         {
 			int hp = MaxHealth;
 			hp += (int)((float)hp * stats.HPScale);
@@ -1986,6 +1987,15 @@ namespace ViMG
 
 			return hp;
         }
+
+		public int GetCalculatedMaxMagic()
+		{
+			int mp = MaxMagic;
+			mp += (int)((float)mp * stats.MPScale);
+			mp += stats.MPFlat;
+
+			return mp;
+		}
 
 		public override void OnSave(List<byte> saveBytes)
 		{

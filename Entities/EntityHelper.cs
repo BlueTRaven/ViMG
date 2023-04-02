@@ -22,7 +22,9 @@ namespace ViMG.Entities
 
         public static RectangleF GetEntityDirectionalSourceRect(Vector3 facing, DirectionalSourceRect directionalSourceRect)
         {
-            float facingDotCamera = Vector3.Dot(facing, Main.camera.ForwardYawOnly);
+            //TODO: above/below
+            //For the moment, just zero out the y axis...
+            float facingDotCamera = Vector3.Dot(facing, Main.camera.Forward);
 
             RectangleF sourceRect = directionalSourceRect.front;
 

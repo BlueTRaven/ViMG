@@ -126,7 +126,7 @@ namespace ViMG.WorldLogics
 			{
 				Main.Renderer.DoCSMLight = true;
 
-				if ((int)((alive * 60f) % 5f) == 0 || Main.camera.IsDirty)
+				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
 				{
 					Color color = Color.White * (1 - world.GetTimeOfDay());
 
@@ -137,7 +137,7 @@ namespace ViMG.WorldLogics
 						color = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
 					}
 
-					float angle = 360 * ((alive % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+					float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 					directionalLight.UpdateCameras(world, Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), color);
@@ -179,7 +179,7 @@ namespace ViMG.WorldLogics
 			if (world.LoadedFolderName == "coconut")
 				sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
 
-			float angle = 360 * ((alive % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+			float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
 			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
 				Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *

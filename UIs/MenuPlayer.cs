@@ -58,10 +58,11 @@ namespace ViMG.UIs
 		private static string[] tagsHead = new string[1] { "armor_head" };
 		private static string[] tagsAccessories = new string[1] { "accessory" };
 
-		private static string[][] tagsGearBySlot = new string[3][]
+		private static string[][] tagsGearBySlot = new string[4][]
 		{
 			new string[1] { "gear_heart" },
 			new string[1] { "gear_run" },
+			new string[1] { "gear_magic" },
 			new string[1] { "gear_dj" },
         };
 
@@ -450,7 +451,7 @@ namespace ViMG.UIs
 
 				buttonParameters.bounds.Position = Vector2.Zero;
 
-				for (int i = 0; i < 3; i++)
+				for (int i = 0; i < 4; i++)
 				{
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2, 0));
 					//pos = new Vector2(i * 18 * SCALE, 0);
@@ -570,25 +571,25 @@ namespace ViMG.UIs
 			}
 
             Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_PADDING);
+                WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), HEALTHBAR_PADDING);
             RectangleF hbRect = new RectangleF(hbPos,
-                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), 8 * HEALTHBAR_SCALE));
 
 			if (hbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
 			{
 				UIWidgets.MakeTooltip(hbPos, "Health", string.Format("{0}/{1}\n" +
-					"Your health. If this is reduced to zero, you die. So don't let that happen.", player.Health, player.GetRealMaxHealth()));
+					"Your health. If this is reduced to zero, you die. So don't let that happen.", player.Health, player.GetCalculatedMaxHealth()));
 			}
 
             Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+                WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
             RectangleF mbRect = new RectangleF(mbPos,
-                new Vector2(WIDTH_PER_MAGIC * player.MaxMagic, 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), 8 * HEALTHBAR_SCALE));
 
             if (mbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
             {
                 UIWidgets.MakeTooltip(mbPos, "Magic", string.Format("{0}/{1}\n" +
-                    "Your magic. Used to cast magical spells.", player.Magic, player.MaxMagic));
+                    "Your magic. Used to cast magical spells.", player.Magic, player.GetCalculatedMaxMagic()));
             }
 
             float unit = (float)Options.CurrentWindowResolution.X / 80f;
@@ -746,12 +747,12 @@ namespace ViMG.UIs
 			}
 
 			Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
-				WIDTH_PER_HEALTH * player.GetRealMaxHealth(), HEALTHBAR_PADDING);
+				WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), HEALTHBAR_PADDING);
 			RectangleF hbRect = new RectangleF(hbPos,
-                new Vector2(WIDTH_PER_HEALTH * player.GetRealMaxHealth(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), 8 * HEALTHBAR_SCALE));
 
 			float health = player.Health;
-			float lostHealth = player.GetRealMaxHealth() - player.Health;
+			float lostHealth = player.GetCalculatedMaxHealth() - player.Health;
 
             healthbarLowerNS.Draw(batch, Color.White, hbRect, HEALTHBAR_SCALE, 0);
 
@@ -763,12 +764,12 @@ namespace ViMG.UIs
 			}
 
             Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_MAGIC * player.MaxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+                WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
             RectangleF mbRect = new RectangleF(mbPos,
-                new Vector2(WIDTH_PER_MAGIC * player.MaxMagic, 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), 8 * HEALTHBAR_SCALE));
 
             float magic = player.Magic;
-			float lostMagic = player.MaxMagic - player.Magic;
+			float lostMagic = player.GetCalculatedMaxMagic() - player.Magic;
 
 			magicbarLowerNS.Draw(batch, Color.White, mbRect, HEALTHBAR_SCALE, 0);
 		

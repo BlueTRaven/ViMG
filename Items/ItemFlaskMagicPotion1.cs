@@ -21,8 +21,8 @@ namespace ViMG.Items
         {
             player.Magic += 5;
 
-            if (player.Magic > player.MaxMagic)
-                player.Magic = player.MaxMagic;
+            if (player.Magic > player.GetCalculatedMaxMagic())
+                player.Magic = player.GetCalculatedMaxMagic();
 
             inventory.Remove(index, 1);
 

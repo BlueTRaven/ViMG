@@ -174,7 +174,7 @@ namespace ViMG.Rendering
         public Effect EffectHDR;
         public Effect EffectRadialFog;
         public Effect EffectAurora;
-
+        public Effect EffectStars;
         public Effect EffectFXAA;
 
         private Effect DEBUGEffectVisualizeCubemap;
@@ -284,6 +284,7 @@ namespace ViMG.Rendering
             EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
             EffectRadialFog = Main.assetsManager.GetAsset<Effect>("radial_fog");
             EffectAurora = Main.assetsManager.GetAsset<Effect>("aurora");
+            EffectStars = Main.assetsManager.GetAsset<Effect>("stars");
 
             DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
 
@@ -704,6 +705,13 @@ namespace ViMG.Rendering
                     NumDrawCalls++;
                 }
             }
+
+            /*EffectStars.Parameters["Time"].SetValue(alive);
+            EffectStars.Parameters["WorldMatrix"].SetValue(Main.camera.GetViewMatrix());
+            
+            device.SetVertexBuffer(vboQuad);
+            device.Indices = iboQuad;
+            DrawFullscreenQuad(EffectStars);*/
 
             /*EffectAurora.Parameters["Time"].SetValue(alive);
             EffectAurora.Parameters["Resolution"].SetValue(Options.CurrentWindowResolution.ToVector2());

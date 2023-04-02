@@ -8,6 +8,14 @@ namespace ViMG.Entities
 {
 	public class Entity
 	{
+		public enum SerializationTime
+		{ 
+			Never,			//Never serialized. Overrides Serialize.
+			OnChunkUnload,	//Only serialized when the chunk is unloaded.
+			OnWorldSave,	//Only serialized when the world is saved.
+			Always
+		}
+
 		public Vector3 Position;
 		public World world;
 

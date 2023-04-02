@@ -24,6 +24,11 @@ namespace ViMG
             return -(float.Cos(MathF.PI * t) - 1f) / 2f;
         }
 
+		public static float EaseInCubic(float t)
+		{
+			return t * t * t;
+		}
+
         public static float EaseInOutElastic(float t)
 		{
 			const float c5 = (2f * MathF.PI) / 4.5f;

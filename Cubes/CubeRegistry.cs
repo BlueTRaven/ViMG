@@ -83,6 +83,7 @@ namespace ViMG.Cubes
 			Register(new CubeGrave());
 			Register(new CubeCaveRoot());
 			Register(new CubeObeliskPlaque());
+			Register(new CubeManaStar());
 		}
 
         protected override void PostRegistration()
