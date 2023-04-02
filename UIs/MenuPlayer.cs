@@ -66,6 +66,17 @@ namespace ViMG.UIs
 			new string[1] { "gear_dj" },
         };
 
+		private static (string name, string description)[] tooltipsByGearSlot = new (string name, string description)[4]
+		{
+			("Heart", "Your heart. It beats steadily within your chest. Some say it could be replaced... who wouldn't want a better heart?\n" +
+				"Gear equipped here increases your maximum hp."),
+            ("Boots", "All a man really needs is a pair of good boots.\n" +
+				"Gear equippeed here allows you to run."),
+            ("Magic", "Magic - who knows how it works?\n" +
+				"Gear equipped here increases your maximum magic."),
+            ("Feather Artifact", "Gear equipped here allows you to jump multiple times.")
+        };
+
 		private static string[][] tagsAccessoriesBySlot = new string[6][]
 		{
 			tagsLegs,
@@ -463,8 +474,13 @@ namespace ViMG.UIs
 					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i), 1);
 
 					if (!gearInventory.Get(i).valid)
+					{
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
+
+						if (itemslot.button.hovered)
+							UIWidgets.MakeTooltip(Vector2.Zero, tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
+					}
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
 					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, ref held,
