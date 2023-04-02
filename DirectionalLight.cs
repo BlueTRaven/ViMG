@@ -15,8 +15,6 @@ namespace ViMG
     {
 		public const int RT_SIZE = 512;
 
-        //public CameraOrthographic camera;
-		public CameraCSM camera;
 		public CameraCSM[] cameras;
 
 		public readonly float width;
@@ -44,7 +42,7 @@ namespace ViMG
 
 		private FastList<ChunkPosition>[] cameraCachedChunks;
 
-		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float near, float far, float[] splitDistances)
+		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float[] splitDistances)
         {
 			int num = splitDistances.Length + 1;
 
@@ -65,8 +63,6 @@ namespace ViMG
 					farPlanes[i] = mainCamera.Far * splitDistances[i];
 				else farPlanes[i] = mainCamera.Far;
             }
-
-			camera = new CameraCSM(mainCamera, near, far, -1, -1);
 
 			cameras = new CameraCSM[num];
 			lightViewProjections = new Matrix[num];

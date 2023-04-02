@@ -27,7 +27,7 @@ namespace ViMG.Entities
         private EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
         {
             front = new RectangleF(0, 0, 16, 16),
-            sides = new RectangleF(0, 16, 16, 16),
+            sideLeft = new RectangleF(0, 16, 16, 16),
             back = new RectangleF(0, 32, 16, 16)
         };
 

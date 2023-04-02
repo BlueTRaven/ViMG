@@ -15,36 +15,45 @@ namespace ViMG.Entities
         {
             public RectangleF front;
             public RectangleF back;
-            public RectangleF sides;
+            public RectangleF sideLeft;
+            public RectangleF sideRight;
             public RectangleF below;
             public RectangleF above;
         }
 
         public static RectangleF GetEntityDirectionalSourceRect(Vector3 facing, DirectionalSourceRect directionalSourceRect)
         {
-            //TODO: above/below
-            //For the moment, just zero out the y axis...
-            float facingDotCamera = Vector3.Dot(facing, Main.camera.Forward);
+            Vector2 facingXZ = Vector2.Normalize(facing.XZ());
+            Vector2 forwardXZ = Vector2.Normalize(Main.camera.Forward.XZ());
 
+            float ang = float.Acos(Vector2.Dot(facingXZ, forwardXZ));
+            
             RectangleF sourceRect = directionalSourceRect.front;
 
-            if (facingDotCamera < -0.3f)
+            if (ang > MathHelper.ToRadians(180 - 45))
             {
                 //back
                 sourceRect = directionalSourceRect.back;
             }
-            else if (facingDotCamera < 0.2f)
+            else if (ang > MathHelper.ToRadians(45))
             {
                 //sides
-                sourceRect = directionalSourceRect.sides;
+                sourceRect = directionalSourceRect.sideRight;
 
-                float leftDot = facing.X * Main.camera.ForwardYawOnly.Z - facing.Z * Main.camera.ForwardYawOnly.X;
+                float leftDot = Vector2.Dot(facing.XZ(), Main.camera.Right.XZ());
 
                 if (leftDot < 0)
                 {
-                    //if facing to the left, needs to be flipped.
-                    sourceRect.x += sourceRect.width;
-                    sourceRect.width = -sourceRect.width;
+                    if (directionalSourceRect.sideLeft == RectangleF.Empty)
+                    {
+                        //if facing to the left and we do not have a source rect for the left available, needs to be flipped.
+                        sourceRect.x += sourceRect.width;
+                        sourceRect.width = -sourceRect.width;
+                    }
+                    else
+                    {
+                        sourceRect = directionalSourceRect.sideLeft;
+                    }
                 }
             }
 

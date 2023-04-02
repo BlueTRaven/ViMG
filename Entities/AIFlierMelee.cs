@@ -27,6 +27,7 @@ namespace ViMG.Entities
 		public float MaxVelocity = Cube.CUBE_SCALE * 6;
 
 		public float Acceleration = Cube.CUBE_SCALE / 2f;
+		public float TurnSpeed = MathHelper.ToRadians(5f);
 
 		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 2f;
 		public float AttackTargetDistance = Cube.CUBE_SCALE * 2f;
@@ -107,7 +108,7 @@ namespace ViMG.Entities
 							//Instead of simply adding/moving in a given direction, we instead attempt to rotate our movement velocity.
 							//This leads to more interesting movement patterns - in general, strafing has more of an effect this way.
 							Vector3 cross = Vector3.Cross(velocityDir, playerDir);
-							Matrix mat = Matrix.CreateFromAxisAngle(cross, MathHelper.ToRadians(5));
+							Matrix mat = Matrix.CreateFromAxisAngle(cross, TurnSpeed);
 
 							Vector3 rotated = Vector3.Normalize(Vector3.Transform(velocityDir, mat));
 
@@ -128,8 +129,12 @@ namespace ViMG.Entities
 						//slow down very fast.
 						Velocity *= 0.65f;
 
-						if (distance < AttackTargetDistance)
+                        Facing = Vector3.Normalize(Velocity);
+
+                        if (distance < AttackTargetDistance)
 						{
+							Facing = playerDir;
+
 							attackTimer -= (float)deltaTime;
 
 							if (attackTimer <= 0)

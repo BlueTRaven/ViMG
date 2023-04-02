@@ -32,8 +32,10 @@ namespace ViMG.WorldLogics
 
         public WorldLogicIsland(string worldName, GraphicsDevice device) : base(device)
         {
-			directionalLight = new DirectionalLight(device, Main.camera, Main.camera.Near, Main.camera.Far / 50f,
-                new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f });
+			float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
+
+            directionalLight = new DirectionalLight(device, Main.camera, splits);
+			
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
 			List<VertexCube> vertices = new List<VertexCube>();
@@ -172,7 +174,19 @@ namespace ViMG.WorldLogics
         {
             base.Draw(world, device);
 
-			directionalLight.DrawShadowmap(device, world);
+            /*if (Main.inputManager.JustPressed(Keys.V))
+            {
+                directionalLight.Dispose();
+
+                //float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
+                float[] splits = new float[] { 0.001f, 0.005f, 0.01f, 0.1f };
+
+                directionalLight = new DirectionalLight(device, Main.camera, splits);
+
+                directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
+            }*/
+
+            directionalLight.DrawShadowmap(device, world);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 
 			Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");

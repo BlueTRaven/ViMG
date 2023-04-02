@@ -37,7 +37,7 @@ namespace ViMG.Entities
         {
             front = new RectangleF(0, 0, 4, 4),
             back = new RectangleF(0, 0, 4, 4),
-            sides = new RectangleF(4, 0, 8, 4),
+            sideLeft = new RectangleF(4, 0, 8, 4),
         };
 
         public ManaStar()
