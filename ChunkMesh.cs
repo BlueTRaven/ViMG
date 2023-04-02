@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
-	public class ChunkMesh
+    public class ChunkMesh
 	{
 		public VertexBuffer VBO;
 		public IndexBuffer IBO;

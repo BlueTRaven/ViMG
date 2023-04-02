@@ -9,6 +9,7 @@ using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {

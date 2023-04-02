@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
-	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
 	public class Tree : Entity
 	{
@@ -76,10 +77,6 @@ namespace ViMG.Entities
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			//Don't draw in depth buffer.
-			if (effect.Name == "Effects/depth")
-				return;
-
 			base.Draw(device, effect);
 
 			if (meshTrunk == null)

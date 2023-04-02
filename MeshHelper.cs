@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
-	public static class MeshHelper
+    public static class MeshHelper
 	{
 		private static Color[] faceColors = new Color[6]
 		{

@@ -9,10 +9,11 @@ using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Recipes;
 using ViMG.UIs;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Cubes
 {
-	public class CubeAnvilIron : Cube
+    public class CubeAnvilIron : Cube
 	{
 		public CubeAnvilIron() : base("anvil_iron", new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White, 6)
 		{

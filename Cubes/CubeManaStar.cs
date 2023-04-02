@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
@@ -14,8 +15,13 @@ namespace ViMG.Cubes
         {
             Name = "Mana Star";
             Description = "Cube item version. Unobtainable.";
+        }
 
-            Transparency = TransparencyValue.Transparent;
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("mana_star"), 1, 0));
         }
     }
 }

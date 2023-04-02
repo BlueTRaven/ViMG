@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Generation;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Items
 {

@@ -479,7 +479,7 @@ namespace ViMG.UIs
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
 
 						if (itemslot.button.hovered)
-							UIWidgets.MakeTooltip(Vector2.Zero, tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
+							UIWidgets.MakeTooltip(new Vector2(0, SIZE), tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
 					}
 
 					var output = MenuHelper.ItemSlotClickOutput.None;

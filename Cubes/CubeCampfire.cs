@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Items;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Cubes
 {

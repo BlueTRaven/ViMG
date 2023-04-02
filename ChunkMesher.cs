@@ -22,7 +22,7 @@ using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
-	public class ChunkMesher
+    public class ChunkMesher
 	{
 #if DEBUG
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;

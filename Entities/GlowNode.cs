@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Items;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
-	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
 	public class GlowNode : Entity, ICubeTracker
 	{

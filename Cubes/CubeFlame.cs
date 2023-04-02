@@ -8,6 +8,7 @@ using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using ViMG.ChunkStuff;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Cubes
 {

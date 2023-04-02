@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.GameStates;
 using ViMG.Spawners;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.WorldLogics
 {

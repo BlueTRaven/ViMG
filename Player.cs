@@ -15,11 +15,12 @@ using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.UIs;
+using ViMG.VertexDeclarations;
 using static ViMG.Player;
 
 namespace ViMG
 {
-	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(10, 0)]
 	public class Player : Entity, IHitboxOwner
 	{
@@ -656,16 +657,6 @@ namespace ViMG
 					world.HitboxManager.Update(hitbox, rect);
 				}
 			}
-
-			//float sine = ((float)Math.Sin(MathHelper.Pi * 2 * ((alive % 10f) / 10f)) + 1f) / 2f;
-
-			/*float positionY = Position.Y;
-			float start = 3772;
-			float end = 3772 - 128;
-
-			float factor = 1 - ((positionY - start) / (end - start));
-			factor = Math.Clamp(factor, 0, 1);
-			Main.CubeEffect.Parameters["AmbientStrength"].SetValue(factor);*/
 
 			if (Main.inputManager.JustPressed(Keys.F3))
 			{

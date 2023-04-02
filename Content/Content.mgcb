@@ -37,36 +37,6 @@
 /processorParam:DebugMode=Auto
 /build:Effects/bloom_upsample.fx
 
-#begin Effects/cube_lit.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/cube_lit.fx
-
-#begin Effects/cube_unlit.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/cube_unlit.fx
-
-#begin Effects/CubeEffect.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/CubeEffect.fx
-
-#begin Effects/debug_vpc.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/debug_vpc.fx
-
-#begin Effects/debug_vpt.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/debug_vpt.fx
-
 #begin Effects/deferred.fx
 /importer:EffectImporter
 /processor:EffectProcessor

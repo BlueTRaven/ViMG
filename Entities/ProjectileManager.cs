@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
-	public class ProjectileManager : IHitboxOwner
+    public class ProjectileManager : IHitboxOwner
 	{
 		public struct ProjectileBatchStats
         {

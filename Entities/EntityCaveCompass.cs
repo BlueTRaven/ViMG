@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {

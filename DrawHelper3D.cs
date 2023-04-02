@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
-	public static class DrawHelper3D
+    public static class DrawHelper3D
 	{
 		private static VertexBuffer vboQuad;
 		private static IndexBuffer iboQuad;
@@ -591,64 +592,6 @@ namespace ViMG
 			vertices.Add(new VertexPositionTexture(r_t_f, new Vector2(0, 0.5f)));
 			vertices.Add(new VertexPositionTexture(r_t_n, new Vector2(0, 1f)));
 			vertices.Add(new VertexPositionTexture(l_t_n, new Vector2(0.5f, 1f)));
-		}
-
-		[Obsolete]
-		public static void DrawCubeImmediate(GraphicsDevice device, Vector3 position, Vector3 size, Color color, Matrix? matrix = null)
-		{
-			Main.BasicEffect.DiffuseColor = color.ToVector3();
-			var mvp = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
-			var mesh = MeshHelper.MakeCubeVertexPositionColor(device, position, position + size, MeshHelper.CubeFace.ALL, color, DrawHelper.WhitePixel);
-
-			if (matrix.HasValue)
-				mesh.Draw(device, Main.BasicEffect, matrix.Value);
-			else mesh.DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, Matrix.Identity);
-			Main.BasicEffect.DiffuseColor = Color.White.ToVector3();
-		}
-
-		[Obsolete]
-		public static void DrawQuadImmediate(GraphicsDevice device, Vector3 min, Vector3 max, Color color)
-		{
-			List<VertexPositionColor> vertices = new List<VertexPositionColor>();
-			List<int> indices = new List<int>();
-			
-			Vector3 a = new Vector3(min.X, min.Y, min.Z);
-			Vector3 b = new Vector3(max.X, min.Y, min.Z);
-			Vector3 c = new Vector3(max.X, max.Y, min.Z);
-			Vector3 d = new Vector3(min.X, max.Y, min.Z);
-
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexPositionColor(a, color));
-			vertices.Add(new VertexPositionColor(b, color));
-			vertices.Add(new VertexPositionColor(c, color));
-			vertices.Add(new VertexPositionColor(d, color));
-
-			//MeshHelper.MakeQuadVertsVertexPositionColor(a, b, c, d, color, vertices, indices);
-
-			new SimpleMesh<VertexPositionColor, int>(device, vertices, indices).DrawDebugVertexPositionColor(device, Main.VertexPositionColorDebugEffect, Color.White, Matrix.Identity);
-		}
-
-		[Obsolete]
-		public static void DrawTexturedQuadImmediate(GraphicsDevice device, Vector3 min, Vector3 max, Matrix transform, Texture2D texture)
-		{
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-			List<VertexPositionTexture> vertices = new List<VertexPositionTexture>();
-			List<int> indices = new List<int>();
-
-			MeshHelper.MakeQuadVertsVertexPositionTexture(a, b, c, d, new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), vertices, indices);
-
-			new SimpleMesh<VertexPositionTexture, int>(device, vertices, indices, texture).DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, transform);
 		}
 	}
 }

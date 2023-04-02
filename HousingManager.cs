@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.Design;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 using static ViMG.HitboxManager;
 
 namespace ViMG

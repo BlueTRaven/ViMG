@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Items
 {
-	public class ItemBow : Item
+    public class ItemBow : Item
 	{
 		private Color color;
 		private string materialName;

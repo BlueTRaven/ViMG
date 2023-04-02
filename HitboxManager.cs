@@ -7,11 +7,12 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.VertexDeclarations;
 using static ViMG.LightManager;
 
 namespace ViMG
 {
-	public class HitboxManager
+    public class HitboxManager
 	{
 		public enum Group
         {

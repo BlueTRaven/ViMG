@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
-	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
     public class Sapling : Entity, ICubeTracker
     {

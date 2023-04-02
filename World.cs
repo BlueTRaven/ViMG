@@ -22,11 +22,12 @@ using ViMG.Items;
 using ViMG.Physics;
 using ViMG.Spawners;
 using ViMG.UIs;
+using ViMG.VertexDeclarations;
 using ViMG.WorldLogics;
 
 namespace ViMG
 {
-	public class World
+    public class World
 	{
 		public readonly string LoadedFolderName;
 		public readonly int Layer;
@@ -140,11 +141,6 @@ namespace ViMG
 			LightManager = new LightManager(device);
 
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
-
-			Main.CubeLitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
-			Main.CubeLitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
-			Main.CubeUnlitEffect.Parameters["WorldSize"].SetValue(new Vector3(worldSize));
-			Main.CubeUnlitEffect.Parameters["CubeSize"].SetValue(new Vector3(Cube.CUBE_SCALE));
 		}
 
 		private void CreateMeshes(GraphicsDevice device)
@@ -691,7 +687,7 @@ namespace ViMG
 			}
 
 			ProjectileManager.Draw(device);
-			EntityManager.Draw(device, Main.CubeLitEffect);
+			EntityManager.Draw(device, null);
 
 			logic.Draw(this, device);
 

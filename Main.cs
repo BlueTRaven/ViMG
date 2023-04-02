@@ -26,11 +26,8 @@ namespace ViMG
 		public const float NEAR = 0.005f;
 		public const float FAR = 12 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE;
 
-		public static BasicEffect BasicEffect;
 		public static Effect VertexPositionColorDebugEffect;
 		public static Effect VertexPositionTextureDebugEffect;
-		public static Effect CubeLitEffect;
-		public static Effect CubeUnlitEffect;
 
 		//private World world;
 		private GameStateManager gameStateManager;
@@ -41,8 +38,6 @@ namespace ViMG
 		public static InputManager inputManager;
 		public static ViMGAssetsManager assetsManager;
 		public static RegistryService Registry;
-
-		public static DelayedUploader<VertexCube, int> DelayedUploaderChunkMesh = new DelayedUploader<VertexCube, int>();
 
 		public static FrameCounter frameCounter;
 
@@ -146,14 +141,6 @@ namespace ViMG
 
 		protected override void Initialize()
 		{
-			WVP.SetProjection(camera.GetProjectionMatrix());
-			//WVP.SetProjection(Matrix.CreateOrthographicOffCenter(-10.0f, 10.0f, -10.0f, 10.0f, NEAR, FAR));
-
-			BasicEffect = new BasicEffect(GraphicsDevice);
-			BasicEffect.Projection = camera.GetProjectionMatrix();
-			BasicEffect.TextureEnabled = true;
-			BasicEffect.VertexColorEnabled = true;
-
 			genericDSS = new DepthStencilState()
 			{
 				DepthBufferEnable = true,
@@ -262,32 +249,6 @@ namespace ViMG
         {
 			batch = new SpriteBatch(GraphicsDevice);
 			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
-
-			CubeLitEffect = assetsManager.GetAsset<Effect>("cube_lit");
-			CubeUnlitEffect = assetsManager.GetAsset<Effect>("cube_unlit");
-			FogManager = new FogManager(CubeLitEffect, CubeUnlitEffect);
-
-			//CubeEffect.Parameters["AOStrength"].SetValue(0.5f);
-			CubeLitEffect.Parameters["AmbientStrength"].SetValue(0f);
-			CubeLitEffect.Parameters["AmbientColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["SpecularStrength"].SetValue(1f);
-			CubeLitEffect.Parameters["LightColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["TintColor"].SetValue(Color.White.ToVector3());
-			CubeLitEffect.Parameters["EnableFog"].SetValue(false);
-
-			CubeLitEffect.Parameters["EnableShadows"].SetValue(ENABLE_SHADOWS);
-			//CubeEffect.Parameters["LightResolution"].SetValue(new Vector2(1024));
-
-			VertexPositionColorDebugEffect = assetsManager.GetAsset<Effect>("debug_vpc");
-			VertexPositionColorDebugEffect.Name = "VertexPositionColorDebugEffect";
-			VertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
-			VertexPositionTextureDebugEffect = assetsManager.GetAsset<Effect>("debug_vpt");
-			VertexPositionTextureDebugEffect.Name = "VertexPositionTextureDebugEffect";
-			VertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector4());
-
-			FogManager.Set(1200f, 2000f, assetsManager.GetAsset<Texture2D>("heightmap_layer1_day"), assetsManager.GetAsset<Texture2D>("heightmap_layer1_night"), 0);
-
-			//ui = new MenuMain(world);
 		}
 
 		protected override void Update(GameTime gt)
@@ -345,10 +306,6 @@ namespace ViMG
 
 			Renderer.Update(deltaTime);
 
-			CubeLitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
-			CubeUnlitEffect.Parameters["CameraPos"].SetValue(-camera.Position);
-			//CubeEffect.Parameters["LightPos"].SetValue(-camera.Position);
-
 			if (IsActive && !paused && !MouseControl)
 				Options.CenterMouse();
 		}
@@ -365,10 +322,7 @@ namespace ViMG
 			Matrix view = camera.GetViewMatrix();
 
 			WVP.SetView(view);
-			CubeLitEffect.Parameters["View"].SetValue(view);
-
-			BasicEffect.View = view;
-
+			
 			gameStateManager.Draw(GraphicsDevice);
 
 			//if (WorldLoaded)

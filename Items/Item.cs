@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Items
 {
-	public abstract class Item : IRegisterable
+    public abstract class Item : IRegisterable
 	{
 		public const float DEFAULT_USE_TIME = 0.5f;
 		public const float DEFAULT_USE_ANIM_TIME = 0.5f;

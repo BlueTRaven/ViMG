@@ -12,11 +12,12 @@ using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.UIs;
+using ViMG.VertexDeclarations;
 using static ViMG.Cubes.Cube.CubeVisualInstance;
 
 namespace ViMG.Cubes
 {
-	public class Cube : IRegisterable
+    public class Cube : IRegisterable
 	{
 		public struct CubeAnimation
         {

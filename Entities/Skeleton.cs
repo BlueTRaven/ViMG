@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
-	public class Skeleton : Entity, IHitboxOwner
+    public class Skeleton : Entity, IHitboxOwner
 	{
 		private enum State
         {

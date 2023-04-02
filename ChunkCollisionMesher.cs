@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.GameStates;
+using ViMG.VertexDeclarations;
 
 namespace ViMG
 {
