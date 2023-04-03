@@ -276,7 +276,7 @@ namespace ViMG
 		private Vector3 attackStateTargetPos;
 
 		private (VertexBuffer VBO, IndexBuffer IBO) mesh;
-		private SimpleMesh<VertexCube, int> lookAtMesh;
+		private (VertexBuffer VBO, IndexBuffer IBO) lookAtMesh;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -1659,11 +1659,14 @@ namespace ViMG
 			if (mesh.VBO == null)
 				mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
 
-			if (lookAtMesh == null)
+			if (lookAtMesh.VBO == null)
 			{
-				lookAtMesh = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+				List<VertexCube> vertices = new List<VertexCube>();
+				List<int> indices = new List<int>();
+				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
+				lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-				lookAtMesh.Name = "Look At Mesh";
+				//lookAtMesh.Name = "Look At Mesh";
 			}
 
 			if (currentThirdPersonDistance > THIRDPERSON_FADEOUT_START)

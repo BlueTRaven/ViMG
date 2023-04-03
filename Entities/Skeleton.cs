@@ -18,7 +18,7 @@ namespace ViMG.Entities
 			LyingInPileKillable
         }
 
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		private State state;
 
@@ -336,7 +336,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh == null)
+			if (mesh.VBO == null)
 				MakeMesh(device);
 
 			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
@@ -364,7 +364,7 @@ namespace ViMG.Entities
                 }
             }
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skeleton"),
 				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
@@ -419,8 +419,8 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
-		}
+			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);//new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
+        }
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{

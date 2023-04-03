@@ -56,7 +56,7 @@ namespace ViMG.Items
 			var mesh = cube.GetHeldMesh(device);
 
 			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
-			if (mesh != null && !mesh.IsEmpty)
+			if (mesh.VBO != null)
 				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
 					mesh.VBO, mesh.IBO, scaled, cube.GetHeldSourceRect(world)));
 		}

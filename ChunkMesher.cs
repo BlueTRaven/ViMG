@@ -397,7 +397,8 @@ namespace ViMG
 				(List<VertexCube> verts, List<int> indices) empties = state.mesher.GenerateChunk(
 					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air);
 
-                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, opaques);
+                cmi.meshes[(int)Cube.RenderPass.Opaque] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
+					opaques.verts.ToVertexOpaquePass(), opaques.indices);
 				cmi.meshes[(int)Cube.RenderPass.Transparent] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
 					transparents.verts.ToVertexTransparentPass(), transparents.indices);
 				cmi.meshes[(int)Cube.RenderPass.DepthOnly] = MeshHelper.MakeSimplerMesh(state.mesher.device, 
@@ -571,6 +572,9 @@ namespace ViMG
 
 								cube.MakeCubeVerts(pass, data, parameters, vertices, indices);
 
+								if (vertices.Count % 4 != 0)
+									throw new Exception("Invalid mesh! Must be defined as quads and not some other structure!");
+
 								int count = vertices.Count - oldCount;
 
 								BakeAO(data, cubePosition, oldCount, oldCount + count, vertices);
@@ -599,6 +603,36 @@ namespace ViMG
 			}
 
 			return (vertices, indices);
+		}
+
+		private static void BakeTangent(int start, int end, List<VertexCube> vertices)
+		{
+			for (int i = start; i < end; i += 4)
+			{
+				VertexCube vert1 = vertices[i + 0];
+                VertexCube vert2 = vertices[i + 1];
+                VertexCube vert3 = vertices[i + 2];
+                VertexCube vert4 = vertices[i + 3];
+
+				Vector3 edge1 = vert2.Position - vert1.Position;
+				Vector3 edge2 = vert3.Position - vert1.Position;
+				Vector2 dUV1 = vert2.TextureCoordinate - vert1.TextureCoordinate;
+                Vector2 dUV2 = vert3.TextureCoordinate - vert1.TextureCoordinate;
+
+				float f = 1 / (dUV1.X * dUV2.Y - dUV2.X * dUV1.Y);
+
+				Vector3 tangent = new Vector3(
+					f * (dUV2.Y * edge1.X - dUV1.Y * edge2.X),
+                    f * (dUV2.Y * edge1.Y - dUV1.Y * edge2.Y),
+                    f * (dUV2.Y * edge1.Z - dUV1.Y * edge2.Z)
+                    );
+
+                Vector3 bitangent = new Vector3(
+                    f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
+                    f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
+                    f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
+                    );
+            }
 		}
 
 		private static void BakeAO(CopiedChunkData data, CubePosition cubePosition, int start, int end, List<VertexCube> vertices)

@@ -62,7 +62,7 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
 
-			meshSun = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+			meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 
 			vertices = new List<VertexCube>();
 			indices = new List<int>();
@@ -79,7 +79,7 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
 
-			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 		}
 
         public override void Initialize(World world)

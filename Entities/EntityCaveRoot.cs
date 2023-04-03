@@ -84,7 +84,7 @@ namespace ViMG.Entities
                 List<int> indices = new List<int>();
                 DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-                mesh = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+                mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             }
 
             RectangleF sourceRect = new RectangleF(0, 176, 16, 16);

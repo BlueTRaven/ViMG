@@ -20,7 +20,7 @@ namespace ViMG.Entities
 
 		private int light = -1;
 
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -80,7 +80,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh == null)
+			if (mesh.VBO == null)
 				MakeMesh(device);
 
 			/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
@@ -133,7 +133,8 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
+			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+            //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
 		}
 
 		public bool OnInteract(Player player)

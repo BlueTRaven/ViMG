@@ -34,7 +34,7 @@ namespace ViMG.Items
 			else
 			{
 				//If no valid meta, draw an error texture.
-				if (meshItemQuadInWorld != null)
+				if (meshItemQuadInWorld.VBO != null)
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("swrod"), 
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel,

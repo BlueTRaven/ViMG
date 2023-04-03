@@ -206,7 +206,8 @@ namespace ViMG.Cubes
 		private readonly RectangleF sourceRect;
 		private readonly Color tintColor;
 
-		public SimpleMesh<VertexCube, int> mesh;
+		public (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		//public SimpleMesh<VertexCube, int> mesh;
 
 		public int MineProgressToBreak;
 		public int MineLevelRequirement;
@@ -363,9 +364,9 @@ namespace ViMG.Cubes
 
         }
 
-		public virtual SimpleMesh<VertexCube, int> GetHeldMesh(GraphicsDevice device)
+		public virtual (VertexBuffer VBO, IndexBuffer IBO) GetHeldMesh(GraphicsDevice device)
 		{
-			if (mesh == null)
+			if (mesh.VBO == null)
 			{
 				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
@@ -382,7 +383,8 @@ namespace ViMG.Cubes
 				MakeCubeVerts(RenderPass.Opaque, default, parameters, vertices, indices);
 
 				if (vertices.Count > 0)
-					mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+					mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+					//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
 
 			return mesh;

@@ -13,10 +13,10 @@ namespace ViMG.Entities
 	[EntityMeta(0, 0)]
 	public class Tree : Entity
 	{
-		private static SimpleMesh<VertexCube, int> meshTrunk;
-		private static SimpleMesh<VertexCube, int> meshSegmentA;
-		private static SimpleMesh<VertexCube, int> meshSegmentB;
-		private static SimpleMesh<VertexCube, int> meshTreeTop;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshTrunk;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshSegmentA;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshSegmentB;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshTreeTop;
 
 		private int baseSize;
 		private int size;
@@ -79,7 +79,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (meshTrunk == null)
+			if (meshTrunk.VBO == null)
 				MakeMesh(device);
 
 			if (Main.camera.GetFrustum().Contains(new BoundingBox(bounds.Position, bounds.FarPosition)) == ContainmentType.Disjoint)
@@ -87,20 +87,23 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.wireframeRS;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshTrunk.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 				Matrix.CreateTranslation(Position), new RectangleF(0, 96 - 16, 80, 16)));
 
 			for (int i = 0; i < size; i++)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshSegmentB.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)), new RectangleF(0, 48, 80, 32)));
 			}
 
 			if (size == baseSize)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshTreeTop.texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
 			}
@@ -195,7 +198,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshTrunk = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshTrunk = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshSegmentA(GraphicsDevice device)
@@ -279,7 +282,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshSegmentA = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshSegmentA = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshSegmentB(GraphicsDevice device)
@@ -363,7 +366,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshSegmentB = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshSegmentB = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		private static void MakeMeshTreeTop(GraphicsDevice device)
@@ -447,7 +450,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(1, 0, 0)));
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(1, 0, 0)));
 
-			meshTreeTop = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
+			meshTreeTop = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("tree"));
 		}
 
 		public override void OnSave(List<byte> saveBytes)

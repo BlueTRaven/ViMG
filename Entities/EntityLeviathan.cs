@@ -91,7 +91,7 @@ namespace ViMG.Entities
 				vertices.Add(new VertexCube(new Vector3(VERT_DIST, VERT_DIST, 0), Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
 				vertices.Add(new VertexCube(new Vector3(VERT_DIST, -VERT_DIST, 0), Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
 
-				quad = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+				quad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 			}
 			else
 			{

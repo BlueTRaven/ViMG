@@ -272,7 +272,7 @@ namespace ViMG
 			}
 		}
 
-		private static SimpleMesh<VertexCube, int> meshHealthbar;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshHealthbar;
 
 		private static void MakeMeshHealthbar(GraphicsDevice device)
         {
@@ -318,15 +318,16 @@ namespace ViMG
 			vertices.Add(new VertexCube(d, Color.Red, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.Red, ctx, new Vector3(0, 0, -1)));
 
-			meshHealthbar = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
+			meshHealthbar = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+			//meshHealthbar = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 		}
 
 		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
         {
-			if (meshHealthbar == null)
+			if (meshHealthbar.VBO == null)
 				MakeMeshHealthbar(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(meshHealthbar.texture, DrawHelper.BlackPixel, meshHealthbar.texture, meshHealthbar.VBO, meshHealthbar.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel, DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshHealthbar.VBO, meshHealthbar.IBO,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
@@ -394,13 +395,7 @@ namespace ViMG
 
 			MakeUVSphereRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1), radius, 16, 16, flip);
 
-			vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
-			ibo = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
-
-			vbo.SetData(vertices.ToArray());
-			ibo.SetData(indices.ToArray());
-
-			return (vbo, ibo);
+			return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
 		public static void MakeUVSphereRaw(List<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16, bool flip = false)

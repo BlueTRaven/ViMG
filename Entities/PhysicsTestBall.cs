@@ -77,7 +77,7 @@ namespace ViMG.Entities
                 List<int> indices = new List<int>();
                 DrawHelper3D.MakeUVSphereRaw(vertices, indices, new Vector3(Cube.CUBE_SCALE / 2f), BrUtility.RectangleF.Empty, Cube.CUBE_SCALE / 2f);
 
-                mesh = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+                mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             }
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),

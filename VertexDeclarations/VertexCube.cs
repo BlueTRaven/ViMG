@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ViMG.VertexDeclarations
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct VertexCube : IVertexType
+    public struct VertexCube
     {
         public static readonly VertexDeclaration VertexDeclaration;
 
@@ -37,13 +37,13 @@ namespace ViMG.VertexDeclarations
             AnimFrameSize = 0;
         }
 
-        VertexDeclaration IVertexType.VertexDeclaration
+        /*VertexDeclaration IVertexType.VertexDeclaration
         {
             get
             {
                 return VertexDeclaration;
             }
-        }
+        }*/
 
         public override string ToString()
         {

@@ -234,7 +234,7 @@ namespace ViMG.Entities
 		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
 
 		private World world;
-		private static SimpleMesh<VertexCube, int> mesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		public ProjectileManager(World world, GraphicsDevice device)
 		{
@@ -267,7 +267,8 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 
-			mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
+			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+            //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
             this.world = world;
         }
 

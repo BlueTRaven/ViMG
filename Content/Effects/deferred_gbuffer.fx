@@ -5,11 +5,12 @@ sampler Sampler : register(s0);
 sampler BilinearSampler : register(s1);
 
 Texture2D Diffuse			: register(t0);
-Texture2D Specular			: register(t1);
-Texture2D Emissive			: register(t2);
+Texture2D Normal			: register(t1);
+Texture2D Specular			: register(t2);
+Texture2D Emissive			: register(t3);
 
-Texture2D WorldheightMapAmb	: register(t3);
-Texture2D Heightmap			: register(t4);
+Texture2D WorldheightMapAmb	: register(t4);
+//Texture2D Heightmap			: register(t5);
 
 float4x4 World;
 float4x4 View;
@@ -111,6 +112,9 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb * input.Color.rgb;
 
+    float normal = Normal.Sample(Sampler, input.TexCoord);
+    normal = normalize(normal * 2.0 - 1.0);
+	
 	float depth = input.DepthVS;
 
 	output.Diffuse.rgb = albedoSample.rgb * input.Color.rgb;

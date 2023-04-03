@@ -231,7 +231,7 @@ namespace ViMG.Rendering
             List<VertexCube> cubeVertices = new List<VertexCube>();
             List<int> cubeIndices = new List<int>();
             MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(-Vector3.One / 2f, Vector3.One / 2f, MeshHelper.CubeFace.ALL, Color.White, cubeVertices, cubeIndices);
-            DEBUGCubeMesh = MeshHelper.MakeSimplerMesh(device, cubeVertices, cubeIndices);
+            DEBUGCubeMesh = MeshHelper.MakeSimplerMesh(device, cubeVertices.ToVertexTransparentPass(), cubeIndices);
 
             bloom = new RendererBloom(device);
 
@@ -504,6 +504,7 @@ namespace ViMG.Rendering
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
 
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
+                        //EffectGBuffer.Parameters["Normal"].SetValue(DrawHelper.NormalPixel);
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
                         EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
 

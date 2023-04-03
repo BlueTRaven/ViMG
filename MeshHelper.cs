@@ -113,18 +113,18 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_b_n, faceColors[5], new Vector2(0, 0), new Vector3(0, -1, 0)));
 			vertices.Add(new VertexCube(l_b_n, faceColors[5], new Vector2(1, 0), new Vector3(0, -1, 0)));
 
-			return MakeSimplerMesh(device, vertices, indices);
+			return MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (List<TVertex> vertices, List<TIndex> indices) tuple)
-			where TVertex : struct
+			where TVertex : struct, IVertexType
 			where TIndex : struct
 		{
 			return MakeSimplerMesh(device, tuple.vertices, tuple.indices);
         }
 
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices) 
-			where TVertex : struct 
+			where TVertex : struct, IVertexType
 			where TIndex : struct
         {
 			if (vertices.Count == 0)
@@ -183,13 +183,7 @@ namespace ViMG
             vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
             vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-            VertexBuffer vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
-            IndexBuffer ibo = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
-
-            vbo.SetData(vertices.ToArray());
-            ibo.SetData(indices.ToArray());
-
-            return (vbo, ibo);
+            return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeEnemyQuad(GraphicsDevice device, float width, float height)
@@ -236,13 +230,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			VertexBuffer vbo = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
-			IndexBuffer ibo = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
-
-			vbo.SetData(vertices.ToArray());
-			ibo.SetData(indices.ToArray());
-
-			return (vbo, ibo);
+            return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
 		[Flags]
@@ -282,7 +270,7 @@ namespace ViMG
             }
         }
 
-		public static SimpleMesh<VertexCube, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
+		/*public static SimpleMesh<VertexCube, int> MakeCubeVertexPositionColorTextureNormal(GraphicsDevice device, Vector3 min, Vector3 max, CubeFace faces, Color color, Texture2D texture)
 		{
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
@@ -292,7 +280,7 @@ namespace ViMG
 			if (texture == null)
 				return new SimpleMesh<VertexCube, int>(device, vertices, indices);
 			else return new SimpleMesh<VertexCube, int>(device, vertices, indices, texture);
-		}
+		}*/
 
 		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexCube> vertices, List<int> indices)
 		{

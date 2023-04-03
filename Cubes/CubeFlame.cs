@@ -14,7 +14,7 @@ namespace ViMG.Cubes
 {
     public class CubeFlame : Cube
     {
-        private static SimpleMesh<VertexCube, int> heldMesh;
+        private static (VertexBuffer VBO, IndexBuffer IBO) heldMesh;
 
         public CubeFlame() : base("flame", new RectangleF(192, 0, 16, 16), Color.White, 1)
         {
@@ -22,9 +22,9 @@ namespace ViMG.Cubes
             Collision = CollisionValue.None;
         }
 
-        public override SimpleMesh<VertexCube, int> GetHeldMesh(GraphicsDevice device)
+        public override (VertexBuffer VBO, IndexBuffer IBO) GetHeldMesh(GraphicsDevice device)
         {
-            if (heldMesh == null)
+            if (heldMesh.VBO == null)
             {
                 List<VertexCube> vertices = new List<VertexCube>();
                 List<int> indices = new List<int>();
@@ -37,7 +37,8 @@ namespace ViMG.Cubes
                 MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(b, c, d, a,
                     new Vector3(0, 0, 1), Color.White, vertices, indices);
 
-                heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+                heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
             return heldMesh;

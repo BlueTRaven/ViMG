@@ -133,7 +133,7 @@ namespace ViMG.Items
 
 		public int Id = -1;
 
-		protected static SimpleMesh<VertexCube, int> meshItemQuadInWorld;
+		protected static (VertexBuffer VBO, IndexBuffer IBO) meshItemQuadInWorld;
 
 		public Item(string identifier, Texture2D texture, RectangleF sourceRect)
 		{
@@ -219,7 +219,7 @@ namespace ViMG.Items
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (meshItemQuadInWorld == null)
+			if (meshItemQuadInWorld.VBO == null)
 				MakeMesh(device);
 
 			RectangleF sourceRect = SourceRect;
@@ -283,7 +283,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));*/
 
-			meshItemQuadInWorld = new SimpleMesh<VertexCube, int>(device, vertices, indices);
+			meshItemQuadInWorld = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
 		}
 	}
 }

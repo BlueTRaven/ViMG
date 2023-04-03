@@ -196,7 +196,7 @@ namespace ViMG.Items
 
 		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (meshItemQuadInWorld == null)
+			if (meshItemQuadInWorld.VBO == null)
 				MakeMesh(device);
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,

@@ -19,7 +19,7 @@ float2 SourceRectFarPos;
 float2 TextureSize;
 float2 TexCoordOffset;
 
-VSOutputCube MainVS(in VSInputCube input)
+VSOutputCube MainVS(in VSInputTransparent input)
 {
 	VSOutputCube output = (VSOutputCube)0;
 

@@ -132,13 +132,7 @@ namespace ViMG.Entities
 
 			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-			VertexBuffer VBO = new VertexBuffer(device, typeof(VertexCube), vertices.Count, BufferUsage.WriteOnly);
-			IndexBuffer IBO = new IndexBuffer(device, typeof(int), indices.Count, BufferUsage.WriteOnly);
-
-			VBO.SetData(vertices.ToArray());
-			IBO.SetData(indices.ToArray());
-
-			mesh = (VBO, IBO);
+            mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
     }
 }

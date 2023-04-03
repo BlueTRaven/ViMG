@@ -301,7 +301,7 @@ namespace ViMG
 				List<VertexCube> vertices = new List<VertexCube>();
 				List<int> indices = new List<int>();
 				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, Vector3.One, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
- 				debugMesh = MeshHelper.MakeSimplerMesh(device, vertices, indices);
+ 				debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
 			for (int i = 0; i < hitboxes.Length; i++)

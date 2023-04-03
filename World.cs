@@ -41,11 +41,8 @@ namespace ViMG
 		public ChunkManager ChunkManager;
 		public ChunkGenerator ChunkGenerator;
 
-		private static SimpleMesh<VertexPositionColor, int> meshWireframeCube;
-		private static SimpleMesh<VertexPositionColor, int> meshWireframeUnscaled;
-		private static SimpleMesh<VertexCube, int> meshMiningCube;
-
-		private static SimpleMesh<VertexCube, int> skyboxMesh;
+		private static (VertexBuffer VBO, IndexBuffer IBO) meshMiningCube;
+		private static (VertexBuffer VBO, IndexBuffer IBO) skyboxMesh;
 		private static bool meshesLoaded;
 		public Skybox Skybox;
 
@@ -145,8 +142,7 @@ namespace ViMG
 
 		private void CreateMeshes(GraphicsDevice device)
         {
-			meshWireframeUnscaled = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(1), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-			meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
+			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
 
 			List<VertexCube> vertices = new List<VertexCube>();
 			List<int> indices = new List<int>();
@@ -250,16 +246,14 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 
-			skyboxMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
+			skyboxMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+			//skyboxMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
 			meshesLoaded = true;
 		}
 
 		public void FinishLoading(GraphicsDevice device)
         {
-			if (!skyboxMesh.Uploaded)
-				skyboxMesh.Upload(device);
-
 			//The player reference will not be set up after loading. We need to do that ourselves.
 			//TODO multiplayer
 			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.

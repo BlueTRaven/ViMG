@@ -26,7 +26,7 @@ namespace ViMG.Items
         private CubePosition first;
         private CubePosition second;
 
-        private SimpleMesh<VertexCube, int> meshWireframeCube;
+        private (VertexBuffer VBO, IndexBuffer IBO) meshWireframeCube;
 
         public ItemDebugStructureCopier() : base("DEBUGStructureCopier", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16))
         {
@@ -124,8 +124,13 @@ namespace ViMG.Items
         {
             base.DrawInWorld(device, world, item, transform);
 
-            if (meshWireframeCube == null)
-                meshWireframeCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+            if (meshWireframeCube.VBO == null)
+            {
+                List<VertexCube> vertices = new List<VertexCube>();
+                List<int> indices = new List<int>();
+                MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
+                meshWireframeCube = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices); //MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+            }
 
             if (state != State.None)
             {

@@ -8,6 +8,18 @@ namespace ViMG.VertexDeclarations
 {
     public static class VertexCasts
     {
+        public static List<VertexOpaquePass> ToVertexOpaquePass(this List<VertexCube> cubes)
+        {
+            List<VertexOpaquePass> opaques = new List<VertexOpaquePass>();
+
+            for (int i = 0; i < cubes.Count; i++)
+            {
+                opaques.Add(new VertexOpaquePass(cubes[i]));
+            }
+
+            return opaques;
+        }
+
         public static List<VertexTransparentPass> ToVertexTransparentPass(this List<VertexCube> cubes)
         {
             List<VertexTransparentPass> transparents = new List<VertexTransparentPass>();
