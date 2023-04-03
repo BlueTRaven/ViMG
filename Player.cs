@@ -330,6 +330,8 @@ namespace ViMG
 
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
+
+			Position = deadPlayer.Position;
 		}
 
 		public void FirstCreated()
@@ -1228,7 +1230,11 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.V))
 			{
-				world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE, null));
+				Skullhead slime = new Skullhead(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f);
+				world.EntityManager.Add(slime);
+
+				//for (int i = 0; i < 8; i++)
+					//world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, slime));
                 //world.EntityManager.Add(new ManaStar(new Vector2(Main.random.NextFloat(-70, 70), Main.random.NextFloat(-180, 180))));
                 //world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
             }

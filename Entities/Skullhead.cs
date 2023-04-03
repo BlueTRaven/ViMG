@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
@@ -20,6 +21,8 @@ namespace ViMG.Entities
 			Dash,
 			Rotate,
 			SlowChase,
+			Transition,
+			PostTransitionWait,
         }
 
 		private const float CHASE_TIME = 1f;//6f;
@@ -27,6 +30,8 @@ namespace ViMG.Entities
 		private const float DASH_TIME = 0.75f;
 		private const float ROTATE_TIME = 1.4f; //or, in other words, time between each skull fire
 		private const float SLOW_CHASE_TIME = 8f;
+		private const float TRANSITIONP2_TIME = 3f;
+		private const float POSTTRANSITIONWAIT_TIME = 1.3f;
 
 		private const float CHASE_DISTANCE = Cube.CUBE_SCALE * 12f;
 		private const float DASH_DISTANCE = Cube.CUBE_SCALE * 8f;
@@ -54,6 +59,10 @@ namespace ViMG.Entities
 		private int health;
 		private int maxHealth = 300;
 		private int statMaxHealth;
+
+		private float kbScale = 1.5f;
+
+		private bool transitioned = false;
 
 		private Vector3 targetOffset;
 		private Vector3 targetPosition;
@@ -161,7 +170,9 @@ namespace ViMG.Entities
 
 				if (direction.Length() > CHASE_DISTANCE)
 				{
-					velocity += Vector3.Normalize(direction * Cube.CUBE_SCALE);
+                    EntityHelper.AddCappedVelocity(ref velocity, Vector3.Normalize(direction) * Cube.CUBE_SCALE,
+                        new Vector3(Cube.CUBE_SCALE * 5.5f));
+                    //velocity += Vector3.Normalize(direction * Cube.CUBE_SCALE);
 				}
 				else
 				{
@@ -177,7 +188,7 @@ namespace ViMG.Entities
 					}
 				}
 
-				ClampVelocityLength(Cube.CUBE_SCALE * 16);
+				//ClampVelocityLength(Cube.CUBE_SCALE * 16);
 			}
 			else if (state == State.SetupDash)
             {
@@ -305,11 +316,17 @@ namespace ViMG.Entities
 
 				if (direction.Length() > SLOWCHASE_DISTANCE)
 				{
-					velocity += Vector3.Normalize(direction * Cube.CUBE_SCALE / 2f);
+					//if we get knocked back too far away, clamp velocity
+					if (direction.Length() > Cube.CUBE_SCALE * 16 * 2.5f)
+						velocity = Vector3.Normalize(velocity) * Cube.CUBE_SCALE * 5.5f;
+
+					EntityHelper.AddCappedVelocity(ref velocity, Vector3.Normalize(direction) * Cube.CUBE_SCALE / 4f,
+						new Vector3(Cube.CUBE_SCALE * 5.5f));
 				}
-				else
+				
+				if (direction.Length() < SLOWCHASE_DISTANCE || stateTimer <= 4f)
 				{
-					velocity *= 0.98f;
+					//velocity *= 0.98f;
 
 					if (stateTimer <= 0)
 					{
@@ -319,8 +336,41 @@ namespace ViMG.Entities
 					}
 				}
 
-				ClampVelocityLength(Cube.CUBE_SCALE * 5.5f);
+				//ClampVelocityLength(Cube.CUBE_SCALE * 5.5f);
 			}
+			else if (state == State.Transition)
+			{
+                stateTimer -= (float)deltaTime;
+
+                velocity *= 0.9f;
+
+				kbScale = 0;
+
+				if (stateTimer <= 0)
+				{
+					state = State.PostTransitionWait;
+                    stateTimer = POSTTRANSITIONWAIT_TIME;
+                    stateTime = POSTTRANSITIONWAIT_TIME;
+					transitioned = true;
+
+                    for (int i = 0; i < 8; i++)
+                        world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, this));
+                }
+			}
+			else if (state == State.PostTransitionWait)
+			{
+                stateTimer -= (float)deltaTime;
+				velocity = Vector3.Zero;
+
+                if (stateTimer <= 0)
+                {
+					kbScale = 1;	//more resistance to knockback
+
+                    state = State.Chase;
+                    stateTimer = CHASE_TIME;
+                    stateTime = CHASE_TIME;
+                }
+            }
 
 			if (world.player.Health <= 0)
             {
@@ -379,6 +429,9 @@ namespace ViMG.Entities
 				scale = new Vector3(1, 160f / 128f, 1);
 			}
 
+			if (transitioned)
+				sourceRect.x += 256f;
+
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skullhead"),
@@ -413,9 +466,10 @@ namespace ViMG.Entities
 			{
 				if (other.group == HitboxManager.Group.PLAYER_DEAL)
 				{
-					Vector3 direction = Vector3.Normalize(other.direction);
+					EntityHelper.CalculateKnockback(ref velocity, other, kbScale);
+					//Vector3 direction = Vector3.Normalize(other.direction);
 
-					velocity = direction * Cube.CUBE_SCALE * 3f * other.knockback;
+					//velocity = direction * Cube.CUBE_SCALE * 3f * other.knockback;
 
 					health -= other.damage;
 
@@ -426,6 +480,15 @@ namespace ViMG.Entities
 
 						if (hitbox != -1)
 							world.HitboxManager.Remove(hitbox);
+					}
+
+					if (state != State.Transition && !transitioned && (float)health / (float)maxHealth <= 0.3f)
+					{
+						state = State.Transition;
+						stateTime = TRANSITIONP2_TIME;
+						stateTimer = stateTime;
+
+						//velocity = Vector3.Normalize(other.direction) * Cube.CUBE_SCALE * 8f;
 					}
 
 					buffManager.AddBuffs(other.applyBuffs);

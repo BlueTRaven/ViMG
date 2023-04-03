@@ -13,6 +13,7 @@ namespace ViMG.Entities
 {
     public class SkullheadEye : Entity, IHasStats
     {
+        private const float CLAMP_DIST = Cube.CUBE_SCALE * 4f;
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
         private static (VertexBuffer VBO, IndexBuffer IBO) lineMesh;
         private AIFlierMelee<SkullheadEye> ai;
@@ -31,11 +32,11 @@ namespace ViMG.Entities
         };
 
         private Vector3 anchor;
-        private Skullhead parent;
+        private Entity parent;
 
         private int MaxHealth = 10;
 
-        public SkullheadEye(Vector3 position, Skullhead parent)
+        public SkullheadEye(Vector3 position, Entity parent)
         {
             this.Position = position;
             this.parent = parent;
@@ -53,9 +54,9 @@ namespace ViMG.Entities
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
                 noticeHandler, buffManager, MaxHealth);
             ai.TurnSpeed = MathHelper.ToRadians(3f);
-            ai.Facing = Vector3.Forward;
+            ai.CollidesWithWorld = false;
 
-            anchor = Position + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8), Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8), Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
+            anchor = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
         }
 
         public override void OnUnload()
@@ -69,14 +70,22 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            Vector3 dir = Position - anchor;
+            AlwaysRender = true;
+
+            Vector3 offsetAnchor = parent.Position + anchor;
+            Vector3 dir = Position - offsetAnchor;
             float dist = dir.Length();
             dir.Normalize();
 
-            if (dist > Cube.CUBE_SCALE * 8f)
-                Position = anchor + dir * Cube.CUBE_SCALE * 8f;
+            if (dist > Cube.CUBE_SCALE * CLAMP_DIST)
+            {
+                ai.Velocity -= dir * Cube.CUBE_SCALE * 1.5f;
+            }
 
             ai.Update(deltaTime);
+
+            if (parent.Dead)
+                world.EntityManager.Remove(this);
         }
 
         public void SetStats(Stats stats)
@@ -112,9 +121,10 @@ namespace ViMG.Entities
             if (ai.Health < MaxHealth)
                 DrawHelper3D.DrawHealthbar(device, ai.Health, MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
 
+            Vector3 offsetAnchor = parent.Position;
             //Offset it slightly so we don't see the line poking through the billboard
-            Vector3 offset = Vector3.Normalize(anchor - Position) * Cube.CUBE_SCALE / 10f;
-            DrawHelper3D.DrawLineTiled(Position + offset, anchor, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, lineMesh,
+            Vector3 offset = Vector3.Normalize(offsetAnchor - Position) * Cube.CUBE_SCALE / 10f;
+            DrawHelper3D.DrawLineTiled(Position + offset, offsetAnchor - offset, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, lineMesh,
                 Main.assetsManager.GetAsset<Texture2D>("skullhead_eye"), new RectangleF(52, 0, 4, 16), Color.White);
         }
     }

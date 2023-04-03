@@ -142,27 +142,27 @@ namespace ViMG.Entities
 
         public static void AddCappedVelocity(ref Vector3 velocity, in Vector3 addVelocity, in Vector3 maxVelocity)
         {
-            float maxLen = maxVelocity.Length();
-
-            //adding velocity would not put us over the maximum (or would decrease it)
-            if ((velocity + addVelocity).Length() < maxLen)
+            float maxVelLen = maxVelocity.Length();
+            if (velocity.Length() < maxVelLen && (velocity + addVelocity).Length() > maxVelLen)
+            {
+                //not above max velocity; set velocity to max velocity.
+                velocity = (velocity + addVelocity) * maxVelLen;
+            }
+            else if (velocity.Length() > maxVelLen)
+            {
+                //already above max velocity
+                //in this scenario just subtract some velocity.
+                //Note that addVelocity can be in the direction we want to go in (which would add velocity)
+                //so we just subtract the length from velocity.
+                velocity -= Vector3.Normalize(velocity) * addVelocity.Length();
+            }
+            else
             {
                 velocity += addVelocity;
-            }
-            //adding velocity would decrease length
-            else if ((velocity + addVelocity).Length() < velocity.Length())
-            {
-                velocity += addVelocity;
-            }
-            //if adding to the current velocity would put us from under to over the maximum
-            else if (velocity.Length() < maxLen && (velocity + addVelocity).Length() >= maxLen)
-            {
-                //just set to the direction
-                velocity = Vector3.Normalize(velocity + addVelocity) * maxLen;
             }
         }
 
-        public static void CalculateKnockback(ref Vector3 velocity, HitboxManager.Hitbox other)
+        public static void CalculateKnockback(ref Vector3 velocity, HitboxManager.Hitbox other, float kbMod = 1)
         {
             Vector3 direction = Vector3.Normalize(other.direction);
             //knockback shouldn't be allowed to hit enemies down
@@ -170,7 +170,7 @@ namespace ViMG.Entities
                 direction.Y = 1;
 
             Vector3 scaledKnockback = direction * new Vector3(Cube.CUBE_SCALE * 3.2f, Cube.CUBE_SCALE * 6.4f, Cube.CUBE_SCALE * 3.2f);
-            scaledKnockback = Vector3.Normalize(scaledKnockback) * (scaledKnockback.Length() + other.knockback);
+            scaledKnockback = Vector3.Normalize(scaledKnockback) * (scaledKnockback.Length() + other.knockback * kbMod);
             velocity = scaledKnockback;
         }
     }

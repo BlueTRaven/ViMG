@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemRodOfShock : Item
     {
-        private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 6, 0), 0);  //TODO 3 magic use
+        private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 6, 1f), 0);  //TODO 3 magic use
 
         public ItemRodOfShock() : base("staff_spell_shock", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 96, 16, 16))
         {

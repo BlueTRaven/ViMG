@@ -29,6 +29,8 @@ namespace ViMG.Entities
 		public float Acceleration = Cube.CUBE_SCALE / 2f;
 		public float TurnSpeed = MathHelper.ToRadians(5f);
 
+		public bool CollidesWithWorld = true;
+
 		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 2f;
 		public float AttackTargetDistance = Cube.CUBE_SCALE * 2f;
 
@@ -202,7 +204,8 @@ namespace ViMG.Entities
 
 			entity.Position += Velocity * (float)deltaTime;
 
-			UpdateCollision();
+			if (CollidesWithWorld)
+				UpdateCollision();
 
 			if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
 				entity.world.EntityManager.Remove(entity);
