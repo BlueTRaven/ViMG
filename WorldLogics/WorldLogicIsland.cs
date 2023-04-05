@@ -32,6 +32,8 @@ namespace ViMG.WorldLogics
         
 		private int lavaLight;
 
+		private WeatherManager weatherManager = new WeatherManager();
+
         public WorldLogicIsland(string worldName, GraphicsDevice device) : base(device)
         {
 			float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
@@ -148,6 +150,8 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
+			weatherManager.Update(deltaTime, world);
+
 			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
@@ -219,6 +223,7 @@ namespace ViMG.WorldLogics
         {
             base.Draw(world, device);
 
+			weatherManager.Draw(device);
             /*if (Main.inputManager.JustPressed(Keys.V))
             {
                 directionalLight.Dispose();

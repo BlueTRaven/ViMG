@@ -68,7 +68,9 @@ namespace ViMG
                 int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
                 ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
 
-                cubes[i] = registry[id];
+                if (id - 1 < 0)
+                    cubes[i] = def;
+                else cubes[i] = registry[id - 1];
             }
         }
 
