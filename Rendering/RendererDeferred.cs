@@ -14,6 +14,22 @@ namespace ViMG.Rendering
 {
     public class RendererDeferred
     {
+        public struct DrawSourceRectParameters
+        {
+            public bool UseSourceRect;
+            public Vector2 SourceRectPos;
+            public Vector2 SourceRectFarPos;
+
+            public DrawSourceRectParameters(RectangleF sourceRect)
+            {
+                RectangleF rect = sourceRect;
+
+                UseSourceRect = true;
+                SourceRectPos = rect.Position;
+                SourceRectFarPos = rect.FarPosition;
+            }
+        }
+
         public struct PointLightVolumeDraw
         {
             public int LightIndex;
@@ -44,10 +60,7 @@ namespace ViMG.Rendering
             public Matrix World;
             public Matrix WorldNormal;
 
-            public bool UseSourceRect;
-            public Vector2 SourceRectPos;
-            public Vector2 SourceRectFarPos;
-            public Vector2 TextureSize;
+            public DrawSourceRectParameters SourceRect;
 
             public Vector3 TintColor;
 
@@ -62,23 +75,36 @@ namespace ViMG.Rendering
                 this.WorldNormal = Matrix.Transpose(Matrix.Invert(world));
                 this.TintColor = tintColor.GetValueOrDefault(Color.White.ToVector3());
 
-                if (sourceRect != null)
-                {
-                    RectangleF rect = sourceRect.Value;
-
-                    UseSourceRect = true;
-                    SourceRectPos = rect.Position;
-                    SourceRectFarPos = rect.FarPosition;
-                }
-                else
-                {
-                    UseSourceRect = false;
-                    SourceRectPos = new Vector2();
-                    SourceRectFarPos = new Vector2();
-                }
-                
-                TextureSize = new Vector2(diffuse.Width, diffuse.Height);
+                if (sourceRect.HasValue)
+                    SourceRect = new DrawSourceRectParameters(sourceRect.Value);
             }
+        }
+
+        //Instanced GBuffer draws share:
+        //Textures
+        //Meshes
+        //And may have per-instance:
+        //World matrices
+        //Tint colors
+        //Source rectangles
+        public struct InstancedGBufferDraw
+        {
+            public Texture2D Diffuse;
+            public Texture2D Specular;
+            public Texture2D Emissive;
+
+            public VertexBuffer VBO;
+            public IndexBuffer IBO;
+
+            public Matrix[] World;
+            public Matrix[] WorldNormal;
+
+            public bool UseSourceRect;
+            public Vector2 SourceRectPos;
+            public Vector2 SourceRectFarPos;
+            public Vector2 TextureSize;
+
+            public Vector3[] TintColor;
         }
 
         public struct TransparentDraw
@@ -90,10 +116,7 @@ namespace ViMG.Rendering
             public VertexBuffer VBO;
             public IndexBuffer IBO;
 
-            public bool UseSourceRect;
-            public Vector2 SourceRectPos;
-            public Vector2 SourceRectFarPos;
-            public Vector2 TextureSize;
+            public DrawSourceRectParameters SourceRect;
 
             public Vector4 TintColor;
 
@@ -106,26 +129,12 @@ namespace ViMG.Rendering
                 this.VBO = vbo;
                 this.IBO = ibo;
 
-                if (sourceRect != null)
-                {
-                    RectangleF rect = sourceRect.Value;
-
-                    UseSourceRect = true;
-                    SourceRectPos = rect.Position;
-                    SourceRectFarPos = rect.FarPosition;
-                }
-                else
-                {
-                    UseSourceRect = false;
-                    SourceRectPos = new Vector2();
-                    SourceRectFarPos = new Vector2();
-                }
+                if (sourceRect.HasValue)
+                    SourceRect = new DrawSourceRectParameters(sourceRect.Value);
 
                 if (tintColor == null)
                     TintColor = Color.White.ToVector4();
                 else TintColor = tintColor.Value.ToVector4();
-
-                TextureSize = new Vector2(diffuse.Width, diffuse.Height);
             }
         }
 
@@ -510,11 +519,11 @@ namespace ViMG.Rendering
 
                         EffectGBuffer.Parameters["TintColor"].SetValue(draw.TintColor);
 
-                        if (draw.UseSourceRect)
+                        if (draw.SourceRect.UseSourceRect)
                         {
                             EffectGBuffer.Parameters["UseSourceRect"].SetValue(true);
-                            EffectGBuffer.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
-                            EffectGBuffer.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                            EffectGBuffer.Parameters["SourceRectPos"].SetValue(draw.SourceRect.SourceRectPos);
+                            EffectGBuffer.Parameters["SourceRectFarPos"].SetValue(draw.SourceRect.SourceRectFarPos);
                         }
                         else EffectGBuffer.Parameters["UseSourceRect"].SetValue(false);
                         
@@ -692,15 +701,15 @@ namespace ViMG.Rendering
                 EffectSkybox.Parameters["World"].SetValue(draw.Transform);
                 EffectSkybox.Parameters["TintColor"].SetValue(draw.TintColor);
 
-                if (draw.UseSourceRect)
+                if (draw.SourceRect.UseSourceRect)
                 {
                     EffectSkybox.Parameters["UseSourceRect"].SetValue(true);
-                    EffectSkybox.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
-                    EffectSkybox.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                    EffectSkybox.Parameters["SourceRectPos"].SetValue(draw.SourceRect.SourceRectPos);
+                    EffectSkybox.Parameters["SourceRectFarPos"].SetValue(draw.SourceRect.SourceRectFarPos);
                 }
                 else EffectSkybox.Parameters["UseSourceRect"].SetValue(false);
 
-                EffectSkybox.Parameters["TextureSize"].SetValue(draw.TextureSize);
+                EffectSkybox.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
 
                 foreach (var pass in EffectSkybox.CurrentTechnique.Passes)
                 {
@@ -804,15 +813,15 @@ namespace ViMG.Rendering
                 EffectTransparent.Parameters["World"].SetValue(draw.Transform);
                 EffectTransparent.Parameters["TintColor"].SetValue(draw.TintColor);
 
-                if (draw.UseSourceRect)
+                if (draw.SourceRect.UseSourceRect)
                 {
                     EffectTransparent.Parameters["UseSourceRect"].SetValue(true);
-                    EffectTransparent.Parameters["SourceRectPos"].SetValue(draw.SourceRectPos);
-                    EffectTransparent.Parameters["SourceRectFarPos"].SetValue(draw.SourceRectFarPos);
+                    EffectTransparent.Parameters["SourceRectPos"].SetValue(draw.SourceRect.SourceRectPos);
+                    EffectTransparent.Parameters["SourceRectFarPos"].SetValue(draw.SourceRect.SourceRectFarPos);
                 }
                 else EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
 
-                EffectTransparent.Parameters["TextureSize"].SetValue(draw.TextureSize);
+                EffectTransparent.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
 
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
