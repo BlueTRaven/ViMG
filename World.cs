@@ -249,7 +249,6 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 
 			skyboxMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-			//skyboxMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 
 			meshesLoaded = true;
 		}
@@ -640,7 +639,6 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateScale(DrawDistanceHoriz * 1.95f * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
 						Skybox.Night, DrawHelper.WhitePixel,
@@ -653,13 +651,24 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
 						Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateScale(DrawDistanceHoriz * 2 * (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)) *
 						Matrix.CreateTranslation(Main.camera.Position),
 						Skybox.Day, DrawHelper.BlackPixel,
 						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
 				}
 
-				if (Main.Debug)
+				/*Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+				{
+					SortValue = 100,
+					Diffuse = Skybox.Weather,
+					Emissive = DrawHelper.BlackPixel,
+					TintColor = Color.White.ToVector4(),
+					Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						Matrix.CreateTranslation(Main.camera.Position),
+					VBO = skyboxMesh.VBO,
+					IBO = skyboxMesh.IBO,
+				});*/
+
+                if (Main.Debug)
 					HitboxManager.DrawDebug(device);
 
 				if (Main.Debug)

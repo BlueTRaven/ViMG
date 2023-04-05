@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +23,9 @@ namespace ViMG.WorldLogics
 		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
+        private static (VertexBuffer VBO, IndexBuffer IBO) skyboxCloudsMesh;
 
-		private float alive;
+        private float alive;
         private DirectionalLight directionalLight;
 		//1 and last are replaced by the previous directional light color to prevent jumping colors.
 		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
@@ -80,14 +82,57 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
 
 			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-		}
+
+			vertices = new List<VertexCube>();
+			indices = new List<int>();
+
+            const int CYLINDER_NUM_SIDES = 16;
+
+            for (int i = 0; i < CYLINDER_NUM_SIDES; i++)
+            {
+                float tc = (float)i / (float)CYLINDER_NUM_SIDES;
+                float tn = ((float)i + 1) / (float)CYLINDER_NUM_SIDES;
+
+                float cc = float.Cos(float.Pi * 2 * tc);
+                float sc = float.Sin(float.Pi * 2 * tc);
+                float cn = float.Cos(float.Pi * 2 * tn);
+                float sn = float.Sin(float.Pi * 2 * tn);
+
+                //cylinder_left/right_top/bottom_near/far
+                Vector3 p1 = new Vector3(cc, 0, sc);
+                Vector3 p2 = new Vector3(cc, 1, sc);
+                Vector3 p3 = new Vector3(cn, 1, sn);
+                Vector3 p4 = new Vector3(cn, 0, sn);
+
+                Vector2 tc1 = new Vector2(tc * 4f, 1);
+                Vector2 tc2 = new Vector2(tc * 4f, 0);
+                Vector2 tc3 = new Vector2(tn * 4f, 0);
+                Vector2 tc4 = new Vector2(tn * 4f, 1);
+
+                int offset = vertices.Count;
+                indices.Add(offset + 0);
+                indices.Add(offset + 1);
+                indices.Add(offset + 2);
+                indices.Add(offset + 2);
+                indices.Add(offset + 3);
+                indices.Add(offset + 0);
+
+                vertices.Add(new VertexCube(p1, Color.White, tc1, new Vector3(0, 1, 0)));
+                vertices.Add(new VertexCube(p2, Color.White, tc2, new Vector3(0, 1, 0)));
+                vertices.Add(new VertexCube(p3, Color.White, tc3, new Vector3(0, 1, 0)));
+                vertices.Add(new VertexCube(p4, Color.White, tc4, new Vector3(0, 1, 0)));
+            }
+
+            skyboxCloudsMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+        }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
 			world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
-			world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
+			world.Skybox.Weather = Main.assetsManager.GetAsset<Texture2D>("skybox_stormy");
+            world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
 
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSMerchant(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));
@@ -196,13 +241,40 @@ namespace ViMG.WorldLogics
 
 			float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
-			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
+			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(200,
 				Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				Matrix.CreateTranslation(world.player.Position),
 				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
 
-			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
+            Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+            {
+                SortValue = 199,
+                Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_clouds"),
+                Emissive = null,
+                TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()),
+                Transform = 
+				Matrix.CreateScale(1, 0.5f, 1) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
+				Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
+                VBO = skyboxCloudsMesh.VBO,
+                IBO = skyboxCloudsMesh.IBO,
+            });
+
+            Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+            {
+                SortValue = 199,
+                Diffuse = DrawHelper.WhitePixel,
+                Emissive = null,
+                TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()),
+                Transform =
+                Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
+                Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
+                VBO = skyboxCloudsMesh.VBO,
+                IBO = skyboxCloudsMesh.IBO,
+            });
+
+            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
 					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);

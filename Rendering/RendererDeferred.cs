@@ -680,6 +680,9 @@ namespace ViMG.Rendering
             EffectSkybox.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
             EffectSkybox.Parameters["SeaLevel"].SetValue(Generation.ChunkGeneratorIsland.SEA_LEVEL * Cubes.Cube.CUBE_SCALE);
 
+            //TODO sorting should be done in update, not draw
+            DrawsSkyboxPass = DrawsSkyboxPass.OrderByDescending(x => x.SortValue).ToList();
+
             foreach (TransparentDraw draw in DrawsSkyboxPass)
             {
                 device.SetVertexBuffer(draw.VBO);
