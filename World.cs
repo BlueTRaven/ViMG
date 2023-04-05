@@ -53,6 +53,8 @@ namespace ViMG
 		public int DrawDistanceVert = 6;
 		public int DrawRadius = 6;
 
+		public float TimeScale = 1f;
+
 		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
@@ -290,6 +292,8 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
+			deltaTime *= TimeScale;
+
 			PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			ChunkLoadManager.UpdateLoadTarget(player.Position);

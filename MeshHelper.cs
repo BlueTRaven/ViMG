@@ -116,19 +116,22 @@ namespace ViMG
 			return MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (List<TVertex> vertices, List<TIndex> indices) tuple)
-			where TVertex : struct, IVertexType
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (List<TVertex> vertices, List<TIndex> indices) tuple, bool bakeTangents = true)
+			where TVertex : struct, IVertexType, IVertexDeclGetters
 			where TIndex : struct
 		{
-			return MakeSimplerMesh(device, tuple.vertices, tuple.indices);
+			return MakeSimplerMesh(device, tuple.vertices, tuple.indices, bakeTangents);
         }
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices) 
-			where TVertex : struct, IVertexType
-			where TIndex : struct
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices, bool bakeTangents = true) 
+			where TVertex : struct, IVertexType, IVertexDeclGetters
+            where TIndex : struct
         {
 			if (vertices.Count == 0)
 				return (null, null);
+
+			if (bakeTangents)
+				BakeTangents(0, vertices.Count, vertices);
 
 			VertexBuffer VBO = new VertexBuffer(device, typeof(TVertex), vertices.Count, BufferUsage.WriteOnly);
 			IndexBuffer IBO = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
@@ -139,7 +142,50 @@ namespace ViMG
 			return (VBO, IBO);
         }
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeCenteredQuad(GraphicsDevice device, float width, float height)
+        public static void BakeTangents<T>(int start, int end, List<T> vertices)
+			where T : struct, IVertexDeclGetters
+        {
+            for (int i = start; i < end; i += 4)
+            {
+                T vert1 = vertices[i + 0];
+                T vert2 = vertices[i + 1];
+                T vert3 = vertices[i + 2];
+                T vert4 = vertices[i + 3];
+
+                Vector3 edge1 = vert2.GetPosition() - vert1.GetPosition();
+                Vector3 edge2 = vert3.GetPosition() - vert1.GetPosition();
+                Vector2 dUV1 = vert2.GetUV() - vert1.GetUV();
+                Vector2 dUV2 = vert3.GetUV() - vert1.GetUV();
+
+                float f = 1 / (dUV1.X * dUV2.Y - dUV2.X * dUV1.Y);
+
+				Vector3 tangent = vert1.GetPosition() - vert2.GetPosition();
+                /*Vector3 tangent = new Vector3(
+                    f * (dUV2.Y * edge1.X - dUV1.Y * edge2.X),
+                    f * (dUV2.Y * edge1.Y - dUV1.Y * edge2.Y),
+                    f * (dUV2.Y * edge1.Z - dUV1.Y * edge2.Z)
+                    );*/
+
+				Vector3 bitangent = Vector3.Cross(vert1.GetNormal(), tangent);
+                /*Vector3 bitangent = new Vector3(
+                    f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
+                    f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
+                    f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
+                    );*/
+
+				vert1.SetTangent(tangent, bitangent);
+                vert2.SetTangent(tangent, bitangent);
+                vert3.SetTangent(tangent, bitangent);
+                vert4.SetTangent(tangent, bitangent);
+
+                vertices[i + 0] = vert1;
+                vertices[i + 1] = vert2;
+                vertices[i + 2] = vert3;
+				vertices[i + 3] = vert4;
+            }
+        }
+
+        public static (VertexBuffer VBO, IndexBuffer IBO) MakeCenteredQuad(GraphicsDevice device, float width, float height)
 		{
             Vector3 min = -new Vector3(width / 2f, height / 2f, 0);
             Vector3 max = new Vector3(width / 2f, height / 2f, 0);

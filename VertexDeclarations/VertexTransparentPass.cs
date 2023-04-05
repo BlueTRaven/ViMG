@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ViMG.VertexDeclarations
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct VertexTransparentPass : IVertexType
+    public struct VertexTransparentPass : IVertexType, IVertexDeclGetters
     {
         public static readonly VertexDeclaration VertexDeclaration;
 
@@ -68,6 +68,25 @@ namespace ViMG.VertexDeclarations
             hashCode = hashCode * -1521134295 + EqualityComparer<Color>.Default.GetHashCode(Color);
             hashCode = hashCode * -1521134295 + EqualityComparer<Vector2>.Default.GetHashCode(TextureCoordinate);
             return hashCode;
+        }
+
+        public Vector3 GetPosition()
+        {
+            return Position;
+        }
+
+        public Vector2 GetUV()
+        {
+            return TextureCoordinate;
+        }
+
+        public Vector3 GetNormal()
+        {
+            return Vector3.Zero;
+        }
+
+        public void SetTangent(Vector3 tangent, Vector3 bitangent)
+        {
         }
 
         static VertexTransparentPass()

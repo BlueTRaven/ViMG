@@ -8,6 +8,8 @@ struct VSInputCube
 	float4 Color : COLOR0;
 	float2 TexCoord : TEXCOORD0;
 	float3 Normal : NORMAL0;
+    float3 Tangent : NORMAL1;
+    float3 Bitangent : NORMAL2;
 	float AO : TEXCOORD1;
 
 	float AnimFrameTime : TEXCOORD2;
@@ -45,7 +47,6 @@ struct VSOutputCube
 	float AO : TEXCOORD4;
 	float DepthVS : DEPTHVS;
 	float2 Depth : TEXCOORD5;
-	//float4 PositionLS : TEXCOORD5;
 };
 
 struct VSInputPC

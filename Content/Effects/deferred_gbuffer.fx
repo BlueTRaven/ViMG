@@ -41,17 +41,40 @@ struct PSOutputGBuffer
 	float4 AO					: COLOR5;
 };
 
-VSOutputCube MainVS(in VSInputCube input)
+struct VSOutputGBuffer
 {
-	VSOutputCube output = (VSOutputCube)0;
+    float4 Position		: SV_Position;
+    float4 Color		: COLOR0;
+    float2 TexCoord		: TEXCOORD0;
+    float3 PositionWS	: TEXCOORD1;
+    float4 PositionSS	: TEXCOORD2;
+    float3x3 TBN		: TEXCOORD3;
+    float3 Normal		: NORMAL0;
+    float AO			: AO;
+    float DepthVS		: DEPTHVS;
+    //float2 Depth		: DEPTHA;
+};
+
+VSOutputGBuffer MainVS(in VSInputCube input)
+{
+    VSOutputGBuffer output = (VSOutputGBuffer) 0;
 
 	output.PositionWS = mul(input.Position, World).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
 	output.PositionSS = output.Position;
 	output.Color = input.Color * float4(TintColor, 1);
+	
+    float3 T = normalize(mul(float4(input.Tangent, 0), WorldNormal)).xyz;
+    float3 B = normalize(mul(float4(input.Bitangent, 0), WorldNormal)).xyz;
+    float3 N = normalize(mul(float4(input.Normal, 0), WorldNormal)).xyz;
+	
+	//might need to be transposed
+    output.TBN = float3x3(T, B, N);
+	
 	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
+	
 	output.AO = input.AO;
-	output.Depth = output.Position.zw;
+	//output.Depth = output.Position.zw;
 	output.DepthVS = output.Position.w;
 
 	if (UseSourceRect)
@@ -97,7 +120,7 @@ float3 ScreenSpaceToWorldSpace(float2 screenSpace, float depth)
 	return position_v.xyz / position_v.w;
 }
 
-PSOutputGBuffer MainPS(VSOutputCube input)
+PSOutputGBuffer MainPS(VSOutputGBuffer input)
 {
 	float4 albedoSample = Diffuse.Sample(Sampler, input.TexCoord);
 	if (albedoSample.a < 0.1)
@@ -112,8 +135,9 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	float3 emissive = Emissive.Sample(Sampler, input.TexCoord).rgb * input.Color.rgb;
 
-    float normal = Normal.Sample(Sampler, input.TexCoord);
-    normal = normalize(normal * 2.0 - 1.0);
+    float3 normal = Normal.Sample(Sampler, input.TexCoord).rgb;
+    normal = normal * 2.0 - 1.0;	//to [-1, 1]
+    normal = normalize(mul(normal, input.TBN));
 	
 	float depth = input.DepthVS;
 
@@ -124,7 +148,7 @@ PSOutputGBuffer MainPS(VSOutputCube input)
 
 	output.Depth = float4(depth, depth, depth, 1.0);
 	output.Position = float4(input.PositionWS, 1);
-	output.Normal = float4(normalize(input.Normal), 1);		//float4(-normalize(cross(ddx(input.PositionWS), ddy(input.PositionWS))), 1);
+    output.Normal = float4(normal.x, normal.y, normal.z, 1); //float4(-normalize(cross(ddx(input.PositionWS), ddy(input.PositionWS))), 1);
 	output.AO = float4(input.AO, input.AO, input.AO, 1);
 	
 	return output;

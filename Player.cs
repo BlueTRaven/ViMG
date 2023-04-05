@@ -1122,6 +1122,8 @@ namespace ViMG
             fallStartY = Position.Y;    //so we don't immediately die sometimes
         }
 
+		private float DEBUGTimeSkipHeldTime;
+
 		private void UpdateMovement(double deltaTime)
 		{
 			Vector3 actualMaxVel = MaxVelocity;
@@ -1223,12 +1225,25 @@ namespace ViMG
 
 			UpdateMaybeDash(deltaTime);
 
-			if (Main.inputManager.JustPressed(Keys.T))
-			{
-				world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-			}
+            DEBUGTimeSkipHeldTime += (float)deltaTime;
 
-			if (Main.inputManager.JustPressed(Keys.V))
+            if (Main.inputManager.JustPressed(Keys.T))
+			{
+				DEBUGTimeSkipHeldTime = 0;
+                world.TimeScale = 2f;
+            }
+
+			if (Main.inputManager.JustReleased(Keys.T))
+			{
+                world.TimeScale = 1f;
+
+                if (DEBUGTimeSkipHeldTime <= 0.25f)
+                    world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+
+                DEBUGTimeSkipHeldTime = 0;
+            }
+
+            if (Main.inputManager.JustPressed(Keys.V))
 			{
 				Skullhead slime = new Skullhead(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f);
 				world.EntityManager.Add(slime);

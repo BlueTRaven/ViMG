@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ViMG.VertexDeclarations
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct VertexOpaquePass : IVertexType
+    public struct VertexOpaquePass : IVertexType, IVertexDeclGetters
     {
         public static readonly VertexDeclaration VertexDeclaration;
 
@@ -18,6 +18,8 @@ namespace ViMG.VertexDeclarations
         public Color Color;
         public Vector2 TextureCoordinate;
         public Vector3 Normal;
+        public Vector3 Tangent;
+        public Vector3 Bitangent;
         public float AO;
 
         public float AnimFrameTime;
@@ -30,6 +32,8 @@ namespace ViMG.VertexDeclarations
             Color = vertex.Color;
             TextureCoordinate = vertex.TextureCoordinate;
             Normal = vertex.Normal;
+            Tangent = vertex.Tangent;
+            Bitangent = vertex.Bitangent;
             AO = vertex.AO;
 
             AnimFrameTime = vertex.AnimFrameTime;
@@ -84,18 +88,52 @@ namespace ViMG.VertexDeclarations
             return hashCode;
         }
 
+        public Vector3 GetPosition()
+        {
+            return Position;
+        }
+
+        public Vector2 GetUV()
+        {
+            return TextureCoordinate;
+        }
+
+        public Vector3 GetNormal()
+        {
+            return Normal;
+        }
+
+        public void SetTangent(Vector3 tangent, Vector3 bitangent)
+        {
+            this.Tangent = tangent;
+            this.Bitangent = bitangent;
+        }
+
         static VertexOpaquePass()
         {
             var elements = new VertexElement[]
             {
-                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Position").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Color").ToInt32(), VertexElementFormat.Color, VertexElementUsage.Color, 0),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "TextureCoordinate").ToInt32(), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Normal").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Tangent").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 1),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Bitangent").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 2),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AO").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameTime").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "NumAnimFrames").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
+                
+                /*new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0),
                 new VertexElement(12 + 4, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
                 new VertexElement(12 + 4 + 8, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                new VertexElement(12 + 4 + 8 + 12, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-                new VertexElement(12 + 4 + 8 + 12 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
-                new VertexElement(12 + 4 + 8 + 12 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
-                new VertexElement(12 + 4 + 8 + 12 + 4 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
+                new VertexElement(12 + 4 + 8 + 12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 1),
+                new VertexElement(12 + 4 + 8 + 12 + 12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 2),
+                new VertexElement(12 + 4 + 8 + 12 + 12 + 12, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
+                new VertexElement(12 + 4 + 8 + 12 + 12 + 12 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
+                new VertexElement(12 + 4 + 8 + 12 + 12 + 12 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
+                new VertexElement(12 + 4 + 8 + 12 + 12 + 12 + 4 + 4 + 4, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),*/
             };
             VertexDeclaration = new VertexDeclaration(elements);
         }

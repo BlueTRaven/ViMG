@@ -504,7 +504,7 @@ namespace ViMG.Rendering
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
 
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
-                        //EffectGBuffer.Parameters["Normal"].SetValue(DrawHelper.NormalPixel);
+                        EffectGBuffer.Parameters["Normal"].SetValue(Main.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"));
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
                         EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
 
