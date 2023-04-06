@@ -71,6 +71,40 @@ namespace ViMG.WorldLogics
             Storming,       //Weather skybox w/ rain particle effect and lightning
         }
 
+        public enum WeatherSeverity
+        {
+            Low,
+            Medium,
+            High
+        }
+        
+        private record struct Transition
+        {
+            public WeatherStats A;
+            public WeatherStats B;
+            public float Time;
+        }
+
+        private struct WeatherStats
+        {
+            public WeatherType WType;
+
+            public Vector3 DirLightFacing;
+            public Color DirLightColor;
+            public float SkyboxAlpha;
+            public Color SkyboxColor;
+            public Vector2 FogExtents;
+        }
+
+        public record struct PublicTransitionInfo
+        {
+            public WeatherType A;
+            public WeatherType B;
+            public float TimeLeft;
+            public float Time;
+        }
+
+        #region Particle Stuff
         private record struct ParticleEmissionSettings
         {
             public Point particlesPerEmit;
@@ -92,33 +126,166 @@ namespace ViMG.WorldLogics
         private RainParticle[] particles = new RainParticle[MAX_RAIN_PARTICLES];
         private CubePosition[] queryPositions = new CubePosition[MAX_RAIN_PARTICLES];
         private Cube[] touchedCubes = new Cube[MAX_RAIN_PARTICLES];
+        private float timeUntilNextEmit;
 
         private int min;
         private int max;
+        #endregion
 
-        public float WeatherTimer;  //How long the current weather has remaining
-        public float WeatherTime;   //The overall time of the current weather
+        public float Timer;  //How long the current weather has remaining
+        public float Time;   //The overall time of the current weather
 
-        private float timeUntilNextEmit;
+        private WeatherStats currentWeather;
+
+        private Transition currentTransition;
+        private float transitionTimer;
 
         public WeatherManager(GraphicsDevice device)
         {
             drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
+
+            currentWeather = MakeDefaultWeatherState(Color.White);
         }
 
         public void Update(double deltaTime, World world, DirectionalLight directionalLight, ref Color lightColor)
         {
-            WeatherTimer -= (float)deltaTime;
+            Timer -= (float)deltaTime;
             timeUntilNextEmit -= (float)deltaTime;
 
-            Main.Renderer.FogExtents = new Vector2(Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 32);
+            if (transitionTimer > 0)
+            {
+                transitionTimer -= (float)deltaTime;
 
-            lightColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingDLightColors);
-            world.WeatherSkyboxAlpha = 1f;
-            if (world.IsDay())
-                world.WeatherSkyboxColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingSkyboxColors);
-            else world.WeatherSkyboxColor = new Color(0.01f, 0.01f, 0.01f, 1f);
+                //transitioning to or from clear
+                if (currentTransition.A.WType == WeatherType.Clear)
+                    currentTransition.A = MakeDefaultWeatherState(lightColor);
 
+                if (currentTransition.B.WType == WeatherType.Clear)
+                    currentTransition.B = MakeDefaultWeatherState(lightColor);
+
+                float p = 1 - (transitionTimer / currentTransition.Time);
+                Main.Renderer.FogExtents = Vector2.Lerp(currentTransition.A.FogExtents, currentTransition.B.FogExtents, p);
+                world.WeatherSkyboxAlpha = MathHelper.Lerp(currentTransition.A.SkyboxAlpha, currentTransition.B.SkyboxAlpha, p);
+                world.WeatherSkyboxColor = Color.Lerp(currentTransition.A.SkyboxColor, currentTransition.B.SkyboxColor, p);
+                lightColor = Color.Lerp(currentTransition.A.DirLightColor, currentTransition.B.DirLightColor, p);
+
+                if (transitionTimer <= 0)
+                    currentWeather = currentTransition.B;
+            }
+            else
+            {
+                Main.Renderer.FogExtents = currentWeather.FogExtents;
+                world.WeatherSkyboxAlpha = currentWeather.SkyboxAlpha;
+                world.WeatherSkyboxColor = currentWeather.SkyboxColor;
+                lightColor = currentWeather.DirLightColor;
+            }
+
+            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.L))
+            {
+                Color lc = Utility.MultiLerp(1 - world.GetTimeOfDay(timeOffset: 2f), Color.Lerp, rainingDLightColors);
+
+                Color sc;
+                if (world.IsDay())
+                    sc = Utility.MultiLerp(1 - world.GetTimeOfDay(timeOffset: 2f), Color.Lerp, rainingSkyboxColors);
+                else sc = new Color(0.01f, 0.01f, 0.01f, 1f);
+
+                WeatherStats a = new WeatherStats();
+                WeatherStats b = new WeatherStats()
+                {
+                    WType = WeatherType.Raining,
+                    FogExtents = new Vector2(Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 32),
+                    SkyboxAlpha = 1,
+                    SkyboxColor = sc,
+                    DirLightColor = lc
+                };
+
+                if (currentWeather.WType == WeatherType.Clear)
+                {
+                    transitionTimer = 2f;
+                    currentTransition = new Transition()
+                    {
+                        Time = 2f,
+                        A = a,
+                        B = b
+                    };
+                }
+                else
+                {
+                    transitionTimer = 2f;
+                    currentTransition = new Transition()
+                    {
+                        Time = 2f,
+                        A = b,
+                        B = a
+                    };
+                }
+            }
+
+            if ((currentWeather.WType == WeatherType.Raining || currentWeather.WType == WeatherType.Storming) || currentTransition.B.WType == WeatherType.Raining)
+            {
+                currentWeather.FogExtents = new Vector2(Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 32);
+
+                currentWeather.DirLightColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingDLightColors);
+
+                currentWeather.SkyboxAlpha = 1f;
+                if (world.IsDay())
+                    currentWeather.SkyboxColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingSkyboxColors);
+                else currentWeather.SkyboxColor = new Color(0.01f, 0.01f, 0.01f, 1f);
+
+                EmitWeatherParticles(world, emissionSettingsHeavy);
+            }
+
+            UpdateWeatherParticles(world, deltaTime);
+        }
+
+        public WeatherType GetCurrentWeather()
+        {
+            return currentWeather.WType;
+        }
+
+        public PublicTransitionInfo GetCurrentTransition()
+        {
+            return new PublicTransitionInfo()
+            {
+                A = currentTransition.A.WType,
+                B = currentTransition.B.WType,
+                Time = currentTransition.Time,
+                TimeLeft = transitionTimer
+            };
+        }
+
+        private void EmitWeatherParticles(World world, ParticleEmissionSettings settings)
+        {
+            if (timeUntilNextEmit <= 0)
+            {
+                timeUntilNextEmit += Main.random.NextFloat(settings.timeUntilNextEmit.X, settings.timeUntilNextEmit.Y);
+
+                int num = Main.random.Next(settings.particlesPerEmit.X, settings.particlesPerEmit.Y);
+
+                const float MAX_RADIUS = Cube.CUBE_SCALE * 32;
+
+                for (int i = 0; i < MAX_RAIN_PARTICLES; i++)
+                {
+                    if (!particles[i].inUse)
+                    {
+                        float r = Main.random.NextFloat(0, MAX_RADIUS);
+
+                        Vector2 ang = Main.random.NextAngle();
+                        particles[i].inUse = true;
+                        particles[i].position = world.player.Position + new Vector3(ang.X * r, 0, ang.Y * r);
+                        particles[i].position.Y = Cube.CUBE_SCALE * world.sizeInCubes;  //place at the top of the world for now
+
+                        num--;
+
+                        if (num <= 0)
+                            break;
+                    }
+                }
+            }
+        }
+
+        private void UpdateWeatherParticles(World world, double deltaTime)
+        {
             min = MAX_RAIN_PARTICLES;
             max = 0;
 
@@ -195,35 +362,19 @@ namespace ViMG.WorldLogics
 
             if (max - min > 0)
                 drawInstanceBuffer.SetData(instancedData, min, max - min);
+        }
 
-            ParticleEmissionSettings settings = emissionSettingsHeavy;
-
-            if (timeUntilNextEmit <= 0)
+        private WeatherStats MakeDefaultWeatherState(Color lightColor)
+        {
+            WeatherStats s = new WeatherStats()
             {
-                timeUntilNextEmit += Main.random.NextFloat(settings.timeUntilNextEmit.X, settings.timeUntilNextEmit.Y);
+                FogExtents = Options.DefaultFogExtents,
+                SkyboxAlpha = 0,
+                SkyboxColor = Color.Transparent,
+                DirLightColor = lightColor,
+            };
 
-                int num = Main.random.Next(settings.particlesPerEmit.X, settings.particlesPerEmit.Y);
-
-                const float MAX_RADIUS = Cube.CUBE_SCALE * 32;
-
-                for (int i = 0; i < MAX_RAIN_PARTICLES; i++)
-                {
-                    if (!particles[i].inUse)
-                    {
-                        float r = Main.random.NextFloat(0, MAX_RADIUS);
-
-                        Vector2 ang = Main.random.NextAngle();
-                        particles[i].inUse = true;
-                        particles[i].position = world.player.Position + new Vector3(ang.X * r, 0, ang.Y * r);
-                        particles[i].position.Y = Cube.CUBE_SCALE * world.sizeInCubes;  //place at the top of the world for now
-
-                        num--;
-
-                        if (num <= 0)
-                            break;
-                    }
-                }
-            }
+            return s;
         }
 
         public void Draw(GraphicsDevice device)

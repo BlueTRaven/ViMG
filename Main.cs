@@ -285,9 +285,6 @@ namespace ViMG
 
 			inputManager.Update(new GameTime());
 
-			if (inputManager.JustPressed(Keys.L))
-				Options.UseInstancedLightVolumes = !Options.UseInstancedLightVolumes;
-
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;

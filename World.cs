@@ -295,9 +295,6 @@ namespace ViMG
 		{
 			deltaTime *= TimeScale;
 
-            Main.Renderer.FogExtents = new Vector2(Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3),
-                Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1));
-
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
@@ -749,7 +746,7 @@ namespace ViMG
 			alive += time;
         }
 
-		public float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1)
+		public float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1, float timeOffset = 0)
 		{
 			//values here are in % of day cycle time;
 			//dawn starts at the last 8% of the total cycle
@@ -767,7 +764,7 @@ namespace ViMG
 			float duskStart = 0.5f - ((1 - DUSK_START - 0.5f) * duskStartOffsetScale);
 			float duskEnd = ((DUSK_END - 0.5f) * duskEndOffsetScale) + 0.5f;
 
-			float timeOfDayPercent = (alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+			float timeOfDayPercent = ((alive + timeOffset) % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
 
 			//Night time
 			if (timeOfDayPercent > duskEnd && timeOfDayPercent <= dawnStart)

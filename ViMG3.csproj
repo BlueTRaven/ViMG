@@ -6,6 +6,7 @@
 	<MonoGamePlatform>Windows</MonoGamePlatform>
 	<RootNamespace>ViMG</RootNamespace>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,10 @@
     <None Remove="BrUtility\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="MonoGame\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="logo.ico" />
   </ItemGroup>
 
   <ItemGroup>

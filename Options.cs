@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ViMG.Cubes;
 
 namespace ViMG
 {
@@ -77,6 +78,9 @@ namespace ViMG
         //TODO Remove
         public static float SMAAThreshold = 0.05f;
         public static bool SMAAThresholdChanged;
+
+        public static Vector2 DefaultFogExtents => new Vector2(Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (RenderDistance - 3),
+                Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (RenderDistance - 1));
 
         public static void CenterMouse()
         {
