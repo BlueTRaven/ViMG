@@ -242,6 +242,8 @@ namespace ViMG.Rendering
         public static int NumPointLightsRendered;
         public static int NumDrawCalls;
 
+        public Vector2 FogExtents;  //X: near, Y: far
+
         public bool DoCSMLight = true;
         private float alive;
 
@@ -571,7 +573,6 @@ namespace ViMG.Rendering
 
                         EffectGBuffer.Parameters["InstancedDraws"].SetValue(draw.SBO);
 
-                        //EffectGBuffer.Parameters["World"].SetValue(Matrix.CreateTranslation(Main.camera.Position - Main.camera.Forward * Cubes.Cube.CUBE_SCALE * 5f));
                         EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
                         EffectGBuffer.Parameters["Normal"].SetValue(Main.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"));
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
@@ -583,7 +584,6 @@ namespace ViMG.Rendering
                         {
                             pass.Apply();
                             device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.IBO.IndexCount, draw.IBO.IndexCount / 3, draw.SBOLen);
-                            //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
 
                             NumDrawCalls++;
                         }
@@ -821,9 +821,7 @@ namespace ViMG.Rendering
                 EffectRadialFog.CurrentTechnique = EffectRadialFog.Techniques["T2"];
                 EffectRadialFog.Parameters["Position"].SetValue(position);
                 EffectRadialFog.Parameters["Color"].SetValue(skybox);
-                EffectRadialFog.Parameters["FogExtents"].SetValue(
-                    new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3),
-                    Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1)));
+                EffectRadialFog.Parameters["FogExtents"].SetValue(FogExtents);
                 EffectRadialFog.Parameters["CameraPosition"].SetValue(Main.camera.Position);
 
                 device.SetVertexBuffer(vboQuad);
@@ -849,8 +847,7 @@ namespace ViMG.Rendering
 
             EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
             EffectTransparent.Parameters["CameraPosition"].SetValue(Main.camera.Position);
-            EffectTransparent.Parameters["FogExtents"].SetValue(new Vector2(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3),
-                    Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1)));
+            EffectTransparent.Parameters["FogExtents"].SetValue(FogExtents);
 
             EffectTransparent.CurrentTechnique = EffectTransparent.Techniques["T1"];
             //device.RasterizerState = Main.noCullRS;

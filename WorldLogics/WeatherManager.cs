@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Physics;
 using BrUtility;
-using SharpDX.MediaFoundation;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
 
@@ -15,23 +14,49 @@ namespace ViMG.WorldLogics
 {
     public class WeatherManager
     {
-        private const int MAX_RAIN_PARTICLES = 4000;
+        private const int MAX_RAIN_PARTICLES = 8000;
+        private const float RAIN_STAY_TIME = 0.25f;
+
         private static ParticleEmissionSettings emissionSettingsDrizzle = new ParticleEmissionSettings()
         {
-            particlesPerEmit = new Point(1, 3),
+            particlesPerEmit = new Point(8, 30),
             timeUntilNextEmit = new Vector2((float)Main.FIXED_STEP * 6, (float)Main.FIXED_STEP * 10)
         };
 
         private static ParticleEmissionSettings emissionSettingsNormal = new ParticleEmissionSettings()
         {
-            particlesPerEmit = new Point(10, 50),
+            particlesPerEmit = new Point(50, 100),
             timeUntilNextEmit = new Vector2((float)Main.FIXED_STEP * 6, (float)Main.FIXED_STEP * 10)
         };
 
         private static ParticleEmissionSettings emissionSettingsHeavy = new ParticleEmissionSettings()
         {
-            particlesPerEmit = new Point(50, 100),
-            timeUntilNextEmit = new Vector2((float)Main.FIXED_STEP * 6, (float)Main.FIXED_STEP * 10)
+            particlesPerEmit = new Point(16, 32),
+            timeUntilNextEmit = new Vector2((float)Main.FIXED_STEP * 1, (float)Main.FIXED_STEP * 2)
+        };
+
+        //only relevant during the day...
+        private static Color[] rainingDLightColors =
+        {
+            new(78, 78, 78),
+            new(178, 178, 178),
+            new(178, 178, 178),
+        };
+
+        private static Color[] rainingSkyboxColors =
+        {
+            new(0.01f, 0.01f, 0.01f, 1f),
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+        };
+
+        private static Color[] lightningColors =
+        {
+            new(255, 255, 137),
+            new(0, 0, 0)
         };
 
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
@@ -81,10 +106,18 @@ namespace ViMG.WorldLogics
             drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
         }
 
-        public void Update(double deltaTime, World world)
+        public void Update(double deltaTime, World world, DirectionalLight directionalLight, ref Color lightColor)
         {
             WeatherTimer -= (float)deltaTime;
             timeUntilNextEmit -= (float)deltaTime;
+
+            Main.Renderer.FogExtents = new Vector2(Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 32);
+
+            lightColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingDLightColors);
+            world.WeatherSkyboxAlpha = 1f;
+            if (world.IsDay())
+                world.WeatherSkyboxColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingSkyboxColors);
+            else world.WeatherSkyboxColor = new Color(0.01f, 0.01f, 0.01f, 1f);
 
             min = MAX_RAIN_PARTICLES;
             max = 0;
@@ -95,7 +128,8 @@ namespace ViMG.WorldLogics
                 Matrix.CreateRotationX(MathHelper.ToRadians(90));
 
             RendererDeferred.DrawSourceRectParameters fallingSR = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 16, 16));
-            RendererDeferred.DrawSourceRectParameters onGroundSR = new RendererDeferred.DrawSourceRectParameters(new RectangleF(16, 0, 16, 16));
+            RendererDeferred.DrawSourceRectParameters onGroundSR1 = new RendererDeferred.DrawSourceRectParameters(new RectangleF(16, 0, 16, 16));
+            RendererDeferred.DrawSourceRectParameters onGroundSR2 = new RendererDeferred.DrawSourceRectParameters(new RectangleF(32, 0, 16, 16));
 
             for (int i = 0; i < MAX_RAIN_PARTICLES; i++)
             {
@@ -132,24 +166,35 @@ namespace ViMG.WorldLogics
                     {//put the particle on top of the block.
                         particles[i].position.Y = queryPositions[i].InWorldSpace().Y + Cube.CUBE_SCALE + Cube.CUBE_SCALE * 0.005f;
                         particles[i].hasTouchedGround = true;
-                        particles[i].timeRemaining = 0.25f;
+                        particles[i].timeRemaining = RAIN_STAY_TIME;
                     }
+                }
+
+                RendererDeferred.DrawSourceRectParameters sr = fallingSR;
+
+                if (particles[i].hasTouchedGround)
+                {
+                    if (particles[i].timeRemaining > RAIN_STAY_TIME / 2f)
+                        sr = onGroundSR1;
+                    else sr = onGroundSR2;
                 }
 
                 Matrix wm = (particles[i].hasTouchedGround ? onGroundMatrix : fallingMatrix) *
                         Matrix.CreateTranslation(particles[i].position);
+                //THIS IS IMPORTANT! Matrices are TRANSPOSED by monogame when setting constant buffers!
+                //Therefore we need to transpose our matrices the same way for our transform matrices.
                 Matrix.Transpose(ref wm, out wm);
                 instancedData[i] = new RendererDeferred.InstancedDraw()
                 {
                     World = wm,
                     WorldNormal = Matrix.Transpose(Matrix.Invert(wm)),
                     TintColor = Color.White.ToVector3(),
-                    SourceRect = particles[i].hasTouchedGround ? onGroundSR : fallingSR
+                    SourceRect = sr
                 };
             }
 
             if (max - min > 0)
-                drawInstanceBuffer.SetData(instancedData, 0, MAX_RAIN_PARTICLES);
+                drawInstanceBuffer.SetData(instancedData, min, max - min);
 
             ParticleEmissionSettings settings = emissionSettingsHeavy;
 
@@ -159,13 +204,17 @@ namespace ViMG.WorldLogics
 
                 int num = Main.random.Next(settings.particlesPerEmit.X, settings.particlesPerEmit.Y);
 
+                const float MAX_RADIUS = Cube.CUBE_SCALE * 32;
+
                 for (int i = 0; i < MAX_RAIN_PARTICLES; i++)
                 {
                     if (!particles[i].inUse)
                     {
+                        float r = Main.random.NextFloat(0, MAX_RADIUS);
+
+                        Vector2 ang = Main.random.NextAngle();
                         particles[i].inUse = true;
-                        particles[i].position = world.player.Position + 
-                            new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 32, Cube.CUBE_SCALE * 32), 0, Main.random.NextFloat(-Cube.CUBE_SCALE * 32, Cube.CUBE_SCALE * 32));
+                        particles[i].position = world.player.Position + new Vector3(ang.X * r, 0, ang.Y * r);
                         particles[i].position.Y = Cube.CUBE_SCALE * world.sizeInCubes;  //place at the top of the world for now
 
                         num--;

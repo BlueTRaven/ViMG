@@ -45,6 +45,8 @@ namespace ViMG
 		private static (VertexBuffer VBO, IndexBuffer IBO) skyboxMesh;
 		private static bool meshesLoaded;
 		public Skybox Skybox;
+		public float WeatherSkyboxAlpha;
+		public Color WeatherSkyboxColor;
 
 		public GameStateManager GameStateManager;
 		public Player player;
@@ -293,7 +295,10 @@ namespace ViMG
 		{
 			deltaTime *= TimeScale;
 
-			PhysicsInfo.Simulation.Timestep((float)deltaTime);
+            Main.Renderer.FogExtents = new Vector2(Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 3),
+                Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (Options.RenderDistance - 1));
+
+            PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			ChunkLoadManager.UpdateLoadTarget(player.Position);
 
@@ -656,19 +661,22 @@ namespace ViMG
 						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
 				}
 
-				/*Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+				if (WeatherSkyboxAlpha > 0)
 				{
-					SortValue = 100,
-					Diffuse = Skybox.Weather,
-					Emissive = DrawHelper.BlackPixel,
-					TintColor = Color.White.ToVector4(),
-					Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateTranslation(Main.camera.Position),
-					VBO = skyboxMesh.VBO,
-					IBO = skyboxMesh.IBO,
-				});*/
+					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+					{
+						SortValue = 100,
+						Diffuse = Skybox.Weather,
+						Emissive = DrawHelper.BlackPixel,
+						TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
+						Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
+							Matrix.CreateTranslation(Main.camera.Position),
+						VBO = skyboxMesh.VBO,
+						IBO = skyboxMesh.IBO,
+					});
+				}
 
-                if (Main.Debug)
+				if (Main.Debug)
 					HitboxManager.DrawDebug(device);
 
 				if (Main.Debug)

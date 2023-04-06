@@ -28,7 +28,14 @@ namespace ViMG.WorldLogics
         private float alive;
         private DirectionalLight directionalLight;
 		//1 and last are replaced by the previous directional light color to prevent jumping colors.
-		private static Color[] duskColors = new Color[] { Color.White, Color.Salmon, Color.DarkBlue, Color.Black, Color.White };
+		private static Color[] duskColors = new Color[] 
+		{ 
+			Color.White, 
+			Color.Salmon, 
+			Color.DarkBlue, 
+			Color.Black, 
+			Color.White 
+		};
         
 		private int lavaLight;
 
@@ -152,7 +159,16 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			weatherManager.Update(deltaTime, world);
+			Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
+
+            if (world.GetDuskTime() > 0)
+            {
+                duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
+                duskColors[^1] = sunlightColor;
+                sunlightColor = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
+            }
+
+            weatherManager.Update(deltaTime, world, directionalLight, ref sunlightColor);
 
 			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
@@ -182,19 +198,10 @@ namespace ViMG.WorldLogics
 
 				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
 				{
-					Color color = Color.White * (1 - world.GetTimeOfDay());
-
-					if (world.GetDuskTime() > 0)
-					{
-						duskColors[0] = color;  //so that we don't snap to the wrong color...
-						duskColors[^1] = color;
-						color = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
-					}
-
 					float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 					directionalLight.UpdateCameras(world, Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), color);
+						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), sunlightColor);
 
 					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
