@@ -1695,7 +1695,7 @@ namespace ViMG
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 					Matrix.CreateTranslation(world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position);
 
-                if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
+                /*if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
 				{
 					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(currentThirdPersonDistance,
                         worldMat, DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, color));
@@ -1704,7 +1704,7 @@ namespace ViMG
 				{
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
-				}
+				}*/
             }
 
 			if (lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))

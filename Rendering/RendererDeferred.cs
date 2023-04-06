@@ -30,6 +30,16 @@ namespace ViMG.Rendering
             }
         }
 
+        public struct InstancedDraw
+        {
+            public Matrix World;
+            public Matrix WorldNormal;
+
+            public DrawSourceRectParameters SourceRect;
+
+            public Vector3 TintColor;
+        }
+
         public struct PointLightVolumeDraw
         {
             public int LightIndex;
@@ -87,6 +97,7 @@ namespace ViMG.Rendering
         //World matrices
         //Tint colors
         //Source rectangles
+        //For best results, pre-allocate the per-instance arrays.
         public struct InstancedGBufferDraw
         {
             public Texture2D Diffuse;
@@ -96,15 +107,23 @@ namespace ViMG.Rendering
             public VertexBuffer VBO;
             public IndexBuffer IBO;
 
-            public Matrix[] World;
-            public Matrix[] WorldNormal;
+            public StructuredBuffer SBO;
 
-            public bool UseSourceRect;
-            public Vector2 SourceRectPos;
-            public Vector2 SourceRectFarPos;
-            public Vector2 TextureSize;
+            public int SBOStart;
+            public int SBOLen;
 
-            public Vector3[] TintColor;
+            public InstancedGBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart, int SBOLen)
+            {
+                this.Diffuse = diffuse;
+                this.Specular = specular;
+                this.Emissive = emissive;
+                this.VBO = VBO;
+                this.IBO = IBO;
+
+                this.SBO = SBO;
+                this.SBOStart = SBOStart;
+                this.SBOLen = SBOLen;
+            }
         }
 
         public struct TransparentDraw
@@ -209,6 +228,7 @@ namespace ViMG.Rendering
         private StructuredBuffer bufferLightVolumeIndices;
 
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
+        public List<InstancedGBufferDraw> DrawsPassGBufferInstanced = new List<InstancedGBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<PointLightVolumeDraw> DrawsShadowmappedPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
@@ -334,6 +354,7 @@ namespace ViMG.Rendering
         public void FrameStart()
         {
             DrawsPassGBuffer.Clear();
+            DrawsPassGBufferInstanced.Clear();
             DrawsPointLightVolumePass.Clear();
             DrawsShadowmappedPointLightVolumePass.Clear();
             DrawsTransparentPass.Clear();
@@ -498,7 +519,7 @@ namespace ViMG.Rendering
                 Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
                 EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
-                //EffectGBuffer.Parameters["InvViewProjection"].SetValue(Matrix.Invert(viewProjection));
+                EffectGBuffer.Parameters["UseInstancing"].SetValue(false);
 
                 device.SamplerStates[1] = bilinearClampSS;
 
@@ -517,6 +538,8 @@ namespace ViMG.Rendering
                         EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
                         EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
 
+                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+
                         EffectGBuffer.Parameters["TintColor"].SetValue(draw.TintColor);
 
                         if (draw.SourceRect.UseSourceRect)
@@ -527,12 +550,40 @@ namespace ViMG.Rendering
                         }
                         else EffectGBuffer.Parameters["UseSourceRect"].SetValue(false);
                         
+                        foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+
+                            NumDrawCalls++;
+                        }
+                    }
+                }
+
+                if (DrawsPassGBufferInstanced.Count > 0)
+                {
+                    EffectGBuffer.Parameters["UseInstancing"].SetValue(true);
+
+                    foreach (InstancedGBufferDraw draw in DrawsPassGBufferInstanced)
+                    {
+                        device.SetVertexBuffer(draw.VBO);
+                        device.Indices = draw.IBO;
+
+                        EffectGBuffer.Parameters["InstancedDraws"].SetValue(draw.SBO);
+
+                        //EffectGBuffer.Parameters["World"].SetValue(Matrix.CreateTranslation(Main.camera.Position - Main.camera.Forward * Cubes.Cube.CUBE_SCALE * 5f));
+                        EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
+                        EffectGBuffer.Parameters["Normal"].SetValue(Main.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"));
+                        EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
+                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
+
                         EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
 
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                            device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.IBO.IndexCount, draw.IBO.IndexCount / 3, draw.SBOLen);
+                            //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
 
                             NumDrawCalls++;
                         }

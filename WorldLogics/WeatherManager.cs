@@ -9,6 +9,7 @@ using ViMG.Physics;
 using BrUtility;
 using SharpDX.MediaFoundation;
 using Microsoft.Xna.Framework.Graphics;
+using ViMG.Rendering;
 
 namespace ViMG.WorldLogics
 {
@@ -60,6 +61,9 @@ namespace ViMG.WorldLogics
             public bool inUse;
         }
 
+        private StructuredBuffer drawInstanceBuffer;
+
+        private RendererDeferred.InstancedDraw[] instancedData = new RendererDeferred.InstancedDraw[MAX_RAIN_PARTICLES];
         private RainParticle[] particles = new RainParticle[MAX_RAIN_PARTICLES];
         private CubePosition[] queryPositions = new CubePosition[MAX_RAIN_PARTICLES];
         private Cube[] touchedCubes = new Cube[MAX_RAIN_PARTICLES];
@@ -72,6 +76,11 @@ namespace ViMG.WorldLogics
 
         private float timeUntilNextEmit;
 
+        public WeatherManager(GraphicsDevice device)
+        {
+            drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
+        }
+
         public void Update(double deltaTime, World world)
         {
             WeatherTimer -= (float)deltaTime;
@@ -79,6 +88,14 @@ namespace ViMG.WorldLogics
 
             min = MAX_RAIN_PARTICLES;
             max = 0;
+
+            Matrix fallingMatrix = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+            Matrix onGroundMatrix = Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
+                Matrix.CreateRotationX(MathHelper.ToRadians(90));
+
+            RendererDeferred.DrawSourceRectParameters fallingSR = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 16, 16));
+            RendererDeferred.DrawSourceRectParameters onGroundSR = new RendererDeferred.DrawSourceRectParameters(new RectangleF(16, 0, 16, 16));
 
             for (int i = 0; i < MAX_RAIN_PARTICLES; i++)
             {
@@ -101,6 +118,10 @@ namespace ViMG.WorldLogics
                 }
             }
 
+            //If the above loop doesn't update anything then we'll be using placeholder values; this reinitializes them
+            min = int.Min(min, max);
+            max = int.Max(min, max);
+
             world.ChunkManager.InitializerView.GetCubes(queryPositions.AsSpan(), touchedCubes.AsSpan(), Main.Registry.CubeRegistry.Air, min, max - min);
 
             for (int i = min; i < max; i++)
@@ -114,7 +135,21 @@ namespace ViMG.WorldLogics
                         particles[i].timeRemaining = 0.25f;
                     }
                 }
+
+                Matrix wm = (particles[i].hasTouchedGround ? onGroundMatrix : fallingMatrix) *
+                        Matrix.CreateTranslation(particles[i].position);
+                Matrix.Transpose(ref wm, out wm);
+                instancedData[i] = new RendererDeferred.InstancedDraw()
+                {
+                    World = wm,
+                    WorldNormal = Matrix.Transpose(Matrix.Invert(wm)),
+                    TintColor = Color.White.ToVector3(),
+                    SourceRect = particles[i].hasTouchedGround ? onGroundSR : fallingSR
+                };
             }
+
+            if (max - min > 0)
+                drawInstanceBuffer.SetData(instancedData, 0, MAX_RAIN_PARTICLES);
 
             ParticleEmissionSettings settings = emissionSettingsHeavy;
 
@@ -147,7 +182,11 @@ namespace ViMG.WorldLogics
             if (mesh.VBO == null)
                 mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            for (int i = min; i < max; i++)
+            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
+                Main.assetsManager.GetAsset<Texture2D>("rain"), DrawHelper.WhitePixel, DrawHelper.BlackPixel, 
+                mesh.VBO, mesh.IBO, drawInstanceBuffer, min, max - min));
+
+            /*for (int i = min; i < max; i++)
             {
                 if (particles[i].inUse)
                 {
@@ -170,7 +209,7 @@ namespace ViMG.WorldLogics
                             new RectangleF(16, 0, 16, 16)));
                     }
                 }
-            }
+            }*/
         }
     }
 }

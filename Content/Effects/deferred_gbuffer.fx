@@ -18,6 +18,8 @@ float4x4 WorldNormal;
 float4x4 ViewProjection;
 float4x4 InvViewProjection;
 
+bool UseInstancing;
+
 bool UseSourceRect;
 float2 SourceRectPos;
 float2 SourceRectFarPos;
@@ -31,6 +33,18 @@ float3 TintColor;
 
 float Time;
 
+struct InstancedDrawParams
+{
+    float4x4 World;
+    float4x4 WorldNormal;
+
+    bool UseSourceRect;
+    float2 SourceRectPos;
+    float2 SourceRectFarPos;
+
+    float3 TintColor;
+};
+
 struct PSOutputGBuffer
 {
 	float4 Diffuse				: COLOR0;			//color/albedo rgb; Specular a
@@ -39,6 +53,23 @@ struct PSOutputGBuffer
 	float4 Position				: COLOR3;
 	float4 Normal				: COLOR4;
 	float4 AO					: COLOR5;
+};
+
+struct VSInputGBuffer
+{
+    float4 Position		: POSITION0;
+    float4 Color		: COLOR0;
+    float2 TexCoord		: TEXCOORD0;
+    float3 Normal		: NORMAL0;
+    float3 Tangent		: NORMAL1;
+    float3 Bitangent	: NORMAL2;
+    float AO			: TEXCOORD1;
+
+    float AnimFrameTime : TEXCOORD2;
+    float NumAnimFrames : TEXCOORD3;
+    float AnimFrameSize : TEXCOORD4;
+	
+    uint InstanceID		: SV_INSTANCEID;
 };
 
 struct VSOutputGBuffer
@@ -52,35 +83,75 @@ struct VSOutputGBuffer
     float3 Normal		: NORMAL0;
     float AO			: AO;
     float DepthVS		: DEPTHVS;
+	
+	float4x4 t : TEXCOORD8;
+    uint InstanceID		: INSTANCEID;
     //float2 Depth		: DEPTHA;
 };
 
-VSOutputGBuffer MainVS(in VSInputCube input)
+//A structured buffer containing all the instanced draw parameters.
+StructuredBuffer<InstancedDrawParams> InstancedDraws : register(t15);
+
+VSOutputGBuffer MainVS(in VSInputGBuffer input)
 {
     VSOutputGBuffer output = (VSOutputGBuffer) 0;
 
-	output.PositionWS = mul(input.Position, World).xyz;
+    float4x4 useWorld;
+    float4x4 useWorldNormal;
+	
+    bool useUseSourceRect;
+    float2 useSourceRectPos;
+    float2 useSourceRectFarPos;
+	
+    float4 useTintColor;
+	
+    if (UseInstancing)
+    {
+        useWorld = InstancedDraws[input.InstanceID].World;
+        useWorldNormal = InstancedDraws[input.InstanceID].WorldNormal;
+		
+        useUseSourceRect = InstancedDraws[input.InstanceID].UseSourceRect;
+        useSourceRectPos = InstancedDraws[input.InstanceID].SourceRectPos;
+        useSourceRectFarPos = InstancedDraws[input.InstanceID].SourceRectFarPos;
+		
+        useTintColor = float4(InstancedDraws[input.InstanceID].TintColor, 1);
+		
+        output.InstanceID = input.InstanceID;
+    }
+    else
+    {
+        useWorld = World;
+        useWorldNormal = WorldNormal;
+        
+		useUseSourceRect = UseSourceRect;
+        useSourceRectPos = SourceRectPos;
+        useSourceRectFarPos = SourceRectFarPos;
+		
+        useTintColor = float4(TintColor, 1);
+    }
+	
+    output.PositionWS = mul(input.Position, useWorld).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
 	output.PositionSS = output.Position;
-	output.Color = input.Color * float4(TintColor, 1);
+	output.Color = input.Color * useTintColor;
 	
-    float3 T = normalize(mul(float4(input.Tangent, 0), WorldNormal)).xyz;
-    float3 B = normalize(mul(float4(input.Bitangent, 0), WorldNormal)).xyz;
-    float3 N = normalize(mul(float4(input.Normal, 0), WorldNormal)).xyz;
+    float3 T = normalize(mul(float4(input.Tangent, 0), useWorldNormal)).xyz;
+    float3 B = normalize(mul(float4(input.Bitangent, 0), useWorldNormal)).xyz;
+    float3 N = normalize(mul(float4(input.Normal, 0), useWorldNormal)).xyz;
 	
 	//might need to be transposed
     output.TBN = float3x3(T, B, N);
 	
-	output.Normal = mul(float4(input.Normal, 1), WorldNormal).xyz;
+    output.Normal = mul(float4(input.Normal, 1), useWorldNormal).xyz;
 	
 	output.AO = input.AO;
 	//output.Depth = output.Position.zw;
 	output.DepthVS = output.Position.w;
 
-	if (UseSourceRect)
+    if (useUseSourceRect)
 	{
-		float2 xy = SourceRectPos / TextureSize;
-		float2 wh = (SourceRectFarPos - SourceRectPos) / TextureSize;
+        float2 xy = useSourceRectPos / TextureSize;
+        float2 wh = (useSourceRectFarPos - useSourceRectPos) / TextureSize;
 
 		output.TexCoord = xy + (wh * input.TexCoord);
 	}

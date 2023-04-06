@@ -32,10 +32,12 @@ namespace ViMG.WorldLogics
         
 		private int lavaLight;
 
-		private WeatherManager weatherManager = new WeatherManager();
+		private WeatherManager weatherManager;
 
         public WorldLogicIsland(string worldName, GraphicsDevice device) : base(device)
         {
+			weatherManager = new WeatherManager(device);
+
 			float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
 
             directionalLight = new DirectionalLight(device, Main.camera, splits);
