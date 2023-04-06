@@ -23,7 +23,6 @@ namespace ViMG.WorldLogics
 		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
-        private static (VertexBuffer VBO, IndexBuffer IBO) skyboxCloudsMesh;
 
         private float alive;
         private DirectionalLight directionalLight;
@@ -93,48 +92,6 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
 
 			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-
-			vertices = new List<VertexCube>();
-			indices = new List<int>();
-
-            const int CYLINDER_NUM_SIDES = 16;
-
-            for (int i = 0; i < CYLINDER_NUM_SIDES; i++)
-            {
-                float tc = (float)i / (float)CYLINDER_NUM_SIDES;
-                float tn = ((float)i + 1) / (float)CYLINDER_NUM_SIDES;
-
-                float cc = float.Cos(float.Pi * 2 * tc);
-                float sc = float.Sin(float.Pi * 2 * tc);
-                float cn = float.Cos(float.Pi * 2 * tn);
-                float sn = float.Sin(float.Pi * 2 * tn);
-
-                //cylinder_left/right_top/bottom_near/far
-                Vector3 p1 = new Vector3(cc, 0, sc);
-                Vector3 p2 = new Vector3(cc, 1, sc);
-                Vector3 p3 = new Vector3(cn, 1, sn);
-                Vector3 p4 = new Vector3(cn, 0, sn);
-
-                Vector2 tc1 = new Vector2(tc * 4f, 1);
-                Vector2 tc2 = new Vector2(tc * 4f, 0);
-                Vector2 tc3 = new Vector2(tn * 4f, 0);
-                Vector2 tc4 = new Vector2(tn * 4f, 1);
-
-                int offset = vertices.Count;
-                indices.Add(offset + 0);
-                indices.Add(offset + 1);
-                indices.Add(offset + 2);
-                indices.Add(offset + 2);
-                indices.Add(offset + 3);
-                indices.Add(offset + 0);
-
-                vertices.Add(new VertexCube(p1, Color.White, tc1, new Vector3(0, 1, 0)));
-                vertices.Add(new VertexCube(p2, Color.White, tc2, new Vector3(0, 1, 0)));
-                vertices.Add(new VertexCube(p3, Color.White, tc3, new Vector3(0, 1, 0)));
-                vertices.Add(new VertexCube(p4, Color.White, tc4, new Vector3(0, 1, 0)));
-            }
-
-            skyboxCloudsMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
         }
 
         public override void Initialize(World world)
@@ -159,17 +116,6 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
-
-            if (world.GetDuskTime() > 0)
-            {
-                duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
-                duskColors[^1] = sunlightColor;
-                sunlightColor = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
-            }
-
-            weatherManager.Update(deltaTime, world, directionalLight, ref sunlightColor);
-
 			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
@@ -191,17 +137,32 @@ namespace ViMG.WorldLogics
 				}
 			}
 
-			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-			if (CubePosition.FromWorldSpace(world.player.Position).Y > 140)
+            //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
+            if (CubePosition.FromWorldSpace(world.player.Position).Y > 140)
 			{
 				Main.Renderer.DoCSMLight = true;
 
-				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
+                Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
+
+                if (world.GetDuskTime() > 0)
+                {
+                    duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
+                    duskColors[^1] = sunlightColor;
+                    sunlightColor = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
+                }
+
+				Vector4 lightColor = sunlightColor.ToVector4();
+
+                float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+				Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE)));
+
+                weatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
+
+                if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
 				{
-					float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
-					directionalLight.UpdateCameras(world, Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-						Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-						Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE))), sunlightColor);
+					directionalLight.UpdateCameras(world, lightDir, lightColor);
 
 					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
@@ -213,7 +174,8 @@ namespace ViMG.WorldLogics
 					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
-			}
+
+            }
 			else
 			{
 				Main.Renderer.DoCSMLight = false;
@@ -221,7 +183,7 @@ namespace ViMG.WorldLogics
 				if (Main.inputManager.IsHeld(Keys.F6))
 					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 			}
-		}
+        }
 
         public override bool AllowsLoadingNextLayer(World world)
         {
@@ -232,7 +194,7 @@ namespace ViMG.WorldLogics
         {
             base.Draw(world, device);
 
-			weatherManager.Draw(device);
+			weatherManager.Draw(device, world);
             /*if (Main.inputManager.JustPressed(Keys.V))
             {
                 directionalLight.Dispose();
@@ -259,34 +221,7 @@ namespace ViMG.WorldLogics
 				Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				Matrix.CreateTranslation(world.player.Position),
-				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO));
-
-            Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
-            {
-                SortValue = 199,
-                Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_clouds"),
-                Emissive = null,
-                TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()),
-                Transform = 
-				Matrix.CreateScale(1, 0.5f, 1) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
-                VBO = skyboxCloudsMesh.VBO,
-                IBO = skyboxCloudsMesh.IBO,
-            });
-
-            Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
-            {
-                SortValue = 199,
-                Diffuse = DrawHelper.WhitePixel,
-                Emissive = null,
-                TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()),
-                Transform =
-                Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
-                VBO = skyboxCloudsMesh.VBO,
-                IBO = skyboxCloudsMesh.IBO,
-            });
+				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO, tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
 
             if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{

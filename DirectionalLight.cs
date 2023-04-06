@@ -25,7 +25,7 @@ namespace ViMG
 
 		private Matrix[] lightViewProjections;
 		private Vector3 lightDirection;
-		private Vector3 lightColor;
+		private Vector4 lightColor;
 
 		private Vector4[] cascadeOffsets;
 		private Vector4[] cascadeScales;
@@ -102,10 +102,10 @@ namespace ViMG
 			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
-		public void UpdateCameras(World world, Vector3 direction, Color color, float clampY = -1)
+		public void UpdateCameras(World world, Vector3 direction, Vector4 color, float clampY = -1)
         {
 			this.lightDirection = Vector3.Normalize(direction);
-			this.lightColor = color.ToVector3();
+			this.lightColor = color;
 
 			ChunkPosition cameraPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 

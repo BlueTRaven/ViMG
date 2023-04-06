@@ -22,7 +22,7 @@ float4 CascadeOffsets[CASCADE_COUNT];
 float4 CascadeScales[CASCADE_COUNT];
 float4x4 LightViewProjection;
 float3 LightDirection;
-float3 LightColor;
+float4 LightColor;
 float2 LightResolution;
 
 float3 CameraPosition;
@@ -296,11 +296,11 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 
 	float3 halfwayDir = normalize(LightDirection + CameraPosition);
 	float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-	float3 lightSpec = LightColor * spec;
+	float3 lightSpec = LightColor.rgb * spec;
 
 	float worldHeight = WorldheightMap.Sample(Sampler, float2(0.5, 1 - (position.y / (512.0 * 0.1)))).r;
 
-	float3 lightDiffuse = LightColor * ndotl * shadowColor;
+	float3 lightDiffuse = LightColor.rgb * ndotl * shadowColor * LightColor.a;
 
 	return float4((lightDiffuse + lightSpec) * worldHeight, 1);
 }
