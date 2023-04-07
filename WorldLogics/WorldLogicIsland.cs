@@ -40,6 +40,11 @@ namespace ViMG.WorldLogics
 
 		private WeatherManager weatherManager;
 
+		private float weatherChangeTimer;
+		private static Vector2 passiveWeatherTime = new Vector2(60 * 4f, 60 * 12f);
+		private static Vector2 activeWeatherTime = new Vector2(60 * 2f, 60 * 12f);
+		private const float ACTIVE_WEATHER_CHANCE = 0.25f;
+
         public WorldLogicIsland(string worldName, GraphicsDevice device) : base(device)
         {
 			weatherManager = new WeatherManager(device);
@@ -137,6 +142,32 @@ namespace ViMG.WorldLogics
 				}
 			}
 
+			if (weatherChangeTimer <= 0 || Main.inputManager.JustPressed(Keys.L))
+			{
+				if (!weatherManager.IsTransitioning())
+				{
+					bool isActive = Main.random.NextFloat() < ACTIVE_WEATHER_CHANCE;
+
+					WeatherManager.WeatherType[] types;
+
+					if (!isActive)
+					{
+						types = WeatherManager.PassiveWeatherTypes;
+						weatherChangeTimer = Main.random.NextFloat(passiveWeatherTime.X, passiveWeatherTime.Y);
+					}
+					else
+					{
+						types = WeatherManager.ActiveWeatherTypes;
+						weatherChangeTimer = Main.random.NextFloat(activeWeatherTime.X, activeWeatherTime.Y);
+					}
+
+					WeatherManager.WeatherType nextWeather = types[Main.random.Next(0, types.Length)];
+
+					weatherManager.DoTransition(nextWeather, 15f);
+				}
+			}
+			else weatherChangeTimer -= (float)deltaTime;
+
             //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
             if (CubePosition.FromWorldSpace(world.player.Position).Y > 140)
 			{
@@ -165,16 +196,13 @@ namespace ViMG.WorldLogics
 					directionalLight.UpdateCameras(world, lightDir, lightColor);
 
 					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
-					//Main.CubeLitEffect.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
 					if (!Main.inputManager.IsHeld(Keys.F6))
 						Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 					else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-					//Main.Renderer.EffectGBuffer.Parameters["Heightmap"].SetValue(ChunkManager.Heightmap);
 					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
-
             }
 			else
 			{
