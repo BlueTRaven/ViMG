@@ -213,7 +213,7 @@ namespace ViMG
 
 			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
-			Registry = new RegistryService();
+			Registry = new RegistryService(GraphicsDevice);
 			Registry.Register();
 
 			//world = new World(GraphicsDevice, 512);

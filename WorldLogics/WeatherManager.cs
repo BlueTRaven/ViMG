@@ -177,9 +177,6 @@ namespace ViMG.WorldLogics
         private int max;
         #endregion
 
-        public float Timer;  //How long the current weather has remaining
-        public float Time;   //The overall time of the current weather
-
         private WeatherStats currentWeather;
 
         private float lightningTimer;
@@ -246,7 +243,6 @@ namespace ViMG.WorldLogics
         {
             lightNeedsUpdate = false;
 
-            Timer -= (float)deltaTime;
             timeUntilNextEmit -= (float)deltaTime;
 
             if (transitionTimer > 0)
@@ -548,9 +544,13 @@ namespace ViMG.WorldLogics
             min = MAX_RAIN_PARTICLES;
             max = 0;
 
-            Matrix fallingMatrix = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+            Matrix fallingMatrix = 
+                Matrix.CreateScale(0.25f) *
+                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y);
-            Matrix onGroundMatrix = Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
+            Matrix onGroundMatrix =
+                Matrix.CreateScale(0.25f) *
+                Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
                 Matrix.CreateRotationX(MathHelper.ToRadians(90));
 
             RendererDeferred.DrawSourceRectParameters fallingSR = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 16, 16));

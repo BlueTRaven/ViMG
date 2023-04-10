@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Win32;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,6 +21,9 @@ namespace ViMG.Entities
 
 		private int baseSize;
 		private int size;
+
+		public int Size => size;
+		public int MaxSize => baseSize;
 
 		private CubePosition basePosition;
 
@@ -63,7 +67,7 @@ namespace ViMG.Entities
 				return;
 			
 			// If we're on the same y axis
-			if (updating.X == basePosition.X && updating.Z == basePosition.Z && updating.Y > basePosition.Y && updating.Y < basePosition.Y + size)
+			if (updating.X == basePosition.X && updating.Z == basePosition.Z && updating.Y > basePosition.Y && updating.Y <= basePosition.Y + size)
 			{
 				if (updatedId == 0)
 				{
@@ -79,7 +83,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (meshTrunk.VBO == null)
+			/*if (meshTrunk.VBO == null)
 				MakeMesh(device);
 
 			if (Main.camera.GetFrustum().Contains(new BoundingBox(bounds.Position, bounds.FarPosition)) == ContainmentType.Disjoint)
@@ -106,7 +110,7 @@ namespace ViMG.Entities
 					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
-			}
+			}*/
 		}
 
 		private static void MakeMesh(GraphicsDevice device)
@@ -473,7 +477,8 @@ namespace ViMG.Entities
 
 			basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 
-			Position = basePosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
+			Position = basePosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f);
+			//Position = basePosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
 			bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
 		}
 	}

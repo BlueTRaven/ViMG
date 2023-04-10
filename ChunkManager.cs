@@ -392,12 +392,13 @@ namespace ViMG
 
         public void Dispose()
         {
+            //There may still be things in the queue, including active threads, so wait on those
+            //TODO: maybe this isn't necessary? Mesh Resources aren't created anywhere but the main thread
+            RenderMesher.FinishFlush();
+            CollisionMesher.FinishFlush();
+
             RenderMesher.UnloadAll();
             CollisionMesher.UnloadAll();
-            //UnloadAllMeshes();
-
-            //cubeMeshInfos = null;
-            //chunkMeshInfos = null;
         }
 
         public ThreadedCubeView CreateThreadedCubeView(ChunkLoadManager loadManager)

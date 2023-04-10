@@ -163,8 +163,8 @@ namespace ViMG.WorldLogics
 
 					WeatherManager.WeatherType nextWeather = types[Main.random.Next(0, types.Length)];
 
-					weatherManager.DoTransition(nextWeather, 15f);
-				}
+                    weatherManager.DoTransition(nextWeather, 15f);
+                }
 			}
 			else weatherChangeTimer -= (float)deltaTime;
 

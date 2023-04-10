@@ -297,21 +297,22 @@ namespace ViMG
 
 		public void UnloadAll()
 		{
-			loadedChunks.Clear();
 			//TODO: there may still be meshes in the queue.
-			//The reason why I'm not calling FlushMeshQueue here is because it needs World
-
 			chunkManager.RenderMesher.FinishFlush();
 			chunkManager.CollisionMesher.FinishFlush();
 
 			chunkManager.RenderMesher.UnloadAll();
 			chunkManager.CollisionMesher.UnloadAll();
+			
 			entityManager.UnloadAll();
+			
+			loadedChunks.Clear();
 		}
 
         public void Dispose()
         {
-			UnloadAll();
+			chunkManager.Dispose();
+			entityManager.Dispose();
 
 			loadedChunks = null;
         }

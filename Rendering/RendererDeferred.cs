@@ -112,8 +112,11 @@ namespace ViMG.Rendering
             public int SBOStart;
             public int SBOLen;
 
-            public InstancedGBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart, int SBOLen)
+            public InstancedGBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart = 0, int SBOLen = -1)
             {
+                if (SBOLen == -1)
+                    SBOLen = SBO.ElementCount;
+
                 this.Diffuse = diffuse;
                 this.Specular = specular;
                 this.Emissive = emissive;

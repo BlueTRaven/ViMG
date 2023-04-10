@@ -64,7 +64,7 @@ namespace ViMG
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
-			MakeXMeshRaw(vertices, indices, parameters.positionWS, scale, sourceRect);
+			MeshHelper.MakeXMeshVerts(vertices, indices, parameters.positionWS, scale, sourceRect);
 
 			int verticesEnd = vertices.Count;
 

@@ -111,7 +111,24 @@ namespace ViMG.Entities
 			this.world = world;
 
 			this.sizeInCubes = world.sizeInCubes;
+
+            foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+            {
+				if (r != null)
+					r.NewEntityManagerInitialized(this);
+            }
         }
+
+		public void Dispose()
+		{
+            foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+            {
+				if (r != null)
+					r.EntityManagerDisposed(this);
+            }
+
+            UnloadAll();
+		}
 
 		public void ForceAdd(Entity entity, ulong id)
 		{
@@ -459,6 +476,12 @@ namespace ViMG.Entities
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
+			foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+			{
+				if (r != null && entitiesByType.ContainsKey(r.GetRenderedType()))
+					r.Render(device, 0, this);
+			}
+
 			foreach (Entity entity in entities)
 			{
 				if (entity.AlwaysRender || Main.camera.FrustumContains(entity.Position))
