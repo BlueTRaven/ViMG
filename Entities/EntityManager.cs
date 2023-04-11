@@ -150,41 +150,6 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			if (entity is ICubeTracker tracker)
-			{
-                CubePosition position = tracker.TrackedPosition;
-
-				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-				if (cubeTrackers.ContainsKey(chunkPos))
-					cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-				else
-				{
-					CubeTrackers ts = new CubeTrackers();
-					ts.Add(position.InChunkSpace(chunkPos), entity);
-
-                    cubeTrackers.Add(chunkPos, ts);
-				}
-			}
-
-			if (entity is IMultiCubeTracker multiTracker)
-			{
-				foreach (CubePosition position in multiTracker.TrackedPositions)
-				{
-                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-                    if (cubeTrackers.ContainsKey(chunkPos))
-                        cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-                    else
-                    {
-                        CubeTrackers ts = new CubeTrackers();
-                        ts.Add(position.InChunkSpace(chunkPos), entity);
-
-                        cubeTrackers.Add(chunkPos, ts);
-                    }
-				}
-			}
-
 			entities.Add(entity);
 			if (!entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType.Add(entity.GetType(), new List<Entity>());
@@ -196,7 +161,42 @@ namespace ViMG.Entities
 
 			entity.Initialize(world);
 
-			OnEntityAdded?.Invoke(entity);
+            if (entity is ICubeTracker tracker)
+            {
+                CubePosition position = tracker.TrackedPosition;
+
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                if (cubeTrackers.ContainsKey(chunkPos))
+                    cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+                else
+                {
+                    CubeTrackers ts = new CubeTrackers();
+                    ts.Add(position.InChunkSpace(chunkPos), entity);
+
+                    cubeTrackers.Add(chunkPos, ts);
+                }
+            }
+
+            if (entity is IMultiCubeTracker multiTracker)
+            {
+                foreach (CubePosition position in multiTracker.TrackedPositions)
+                {
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                    if (cubeTrackers.ContainsKey(chunkPos))
+                        cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+                    else
+                    {
+                        CubeTrackers ts = new CubeTrackers();
+                        ts.Add(position.InChunkSpace(chunkPos), entity);
+
+                        cubeTrackers.Add(chunkPos, ts);
+                    }
+                }
+            }
+
+            OnEntityAdded?.Invoke(entity);
 		}
 
 		public void Remove(Entity entity)
@@ -338,6 +338,9 @@ namespace ViMG.Entities
 
 		private void ReallyRemove(Entity entity)
         {
+			if (entity == null)
+				return;
+
 			if (iteratingUpdate)
 				throw new Exception("Cannot remove entity while iterating");
 
@@ -388,6 +391,23 @@ namespace ViMG.Entities
 
 			return all.FirstOrDefault() as T;
         }
+
+		//TODO this feels like it would be slow.
+		public void UpdateTrackedPositions<T>(T ent, IReadOnlyList<CubePosition> oldTrackedPositions) where T : Entity, IMultiCubeTracker
+		{
+            for (int i = 0; i < oldTrackedPositions.Count(); i++)
+            {
+                ChunkPosition cpos = ChunkPosition.CubeChunk(oldTrackedPositions.ElementAt(i));
+                cubeTrackers[cpos].Remove(oldTrackedPositions.ElementAt(i).InChunkSpace(cpos));
+            }
+
+            var trackedPositions = ent.TrackedPositions;
+            for (int i = 0; i < trackedPositions.Count(); i++)
+            {
+                ChunkPosition cpos = ChunkPosition.CubeChunk(trackedPositions.ElementAt(i));
+                cubeTrackers[cpos].Add(trackedPositions.ElementAt(i).InChunkSpace(cpos), ent);
+            }
+		}
 
 		private IReadOnlyList<Entity> emptyList = new List<Entity>();
 		public IReadOnlyList<Entity> GetAll<T>() where T : Entity

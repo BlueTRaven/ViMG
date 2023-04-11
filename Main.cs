@@ -104,6 +104,8 @@ namespace ViMG
 		public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
 		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
 
+		public static double Time;
+
 		public static bool Exit = false;
 
 		//public static bool WorldLoaded = false;
@@ -282,6 +284,8 @@ namespace ViMG
 		private void FixedUpdate(double deltaTime)
 		{
 			DEBUGPopupText = "";
+
+			Time += deltaTime;
 
 			inputManager.Update(new GameTime());
 

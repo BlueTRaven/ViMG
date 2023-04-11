@@ -51,25 +51,14 @@ namespace ViMG.Entities
 
 			if (world.GetTime() > toGrowTime && !grown)
             {
-				Cube treeCube = Main.Registry.CubeRegistry.Get("tree");
+                world.EntityManager.Remove(this);   
 
-				//Destroy self
-				world.ChunkManager.ThreadedView.SetCube(TrackedPosition, 0);
-
-				//TODO performance
-				//batch these SetCube calls
 				int num = Main.random.Next(3, 12);
-				for (int i = 0; i < num; i++)
-				{
-					var posOffset = TrackedPosition;
-					posOffset.Y += i;
-
-					world.ChunkManager.ThreadedView.SetCube(posOffset, treeCube.Id);
-				}
 
 				Tree tree = new Tree(TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f),
 					num, TrackedPosition);
-				world.EntityManager.Add(tree);
+                //tree must be delayed otherwise we'll have both the tree and sapling occupying the same space
+				world.EntityManager.Add(tree, true);
 
 				grown = true;
 			}

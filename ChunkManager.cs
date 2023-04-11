@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -18,13 +19,15 @@ namespace ViMG
     {
         private readonly struct CubeUpdated
         {
+            public readonly double timeUpdated;
             public readonly CubePosition updated;
             public readonly CubePosition notified;
             public readonly ushort oldId;
             public readonly ushort newId;
 
-            public CubeUpdated(CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
+            public CubeUpdated(double timeUpdated, CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
             {
+                this.timeUpdated = timeUpdated;
                 this.updated = updated;
                 this.notified = notified;
                 this.oldId = oldId;
@@ -103,6 +106,8 @@ namespace ViMG
             int size = Marshal.SizeOf<CubeMeshInfo>();
         }
 
+        private FastList<CubeUpdated> uniqueUpdates = new FastList<CubeUpdated>();
+
         //Update queue of chunks to mesh
         public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
@@ -127,10 +132,11 @@ namespace ViMG
                         if (entityTracking is ICubeTracker tracker)
                             tracker.TrackingCubeUpdated(world, this, updated.newId);
                         else if (entityTracking is IMultiCubeTracker multiTracker)
-                            multiTracker.TrackingCubeUpdated(world, this, updated.newId);
+                            multiTracker.TrackingCubeUpdated(world, this, updated.updated, updated.newId, updated.timeUpdated);
                     }
                 }
-                else ThreadedView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air).OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId);
+                else ThreadedView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
+                        .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);
 
                 updatedThisFrame++;
             }
@@ -303,7 +309,7 @@ namespace ViMG
         private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             //GetCubeMeshInfo(position).version++;
-            updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, updatedId));
+            updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
             {
@@ -316,7 +322,7 @@ namespace ViMG
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
-                    updatedCubePositions.Enqueue(new CubeUpdated(position, adjacentPosition, oldId, updatedId));
+                    updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, adjacentPosition, oldId, updatedId));
                 }
             }
         }

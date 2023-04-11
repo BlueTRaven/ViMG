@@ -16,50 +16,11 @@ namespace ViMG.Cubes
 			Transparency = TransparencyValue.Invisible;
 		}
 
-		public override void PostChunkGen(WorldPrototype world, CubePosition position)
-		{
-			base.PostChunkGen(world, position);
-
-			int size = 0;
-
-			// don't generate a tree if there's a tree below us. We only want the base cube to care.
-			if (world.ChunkManager.ThreadedView.GetCube(position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace))
-				.GetOrDefault(Main.Registry.CubeRegistry.Air) != this)
-			{
-				//List<CubePosition> listenPositions = new List<CubePosition>();
-				for (int i = 0; i < 12; i++)
-				{
-					CubePosition pos = position + new CubePosition(0, i, 0, CubePosition.CoordinateSpace.CubeSpace);
-					if (world.ChunkManager.ThreadedView.GetCube(pos)
-						.GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
-					{
-						size = i;
-					}
-					else break;
-				}
-
-				Tree tree = new Tree(position.InWorldSpace() - new Vector3(CUBE_SCALE * 1.25f, 0, CUBE_SCALE * 1.25f), 
-					size, position);
-				world.AddEntity(tree);
-			}
-		}
-
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{
 			base.GetDrops(itemsToDrop);
 
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1));
-		}
-
-		public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId)
-		{
-			base.OnAdjacentUpdated(world, manager, position, updating, updatedId);
-
-			if (position.Y > updating.Y && updatedId == 0)
-			{
-				world.TryMineCube(position, 0, 0, true);
-				//parent.SetCube(position, 0);
-			}
 		}
 	}
 }

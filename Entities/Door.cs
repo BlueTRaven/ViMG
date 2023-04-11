@@ -190,14 +190,17 @@ namespace ViMG.Entities
             return true;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition position, ushort updatedId, double timeUpdated)
         {
-            for (int i = 0; i < TrackedPositions.Count(); i++)
+            if (timeUpdated > TimeInitialized)
             {
-                cm.ThreadedView.SetCube(TrackedPositions.ElementAt(i), 0);
-            }
+                for (int i = 0; i < TrackedPositions.Count(); i++)
+                {
+                    cm.ThreadedView.SetCube(TrackedPositions.ElementAt(i), 0);
+                }
 
-            world.EntityManager.Remove(this);
+                world.EntityManager.Remove(this);
+            }
         }
 
         public override void OnSave(List<byte> saveBytes)

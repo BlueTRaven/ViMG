@@ -215,13 +215,9 @@ namespace ViMG.Generation
 								if (val == 0)
 								{
 									int num = GetRandom().Next(3, 12);
-									for (int i = 0; i < num; i++)
-									{
-										var posOffset = pos;
-										posOffset.Y += i;
 
-										world.ChunkManager.InitializerView.SetCube(posOffset, 6);	//tree
-									}
+									world.EntityManager.Add(new Tree(pos.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f),
+										num, pos));
 								}
 								else if (val == 1)
 									world.ChunkManager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling

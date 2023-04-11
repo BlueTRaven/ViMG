@@ -33,7 +33,9 @@ namespace ViMG.Entities
 		private ulong id = 0;
 		public ulong Id => id;
 
-		public void SetId(ulong id)
+        public double TimeInitialized;
+
+        public void SetId(ulong id)
 		{
 			this.id = id;
 		}
@@ -41,6 +43,8 @@ namespace ViMG.Entities
 		public virtual void Initialize(World world)
 		{
 			this.world = world;
+
+			TimeInitialized = Main.Time;
 		}
 
 		public virtual void Update(double deltaTime)

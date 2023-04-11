@@ -20,11 +20,13 @@ namespace ViMG.Entities.Renderers
         public virtual void NewEntityManagerInitialized(EntityManager entityManager)
         {
             entityManager.OnEntityAdded += OnEntityAdded;
+            entityManager.OnEntityRemoved += OnEntityRemoved;
         }
 
         public virtual void EntityManagerDisposed(EntityManager entityManager)
         {
-            entityManager.OnEntityRemoved += OnEntityRemoved;
+            entityManager.OnEntityAdded -= OnEntityAdded;
+            entityManager.OnEntityRemoved -= OnEntityRemoved;
         }
 
         private void OnEntityAdded(Entity entity)

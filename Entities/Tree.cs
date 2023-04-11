@@ -11,8 +11,8 @@ using ViMG.VertexDeclarations;
 namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(0, 0)]
-	public class Tree : Entity
+	[EntityMeta(1, 0)]
+	public class Tree : Entity, IMultiCubeTracker
 	{
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshTrunk;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshSegmentA;
@@ -25,13 +25,17 @@ namespace ViMG.Entities
 		public int Size => size;
 		public int MaxSize => baseSize;
 
-		private CubePosition basePosition;
+		private CubePosition[] trackedPositions;
+        public IEnumerable<CubePosition> TrackedPositions => trackedPositions;
 
 		private Rectangle3D bounds;
 
+		public bool NeedsRerender;
+
+		private static CubeTree cube;
+
 		public Tree()
 		{
-			AlwaysRender = true;
 		}
 
 		public Tree(Vector3 position, int size, CubePosition basePosition)
@@ -41,17 +45,74 @@ namespace ViMG.Entities
 			this.Position = position;
 			this.baseSize = size;
 			this.size = baseSize;
-			this.basePosition = basePosition;
 
-			bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
-		}
+            trackedPositions = new CubePosition[size];
+			trackedPositions[0] = basePosition;
 
-		public override void Update(double deltaTime)
+            bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + 4), Cube.CUBE_SCALE));
+        }
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+            if (cube == null)
+                cube = Main.Registry.CubeRegistry.Get("tree") as CubeTree;
+
+            for (int i = 1; i < size; i++)
+            {
+                var posOffset = trackedPositions[0] + new CubePosition(0, i, 0);
+
+                world.ChunkManager.ThreadedView.SetCube(posOffset, cube.Id);
+
+                trackedPositions[i] = posOffset;
+            }
+        }
+
+        public override void Update(double deltaTime)
 		{
 			base.Update(deltaTime);
 		}
 
-		public override void OnCubeUpdated(CubePosition updating, int updatedId)
+        public bool OnInteract(Player player)
+        {
+			return false;
+        }
+
+        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition position, ushort updatedId, double updatedTime)
+        {
+			if (updatedTime >= TimeInitialized && updatedId != cube.Id)
+			{
+				if (position == trackedPositions[0])
+				{
+					size = 0;
+					world.EntityManager.Remove(this);
+					return;
+				}
+				else
+				{
+					for (int i = position.Y + 1; i < trackedPositions[0].Y + baseSize; i++)
+					{
+						world.TryMineCube(new CubePosition(position.X, i, position.Z), 0, 0, true);
+					}
+
+					size = position.Y - trackedPositions[0].Y;
+
+					CubePosition[] oldTracked = trackedPositions;
+
+					trackedPositions = new CubePosition[size];
+					trackedPositions[0] = oldTracked[0];
+                    for (int i = 1; i < size; i++)
+                        trackedPositions[i] = trackedPositions[0] + new CubePosition(0, i, 0);
+
+					world.EntityManager.UpdateTrackedPositions(this, oldTracked);
+
+					NeedsRerender = true;
+				}
+			}
+        }
+
+        /*public override void OnCubeUpdated(CubePosition updating, int updatedId)
 		{
 			base.OnCubeUpdated(updating, updatedId);
 
@@ -77,13 +138,13 @@ namespace ViMG.Entities
 						size = sizeA;
 				}
 			}
-		}
+		}*/
 
-		public override void Draw(GraphicsDevice device, Effect effect)
+		/*public override void Draw(GraphicsDevice device, Effect effect)
 		{
 			base.Draw(device, effect);
 
-			/*if (meshTrunk.VBO == null)
+			if (meshTrunk.VBO == null)
 				MakeMesh(device);
 
 			if (Main.camera.GetFrustum().Contains(new BoundingBox(bounds.Position, bounds.FarPosition)) == ContainmentType.Disjoint)
@@ -91,14 +152,14 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.wireframeRS;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 				Matrix.CreateTranslation(Position), new RectangleF(0, 96 - 16, 80, 16)));
 
 			for (int i = 0; i < size; i++)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)), new RectangleF(0, 48, 80, 32)));
@@ -106,12 +167,12 @@ namespace ViMG.Entities
 
 			if (size == baseSize)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"), 
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
-			}*/
-		}
+			}
+		}*/
 
 		private static void MakeMesh(GraphicsDevice device)
 		{
@@ -464,7 +525,8 @@ namespace ViMG.Entities
 			SaveHelper.SaveInt32(saveBytes, baseSize);
 			SaveHelper.SaveInt32(saveBytes, size);
 
-			SaveHelper.SaveCubePosition(saveBytes, basePosition);
+			for (int i = 0; i < size; i++)
+				SaveHelper.SaveCubePosition(saveBytes, trackedPositions[i]);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -475,11 +537,31 @@ namespace ViMG.Entities
 			baseSize =  SaveHelper.LoadInt32(loadBytes, ref index);
 			size = SaveHelper.LoadInt32(loadBytes, ref index);
 
-			basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+			if (version == 0)
+			{
+				//version 0 had weirdly generated sizes. They would have one too many tree blocks for its size.
+				size++;
+				baseSize++;
 
-			Position = basePosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f);
-			//Position = basePosition.InWorldSpace() - new Vector3(Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4, 0, Cube.CUBE_SCALE + Cube.CUBE_SCALE / 4);
-			bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
+				CubePosition basePosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+
+				Position = basePosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f);
+				bounds = new Rectangle3D(basePosition.InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
+
+                trackedPositions = new CubePosition[size];
+
+                for (int i = 0; i < size; i++)
+                    trackedPositions[i] = basePosition + new CubePosition(0, i, 0);
+            }
+			else
+			{
+				trackedPositions = new CubePosition[size];
+				for (int i = 0; i < size; i++)
+					trackedPositions[i] = SaveHelper.LoadCubePosition(loadBytes, ref index);
+
+                Position = trackedPositions[0].InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f);
+                bounds = new Rectangle3D(trackedPositions[0].InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
+            }
 		}
-	}
+    }
 }
