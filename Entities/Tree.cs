@@ -30,7 +30,7 @@ namespace ViMG.Entities
 
 		private Rectangle3D bounds;
 
-		public bool NeedsRerender;
+		public bool NeedsRerender = true;
 
 		private static CubeTree cube;
 

@@ -187,7 +187,7 @@ namespace ViMG.WorldLogics
                 float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 				Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-					Matrix.CreateRotationY(MathHelper.ToRadians(SUN_LIGHT_ANGLE)));
+					Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
 
                 weatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
 

@@ -29,29 +29,6 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
-        protected override void OnEntityOfOurTypeAdded(Entity entity)
-        {
-            base.OnEntityOfOurTypeAdded(entity);
-
-            //we can just add to the list of draws
-            Tree tree = entity as Tree;
-
-            RenderTree(tree);
-
-            needsReupload = true;
-        }
-
-        protected override void OnEntityOfOurTypeRemoved(Entity entity)
-        {
-            base.OnEntityOfOurTypeRemoved(entity);
-
-            //This is the lazy way...
-            //Since the entity may have been removed out of pretty much anywhere in the list,
-            //and we really don't want to have to keep parity in indices between our draw list and the entity list (pretty much impossible),
-            //just rebuild the entire thing from scratch every time an entity was removed.
-            needsRebuild = true;
-        }
-
         private void BuildList(IReadOnlyCollection<Entity> renderingEntities)
         {
             for (int e = 0; e < renderingEntities.Count; e++)
@@ -120,9 +97,10 @@ namespace ViMG.Entities.Renderers
                 }
             }
 
-            if (draws == null || needsRebuild)
+            if (needsRebuild)
             {
-                draws = new FastList<RendererDeferred.InstancedDraw>();
+                draws.Clear();
+                //draws = new FastList<RendererDeferred.InstancedDraw>();
                 BuildList(entityManager.GetAll<Tree>());
 
                 needsRebuild = false;

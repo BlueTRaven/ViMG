@@ -332,6 +332,9 @@ namespace ViMG
             Vector3 g = pos + new Vector3(max.X, max.Y, max.Z);
             Vector3 h = pos + new Vector3(max.X, min.Y, max.Z);
 
+			Vector3 crossabg = -Vector3.Cross(Vector3.Normalize(b - g), Vector3.Normalize(b - a));
+			Vector3 crossefc = -Vector3.Cross(Vector3.Normalize(f - c), Vector3.Normalize(f - e));
+
             Vector3 anrm = new Vector3(0.5f, 0, 0.5f);
             Vector3 bnrm = new Vector3(0.5f, 0, 0.5f);
             Vector3 cnrm = new Vector3(-0.5f, 0, 0.5f);
@@ -344,41 +347,41 @@ namespace ViMG
 
             int offset = vertices.Count;
 
-            vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), anrm));
-            vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), bnrm));
-            vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), cnrm));
-            vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), dnrm));
+            vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					crossabg));
+            vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y),										crossabg));
+            vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y),						crossefc));
+            vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), crossefc));
+																																		
+            vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					crossefc));
+            vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y),										crossefc));
+            vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y),						crossabg));
+            vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), crossabg));
 
-            vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), enrm));
-            vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y), fnrm));
-            vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), gnrm));
-            vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), hnrm));
+            indices.Add(offset + 0);	//a
+            indices.Add(offset + 1);	//b
+            indices.Add(offset + 6);	//g
+            indices.Add(offset + 6);	//g
+            indices.Add(offset + 7);	//h
+            indices.Add(offset + 0);	//a
 
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 6);
-            indices.Add(offset + 6);
-            indices.Add(offset + 7);
-            indices.Add(offset + 0);
-
-            indices.Add(offset + 4);
-            indices.Add(offset + 5);
-            indices.Add(offset + 2);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-            indices.Add(offset + 4);
+            indices.Add(offset + 4);	//e
+            indices.Add(offset + 5);	//f
+            indices.Add(offset + 2);	//c
+            indices.Add(offset + 2);	//c
+            indices.Add(offset + 3);	//d
+            indices.Add(offset + 4);	//e
 
             offset = vertices.Count;
 
-            vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), -anrm));
-            vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), -bnrm));
-            vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), -cnrm));
-            vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -dnrm));
-
-            vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), -enrm));
-            vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y), -fnrm));
-            vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y), -gnrm));
-            vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -hnrm));
+            vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					-crossabg));
+            vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y),										-crossabg));
+            vertices.Add(new VertexCube(c, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y),						-crossefc));
+            vertices.Add(new VertexCube(d, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -crossefc));
+																																		
+            vertices.Add(new VertexCube(e, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					-crossefc));
+            vertices.Add(new VertexCube(f, Color.White, new Vector2(sourceRect.x, sourceRect.y),										-crossefc));
+            vertices.Add(new VertexCube(g, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y),						-crossabg));
+            vertices.Add(new VertexCube(h, Color.White, new Vector2(sourceRect.x + sourceRect.width, sourceRect.y + sourceRect.height), -crossabg));
 
             indices.Add(offset + 6);
             indices.Add(offset + 1);
