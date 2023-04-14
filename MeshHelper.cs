@@ -335,16 +335,6 @@ namespace ViMG
 			Vector3 crossabg = -Vector3.Cross(Vector3.Normalize(b - g), Vector3.Normalize(b - a));
 			Vector3 crossefc = -Vector3.Cross(Vector3.Normalize(f - c), Vector3.Normalize(f - e));
 
-            Vector3 anrm = new Vector3(0.5f, 0, 0.5f);
-            Vector3 bnrm = new Vector3(0.5f, 0, 0.5f);
-            Vector3 cnrm = new Vector3(-0.5f, 0, 0.5f);
-            Vector3 dnrm = new Vector3(-0.5f, 0, 0.5f);
-
-            Vector3 enrm = new Vector3(-0.5f, 0, 0.5f);
-            Vector3 fnrm = new Vector3(-0.5f, 0, 0.5f);
-            Vector3 gnrm = new Vector3(0.5f, 0, 0.5f);
-            Vector3 hnrm = new Vector3(0.5f, 0, 0.5f);
-
             int offset = vertices.Count;
 
             vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					crossabg));

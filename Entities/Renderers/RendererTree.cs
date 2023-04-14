@@ -29,6 +29,20 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
+        protected override void OnEntityOfOurTypeAdded(int renderedTypeIndex, Entity entity)
+        {
+            base.OnEntityOfOurTypeAdded(renderedTypeIndex, entity);
+
+            needsRebuild = true;
+        }
+
+        protected override void OnEntityOfOurTypeRemoved(int renderedTypeIndex, Entity entity)
+        {
+            base.OnEntityOfOurTypeRemoved(renderedTypeIndex, entity);
+
+            needsRebuild = true;
+        }
+
         private void BuildList(IReadOnlyCollection<Entity> renderingEntities)
         {
             for (int e = 0; e < renderingEntities.Count; e++)
@@ -81,7 +95,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
         {
             IReadOnlyList<Entity> ents = entityManager.GetAll<Tree>();
 
@@ -119,9 +133,10 @@ namespace ViMG.Entities.Renderers
                 DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, SBO, 0, draws.Length));
         }
 
-        public override Type GetRenderedType()
+        private static Type[] renderedTypes = new Type[] { typeof(Tree) };
+        public override Type[] GetRenderedTypes()
         {
-            return typeof(Tree);
+            return renderedTypes;
         }
     }
 }

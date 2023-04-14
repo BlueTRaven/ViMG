@@ -498,8 +498,17 @@ namespace ViMG.Entities
 		{
 			foreach (var r in Main.Registry.RendererRegistry.GetIterable())
 			{
-				if (r != null && entitiesByType.ContainsKey(r.GetRenderedType()))
-					r.Render(device, 0, this);
+				if (r != null)
+				{
+					Type[] renderedTypes = r.GetRenderedTypes();
+
+                    for (int i = 0; i < renderedTypes.Length; i++)
+					{
+                        Type renderedType = renderedTypes[i];
+                        if (entitiesByType.ContainsKey(renderedType))
+							r.Render(device, 0, this, i);
+					}
+				}
 			}
 
 			foreach (Entity entity in entities)

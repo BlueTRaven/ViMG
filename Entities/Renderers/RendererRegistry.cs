@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using BrUtility;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace ViMG.Entities.Renderers
 {
     public class RendererRegistry : ObjRegistry<EntityRenderer>
     {
+        private Dictionary<Type, EntityRenderer> objsByType = new Dictionary<Type, EntityRenderer>();
+
         private readonly GraphicsDevice device;
 
         public RendererRegistry(GraphicsDevice device)
@@ -21,6 +24,13 @@ namespace ViMG.Entities.Renderers
             base.DoRegistration();
 
             Register(new RendererTree(device));
+        }
+
+        protected override void Register(EntityRenderer obj)
+        {
+            base.Register(obj);
+
+            objsByType.Add(obj.GetType(), obj);
         }
     }
 }

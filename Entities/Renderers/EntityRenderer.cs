@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using BrUtility;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +13,8 @@ namespace ViMG.Entities.Renderers
     {
         private readonly string identifier;
         public string Identifier => identifier;
+
+        private FastList<Type> renderableTypes = new FastList<Type>();
 
         public EntityRenderer(string identifier, GraphicsDevice device)
         {
@@ -31,32 +35,38 @@ namespace ViMG.Entities.Renderers
 
         private void OnEntityAdded(Entity entity)
         {
-            if (entity.GetType() == GetRenderedType())
+            Type[] types = GetRenderedTypes();
+
+            for (int i = 0; i < types.Length; i++)
             {
-                OnEntityOfOurTypeAdded(entity);
+                if (entity.GetType() == types[i])
+                    OnEntityOfOurTypeAdded(i, entity);
             }
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            if (entity.GetType() == GetRenderedType())
+            Type[] types = GetRenderedTypes();
+
+            for (int i = 0; i < types.Length; i++)
             {
-                OnEntityOfOurTypeRemoved(entity);
+                if (entity.GetType() == types[i])
+                    OnEntityOfOurTypeRemoved(i, entity);
             }
         }
 
-        protected virtual void OnEntityOfOurTypeAdded(Entity entity)
+        protected virtual void OnEntityOfOurTypeAdded(int renderedTypeIndex, Entity entity)
         {
 
         }
 
-        protected virtual void OnEntityOfOurTypeRemoved(Entity entity)
+        protected virtual void OnEntityOfOurTypeRemoved(int renderedTypeIndex, Entity entity)
         {
 
         }
 
-        public abstract Type GetRenderedType();
+        public abstract Type[] GetRenderedTypes();
 
-        public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager);
+        public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex);
     }
 }

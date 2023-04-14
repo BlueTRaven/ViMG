@@ -85,13 +85,19 @@ namespace ViMG.Entities
 			{
 				if (position == trackedPositions[0])
 				{
-					size = 0;
 					world.EntityManager.Remove(this);
-					return;
+
+                    for (int i = position.Y; i < position.Y + size; i++)
+                    {
+                        world.TryMineCube(new CubePosition(position.X, i, position.Z), 0, 0, true);
+                    }
+
+					size = 0;
+                    return;
 				}
 				else
 				{
-					for (int i = position.Y + 1; i < trackedPositions[0].Y + baseSize; i++)
+					for (int i = position.Y + 1; i < trackedPositions[0].Y + size; i++)
 					{
 						world.TryMineCube(new CubePosition(position.X, i, position.Z), 0, 0, true);
 					}
