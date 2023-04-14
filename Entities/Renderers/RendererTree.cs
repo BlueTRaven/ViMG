@@ -66,7 +66,7 @@ namespace ViMG.Entities.Renderers
                     draws.Add(new RendererDeferred.InstancedDraw()
                     {
                         World = w,
-                        WorldNormal = Matrix.Invert(w),
+                        WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
                         SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(32, 80, 16, 16)),
                     });
                 }
@@ -77,7 +77,7 @@ namespace ViMG.Entities.Renderers
                     draws.Add(new RendererDeferred.InstancedDraw()
                     {
                         World = w,
-                        WorldNormal = Matrix.Invert(w),
+                        WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
                         SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 80, 48)),
                     });
                 }
@@ -88,7 +88,7 @@ namespace ViMG.Entities.Renderers
                     draws.Add(new RendererDeferred.InstancedDraw()
                     {
                         World = w,
-                        WorldNormal = Matrix.Invert(w),
+                        WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
                         SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(32, 48, 16, 16)),
                     });
                 }
@@ -123,7 +123,12 @@ namespace ViMG.Entities.Renderers
             if (needsReupload)
             {
                 if (SBO == null || SBO.ElementCount < draws.Length)
+                {
+                    if (SBO != null)
+                        SBO.Dispose();
+
                     SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
+                }
                 SBO.SetData(draws.Buffer);
 
                 needsReupload = false;

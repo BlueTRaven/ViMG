@@ -30,6 +30,30 @@ namespace ViMG.Rendering
             }
         }
 
+        public record struct DrawMaterial
+        {
+            public Texture2D Diffuse;
+            public Texture2D Normal = DrawHelper.NormalPixel;
+            public Texture2D Specular = DrawHelper.WhitePixel;
+            public Texture2D Emissive = DrawHelper.BlackPixel;
+
+            public DrawMaterial(Texture2D diffuseOnly)
+            {
+                Diffuse = diffuseOnly;
+                Normal = DrawHelper.NormalPixel;
+                Specular = DrawHelper.WhitePixel;
+                Emissive = DrawHelper.BlackPixel;
+            }
+
+            public DrawMaterial(string name)
+            {
+                Diffuse = Main.assetsManager.GetAsset<Texture2D>(name);
+                Normal = Main.assetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
+                Specular = Main.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.WhitePixel;
+                Emissive = Main.assetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
+            }
+        }
+
         public struct InstancedDraw
         {
             public Matrix World;

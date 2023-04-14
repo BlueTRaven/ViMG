@@ -364,7 +364,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
+			/*if (mesh.VBO == null)
 				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 				//MakeMesh(device);
 
@@ -376,7 +376,7 @@ namespace ViMG.Entities
 				DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("imp_emissive"), mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+				Matrix.CreateTranslation(Position), sourceRect, tintColor));*/
 
 			if (health < maxHealth)
 				DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);

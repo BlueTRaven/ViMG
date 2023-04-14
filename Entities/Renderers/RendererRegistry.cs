@@ -24,6 +24,7 @@ namespace ViMG.Entities.Renderers
             base.DoRegistration();
 
             Register(new RendererTree(device));
+            Register(new RendererGenericBillboardedEntity(device));
         }
 
         protected override void Register(EntityRenderer obj)

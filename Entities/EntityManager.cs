@@ -417,6 +417,13 @@ namespace ViMG.Entities
 			else return emptyList;
 		}
 
+		public IReadOnlyList<Entity> GetAll(Type type)
+		{
+			if (entitiesByType.ContainsKey(type))
+				return entitiesByType[type];
+			else return emptyList;
+		}
+
 		public IReadOnlyList<Entity> GetEntities()
 		{
 			return entities;

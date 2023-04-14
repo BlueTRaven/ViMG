@@ -1245,7 +1245,7 @@ namespace ViMG
 
             if (Main.inputManager.JustPressed(Keys.V))
 			{
-				Skullhead slime = new Skullhead(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f);
+                Imp slime = new Imp(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f);
 				world.EntityManager.Add(slime);
 
 				//for (int i = 0; i < 8; i++)
