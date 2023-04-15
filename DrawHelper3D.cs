@@ -371,6 +371,8 @@ namespace ViMG
 				color.ToVector3()));
 		}
 
+		//Draws a stretched texture along a line.
+		//If you want the texture to be tiled properly, use DrawLineTiled.
 		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
             RendererDeferred.DrawMaterial material, (VertexBuffer VBO, IndexBuffer IBO) mesh, RectangleF sourceRectangle, Color color)
 		{

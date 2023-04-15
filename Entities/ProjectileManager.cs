@@ -241,7 +241,7 @@ namespace ViMG.Entities
 
 		public ProjectileManager(World world, GraphicsDevice device)
 		{
-			Vector3 min = new Vector3(-0.5f, -0.5f, 0);
+			/*Vector3 min = new Vector3(-0.5f, -0.5f, 0);
 			Vector3 max = new Vector3(0.5f, 0.5f, 0);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
@@ -268,9 +268,10 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));*/
 
-			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+			mesh = MeshHelper.MakeCenteredQuad(device, 1, 1);
+			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
             this.world = world;
         }
@@ -389,14 +390,25 @@ namespace ViMG.Entities
 			{
 				if (projectiles[i].active)
 				{
-					//float roll = Vector3.Dot(-Main.camera.Up, Vector3.Normalize(projectiles[i].velocity)) + MathHelper.ToRadians(180);
-					float roll = 0;
+					if (!projectiles[i].visStats.rollFollowsVelocity)
+					{
+						Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+							Matrix.CreateScale(projectiles[i].visStats.scale) *
+							Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, 0) *
+							Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
+					}
+					else
+					{
+                        Vector3 axis = projectiles[i].velocity;
+                        axis.Normalize();
 
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
-						Matrix.CreateScale(projectiles[i].visStats.scale) *
-						Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, roll) *
-						//Matrix.CreateRotationZ(roll) *
-						Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
+                        Matrix mat = Matrix.CreateConstrainedBillboard(projectiles[i].position, 
+							Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+
+                        Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+                            Matrix.CreateScale(projectiles[i].visStats.scale) *
+                            mat, projectiles[i].visStats.sourceRect));
+                    }
 				}
 			}
 		}

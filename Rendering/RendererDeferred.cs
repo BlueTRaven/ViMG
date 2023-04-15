@@ -60,14 +60,19 @@ namespace ViMG.Rendering
             }
         }
 
-        public struct InstancedDraw
+        public record struct InstancedDraw
         {
             public Matrix World;
             public Matrix WorldNormal;
 
             public DrawSourceRectParameters SourceRect;
 
-            public Vector3 TintColor;
+            public Vector3 TintColor = Vector3.One;
+
+            public InstancedDraw()
+            {
+                TintColor = Vector3.One;
+            }
         }
 
         public struct PointLightVolumeDraw
@@ -123,7 +128,7 @@ namespace ViMG.Rendering
         //World matrices
         //Tint colors
         //Source rectangles
-        //For best results, pre-allocate the per-instance arrays.
+        //The SBO must contain an array of InstancedDraws.
         public struct InstancedGBufferDraw
         {
             public DrawMaterial Material;
