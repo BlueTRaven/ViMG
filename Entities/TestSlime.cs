@@ -8,12 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class TestSlime : Entity, IHasStats
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
 
         private BuffManager buffManager;
         private NoticeHandler<Player> noticeHandler;
@@ -49,8 +51,7 @@ namespace ViMG.Entities
             if (mesh.VBO == null)
                 mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("slime"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));

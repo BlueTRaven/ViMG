@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemFlaskMagicPotion1 : Item
     {
-        public ItemFlaskMagicPotion1() : base("flask_magicpotion1", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 96, 16, 16))
+        public ItemFlaskMagicPotion1() : base("flask_magicpotion1", StaticMaterials.Items, new RectangleF(48, 96, 16, 16))
         {
             name = "Magic Potion 1";
             description = "A potion that restores magic power. It smells like chalk and tastes like it too.";

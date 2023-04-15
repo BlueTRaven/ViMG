@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemTinderbox : Item
     {
-        public ItemTinderbox() : base("tinderbox", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 32, 16, 16))
+        public ItemTinderbox() : base("tinderbox", StaticMaterials.Items, new RectangleF(32, 32, 16, 16))
         {
             name = "Tinderbox";
             description = "A tinderbox, as well as a set of flint and steel, used to light fires. Right-click on the ground to create a fire that should last you for some time.";

@@ -16,10 +16,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.GameStates;
 using ViMG.Generation;
 using ViMG.Items;
 using ViMG.Physics;
+using ViMG.Rendering;
 using ViMG.Spawners;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
@@ -580,15 +582,14 @@ namespace ViMG
 			{
 				Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
 
-				Texture2D emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive");
+				RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
 				if (player.GetBuffManager().HasBuff("emissive_ores"))
-					emissiveTexture = Main.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores");
+					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
                 (VertexBuffer VBO, IndexBuffer IBO) mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
                 if (mesh.VBO != null)
                 {
-                    Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-                        DrawHelper.BlackPixel, emissiveTexture, mesh.VBO, mesh.IBO,
+                    Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
                         transform, null));
                 }
 
@@ -601,10 +602,8 @@ namespace ViMG
                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
                     //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
-                    Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-                        Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-                        emissiveTexture,
-                        mesh.VBO, mesh.IBO, null, null));
+                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+                        cubesMaterial, mesh.VBO, mesh.IBO, transform));
                 }
 
 				if (Main.Renderer.EffectEmptyEnabled)
@@ -617,10 +616,8 @@ namespace ViMG
 
 						Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-						Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), transform,
-							Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-							DrawHelper.WhitePixel,
-							mesh.VBO, mesh.IBO));
+						Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
+							StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
 					}
 				}
 
@@ -640,11 +637,12 @@ namespace ViMG
 					float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
-						Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						new RendererDeferred.DrawMaterial(Skybox.Night),
+                        skyboxMesh.VBO, skyboxMesh.IBO,
+                        Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
-						Skybox.Night, DrawHelper.WhitePixel,
-						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White));
+						null, Color.White));
 				}
 
 				if (alphaDay > 0)
@@ -652,10 +650,11 @@ namespace ViMG
 					Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
-						Matrix.CreateTranslation(new Vector3(-0.5f)) *
+						new RendererDeferred.DrawMaterial(Skybox.Day),
+                        skyboxMesh.VBO, skyboxMesh.IBO,
+                        Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateTranslation(Main.camera.Position),
-						Skybox.Day, DrawHelper.BlackPixel,
-						skyboxMesh.VBO, skyboxMesh.IBO, null, Color.White * alphaDay));
+						null, Color.White * alphaDay));
 				}
 
 				if (WeatherSkyboxAlpha > 0)
@@ -663,8 +662,7 @@ namespace ViMG
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
 					{
 						SortValue = 100,
-						Diffuse = Skybox.Weather,
-						Emissive = DrawHelper.BlackPixel,
+						Material = new Rendering.RendererDeferred.DrawMaterial(Skybox.Weather),
 						TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
 						Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
 							Matrix.CreateTranslation(Main.camera.Position),
@@ -692,8 +690,8 @@ namespace ViMG
 
 					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("mine"),
-						DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshMiningCube.VBO, meshMiningCube.IBO,
+					RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube.VBO, meshMiningCube.IBO,
 						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
 				}
 			}

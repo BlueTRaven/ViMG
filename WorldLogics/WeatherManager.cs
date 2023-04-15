@@ -91,6 +91,10 @@ namespace ViMG.WorldLogics
 
         private static (VertexBuffer VBO, IndexBuffer IBO) skyboxCloudsMesh;
         private static (VertexBuffer VBO, IndexBuffer IBO) rainMesh;
+        private static RendererDeferred.DrawMaterial materialRain = new RendererDeferred.DrawMaterial("rain");
+        private static RendererDeferred.DrawMaterial materialSparselyCloudy = new RendererDeferred.DrawMaterial("skybox_sparseclouds");
+        private static RendererDeferred.DrawMaterial materialCloudy = new RendererDeferred.DrawMaterial("skybox_clouds");
+        private static RendererDeferred.DrawMaterial materialFog = new RendererDeferred.DrawMaterial("skybox_fog");
 
         public enum WeatherType
         {
@@ -626,8 +630,7 @@ namespace ViMG.WorldLogics
         public void Draw(GraphicsDevice device, World world)
         {
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                Main.assetsManager.GetAsset<Texture2D>("rain"), DrawHelper.WhitePixel, DrawHelper.BlackPixel, 
-                rainMesh.VBO, rainMesh.IBO, drawInstanceBuffer, min, max - min));
+                materialRain, rainMesh.VBO, rainMesh.IBO, drawInstanceBuffer, min, max - min));
 
             if (currentWeather.WType == WeatherType.Cloudy || IsTransitioningFrom(WeatherType.Cloudy) || IsTransitioningTo(WeatherType.Cloudy))
             {
@@ -648,8 +651,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_clouds"),
-                    Emissive = null,
+                    Material = materialCloudy,
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
@@ -662,8 +664,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = DrawHelper.WhitePixel,
-                    Emissive = null,
+                    Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
@@ -691,8 +692,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_sparseclouds"),
-                    Emissive = null,
+                    Material = materialSparselyCloudy,
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
@@ -705,8 +705,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_fog"),
-                    Emissive = null,
+                    Material = materialFog,
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.25f, 1) *
@@ -719,8 +718,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = DrawHelper.WhitePixel,
-                    Emissive = null,
+                    Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
@@ -744,8 +742,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = Main.assetsManager.GetAsset<Texture2D>("skybox_fog"),
-                    Emissive = null,
+                    Material = materialFog,
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
@@ -757,8 +754,7 @@ namespace ViMG.WorldLogics
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
-                    Diffuse = DrawHelper.WhitePixel,
-                    Emissive = null,
+                    Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),

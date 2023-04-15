@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemScrollSonar : Item
     {
-        public ItemScrollSonar() : base("scroll_sonar", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 32, 16, 16))
+        public ItemScrollSonar() : base("scroll_sonar", StaticMaterials.Items, new RectangleF(112, 32, 16, 16))
         {
             name = "Scroll: Void";
             description = "Locates nearby empty spaces.\n" +

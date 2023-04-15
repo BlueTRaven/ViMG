@@ -85,25 +85,25 @@ namespace ViMG.UIs
             Vector2 labelOffset = new Vector2(0, 12 * scale);
 
             RectangleF rect = new RectangleF(position, 16 * scale, 16 * scale);
-            Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.Texture, coinsCopper.item.SourceRect));
+            Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.Material.Diffuse, coinsCopper.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsCopper.item.GetName(coinsCopper) + " x" + coinsCopper.num, coinsCopper.item.GetDescription(coinsCopper));
 
             rect = new RectangleF(position.X + 16 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.Texture, coinsBronze.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.Material.Diffuse, coinsBronze.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsBronze.item.GetName(coinsBronze) + " x" + coinsBronze.num, coinsBronze.item.GetDescription(coinsBronze));
 
             rect = new RectangleF(position.X + 32 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.Texture, coinsSilver.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.Material.Diffuse, coinsSilver.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsSilver.item.GetName(coinsSilver) + " x" + coinsSilver.num, coinsSilver.item.GetDescription(coinsSilver));
 
             rect = new RectangleF(position.X + 48 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.Texture, coinsGold.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.Material.Diffuse, coinsGold.item.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsGold.item.GetName(coinsGold) + " x" + coinsGold.num, coinsGold.item.GetDescription(coinsGold));

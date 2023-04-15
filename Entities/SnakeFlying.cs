@@ -8,14 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class SnakeFlying : Entity, IHasStats
     {
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x2;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
 
-		public Vector3 Velocity;
+        public Vector3 Velocity;
 
 		public int MaxHealth = 10;
 
@@ -96,14 +98,12 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = aiFlying.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("snake"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh2x2.VBO, mesh2x2.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2.VBO, mesh2x2.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRectWings, tintColor));
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("snake"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh2x2.VBO, mesh2x2.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2.VBO, mesh2x2.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRectSnake, tintColor));

@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemBoneLegs : Item
     {
-        public ItemBoneLegs() : base("legs_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 80, 16, 16))
+        public ItemBoneLegs() : base("legs_bone", StaticMaterials.Items, new RectangleF(128, 80, 16, 16))
         {
             name = "Bone Leggings";
             description = "Leggings produced from bone.";
@@ -37,7 +38,7 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.VBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
                 meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 
@@ -45,7 +46,7 @@ namespace ViMG.Items
         {
             //base.DrawInInventory(batch, position, scale);
 
-            batch.Draw(Texture, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

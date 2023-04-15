@@ -9,6 +9,7 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -23,6 +24,7 @@ namespace ViMG.Entities
             Finished,
         }
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
 
         private Vector2 pitchYaw;
 
@@ -114,13 +116,13 @@ namespace ViMG.Entities
                     distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / DIVINGINSKY_TIME));
 
                 Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
+                    material, mesh.VBO, mesh.IBO,
                     Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                     Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
                     Matrix.CreateRotationX(MathHelper.ToRadians(pitchYaw.X)) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(pitchYaw.Y)) *
                     Matrix.CreateTranslation(Main.camera.Position),
-                    Main.assetsManager.GetAsset<Texture2D>("mana_star"), DrawHelper.WhitePixel,
-                    mesh.VBO, mesh.IBO, directionalSourceRect.front, Color.White * world.GetTimeOfNight()));
+                    directionalSourceRect.front, Color.White * world.GetTimeOfNight()));
             }
             else if (state == State.DivingInWorld)
             {
@@ -147,16 +149,15 @@ namespace ViMG.Entities
 
                 float sortVal = (Main.camera.Position - Position).Length();
 
-                Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(sortVal,
-                    lerpStartRotMat * Matrix.CreateTranslation(p),
-                    Main.assetsManager.GetAsset<Texture2D>("mana_star"), DrawHelper.WhitePixel,
-                    mesh.VBO, mesh.IBO, directionalSourceRect.front, Color.White * world.GetTimeOfNight() * (1 - t)));
+                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    material, mesh.VBO, mesh.IBO, lerpStartRotMat * Matrix.CreateTranslation(p), 
+                    directionalSourceRect.front, Color.White * world.GetTimeOfNight() * (1 - t)));
 
-                Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    material, mesh.VBO, mesh.IBO, 
                     Matrix.CreateScale(sx, 1, 1) *
                     lerpEndRotMat * Matrix.CreateTranslation(p),
-                    Main.assetsManager.GetAsset<Texture2D>("mana_star"), DrawHelper.WhitePixel,
-                    mesh.VBO, mesh.IBO, sourceRect, Color.White * world.GetTimeOfNight() * t));
+                    sourceRect, Color.White * world.GetTimeOfNight() * t));
             }
             else if (state == State.Finished)
             {

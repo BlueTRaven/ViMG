@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemHeart : Item
     {
-        public ItemHeart() : base("heart", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 43, 16, 21))
+        public ItemHeart() : base("heart", StaticMaterials.Items, new RectangleF(128, 43, 16, 21))
         {
 
         }

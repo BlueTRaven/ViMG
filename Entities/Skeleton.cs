@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
@@ -19,8 +20,9 @@ namespace ViMG.Entities
         }
 
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skeleton");
 
-		private State state;
+        private State state;
 
 		private NoticeHandler<Player> noticeHandler;
 
@@ -364,8 +366,7 @@ namespace ViMG.Entities
                 }
             }
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skeleton"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(vibratePos) *

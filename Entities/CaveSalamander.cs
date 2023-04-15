@@ -9,12 +9,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class CaveSalamander : Entity
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("salamander");
 
 		public Vector3 MaxVelocity = new Vector3(1.6f * Cube.CUBE_SCALE);
 		public Vector3 MaxVelocityFalling = new Vector3(1.6f * Cube.CUBE_SCALE, 17 * Cube.CUBE_SCALE, 1.6f * Cube.CUBE_SCALE);
@@ -165,8 +167,7 @@ namespace ViMG.Entities
             if (mesh.VBO == null)
                 mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("salamander"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));

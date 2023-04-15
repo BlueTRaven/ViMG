@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -13,7 +14,7 @@ namespace ViMG.Items
 	{
 		private ItemPickaxeHead.PickaxeStats stats = new ItemPickaxeHead.PickaxeStats(0.55f, 1, 2, 1, 1, 0);
 
-		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 144, 16, 16))
+		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", StaticMaterials.Items, new RectangleF(32, 144, 16, 16))
 		{
 			name = "Lavacrystal Pickaxe";
 			description = "A pickaxe made of enchanted bones and lava crystal.\n" +

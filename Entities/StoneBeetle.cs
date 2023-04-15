@@ -8,12 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class StoneBeetle : Entity, IHasStats
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("stone_beetle");
 
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
@@ -48,8 +50,7 @@ namespace ViMG.Entities
 
             ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 0.5f, true); 
-            ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-                new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
+            ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
             visStats.rollFollowsVelocity = true;
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
@@ -102,8 +103,7 @@ namespace ViMG.Entities
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("stone_beetle"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));

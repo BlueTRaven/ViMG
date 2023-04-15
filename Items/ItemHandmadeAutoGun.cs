@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -16,12 +17,11 @@ namespace ViMG.Items
         private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.8f, 1, 1);
 
         private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(2, 0, 0);
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-               new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
+        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
             Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-        public ItemHandmadeAutoGun() : base("handmade_autogun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 128, 16, 16))
+        public ItemHandmadeAutoGun() : base("handmade_autogun", StaticMaterials.Items, new RectangleF(96, 128, 16, 16))
         {
             name = "Handmade Automatic Gun";
             description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.\n" +

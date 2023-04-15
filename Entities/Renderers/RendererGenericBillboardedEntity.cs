@@ -88,7 +88,7 @@ namespace ViMG.Entities.Renderers
             stats.SBO.SetData(stats.Draws.Buffer);
 
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                stats.Material.Diffuse, stats.Material.Specular, stats.Material.Emissive, mesh.VBO, mesh.IBO, stats.SBO, 0, stats.Draws.Length));
+                stats.Material, mesh.VBO, mesh.IBO, stats.SBO, 0, stats.Draws.Length));
         }
     }
 }

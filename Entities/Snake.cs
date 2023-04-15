@@ -8,6 +8,7 @@ using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Buffs;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -16,8 +17,9 @@ namespace ViMG.Entities
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x1;
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh1x1;
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x2;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
 
-		private AIWalkerMelee<Snake> ai;
+        private AIWalkerMelee<Snake> ai;
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
@@ -146,8 +148,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("snake"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, useMesh.VBO, useMesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, useMesh.VBO, useMesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));

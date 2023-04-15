@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemScrollFind : Item
     {
-        public ItemScrollFind() : base("scroll_find", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 32, 16, 16))
+        public ItemScrollFind() : base("scroll_find", StaticMaterials.Items, new RectangleF(112, 32, 16, 16))
         {
         }
 
@@ -44,7 +45,7 @@ namespace ViMG.Items
 			if (point.valid) 
 			{
 				player.world.EntityManager.Add(new Entities.Line(player.Position, point.position.InWorldSpace(), Cube.CUBE_SCALE / 16f, -1,
-					DrawHelper.WhitePixel, RectangleF.Empty, Color.Red, 2f * 60f));
+					new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty, Color.Red, 2f * 60f));
 
 				player.Magic -= 5;
 

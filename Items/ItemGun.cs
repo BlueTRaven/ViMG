@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -14,11 +15,11 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileVisStats projVisStats;
 		private ProjectileManager.ProjectileStats projStats;
 
-		public ItemGun() : base("gun_base", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 0, 16, 16))
+		public ItemGun() : base("gun_base", StaticMaterials.Items, new RectangleF(32, 0, 16, 16))
 		{
 			projVisStats = new ProjectileManager.ProjectileVisStats()
 			{ 
-				texture = Main.assetsManager.GetAsset<Texture2D>("bullet"),
+				sourceRect = new RectangleF(0, 0, 16, 16),
 				scale = Cube.CUBE_SCALE
 			};
 

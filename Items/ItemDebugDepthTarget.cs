@@ -13,7 +13,7 @@ namespace ViMG.Items
 		public RenderTarget2D DepthTarget;
 
 		private static SimpleMesh<VertexPositionTexture, int> depthMesh;
-		public ItemDebugDepthTarget() : base("debug_depth_target", null, new BrUtility.RectangleF(0, 0, 0, 0))
+		public ItemDebugDepthTarget() : base("debug_depth_target", new Rendering.RendererDeferred.DrawMaterial(), new BrUtility.RectangleF(0, 0, 0, 0))
 		{
 			name = "DEBUG SHADOW DEPTH RENDERER";
 			description = "Renders the depth buffer into your very hands.\n" +

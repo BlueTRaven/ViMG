@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
@@ -99,7 +100,10 @@ namespace ViMG.Entities
 		{
 			public float scale;
 			public RectangleF sourceRect;
-			public Texture2D texture;
+			//Note: we're removing the option to add a texture in visual stats.
+			//That means each projectile MUST use the projectile texture.
+			//This is done for instancing's sake. If there is the possibility of having more than one texture, it kills the ability to instance
+			//and makes things much more complicated to work with. So we're just going to disallow this.
 
 			public bool hasLight;
 			public Vector4 lightColor;
@@ -107,9 +111,8 @@ namespace ViMG.Entities
 
 			public bool rollFollowsVelocity;
 
-			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale)
+			public ProjectileVisStats(RectangleF sourceRect, float scale)
 			{
-				this.texture = texture;
 				this.sourceRect = sourceRect;
 				this.scale = scale;
 
@@ -120,9 +123,8 @@ namespace ViMG.Entities
 				rollFollowsVelocity = false;
 			}
 
-			public ProjectileVisStats(Texture2D texture, RectangleF sourceRect, float scale, Vector4 lightColor, Vector2 lightExtents)
+			public ProjectileVisStats(RectangleF sourceRect, float scale, Vector4 lightColor, Vector2 lightExtents)
 			{
-				this.texture = texture;
 				this.sourceRect = sourceRect;
 				this.scale = scale;
 
@@ -230,11 +232,12 @@ namespace ViMG.Entities
 		}
 
 		public const int PROJECTILES_MAX = 1024;
+		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
 
 		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
 
 		private World world;
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		public ProjectileManager(World world, GraphicsDevice device)
 		{
@@ -389,8 +392,7 @@ namespace ViMG.Entities
 					//float roll = Vector3.Dot(-Main.camera.Up, Vector3.Normalize(projectiles[i].velocity)) + MathHelper.ToRadians(180);
 					float roll = 0;
 
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(projectiles[i].visStats.texture,
-						DrawHelper.BlackPixel, projectiles[i].visStats.hasLight ? DrawHelper.WhitePixel : DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 						Matrix.CreateScale(projectiles[i].visStats.scale) *
 						Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, roll) *
 						//Matrix.CreateRotationZ(roll) *

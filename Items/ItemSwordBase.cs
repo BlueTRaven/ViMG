@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
 	public class ItemSwordBase : Item
 	{
-		public ItemSwordBase() : base("sword_base", Main.assetsManager.GetAsset<Texture2D>("swrod"), new BrUtility.RectangleF(0, 0, 16, 16))
+		public ItemSwordBase() : base("sword_base", StaticMaterials.Items, new BrUtility.RectangleF(0, 0, 16, 16))
 		{
 		}
 

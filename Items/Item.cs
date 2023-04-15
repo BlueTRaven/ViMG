@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Items
@@ -118,7 +119,8 @@ namespace ViMG.Items
             }
 		}
 
-		public readonly Texture2D Texture;
+		//public readonly Texture2D Texture;
+		public readonly RendererDeferred.DrawMaterial Material;
 		public readonly RectangleF SourceRect;
 		protected float scale = 1f;
 		protected const float MESH_SIZE = Cube.CUBE_SCALE / 2f;
@@ -135,10 +137,10 @@ namespace ViMG.Items
 
 		protected static (VertexBuffer VBO, IndexBuffer IBO) meshItemQuadInWorld;
 
-		public Item(string identifier, Texture2D texture, RectangleF sourceRect)
+		public Item(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect)
 		{
 			this.Identifier = identifier;
-			this.Texture = texture;
+			this.Material = material;
 			this.SourceRect = sourceRect;
 		}
 
@@ -214,7 +216,7 @@ namespace ViMG.Items
 			//fit to frame
 			scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
 
-			batch.Draw(Texture, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+			batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
@@ -229,7 +231,7 @@ namespace ViMG.Items
 				sourceRect.width = -sourceRect.width;
             }
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
 				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, 
 				transform, sourceRect));
 		}

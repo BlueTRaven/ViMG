@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemMetalHeart : Item
     {
-        public ItemMetalHeart() : base("heart_metal", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(144, 43, 16, 21))
+        public ItemMetalHeart() : base("heart_metal", StaticMaterials.Items, new RectangleF(144, 43, 16, 21))
         {
             name = "Metal Heart";
             description = "An intricately carved block of solid steel in the shape of a heart. Makes you feel uneasy.\n" +

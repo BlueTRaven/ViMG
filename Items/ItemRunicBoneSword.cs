@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -24,7 +25,7 @@ namespace ViMG.Items
                 preUseTime = 12f / 60f
             }, 16, Cube.CUBE_SCALE * 1.25f), Cube.CUBE_SCALE * 1.75f);
 
-        public ItemRunicBoneSword() : base("sword_runic_bone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 112, 32, 32))
+        public ItemRunicBoneSword() : base("sword_runic_bone", StaticMaterials.Items, new RectangleF(176, 112, 32, 32))
         {
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
@@ -37,8 +38,7 @@ namespace ViMG.Items
 
             stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
-            visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-                new RectangleF(48, 0, 16, 16), Cube.CUBE_SCALE / 3f);
+            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 0, 16, 16), Cube.CUBE_SCALE / 3f);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)

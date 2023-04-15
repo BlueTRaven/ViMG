@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -15,7 +16,7 @@ namespace ViMG.Items
 
         private readonly string realResourceName;
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
-            base("coin_" + resource, Main.assetsManager.GetAsset<Texture2D>("swrod"), sourceRect)
+            base("coin_" + resource, StaticMaterials.Items, sourceRect)
         {
             this.resource = resource;
             this.Value = value;

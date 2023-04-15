@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemSkeletonHead : Item
     {
-        public ItemSkeletonHead() : base("skeleton_head", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 64, 16, 16))
+        public ItemSkeletonHead() : base("skeleton_head", StaticMaterials.Items, new RectangleF(48, 64, 16, 16))
         {
             name = "Skeleton Head";
             description = "Unlike most skeletons on this strange island, this one doesn't appear to be alive.\n" +

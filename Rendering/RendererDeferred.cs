@@ -34,23 +34,29 @@ namespace ViMG.Rendering
         {
             public Texture2D Diffuse;
             public Texture2D Normal = DrawHelper.NormalPixel;
-            public Texture2D Specular = DrawHelper.WhitePixel;
+            public Texture2D Specular = DrawHelper.BlackPixel;
             public Texture2D Emissive = DrawHelper.BlackPixel;
 
             public DrawMaterial(Texture2D diffuseOnly)
             {
                 Diffuse = diffuseOnly;
                 Normal = DrawHelper.NormalPixel;
-                Specular = DrawHelper.WhitePixel;
+                Specular = DrawHelper.BlackPixel;
                 Emissive = DrawHelper.BlackPixel;
+
+                if (Diffuse == null)
+                    throw new Exception("AAAAA");
             }
 
             public DrawMaterial(string name)
             {
                 Diffuse = Main.assetsManager.GetAsset<Texture2D>(name);
                 Normal = Main.assetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
-                Specular = Main.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.WhitePixel;
+                Specular = Main.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.BlackPixel;
                 Emissive = Main.assetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
+
+                if (Diffuse == null)
+                    throw new Exception("AAAAA");
             }
         }
 
@@ -84,9 +90,7 @@ namespace ViMG.Rendering
 
         public struct GBufferDraw
         {
-            public Texture2D Diffuse;
-            public Texture2D Specular;
-            public Texture2D Emissive;
+            public DrawMaterial Material;
 
             public VertexBuffer VBO;
             public IndexBuffer IBO;
@@ -98,11 +102,9 @@ namespace ViMG.Rendering
 
             public Vector3 TintColor;
 
-            public GBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect = null, Vector3? tintColor = null)
+            public GBufferDraw(DrawMaterial material, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect = null, Vector3? tintColor = null)
             {
-                this.Diffuse = diffuse;
-                this.Specular = specular;
-                this.Emissive = emissive;
+                this.Material = material;
                 this.VBO = VBO;
                 this.IBO = IBO;
                 this.World = world;
@@ -124,9 +126,7 @@ namespace ViMG.Rendering
         //For best results, pre-allocate the per-instance arrays.
         public struct InstancedGBufferDraw
         {
-            public Texture2D Diffuse;
-            public Texture2D Specular;
-            public Texture2D Emissive;
+            public DrawMaterial Material;
 
             public VertexBuffer VBO;
             public IndexBuffer IBO;
@@ -136,14 +136,12 @@ namespace ViMG.Rendering
             public int SBOStart;
             public int SBOLen;
 
-            public InstancedGBufferDraw(Texture2D diffuse, Texture2D specular, Texture2D emissive, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart = 0, int SBOLen = -1)
+            public InstancedGBufferDraw(DrawMaterial material, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart = 0, int SBOLen = -1)
             {
                 if (SBOLen == -1)
                     SBOLen = SBO.ElementCount;
 
-                this.Diffuse = diffuse;
-                this.Specular = specular;
-                this.Emissive = emissive;
+                this.Material = material;
                 this.VBO = VBO;
                 this.IBO = IBO;
 
@@ -155,10 +153,11 @@ namespace ViMG.Rendering
 
         public struct TransparentDraw
         {
+            public DrawMaterial Material;
+
             public float SortValue;
             public Matrix Transform;
-            public Texture2D Diffuse;
-            public Texture2D Emissive;
+
             public VertexBuffer VBO;
             public IndexBuffer IBO;
 
@@ -166,12 +165,11 @@ namespace ViMG.Rendering
 
             public Vector4 TintColor;
 
-            public TransparentDraw(float sortValue, Matrix transform, Texture2D diffuse, Texture2D emissive, VertexBuffer vbo, IndexBuffer ibo, RectangleF? sourceRect = null, Color? tintColor = null)
+            public TransparentDraw(float sortValue, DrawMaterial material, VertexBuffer vbo, IndexBuffer ibo, Matrix transform, RectangleF? sourceRect = null, Color? tintColor = null)
             {
+                this.Material = material;
                 this.SortValue = sortValue;
                 this.Transform = transform;
-                this.Diffuse = diffuse;
-                this.Emissive = emissive;
                 this.VBO = vbo;
                 this.IBO = ibo;
 
@@ -258,7 +256,7 @@ namespace ViMG.Rendering
         public List<InstancedGBufferDraw> DrawsPassGBufferInstanced = new List<InstancedGBufferDraw>();
         public List<PointLightVolumeDraw> DrawsPointLightVolumePass = new List<PointLightVolumeDraw>();
         public List<PointLightVolumeDraw> DrawsShadowmappedPointLightVolumePass = new List<PointLightVolumeDraw>();
-        public List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
+        private List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsSkyboxPass = new List<TransparentDraw>();
         //Note that DEBUG markers ARE NOT RESET EVERY FRAME.
@@ -562,12 +560,12 @@ namespace ViMG.Rendering
                         EffectGBuffer.Parameters["World"].SetValue(draw.World);
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
 
-                        EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
-                        EffectGBuffer.Parameters["Normal"].SetValue(Main.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"));
-                        EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
-                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
+                        EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
+                        EffectGBuffer.Parameters["Normal"].SetValue(draw.Material.Normal);
+                        EffectGBuffer.Parameters["Specular"].SetValue(draw.Material.Specular);
+                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Material.Emissive);
 
-                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Material.Diffuse.Bounds.Size.ToVector2());
 
                         EffectGBuffer.Parameters["TintColor"].SetValue(draw.TintColor);
 
@@ -600,12 +598,12 @@ namespace ViMG.Rendering
 
                         EffectGBuffer.Parameters["InstancedDraws"].SetValue(draw.SBO);
 
-                        EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Diffuse);
-                        EffectGBuffer.Parameters["Normal"].SetValue(Main.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"));
-                        EffectGBuffer.Parameters["Specular"].SetValue(draw.Specular);
-                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Emissive);
+                        EffectGBuffer.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
+                        EffectGBuffer.Parameters["Normal"].SetValue(draw.Material.Normal);
+                        EffectGBuffer.Parameters["Specular"].SetValue(draw.Material.Specular);
+                        EffectGBuffer.Parameters["Emissive"].SetValue(draw.Material.Emissive);
 
-                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+                        EffectGBuffer.Parameters["TextureSize"].SetValue(draw.Material.Diffuse.Bounds.Size.ToVector2());
 
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
@@ -775,7 +773,7 @@ namespace ViMG.Rendering
                 device.SetVertexBuffer(draw.VBO);
                 device.Indices = draw.IBO;
 
-                EffectSkybox.Parameters["Diffuse"].SetValue(draw.Diffuse);
+                EffectSkybox.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
                 EffectSkybox.Parameters["World"].SetValue(draw.Transform);
                 EffectSkybox.Parameters["TintColor"].SetValue(draw.TintColor);
 
@@ -787,7 +785,7 @@ namespace ViMG.Rendering
                 }
                 else EffectSkybox.Parameters["UseSourceRect"].SetValue(false);
 
-                EffectSkybox.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+                EffectSkybox.Parameters["TextureSize"].SetValue(draw.Material.Diffuse.Bounds.Size.ToVector2());
 
                 foreach (var pass in EffectSkybox.CurrentTechnique.Passes)
                 {
@@ -883,8 +881,8 @@ namespace ViMG.Rendering
                 device.SetVertexBuffer(draw.VBO);
                 device.Indices = draw.IBO;
 
-                EffectTransparent.Parameters["Diffuse"].SetValue(draw.Diffuse);
-                EffectTransparent.Parameters["Emissive"].SetValue(draw.Emissive);
+                EffectTransparent.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
+                EffectTransparent.Parameters["Emissive"].SetValue(draw.Material.Emissive);
                 EffectTransparent.Parameters["World"].SetValue(draw.Transform);
                 EffectTransparent.Parameters["TintColor"].SetValue(draw.TintColor);
 
@@ -896,7 +894,7 @@ namespace ViMG.Rendering
                 }
                 else EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
 
-                EffectTransparent.Parameters["TextureSize"].SetValue(draw.Diffuse.Bounds.Size.ToVector2());
+                EffectTransparent.Parameters["TextureSize"].SetValue(draw.Material.Diffuse.Bounds.Size.ToVector2());
 
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
@@ -1074,6 +1072,17 @@ namespace ViMG.Rendering
             if (currentOutput == -1)
                 return outputRT;
             else return gbufferTargets[currentOutput];
+        }
+
+        public void AddTransparentDraw(TransparentDraw draw)
+        {
+            if (draw.Material.Diffuse == null)
+            {
+                Console.WriteLine("Cannot add draw without diffuse material.");
+                return;
+            }
+
+            DrawsTransparentPass.Add(draw);
         }
     }
 }

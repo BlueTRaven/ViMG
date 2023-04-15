@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -21,7 +22,7 @@ namespace ViMG.Items
                 preUseTime = 10f / 60f,
             }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
-        public ItemIronAxe() : base("wepaxe_iron", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 64, 32, 16))
+        public ItemIronAxe() : base("wepaxe_iron", StaticMaterials.Items, new RectangleF(128, 64, 32, 16))
         {
             name = "Iron Axe";
             description = "An axe made of well-crafted iron.\n" +

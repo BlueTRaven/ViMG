@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -14,7 +15,7 @@ namespace ViMG.Items
     {
         private int light = -1;
 
-        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 96, 32, 32))
+        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull", StaticMaterials.Items, new RectangleF(64, 96, 32, 32))
         {
             name = "Suspiciously Glowing Skull";
             description = "A skull that emits a faint red glowing light. It's unsettling...\n" +

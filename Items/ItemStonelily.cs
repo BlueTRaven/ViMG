@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemStonelily : Item
     {
-        public ItemStonelily() : base("stone_lily", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 80, 16, 16))
+        public ItemStonelily() : base("stone_lily", StaticMaterials.Items, new RectangleF(0, 80, 16, 16))
         {
             name = "Stone Lily";
             description = "A lily made of solid stone. Despite its cold exterior, its beautiful appearance warms your heart.\n" +

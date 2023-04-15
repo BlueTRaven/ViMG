@@ -14,6 +14,7 @@ namespace ViMG.Entities.Renderers
 {
     public class RendererTree : EntityRenderer
     {
+        private RendererDeferred.DrawMaterial material;
         private (VertexBuffer VBO, IndexBuffer IBO) mesh;
         private StructuredBuffer SBO;
         private FastList<RendererDeferred.InstancedDraw> draws = new FastList<RendererDeferred.InstancedDraw>();
@@ -22,6 +23,7 @@ namespace ViMG.Entities.Renderers
 
         public RendererTree(GraphicsDevice device) : base("tree", device)
         {
+            material = new RendererDeferred.DrawMaterial("tree");
             List<VertexCube> vertices = new List<VertexCube>();
             List<int> indices = new List<int>();
             MeshHelper.MakeXMeshVerts(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
@@ -134,8 +136,7 @@ namespace ViMG.Entities.Renderers
                 needsReupload = false;
             }
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
-                DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, SBO, 0, draws.Length));
+            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh.VBO, mesh.IBO, SBO, 0, draws.Length));
         }
 
         private static Type[] renderedTypes = new Type[] { typeof(Tree) };

@@ -3,12 +3,13 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
 	public class ItemGlowdust : Item
 	{
-		public ItemGlowdust() : base("glowdust", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 16, 16, 16))
+		public ItemGlowdust() : base("glowdust", StaticMaterials.Items, new RectangleF(16, 16, 16, 16))
 		{
 			name = "Glowdust";
 			description = "A strange glowing dust that sticks to your fingers.";

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -17,7 +18,7 @@ namespace ViMG.Items
             new(Main.Registry.BuffRegistry.Get("str_up"), 3f * 60f, 5)
         };
 
-        public ItemPotato() : base("food_potato", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(192, 80, 16, 16))
+        public ItemPotato() : base("food_potato", StaticMaterials.Items, new RectangleF(192, 80, 16, 16))
         {
             name = "Potato";
             description = "A hearty potato.\n" +

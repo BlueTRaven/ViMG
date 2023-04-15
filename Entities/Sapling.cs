@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
@@ -82,8 +83,7 @@ namespace ViMG.Entities
 				MakeMesh(device);
 
 			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-				Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.vbo, mesh.ibo,
+				StaticMaterials.Cubes, mesh.vbo, mesh.ibo,
 				Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), GetSourceRect()));
 		}
 

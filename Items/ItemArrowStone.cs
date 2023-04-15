@@ -3,12 +3,13 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
 	public class ItemArrowStone : Item
 	{
-		public ItemArrowStone() : base("ammo_arrow_stone", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(16, 48, 16, 16))
+		public ItemArrowStone() : base("ammo_arrow_stone", StaticMaterials.Items, new RectangleF(16, 48, 16, 16))
 		{
 			Tags.Add("ammo_arrow");
 		}

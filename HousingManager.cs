@@ -258,8 +258,9 @@ namespace ViMG
                     Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
                         Matrix.CreateTranslation(worldPos);
 
-                    Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(distance, transform, DrawHelper.WhitePixel, DrawHelper.WhitePixel,
-                        debugMesh.VBO, debugMesh.IBO,
+                    //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+                        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh.VBO, debugMesh.IBO, transform,
                         tintColor: Color.Green * 0.125f));
                 }
             }

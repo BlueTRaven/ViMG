@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -15,11 +16,10 @@ namespace ViMG.Items
     {
         private RangedAttackStats rangeAttackStats = new RangedAttackStats(new AttackStats(Player.DamageType.Ranged, 2f, 14, 4), Cube.CUBE_SCALE * 20, 0);
 
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-            new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
+        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats;
 
-        public ItemLavaCannon() : base("cannon_lavacrystal", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(128, 112, 32, 16))
+        public ItemLavaCannon() : base("cannon_lavacrystal", StaticMaterials.Items, new RectangleF(128, 112, 32, 16))
         {
             name = "Lava Cannon";
             description = "Fires a crystal of lava that explodes upon impact.\n" +

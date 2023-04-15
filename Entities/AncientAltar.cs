@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
@@ -14,9 +15,9 @@ namespace ViMG.Entities
 	public class AncientAltar : Entity, ICubeTracker
 	{
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
-		//private static SimpleMesh<VertexCube, int> mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
-		private float radius;
+        private float radius;
 
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -92,8 +93,7 @@ namespace ViMG.Entities
 			if (mesh.VBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
-				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
 			/*Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,

@@ -10,6 +10,7 @@ using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using ViMG.VertexDeclarations;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -25,6 +26,7 @@ namespace ViMG.Entities
         }
 
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private Save save;
         public CubePosition TrackedPosition => save.trackedPosition;
@@ -102,8 +104,7 @@ namespace ViMG.Entities
             else sourceRect.x = 2 * 16;
 
             Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-                Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel, DrawHelper.WhitePixel, 
-                mesh.VBO, mesh.IBO, Matrix.CreateTranslation(Position), sourceRect));
+                material, mesh.VBO, mesh.IBO, Matrix.CreateTranslation(Position), sourceRect));
         }
 
         public unsafe override void OnSave(List<byte> saveBytes)

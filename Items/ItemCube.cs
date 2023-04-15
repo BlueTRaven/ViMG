@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -12,7 +13,7 @@ namespace ViMG.Items
 	{
 		private ushort cubeId;
 
-		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), 
+		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, StaticMaterials.Cubes, 
 			cube.GetHeldSourceRect())
 		{
 			this.cubeId = cubeId;
@@ -57,7 +58,7 @@ namespace ViMG.Items
 
 			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
 			if (mesh.VBO != null)
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
 					mesh.VBO, mesh.IBO, scaled, cube.GetHeldSourceRect(world)));
 		}
 	}

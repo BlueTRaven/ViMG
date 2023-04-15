@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -16,7 +17,7 @@ namespace ViMG.Items
         private static MagicAttackStats magicStats = 
             new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
 
-        public ItemBookWinds() : base("book_spell_winds", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 32, 16, 16))
+        public ItemBookWinds() : base("book_spell_winds", StaticMaterials.Items, new RectangleF(80, 32, 16, 16))
         {
             name = "Spellbook: Winds";
             description = "A spellbook with an explanation of how to cast \"Winds\".\n" +

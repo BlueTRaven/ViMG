@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -19,6 +20,7 @@ namespace ViMG.Entities
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mountMesh;
         private static (VertexBuffer VBO, IndexBuffer IBO) doorMesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private TypedIndex mountShapeIndex;
         private TypedIndex doorShapeIndex;
@@ -168,16 +170,14 @@ namespace ViMG.Entities
             var position = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Position;
             var orientation = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Orientation;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mountMesh.VBO, mountMesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mountMesh.VBO, mountMesh.IBO,
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
                 Matrix.CreateTranslation(position)));
 
             position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position;
             orientation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, doorMesh.VBO, doorMesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, doorMesh.VBO, doorMesh.IBO,
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
                 Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
 

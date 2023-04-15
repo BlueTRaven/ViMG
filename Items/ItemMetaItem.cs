@@ -4,12 +4,14 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
 	public abstract class ItemMetaItem<T> : Item where T : Item
 	{
-		public ItemMetaItem(string identifier, Texture2D texture, RectangleF sourceRect) : base(identifier, texture, sourceRect)
+		public ItemMetaItem(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect) : base(identifier, material, sourceRect)
 		{
 		}
 
@@ -36,8 +38,7 @@ namespace ViMG.Items
 				//If no valid meta, draw an error texture.
 				if (meshItemQuadInWorld.VBO != null)
 				{
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("swrod"), 
-						DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
 						meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, new RectangleF(112, 112, 16, 16)));
 				}
 			}

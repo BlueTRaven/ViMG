@@ -8,13 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class SlimeBig : Entity, IHasStats
     {
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
-		//private static SimpleMesh<VertexCube, int> mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
 
         private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
@@ -90,8 +91,7 @@ namespace ViMG.Entities
 			if (ai.OnGround && (alive % interval) / interval < 0.5f)
 				ysrc = 64;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("slime"), 
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),

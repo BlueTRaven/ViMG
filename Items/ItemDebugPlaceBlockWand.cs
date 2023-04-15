@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -14,7 +15,7 @@ namespace ViMG.Items
     {
         private const int MAX_PLACEABLE_BLOCKS = 80;
 
-        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 64, 16, 16))
+        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", StaticMaterials.Items, new RectangleF(64, 64, 16, 16))
         {
             name = "DEBUG Place block wand";
             description = "Places blocks. For use in building.";

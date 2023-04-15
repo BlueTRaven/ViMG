@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemOssifiedHeart : Item
     {
-        public ItemOssifiedHeart() : base("heart_ossified", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(160, 43, 16, 21))
+        public ItemOssifiedHeart() : base("heart_ossified", StaticMaterials.Items, new RectangleF(160, 43, 16, 21))
         {
             name = "Ossified Heart";
             description = "Bone in the shape of a heart. Perhaps it was once a true heart, and disease turned it to bone.\n" +

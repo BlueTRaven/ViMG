@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -18,13 +19,13 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileVisStats visStats;
         private ProjectileManager.ProjectileStats stats;
 
-        public ItemBoneStaff() : base("magic_bone_staff", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(208, 124, 19, 20))
+        public ItemBoneStaff() : base("magic_bone_staff", StaticMaterials.Items, new RectangleF(208, 124, 19, 20))
         {
             name = "Runic Bone Staff";
             description = "A staff crafted from finely-carved bone.\n" +
                 magicStats.GetTooltip();
 
-            visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(80, 128, 32, 32), Cube.CUBE_SCALE);
+            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(80, 128, 32, 32), Cube.CUBE_SCALE);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, magicStats.attackStats.damage,
                 magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
         }

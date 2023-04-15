@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemMusketBall : Item
     {
-        public ItemMusketBall() : base("ammo_bullet_musketball", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 32, 16, 16))
+        public ItemMusketBall() : base("ammo_bullet_musketball", StaticMaterials.Items, new RectangleF(96, 32, 16, 16))
         {
             name = "Musket Ball";
             description = "A ball made as ammunition for simple ranged weaponry.";

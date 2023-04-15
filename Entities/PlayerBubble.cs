@@ -7,12 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class PlayerBubble : Entity, IHitboxOwner
     {
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("bubble");
 
         private float alive;
 
@@ -86,8 +88,8 @@ namespace ViMG.Entities
                 Matrix.CreateScale(scaleX, scaleY, 1) *
                 Matrix.CreateBillboard(Position, Main.camera.Position, Main.camera.Up, Main.camera.Forward);
 
-            Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((Main.camera.Position - Position).Length(),
-                mat, Main.assetsManager.GetAsset<Texture2D>("bubble"), DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((Main.camera.Position - Position).Length(),
+                material, mesh.VBO, mesh.IBO, mat,
                 new RectangleF(0, 0, 64, 64), Color.White * 0.85f));
         }
 

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -15,7 +16,7 @@ namespace ViMG.Items
     {
         private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 8, 8), 5);
 
-        public ItemBookBubble() : base("book_spell_bubble", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 48, 16, 16))
+        public ItemBookBubble() : base("book_spell_bubble", StaticMaterials.Items, new RectangleF(64, 48, 16, 16))
         {
             name = "Spellbook: Bubble";
             description = "A spellbook with an explanation of how to cast \"Bubble\".\n" +

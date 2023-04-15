@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemSwingTest : Item
     {
-        public ItemSwingTest() : base("swing_test", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 0, 16, 16))
+        public ItemSwingTest() : base("swing_test", StaticMaterials.Items, new RectangleF(48, 0, 16, 16))
         {
             name = "Swing Test";
         }

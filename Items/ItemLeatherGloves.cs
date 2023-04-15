@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemLeatherGloves : Item
     {
-        public ItemLeatherGloves() : base("leather_gloves", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 48, 16, 16))
+        public ItemLeatherGloves() : base("leather_gloves", StaticMaterials.Items, new RectangleF(48, 48, 16, 16))
         {
             name = "Leather Gloves";
             description = "A pair of sturdy leather gloves.\n" +

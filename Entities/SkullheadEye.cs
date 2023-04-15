@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -16,6 +17,8 @@ namespace ViMG.Entities
         private const float CLAMP_DIST = Cube.CUBE_SCALE * 4f;
         private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
         private static (VertexBuffer VBO, IndexBuffer IBO) lineMesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead_eye");
+
         private AIFlierMelee<SkullheadEye> ai;
 
         private BuffManager buffManager;
@@ -112,8 +115,7 @@ namespace ViMG.Entities
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skullhead_eye"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));
@@ -124,8 +126,8 @@ namespace ViMG.Entities
             Vector3 offsetAnchor = parent.Position;
             //Offset it slightly so we don't see the line poking through the billboard
             Vector3 offset = Vector3.Normalize(offsetAnchor - Position) * Cube.CUBE_SCALE / 10f;
-            DrawHelper3D.DrawLineTiled(Position + offset, offsetAnchor - offset, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, lineMesh,
-                Main.assetsManager.GetAsset<Texture2D>("skullhead_eye"), new RectangleF(52, 0, 4, 16), Color.White);
+            DrawHelper3D.DrawLineTiled(Position + offset, offsetAnchor - offset, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, material, 
+                lineMesh, new RectangleF(52, 0, 4, 16), Color.White);
         }
     }
 }

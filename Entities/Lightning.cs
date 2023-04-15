@@ -92,7 +92,7 @@ namespace ViMG.Entities
 
                 Vector3 current = positions[i];
 
-                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, LightningColor);
+                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
             }
 
             //DrawHelper3D.DrawLine(Position, bottomPosition, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, Color.Yellow);

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -18,11 +19,10 @@ namespace ViMG.Items
 
 		private static Buff.BuffInstance[] applyBuffs;
 
-		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
+		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private static ProjectileManager.ProjectileStats stats;
 
-		public ItemPoisonGun() : base("poison_gun", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 128, 16, 16))
+		public ItemPoisonGun() : base("poison_gun", StaticMaterials.Items, new RectangleF(112, 128, 16, 16))
         {
             name = "Poison Gun";
 			//TODO normal bullets if not musketball

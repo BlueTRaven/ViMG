@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -15,12 +16,11 @@ namespace ViMG.Items
 	{
 		private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 1.25f, 2, 1f);
 
-		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-			new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
+		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
 			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-		public ItemFlintlockPistol() : base("flintlock_pistol", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(144, 128, 16, 16))
+		public ItemFlintlockPistol() : base("flintlock_pistol", StaticMaterials.Items, new RectangleF(144, 128, 16, 16))
         {
             name = "Flintlock Pistol";
             description = "An old flintlock pistol. Better than a matchlock pistol!\n" +

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -16,7 +17,7 @@ namespace ViMG.Items
     {
         private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 6, 1f), 3);  //TODO 3 magic use
 
-        public ItemRodOfShock() : base("staff_spell_shock", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 96, 16, 16))
+        public ItemRodOfShock() : base("staff_spell_shock", StaticMaterials.Items, new RectangleF(112, 96, 16, 16))
         {
             name = "Staff of Shock";
             description = "Delivers a brief shock in a line in front of you. Ouch.\n" +

@@ -8,17 +8,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class Ghoul : Entity, IHasStats
     {
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("ghoul");
+
         public AIWalkerMelee<Ghoul> ai;
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
 		private float alive;
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
 		private const float CHECK_LIGHT_TIME = 1f;
 		private float checkLightTimer;
@@ -132,8 +135,7 @@ namespace ViMG.Entities
 
 			if (!inLight)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("ghoul"),
-					DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("ghoul_emissive"), mesh.VBO, mesh.IBO,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 					Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 32)));
@@ -144,12 +146,12 @@ namespace ViMG.Entities
 
 				float alpha = MathHelper.Lerp(0.5f, 1f, inLightTimer / CHECK_LIGHT_TIME);
 
-				Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(distance,
-					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-					Matrix.CreateTranslation(Position),
-					Main.assetsManager.GetAsset<Texture2D>("ghoul"),
-					Main.assetsManager.GetAsset<Texture2D>("ghoul_emissive"), mesh.VBO, mesh.IBO, new RectangleF(0, 0, 16, 32), Color.White * alpha));
+				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+					material, mesh.VBO, mesh.IBO,
+                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                    Matrix.CreateTranslation(Position), 
+					new RectangleF(0, 0, 16, 32), Color.White * alpha));
             }
 
 			if (ai.Health < ai.MaxHealth)

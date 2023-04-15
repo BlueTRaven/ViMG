@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemImpEyeball : Item
     {
-        public ItemImpEyeball() : base("imp_eyeball", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 48, 16, 16))
+        public ItemImpEyeball() : base("imp_eyeball", StaticMaterials.Items, new RectangleF(32, 48, 16, 16))
         {
             name = "Imp Eyeball";
             description = "An imp eyeball. It swivels to look at you no matter where you hold it. Gross.\n" +

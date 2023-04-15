@@ -7,13 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemBookOfEmber : Item
     {
 		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 0.25f, 1, 0f), 1);
-        public ItemBookOfEmber() : base("book_spell_ember", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 32, 16, 16))
+        public ItemBookOfEmber() : base("book_spell_ember", StaticMaterials.Items, new RectangleF(64, 32, 16, 16))
         {
 			name = "Spellbook: Ember";
 			description = "A spellbook with an explanation of how to cast \"Ember\".\n" +

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -17,18 +18,16 @@ namespace ViMG.Items
 		private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.95f, 1, 1f);
 
 		private ProjectileManager.ProjectileBatchStats batchStatsWithMusketballs = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-45, 45), new Vector2(-45, 45));
-		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-			   new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
+		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats statsWithMusketballs = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 4, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, true, 0.3f, true);
 
 		private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-25, 25), new Vector2(-25, 25));
-		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-			   new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
+		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE);
 
-		public ItemStoneBlunderbuss() : base("stone_blunderbuss", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 128, 16, 16))
+		public ItemStoneBlunderbuss() : base("stone_blunderbuss", StaticMaterials.Items, new RectangleF(80, 128, 16, 16))
         {
 			name = "Stone Blunderbuss";
 			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +

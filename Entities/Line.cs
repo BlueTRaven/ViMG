@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -16,7 +17,7 @@ namespace ViMG.Entities
         private readonly Vector3 endPosition;
         private readonly float width;
         private readonly float tileHeight;
-        private readonly Texture2D texture;
+        private readonly RendererDeferred.DrawMaterial material;
         private readonly RectangleF sourceRectangle;
         private readonly Color color;
 
@@ -27,13 +28,13 @@ namespace ViMG.Entities
         {
         }
 
-        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, Texture2D texture, RectangleF sourceRectangle, Color color, float time)
+        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color, float time)
         {
             this.Position = position;
             this.endPosition = endPosition;
             this.width = width;
             this.tileHeight = tileHeight;
-            this.texture = texture;
+            this.material = material;
             this.sourceRectangle = sourceRectangle;
             this.color = color;
             this.time = time;
@@ -64,8 +65,8 @@ namespace ViMG.Entities
 				mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
 
             if (tileHeight != -1)
-                DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, mesh, texture, sourceRectangle, color);
-            else DrawHelper3D.DrawLine(Position, endPosition, width, mesh, texture, sourceRectangle, color);
+                DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
+            else DrawHelper3D.DrawLine(Position, endPosition, width, material, mesh, sourceRectangle, color);
         }
 	}
 }

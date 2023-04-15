@@ -84,9 +84,9 @@ namespace ViMG.Entities
 
             float radius = (1 - timer / EXPLOSION_TIME) * this.radius;
             float sort = (Position - Main.camera.Position).Length();
-            Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(sort, 
-                Matrix.CreateScale(radius) * Matrix.CreateTranslation(Position), 
-                DrawHelper.WhitePixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO, null, Color.Red * 0.5f));
+            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
+                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh.VBO, mesh.IBO,
+                Matrix.CreateScale(radius) * Matrix.CreateTranslation(Position), null, Color.Red * 0.5f));
         }
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

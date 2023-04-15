@@ -135,7 +135,8 @@ namespace ViMG.Entities
 
                 Vector3 current = positions[i];
 
-                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, Lightning.LightningColor);
+                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), 
+                    mesh, RectangleF.Empty, Lightning.LightningColor);
             }
         }
 

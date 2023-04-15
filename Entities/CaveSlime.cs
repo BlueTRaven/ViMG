@@ -8,14 +8,15 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
 using ViMG.Buffs;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class CaveSlime : Entity, IHasStats
     {
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
-
-		private int maxHealth = 12;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
+        private int maxHealth = 12;
 		private Color tintColor = Color.White;
 
 		private float alive;
@@ -90,8 +91,7 @@ namespace ViMG.Entities
 			if (ai.InvulnTimer > 0)
 				tintColor = Color.Red;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("slime"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),

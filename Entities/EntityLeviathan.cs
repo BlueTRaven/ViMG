@@ -7,13 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
     public class EntityLeviathan : Entity, IHitboxOwner
     {
-		private enum State
+        private static (VertexBuffer VBO, IndexBuffer IBO) quad;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("leviathan");
+
+        private enum State
         {
 			Watching,
 			Enraged
@@ -21,8 +25,6 @@ namespace ViMG.Entities
 
 		private State state;
 		private int hitbox = -1;
-
-        private static (VertexBuffer VBO, IndexBuffer IBO) quad;
 
         public EntityLeviathan()
         {
@@ -113,16 +115,15 @@ namespace ViMG.Entities
 
 						float alpha = (dist - MIN_DIST) / (MAX_DIST - MIN_DIST);
 
-						Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(Cube.CUBE_SCALE * 32,
-							Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos),
-							Main.assetsManager.GetAsset<Texture2D>("leviathan"), DrawHelper.WhitePixel, quad.VBO, quad.IBO, new RectangleF(0, 0, 64, 64), Color.White * alpha));
+						Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(Cube.CUBE_SCALE * 32,
+							material, quad.VBO, quad.IBO, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos), 
+							new RectangleF(0, 0, 64, 64), Color.White * alpha));
 					}
 				}
                 else
                 {
 					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-						Main.assetsManager.GetAsset<Texture2D>("leviathan"), DrawHelper.BlackPixel, DrawHelper.WhitePixel,
-						quad.VBO, quad.IBO, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(Position),
+						material, quad.VBO, quad.IBO, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(Position),
 						new RectangleF(64, 0, 64, 64)));
 				}
 			}

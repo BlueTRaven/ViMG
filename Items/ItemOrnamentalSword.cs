@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -20,7 +21,7 @@ namespace ViMG.Items
                 preUseTime = 10f / 60f,
             }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
-        public ItemOrnamentalSword() : base("sword_ornamental", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(64, 128, 16, 16))
+        public ItemOrnamentalSword() : base("sword_ornamental", StaticMaterials.Items, new RectangleF(64, 128, 16, 16))
         {
             name = "Ornamental Sword";
             description = "A large sword that looks fancy but in reality is pretty flimsy.\n" +

@@ -7,6 +7,7 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using static ViMG.LightManager;
 
@@ -307,15 +308,15 @@ namespace ViMG
 			for (int i = 0; i < hitboxes.Length; i++)
             {
 				if (hitboxes[i].active)
-                {
+				{
 					float distance = (hitboxes[i].bounds.Position - Main.camera.Position).Length();
 					Matrix transform = Matrix.CreateScale(hitboxes[i].bounds.Size) *
 						Matrix.CreateTranslation(hitboxes[i].bounds.Position);
 
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(distance, transform, DrawHelper.WhitePixel, DrawHelper.WhitePixel,
-						debugMesh.VBO, debugMesh.IBO,
-						tintColor: Color.Red * 0.5f));
-                }
+					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance, 
+						new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh.VBO, debugMesh.IBO,
+						transform, tintColor: Color.Red * 0.5f));
+				}
             }
         }
 	}

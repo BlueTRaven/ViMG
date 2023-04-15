@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -16,7 +17,8 @@ namespace ViMG.Items
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material, Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 80, 16, 16))
+        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material, 
+            StaticMaterials.Items, new RectangleF(96, 80, 16, 16))
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;
@@ -48,7 +50,7 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.VBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
                 meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
         }
 
@@ -56,7 +58,7 @@ namespace ViMG.Items
         {
             //base.DrawInInventory(batch, position, scale);
 
-            batch.Draw(Texture, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 using ViMG.Generation;
 
 namespace ViMG.Items
@@ -27,7 +28,7 @@ namespace ViMG.Items
         private static int currentStructure;
         private static string[] assetKeysList;
 
-        public ItemDebugStructurePaster() : base("DEBUGStructurePaster", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructurePaster() : base("DEBUGStructurePaster", StaticMaterials.Items, new RectangleF(112, 112, 16, 16))
         {
             name = "DEBUG Structure Paster";
             description = "Allows you to paste structures, as they are defined in their structure files, into the world.";

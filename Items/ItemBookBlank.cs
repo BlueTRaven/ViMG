@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemBookBlank : Item
     {
-        public ItemBookBlank() : base("book_blank", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(48, 32, 16, 16))
+        public ItemBookBlank() : base("book_blank", StaticMaterials.Items, new RectangleF(48, 32, 16, 16))
         {
             name = "Book";
             description = "A book made of paper bound together.\n" +

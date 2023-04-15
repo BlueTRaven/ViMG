@@ -9,12 +9,15 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class Ghost : Entity, Buffs.IHasStats
     {
         private const int MAX_HEALTH = 30;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("grave_ghost");
 
         private float alive;
         private float hurtTimer;
@@ -24,7 +27,6 @@ namespace ViMG.Entities
         private BuffManager buffManager;
 
         private Color tintColor;
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
         private float despawnTimer = 20;
 
@@ -168,8 +170,7 @@ namespace ViMG.Entities
 
             tintColor = Color.White;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("grave_ghost"),
-                DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position + offset), sourceRect, tintColor.ToVector3()));

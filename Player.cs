@@ -12,8 +12,10 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.Items;
 using ViMG.Physics;
+using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
 using static ViMG.Player;
@@ -277,6 +279,9 @@ namespace ViMG
 
 		private (VertexBuffer VBO, IndexBuffer IBO) mesh;
 		private (VertexBuffer VBO, IndexBuffer IBO) lookAtMesh;
+
+		private RendererDeferred.DrawMaterial material;
+		private RendererDeferred.DrawMaterial lookAtMaterial = StaticMaterials.Cubes;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -1724,25 +1729,25 @@ namespace ViMG
 					{
 						if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
 						{
-							Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
-								Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+							Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
+                                lookAtMesh.VBO, lookAtMesh.IBO,
+                                Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 								Matrix.CreateScale(1.126f) *
 								Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
 								Matrix.CreateTranslation(positions[i].InWorldSpace()),
-								Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
-								lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
+								new RectangleF(0, 1008, 16, 16), color));
 						}
 					}
 				}
 				else 
 				{
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(),
-						Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
+                        lookAtMesh.VBO, lookAtMesh.IBO,
+                        Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateScale(1.126f) *
 						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateTranslation(LookAtPos.InWorldSpace()),
-						Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), DrawHelper.BlackPixel,
-						lookAtMesh.VBO, lookAtMesh.IBO, new RectangleF(0, 1008, 16, 16), color));
+						new RectangleF(0, 1008, 16, 16), color));
 				}
 			}
 		}

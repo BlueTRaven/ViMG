@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -39,8 +40,9 @@ namespace ViMG.Entities
 
         private static (VertexBuffer VBO, IndexBuffer IBO) meshHead;
         private static (VertexBuffer VBO, IndexBuffer IBO) meshVertibrae;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead");
 
-		private Color tintColor = Color.White;
+        private Color tintColor = Color.White;
 
 		private float invulnTimer;
 		private float alive;
@@ -96,9 +98,10 @@ namespace ViMG.Entities
 
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-            visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("skullhead"), new RectangleF(48, 128, 32, 32), Cube.CUBE_SCALE);
+            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 48, 32, 32), Cube.CUBE_SCALE);
 
-			world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
+            //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+            world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
 		}
 
         public override void OnDelete()
@@ -434,8 +437,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skullhead"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshHead.VBO, meshHead.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshHead.VBO, meshHead.IBO,
 				Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
 				Matrix.CreateScale(scale) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
@@ -449,8 +451,7 @@ namespace ViMG.Entities
 
 				float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("skullhead"),
-					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshVertibrae.VBO, meshVertibrae.IBO,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae.VBO, meshVertibrae.IBO,
 					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 					Matrix.CreateTranslation(trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));

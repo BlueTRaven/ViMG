@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
@@ -14,10 +15,11 @@ namespace ViMG.Entities
     {
         const float RADIUS_XZ = Cube.CUBE_SCALE * 16;
         const float RADIUS_Y = Cube.CUBE_SCALE * 2f;
+        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("glow_node");
 
         private int[] lights;
         private bool[] shadowmapped;
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
         public LightStressTest(Vector3 position)
         {
@@ -83,8 +85,7 @@ namespace ViMG.Entities
 
                 Vector3 lightPos = Position + new Vector3(x, y, z);
 
-                Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("glow_node"),
-                    DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+                Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                     Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                     Matrix.CreateTranslation(lightPos), null));

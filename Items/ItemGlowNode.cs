@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
 	public class ItemGlowNode : Item
 	{
-		public ItemGlowNode() : base("glow_node", Main.assetsManager.GetAsset<Texture2D>("glow_node"), new RectangleF(0, 0, 16, 16))
+		public ItemGlowNode() : base("glow_node", new Rendering.RendererDeferred.DrawMaterial("glow_node"), new RectangleF(0, 0, 16, 16))
 		{
 			name = "Glow Node";
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";

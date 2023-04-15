@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -13,7 +14,7 @@ namespace ViMG.Items
     {
         private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 60f * 5f);
 
-        public ItemBread() : base("food_bread1", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(96, 96, 16, 16))
+        public ItemBread() : base("food_bread1", StaticMaterials.Items, new RectangleF(96, 96, 16, 16))
         {
             name = "Agaldam Bread";
             description = "A thick, dry, brick-like loaf of bread. If your teeth survive eating this, " +

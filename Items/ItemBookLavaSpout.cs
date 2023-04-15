@@ -8,19 +8,19 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemBookLavaSpout : Item
     {
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-            new RectangleF(48, 16, 16, 16), Cube.CUBE_SCALE);
+        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 16, 16, 16), Cube.CUBE_SCALE);
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
                 Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, true, 1, true);
 
         private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 4f / 60f, 4, 1f), 1);
 
-        public ItemBookLavaSpout() : base("book_spell_lava_spout", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(144, 96, 16, 16))
+        public ItemBookLavaSpout() : base("book_spell_lava_spout", StaticMaterials.Items, new RectangleF(144, 96, 16, 16))
         {
             name = "Spellbook: Lava Spout";
             description = "The book's pages erupt into lava.\n" +

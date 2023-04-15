@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -22,7 +23,7 @@ namespace ViMG.Items
             color.W = 1.5f;
         }
 
-        public ItemLantern() : base("lantern", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(32, 64, 16, 16))
+        public ItemLantern() : base("lantern", StaticMaterials.Items, new RectangleF(32, 64, 16, 16))
         {
         }
 

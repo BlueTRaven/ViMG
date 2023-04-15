@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG
@@ -322,12 +323,14 @@ namespace ViMG
 			//meshHealthbar = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 		}
 
+		private static RendererDeferred.DrawMaterial healthbarMaterial = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel);
 		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
         {
 			if (meshHealthbar.VBO == null)
 				MakeMeshHealthbar(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel, DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshHealthbar.VBO, meshHealthbar.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
+				healthbarMaterial, meshHealthbar.VBO, meshHealthbar.IBO,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
@@ -337,7 +340,7 @@ namespace ViMG
 		
 		//Draws a line that is tiled along the vertical axis.
 		public static void DrawLineTiled(Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
-			(VertexBuffer VBO, IndexBuffer IBO) mesh, Texture2D texture, RectangleF sourceRectangle, Color color)
+			RendererDeferred.DrawMaterial material, (VertexBuffer VBO, IndexBuffer IBO) mesh, RectangleF sourceRectangle, Color color)
 		{
 			Vector3 axis = endPosition - startPosition;
 			float distance = axis.Length();
@@ -350,8 +353,7 @@ namespace ViMG
 
 			for (int i = 0; i < tileTimes; i++)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
-					DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
 					sourceRectangle, color.ToVector3()));
 			}
@@ -363,15 +365,14 @@ namespace ViMG
 			Vector2 fixedPosition = sourceRectangle.Position;
 			fixedPosition.Y += sourceRectangle.height - fixedHeight;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
-				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
 				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
 				color.ToVector3()));
 		}
 
 		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
-            (VertexBuffer VBO, IndexBuffer IBO) mesh, Texture2D texture, RectangleF sourceRectangle, Color color)
+            RendererDeferred.DrawMaterial material, (VertexBuffer VBO, IndexBuffer IBO) mesh, RectangleF sourceRectangle, Color color)
 		{
             Vector3 axis = endPosition - startPosition;
             float distance = axis.Length();
@@ -379,8 +380,7 @@ namespace ViMG
 
             Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(texture,
-                DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
                 Matrix.CreateScale(width, distance, width) * mat,
                 sourceRectangle, color.ToVector3()));
         }

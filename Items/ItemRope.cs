@@ -15,7 +15,7 @@ namespace ViMG.Items
     {
 		private Cube cube;
 
-        public ItemRope() : base("rope", Main.assetsManager.GetAsset<Texture2D>("cubes_textures"), new RectangleF(112, 64, 16, 16))
+        public ItemRope() : base("rope", new Rendering.RendererDeferred.DrawMaterial("cubes_textures"), new RectangleF(112, 64, 16, 16))
         {
             name = "Rope";
             description = "Sturdy, strong rope. Use it to traverse big pits!";

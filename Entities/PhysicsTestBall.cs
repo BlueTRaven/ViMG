@@ -10,13 +10,15 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Physics;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
 {
     public class PhysicsTestBall : Entity
     {
-        private (VertexBuffer vbo, IndexBuffer ibo) mesh;
+        private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private TypedIndex physicsShapeIndex;
         private BodyHandle physicsHandle;
@@ -80,8 +82,7 @@ namespace ViMG.Entities
                 mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             }
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-                DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.vbo, mesh.ibo,
+            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.vbo, mesh.ibo,
                 Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), sourceRect: new RectangleF(0, 0, 16, 16)));
         }
     }

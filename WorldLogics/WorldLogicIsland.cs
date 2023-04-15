@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.GameStates;
+using ViMG.Rendering;
 using ViMG.Spawners;
 using ViMG.VertexDeclarations;
 
@@ -23,6 +24,9 @@ namespace ViMG.WorldLogics
 		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshSun;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
+        private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("sun"));
+        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("lava"));
+
 
         private float alive;
         private DirectionalLight directionalLight;
@@ -238,6 +242,7 @@ namespace ViMG.WorldLogics
             directionalLight.DrawShadowmap(device, world);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
 
+			//TODO: re-implement this easter egg
 			Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
 
 			if (world.LoadedFolderName == "coconut")
@@ -246,18 +251,19 @@ namespace ViMG.WorldLogics
 			float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
 			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(200,
-				Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
+				materialSun, meshSun.VBO, meshSun.IBO,
+                Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				Matrix.CreateTranslation(world.player.Position),
-				sunTexture, DrawHelper.WhitePixel, meshSun.VBO, meshSun.IBO, tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
+				tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
 
             if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
 					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("lava"),
-					DrawHelper.BlackPixel, DrawHelper.WhitePixel, meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
+				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(materialLava, 
+					meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
 			}
 		}
 

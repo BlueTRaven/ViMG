@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Entities
@@ -15,6 +16,7 @@ namespace ViMG.Entities
     public class EntityCaveCompass : Entity, ICubeTracker
     {
 		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private Quaternion target;
         private Quaternion current;
@@ -117,8 +119,7 @@ namespace ViMG.Entities
 			if (mesh.vbo == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.vbo, mesh.ibo,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.vbo, mesh.ibo,
                 Matrix.CreateTranslation(0, -Cube.CUBE_SCALE / 2f, 0) *
                 Matrix.CreateFromQuaternion(current) *
                 Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *

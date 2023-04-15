@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemBoneWhistle : Item
     {
-        public ItemBoneWhistle() : base("bone_whistle", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(80, 80, 16, 16))
+        public ItemBoneWhistle() : base("bone_whistle", StaticMaterials.Items, new RectangleF(80, 80, 16, 16))
         {
             name = "Bone Whistle";
             description = "A whistle carved of bone.\n" +

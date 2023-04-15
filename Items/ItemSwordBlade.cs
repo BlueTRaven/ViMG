@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
@@ -14,7 +15,7 @@ namespace ViMG.Items
 		private readonly string materialName;
 
 		public ItemSwordBlade(string material, Color color, MeleeAttackStats stats) : base("sword_blade_" + material, 
-			Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(0, 128, 16, 16))
+			StaticMaterials.Items, new RectangleF(0, 128, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 
@@ -42,15 +43,15 @@ namespace ViMG.Items
 			if (meshItemQuadInWorld.VBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Texture, DrawHelper.BlackPixel, DrawHelper.BlackPixel,
-				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
+                meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
 		}
 
 		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
 		{
 			//base.DrawInInventory(batch, position, scale);
 
-			batch.Draw(Texture, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+			batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 	}
 }

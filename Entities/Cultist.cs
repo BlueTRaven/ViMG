@@ -8,14 +8,16 @@ using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Buffs;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class Cultist : Entity, IHasStats
     {
 		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cultist");
 
-		private NoticeHandler<Player> noticeHandler;
+        private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
 		private int maxHealth = 140;
@@ -39,8 +41,7 @@ namespace ViMG.Entities
 
 			ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
 									HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, 1, false, 0, true); ;
-			ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(Main.assetsManager.GetAsset<Texture2D>("projectiles"),
-				new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE,
+			ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE,
 				Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
@@ -90,8 +91,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cultist"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO,
+			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));

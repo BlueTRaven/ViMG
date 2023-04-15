@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities.Renderers;
 
 namespace ViMG.Items
 {
     public class ItemManaStar : Item
     {
-        public ItemManaStar() : base("mana_star", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(176, 32, 16, 16))
+        public ItemManaStar() : base("mana_star", StaticMaterials.Items, new RectangleF(176, 32, 16, 16))
         {
             name = "Mana Star";
             description = "A hefty astroid composed of an unknown blue material.\n" +

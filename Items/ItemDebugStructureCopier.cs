@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities.Renderers;
 using ViMG.Generation;
 using ViMG.VertexDeclarations;
 
@@ -28,7 +29,7 @@ namespace ViMG.Items
 
         private (VertexBuffer VBO, IndexBuffer IBO) meshWireframeCube;
 
-        public ItemDebugStructureCopier() : base("DEBUGStructureCopier", Main.assetsManager.GetAsset<Texture2D>("swrod"), new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructureCopier() : base("DEBUGStructureCopier", StaticMaterials.Items, new RectangleF(112, 112, 16, 16))
         {
             name = "DEBUG STRUCTURE COPIER";
             description = "Right click to begin selecting.\n" +
@@ -156,9 +157,10 @@ namespace ViMG.Items
                 }
                 else scale.Z -= Cube.CUBE_SCALE;
 
-                Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(0,
-                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start),
-                    DrawHelper.WhitePixel, DrawHelper.WhitePixel, meshWireframeCube.VBO, meshWireframeCube.IBO, tintColor: Color.White * 0.5f));
+                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
+                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube.VBO, meshWireframeCube.IBO, 
+                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start), 
+                    tintColor: Color.White * 0.5f));
             }
         }
     }
