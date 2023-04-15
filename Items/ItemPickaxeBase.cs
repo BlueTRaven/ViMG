@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemPickaxeBase : Item
+    public class ItemPickaxeBase : Item
 	{
 		public ItemPickaxeBase() : base("pickaxe_base", StaticMaterials.Items, new BrUtility.RectangleF(16, 0, 16, 16))
 		{

@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemSwordBase : Item
+    public class ItemSwordBase : Item
 	{
 		public ItemSwordBase() : base("sword_base", StaticMaterials.Items, new BrUtility.RectangleF(0, 0, 16, 16))
 		{

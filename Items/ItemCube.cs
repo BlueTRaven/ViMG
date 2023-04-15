@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemCube : Item
+    public class ItemCube : Item
 	{
 		private ushort cubeId;
 

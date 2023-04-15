@@ -12,7 +12,6 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
-using ViMG.Entities.Renderers;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.Rendering;

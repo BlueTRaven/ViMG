@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Items

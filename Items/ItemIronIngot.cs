@@ -3,11 +3,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemIronIngot : Item
+    public class ItemIronIngot : Item
 	{
 		public ItemIronIngot() : base("ingot_iron", StaticMaterials.Items, new RectangleF(80, 0, 16, 16))
 		{

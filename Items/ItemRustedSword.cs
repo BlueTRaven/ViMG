@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {

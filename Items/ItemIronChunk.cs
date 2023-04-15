@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemIronChunk : Item
+    public class ItemIronChunk : Item
 	{
 		public ItemIronChunk() : base("iron_chunk", StaticMaterials.Items, new RectangleF(48, 16, 16, 16))
 		{

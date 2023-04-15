@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>, IHasAreaEffect
+    public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>, IHasAreaEffect
 	{
 		public ItemPickaxe() : base("pickaxe", StaticMaterials.Items, new RectangleF(16, 144, 16, 16))
 		{

@@ -3,11 +3,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemBrittleBone : Item
+    public class ItemBrittleBone : Item
 	{
 		public ItemBrittleBone() : base("brittle_bone", StaticMaterials.Items, new RectangleF(16, 112, 16, 16))
 		{

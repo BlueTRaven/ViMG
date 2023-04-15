@@ -16,7 +16,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
-using ViMG.Entities.Renderers;
 using ViMG.GameStates;
 using ViMG.Generation;
 using ViMG.Items;

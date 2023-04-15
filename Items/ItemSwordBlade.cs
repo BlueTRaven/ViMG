@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemSwordBlade : Item
+    public class ItemSwordBlade : Item
 	{
 		private readonly Color color;
 		private readonly MeleeAttackStats stats;

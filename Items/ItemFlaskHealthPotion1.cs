@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemFlaskHealthPotion1 : Item
+    public class ItemFlaskHealthPotion1 : Item
 	{
 		public ItemFlaskHealthPotion1() : base("flask_healthpotion1", StaticMaterials.Items, new RectangleF(16, 96, 16, 16))
 		{

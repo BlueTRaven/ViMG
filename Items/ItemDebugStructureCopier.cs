@@ -8,8 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
 using ViMG.Generation;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Items

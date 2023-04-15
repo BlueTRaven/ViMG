@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemSlimeChunk : Item
+    public class ItemSlimeChunk : Item
 	{
 		public ItemSlimeChunk() : base("slime_chunk", StaticMaterials.Items, new RectangleF(0, 112, 16, 16))
 		{

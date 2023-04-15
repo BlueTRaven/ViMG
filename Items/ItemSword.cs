@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemSword : ItemMetaItem<ItemSwordBlade>
+    public class ItemSword : ItemMetaItem<ItemSwordBlade>
 	{
 		public ItemSword() : base("sword", StaticMaterials.Items, new RectangleF(16, 128, 16, 16))
 		{

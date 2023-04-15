@@ -4,12 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
 using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public abstract class ItemMetaItem<T> : Item where T : Item
+    public abstract class ItemMetaItem<T> : Item where T : Item
 	{
 		public ItemMetaItem(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect) : base(identifier, material, sourceRect)
 		{

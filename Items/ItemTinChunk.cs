@@ -3,11 +3,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemTinChunk : Item
+    public class ItemTinChunk : Item
 	{
 		public ItemTinChunk() : base("tin_chunk", StaticMaterials.Items, new RectangleF(64, 16, 16, 16))
 		{

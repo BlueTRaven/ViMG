@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Entities;
-using ViMG.Entities.Renderers;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-	public class ItemGun : Item
+    public class ItemGun : Item
 	{
 		private ProjectileManager.ProjectileVisStats projVisStats;
 		private ProjectileManager.ProjectileStats projStats;
