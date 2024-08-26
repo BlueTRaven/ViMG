@@ -33,6 +33,7 @@ namespace ViMG.Entities
 		private ulong id = 0;
 		public ulong Id => id;
 
+		public float Alive;
         public double TimeInitialized;
 
         public void SetId(ulong id)
@@ -49,7 +50,7 @@ namespace ViMG.Entities
 
 		public virtual void Update(double deltaTime)
 		{
-
+			Alive += (float)deltaTime;
 		}
 
 		//Called when an enemy is killed by normal means; I.e. the player has dealt enough damage to it.

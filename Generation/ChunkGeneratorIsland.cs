@@ -217,7 +217,7 @@ namespace ViMG.Generation
 									int num = GetRandom().Next(3, 12);
 
 									world.EntityManager.Add(new Tree(pos.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f),
-										num, pos));
+										num, pos), true);
 								}
 								else if (val == 1)
 									world.ChunkManager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling

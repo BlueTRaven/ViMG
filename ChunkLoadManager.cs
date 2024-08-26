@@ -99,36 +99,40 @@ namespace ViMG
 			{
                 GameStateTheIsland.ProgressMin = max - queue.Count;
 
+				// TODO: sometimes there's stuff in the queue that apparently never gets meshed properly. Why is this?
 				ChunkPosition queuedPosition = queue.Dequeue();
+                Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+				loadedChunks[queuedPosition] = LoadingState.Loaded;
+				loadedChunksFastLookup[i] = LoadingState.Loaded;
 
 				//Chunk has been told to unload before we got to it.
 				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
-				Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-				if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
-					continue;
-				else if (loadedChunksFastLookup[i] == LoadingState.Loading)
-				{
-					//entIO.Deserialize(queuedPosition);
-					//chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
-					if (chunkManager.RenderMesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
-					{
-						loadedChunks[queuedPosition] = LoadingState.Loaded;
-						loadedChunksFastLookup[i] = LoadingState.Loaded;
+				//Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+				//if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
+				//	continue;
+				//else if (loadedChunksFastLookup[i] == LoadingState.Loading)
+				//{
+				//	//entIO.Deserialize(queuedPosition);
+				//	//chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
+				//	if (chunkManager.RenderMesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
+				//	{
+				//		loadedChunks[queuedPosition] = LoadingState.Loaded;
+				//		loadedChunksFastLookup[i] = LoadingState.Loaded;
 
-						hasChanged = true;
-					}
-					else
-					{
-						//not finished loading; re-queue
-						queue.EnqueueWithoutSorting(queuedPosition);
-					}
-				}
+				//		hasChanged = true;
+				//	}
+				//	else
+				//	{
+				//		//not finished loading; re-queue
+				//		queue.EnqueueWithoutSorting(queuedPosition);
+				//	}
+				//}
 			}
 
             //GameStateTheIsland.LoadMessage = "Flushing mesh queue...";
-			//chunkManager.RenderMesher.FinishFlush();
+            //chunkManager.RenderMesher.FinishFlush();
 
-			if (hasChanged)
+            if (hasChanged)
 				gettableLoadedChunks = loadedChunks.Keys;
 
 			hasChanged = false;
@@ -231,13 +235,14 @@ namespace ViMG
 							}
 							else if (loadedChunks[pos] == LoadingState.Unloaded)
 							{
-								loadedChunks[pos] = LoadingState.Loading;
 								shouldLoad = true;
 							}
 
 							if (shouldLoad)
 							{
-								Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                                loadedChunks[pos] = LoadingState.Loading;
+
+                                Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 								loadedChunksFastLookup[i] = LoadingState.Loading;
 								queue.EnqueueWithoutSorting(pos);
 

@@ -121,5 +121,20 @@ namespace ViMG.Entities
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
 				world.EntityManager.Remove(this);
 		}
+
+		public static RectangleF GetSourceRect(SlimeBig slime)
+		{
+            int ysrc = 32;
+
+            const float minInterval = 0.65f;
+            const float maxInterval = 0.85f;
+
+            float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+
+            if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
+                ysrc = 64;
+
+			return slime.noticeHandler.Noticed ? new RectangleF(32, ysrc, 32, 32) : new RectangleF(0, ysrc, 32, 32);
+        }
 	}
 }

@@ -486,7 +486,7 @@ namespace ViMG
 				state = State.Normal;
 
 			if (!Main.Debug && (!world.ChunkManager.IsInWorldBounds(Position) ||
-				!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
+				!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position)))) 
 				world.PhysicsInfo.Simulation.Sleeper.Sleep(world.PhysicsInfo.Simulation.Bodies[physicsHandle].MemoryLocation.Index);
 			else
 				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);    //player physics shape can never fall asleep

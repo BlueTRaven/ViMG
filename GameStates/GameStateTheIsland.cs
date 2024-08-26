@@ -73,6 +73,8 @@ namespace ViMG.GameStates
                     world = LoadWorld(device, worldName);
                 }
 
+                if (world == null) throw new Exception("Errored while loading world");
+
                 LoadMessage = "Loading World...";
                 //Now we can tell the ChunkLoadManager what should be loaded.
                 world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
@@ -244,6 +246,7 @@ namespace ViMG.GameStates
             //chunkLoadManager.UnloadAll();
             
             worldInfoIO.Save(worldName, world.WorldInfo);
+            Main.SessionIO.Save();
 
             ProfilingHelper.End("Done.");
 

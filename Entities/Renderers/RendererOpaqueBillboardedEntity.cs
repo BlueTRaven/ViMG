@@ -12,7 +12,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities.Renderers
 {
-    public class RendererGenericBillboardedEntity : EntityRenderer
+    public class RendererOpaqueBillboardedEntity : EntityRenderer
     {
         private class TypeStats
         {
@@ -20,9 +20,12 @@ namespace ViMG.Entities.Renderers
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
 
-            public TypeStats(RendererDeferred.DrawMaterial material)
+            public Vector2 Scale;
+
+            public TypeStats(RendererDeferred.DrawMaterial material, Vector2? scale = null)
             {
                 this.Material = material;
+                this.Scale = scale ?? Vector2.One;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
         }
@@ -30,16 +33,24 @@ namespace ViMG.Entities.Renderers
         private TypeStats[] typeStats;
         private Type[] renderedTypes = new Type[]
         {
-            typeof(Imp)
+            typeof(Imp),
+            typeof(Skeleton),
+            typeof(Slime),
+            typeof(SlimeBig),
+            typeof(CaveSlime),
         };
 
         public (VertexBuffer VBO, IndexBuffer IBO) mesh;
 
-        public RendererGenericBillboardedEntity(GraphicsDevice device) : base("generic_billboard", device)
+        public RendererOpaqueBillboardedEntity(GraphicsDevice device) : base("generic_billboard", device)
         {
             typeStats = new TypeStats[]
             {
-                new TypeStats(new RendererDeferred.DrawMaterial("imp"))
+                new TypeStats(new RendererDeferred.DrawMaterial("imp")),
+                new TypeStats(new RendererDeferred.DrawMaterial("skeleton"), new Vector2(1, 2)),
+                new TypeStats(new RendererDeferred.DrawMaterial("slime")),
+                new TypeStats(new RendererDeferred.DrawMaterial("slime"), new Vector2(2)),
+                new TypeStats(new RendererDeferred.DrawMaterial("slime")),
             };
 
             mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
@@ -61,6 +72,13 @@ namespace ViMG.Entities.Renderers
 
             Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+
+            RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
+            {
+                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 16, 16, 16)),
+                TintColor = Color.White.ToVector3(),
+            };
+
             foreach (Entity entity in entities)
             {
                 Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
@@ -68,13 +86,20 @@ namespace ViMG.Entities.Renderers
                     Matrix.CreateTranslation(entity.Position);
                 Matrix.Transpose(ref mat, out mat);
 
-                stats.Draws.Add(new RendererDeferred.InstancedDraw()
+                RendererDeferred.InstancedDraw draw = baseDraw with
                 {
-                    SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 16, 16, 16)),
-                    TintColor = Color.White.ToVector3(),
                     World = mat,
                     WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                });
+                };
+
+                if (type == typeof(SlimeBig))
+                {
+                    SlimeBig slime = entity as SlimeBig;
+
+                    draw.SourceRect = new RendererDeferred.DrawSourceRectParameters(SlimeBig.GetSourceRect(slime));
+                }
+
+                stats.Draws.Add(draw);
             }
 
             if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
