@@ -38,8 +38,8 @@ namespace ViMG.Entities
 		private const float DASH_DISTANCE = Cube.CUBE_SCALE * 8f;
 		private const float SLOWCHASE_DISTANCE = Cube.CUBE_SCALE * 1.5f;
 
-        private static (VertexBuffer VBO, IndexBuffer IBO) meshHead;
-        private static (VertexBuffer VBO, IndexBuffer IBO) meshVertibrae;
+        private static VerySimpleMesh meshHead;
+        private static VerySimpleMesh meshVertibrae;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead");
 
         private Color tintColor = Color.White;
@@ -417,11 +417,13 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (meshHead.VBO == null)
-				meshHead = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128);
+			if (meshHead.IBO == null)
+				meshHead = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128, Enums.Alignment.Bottom);
+				//meshHead = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128);
 
-			if (meshVertibrae.VBO == null)
-				meshVertibrae = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16);
+			if (meshVertibrae.IBO == null)
+                meshVertibrae = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16, Enums.Alignment.Bottom);
+            //meshVertibrae = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16);
 
 			RectangleF sourceRect = new RectangleF(0, 0, 128, 128);
 			Vector3 scale = Vector3.One;
@@ -437,7 +439,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshHead.VBO, meshHead.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshHead,
 				Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
 				Matrix.CreateScale(scale) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
@@ -451,7 +453,7 @@ namespace ViMG.Entities
 
 				float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae.VBO, meshVertibrae.IBO,
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae,
 					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 					Matrix.CreateTranslation(trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));

@@ -51,9 +51,9 @@ namespace ViMG
         private readonly struct BatchCollisionMeshTaskState
         {
             public readonly CollisionMeshBatch batch;
-            public readonly ChunkMesher mesher;
+            public readonly ChunkRenderMesher mesher;
 
-            public BatchCollisionMeshTaskState(CollisionMeshBatch batch, ChunkMesher mesher)
+            public BatchCollisionMeshTaskState(CollisionMeshBatch batch, ChunkRenderMesher mesher)
             {
                 this.batch = batch;
                 this.mesher = mesher;
@@ -124,14 +124,14 @@ namespace ViMG
 
         private CollisionMeshInfo[] meshes;
 
-        private readonly ChunkMesher mesher;
+        private readonly ChunkRenderMesher mesher;
         private readonly int sizeInChunks;
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
         private BufferPool bufferPool;
 
-        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkMesher mesher, int sizeInChunks)
+        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkRenderMesher mesher, int sizeInChunks)
         {
             bufferPool = new BufferPool();
 
@@ -402,9 +402,9 @@ namespace ViMG
 
                     state.batch.copies[i].GetFaces(positions, faces);
 
-                    (List<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
+                    (FastList<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
 
-                    if (opaques.verts.Count > 0)
+                    if (opaques.verts.Length > 0)
                         meshes[i] = GenerateMesh(state.batch.pools[i], opaques.verts, opaques.indices);
                     //else meshes[i] = default;
                 }
@@ -414,7 +414,7 @@ namespace ViMG
         }
 
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh
-        public static Mesh GenerateMesh(BufferPool bufferPool, List<VertexCube> vertices, List<int> indices)
+        public static Mesh GenerateMesh(BufferPool bufferPool, FastList<VertexCube> vertices, List<int> indices)
         {
             Buffer<Triangle> triangleBuffer;
 

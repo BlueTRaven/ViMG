@@ -89,8 +89,8 @@ namespace ViMG.WorldLogics
             new(0, 0, 0)
         };
 
-        private static (VertexBuffer VBO, IndexBuffer IBO) skyboxCloudsMesh;
-        private static (VertexBuffer VBO, IndexBuffer IBO) rainMesh;
+        private static VerySimpleMesh skyboxCloudsMesh;
+        private static VerySimpleMesh rainMesh;
         private static RendererDeferred.DrawMaterial materialRain = new RendererDeferred.DrawMaterial("rain");
         private static RendererDeferred.DrawMaterial materialSparselyCloudy = new RendererDeferred.DrawMaterial("skybox_sparseclouds");
         private static RendererDeferred.DrawMaterial materialCloudy = new RendererDeferred.DrawMaterial("skybox_clouds");
@@ -196,9 +196,10 @@ namespace ViMG.WorldLogics
         {
             drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
 
-            rainMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+            rainMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Center);
+            //rainMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            var vertices = new List<VertexCube>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
             var indices = new List<int>();
 
             const int CYLINDER_NUM_SIDES = 16;
@@ -224,7 +225,7 @@ namespace ViMG.WorldLogics
                 Vector2 tc3 = new Vector2(tn * 4f, 0);
                 Vector2 tc4 = new Vector2(tn * 4f, 1);
 
-                int offset = vertices.Count;
+                int offset = vertices.Length;
                 indices.Add(offset + 0);
                 indices.Add(offset + 1);
                 indices.Add(offset + 2);
@@ -238,7 +239,8 @@ namespace ViMG.WorldLogics
                 vertices.Add(new VertexCube(p4, Color.White, tc4, new Vector3(0, 1, 0)));
             }
 
-            skyboxCloudsMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+            skyboxCloudsMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+            //skyboxCloudsMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 
             currentWeather = MakeWeatherState(WeatherType.Cloudy, Color.White);
         }
@@ -630,7 +632,7 @@ namespace ViMG.WorldLogics
         public void Draw(GraphicsDevice device, World world)
         {
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                materialRain, rainMesh.VBO, rainMesh.IBO, drawInstanceBuffer, min, max - min));
+                materialRain, rainMesh, drawInstanceBuffer, min, max - min));
 
             if (currentWeather.WType == WeatherType.Cloudy || IsTransitioningFrom(WeatherType.Cloudy) || IsTransitioningTo(WeatherType.Cloudy))
             {
@@ -657,8 +659,7 @@ namespace ViMG.WorldLogics
                     Matrix.CreateScale(1, 0.5f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
 
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
@@ -669,8 +670,7 @@ namespace ViMG.WorldLogics
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
             }
             if (currentWeather.WType == WeatherType.SparselyCloudy || IsTransitioningFrom(WeatherType.SparselyCloudy) || IsTransitioningTo(WeatherType.SparselyCloudy))
@@ -698,8 +698,7 @@ namespace ViMG.WorldLogics
                     Matrix.CreateScale(1, 0.5f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
 
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
@@ -711,8 +710,7 @@ namespace ViMG.WorldLogics
                     Matrix.CreateScale(1, 0.25f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
 
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
@@ -723,8 +721,7 @@ namespace ViMG.WorldLogics
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
             }
             if (currentWeather.WType == WeatherType.Clear || IsTransitioningFrom(WeatherType.Clear) || IsTransitioningTo(WeatherType.Clear))
@@ -747,8 +744,7 @@ namespace ViMG.WorldLogics
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
 
                 Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
@@ -758,8 +754,7 @@ namespace ViMG.WorldLogics
                     TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
                     Transform =
                     Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
-                    VBO = skyboxCloudsMesh.VBO,
-                    IBO = skyboxCloudsMesh.IBO,
+                    Mesh = skyboxCloudsMesh,
                 });
             }
         }

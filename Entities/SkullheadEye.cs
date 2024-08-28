@@ -15,8 +15,8 @@ namespace ViMG.Entities
     public class SkullheadEye : Entity, IHasStats
     {
         private const float CLAMP_DIST = Cube.CUBE_SCALE * 4f;
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
-        private static (VertexBuffer VBO, IndexBuffer IBO) lineMesh;
+        private static VerySimpleMesh mesh;
+        private static VerySimpleMesh lineMesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead_eye");
 
         private AIFlierMelee<SkullheadEye> ai;
@@ -105,17 +105,19 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
+            if (mesh.IBO == null)
             {
-                mesh = MeshHelper.MakeCenteredQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32);
-                lineMesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+                mesh = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32, Enums.Alignment.Center);
+                //mesh = MeshHelper.MakeCenteredQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32);
+                lineMesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+                //lineMesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
             }
 
             RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, dsr);
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));

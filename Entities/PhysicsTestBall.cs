@@ -17,7 +17,7 @@ namespace ViMG.Entities
 {
     public class PhysicsTestBall : Entity
     {
-        private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private TypedIndex physicsShapeIndex;
@@ -73,16 +73,18 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.vbo == null)
+            if (mesh.IBO == null)
             {
-                List<VertexCube> vertices = new List<VertexCube>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
-                DrawHelper3D.MakeUVSphereRaw(vertices, indices, new Vector3(Cube.CUBE_SCALE / 2f), BrUtility.RectangleF.Empty, Cube.CUBE_SCALE / 2f);
+                MeshHelper.MakeUVSphereRaw(vertices, indices, new Vector3(Cube.CUBE_SCALE / 2f), BrUtility.RectangleF.Empty, Cube.CUBE_SCALE / 2f);
 
-                mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+                mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+                //mesh = new VerySimpleMesh(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+                //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             }
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.vbo, mesh.ibo,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), sourceRect: new RectangleF(0, 0, 16, 16)));
         }
     }

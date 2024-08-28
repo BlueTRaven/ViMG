@@ -16,7 +16,7 @@ namespace ViMG.Entities
     public class Ghost : Entity, Buffs.IHasStats
     {
         private const int MAX_HEALTH = 30;
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("grave_ghost");
 
         private float alive;
@@ -123,8 +123,9 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
 
             RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
 
@@ -170,7 +171,7 @@ namespace ViMG.Entities
 
             tintColor = Color.White;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position + offset), sourceRect, tintColor.ToVector3()));

@@ -18,8 +18,8 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     public class Door : Entity, IMultiCubeTracker
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mountMesh;
-        private static (VertexBuffer VBO, IndexBuffer IBO) doorMesh;
+        private static VerySimpleMesh mountMesh;
+        private static VerySimpleMesh doorMesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private TypedIndex mountShapeIndex;
@@ -161,23 +161,25 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (doorMesh.VBO == null)
+            if (doorMesh.IBO == null)
             {
-                mountMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f);
-                doorMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
+                mountMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f, Enums.Alignment.Center);
+                doorMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2f, Enums.Alignment.Center);
+                //mountMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f);
+                //doorMesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
             }
 
             var position = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Position;
             var orientation = world.PhysicsInfo.Simulation.Bodies[mountHandle].Pose.Orientation;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mountMesh.VBO, mountMesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mountMesh,
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
                 Matrix.CreateTranslation(position)));
 
             position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position;
             orientation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, doorMesh.VBO, doorMesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, doorMesh,
                 Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
                 Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
 

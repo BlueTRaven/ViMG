@@ -15,7 +15,7 @@ namespace ViMG.Entities.Renderers
     public class RendererTree : EntityRenderer
     {
         private RendererDeferred.DrawMaterial material;
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private VerySimpleMesh mesh;
         private StructuredBuffer SBO;
         private FastList<RendererDeferred.InstancedDraw> draws = new FastList<RendererDeferred.InstancedDraw>();
         private bool needsRebuild;
@@ -24,11 +24,11 @@ namespace ViMG.Entities.Renderers
         public RendererTree(GraphicsDevice device) : base("tree", device)
         {
             material = new RendererDeferred.DrawMaterial("tree");
-            List<VertexCube> vertices = new List<VertexCube>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
             List<int> indices = new List<int>();
             MeshHelper.MakeXMeshVerts(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-            mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+            mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));// MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
         protected override void OnEntityOfOurTypeAdded(int renderedTypeIndex, Entity entity)
@@ -136,7 +136,7 @@ namespace ViMG.Entities.Renderers
                 needsReupload = false;
             }
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh.VBO, mesh.IBO, SBO, 0, draws.Length));
+            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
         }
 
         private static Type[] renderedTypes = new Type[] { typeof(Tree) };

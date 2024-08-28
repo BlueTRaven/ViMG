@@ -4,8 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Security;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG
@@ -24,7 +27,7 @@ namespace ViMG
 
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeCubemap(GraphicsDevice device, Vector3 min, Vector3 max)
         {
-			List<VertexCube> vertices = new List<VertexCube>();
+			FastList<VertexCube> vertices = new FastList<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
@@ -49,7 +52,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_t_f, faceColors[0], new Vector2(0, 0), new Vector3(0, 1, 0)));
 			vertices.Add(new VertexCube(l_t_f, faceColors[0], new Vector2(1, 0), new Vector3(0, 1, 0)));
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -62,7 +65,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_b_n, faceColors[1], new Vector2(0, 0), new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(r_b_n, faceColors[1], new Vector2(1, 0), new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -75,7 +78,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_b_n, faceColors[2], new Vector2(0, 0), new Vector3(-1, 0, 0)));
 			vertices.Add(new VertexCube(r_b_f, faceColors[2], new Vector2(1, 0), new Vector3(-1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -88,7 +91,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_b_f, faceColors[3], new Vector2(0, 0), new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(l_b_f, faceColors[3], new Vector2(1, 0), new Vector3(0, 0, -1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -101,7 +104,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_b_f, faceColors[4], new Vector2(0, 0), new Vector3(1, 0, 0)));
 			vertices.Add(new VertexCube(l_b_n, faceColors[4], new Vector2(1, 0), new Vector3(1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -117,86 +120,256 @@ namespace ViMG
 			return MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (List<TVertex> vertices, List<TIndex> indices) tuple, bool bakeTangents = true)
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, (FastList<TVertex> vertices, List<TIndex> indices) tuple, bool bakeTangents = true)
 			where TVertex : struct, IVertexType, IVertexDeclGetters
 			where TIndex : struct
 		{
 			return MakeSimplerMesh(device, tuple.vertices, tuple.indices, bakeTangents);
         }
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, List<TVertex> vertices, List<TIndex> indices, bool bakeTangents = true) 
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeSimplerMesh<TVertex, TIndex>(GraphicsDevice device, FastList<TVertex> vertices, List<TIndex> indices, bool bakeTangents = true) 
 			where TVertex : struct, IVertexType, IVertexDeclGetters
             where TIndex : struct
         {
-			if (vertices.Count == 0)
+			if (vertices.Length == 0)
 				return (null, null);
 
 			if (bakeTangents)
-				BakeTangents(0, vertices.Count, vertices);
+				BakeTangents(0, vertices.Length, vertices);
 
-			VertexBuffer VBO = new VertexBuffer(device, typeof(TVertex), vertices.Count, BufferUsage.WriteOnly);
+			VertexBuffer VBO = new VertexBuffer(device, typeof(TVertex), vertices.Length, BufferUsage.WriteOnly);
 			IndexBuffer IBO = new IndexBuffer(device, typeof(TIndex), indices.Count, BufferUsage.WriteOnly);
 
-			VBO.SetData(vertices.ToArray());
+			VBO.SetData(vertices.Buffer, 0, vertices.Length);
 			IBO.SetData(indices.ToArray());
 
 			return (VBO, IBO);
         }
 
-        public static void BakeTangents<T>(int start, int end, List<T> vertices)
+        public static unsafe void BakeTangents<T>(int start, int end, FastList<T> vertices)
 			where T : struct, IVertexDeclGetters
         {
-            for (int i = start; i < end; i += 4)
+			Debug.Assert((end - start) % 4 == 0);
+
+				for (int i = start; i < end; i += 4)
+				{
+					T vert1 = vertices[i + 0];
+					T vert2 = vertices[i + 1];
+					T vert3 = vertices[i + 2];
+					T vert4 = vertices[i + 3];
+
+					Vector3 edge1 = vert2.GetPosition() - vert1.GetPosition();
+					Vector3 edge2 = vert3.GetPosition() - vert1.GetPosition();
+					Vector2 dUV1 = vert2.GetUV() - vert1.GetUV();
+					Vector2 dUV2 = vert3.GetUV() - vert1.GetUV();
+
+					float f = 1 / (dUV1.X * dUV2.Y - dUV2.X * dUV1.Y);
+
+					Vector3 tangent = vert1.GetPosition() - vert2.GetPosition();
+					/*Vector3 tangent = new Vector3(
+						f * (dUV2.Y * edge1.X - dUV1.Y * edge2.X),
+						f * (dUV2.Y * edge1.Y - dUV1.Y * edge2.Y),
+						f * (dUV2.Y * edge1.Z - dUV1.Y * edge2.Z)
+						);*/
+
+					Vector3 bitangent = Vector3.Cross(vert1.GetNormal(), tangent);
+					/*Vector3 bitangent = new Vector3(
+						f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
+						f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
+						f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
+						);*/
+
+					vert1.SetTangent(tangent, bitangent);
+					vert2.SetTangent(tangent, bitangent);
+					vert3.SetTangent(tangent, bitangent);
+					vert4.SetTangent(tangent, bitangent);
+
+					vertices.Buffer[i + 0] = vert1;
+					vertices.Buffer[i + 1] = vert2;
+					vertices.Buffer[i + 2] = vert3;
+					vertices.Buffer[i + 3] = vert4;
+			}
+        }
+
+        public static VerySimpleMesh MakeUVSphere(GraphicsDevice device, float radius, bool flip = false)
+        {
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
+
+            MakeUVSphereRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1), radius, 16, 16, flip);
+
+			return VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+            //return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+        }
+
+        public static void MakeUVSphereRaw(FastList<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16, bool flip = false, int vertexOffset = 0)
+        {
+            //https://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
+            for (int t = 0; t < stacks; t++)
             {
-                T vert1 = vertices[i + 0];
-                T vert2 = vertices[i + 1];
-                T vert3 = vertices[i + 2];
-                T vert4 = vertices[i + 3];
+                float theta1 = ((float)(t) / stacks) * MathF.PI;
+                float theta2 = ((float)(t + 1) / stacks) * MathF.PI;
 
-                Vector3 edge1 = vert2.GetPosition() - vert1.GetPosition();
-                Vector3 edge2 = vert3.GetPosition() - vert1.GetPosition();
-                Vector2 dUV1 = vert2.GetUV() - vert1.GetUV();
-                Vector2 dUV2 = vert3.GetUV() - vert1.GetUV();
+                for (int p = 0; p < slices; p++) // slices are ORANGE SLICES so the count azimuth
+                {
+                    float phi1 = ((float)(p) / slices) * 2 * MathF.PI; // azimuth goes around 0 .. 2*PI
+                    float phi2 = ((float)(p + 1) / slices) * 2 * MathF.PI;
 
-                float f = 1 / (dUV1.X * dUV2.Y - dUV2.X * dUV1.Y);
+                    Vector3 vert1 = FromSphericalCoordinates(radius, phi1, theta1) + position;
+                    Vector3 vert2 = FromSphericalCoordinates(radius, phi2, theta1) + position;
+                    Vector3 vert3 = FromSphericalCoordinates(radius, phi2, theta2) + position;
+                    Vector3 vert4 = FromSphericalCoordinates(radius, phi1, theta2) + position;
 
-				Vector3 tangent = vert1.GetPosition() - vert2.GetPosition();
-                /*Vector3 tangent = new Vector3(
-                    f * (dUV2.Y * edge1.X - dUV1.Y * edge2.X),
-                    f * (dUV2.Y * edge1.Y - dUV1.Y * edge2.Y),
-                    f * (dUV2.Y * edge1.Z - dUV1.Y * edge2.Z)
-                    );*/
+                    Vector2 uv1 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
+                    Vector2 uv2 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
+                    Vector2 uv3 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
+                    Vector2 uv4 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
 
-				Vector3 bitangent = Vector3.Cross(vert1.GetNormal(), tangent);
-                /*Vector3 bitangent = new Vector3(
-                    f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
-                    f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
-                    f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
-                    );*/
+                    uv1 += sourceRect.Position;
+                    uv2 += sourceRect.Position;
+                    uv3 += sourceRect.Position;
+                    uv4 += sourceRect.Position;
 
-				vert1.SetTangent(tangent, bitangent);
-                vert2.SetTangent(tangent, bitangent);
-                vert3.SetTangent(tangent, bitangent);
-                vert4.SetTangent(tangent, bitangent);
+                    int indicesStart = vertices.Length + vertexOffset;
 
-                vertices[i + 0] = vert1;
-                vertices[i + 1] = vert2;
-                vertices[i + 2] = vert3;
-				vertices[i + 3] = vert4;
+                    if (t == 0)
+                    {
+                        if (!flip)
+                        {
+                            indices.Add(indicesStart + 0);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 2);
+                        }
+                        else
+                        {
+                            indices.Add(indicesStart + 2);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 0);
+                        }
+
+                        Vector3 dir = Vector3.Cross(vert3 - vert1, vert4 - vert1);
+                        Vector3 norm = Vector3.Normalize(dir);
+
+                        vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+                        vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+                        vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
+                    }
+                    else if (t + 1 == stacks)
+                    {
+                        if (!flip)
+                        {
+                            indices.Add(indicesStart + 0);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 2);
+                        }
+                        else
+                        {
+                            indices.Add(indicesStart + 2);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 0);
+                        }
+
+                        Vector3 dir = Vector3.Cross(vert1 - vert3, vert2 - vert3);
+                        Vector3 norm = Vector3.Normalize(dir);
+
+                        vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+                        vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+                        vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
+                    }
+                    else
+                    {
+                        if (!flip)
+                        {
+                            indices.Add(indicesStart + 0);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 3);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 2);
+                            indices.Add(indicesStart + 3);
+                        }
+                        else
+                        {
+                            indices.Add(indicesStart + 3);
+                            indices.Add(indicesStart + 1);
+                            indices.Add(indicesStart + 0);
+                            indices.Add(indicesStart + 3);
+                            indices.Add(indicesStart + 2);
+                            indices.Add(indicesStart + 1);
+                        }
+
+                        Vector3 dir = Vector3.Cross(vert2 - vert1, vert4 - vert1);
+                        Vector3 norm = Vector3.Normalize(dir);
+
+                        vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
+                        vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
+                        vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
+                        vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
+                    }
+                }
             }
         }
 
-        public static (VertexBuffer VBO, IndexBuffer IBO) MakeCenteredQuad(GraphicsDevice device, float width, float height)
+        private static Vector3 FromSphericalCoordinates(float r, float theta, float phi)
+        {
+            float x = r * MathF.Sin(phi) * MathF.Cos(theta);
+            float y = r * MathF.Sin(phi) * MathF.Sin(theta);
+            float z = r * MathF.Cos(phi);
+
+            return new Vector3(x, y, z);
+        }
+
+        public static VerySimpleMesh MakeQuad(GraphicsDevice device, float width, float height, Enums.Alignment alignment)
 		{
-            Vector3 min = -new Vector3(width / 2f, height / 2f, 0);
-            Vector3 max = new Vector3(width / 2f, height / 2f, 0);
+			Vector2 min;
+			Vector2 max;
 
-            Vector3 a = new Vector3(max.X, min.Y, max.Z);
-            Vector3 b = new Vector3(min.X, min.Y, max.Z);
-            Vector3 c = new Vector3(min.X, max.Y, max.Z);
-            Vector3 d = new Vector3(max.X, max.Y, max.Z);
+			switch (alignment)
+			{
+				case Enums.Alignment.TopLeft:
+					min = new Vector2();
+					max = new Vector2(width, height);
+					break;
+				case Enums.Alignment.Top:
+					min = new Vector2(-width / 2f, 0);
+					max = new Vector2(width / 2, height);
+					break;
+				case Enums.Alignment.TopRight:
+                    min = new Vector2(-width, 0);
+                    max = new Vector2(0, height);
+					break;
+				case Enums.Alignment.Left:
+					min = new Vector2(0, -height / 2f);
+					max = new Vector2(width, -height / 2f);
+					break;
+				case Enums.Alignment.Center:
+                    min = new Vector2(-width / 2f, -height / 2f);
+                    max = new Vector2(width / 2f, height / 2f);
+					break;
+				case Enums.Alignment.Right:
+                    min = new Vector2(-width, -height / 2f);
+                    max = new Vector2(0, height / 2f);
+					break;
+				case Enums.Alignment.BottomLeft:
+                    min = new Vector2(0, -height);
+                    max = new Vector2(width, 0);
+					break;
+				case Enums.Alignment.Bottom:
+                    min = new Vector2(-width / 2f, -height);
+                    max = new Vector2(width / 2f, 0);
+                    break;
+				case Enums.Alignment.BottomRight:
+                    min = new Vector2(-width, -height);
+                    max = new Vector2(0, 0);
+                    break;
+				default: throw new Exception("???");
+            }
 
-            List<VertexCube> vertices = new List<VertexCube>();
+            Vector3 a = new Vector3(max.X, min.Y, 0);
+            Vector3 b = new Vector3(min.X, min.Y, 0);
+            Vector3 c = new Vector3(min.X, max.Y, 0);
+            Vector3 d = new Vector3(max.X, max.Y, 0);
+
+            FastList<VertexCube> vertices = new FastList<VertexCube>(8);
             List<int> indices = new List<int>();
 
             Vector2 atx = new Vector2(1, 1);
@@ -204,7 +377,7 @@ namespace ViMG
             Vector2 ctx = new Vector2(0, 0);
             Vector2 dtx = new Vector2(1, 0);
 
-            int offset = vertices.Count;
+            int offset = vertices.Length;
             indices.Add(offset + 0);
             indices.Add(offset + 1);
             indices.Add(offset + 3);
@@ -217,7 +390,56 @@ namespace ViMG
             vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
             vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-            offset = vertices.Count;
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
+
+			return VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices), true);// MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+        }
+
+		// TODO: both MakeCenteredQuad and MakeEnemyQuad can be rewritten to use Enums.Alignment.
+		// Produces a quad with half extents in xy.
+        public static (VertexBuffer VBO, IndexBuffer IBO) MakeCenteredQuad(GraphicsDevice device, float width, float height)
+		{
+            Vector3 min = -new Vector3(width / 2f, height / 2f, 0);
+            Vector3 max = new Vector3(width / 2f, height / 2f, 0);
+
+            Vector3 a = new Vector3(max.X, min.Y, max.Z);
+            Vector3 b = new Vector3(min.X, min.Y, max.Z);
+            Vector3 c = new Vector3(min.X, max.Y, max.Z);
+            Vector3 d = new Vector3(max.X, max.Y, max.Z);
+
+            FastList<VertexCube> vertices = new FastList<VertexCube>(8);
+            List<int> indices = new List<int>();
+
+            Vector2 atx = new Vector2(1, 1);
+            Vector2 btx = new Vector2(0, 1);
+            Vector2 ctx = new Vector2(0, 0);
+            Vector2 dtx = new Vector2(1, 0);
+
+            int offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+
+            offset = vertices.Length;
             indices.Add(offset + 0);
             indices.Add(offset + 1);
             indices.Add(offset + 3);
@@ -233,6 +455,7 @@ namespace ViMG
             return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
         }
 
+		// Produces a quad that is anchored on the bottom.
 		public static (VertexBuffer VBO, IndexBuffer IBO) MakeEnemyQuad(GraphicsDevice device, float width, float height)
         {
 			Vector3 min = -new Vector3(width / 2f, 0, 0);
@@ -243,7 +466,7 @@ namespace ViMG
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			List<VertexCube> vertices = new List<VertexCube>();
+			FastList<VertexCube> vertices = new FastList<VertexCube>();
 			List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(1, 1);
@@ -251,7 +474,7 @@ namespace ViMG
 			Vector2 ctx = new Vector2(0, 0);
 			Vector2 dtx = new Vector2(1, 0);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -264,7 +487,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -317,7 +540,7 @@ namespace ViMG
             }
         }
 
-		public static void MakeXMeshVerts(List<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect)
+		public static void MakeXMeshVerts(FastList<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect, int vertexOffset = 0)
         {
             Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2 * scale.X, 0, Cube.CUBE_SCALE / 2 * scale.Z);
             Vector3 max = new Vector3(Cube.CUBE_SCALE / 2 * scale.X, Cube.CUBE_SCALE * scale.Y, Cube.CUBE_SCALE / 2 * scale.Z);
@@ -335,7 +558,7 @@ namespace ViMG
 			Vector3 crossabg = -Vector3.Cross(Vector3.Normalize(b - g), Vector3.Normalize(b - a));
 			Vector3 crossefc = -Vector3.Cross(Vector3.Normalize(f - c), Vector3.Normalize(f - e));
 
-            int offset = vertices.Count;
+            int offset = vertices.Length + vertexOffset;
 
             vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					crossabg));
             vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y),										crossabg));
@@ -361,7 +584,7 @@ namespace ViMG
             indices.Add(offset + 3);	//d
             indices.Add(offset + 4);	//e
 
-            offset = vertices.Count;
+            offset = vertices.Length + vertexOffset;
 
             vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height),					-crossabg));
             vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y),										-crossabg));
@@ -388,7 +611,7 @@ namespace ViMG
             indices.Add(offset + 2);
         }
 
-		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, List<VertexCube> vertices, List<int> indices)
+		public static void MakeCubeVertsVertexPositionColorTextureNormal(Vector3 min, Vector3 max, CubeFace faces, Color color, FastList<VertexCube> vertices, List<int> indices)
 		{
 			Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
 			Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
@@ -418,9 +641,9 @@ namespace ViMG
 				MakeQuadVertsVertexPositionColorTextureNormal(r_b_f, l_b_f, l_b_n, r_b_n, new Vector3(0, -1, 0), color, vertices, indices);
 		}
 
-		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, List<VertexCube> vertices, List<int> indices, RectangleF? sourceRect = null, Point? textureSize = null)
+		public static void MakeQuadVertsVertexPositionColorTextureNormal(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, FastList<VertexCube> vertices, List<int> indices, RectangleF? sourceRect = null, Point? textureSize = null)
 		{
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);

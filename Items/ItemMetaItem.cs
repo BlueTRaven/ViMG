@@ -35,10 +35,10 @@ namespace ViMG.Items
 			else
 			{
 				//If no valid meta, draw an error texture.
-				if (meshItemQuadInWorld.VBO != null)
+				if (meshItemQuadInWorld.IBO != null)
 				{
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
-						meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, new RectangleF(112, 112, 16, 16)));
+					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
+						meshItemQuadInWorld, transform, new RectangleF(112, 112, 16, 16)));
 				}
 			}
 		}

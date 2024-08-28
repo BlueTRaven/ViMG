@@ -135,7 +135,7 @@ namespace ViMG.Items
 
 		public int Id = -1;
 
-		protected static (VertexBuffer VBO, IndexBuffer IBO) meshItemQuadInWorld;
+		protected static VerySimpleMesh meshItemQuadInWorld;
 
 		public Item(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect)
 		{
@@ -221,7 +221,7 @@ namespace ViMG.Items
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (meshItemQuadInWorld.VBO == null)
+			if (meshItemQuadInWorld.IBO == null)
 				MakeMesh(device);
 
 			RectangleF sourceRect = SourceRect;
@@ -231,8 +231,8 @@ namespace ViMG.Items
 				sourceRect.width = -sourceRect.width;
             }
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
-				meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, 
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+				meshItemQuadInWorld, 
 				transform, sourceRect));
 		}
 
@@ -246,15 +246,15 @@ namespace ViMG.Items
 			Vector3 c = new Vector3(max.X, max.Y, 0);
 			Vector3 d = new Vector3(max.X, min.Y, 0);
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
 			Vector2 btx = new Vector2(0, 0);
 			Vector2 ctx = new Vector2(1, 0);
 			Vector2 dtx = new Vector2(1, 1);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -285,7 +285,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));*/
 
-			meshItemQuadInWorld = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
+			meshItemQuadInWorld = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
 		}
 	}
 }

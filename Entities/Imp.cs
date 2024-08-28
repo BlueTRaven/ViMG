@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class Imp : Entity, IHitboxOwner
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
 
 		private bool onGround;
 		private bool shouldJump;
@@ -372,7 +373,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("imp"),
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("imp"),
 				DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("imp_emissive"), mesh.VBO, mesh.IBO,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *

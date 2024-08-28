@@ -22,8 +22,8 @@ namespace ViMG.WorldLogics
 		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		private const float SUN_LIGHT_ANGLE = 5f; //rotate 5 degrees
 		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshSun;
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshLavaQuad;
+		private static VerySimpleMesh meshSun;
+		private static VerySimpleMesh meshLavaQuad;
         private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("sun"));
         private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("lava"));
 
@@ -59,8 +59,8 @@ namespace ViMG.WorldLogics
 			
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			indices.Add(0);
 			indices.Add(1);
@@ -83,10 +83,11 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
 
-			meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+			meshSun = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+			//meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 
-			vertices = new List<VertexCube>();
-			indices = new List<int>();
+            vertices = new FastList<VertexCube>();
+            indices = new List<int>();
 
 			indices.Add(3);
 			indices.Add(1);
@@ -100,7 +101,8 @@ namespace ViMG.WorldLogics
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
 			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
 
-			meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+            meshLavaQuad = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+            //meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
         }
 
         public override void Initialize(World world)
@@ -251,7 +253,7 @@ namespace ViMG.WorldLogics
 			float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
 			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(200,
-				materialSun, meshSun.VBO, meshSun.IBO,
+				materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 				Matrix.CreateTranslation(world.player.Position),
@@ -262,8 +264,8 @@ namespace ViMG.WorldLogics
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
 					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);
 
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(materialLava, 
-					meshLavaQuad.VBO, meshLavaQuad.IBO, mat));
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava, 
+					meshLavaQuad, mat));
 			}
 		}
 

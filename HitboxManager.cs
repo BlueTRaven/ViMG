@@ -293,16 +293,17 @@ namespace ViMG
 			return hitboxes;
 		}
 
-		private static (VertexBuffer VBO, IndexBuffer IBO) debugMesh;
+		private static VerySimpleMesh debugMesh;
 
 		public void DrawDebug(GraphicsDevice device)
         {
-			if (debugMesh.VBO == null)
+			if (debugMesh.IBO == null)
             {
-				List<VertexCube> vertices = new List<VertexCube>();
-				List<int> indices = new List<int>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
+                List<int> indices = new List<int>();
 				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, Vector3.One, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
- 				debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+                debugMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+                //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
 			for (int i = 0; i < hitboxes.Length; i++)
@@ -314,7 +315,7 @@ namespace ViMG
 						Matrix.CreateTranslation(hitboxes[i].bounds.Position);
 
 					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance, 
-						new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh.VBO, debugMesh.IBO,
+						new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh,
 						transform, tintColor: Color.Red * 0.5f));
 				}
             }

@@ -28,7 +28,7 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(new EntityCubeBonfire(position));
         }
 
-        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             return new CubeAnimation(0.125f, 4, 32);
         }
@@ -38,10 +38,10 @@ namespace ViMG.Cubes
             return pass == RenderPass.Opaque;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, new Vector3(2), vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, new Vector3(2), vertices, indices, vertexOffset);
         }
     }
 }

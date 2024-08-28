@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class CaveSlime : Entity, IHasStats
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
         private int maxHealth = 12;
 		private Color tintColor = Color.White;
@@ -74,8 +74,8 @@ namespace ViMG.Entities
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+			if (mesh.IBO == null)
+				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);// MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
 			int ysrc = 0;
 
@@ -91,7 +91,7 @@ namespace ViMG.Entities
 			if (ai.InvulnTimer > 0)
 				tintColor = Color.Red;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),

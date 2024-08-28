@@ -15,7 +15,7 @@ namespace ViMG.Entities
     //TODO this thing's broke
     public class EntityCaveCompass : Entity, ICubeTracker
     {
-		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private Quaternion target;
@@ -116,10 +116,10 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-			if (mesh.vbo == null)
+			if (mesh.IBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.vbo, mesh.ibo,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateTranslation(0, -Cube.CUBE_SCALE / 2f, 0) *
                 Matrix.CreateFromQuaternion(current) *
                 Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
@@ -128,12 +128,12 @@ namespace ViMG.Entities
 
         private static void MakeMesh(GraphicsDevice device)
         {
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-            mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+            mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); // MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.Design;
 using ViMG.Cubes;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using static ViMG.HitboxManager;
 
@@ -237,16 +238,18 @@ namespace ViMG
             return HousingValidity.Valid;
         }
 
-        private static (VertexBuffer VBO, IndexBuffer IBO) debugMesh;
+        private static VerySimpleMesh debugMesh;
 
         public void DrawDebug(World world, GraphicsDevice device)
         {
-            if (debugMesh.VBO == null)
+            if (debugMesh.IBO == null)
             {
-                List<VertexCube> vertices = new List<VertexCube>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
                 MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, Vector3.One, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-                debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+                
+                debugMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+                //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
             foreach (Housing housing in world.WorldInfo.housings)
@@ -260,7 +263,7 @@ namespace ViMG
 
                     //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
                     Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-                        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh.VBO, debugMesh.IBO, transform,
+                        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
                         tintColor: Color.Green * 0.125f));
                 }
             }

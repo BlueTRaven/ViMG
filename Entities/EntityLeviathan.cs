@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class EntityLeviathan : Entity, IHitboxOwner
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) quad;
+        private static VerySimpleMesh quad;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("leviathan");
 
         private enum State
@@ -75,10 +75,10 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-			if (quad.VBO == null)
+			if (quad.IBO == null)
 			{
-				List<VertexCube> vertices = new List<VertexCube>();
-				List<int> indices = new List<int>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
+                List<int> indices = new List<int>();
 
 				indices.Add(0);
 				indices.Add(1);
@@ -93,7 +93,8 @@ namespace ViMG.Entities
 				vertices.Add(new VertexCube(new Vector3(VERT_DIST, VERT_DIST, 0), Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
 				vertices.Add(new VertexCube(new Vector3(VERT_DIST, -VERT_DIST, 0), Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
 
-				quad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+				//quad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+				quad = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
 			}
 			else
 			{
@@ -116,14 +117,14 @@ namespace ViMG.Entities
 						float alpha = (dist - MIN_DIST) / (MAX_DIST - MIN_DIST);
 
 						Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(Cube.CUBE_SCALE * 32,
-							material, quad.VBO, quad.IBO, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos), 
+							material, quad, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(tpos), 
 							new RectangleF(0, 0, 64, 64), Color.White * alpha));
 					}
 				}
                 else
                 {
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-						material, quad.VBO, quad.IBO, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(Position),
+					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+						material, quad, Matrix.CreateRotationY(-Main.camera.Rotation.Y) * Matrix.CreateTranslation(Position),
 						new RectangleF(64, 0, 64, 64)));
 				}
 			}

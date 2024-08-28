@@ -40,7 +40,7 @@ namespace ViMG.Entities.Renderers
             typeof(CaveSlime),
         };
 
-        public (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        public VerySimpleMesh mesh;
 
         public RendererOpaqueBillboardedEntity(GraphicsDevice device) : base("generic_billboard", device)
         {
@@ -53,7 +53,7 @@ namespace ViMG.Entities.Renderers
                 new TypeStats(new RendererDeferred.DrawMaterial("slime")),
             };
 
-            mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);// MeshHelper.MakeEnemyQuad(device, 1, 1);
         }
 
         public override Type[] GetRenderedTypes()
@@ -113,7 +113,7 @@ namespace ViMG.Entities.Renderers
             stats.SBO.SetData(stats.Draws.Buffer);
 
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                stats.Material, mesh.VBO, mesh.IBO, stats.SBO, 0, stats.Draws.Length));
+                stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
         }
     }
 }

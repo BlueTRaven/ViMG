@@ -39,7 +39,7 @@ namespace ViMG.Cubes
             return pass == RenderPass.Opaque;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
 			/*CubePosition cp = CubePosition.FromWorldSpace(pos);
 
@@ -74,7 +74,7 @@ namespace ViMG.Cubes
 				new Vector3(max.X, max.Y, min.Z), new Vector3(min.X, max.Y, min.Z), new Vector3(0, -1, 0), MeshHelper.CubeFace.UP, this, vertices, indices);*/
 
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
         }
     }
 }

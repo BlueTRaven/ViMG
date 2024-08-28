@@ -133,7 +133,7 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
     output.PositionWS = mul(input.Position, useWorld).xyz;
 	output.Position = mul(float4(output.PositionWS, 1), ViewProjection);
 	output.PositionSS = output.Position;
-	output.Color = input.Color * useTintColor;
+    output.Color = input.Color * useTintColor;
 	
     float3 T = normalize(mul(float4(input.Tangent, 0), useWorldNormal)).xyz;
     float3 B = normalize(mul(float4(input.Bitangent, 0), useWorldNormal)).xyz;
@@ -144,7 +144,7 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
 	
     output.Normal = mul(float4(input.Normal, 1), useWorldNormal).xyz;
 	
-	output.AO = input.AO;
+    output.AO = input.AO;
 	//output.Depth = output.Position.zw;
 	output.DepthVS = output.Position.w;
 
@@ -153,9 +153,10 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
         float2 xy = useSourceRectPos / TextureSize;
         float2 wh = (useSourceRectFarPos - useSourceRectPos) / TextureSize;
 
-		output.TexCoord = xy + (wh * input.TexCoord);
-	}
-	else output.TexCoord = input.TexCoord + TexCoordOffset;
+        output.TexCoord = xy + (wh * input.TexCoord);
+    }
+    else
+        output.TexCoord = input.TexCoord + TexCoordOffset;
 
 	//bool HasAnimation: whether or not the vertex has a texcoord animation.
 	//float AnimationFrameTime: how long each frame of the animation lasts.
@@ -166,13 +167,13 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
 	//HasAnimation: true
 	//AnimFrameTime: 0.25
 	//NumAnimFrames: 3
-	if (input.AnimFrameTime > 0)
+    if (input.AnimFrameTime > 0)
 	{
-		float totalFrameTime = input.AnimFrameTime * input.NumAnimFrames;
+        float totalFrameTime = input.AnimFrameTime * input.NumAnimFrames;
 
-		uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFrames;
+        uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFrames;
 
-		float2 wh = input.AnimFrameSize / 1024.0;
+        float2 wh = input.AnimFrameSize / 1024.0;
 
 		output.TexCoord.x += wh.x * frame;
 	}

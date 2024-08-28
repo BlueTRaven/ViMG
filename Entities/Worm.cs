@@ -13,7 +13,7 @@ namespace ViMG.Entities
 {
     public class Worm : Entity
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("worm");
 
         public int health;
@@ -112,17 +112,18 @@ namespace ViMG.Entities
 
         public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+			if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));
 
             for (int i = 0; i < trainPositions.Length; i++)
             {
-                Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+                Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                     Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                     Matrix.CreateTranslation(trainPositions[i]), new RectangleF(16, 0, 16, 16)));

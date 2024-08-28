@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class GenericExplosion : Entity, IHitboxOwner
     {
-        private (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private VerySimpleMesh mesh;
 
         private const float EXPLOSION_TIME = 10f / 60f;
         private const float HITBOX_TIME = 4f / 60f;
@@ -79,13 +80,13 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = DrawHelper3D.MakeUVSphere(device, 1f);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeUVSphere(device, 1f);
 
             float radius = (1 - timer / EXPLOSION_TIME) * this.radius;
             float sort = (Position - Main.camera.Position).Length();
             Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
-                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh.VBO, mesh.IBO,
+                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
                 Matrix.CreateScale(radius) * Matrix.CreateTranslation(Position), null, Color.Red * 0.5f));
         }
 

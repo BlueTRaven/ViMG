@@ -78,7 +78,7 @@ namespace ViMG
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
         private readonly ChunkManagerIO io;
-        public readonly ChunkMesher RenderMesher;
+        public readonly ChunkRenderMesher RenderMesher;
         public readonly ChunkCollisionMesher CollisionMesher;
 
         public InitializerCubeView InitializerView;
@@ -100,7 +100,7 @@ namespace ViMG
 
             //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
-            RenderMesher = new ChunkMesher(device, sizeInChunksXZ);
+            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ);
             CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
@@ -259,10 +259,10 @@ namespace ViMG
             CollisionMesher.MarkDirty(position);
         }
 
-        public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
-        {
-            return RenderMesher.GetMesh(position, pass);
-        }
+        //public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
+        //{
+        //    return RenderMesher.GetMesh(position, pass);
+        //}
 
         public delegate MeshHelper.CubeFace GetFacesDel(CubePosition position);
         private MeshHelper.CubeFace GetCachedFaces(CubePosition position)

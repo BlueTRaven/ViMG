@@ -232,7 +232,7 @@ namespace ViMG.Entities
 		}
 
 		public const int PROJECTILES_MAX = 1024;
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
 		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
 
 		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
@@ -241,7 +241,7 @@ namespace ViMG.Entities
 
 		public ProjectileManager(World world, GraphicsDevice device)
 		{
-			/*Vector3 min = new Vector3(-0.5f, -0.5f, 0);
+            /*Vector3 min = new Vector3(-0.5f, -0.5f, 0);
 			Vector3 max = new Vector3(0.5f, 0.5f, 0);
 
 			Vector3 a = new Vector3(max.X, min.Y, max.Z);
@@ -270,7 +270,8 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));*/
 
-			mesh = MeshHelper.MakeCenteredQuad(device, 1, 1);
+            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
+            //mesh = MeshHelper.MakeCenteredQuad(device, 1, 1);
 			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
             this.world = world;
@@ -392,7 +393,7 @@ namespace ViMG.Entities
 				{
 					if (!projectiles[i].visStats.rollFollowsVelocity)
 					{
-						Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+						Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 							Matrix.CreateScale(projectiles[i].visStats.scale) *
 							Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, 0) *
 							Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
@@ -405,7 +406,7 @@ namespace ViMG.Entities
                         Matrix mat = Matrix.CreateConstrainedBillboard(projectiles[i].position, 
 							Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
 
-                        Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+                        Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(projectiles[i].visStats.scale) *
                             mat, projectiles[i].visStats.sourceRect));
                     }

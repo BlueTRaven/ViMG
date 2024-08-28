@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class SlimeBig : Entity, IHasStats
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
 
         private NoticeHandler<Player> noticeHandler;
@@ -78,8 +78,9 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2);
+			if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2);
 
 			int ysrc = 32;
 
@@ -91,7 +92,7 @@ namespace ViMG.Entities
 			if (ai.OnGround && (alive % interval) / interval < 0.5f)
 				ysrc = 64;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position),

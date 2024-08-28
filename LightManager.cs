@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Rendering;
 
 namespace ViMG
 {
@@ -383,21 +384,34 @@ namespace ViMG
 
 								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									(VertexBuffer VBO, IndexBuffer IBO) mesh = world.ChunkManager.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
-									//Matrix transform = world.ChunkManager.GetTransform(chunkPos);
+									VerySimpleMesh mesh = world.ChunkManager.RenderMesher.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+                                    //Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
-									if (mesh.VBO != null)
-									{
-										device.SetVertexBuffer(mesh.VBO);
-										device.Indices = mesh.IBO;
-										
-										foreach (var pass in effectDepth.CurrentTechnique.Passes)
-										{
-											pass.Apply();
-											device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
-										}
-									}
-								}
+
+                                    if (mesh.VBOPosition != null && mesh.VBOTexCoord != null)
+                                    {
+                                        device.SetVertexBuffers(new VertexBufferBinding(mesh.VBOPosition, 0), new VertexBufferBinding(mesh.VBOTexCoord, 0));
+                                        device.Indices = mesh.IBO;
+
+                                        foreach (var pass in effectDepth.CurrentTechnique.Passes)
+                                        {
+                                            pass.Apply();
+                                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
+                                        }
+                                    }
+
+                                    //if (mesh.VBO != null)
+                                    //{
+                                    //	device.SetVertexBuffer(mesh.VBO);
+                                    //	device.Indices = mesh.IBO;
+
+                                    //	foreach (var pass in effectDepth.CurrentTechnique.Passes)
+                                    //	{
+                                    //		pass.Apply();
+                                    //		device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
+                                    //	}
+                                    //}
+                                }
 							}
 						}
 					}

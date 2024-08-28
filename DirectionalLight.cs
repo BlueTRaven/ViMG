@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG
 {
@@ -282,22 +283,33 @@ namespace ViMG
 
 			for (int i = 0; i < cachedChunkPositions.Length; i++)
 			{
-                (VertexBuffer VBO, IndexBuffer IBO) mesh = world.ChunkManager.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
+                VerySimpleMesh mesh = world.ChunkManager.RenderMesher.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
                 //Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
-                if (mesh.VBO != null)
-                {
-                    device.SetVertexBuffer(mesh.VBO);
-                    device.Indices = mesh.IBO;
-
-                    foreach (var pass in effectDepth.CurrentTechnique.Passes)
+				if (mesh.VBOPosition != null && mesh.VBOTexCoord != null)
+				{
+					device.SetVertexBuffers(new VertexBufferBinding(mesh.VBOPosition, 0), new VertexBufferBinding(mesh.VBOTexCoord, 0));
+					device.Indices = mesh.IBO;
+                    
+					foreach (var pass in effectDepth.CurrentTechnique.Passes)
                     {
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
                     }
-
-                    //mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
                 }
+                //if (mesh.VBO != null)
+                //{
+                //    device.SetVertexBuffer(mesh.VBO);
+                //    device.Indices = mesh.IBO;
+
+                //    foreach (var pass in effectDepth.CurrentTechnique.Passes)
+                //    {
+                //        pass.Apply();
+                //        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
+                //    }
+
+                //    //mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
+                //}
             }
 			/*for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
 			{

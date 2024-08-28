@@ -209,17 +209,19 @@ namespace ViMG
 			}
 		}
 
-		public void LoadAroundTarget(World world)
+		public void LoadAroundTarget(World world, int? tempRenderDistance = null)
 		{
 			ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
 
 			//ProfilingHelper.StartBatch("Beginning load around target...");
 
-			for (int z = -Options.RenderDistance; z < Options.RenderDistance; z++)
+			int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
+
+			for (int z = -useRenderDistance; z < useRenderDistance; z++)
 			{
-				for (int y = -Options.RenderDistance; y <= Options.RenderDistance; y++)
+				for (int y = -useRenderDistance; y <= useRenderDistance; y++)
 				{
-					for (int x = -Options.RenderDistance; x <= Options.RenderDistance; x++)
+					for (int x = -useRenderDistance; x <= useRenderDistance; x++)
 					{
 						var pos = baseChunkPos + new ChunkPosition(x, y, z);
 

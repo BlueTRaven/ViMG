@@ -11,6 +11,7 @@ using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
+using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
 using static ViMG.Cubes.Cube.CubeVisualInstance;
@@ -206,7 +207,7 @@ namespace ViMG.Cubes
 		private readonly RectangleF sourceRect;
 		private readonly Color tintColor;
 
-		public (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		public VerySimpleMesh mesh;
 		//public SimpleMesh<VertexCube, int> mesh;
 
 		public int MineProgressToBreak;
@@ -253,12 +254,12 @@ namespace ViMG.Cubes
 			Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
+		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
 		{
 			return sourceRect;
 		}
 
-		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
 		{
 			if (layout == null)
 				return GetSourceRect(pass, data, parameters);
@@ -293,7 +294,7 @@ namespace ViMG.Cubes
 			else return layout.Front;
 		}
 
-		public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			return new CubeAnimation();
         }
@@ -364,14 +365,14 @@ namespace ViMG.Cubes
 
         }
 
-		public virtual (VertexBuffer VBO, IndexBuffer IBO) GetHeldMesh(GraphicsDevice device)
+		public virtual VerySimpleMesh GetHeldMesh(GraphicsDevice device)
 		{
-			if (mesh.VBO == null)
+			if (mesh.IBO == null)
 			{
-				List<VertexCube> vertices = new List<VertexCube>();
+				FastList<VertexCube> vertices = new FastList<VertexCube>();
 				List<int> indices = new List<int>();
 
-				ChunkMesher.CubeMeshingParameters parameters = new ChunkMesher.CubeMeshingParameters()
+				ChunkRenderMesher.CubeMeshingParameters parameters = new ChunkRenderMesher.CubeMeshingParameters()
 				{
 					cube = this,
 					id = Id,
@@ -382,8 +383,9 @@ namespace ViMG.Cubes
 
 				MakeCubeVerts(RenderPass.Opaque, default, parameters, vertices, indices);
 
-				if (vertices.Count > 0)
-					mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+				if (vertices.Length > 0)
+					mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+					//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 					//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
 			}
 
@@ -419,30 +421,30 @@ namespace ViMG.Cubes
 			return true;
         }
 
-		public virtual void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
-        {
+		public virtual void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+		{
 			if ((parameters.faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
-				MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices);
+				MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
-                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.RIGHT), MeshHelper.CubeFace.RIGHT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.RIGHT), MeshHelper.CubeFace.RIGHT, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
-                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.BACK), MeshHelper.CubeFace.BACK, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.BACK), MeshHelper.CubeFace.BACK, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
-                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.LEFT), MeshHelper.CubeFace.LEFT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.LEFT), MeshHelper.CubeFace.LEFT, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
-                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.DOWN), MeshHelper.CubeFace.DOWN, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.DOWN), MeshHelper.CubeFace.DOWN, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
-                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.UP), MeshHelper.CubeFace.UP, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.UP), MeshHelper.CubeFace.UP, vertices, indices, vertexOffset);
         }
 
-		public virtual void MakeCubeFaceVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, ChunkMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, List<VertexCube> vertices, List<int> indices)
+		public virtual void MakeCubeFaceVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, ChunkRenderMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, FastList<VertexCube> vertices, List<int> indices, int vertexOffset)
 		{
-            int offset = vertices.Count;
+            int offset = vertices.Length + vertexOffset;
             indices.Add(offset + 0);
             indices.Add(offset + 1);
             indices.Add(offset + 3);
@@ -478,12 +480,12 @@ namespace ViMG.Cubes
                     vertex.NumAnimFrames = anim.NumFrames;
                     vertex.AnimFrameSize = anim.FrameWidth;
 
-                    vertices[i] = vertex;
+                    vertices.Buffer[i] = vertex;
                 }
             }
         }
 
-		public ChunkMesher.CubeMeshingQuad GetQuadForFace(ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+		public ChunkRenderMesher.CubeMeshingQuad GetQuadForFace(ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
 		{
             Vector3 min = parameters.positionWS;
             Vector3 max = parameters.positionWS + new Vector3(Cube.CUBE_SCALE);
@@ -553,7 +555,7 @@ namespace ViMG.Cubes
                     break;
             }
 
-			return new ChunkMesher.CubeMeshingQuad()
+			return new ChunkRenderMesher.CubeMeshingQuad()
 			{
 				a = a,
 				b = b,

@@ -42,8 +42,8 @@ namespace ViMG
 		public ChunkManager ChunkManager;
 		public ChunkGenerator ChunkGenerator;
 
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshMiningCube;
-		private static (VertexBuffer VBO, IndexBuffer IBO) skyboxMesh;
+		private static VerySimpleMesh meshMiningCube;
+		private static VerySimpleMesh skyboxMesh;
 		private static bool meshesLoaded;
 		public Skybox Skybox;
 		public float WeatherSkyboxAlpha;
@@ -147,10 +147,10 @@ namespace ViMG
 
 		private void CreateMeshes(GraphicsDevice device)
         {
-			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
+            //meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			Vector3 l_b_f = new Vector3(0, 0, 1);
 			Vector3 r_b_f = new Vector3(1, 0, 1);
@@ -167,7 +167,7 @@ namespace ViMG
 			const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
 
 			//front face
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -181,7 +181,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
 
 			//right face
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -195,7 +195,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
 
 			//back face
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -209,7 +209,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
 
 			//left face
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -223,7 +223,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
 
 			//top face
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -238,7 +238,7 @@ namespace ViMG
 
 
 			//bottom face
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -251,7 +251,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 
-			skyboxMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+			skyboxMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 
 			meshesLoaded = true;
 		}
@@ -585,15 +585,19 @@ namespace ViMG
 				if (player.GetBuffManager().HasBuff("emissive_ores"))
 					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
-                (VertexBuffer VBO, IndexBuffer IBO) mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
-                if (mesh.VBO != null)
-                {
-                    Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
-                        transform, null));
-                }
+                VerySimpleMesh mesh = ChunkManager.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
+				if (mesh.IBO != null)
+				{
+					Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
+				}
+                //if (mesh.VBO != null)
+                //{
+                //    Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
+                //        transform, null));
+                //}
 
-                mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
-                if (mesh.VBO != null)
+                mesh = ChunkManager.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
+                if (mesh.IBO != null)
                 {
                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
                     Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
@@ -601,23 +605,43 @@ namespace ViMG
                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
                     //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
-                        cubesMaterial, mesh.VBO, mesh.IBO, transform));
+                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
                 }
+                //if (mesh.VBO != null)
+                //{
+                //    Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+                //    Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+
+                //    Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+                //    //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
+
+                //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+                //        cubesMaterial, mesh.VBO, mesh.IBO, transform));
+                //}
 
 				if (Main.Renderer.EffectEmptyEnabled)
 				{
-					mesh = ChunkManager.GetMesh(pos, Cubes.Cube.RenderPass.Air);
-					if (mesh.VBO != null)
-					{
-						Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-						Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+					mesh = ChunkManager.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Air);
+                    if (mesh.IBO != null)
+                    {
+                        Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+                        Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-						Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+                        Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-						Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
-							StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
-					}
+                        Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+                            StaticMaterials.Cubes, mesh, transform));
+                    }
+     //               if (mesh.VBO != null)
+					//{
+					//	Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+					//	Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+
+					//	Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+
+					//	Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
+					//		StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
+					//}
 				}
 
 				NumChunksDrawn++;
@@ -637,7 +661,7 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						new RendererDeferred.DrawMaterial(Skybox.Night),
-                        skyboxMesh.VBO, skyboxMesh.IBO,
+                        skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
@@ -650,7 +674,7 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
 						new RendererDeferred.DrawMaterial(Skybox.Day),
-                        skyboxMesh.VBO, skyboxMesh.IBO,
+                        skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateTranslation(Main.camera.Position),
 						null, Color.White * alphaDay));
@@ -665,8 +689,7 @@ namespace ViMG
 						TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
 						Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
 							Matrix.CreateTranslation(Main.camera.Position),
-						VBO = skyboxMesh.VBO,
-						IBO = skyboxMesh.IBO,
+						Mesh = skyboxMesh,
 					});
 				}
 
@@ -690,7 +713,7 @@ namespace ViMG
 					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
 					RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube.VBO, meshMiningCube.IBO,
+					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube,
 						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
 				}
 			}

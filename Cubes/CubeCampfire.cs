@@ -9,13 +9,14 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Items;
+using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Cubes
 {
     public class CubeCampfire : Cube
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) heldMesh;
+        private static VerySimpleMesh heldMesh;
 
         public CubeCampfire() : base("campfire", new RectangleF(192, 16, 16, 16), Color.White, 1)
         {
@@ -23,11 +24,11 @@ namespace ViMG.Cubes
             Collision = CollisionValue.None;
         }
 
-        public override (VertexBuffer VBO, IndexBuffer IBO) GetHeldMesh(GraphicsDevice device)
+        public override VerySimpleMesh GetHeldMesh(GraphicsDevice device)
         {
-            if (heldMesh.VBO == null)
+            if (heldMesh.IBO == null)
             {
-                List<VertexCube> vertices = new List<VertexCube>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
 
                 Vector3 a = Vector3.Zero;
@@ -37,8 +38,9 @@ namespace ViMG.Cubes
 
                 MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(b, c, d, a,
                     new Vector3(0, 0, 1), Color.White, vertices, indices);
-
-                heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+                
+                heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+                //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
                 //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
@@ -96,13 +98,13 @@ namespace ViMG.Cubes
             return pass == RenderPass.Opaque;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
         }
 
-        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             return new CubeAnimation(0.125f, 3, 16);
         }

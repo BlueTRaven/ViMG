@@ -24,7 +24,7 @@ namespace ViMG.Cubes
             DropSelf(itemsToDrop);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             if (data == null || !data.GetValid())
                 return base.GetSourceRect(pass, data, parameters, face);

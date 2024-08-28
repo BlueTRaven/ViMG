@@ -18,7 +18,7 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.TransparentOccludesSiblings;
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             if (data == null)
                 return GetSourceRect(pass, data, parameters);

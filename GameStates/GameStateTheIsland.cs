@@ -63,6 +63,7 @@ namespace ViMG.GameStates
             IsLoading = true;
             worldTask = new Task<World>(() =>
             {
+                ProfilingHelper.Start("Loading and Flushing World...");
                 World world;
                 if (!Directory.Exists("./saves/" + worldName + "/"))
                 {
@@ -76,15 +77,17 @@ namespace ViMG.GameStates
                 if (world == null) throw new Exception("Errored while loading world");
 
                 LoadMessage = "Loading World...";
+                ProfilingHelper.Start("Building Meshes...");
                 //Now we can tell the ChunkLoadManager what should be loaded.
                 world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
-                world.ChunkLoadManager.LoadAroundTarget(world);
+                world.ChunkLoadManager.LoadAroundTarget(world, 4);
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
                 world.ChunkLoadManager.FlushLoadQueue();
+                ProfilingHelper.End("Done Building Meshes.");
 
                 LoadMessage = "Loading World...\nFinishing...";
                 world.FinishLoading(device);
@@ -92,6 +95,7 @@ namespace ViMG.GameStates
                 //world.LoadWorld(device, worldName);
 
                 IsLoading = false;
+                ProfilingHelper.End("Finished Loading and Flushing World.");
 
                 return world;
             });

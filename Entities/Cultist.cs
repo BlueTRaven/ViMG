@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class Cultist : Entity, IHasStats
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cultist");
 
         private NoticeHandler<Player> noticeHandler;
@@ -65,10 +65,11 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
+			if (mesh.IBO == null)
 			{
 				float pixelsPerCube = Cube.CUBE_SCALE / 16f;
-				mesh = MeshHelper.MakeEnemyQuad(device, pixelsPerCube * 19, pixelsPerCube * 32);
+                mesh = MeshHelper.MakeQuad(device, pixelsPerCube * 19, pixelsPerCube * 19, Enums.Alignment.Bottom);
+                //mesh = MeshHelper.MakeEnemyQuad(device, pixelsPerCube * 19, pixelsPerCube * 32);
 			}
 
 			RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
@@ -91,7 +92,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));

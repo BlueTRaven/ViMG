@@ -15,7 +15,7 @@ namespace ViMG.Entities
     public class Ducken : Entity, IHasStats, IHitboxOwner
     {
         private const int MAX_HEALTH = 8;
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("ducken");
 
         private NoticeHandler<Player> noticeHandler;
@@ -60,9 +60,10 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
+            if (mesh.IBO == null)
             {
-                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+                //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
             }
 
             RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
@@ -120,7 +121,7 @@ namespace ViMG.Entities
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));

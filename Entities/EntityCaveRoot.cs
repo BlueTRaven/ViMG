@@ -25,7 +25,7 @@ namespace ViMG.Entities
             public float grownTime;     //the time after which this plant will be considered fully grown.
         }
 
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private Save save;
@@ -80,13 +80,14 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
+            if (mesh.IBO == null)
             {
-                List<VertexCube> vertices = new List<VertexCube>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
                 DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-                mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+                mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+                //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
             }
 
             RectangleF sourceRect = new RectangleF(0, 176, 16, 16);
@@ -103,8 +104,8 @@ namespace ViMG.Entities
             }
             else sourceRect.x = 2 * 16;
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-                material, mesh.VBO, mesh.IBO, Matrix.CreateTranslation(Position), sourceRect));
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+                material, mesh, Matrix.CreateTranslation(Position), sourceRect));
         }
 
         public unsafe override void OnSave(List<byte> saveBytes)

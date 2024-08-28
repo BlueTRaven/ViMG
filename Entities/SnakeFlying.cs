@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class SnakeFlying : Entity, IHasStats
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x2;
+		private static VerySimpleMesh mesh2x2;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
 
         public Vector3 Velocity;
@@ -76,9 +76,10 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh2x2.VBO == null)
+			if (mesh2x2.IBO == null)
 			{
-				mesh2x2 = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2);
+				mesh2x2 = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+				//mesh2x2 = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2);
 			}
 
 			RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
@@ -98,12 +99,12 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = aiFlying.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2.VBO, mesh2x2.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRectWings, tintColor));
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2.VBO, mesh2x2.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh2x2,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRectSnake, tintColor));

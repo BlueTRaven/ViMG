@@ -13,7 +13,7 @@ namespace ViMG.Entities
 {
     public class PlayerBubble : Entity, IHitboxOwner
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("bubble");
 
         private float alive;
@@ -68,8 +68,9 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
 
             //Don't draw while exploding
             //TODO: instead of not drawing, draw some "bubble pop" sprite
@@ -89,7 +90,7 @@ namespace ViMG.Entities
                 Matrix.CreateBillboard(Position, Main.camera.Position, Main.camera.Up, Main.camera.Forward);
 
             Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((Main.camera.Position - Position).Length(),
-                material, mesh.VBO, mesh.IBO, mat,
+                material, mesh, mat,
                 new RectangleF(0, 0, 64, 64), Color.White * 0.85f));
         }
 

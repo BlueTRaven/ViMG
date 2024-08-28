@@ -276,8 +276,8 @@ namespace ViMG
 		private const float PUSH_RADIUS = 1.75f * Cube.CUBE_SCALE;
 		private Vector3 attackStateTargetPos;
 
-		private (VertexBuffer VBO, IndexBuffer IBO) mesh;
-		private (VertexBuffer VBO, IndexBuffer IBO) lookAtMesh;
+		private VerySimpleMesh mesh;
+		private VerySimpleMesh lookAtMesh;
 
 		private RendererDeferred.DrawMaterial material;
 		private RendererDeferred.DrawMaterial lookAtMaterial = StaticMaterials.Cubes;
@@ -1683,15 +1683,17 @@ namespace ViMG
 				inventory.Get(menuPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(menuPlayer.HighlightIndex), this, -Main.camera.Forward);
 			}
 
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
+			if (mesh.IBO == null)
+				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f, Enums.Alignment.Center);
+				//mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
 
-			if (lookAtMesh.VBO == null)
+			if (lookAtMesh.IBO == null)
 			{
-				List<VertexCube> vertices = new List<VertexCube>();
-				List<int> indices = new List<int>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
+                List<int> indices = new List<int>();
 				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-				lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+				lookAtMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+				//lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
 				//lookAtMesh.Name = "Look At Mesh";
 			}
@@ -1714,7 +1716,7 @@ namespace ViMG
 				}
 				else
 				{
-					Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
 						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
 				}*/
             }
@@ -1737,7 +1739,7 @@ namespace ViMG
 						if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
 						{
 							Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-                                lookAtMesh.VBO, lookAtMesh.IBO,
+                                lookAtMesh,
                                 Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 								Matrix.CreateScale(1.126f) *
 								Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
@@ -1749,7 +1751,7 @@ namespace ViMG
 				else 
 				{
 					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-                        lookAtMesh.VBO, lookAtMesh.IBO,
+                        lookAtMesh,
                         Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
 						Matrix.CreateScale(1.126f) *
 						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *

@@ -15,7 +15,7 @@ namespace ViMG.Entities
 	[EntityMeta(0)]
     public class Heart : Entity, IHitboxOwner
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("heart");
 
         public int Health;
@@ -99,10 +99,11 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+			if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-			float healthPercent = (float)Health / (float)MaxHealth;
+            float healthPercent = (float)Health / (float)MaxHealth;
 
 			float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
 
@@ -114,7 +115,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateTranslation(-new Vector3(0, Cube.CUBE_SCALE / 2f, 0)) *
 				Matrix.CreateScale(scale) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *

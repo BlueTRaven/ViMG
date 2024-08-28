@@ -27,7 +27,7 @@ namespace ViMG.Items
         private CubePosition first;
         private CubePosition second;
 
-        private (VertexBuffer VBO, IndexBuffer IBO) meshWireframeCube;
+        private VerySimpleMesh meshWireframeCube;
 
         public ItemDebugStructureCopier() : base("DEBUGStructureCopier", StaticMaterials.Items, new RectangleF(112, 112, 16, 16))
         {
@@ -125,12 +125,13 @@ namespace ViMG.Items
         {
             base.DrawInWorld(device, world, item, transform);
 
-            if (meshWireframeCube.VBO == null)
+            if (meshWireframeCube.IBO == null)
             {
-                List<VertexCube> vertices = new List<VertexCube>();
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
                 MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-                meshWireframeCube = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices); //MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+                meshWireframeCube = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+                //meshWireframeCube = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices); //MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
             }
 
             if (state != State.None)
@@ -158,7 +159,7 @@ namespace ViMG.Items
                 else scale.Z -= Cube.CUBE_SCALE;
 
                 Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
-                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube.VBO, meshWireframeCube.IBO, 
+                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube, 
                     Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start), 
                     tintColor: Color.White * 0.5f));
             }

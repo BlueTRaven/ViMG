@@ -36,17 +36,20 @@ namespace ViMG
             return getCubeId(position);
         }
 
-        public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
+        public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
             if (count == -1)
                 count = positions.Length;
 
             byte[] idBytes = io.GetBytes();
 
-            for (int i = offset; i < offset + count; i++)
+            fixed (ushort* idsPtr = ids) 
             {
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                ids[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+                for (int i = offset; i < offset + count; i++)
+                {
+                    int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
+                    idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+                }
             }
         }
 

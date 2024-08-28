@@ -46,7 +46,7 @@
 #begin Effects/deferred_gbuffer.fx
 /importer:EffectImporter
 /processor:EffectProcessor
-/processorParam:DebugMode=Auto
+/processorParam:DebugMode=Debug
 /build:Effects/deferred_gbuffer.fx
 
 #begin Effects/deferred_lightaccum_csmlight.fx
@@ -753,18 +753,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/skybox_clouds.png
 
-#begin Textures/skybox_clouds.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/skybox_clouds.png
-
 #begin Textures/skybox_day.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -776,18 +764,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/skybox_day.png
-
-#begin Textures/skybox_fog.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/skybox_fog.png
 
 #begin Textures/skybox_fog.png
 /importer:TextureImporter

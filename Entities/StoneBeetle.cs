@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class StoneBeetle : Entity, IHasStats
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("stone_beetle");
 
         private NoticeHandler<Player> noticeHandler;
@@ -77,9 +77,10 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
+            if (mesh.IBO == null)
             {
-                mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+                //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
             }
 
             RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, directionalSourceRect);
@@ -103,7 +104,7 @@ namespace ViMG.Entities
 
             Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                 Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                 Matrix.CreateTranslation(Position), sourceRect, tintColor));

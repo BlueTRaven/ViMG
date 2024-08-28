@@ -30,9 +30,9 @@ namespace ViMG.Cubes
             return pass == RenderPass.Transparent;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
-            DrawHelper3D.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, data, parameters), CUBE_SCALE / 2f);
+            MeshHelper.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, data, parameters), CUBE_SCALE / 2f, vertexOffset);
             //base.MakeVerts(pass, world, pos, min, max, visual, cube, vertices, indices);
         }
     }

@@ -34,7 +34,7 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			if (data != null && data.GetValid())
 			{
@@ -46,7 +46,7 @@ namespace ViMG.Cubes
 			return base.GetSourceRect(pass, data, parameters, face);
         }
 
-        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
 			if (data != null && data.GetValid())
 			{

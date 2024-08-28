@@ -23,7 +23,7 @@ namespace ViMG.Entities
             DivingInWorld,
             Finished,
         }
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
 
         private Vector2 pitchYaw;
@@ -103,8 +103,9 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
             if (state == State.InSky || state == State.DivingInSky)
             {
@@ -116,7 +117,7 @@ namespace ViMG.Entities
                     distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / DIVINGINSKY_TIME));
 
                 Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
-                    material, mesh.VBO, mesh.IBO,
+                    material, mesh,
                     Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                     Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
                     Matrix.CreateRotationX(MathHelper.ToRadians(pitchYaw.X)) *
@@ -150,11 +151,11 @@ namespace ViMG.Entities
                 float sortVal = (Main.camera.Position - Position).Length();
 
                 Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
-                    material, mesh.VBO, mesh.IBO, lerpStartRotMat * Matrix.CreateTranslation(p), 
+                    material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p), 
                     directionalSourceRect.front, Color.White * world.GetTimeOfNight() * (1 - t)));
 
                 Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
-                    material, mesh.VBO, mesh.IBO, 
+                    material, mesh, 
                     Matrix.CreateScale(sx, 1, 1) *
                     lerpEndRotMat * Matrix.CreateTranslation(p),
                     sourceRect, Color.White * world.GetTimeOfNight() * t));

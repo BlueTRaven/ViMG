@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace ViMG
 {
+	[DebuggerDisplay("HasValue = {HasValue()} Value = {Get()}")]
 	public ref struct Optional<T> where T : class
 	{
 		public Optional(T obj)
@@ -21,6 +23,13 @@ namespace ViMG
 		public T Get()
 		{
 			return obj;
+		}
+
+		public bool GetOut(out T obj)
+		{
+			obj = this.obj;
+			if (HasValue()) return true; 
+			else return false;
 		}
 
 		public T GetOrDefault(T def)

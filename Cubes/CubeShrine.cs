@@ -41,7 +41,7 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(shrine);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
         {
             if (data.GetValid())
             {

@@ -50,9 +50,9 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeXMeshVerts(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, Vector3 scale, List<VertexCube> vertices, List<int> indices)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, Vector3 scale, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
-			int verticesStart = vertices.Count;
+			int verticesStart = vertices.Length;
 
 			const int textureWidth = 1024;
 			const int textureHeight = 1024;
@@ -65,14 +65,14 @@ namespace ViMG
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
-			MeshHelper.MakeXMeshVerts(vertices, indices, parameters.positionWS, scale, sourceRect);
+			MeshHelper.MakeXMeshVerts(vertices, indices, parameters.positionWS, scale, sourceRect, vertexOffset);
 
-			int verticesEnd = vertices.Count;
+			int verticesEnd = vertices.Length;
 
 			ApplyCubeAnim(pass, data, parameters, MeshHelper.CubeFace.ALL, vertices, verticesStart, verticesEnd);
 		}
 
-		public static void MakeXMeshRaw(List<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect)
+		public static void MakeXMeshRaw(FastList<VertexCube> vertices, List<int> indices, Vector3 pos, Vector3 scale, RectangleF sourceRect)
         {
 			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2 * scale.X, 0, Cube.CUBE_SCALE / 2 * scale.Z);
 			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2 * scale.X, Cube.CUBE_SCALE * scale.Y, Cube.CUBE_SCALE / 2 * scale.Z);
@@ -97,7 +97,7 @@ namespace ViMG
 			Vector3 gnrm = new Vector3(0.5f, 0, 0.5f);
 			Vector3 hnrm = new Vector3(0.5f, 0, 0.5f);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 
 			vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), anrm));
 			vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), bnrm));
@@ -123,7 +123,7 @@ namespace ViMG
 			indices.Add(offset + 3);
 			indices.Add(offset + 4);
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 
 			vertices.Add(new VertexCube(a, Color.White, new Vector2(sourceRect.x, sourceRect.y + sourceRect.height), -anrm));
 			vertices.Add(new VertexCube(b, Color.White, new Vector2(sourceRect.x, sourceRect.y), -bnrm));
@@ -255,7 +255,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
 		}
 
-		public static void ApplyCubeAnim(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, List<VertexCube> vertices, int verticesStart, int verticesEnd)
+		public static void ApplyCubeAnim(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
 			Cube.CubeAnimation anim = parameters.cube.GetAnimation(pass, data, parameters, parameters.faces);
 			if (anim.Valid)
@@ -268,12 +268,12 @@ namespace ViMG
 					vert.NumAnimFrames = anim.NumFrames;
 					vert.AnimFrameSize = anim.FrameWidth;
 
-					vertices[i] = vert;
+					vertices.Buffer[i] = vert;
 				}
 			}
 		}
 
-		private static (VertexBuffer VBO, IndexBuffer IBO) meshHealthbar;
+		private static VerySimpleMesh meshHealthbar;
 
 		private static void MakeMeshHealthbar(GraphicsDevice device)
         {
@@ -290,10 +290,10 @@ namespace ViMG
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			var vertices = new List<VertexCube>();
+			var vertices = new FastList<VertexCube>();
 			var indices = new List<int>();
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -306,7 +306,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(c, Color.Red, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.Red, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -319,18 +319,19 @@ namespace ViMG
 			vertices.Add(new VertexCube(d, Color.Red, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.Red, ctx, new Vector3(0, 0, -1)));
 
-			meshHealthbar = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+			meshHealthbar = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+			//meshHealthbar = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 			//meshHealthbar = new SimpleMesh<VertexCube, int>(device, vertices, indices, DrawHelper.WhitePixel);
 		}
 
 		private static RendererDeferred.DrawMaterial healthbarMaterial = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel);
 		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
         {
-			if (meshHealthbar.VBO == null)
+			if (meshHealthbar.IBO == null)
 				MakeMeshHealthbar(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-				healthbarMaterial, meshHealthbar.VBO, meshHealthbar.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+				healthbarMaterial, meshHealthbar,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
@@ -340,7 +341,7 @@ namespace ViMG
 		
 		//Draws a line that is tiled along the vertical axis.
 		public static void DrawLineTiled(Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
-			RendererDeferred.DrawMaterial material, (VertexBuffer VBO, IndexBuffer IBO) mesh, RectangleF sourceRectangle, Color color)
+			RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
 			Vector3 axis = endPosition - startPosition;
 			float distance = axis.Length();
@@ -353,7 +354,7 @@ namespace ViMG
 
 			for (int i = 0; i < tileTimes; i++)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
 					sourceRectangle, color.ToVector3()));
 			}
@@ -365,7 +366,7 @@ namespace ViMG
 			Vector2 fixedPosition = sourceRectangle.Position;
 			fixedPosition.Y += sourceRectangle.height - fixedHeight;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
 				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
 				color.ToVector3()));
@@ -374,7 +375,7 @@ namespace ViMG
 		//Draws a stretched texture along a line.
 		//If you want the texture to be tiled properly, use DrawLineTiled.
 		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
-            RendererDeferred.DrawMaterial material, (VertexBuffer VBO, IndexBuffer IBO) mesh, RectangleF sourceRectangle, Color color)
+            RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
             Vector3 axis = endPosition - startPosition;
             float distance = axis.Length();
@@ -382,139 +383,10 @@ namespace ViMG
 
             Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateScale(width, distance, width) * mat,
                 sourceRectangle, color.ToVector3()));
         }
-
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeUVSphere(GraphicsDevice device, float radius, bool flip = false)
-        {
-			VertexBuffer vbo;
-			IndexBuffer ibo;
-
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
-
-			MakeUVSphereRaw(vertices, indices, Vector3.Zero, new RectangleF(0, 0, 1, 1), radius, 16, 16, flip);
-
-			return MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-        }
-
-		public static void MakeUVSphereRaw(List<VertexCube> vertices, List<int> indices, Vector3 position, RectangleF sourceRect, float radius, int stacks = 16, int slices = 16, bool flip = false)
-        {
-			//https://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
-			for (int t = 0; t < stacks; t++)
-			{
-				float theta1 = ((float)(t) / stacks) * MathF.PI;
-				float theta2 = ((float)(t + 1) / stacks) * MathF.PI;
-
-				for (int p = 0; p < slices; p++) // slices are ORANGE SLICES so the count azimuth
-				{
-					float phi1 = ((float)(p) / slices) * 2 * MathF.PI; // azimuth goes around 0 .. 2*PI
-					float phi2 = ((float)(p + 1) / slices) * 2 * MathF.PI;
-
-					Vector3 vert1 = FromSphericalCoordinates(radius, phi1, theta1) + position;
-					Vector3 vert2 = FromSphericalCoordinates(radius, phi2, theta1) + position;
-					Vector3 vert3 = FromSphericalCoordinates(radius, phi2, theta2) + position;
-					Vector3 vert4 = FromSphericalCoordinates(radius, phi1, theta2) + position;
-
-					Vector2 uv1 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
-					Vector2 uv2 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta1 / 2f / MathF.PI);
-					Vector2 uv3 = sourceRect.Size.ToVector2() * new Vector2(phi2 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
-					Vector2 uv4 = sourceRect.Size.ToVector2() * new Vector2(phi1 / 2f / MathF.PI, theta2 / 2f / MathF.PI);
-
-					uv1 += sourceRect.Position;
-					uv2 += sourceRect.Position;
-					uv3 += sourceRect.Position;
-					uv4 += sourceRect.Position;
-
-					int indicesStart = vertices.Count;
-
-					if (t == 0)
-					{
-						if (!flip)
-						{
-							indices.Add(indicesStart + 0);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 2);
-						}
-                        else
-                        {
-							indices.Add(indicesStart + 2);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 0);
-						}
-
-						Vector3 dir = Vector3.Cross(vert3 - vert1, vert4 - vert1);
-						Vector3 norm = Vector3.Normalize(dir);
-
-						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
-						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
-						vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
-					}
-					else if (t + 1 == stacks)
-					{
-						if (!flip)
-						{
-							indices.Add(indicesStart + 0);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 2);
-						}
-                        else
-                        {
-							indices.Add(indicesStart + 2);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 0);
-						}
-
-						Vector3 dir = Vector3.Cross(vert1 - vert3, vert2 - vert3);
-						Vector3 norm = Vector3.Normalize(dir);
-
-						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
-						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
-						vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
-					}
-					else
-					{
-						if (!flip)
-						{
-							indices.Add(indicesStart + 0);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 3);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 2);
-							indices.Add(indicesStart + 3);
-						}
-                        else
-                        {
-							indices.Add(indicesStart + 3);
-							indices.Add(indicesStart + 1);
-							indices.Add(indicesStart + 0);
-							indices.Add(indicesStart + 3);
-							indices.Add(indicesStart + 2);
-							indices.Add(indicesStart + 1);
-						}
-
-						Vector3 dir = Vector3.Cross(vert2 - vert1, vert4 - vert1);
-						Vector3 norm = Vector3.Normalize(dir);
-
-						vertices.Add(new VertexCube(vert1, Color.White, uv1, norm));
-						vertices.Add(new VertexCube(vert2, Color.White, uv2, norm));
-						vertices.Add(new VertexCube(vert3, Color.White, uv3, norm));
-						vertices.Add(new VertexCube(vert4, Color.White, uv4, norm));
-					}
-				}
-			}
-		}
-
-		private static Vector3 FromSphericalCoordinates(float r, float theta, float phi)
-        {
-			float x = r * MathF.Sin(phi) * MathF.Cos(theta);
-			float y = r * MathF.Sin(phi) * MathF.Sin(theta);
-			float z = r * MathF.Cos(phi);
-
-			return new Vector3(x, y, z);
-		}
 
 		private static SimpleMesh<VertexPositionTexture, int> axesMesh;
 		public static void DrawAxesImmediate(GraphicsDevice device, Vector3 position)

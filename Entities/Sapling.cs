@@ -16,7 +16,7 @@ namespace ViMG.Entities
 	[EntityMeta(1, 0)]
     public class Sapling : Entity, ICubeTracker
     {
-		private static (VertexBuffer vbo, IndexBuffer ibo) mesh;
+		private static VerySimpleMesh mesh;
 
 		private float startTime;
 		private float toGrowTime;
@@ -79,11 +79,11 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-			if (mesh.vbo == null)
+			if (mesh.IBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(
-				StaticMaterials.Cubes, mesh.vbo, mesh.ibo,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+				StaticMaterials.Cubes, mesh,
 				Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), GetSourceRect()));
 		}
 
@@ -97,12 +97,13 @@ namespace ViMG.Entities
 
         private void MakeMesh(GraphicsDevice device)
         {
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+            mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
         public override void OnSave(List<byte> saveBytes)

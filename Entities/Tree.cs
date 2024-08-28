@@ -158,14 +158,14 @@ namespace ViMG.Entities
 
 			//device.RasterizerState = Main.wireframeRS;
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
 				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 				Matrix.CreateTranslation(Position), new RectangleF(0, 96 - 16, 80, 16)));
 
 			for (int i = 0; i < size; i++)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)), new RectangleF(0, 48, 80, 32)));
@@ -173,7 +173,7 @@ namespace ViMG.Entities
 
 			if (size == baseSize)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
 					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
 					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
@@ -208,8 +208,8 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
 			Vector2 atx = new Vector2(0, 1);
@@ -217,7 +217,7 @@ namespace ViMG.Entities
 			Vector2 ctx = new Vector2(1, segmentSize * 5);
 			Vector2 dtx = new Vector2(0, segmentSize * 5);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -230,7 +230,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -243,7 +243,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -256,7 +256,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -292,8 +292,8 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 80f) * 16f);
 			Vector2 atx = new Vector2(0, segmentSize * 4);
@@ -301,7 +301,7 @@ namespace ViMG.Entities
 			Vector2 ctx = new Vector2(1, segmentSize * 3);
 			Vector2 dtx = new Vector2(0, segmentSize * 3);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -314,7 +314,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -327,7 +327,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -340,7 +340,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -376,8 +376,8 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
 			Vector2 atx = new Vector2(0, segmentSize * 4);
@@ -385,7 +385,7 @@ namespace ViMG.Entities
 			Vector2 ctx = new Vector2(1, segmentSize * 3);
 			Vector2 dtx = new Vector2(0, segmentSize * 3);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -398,7 +398,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -411,7 +411,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -424,7 +424,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -460,8 +460,8 @@ namespace ViMG.Entities
 			g = Vector3.Transform(g, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 			h = Vector3.Transform(h, Matrix.CreateRotationY(MathHelper.ToRadians(90)));
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			const float segmentSize = ((1f / 96f) * 16f);
 			Vector2 atx = new Vector2(0, segmentSize * 3);
@@ -469,7 +469,7 @@ namespace ViMG.Entities
 			Vector2 ctx = new Vector2(1, 0);
 			Vector2 dtx = new Vector2(0, 0);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -482,7 +482,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -495,7 +495,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -508,7 +508,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(g, Color.White, ctx, new Vector3(-1, 0, 0)));
 			vertices.Add(new VertexCube(h, Color.White, dtx, new Vector3(-1, 0, 0)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);

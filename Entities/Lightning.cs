@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
     public class Lightning : Entity
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         public static Color LightningColor = new Color(255, 253, 141);
 
         private Vector3 bottomPosition;
@@ -80,8 +81,9 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-            if (mesh.VBO == null)
-                mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+                //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
 
             for (int i = 0; i < positions.Length; i++)
             {

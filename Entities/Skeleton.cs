@@ -19,7 +19,7 @@ namespace ViMG.Entities
 			LyingInPileKillable
         }
 
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skeleton");
 
         private State state;
@@ -338,7 +338,7 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
+			if (mesh.IBO == null)
 				MakeMesh(device);
 
 			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
@@ -366,7 +366,7 @@ namespace ViMG.Entities
                 }
             }
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(vibratePos) *
@@ -386,15 +386,15 @@ namespace ViMG.Entities
 			Vector3 c = new Vector3(min.X, max.Y, max.Z);
 			Vector3 d = new Vector3(max.X, max.Y, max.Z);
 
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
 
 			Vector2 atx = new Vector2(0, 1);
 			Vector2 btx = new Vector2(1, 1);
 			Vector2 ctx = new Vector2(1, 0);
 			Vector2 dtx = new Vector2(0, 0);
 
-			int offset = vertices.Count;
+			int offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -407,7 +407,7 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			offset = vertices.Count;
+			offset = vertices.Length;
 			indices.Add(offset + 0);
 			indices.Add(offset + 1);
 			indices.Add(offset + 3);
@@ -420,7 +420,8 @@ namespace ViMG.Entities
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
 
-			mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);//new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
+			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);//new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
         }
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

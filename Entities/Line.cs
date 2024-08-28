@@ -13,7 +13,7 @@ namespace ViMG.Entities
 {
     public class Line : Entity
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
         private readonly Vector3 endPosition;
         private readonly float width;
         private readonly float tileHeight;
@@ -61,8 +61,9 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+				//mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
 
             if (tileHeight != -1)
                 DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);

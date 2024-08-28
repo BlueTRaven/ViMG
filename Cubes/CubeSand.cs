@@ -14,7 +14,7 @@ namespace ViMG.Cubes
 		{
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             RectangleF sourceRect = base.GetSourceRect(pass, data, parameters, face);
 

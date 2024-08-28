@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     public class Ghoul : Entity, IHasStats
     {
-        private static (VertexBuffer VBO, IndexBuffer IBO) mesh;
+        private static VerySimpleMesh mesh;
 		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("ghoul");
 
         public AIWalkerMelee<Ghoul> ai;
@@ -130,12 +130,13 @@ namespace ViMG.Entities
         {
             base.Draw(device, effect);
 
-			if (mesh.VBO == null)
-				mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
+			if (mesh.IBO== null)
+				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
 
-			if (!inLight)
+            if (!inLight)
 			{
-				Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, mesh.VBO, mesh.IBO,
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 					Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 32)));
@@ -147,7 +148,7 @@ namespace ViMG.Entities
 				float alpha = MathHelper.Lerp(0.5f, 1f, inLightTimer / CHECK_LIGHT_TIME);
 
 				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-					material, mesh.VBO, mesh.IBO,
+					material, mesh,
                     Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
                     Matrix.CreateTranslation(Position), 

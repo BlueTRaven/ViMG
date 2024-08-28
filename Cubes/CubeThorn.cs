@@ -25,7 +25,7 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.TransparentOccludesSiblings;
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             MeshHelper.CubeFace obscuredFaces = ~parameters.faces;
 
@@ -122,7 +122,7 @@ namespace ViMG.Cubes
             else return new RectangleF();
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkMesher.CubeMeshingParameters parameters, List<VertexCube> vertices, List<int> indices)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
             Vector3 min = parameters.positionWS;
             Vector3 max = parameters.positionWS + new Vector3(CUBE_SCALE);
@@ -133,8 +133,8 @@ namespace ViMG.Cubes
                 Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z + ONE_PIXEL);
                 Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z + ONE_PIXEL);
                 Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z + ONE_PIXEL);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1)),
-                    MeshHelper.CubeFace.FRONT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(l_t_n, r_t_n, r_b_n, l_b_n, new Vector3(0, 0, -1)),
+                    MeshHelper.CubeFace.FRONT, vertices, indices, vertexOffset);
             }
 
             if ((parameters.faces & MeshHelper.CubeFace.LEFT) == MeshHelper.CubeFace.LEFT)
@@ -143,8 +143,8 @@ namespace ViMG.Cubes
                 Vector3 r_b_n = new Vector3(max.X - ONE_PIXEL, max.Y, min.Z);
                 Vector3 r_t_f = new Vector3(max.X - ONE_PIXEL, min.Y, max.Z);
                 Vector3 r_b_f = new Vector3(max.X - ONE_PIXEL, max.Y, max.Z);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0)),
-                    MeshHelper.CubeFace.LEFT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(r_t_n, r_t_f, r_b_f, r_b_n, new Vector3(1, 0, 0)),
+                    MeshHelper.CubeFace.LEFT, vertices, indices, vertexOffset);
             }
 
             if ((parameters.faces & MeshHelper.CubeFace.BACK) == MeshHelper.CubeFace.BACK)
@@ -153,8 +153,8 @@ namespace ViMG.Cubes
                 Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z - ONE_PIXEL);
                 Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z - ONE_PIXEL);
                 Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z - ONE_PIXEL);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1)),
-                    MeshHelper.CubeFace.BACK, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(r_t_f, l_t_f, l_b_f, r_b_f, new Vector3(0, 0, 1)),
+                    MeshHelper.CubeFace.BACK, vertices, indices, vertexOffset);
             }
 
             if ((parameters.faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
@@ -163,8 +163,8 @@ namespace ViMG.Cubes
                 Vector3 l_b_n = new Vector3(min.X + ONE_PIXEL, max.Y, min.Z);
                 Vector3 l_t_f = new Vector3(min.X + ONE_PIXEL, min.Y, max.Z);
                 Vector3 l_b_f = new Vector3(min.X + ONE_PIXEL, max.Y, max.Z);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0)),
-                    MeshHelper.CubeFace.RIGHT, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(l_t_f, l_t_n, l_b_n, l_b_f, new Vector3(-1, 0, 0)),
+                    MeshHelper.CubeFace.RIGHT, vertices, indices, vertexOffset);
             }
 
             if ((parameters.faces & MeshHelper.CubeFace.DOWN) == MeshHelper.CubeFace.DOWN)
@@ -173,8 +173,8 @@ namespace ViMG.Cubes
                 Vector3 r_t_f = new Vector3(max.X, min.Y + ONE_PIXEL, max.Z);
                 Vector3 l_t_n = new Vector3(min.X, min.Y + ONE_PIXEL, min.Z);
                 Vector3 r_t_n = new Vector3(max.X, min.Y + ONE_PIXEL, min.Z);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(r_t_n, l_t_n, l_t_f, r_t_f, new Vector3(0, -1, 0)),
-                    MeshHelper.CubeFace.DOWN, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(r_t_n, l_t_n, l_t_f, r_t_f, new Vector3(0, -1, 0)),
+                    MeshHelper.CubeFace.DOWN, vertices, indices, vertexOffset);
             }
 
             if ((parameters.faces & MeshHelper.CubeFace.UP) == MeshHelper.CubeFace.UP)
@@ -183,8 +183,8 @@ namespace ViMG.Cubes
                 Vector3 l_b_f = new Vector3(min.X, max.Y - ONE_PIXEL, max.Z);
                 Vector3 r_b_n = new Vector3(max.X, max.Y - ONE_PIXEL, min.Z);
                 Vector3 l_b_n = new Vector3(min.X, max.Y - ONE_PIXEL, min.Z);
-                MakeCubeFaceVerts(pass, data, parameters, new ChunkMesher.CubeMeshingQuad(l_b_n, r_b_n, r_b_f, l_b_f, new Vector3(0, 1, 0)),
-                    MeshHelper.CubeFace.UP, vertices, indices);
+                MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(l_b_n, r_b_n, r_b_f, l_b_f, new Vector3(0, 1, 0)),
+                    MeshHelper.CubeFace.UP, vertices, indices, vertexOffset);
             }
         }
     }

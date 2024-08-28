@@ -14,9 +14,9 @@ namespace ViMG.Entities
 {
     public class Snake : Entity, IHasStats
     {
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x1;
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh1x1;
-		private static (VertexBuffer VBO, IndexBuffer IBO) mesh2x2;
+		private static VerySimpleMesh mesh2x1;
+		private static VerySimpleMesh mesh1x1;
+		private static VerySimpleMesh mesh2x2;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
 
         private AIWalkerMelee<Snake> ai;
@@ -97,14 +97,14 @@ namespace ViMG.Entities
 		{
 			base.Draw(device, effect);
 
-			if (mesh2x1.VBO == null)
+			if (mesh2x1.IBO == null)
 			{
-				mesh2x1 = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE);
-				mesh1x1 = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-				mesh2x2 = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2);
+				mesh2x1 = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+				mesh1x1 = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+				mesh2x2 = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
 			}
 
-			(VertexBuffer VBO, IndexBuffer IBO) useMesh = mesh2x1;
+			VerySimpleMesh useMesh = mesh2x1;
 
 			Vector3 velXZ = new Vector3(ai.Velocity.X, 0, ai.Velocity.Z);
 			velXZ.Normalize();
@@ -148,7 +148,7 @@ namespace ViMG.Entities
 
 			Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(material, useMesh.VBO, useMesh.IBO,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, useMesh,
 				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
 				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
 				Matrix.CreateTranslation(Position), sourceRect, tintColor));

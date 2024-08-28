@@ -35,12 +35,12 @@ namespace ViMG.Items
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
         {
-            if (meshItemQuadInWorld.VBO == null)
+            if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
             //TODO: are we drawing this in world JUST so we can tint it a separate color? Why not just add a tint color field?
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
-                meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+                meshItemQuadInWorld, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)

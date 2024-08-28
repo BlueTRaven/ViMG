@@ -5,6 +5,7 @@ using SharpDX.MediaFoundation;
 using SMAADemo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -97,8 +98,7 @@ namespace ViMG.Rendering
         {
             public DrawMaterial Material;
 
-            public VertexBuffer VBO;
-            public IndexBuffer IBO;
+            public VerySimpleMesh Mesh;
 
             public Matrix World;
             public Matrix WorldNormal;
@@ -107,11 +107,12 @@ namespace ViMG.Rendering
 
             public Vector3 TintColor;
 
-            public GBufferDraw(DrawMaterial material, VertexBuffer VBO, IndexBuffer IBO, Matrix world, RectangleF? sourceRect = null, Vector3? tintColor = null)
+            public GBufferDraw(DrawMaterial material, VerySimpleMesh mesh, Matrix world, RectangleF? sourceRect = null, Vector3? tintColor = null)
             {
                 this.Material = material;
-                this.VBO = VBO;
-                this.IBO = IBO;
+                //this.VBO = VBO;
+                //this.IBO = IBO;
+                this.Mesh = mesh;
                 this.World = world;
                 this.WorldNormal = Matrix.Transpose(Matrix.Invert(world));
                 this.TintColor = tintColor.GetValueOrDefault(Color.White.ToVector3());
@@ -133,22 +134,20 @@ namespace ViMG.Rendering
         {
             public DrawMaterial Material;
 
-            public VertexBuffer VBO;
-            public IndexBuffer IBO;
+            public VerySimpleMesh Mesh;
 
             public StructuredBuffer SBO;
 
             public int SBOStart;
             public int SBOLen;
 
-            public InstancedGBufferDraw(DrawMaterial material, VertexBuffer VBO, IndexBuffer IBO, StructuredBuffer SBO, int SBOStart = 0, int SBOLen = -1)
+            public InstancedGBufferDraw(DrawMaterial material, VerySimpleMesh mesh, StructuredBuffer SBO, int SBOStart = 0, int SBOLen = -1)
             {
                 if (SBOLen == -1)
                     SBOLen = SBO.ElementCount;
 
                 this.Material = material;
-                this.VBO = VBO;
-                this.IBO = IBO;
+                this.Mesh = mesh;
 
                 this.SBO = SBO;
                 this.SBOStart = SBOStart;
@@ -163,20 +162,18 @@ namespace ViMG.Rendering
             public float SortValue;
             public Matrix Transform;
 
-            public VertexBuffer VBO;
-            public IndexBuffer IBO;
+            public VerySimpleMesh Mesh;
 
             public DrawSourceRectParameters SourceRect;
 
             public Vector4 TintColor;
 
-            public TransparentDraw(float sortValue, DrawMaterial material, VertexBuffer vbo, IndexBuffer ibo, Matrix transform, RectangleF? sourceRect = null, Color? tintColor = null)
+            public TransparentDraw(float sortValue, DrawMaterial material, VerySimpleMesh mesh, Matrix transform, RectangleF? sourceRect = null, Color? tintColor = null)
             {
                 this.Material = material;
                 this.SortValue = sortValue;
                 this.Transform = transform;
-                this.VBO = vbo;
-                this.IBO = ibo;
+                this.Mesh = mesh;
 
                 if (sourceRect.HasValue)
                     SourceRect = new DrawSourceRectParameters(sourceRect.Value);
@@ -281,15 +278,15 @@ namespace ViMG.Rendering
         private Options.FXAAQuality previousFXAAOption;
 
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
-        public (VertexBuffer VBO, IndexBuffer IBO) DEBUGSphereMesh;
+        public VerySimpleMesh DEBUGSphereMesh;
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
 
         public RendererDeferred(GraphicsDevice device)
         {
             DEBUGCubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
-            DEBUGSphereMesh = DrawHelper3D.MakeUVSphere(device, Cubes.Cube.CUBE_SCALE);
+            DEBUGSphereMesh = MeshHelper.MakeUVSphere(device, Cubes.Cube.CUBE_SCALE);
 
-            List<VertexCube> cubeVertices = new List<VertexCube>();
+            FastList<VertexCube> cubeVertices = new FastList<VertexCube>();
             List<int> cubeIndices = new List<int>();
             MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(-Vector3.One / 2f, Vector3.One / 2f, MeshHelper.CubeFace.ALL, Color.White, cubeVertices, cubeIndices);
             DEBUGCubeMesh = MeshHelper.MakeSimplerMesh(device, cubeVertices.ToVertexTransparentPass(), cubeIndices);
@@ -377,7 +374,9 @@ namespace ViMG.Rendering
             iboQuad = new IndexBuffer(device, typeof(uint), 6, BufferUsage.WriteOnly);
             iboQuad.SetData(indices);
 
-            (vboUVSphere, iboUVSphere) = DrawHelper3D.MakeUVSphere(device, 1);
+            VerySimpleMesh uvSphere = MeshHelper.MakeUVSphere(device, 1);
+            vboUVSphere = uvSphere.VBOPosition;
+            iboUVSphere = uvSphere.IBO;
 
             bufferLightVolumeIndices = new StructuredBuffer(device, typeof(uint), lightVolumeIndices.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
             EffectLightAccumPointLight.Parameters["LightInstanceIndices"].SetValue(bufferLightVolumeIndices);
@@ -557,10 +556,11 @@ namespace ViMG.Rendering
 
                 foreach (GBufferDraw draw in DrawsPassGBuffer)
                 {
-                    if (draw.VBO != null && draw.IBO != null)
+                    if (draw.Mesh.IBO != null)
                     {
-                        device.SetVertexBuffer(draw.VBO);
-                        device.Indices = draw.IBO;
+                        device.SetVertexBuffers(draw.Mesh.Bindings);
+                        //device.SetVertexBuffer(draw.VBO);
+                        device.Indices = draw.Mesh.IBO;
 
                         EffectGBuffer.Parameters["World"].SetValue(draw.World);
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
@@ -585,7 +585,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                             NumDrawCalls++;
                         }
@@ -598,8 +598,10 @@ namespace ViMG.Rendering
 
                     foreach (InstancedGBufferDraw draw in DrawsPassGBufferInstanced)
                     {
-                        device.SetVertexBuffer(draw.VBO);
-                        device.Indices = draw.IBO;
+                        device.SetVertexBuffers(draw.Mesh.Bindings);
+                        device.Indices = draw.Mesh.IBO;
+                        //device.SetVertexBuffer(draw.VBO);
+                        //device.Indices = draw.IBO;
 
                         EffectGBuffer.Parameters["InstancedDraws"].SetValue(draw.SBO);
 
@@ -613,7 +615,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.IBO.IndexCount, draw.IBO.IndexCount / 3, draw.SBOLen);
+                            device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.Mesh.IBO.IndexCount, draw.Mesh.IBO.IndexCount / 3, draw.SBOLen);
 
                             NumDrawCalls++;
                         }
@@ -775,8 +777,10 @@ namespace ViMG.Rendering
 
             foreach (TransparentDraw draw in DrawsSkyboxPass)
             {
-                device.SetVertexBuffer(draw.VBO);
-                device.Indices = draw.IBO;
+                device.SetVertexBuffers(draw.Mesh.Bindings);
+                device.Indices = draw.Mesh.IBO;
+                //device.SetVertexBuffer(draw.VBO);
+                //device.Indices = draw.IBO;
 
                 EffectSkybox.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
                 EffectSkybox.Parameters["World"].SetValue(draw.Transform);
@@ -795,7 +799,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectSkybox.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                     NumDrawCalls++;
                 }
@@ -883,8 +887,10 @@ namespace ViMG.Rendering
             //device.RasterizerState = Main.noCullRS;
             foreach (TransparentDraw draw in DrawsTransparentPass)
             {
-                device.SetVertexBuffer(draw.VBO);
-                device.Indices = draw.IBO;
+                device.SetVertexBuffers(draw.Mesh.Bindings);
+                device.Indices = draw.Mesh.IBO;
+                //device.SetVertexBuffer(draw.VBO);
+                //device.Indices = draw.IBO;
 
                 EffectTransparent.Parameters["Diffuse"].SetValue(draw.Material.Diffuse);
                 EffectTransparent.Parameters["Emissive"].SetValue(draw.Material.Emissive);
@@ -904,7 +910,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                     NumDrawCalls++;
                 }
@@ -922,8 +928,10 @@ namespace ViMG.Rendering
 
                 EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
 
-                device.SetVertexBuffer(DEBUGSphereMesh.VBO);
+                device.SetVertexBuffers(DEBUGSphereMesh.Bindings);
                 device.Indices = DEBUGSphereMesh.IBO;
+                //device.SetVertexBuffer(DEBUGSphereMesh.VBO);
+                //device.Indices = DEBUGSphereMesh.IBO;
 
                 device.DepthStencilState = noDepthReadWriteDSS;
                 device.BlendState = BlendState.Opaque;
@@ -990,8 +998,10 @@ namespace ViMG.Rendering
                 //device.RasterizerState = cullCWRS;
                 foreach (TransparentDraw draw in DrawsEmptyPass)
                 {
-                    device.SetVertexBuffer(draw.VBO);
-                    device.Indices = draw.IBO;
+                    device.SetVertexBuffers(draw.Mesh.Bindings);
+                    device.Indices = draw.Mesh.IBO;
+                    //device.SetVertexBuffer(draw.VBO);
+                    //device.Indices = draw.IBO;
 
                     EffectEmpty.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
                     EffectEmpty.Parameters["World"].SetValue(draw.Transform);
@@ -999,7 +1009,7 @@ namespace ViMG.Rendering
                     foreach (var pass in EffectEmpty.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.IBO.IndexCount / 3);
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                         NumDrawCalls++;
                     }
@@ -1077,6 +1087,18 @@ namespace ViMG.Rendering
             if (currentOutput == -1)
                 return outputRT;
             else return gbufferTargets[currentOutput];
+        }
+
+        public void AddOpaqueDraw(GBufferDraw draw)
+        {
+            Debug.Assert(draw.Mesh.VBOPosition != null, "OpaqueDraw requires a position VBO");
+            Debug.Assert(draw.Mesh.VBOColor != null, "OpaqueDraw requires a color VBO");
+            Debug.Assert(draw.Mesh.VBOTexCoord != null, "OpaqueDraw requires a texcoord VBO");
+            Debug.Assert(draw.Mesh.VBONormal != null, "OpaqueDraw requires a normal VBO");
+            Debug.Assert(draw.Mesh.VBOAO != null, "OpaqueDraw requires a AO VBO");
+            Debug.Assert(draw.Mesh.VBOAnim != null, "OpaqueDraw requires a Animation VBO");
+
+            DrawsPassGBuffer.Add(draw);
         }
 
         public void AddTransparentDraw(TransparentDraw draw)

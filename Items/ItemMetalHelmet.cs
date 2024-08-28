@@ -47,11 +47,11 @@ namespace ViMG.Items
 
         public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
         {
-            if (meshItemQuadInWorld.VBO == null)
+            if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.DrawsPassGBuffer.Add(new Rendering.RendererDeferred.GBufferDraw(Material,
-                meshItemQuadInWorld.VBO, meshItemQuadInWorld.IBO, transform, SourceRect, color.ToVector3()));
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+                meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
         }
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrUtility;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,23 +9,23 @@ namespace ViMG.VertexDeclarations
 {
     public static class VertexCasts
     {
-        public static List<VertexOpaquePass> ToVertexOpaquePass(this List<VertexCube> cubes)
+        public static unsafe FastList<VertexOpaquePass> ToVertexOpaquePass(this FastList<VertexCube> cubes)
         {
-            List<VertexOpaquePass> opaques = new List<VertexOpaquePass>();
+            FastList<VertexOpaquePass> opaques = new FastList<VertexOpaquePass>(cubes.Length);
 
-            for (int i = 0; i < cubes.Count; i++)
+            for (int i = 0; i < cubes.Length; i++)
             {
                 opaques.Add(new VertexOpaquePass(cubes[i]));
             }
 
             return opaques;
         }
-
-        public static List<VertexTransparentPass> ToVertexTransparentPass(this List<VertexCube> cubes)
+         
+        public static unsafe FastList<VertexTransparentPass> ToVertexTransparentPass(this FastList<VertexCube> cubes)
         {
-            List<VertexTransparentPass> transparents = new List<VertexTransparentPass>();
+            FastList<VertexTransparentPass> transparents = new FastList<VertexTransparentPass>(cubes.Length);
 
-            for (int i = 0; i < cubes.Count; i++)
+            for (int i = 0; i < cubes.Length; i++)
             {
                 transparents.Add(new VertexTransparentPass(cubes[i]));
             }
@@ -32,11 +33,11 @@ namespace ViMG.VertexDeclarations
             return transparents;
         }
 
-        public static List<VertexShadowPass> ToVertexShadowPass(this List<VertexCube> cubes)
+        public static unsafe FastList<VertexShadowPass> ToVertexShadowPass(this FastList<VertexCube> cubes)
         {
-            List<VertexShadowPass> shadows = new List<VertexShadowPass>();
+            FastList<VertexShadowPass> shadows = new FastList<VertexShadowPass>(cubes.Length);
 
-            for (int i = 0; i < cubes.Count; i++)
+            for (int i = 0; i < cubes.Length; i++)
             {
                 shadows.Add(new VertexShadowPass(cubes[i]));
             }
@@ -44,11 +45,11 @@ namespace ViMG.VertexDeclarations
             return shadows;
         }
 
-        public static List<VertexEmptyPass> ToVertexEmptyPass(this List<VertexCube> cubes)
+        public static unsafe FastList<VertexEmptyPass> ToVertexEmptyPass(this FastList<VertexCube> cubes)
         {
-            List<VertexEmptyPass> shadows = new List<VertexEmptyPass>();
+            FastList<VertexEmptyPass> shadows = new FastList<VertexEmptyPass>(cubes.Length);
 
-            for (int i = 0; i < cubes.Count; i++)
+            for (int i = 0; i < cubes.Length; i++)
             {
                 shadows.Add(new VertexEmptyPass(cubes[i]));
             }
