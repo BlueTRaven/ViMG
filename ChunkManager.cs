@@ -111,6 +111,8 @@ namespace ViMG
         //Update queue of chunks to mesh
         public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             RenderMesher.Update(world);
             CollisionMesher.Update(world);
 

@@ -147,24 +147,26 @@ namespace ViMG
 
 		public void Save(string folderName)
         {
-			//h: header block
-			//	v: version (int) overall version of the entity file
-			//	l: layer (int) layer that this entity file belongs to
-			//	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
-			//  c: count of entities
-			//e: entities data block
-			//	s: header + entity data block size (total)
-			//  e: entity data block
-			//    h: header block
-			//      s: size (int) includes data
-			//  	i: entity id (int) (index in saved entity array)
-			//	    t: type id (int)
-			//	    cx, cy, cz: chunk x, y, z (int each) (position in chunks)
-			//	    v: version (int)
-			//	  s: size (int)
-			//	  ck: chksum (int)
-			//	  d: data block
-			using (MemoryStream ms = new MemoryStream())
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            //h: header block
+            //	v: version (int) overall version of the entity file
+            //	l: layer (int) layer that this entity file belongs to
+            //	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
+            //  c: count of entities
+            //e: entities data block
+            //	s: header + entity data block size (total)
+            //  e: entity data block
+            //    h: header block
+            //      s: size (int) includes data
+            //  	i: entity id (int) (index in saved entity array)
+            //	    t: type id (int)
+            //	    cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+            //	    v: version (int)
+            //	  s: size (int)
+            //	  ck: chksum (int)
+            //	  d: data block
+            using (MemoryStream ms = new MemoryStream())
 			{
 				using (BinaryWriter writer = new BinaryWriter(ms, Encoding.ASCII, true))
 				{
@@ -205,7 +207,9 @@ namespace ViMG
 
 		public void SerializeAll(int sizeInChunks)
         {
-			for (int z = 0; z < sizeInChunks; z++)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            for (int z = 0; z < sizeInChunks; z++)
             {
 				for (int y = 0; y < sizeInChunks; y++)
                 {
@@ -221,7 +225,9 @@ namespace ViMG
 
 		public void Serialize(IEnumerable<ChunkPosition> positions)
         {
-			foreach (ChunkPosition pos in positions)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            foreach (ChunkPosition pos in positions)
             {
 				Serialize(pos);
             }
@@ -229,9 +235,11 @@ namespace ViMG
 
 		public void Serialize(ChunkPosition pos)
 		{
-			//TODO: entitiesByChunk or something similar so we don't have to loop through all entities to determine whether or not they should be serialized.
+            using var zone = TracyImpl.Tracy.BeginZone();
 
-			var entities = manager.GetEntities();
+            //TODO: entitiesByChunk or something similar so we don't have to loop through all entities to determine whether or not they should be serialized.
+
+            var entities = manager.GetEntities();
 
 			List<Entity> entitiesToSerialize = new List<Entity>();
 
@@ -274,7 +282,9 @@ namespace ViMG
 		//but since we still have to keep the world loaded in this scenario, we have to manually check and decache active entities.
 		public void DecacheCurrentlySerialized()
 		{
-			foreach (List<EntityData> datas in entityDatas.Values)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            foreach (List<EntityData> datas in entityDatas.Values)
 			{
 				List<EntityData> datasToDecache = new List<EntityData>();
 
@@ -297,8 +307,10 @@ namespace ViMG
 
         public LoadError Load(string folderName)
         {
-			//In case of failure, keep old lookups.
-			Dictionary<ChunkPosition, List<EntityLookup>> oldLookups = lookups;
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            //In case of failure, keep old lookups.
+            Dictionary<ChunkPosition, List<EntityLookup>> oldLookups = lookups;
 			lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
 			entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
 			numLoadedEntities = 0;
@@ -423,7 +435,9 @@ namespace ViMG
 
 		public void Deserialize(ChunkPosition pos)
 		{
-			if (!loaded)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            if (!loaded)
 				throw new Exception("Attempted to deserialize when nothing has been loaded. Call Load first!");
 
 			if (entityDatas.ContainsKey(pos))

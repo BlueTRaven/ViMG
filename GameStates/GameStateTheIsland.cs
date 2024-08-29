@@ -60,6 +60,8 @@ namespace ViMG.GameStates
 
         public void BeginLoadWorld(string worldName)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             IsLoading = true;
             worldTask = new Task<World>(() =>
             {
@@ -80,13 +82,13 @@ namespace ViMG.GameStates
                 ProfilingHelper.Start("Building Meshes...");
                 //Now we can tell the ChunkLoadManager what should be loaded.
                 world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
-                world.ChunkLoadManager.LoadAroundTarget(world, 4);
+                world.ChunkLoadManager.LoadAroundTarget(world);
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
-                world.ChunkLoadManager.FlushLoadQueue();
+                world.ChunkLoadManager.FlushLoadQueue(world);
                 ProfilingHelper.End("Done Building Meshes.");
 
                 LoadMessage = "Loading World...\nFinishing...";
@@ -107,6 +109,8 @@ namespace ViMG.GameStates
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (!LayerExists(layer))
             {
                 Console.WriteLine("Tried to load layer {0} but this layer was not yet implemented.", layer);
@@ -150,6 +154,8 @@ namespace ViMG.GameStates
 
         public override void Update(GraphicsDevice device, double deltaTime)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (world == null)
             {
                 if (worldTask.IsCompleted)
@@ -174,6 +180,8 @@ namespace ViMG.GameStates
 
         public World CreateWorld(GraphicsDevice device, string worldName)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             const int SIZE_IN_CHUNKS = 32;
 
             var physicsInfo = new PhysicsInfo();
@@ -259,6 +267,8 @@ namespace ViMG.GameStates
 
         public World LoadWorld(GraphicsDevice device, string worldName)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
@@ -330,6 +340,8 @@ namespace ViMG.GameStates
 
         public World LoadLayer(string worldName, int layer)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
@@ -524,6 +536,8 @@ namespace ViMG.GameStates
 
         public override void Draw(GraphicsDevice device)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             base.Draw(device);
 
             if (world != null)
@@ -534,6 +548,8 @@ namespace ViMG.GameStates
 
         public override void DrawUI(SpriteBatch batch)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             base.DrawUI(batch);
 
             if (world != null)

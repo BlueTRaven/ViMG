@@ -149,7 +149,9 @@ namespace ViMG
         public static unsafe void BakeTangents<T>(int start, int end, FastList<T> vertices)
 			where T : struct, IVertexDeclGetters
         {
-			Debug.Assert((end - start) % 4 == 0);
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            Debug.Assert((end - start) % 4 == 0);
 
 				for (int i = start; i < end; i += 4)
 				{

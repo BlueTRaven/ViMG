@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -306,7 +307,9 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
-			AddLaterEntities();
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            AddLaterEntities();
 
 			iteratingUpdate = true;
 
@@ -458,17 +461,22 @@ namespace ViMG.Entities
 			}
 		}
 
-		public void GetEntityMeshingDatas(Span<CubePosition> positions, Span<BepuUtilities.Memory.Buffer<byte>> meshingDatas, BufferPool bufferPool,
+		private static CubeTrackers emptyTrackers = new CubeTrackers();
+		public unsafe void GetEntityMeshingDatas(Span<CubePosition> positions, Span<BepuUtilities.Memory.Buffer<byte>> meshingDatas, BufferPool bufferPool,
 			int offset = 0, int count = -1)
 		{
-			lock (bufferPool)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            
 			{
 				if (count == -1)
 					count = positions.Length;
 
 				ChunkPosition previousEmptyChunk = new ChunkPosition();
 				ChunkPosition previousChunkPos = new ChunkPosition(-1, -1, -1);
-				CubeTrackers ts = new CubeTrackers();
+				CubeTrackers ts = emptyTrackers;
+
+				Debug.Assert(offset >= 0 && offset + count <= positions.Length);
 
 				for (int i = offset; i < offset + count; i++)
 				{
@@ -495,7 +503,10 @@ namespace ViMG.Entities
 					Entity ent = ts.Get(positions[i].InChunkSpace(chunkPos));
 
 					if (ent != null && ent is ICubeTracker tracker)
-						meshingDatas[i] = tracker.GetMeshingData(bufferPool);
+					{
+                        lock (bufferPool)
+                            meshingDatas[i] = tracker.GetMeshingData(bufferPool);
+					}
 					else meshingDatas[i] = default;
 				}
 			}

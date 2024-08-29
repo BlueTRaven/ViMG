@@ -25,6 +25,8 @@ namespace ViMG.Spawners
 
         public void Update(double deltaTime, World world)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             spawners.ForEach(x => x.Update(deltaTime, world));
 
             SpawnCapMultiplier = 1f;

@@ -38,6 +38,8 @@ namespace ViMG
 
         public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (count == -1)
                 count = positions.Length;
 

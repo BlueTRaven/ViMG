@@ -35,6 +35,8 @@ namespace ViMG.Rendering
 
         public static VerySimpleMesh Opaque(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, bool bakeTangents = true)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             VerySimpleMesh mesh = new VerySimpleMesh();
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
@@ -115,6 +117,8 @@ namespace ViMG.Rendering
 
         public static VerySimpleMesh Transparent(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             VerySimpleMesh mesh = new VerySimpleMesh();
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
@@ -155,6 +159,8 @@ namespace ViMG.Rendering
 
         public static VerySimpleMesh Shadow(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             VerySimpleMesh mesh = new VerySimpleMesh();
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
@@ -189,6 +195,8 @@ namespace ViMG.Rendering
 
         public static VerySimpleMesh SolidColor(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             VerySimpleMesh mesh = new VerySimpleMesh();
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 

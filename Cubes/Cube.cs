@@ -423,7 +423,9 @@ namespace ViMG.Cubes
 
 		public virtual void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
 		{
-			if ((parameters.faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            if ((parameters.faces & MeshHelper.CubeFace.FRONT) == MeshHelper.CubeFace.FRONT)
 				MakeCubeFaceVerts(pass, data, parameters, GetQuadForFace(parameters, MeshHelper.CubeFace.FRONT), MeshHelper.CubeFace.FRONT, vertices, indices, vertexOffset);
 
             if ((parameters.faces & MeshHelper.CubeFace.RIGHT) == MeshHelper.CubeFace.RIGHT)
@@ -444,6 +446,8 @@ namespace ViMG.Cubes
 
 		public virtual void MakeCubeFaceVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, ChunkRenderMesher.CubeMeshingQuad quad, MeshHelper.CubeFace face, FastList<VertexCube> vertices, List<int> indices, int vertexOffset)
 		{
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             int offset = vertices.Length + vertexOffset;
             indices.Add(offset + 0);
             indices.Add(offset + 1);

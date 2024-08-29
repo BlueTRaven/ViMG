@@ -11,6 +11,10 @@ using System.Threading;
 using ViMG.UIs;
 using ViMG.Rendering;
 using ViMG.GameStates;
+using ImGuiNET;
+using MonoGame.ImGuiNet;
+using TracyNative = Tracy;
+using ViMG.TracyImpl;
 
 namespace ViMG
 {
@@ -112,6 +116,8 @@ namespace ViMG
 
 		//private MenuMain ui;
 
+		private ImGuiRenderer imguiRenderer;
+
         public Main()
         {
 			MainThread = Thread.CurrentThread;
@@ -207,6 +213,9 @@ namespace ViMG
 
 			IsFixedTimeStep = false;
 
+			imguiRenderer = new ImGuiRenderer(this);
+			imguiRenderer.RebuildFontAtlas();
+
 			base.Initialize();
 
 			Window.TextInput += WindowTextInput;
@@ -255,7 +264,10 @@ namespace ViMG
 
 		protected override void Update(GameTime gt)
 		{
-			if (Exit)
+            TracyImpl.Tracy.FrameMark();
+			var zone = TracyImpl.Tracy.BeginZone();
+		
+            if (Exit)
 				Exit();
 
 			camera.FrameBegin();
@@ -279,11 +291,15 @@ namespace ViMG
 			}
 
 			base.Update(gt);
+
+			zone.End();
 		}
 
 		private void FixedUpdate(double deltaTime)
 		{
-			DEBUGPopupText = "";
+            var zone = TracyImpl.Tracy.BeginZone();
+
+            DEBUGPopupText = "";
 
 			Time += deltaTime;
 
@@ -309,6 +325,8 @@ namespace ViMG
 
 			if (IsActive && !paused && !MouseControl)
 				Options.CenterMouse();
+
+			zone.End();
 		}
 		
         protected override void Draw(GameTime gameTime)
@@ -316,7 +334,9 @@ namespace ViMG
 			if (NO_RENDER)
 				return;
 
-			Renderer.FrameStart();
+            var zone = TracyImpl.Tracy.BeginZone();
+
+            Renderer.FrameStart();
 
 			GraphicsDevice.Clear(Color.White);
 
@@ -386,6 +406,12 @@ namespace ViMG
 				TextHelper.DrawText(batch, font, DEBUGPopupText,
 					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 					Enums.Alignment.Left, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+
+				imguiRenderer.BeginLayout(gameTime);
+				ImGui.Begin("test");
+				IMGUISettings.AutoIMGUI();
+				ImGui.End();
+				imguiRenderer.EndLayout();
 			}
 
 
@@ -397,6 +423,8 @@ namespace ViMG
             {
 				Console.WriteLine(message);
             }
+
+			zone.End();
         }
 
 		private string FormatPos()

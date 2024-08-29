@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation.DirectX;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -129,11 +130,11 @@ namespace ViMG
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
-        private BufferPool bufferPool;
+        public BufferPool bufferPool;
 
         public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkRenderMesher mesher, int sizeInChunks)
         {
-            bufferPool = new BufferPool();
+            //bufferPool = new BufferPool();
 
             this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
@@ -143,6 +144,8 @@ namespace ViMG
 
         public void Update(World world)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (!currentBatch.isUsed)
                 currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
@@ -184,6 +187,8 @@ namespace ViMG
 
         public void BeginFlush()
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             EnqueueBatch(ref currentBatch);
             currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
@@ -204,6 +209,8 @@ namespace ViMG
         //Flushes all actively enqueued chunks, blocking until they have all been meshed.
         public void FinishFlush()
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             int max = flushTaskQueue.Count;
             GameStateTheIsland.ProgressMax = max;
 
@@ -238,6 +245,7 @@ namespace ViMG
                             meshInfoOld.meshVersion = batchResult.versions[j];
                             meshInfoOld.version = batchResult.versions[j];
 
+                            meshInfoOld.bufferPool = batchResult.pools[j];
                             meshInfoOld.collidableMesh = batchResult.meshes[j];
 
                             if (batchResult.meshes[j].Triangles.Allocated)
@@ -267,83 +275,101 @@ namespace ViMG
 
         private void StartActiveTasks(World world)
         {
-            //First, check for complete tasks.
-            for (int i = 0; i < activeMeshBatchTasks.Length; i++)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            unsafe
             {
-                if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
+                for (int i = 0; i < activeMeshBatchTasks.Length; i++)
                 {
-                    numActiveChunkMeshBatchTasks--;
-
-                    var task = activeMeshBatchTasks[i];
-
-                    if (!task.IsCompletedSuccessfully)
-                        throw new Exception("???");
-
-                    var batchResult = task.Result;
-
-                    for (int j = 0; j < batchResult.num; j++)
+                    //First, check for complete tasks.
+                    if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
                     {
-                        lock (bufferPool)
-                            batchResult.copies[j].Return(bufferPool);
+                        using var zoneEndBatch = TracyImpl.Tracy.BeginZone(name: "EndBatch");
 
-                        //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
+                        numActiveChunkMeshBatchTasks--;
 
-                        ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
+                        var task = activeMeshBatchTasks[i];
 
-                        if (batchResult.versions[j] != meshInfoOld.version || !meshInfoOld.hasMesh)
+                        if (!task.IsCompletedSuccessfully)
+                            throw new Exception("???");
+
+                        var batchResult = task.Result;
+
+                        Debug.Assert(batchResult.num <= batchResult.copies.Length);
+
+                        for (int j = 0; j < batchResult.num; j++)
                         {
-                            //Unload the old mesh now
-                            Unload(ref meshInfoOld);
+                            //lock (bufferPool)
+                            //{
+                                batchResult.copies[j].Return(bufferPool);
+                            //}
 
-                            //Then paste the result stuff over
-                            meshInfoOld.meshVersion = batchResult.versions[j];
-                            meshInfoOld.version = batchResult.versions[j];
+                            //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
-                            meshInfoOld.collidableMesh = batchResult.meshes[j];
+                            ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
 
-                            if (batchResult.meshes[j].Triangles.Allocated)
+                            if (batchResult.versions[j] != meshInfoOld.version || !meshInfoOld.hasMesh)
                             {
-                                //We have to postpone adding the shapes and stuff since this requires access to the simulation
-                                //and that can't be multithreaded.
-                                meshInfoOld.collidableShapeIndex = physicsInfo.Simulation.Shapes.Add(meshInfoOld.collidableMesh);
-                                meshInfoOld.collidableStaticHandle = physicsInfo.Simulation.Statics.Add(
-                                    new StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity, 
-                                    meshInfoOld.collidableShapeIndex));
-                                
-                                meshInfoOld.hasSimReferences = true;
-                                meshInfoOld.hasMesh = true;
+                                //Unload the old mesh now
+                                Unload(ref meshInfoOld);
+
+                                //Then paste the result stuff over
+                                meshInfoOld.meshVersion = batchResult.versions[j];
+                                meshInfoOld.version = batchResult.versions[j];
+
+                                meshInfoOld.bufferPool = batchResult.pools[j];
+                                meshInfoOld.collidableMesh = batchResult.meshes[j];
+
+                                if (batchResult.meshes[j].Triangles.Allocated)
+                                {
+                                    using var zoneAddToSim = TracyImpl.Tracy.BeginZone(name: "AddToSim");
+
+                                    //We have to postpone adding the shapes and stuff since this requires access to the simulation
+                                    //and that can't be multithreaded.
+                                    meshInfoOld.collidableShapeIndex = physicsInfo.Simulation.Shapes.Add(meshInfoOld.collidableMesh);
+                                    meshInfoOld.collidableStaticHandle = physicsInfo.Simulation.Statics.Add(
+                                        new StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity,
+                                        meshInfoOld.collidableShapeIndex));
+
+                                    meshInfoOld.hasSimReferences = true;
+                                    meshInfoOld.hasMesh = true;
+                                }
+                            }
+                            else
+                            {
+                                //version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
+                                batchResult.meshes[j].Dispose(batchResult.pools[j]);
                             }
                         }
-                        else
-                        {
-                            //version has changed while we're meshing - discard the old mesh, as a new one should already be queued.
-                            batchResult.meshes[j].Dispose(batchResult.pools[j]);
-                        }
+
+                        activeMeshBatchTasks[i] = null;
                     }
 
-                    activeMeshBatchTasks[i] = null;
-                }
-
-                if (activeMeshBatchTasks[i] == null && meshBatchTasksQueue.Count > 0)
-                {
-                    meshBatchTasksQueue.Sort();
-                    var task = meshBatchTasksQueue.Dequeue();
-                    activeMeshBatchTasks[i] = task.task;
-                    numActiveChunkMeshBatchTasks++;
-
-                    if (task.task.Status == TaskStatus.Created)
+                    if (activeMeshBatchTasks[i] == null && meshBatchTasksQueue.Count > 0)
                     {
-                        if (Main.MULTITHREAD_MESHING)
-                            task.task.Start();
-                        else task.task.RunSynchronously();
+                        using var _ = TracyImpl.Tracy.BeginZone(name: "StartBatch");
+
+                        meshBatchTasksQueue.Sort();
+                        var task = meshBatchTasksQueue.Dequeue();
+                        activeMeshBatchTasks[i] = task.task;
+                        numActiveChunkMeshBatchTasks++;
+
+                        if (task.task.Status == TaskStatus.Created)
+                        {
+                            if (Main.MULTITHREAD_MESHING)
+                                task.task.Start();
+                            else task.task.RunSynchronously();
+                        }
                     }
                 }
             }
         }
 
         //Adds a position in the current batch. 
-        public void AddToNextBatch(World world, ChunkPosition position)
+        public void AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (!currentBatch.isUsed)
                 currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
@@ -360,7 +386,7 @@ namespace ViMG
                 currentBatch.positions[currentBatch.num] = meshInfo.position;
                 currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                 currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+                currentBatch.copies[currentBatch.num] = copy;// CopiedChunkPool.MakeCopy(world, bufferPool, position);
                 currentBatch.num++;
             }
         }
@@ -372,8 +398,44 @@ namespace ViMG
             meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
         }
 
+        public void ImmediatelyMesh(World world, ChunkPosition position)
+        {
+            var batch = new CollisionMeshBatch(new CopiedChunkData[1]);
+            ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
+            batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+            batch.pools[0] = meshInfo.bufferPool;
+            batch.num = 1;
+
+            var batchState = new BatchCollisionMeshTaskState(batch, mesher);
+
+            BatchCollisionMeshTaskResult result = MeshBatchFn(batchState);
+
+            meshInfo.meshVersion = result.versions[0];
+            meshInfo.version = result.versions[0];
+
+            meshInfo.bufferPool = result.pools[0];
+            meshInfo.collidableMesh = result.meshes[0];
+
+            if (result.meshes[0].Triangles.Allocated)
+            {
+                using var zoneAddToSim = TracyImpl.Tracy.BeginZone(name: "AddToSim");
+
+                //We have to postpone adding the shapes and stuff since this requires access to the simulation
+                //and that can't be multithreaded.
+                meshInfo.collidableShapeIndex = physicsInfo.Simulation.Shapes.Add(meshInfo.collidableMesh);
+                meshInfo.collidableStaticHandle = physicsInfo.Simulation.Statics.Add(
+                    new StaticDescription(System.Numerics.Vector3.Zero, System.Numerics.Quaternion.Identity,
+                    meshInfo.collidableShapeIndex));
+
+                meshInfo.hasSimReferences = true;
+                meshInfo.hasMesh = true;
+            }
+        }
+
         private static BatchCollisionMeshTaskResult MeshBatchFn(object obj)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             BatchCollisionMeshTaskState state = (BatchCollisionMeshTaskState)obj;
 
             Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
@@ -416,9 +478,11 @@ namespace ViMG
         //TODO this should eventually make its own mesh instead of using the opaque render pass mesh
         public static Mesh GenerateMesh(BufferPool bufferPool, FastList<VertexCube> vertices, List<int> indices)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             Buffer<Triangle> triangleBuffer;
 
-            lock (bufferPool)
+            //lock (bufferPool)
                 bufferPool.Take(indices.Count / 3, out triangleBuffer);
 
             for (int i = 0; i < indices.Count; i += 3)
@@ -431,12 +495,12 @@ namespace ViMG
                     vertices[c].Position.ToNumerics());
             }
 
-            lock (bufferPool)
-            {
+            //lock (bufferPool)
+            //{
                 var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, bufferPool);
 
                 return collidableMesh;
-            }
+            //}
         }
 
         public bool IsMeshed(ChunkPosition position)
@@ -446,6 +510,8 @@ namespace ViMG
 
         private void Unload(ref CollisionMeshInfo meshInfo)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             if (meshInfo.hasMesh)
             {
                 if (meshInfo.hasSimReferences)
@@ -495,12 +561,14 @@ namespace ViMG
                         meshes[j].hasSimReferences = false;
                     }
 
-                    lock (meshes[j].bufferPool)
-                        meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
+                    //lock (meshes[j].bufferPool)
+                    meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
 
                     meshes[j].collidableMesh = default;
 
                     meshes[j].hasMesh = false;
+                    meshes[j].bufferPool.AssertEmpty();
+                    meshes[j].bufferPool.Clear();
                 }
                 else if (meshes[j].collidableMesh.Triangles.Allocated)
                 {
@@ -525,12 +593,14 @@ namespace ViMG
 
         private ref CollisionMeshInfo GetChunkMeshInfo(ChunkPosition pos)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(sizeInChunks), out int i);
             ref CollisionMeshInfo meshInfo = ref meshes[i];
             meshInfo.position = pos;
 
             if (meshInfo.bufferPool == null)
-                meshInfo.bufferPool = bufferPool;
+                meshInfo.bufferPool = new BufferPool();
 
             return ref meshInfo;
         }

@@ -50,6 +50,8 @@ namespace ViMG.ChunkStuff
 
         public static unsafe CopiedChunkData MakeCopy(World world, BufferPool bufferPool, ChunkPosition position)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             CubePosition basePosition = position.InCubeSpace();
 
             CopiedChunkData copied = TakeFromPool(basePosition);

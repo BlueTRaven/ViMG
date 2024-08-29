@@ -104,7 +104,9 @@ namespace ViMG
 		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
 		{
-			this.Layer = prototype.Layer;
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            this.Layer = prototype.Layer;
 			this.LoadedFolderName = prototype.WorldName;
 
 			this.GameStateManager = gameStateManager;
@@ -258,10 +260,12 @@ namespace ViMG
 
 		public void FinishLoading(GraphicsDevice device)
         {
-			//The player reference will not be set up after loading. We need to do that ourselves.
-			//TODO multiplayer
-			//Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
-			player = EntityManager.GetFirst<Player>();
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            //The player reference will not be set up after loading. We need to do that ourselves.
+            //TODO multiplayer
+            //Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
+            player = EntityManager.GetFirst<Player>();
 
 			if (player == null)
 			{
@@ -276,7 +280,7 @@ namespace ViMG
 				{
 					ChunkLoadManager.UpdateLoadTarget(player.Position);
 					ChunkLoadManager.LoadAroundTarget(this);
-					ChunkLoadManager.FlushLoadQueue();
+					ChunkLoadManager.FlushLoadQueue(this);
 				}
 			}
 
@@ -294,7 +298,9 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
-			deltaTime *= TimeScale;
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            deltaTime *= TimeScale;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
@@ -318,73 +324,79 @@ namespace ViMG
 			//Perhaps an expanding array
 			//Span<Cube> miningCubesUnwrapped = new Cube[miningCubes.Count];
 
-			foreach (var mined in miningCubes)
+			using (var zoneUpdateMiningCubes = TracyImpl.Tracy.BeginZone()) 
 			{
-				MinedCube mc = mined.Value;
-
-				if (ChunkLoadManager.IsLoaded(mc.chunk))
+				foreach (var mined in miningCubes)
 				{
-					Cube cube = ChunkManager.ThreadedView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					MinedCube mc = mined.Value;
 
-					mc.timer -= (float)deltaTime;
-					if (mc.timer <= 0)
+					if (ChunkLoadManager.IsLoaded(mc.chunk))
 					{
-						mc.progress--;
-						mc.timer = 2;
-					}
+						Cube cube = ChunkManager.ThreadedView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-					if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
+						mc.timer -= (float)deltaTime;
+						if (mc.timer <= 0)
+						{
+							mc.progress--;
+							mc.timer = 2;
+						}
+
+						if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
+							miningRemove.Add(mc.position);
+						else miningUpdate.Add(mc);
+					}
+					else
 						miningRemove.Add(mc.position);
-					else miningUpdate.Add(mc);
 				}
-				else
-					miningRemove.Add(mc.position);
-			}
 
-			foreach (var pos in miningRemove)
-			{
-				miningCubes.Remove(pos);
-			}
-
-			foreach (var mc in miningUpdate)
-			{
-				miningCubes[mc.position] = mc;
-			}
-
-			miningRemove.Clear();
-			miningUpdate.Clear();
-
-			Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
-			Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
-
-			//perform random updates
-			//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
-			if (randomUpdatesTimer <= 0)
-			{
-				randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
-				foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
+				foreach (var pos in miningRemove)
 				{
-					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+					miningCubes.Remove(pos);
+				}
+
+				foreach (var mc in miningUpdate)
+				{
+					miningCubes[mc.position] = mc;
+				}
+
+				miningRemove.Clear();
+				miningUpdate.Clear();
+			}
+
+            using (var zoneRandomUpdates = TracyImpl.Tracy.BeginZone())
+			{
+				Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
+				Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
+
+				//perform random updates
+				//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
+				if (randomUpdatesTimer <= 0)
+				{
+					randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
+					foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
 					{
-						int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
-						Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
-						CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
+						for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+						{
+							int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+							Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
+							CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
 
-						rups[i] = randomUpdatePos;
-					}
+							rups[i] = randomUpdatePos;
+						}
 
-					ChunkManager.ThreadedView.GetIds(rups, rupis);
+						ChunkManager.ThreadedView.GetIds(rups, rupis);
 
-					for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
-					{
-						Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
+						for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+						{
+							Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
 
-						if (cube != Main.Registry.CubeRegistry.Air)
-							cube.OnRandomUpdate(this, ChunkManager, rups[i]);
+							if (cube != Main.Registry.CubeRegistry.Air)
+								cube.OnRandomUpdate(this, ChunkManager, rups[i]);
+						}
 					}
 				}
+				else randomUpdatesTimer -= (float)deltaTime;
 			}
-			else randomUpdatesTimer -= (float)deltaTime;
 
 			PassiveSpawnerManager.Update(deltaTime, this);
 
@@ -424,7 +436,9 @@ namespace ViMG
 
 		private void TryLoadNextLayer()
         {
-			if (logic.AllowsLoadingNextLayer(this) && nextWorld == null)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            if (logic.AllowsLoadingNextLayer(this) && nextWorld == null)
 			{
 				if (player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
 					nextLayer = Layer + 1;
@@ -493,7 +507,7 @@ namespace ViMG
 				//Finally, tell the ChunkLoadManager to actually load the things.
 				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
 				//as it normally does.)
-				loadedWorld.ChunkLoadManager.FlushLoadQueue();
+				loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
 
 				GameStateManager.TheIsland.SetWorld(loadedWorld);
 
@@ -519,12 +533,14 @@ namespace ViMG
 
 		public void SaveWorld()
         {
-			Main.SessionInformation.LastLoadedSave = LoadedFolderName;
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 			Main.SessionIO.Save();
 
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
-			ChunkLoadManager.FlushLoadQueue();
+			ChunkLoadManager.FlushLoadQueue(this);
 			//Serialize all the chunks that are currently loaded
 			//chunkIO.Serialize(ChunkLoadManager.GetLoaded());
 			entIO.Serialize(ChunkLoadManager.GetLoaded());
@@ -555,7 +571,9 @@ namespace ViMG
 
 		public void Draw(GraphicsDevice device)
 		{
-			NumChunksDrawn = 0;
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            NumChunksDrawn = 0;
 			ChunkDrawTime = 0;
 
 			Stopwatch drawTime = Stopwatch.StartNew();
@@ -729,7 +747,9 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-			player.DrawUI(batch);
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            player.DrawUI(batch);
 
 			ChatManager.Draw(batch);
 			//DialogueManager.Draw(batch);
@@ -737,7 +757,9 @@ namespace ViMG
 
 		public void OnCubeUpdate(CubePosition updating, ushort updatedId)
 		{
-			logic.OnCubeUpdated(updating, updatedId);
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            logic.OnCubeUpdated(updating, updatedId);
 
 			HousingManager.OnCubeUpdate(this, updating, updatedId);
 			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
@@ -865,8 +887,10 @@ namespace ViMG
 
         public bool TryMineCube(CubePosition position, int level, int num, bool instant = false)
 		{
-			//debug mode mines instantly
-			if (Main.Debug)
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            //debug mode mines instantly
+            if (Main.Debug)
 				instant = true;
 
 			MinedCube mined = new MinedCube()

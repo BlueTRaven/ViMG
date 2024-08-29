@@ -280,7 +280,9 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
-			Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
 			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
 
 			for (int i = 0; i < PROJECTILES_MAX; i++)

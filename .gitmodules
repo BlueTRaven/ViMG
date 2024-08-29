@@ -7,3 +7,6 @@
 [submodule "bepuphysics2"]
 	path = bepuphysics2
 	url = git@github.com:bepu/bepuphysics2.git
+[submodule "MonoGame.ImGuiNet"]
+	path = MonoGame.ImGuiNet
+	url = git@github.com:Mezo-hx/MonoGame.ImGuiNet.git
