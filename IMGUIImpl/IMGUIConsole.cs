@@ -1,0 +1,520 @@
+﻿using BrUtility;
+using ImGuiNET;
+using SharpDX.Direct3D9;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ViMG.IMGUIImpl
+{
+    public static class IMGUIConsole
+    {
+        public class ConsoleParamException : Exception
+        {
+            private readonly string executingCommand;
+            private readonly string paramName;
+            private readonly string[] options;
+
+            public ConsoleParamException(string executingCommand, string paramName, string[] options = null) : 
+                base()
+            {
+                this.executingCommand = executingCommand;
+                this.paramName = paramName;
+                this.options = options;
+            }
+
+            public override string Message 
+            {
+                get 
+                {
+                    string baseError = "Command " + executingCommand + ": Parameter invalid. Parameter Name: " + paramName;
+
+                    if (options != null)
+                    {
+                        StringBuilder optionsStr = new StringBuilder();
+                        foreach (string option in options)
+                        {
+                            optionsStr.Append("\t");
+                            optionsStr.Append(option);
+                            optionsStr.Append("\n");
+                        }
+                        return baseError + "\nValid Options:\n" + optionsStr.ToString();
+                    }
+                    else return baseError;
+                }
+            }
+        }
+
+        public static bool Show = true;
+
+        private const int MAX_LINES = 500;
+        private const int MAX_HISTORY = 500;
+        private static FastList<string> lines = new(MAX_LINES);
+        private static FastList<string> commandHistory = new(MAX_HISTORY);
+
+        private static string editingString = "";
+        private static string executingCommand = "";
+
+        // 0 = End of buffer
+        private static int historyPos = 0;
+
+        private static bool autoScroll = true;
+        private static bool scrollToBottom = false;
+
+        private static List<(MethodInfo, ConsoleCommandAttribute)> commands = new();
+        private static Dictionary<string, (MethodInfo, ConsoleCommandAttribute)> commandsByName = new();
+
+        private static List<(FieldInfo, ConsoleCommandVarAttribute)> vars = new();
+        private static Dictionary<string, (FieldInfo, ConsoleCommandVarAttribute)> varsByName = new();
+
+        static IMGUIConsole()
+        {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type type in assembly.GetTypes()) 
+                {
+                    foreach (MethodInfo methodInfo in type.GetMethods())
+                    {
+                        if (methodInfo.IsStatic)
+                        {
+                            ConsoleCommandAttribute consoleCommandAttr = methodInfo.GetCustomAttribute<ConsoleCommandAttribute>();
+
+                            if (consoleCommandAttr != null)
+                            {
+                                commands.Add((methodInfo, consoleCommandAttr));
+                                commandsByName.Add(consoleCommandAttr.name, (methodInfo, consoleCommandAttr));
+                            }
+                        }
+                    }
+
+                    foreach (FieldInfo fieldInfo in type.GetFields())
+                    {
+                        if (fieldInfo.IsStatic)
+                        {
+                            ConsoleCommandVarAttribute consoleVarAttr = fieldInfo.GetCustomAttribute<ConsoleCommandVarAttribute>();
+
+                            if (consoleVarAttr != null)
+                            {
+                                vars.Add((fieldInfo, consoleVarAttr));
+                                varsByName.Add(consoleVarAttr.name, (fieldInfo, consoleVarAttr));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        [ConsoleCommand("help")]
+        public static void Help(string[] parameters)
+        {
+            if (parameters == null || parameters.Length == 0)
+            {
+                LogLine("# Available commands:");
+                foreach ((MethodInfo, ConsoleCommandAttribute) command in commands)
+                {
+                    LogLine("# \t" + command.Item2.name);
+                }
+            } 
+            else
+            {
+                if (commandsByName.TryGetValue(parameters[1], out var command))
+                {
+                    LogLine("# " + command.Item2.help);
+                }
+                else LogLine("# No command with name " + parameters[1] + ".");
+            }
+        }
+
+        [ConsoleCommand("clear", "Clears lines displayed in the console. Does not clear history.")]
+        public static void Clear(string[] parameters)
+        {
+            lines.Clear();
+
+            historyPos = 0;
+            //TODO: history should be kept by clear command
+            commandHistory.Clear();
+        }
+
+        [ConsoleCommand("get", "Get the value of a console variable.")]
+        public static void Get(string[] parameters)
+        {
+            RequireParam(parameters, 0, "name");
+            string nameParam = parameters[0];
+
+            if (varsByName.TryGetValue(nameParam, out var variable))
+            {
+                FieldInfo fieldInfo = variable.Item1;
+                LogLine(nameParam + ": " + fieldInfo.GetValue(null).ToString());
+            } 
+            else
+            {
+                LogLine("[error] Could not find variable with name " + nameParam);
+            }
+        }
+
+        [ConsoleCommand("set", "Set the value of a console variable.")]
+        public static void Set(string[] parameters)
+        {
+            RequireParam(parameters, 0, "name");
+            RequireParam(parameters, 1, "value");
+
+            string nameParam = parameters[0];
+
+            if (varsByName.TryGetValue(nameParam, out var variable))
+            {
+                string valueParam = parameters[1];
+
+                FieldInfo fieldInfo = variable.Item1;
+
+                if (fieldInfo.FieldType == typeof(int))
+                {
+                    fieldInfo.SetValue(null, int.Parse(valueParam));
+                } 
+                else if (fieldInfo.FieldType == typeof(float))
+                {
+                    fieldInfo.SetValue(null, float.Parse(valueParam));
+                }
+                else if (fieldInfo.FieldType == typeof(bool))
+                {
+                    fieldInfo.SetValue(null, bool.Parse(valueParam));
+                }
+                else if (fieldInfo.FieldType == typeof(string))
+                {
+                    fieldInfo.SetValue(null, valueParam);
+                }
+                else if (fieldInfo.FieldType.IsEnum)
+                {
+                    fieldInfo.SetValue(null, Enum.Parse(fieldInfo.FieldType, valueParam));
+                }
+
+                LogLine(nameParam + ": " + fieldInfo.GetValue(null).ToString());
+            }
+            else
+            {
+                LogLine("[error] Could not find variable with name " + nameParam);
+            }
+        }
+
+        public static bool RequireParam(string[] parameters, int index, string paramName, string[] options = null)
+        {
+            if (parameters == null)
+            {
+                throw new ArgumentException("Command " + executingCommand + " requires at least " + (index + 1) + " parameters. Given: 0");
+            }
+            else if (parameters.Length <= index)
+            {
+                throw new ArgumentException("Command " + executingCommand + " requires at least " + (index + 1) + " parameters. Given: " + parameters.Length);
+            } 
+            else
+            {
+                if (options == null) return true;
+                else
+                {
+                    string parameter = parameters[index];
+
+                    foreach (string option in options)
+                    {
+                        if (option == parameter)
+                        {
+                            return true;
+                        }
+                    }
+
+                    throw new ConsoleParamException(executingCommand, paramName, options);
+                }
+            }
+
+            return false;
+        }
+
+        public static unsafe void Console()
+        {
+            if (Show)
+            {
+                if (ImGui.Begin("Console", ref Show))
+                {
+                    float footer_height_to_reserve = ImGui.GetStyle().ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing();
+
+                    if (ImGui.BeginChild("ScrollingRegion", new(0, -footer_height_to_reserve), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+                    {
+                        if (ImGui.BeginPopupContextWindow())
+                        {
+                            if (ImGui.Selectable("Clear"))
+                            { }
+                            //ClearLog();
+                            ImGui.EndPopup();
+                        }
+
+                        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new System.Numerics.Vector2(4, 1)); // Tighten spacing
+                                                                                                          //if (copy_to_clipboard)
+                                                                                                          //    ImGui::LogToClipboard();
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            string item = lines[i];
+
+                            // Normally you would store more information in your item than just a string.
+                            // (e.g. make Items[] an array of structure, store color/type etc.)
+                            System.Numerics.Vector4 color = new();
+                            bool has_color = false;
+                            if (item.StartsWith("[error] "))
+                            {
+                                color = new(1.0f, 0.4f, 0.4f, 1.0f);
+                                has_color = true;
+                            }
+                            else if (item.StartsWith("# "))
+                            {
+                                color = new(0.8f, 0.8f, 0.8f, 1.0f);
+                                has_color = true;
+                            }
+
+                            if (has_color)
+                                ImGui.PushStyleColor(ImGuiCol.Text, color);
+                            ImGui.TextUnformatted(item);
+                            if (has_color)
+                                ImGui.PopStyleColor();
+                        }
+
+                        // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
+                        // Using a scrollbar or mouse-wheel will take away from the bottom edge.
+                        if (scrollToBottom || (autoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()))
+                            ImGui.SetScrollHereY(1.0f);
+                        scrollToBottom = false;
+
+                        ImGui.PopStyleVar();
+                    }
+                    ImGui.EndChild();
+                    ImGui.Separator();
+
+                    bool reclaim_focus = false;
+                    ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.EscapeClearsAll | ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.CallbackHistory;
+                    if (ImGui.InputText("Input", ref editingString, (uint)500, input_text_flags, Callback, (nint)null))
+                    {
+                        if (editingString != "")
+                        {
+                            HandleCommand(editingString);
+                            historyPos = -1;
+                            if (commandHistory.Length == MAX_HISTORY)
+                                commandHistory.RemoveAt(0);
+                            commandHistory.Add(editingString);
+                        }
+
+                        editingString = "";
+                        reclaim_focus = true;
+                    }
+
+                    // Auto-focus on window apparition
+                    ImGui.SetItemDefaultFocus();
+                    if (reclaim_focus)
+                        ImGui.SetKeyboardFocusHere(-1); // Auto focus previous widget
+
+                }
+                ImGui.End();
+            }
+        }
+
+        private static void HandleCommand(string entireLine)
+        {
+            LogLine("> " + entireLine);
+
+            string[] splits = entireLine.Split(' ');
+            string commandName = splits[0];
+
+            if (commandsByName.TryGetValue(commandName, out var command))
+            {
+                MethodInfo methodInfo = command.Item1;
+                // Note we leave out the command itself from the strings we pass in.
+                string[] parameters = splits.Length > 1 ? splits[1..] : null;
+
+                executingCommand = commandName;
+
+                try
+                {
+                    methodInfo.Invoke(null, new object[] { parameters });
+                }
+                catch (Exception e)
+                {
+                    LogLine("[error] " + e.InnerException.Message);
+                }
+            }
+            else LogLine("[error] No command with name " + commandName + ".");
+        }
+
+        private static unsafe int Callback(ImGuiInputTextCallbackData* data)
+        {
+            switch (data->EventFlag)
+            {
+                case ImGuiInputTextFlags.CallbackCompletion:
+                    {
+                        char[] chars = new char[data->BufTextLen];
+                        for (int i = 0; i < data->BufTextLen; i++)
+                        {
+                            chars[i] = (char)data->Buf[i];
+                        }
+
+                        //string entireString = new string(chars);
+                        int wordEndIndex = data->CursorPos;
+                        int wordStartIndex = wordEndIndex;
+
+                        while (wordStartIndex > 0)
+                        {
+                            char c = editingString[wordStartIndex - 1];
+                            if (c == ' ' || c == '\t' || c == ',' || c == ';')
+                                break;
+                            wordStartIndex--;
+                        }
+
+                        int wordLen = wordEndIndex - wordStartIndex;
+                        string currentWord = editingString[wordStartIndex..wordEndIndex];
+
+                        // Locate beginning of current word
+                        //byte* word_end = data->Buf + data->CursorPos;
+                        //byte* word_start = word_end;
+
+                        //while (word_start > data->Buf)
+                        //{
+                        //    byte c = word_start[-1];
+                        //    if (c == ' ' || c == '\t' || c == ',' || c == ';')
+                        //        break;
+                        //    word_start--;
+                        //}
+
+                        //int wordLen = (int)(word_end - word_start);
+                        //string currentWord = new string((char*)word_start, 0, wordLen);
+
+                        string[] commands = commandsByName.Keys.ToArray();
+                        
+                        // Build a list of candidates
+                        List<string> candidates = new List<string>();
+                        for (int i = 0; i < commands.Length; i++)
+                        {
+                            if (wordLen <= commands[i].Length)
+                            {
+                                string candidateSubstr = commands[i][0..wordLen];
+                                if (candidateSubstr.ToLower() == currentWord.ToLower())
+                                    candidates.Add(commands[i]);
+                            }
+                        }
+
+                        if (candidates.Count == 0)
+                        {
+                            // No match
+                            //AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+                        }
+                        else if (candidates.Count == 1)
+                        {
+                            string first = editingString[0..wordStartIndex];
+                            string last = editingString[wordEndIndex..];
+
+                            string totalFirst = first + candidates[0];
+                            string totalString = totalFirst + last;
+
+                            byte[] bytes = new byte[totalString.Length];
+
+                            for (int i = 0; i < totalString.Length; i++)
+                            {
+                                data->Buf[i] = (byte)totalString[i];
+                            }
+                            data->Buf[totalString.Length] = 0;
+                            data->BufDirty = 1;
+                            data->BufTextLen = totalString.Length;
+                            data->CursorPos = totalFirst.Length;
+                        }
+                        else
+                        {
+                            int highestMatch = 0;
+                            char compareChar = candidates[0][0];
+
+                            int minStrLen = candidates.Min(x => x.Length);
+                            for (int i = 0; i < minStrLen; i++) 
+                            {
+                                bool allMatched = true;
+                                foreach (string candidate in candidates)
+                                {
+                                    if (candidate[i] != compareChar)
+                                    {
+                                        allMatched = false;
+                                        break;
+                                    }
+                                }
+
+                                if (!allMatched)
+                                    break;
+
+                                highestMatch = i;
+                                compareChar = candidates[0][i + 1];
+                            }
+
+                            string highestMatchedStr = candidates[0][0..(highestMatch + 1)];
+
+                            string first = editingString[0..wordStartIndex];
+                            string last = editingString[wordEndIndex..];
+
+                            string totalFirst = first + highestMatchedStr;
+                            string totalString = totalFirst + last;
+
+                            byte[] bytes = new byte[totalString.Length];
+
+                            for (int i = 0; i < totalString.Length; i++)
+                            {
+                                data->Buf[i] = (byte)totalString[i];
+                            }
+                            data->Buf[totalString.Length] = 0;
+                            data->BufDirty = 1;
+                            data->BufTextLen = totalString.Length;
+                            data->CursorPos = totalFirst.Length;
+
+                            LogLine("# Available Matches:");
+                            foreach (string candidate in candidates)
+                                LogLine("# \t" + candidate);
+                        }
+
+                        break;
+                    }
+                case ImGuiInputTextFlags.CallbackHistory:
+                    {
+                        int oldHistoryPos = historyPos;
+
+                        if (data->EventKey == ImGuiKey.UpArrow)
+                            historyPos++;
+
+                        if (data->EventKey == ImGuiKey.DownArrow)
+                            historyPos--;
+
+                        if (historyPos != oldHistoryPos)
+                        {
+                            if (historyPos >= commandHistory.Length)
+                                historyPos = commandHistory.Length - 1;
+                            if (historyPos < 0)
+                                historyPos = 0;
+                            
+                            string historyString = commandHistory[(commandHistory.Length - 1) - historyPos];
+                            byte[] bytes = new byte[historyString.Length];
+
+                            for (int i = 0; i < historyString.Length; i++)
+                            {
+                                data->Buf[i] = (byte)historyString[i];
+                            }
+                            data->Buf[historyString.Length] = 0;
+                            data->BufDirty = 1;
+                            data->BufTextLen = historyString.Length;
+                            data->CursorPos = historyString.Length;
+                        }
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public static void LogLine(string line)
+        {
+            if (lines.Length == MAX_LINES)
+                lines.RemoveAt(0);
+            lines.Add(line);
+        }
+    }
+}
