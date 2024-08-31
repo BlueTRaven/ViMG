@@ -15,6 +15,8 @@ using ImGuiNET;
 using MonoGame.ImGuiNet;
 using TracyNative = Tracy;
 using ViMG.TracyImpl;
+using System.Diagnostics;
+using ViMG.IMGUIImpl;
 
 namespace ViMG
 {
@@ -34,7 +36,7 @@ namespace ViMG
 		public static Effect VertexPositionTextureDebugEffect;
 
 		//private World world;
-		private GameStateManager gameStateManager;
+		public static GameStateManager gameStateManager;
 
 		public static Camera camera;
 		public static Camera debugCamera;
@@ -117,6 +119,9 @@ namespace ViMG
 		//private MenuMain ui;
 
 		private ImGuiRenderer imguiRenderer;
+
+		private int numFrameTimes = 0;
+		private float[] frameTimes = new float[256];
 
         public Main()
         {
@@ -297,6 +302,7 @@ namespace ViMG
 
 		private void FixedUpdate(double deltaTime)
 		{
+			Stopwatch watch = Stopwatch.StartNew();
             var zone = TracyImpl.Tracy.BeginZone();
 
             DEBUGPopupText = "";
@@ -327,6 +333,17 @@ namespace ViMG
 				Options.CenterMouse();
 
 			zone.End();
+
+			watch.Stop();
+
+			for (int i = 0; i <= frameTimes.Length - 2; i++)
+			{
+				frameTimes[i] = frameTimes[i + 1];
+			}
+			frameTimes[frameTimes.Length - 1] = (float)watch.Elapsed.TotalSeconds;
+			
+			if (numFrameTimes < frameTimes.Length)
+				numFrameTimes += 1;
 		}
 		
         protected override void Draw(GameTime gameTime)
@@ -372,46 +389,86 @@ namespace ViMG
 
 			if (Debug)
 			{
-				TextHelper.FontInfo font = new TextHelper.FontInfo(assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+				//TextHelper.FontInfo font = new TextHelper.FontInfo(assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
-				TextHelper.DrawText(batch, font,
-					frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font,
-					"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
-					"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(camera.Position).ToString(), Color.White, 
-					new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font,
+				//	frameCounter.AverageFramesPerSecond.ToString(), Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font,
+				//	"\nPosition: " + FormatPos() + " Facing: " + FormatFacing() +
+				//	"\nChunk Pos: " + ChunkPosition.WorldSpaceChunk(camera.Position).ToString(), Color.White, 
+				//	new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
-				string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds.";
+				//string queueStr = "\n\n\nNum Chunks Drawn: " + World.NumChunksDrawn + " in " + World.ChunkDrawTime + " seconds.";
 
-				TextHelper.DrawText(batch, font, queueStr,
-					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, queueStr,
+				//	Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
-				TextHelper.DrawText(batch, font, "GBuffer: " + Renderer.GetOutputString(),
-					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "AA: " + Options.CurrentAntiAliasing.ToString() + 
-					(Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA ? " " + Options.CurrentSMAAQuality.ToString() : ""),
-					Color.White, new Rectangle(0, (int)font.LineSpacing, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "Num Draw Calls: " + GraphicsDevice.Metrics.DrawCount,
-					Color.White, new Rectangle(0, (int)font.LineSpacing * 2, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
-				TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered + "(instanced: " + Options.UseInstancedLightVolumes + ")", 
-					Color.White, new Rectangle(0, (int)font.LineSpacing * 3, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, "GBuffer: " + Renderer.GetOutputString(),
+				//	Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, "AA: " + Options.CurrentAntiAliasing.ToString() + 
+				//	(Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA ? " " + Options.CurrentSMAAQuality.ToString() : ""),
+				//	Color.White, new Rectangle(0, (int)font.LineSpacing, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, "Num Draw Calls: " + GraphicsDevice.Metrics.DrawCount,
+				//	Color.White, new Rectangle(0, (int)font.LineSpacing * 2, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, "Num Point Lights: " + RendererDeferred.NumPointLightsRendered + "(instanced: " + Options.UseInstancedLightVolumes + ")", 
+				//	Color.White, new Rectangle(0, (int)font.LineSpacing * 3, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.TopRight, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
-				TextHelper.DrawText(batch, font, DEBUGPopupText,
-					Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
-					Enums.Alignment.Left, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
+				//TextHelper.DrawText(batch, font, DEBUGPopupText,
+				//	Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+				//	Enums.Alignment.Left, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
 				imguiRenderer.BeginLayout(gameTime);
-				ImGui.Begin("test");
-				IMGUISettings.AutoIMGUI();
+
+				if (ImGui.GetIO().WantCaptureKeyboard)
+				{
+					inputManager.InputCaptured = true;
+				}
+				else inputManager.InputCaptured = false;
+
+				if (ImGui.BeginMainMenuBar())
+				{
+					if (ImGui.BeginMenu("Menu"))
+					{
+						ImGui.MenuItem("Settings Menu", null, ref IMGUISettings.Show);
+						ImGui.MenuItem("Debug Info Menu", null, ref IMGUISettings.ShowDebugInfo);
+						ImGui.MenuItem("Console", null, ref IMGUIConsole.Show);
+                        ImGui.EndMenu();
+					}
+					
+					ImGui.EndMainMenuBar();
+				}
+
+				if (IMGUISettings.Show && ImGui.Begin("Settings", ref IMGUISettings.Show))
+				{
+					IMGUISettings.AutoIMGUI();
+				}
 				ImGui.End();
+
+				if (IMGUISettings.ShowDebugInfo && ImGui.Begin("Debug Info", ref IMGUISettings.ShowDebugInfo))
+				{
+					ImGui.Text(string.Format("FPS: {0}", frameCounter.AverageFramesPerSecond.ToString()));
+					ImGui.PlotLines("Fixed Update Frame Times", ref frameTimes[0], numFrameTimes, 0, null, 0, (float)(FIXED_STEP * 4), new(0, 80));
+					ImGui.Text(string.Format("Chunks Drawn: {0} in {1} seconds", World.NumChunksDrawn, World.ChunkDrawTime));
+					ImGui.Text(string.Format("Draw Calls: {0}", GraphicsDevice.Metrics.DrawCount));
+					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
+
+					ImGui.Text(string.Format("Position: {0}", FormatPos()));
+					ImGui.Text(string.Format("Facing: {0}", FormatFacing()));
+					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera.Position).ToString()));
+				}
+				ImGui.End();
+
+				IMGUIConsole.Console();
+
 				imguiRenderer.EndLayout();
+
 			}
 
 

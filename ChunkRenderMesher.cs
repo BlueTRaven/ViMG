@@ -144,11 +144,11 @@ namespace ViMG
 		private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
-		public BufferPool bufferPool;
+		private BufferPool bufferPool;
 
 		private RenderMeshInfo[] chunkMeshInfos;
 
-		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks)
+		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks, BufferPool bufferPool)
 		{
 			this.device = device;
 			this.sizeInChunks = sizeInChunks;
@@ -160,7 +160,7 @@ namespace ViMG
 				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
 
-			//bufferPool = new BufferPool();
+			this.bufferPool = bufferPool;
 		}
 
 		public void Update(World world)

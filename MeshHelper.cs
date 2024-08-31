@@ -328,16 +328,16 @@ namespace ViMG
 			switch (alignment)
 			{
 				case Enums.Alignment.TopLeft:
-					min = new Vector2();
-					max = new Vector2(width, height);
+					min = new Vector2(0, -height);
+					max = new Vector2(width, 0);
 					break;
 				case Enums.Alignment.Top:
-					min = new Vector2(-width / 2f, 0);
-					max = new Vector2(width / 2, height);
+					min = new Vector2(-width / 2f, -height);
+					max = new Vector2(width / 2, 0);
 					break;
 				case Enums.Alignment.TopRight:
-                    min = new Vector2(-width, 0);
-                    max = new Vector2(0, height);
+                    min = new Vector2(-width, -height);
+                    max = new Vector2(0, 0);
 					break;
 				case Enums.Alignment.Left:
 					min = new Vector2(0, -height / 2f);
@@ -352,16 +352,16 @@ namespace ViMG
                     max = new Vector2(0, height / 2f);
 					break;
 				case Enums.Alignment.BottomLeft:
-                    min = new Vector2(0, -height);
-                    max = new Vector2(width, 0);
+                    min = new Vector2(0, 0);
+                    max = new Vector2(width, height);
 					break;
 				case Enums.Alignment.Bottom:
-                    min = new Vector2(-width / 2f, -height);
-                    max = new Vector2(width / 2f, 0);
+                    min = new Vector2(-width / 2f, 0);
+                    max = new Vector2(width / 2f, height);
                     break;
 				case Enums.Alignment.BottomRight:
-                    min = new Vector2(-width, -height);
-                    max = new Vector2(0, 0);
+                    min = new Vector2(-width, 0);
+                    max = new Vector2(0, height);
                     break;
 				default: throw new Exception("???");
             }

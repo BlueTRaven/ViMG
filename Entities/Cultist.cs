@@ -24,7 +24,7 @@ namespace ViMG.Entities
 
 		private float alive;
 
-		private AIWalkerShooter<Cultist> ai;
+		public AIWalkerShooter<Cultist> ai;
 
 		public Cultist()
         {
@@ -61,44 +61,44 @@ namespace ViMG.Entities
 			ai.Update(deltaTime);
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-			{
-				float pixelsPerCube = Cube.CUBE_SCALE / 16f;
-                mesh = MeshHelper.MakeQuad(device, pixelsPerCube * 19, pixelsPerCube * 19, Enums.Alignment.Bottom);
-                //mesh = MeshHelper.MakeEnemyQuad(device, pixelsPerCube * 19, pixelsPerCube * 32);
-			}
+		//	if (mesh.IBO == null)
+		//	{
+		//		float pixelsPerCube = Cube.CUBE_SCALE / 16f;
+  //              mesh = MeshHelper.MakeQuad(device, pixelsPerCube * 19, pixelsPerCube * 19, Enums.Alignment.Bottom);
+  //              //mesh = MeshHelper.MakeEnemyQuad(device, pixelsPerCube * 19, pixelsPerCube * 32);
+		//	}
 
-			RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
+		//	RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
 
-			if (ai.GetState() == AIWalkerShooter<Cultist>.State.Normal)
-			{
-				if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
-				{
-					float animP = (alive % 0.75f) / 0.75f;
+		//	if (ai.GetState() == AIWalkerShooter<Cultist>.State.Normal)
+		//	{
+		//		if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+		//		{
+		//			float animP = (alive % 0.75f) / 0.75f;
 
-					int frame = (int)(animP * 2f);
+		//			int frame = (int)(animP * 2f);
 
-					sourceRect = new RectangleF(22 + frame * 22, 0, 19, 32);
-				}
-			}
-			else if (ai.GetState() == AIWalkerShooter<Cultist>.State.Attack)
-            {
-				sourceRect = new RectangleF(65, 0, 19, 32);
-			}
+		//			sourceRect = new RectangleF(22 + frame * 22, 0, 19, 32);
+		//		}
+		//	}
+		//	else if (ai.GetState() == AIWalkerShooter<Cultist>.State.Attack)
+  //          {
+		//		sourceRect = new RectangleF(65, 0, 19, 32);
+		//	}
 
-			Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+		//	Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-		}
+		//	DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+		//}
 
         public Stats GetStats()
         {

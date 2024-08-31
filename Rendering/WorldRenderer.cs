@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViMG.Entities.Renderers
+namespace ViMG.Rendering
 {
-    public record struct RenderedStaticStats
+    public static class WorldRenderer
     {
+        
     }
 }

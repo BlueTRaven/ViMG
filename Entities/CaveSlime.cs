@@ -19,11 +19,11 @@ namespace ViMG.Entities
         private int maxHealth = 12;
 		private Color tintColor = Color.White;
 
-		private float alive;
+		public float alive;
 
-		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
-		private AISlime<CaveSlime> ai;
+		public NoticeHandler<Player> noticeHandler;
+		public AISlime<CaveSlime> ai;
 
 		public CaveSlime(Vector3 position)
 		{
@@ -72,34 +72,34 @@ namespace ViMG.Entities
 			ai.OnUnload();
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			if (mesh.IBO == null)
-				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);// MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	if (mesh.IBO == null)
+		//		mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);// MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-			int ysrc = 0;
+		//	int ysrc = 0;
 
-			const float minInterval = 0.65f;
-			const float maxInterval = 0.85f;
+		//	const float minInterval = 0.65f;
+		//	const float maxInterval = 0.85f;
 
-			float interval = MathHelper.Lerp(minInterval, maxInterval, ai.JumpTimer / ai.JumpTime) * 2;
+		//	float interval = MathHelper.Lerp(minInterval, maxInterval, ai.JumpTimer / ai.JumpTime) * 2;
 
-			if (ai.OnGround && (alive % interval) / interval < 0.5f)
-				ysrc = 16;
+		//	if (ai.OnGround && (alive % interval) / interval < 0.5f)
+		//		ysrc = 16;
 
-			Color tintColor = this.tintColor;
-			if (ai.InvulnTimer > 0)
-				tintColor = Color.Red;
+		//	Color tintColor = this.tintColor;
+		//	if (ai.InvulnTimer > 0)
+		//		tintColor = Color.Red;
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position),
-				noticeHandler.Noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16), tintColor.ToVector3()));
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(Position),
+		//		noticeHandler.Noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16), tintColor.ToVector3()));
 
-			if (ai.Health < maxHealth)
-				DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position);
-		}
+		//	if (ai.Health < maxHealth)
+		//		DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position);
+		//}
 
 		public Stats GetStats()
 		{

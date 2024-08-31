@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuUtilities.Memory;
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -87,6 +88,8 @@ namespace ViMG
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
+        public BufferPool bufferPool;
+
         public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
         public bool LockGet;    //If true, a lock on the manager must first be obtained before getting a cube.
 
@@ -100,8 +103,9 @@ namespace ViMG
 
             //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
 
-            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ);
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ);
+            this.bufferPool = new BufferPool();
+            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ, bufferPool);
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ, bufferPool);
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
         }

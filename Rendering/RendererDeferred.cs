@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Rendering
@@ -524,6 +525,31 @@ namespace ViMG.Rendering
                 currentOutput++;
                 if (currentOutput > gbufferTargets.Length - 1)
                     currentOutput = -1;
+            }
+
+            switch (IMGUISettings.GBufferOverrideDraw)
+            {
+                case IMGUISettings.RendererGBufferOverrideDraw.Composited:
+                    currentOutput = -1;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.Diffuse:
+                    currentOutput = 0;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.LightAccum:
+                    currentOutput = 1;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.Depth:
+                    currentOutput = 2;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.Position:
+                    currentOutput = 3;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.Normal:
+                    currentOutput = 4;
+                    break;
+                case IMGUISettings.RendererGBufferOverrideDraw.Ao:
+                    currentOutput = 5;
+                    break;
             }
         }
 

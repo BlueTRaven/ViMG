@@ -12,7 +12,7 @@ namespace ViMG.Entities
 {
     public class Skeleton : Entity, IHitboxOwner
 	{
-		private enum State
+		public enum State
         {
 			Active,
 			LyingInPile,
@@ -22,7 +22,7 @@ namespace ViMG.Entities
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skeleton");
 
-        private State state;
+        public State state;
 
 		private NoticeHandler<Player> noticeHandler;
 
@@ -50,6 +50,8 @@ namespace ViMG.Entities
 		private Vector2 idleHome;
 
 		private CubePosition trackBoneBlockPosition;
+
+		public Skeleton() { }
 
 		public Skeleton(Vector3 position)
 		{
@@ -334,47 +336,47 @@ namespace ViMG.Entities
             }
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-				MakeMesh(device);
+		//	if (mesh.IBO == null)
+		//		MakeMesh(device);
 
-			//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
+		//	//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
 
-			RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
+		//	RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
 
-			if (state != State.Active)
-				sourceRect = new RectangleF(16, 0, 16, 32);
+		//	if (state != State.Active)
+		//		sourceRect = new RectangleF(16, 0, 16, 32);
 
-			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Vector3 vibratePos = Vector3.Zero;
+		//	Vector3 vibratePos = Vector3.Zero;
 
-			if (state != State.Active && resurrectTimer <= 4 && (resurrectTimer % (4f / 60f)) / (4f / 60f) < 0.25f)
-			{
-				if (resurrectTimer <= 1)
-                {
-					vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f), 0,
-						Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f));
-				}
-                else
-                {
-					vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f), 0,
-						Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f));
-                }
-            }
+		//	if (state != State.Active && resurrectTimer <= 4 && (resurrectTimer % (4f / 60f)) / (4f / 60f) < 0.25f)
+		//	{
+		//		if (resurrectTimer <= 1)
+  //              {
+		//			vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f), 0,
+		//				Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f));
+		//		}
+  //              else
+  //              {
+		//			vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f), 0,
+		//				Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f));
+  //              }
+  //          }
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(vibratePos) *
-				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(vibratePos) *
+		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			if (health < maxHealth)
-				DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
-		}
+		//	if (health < maxHealth)
+		//		DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
+		//}
 
 		private static void MakeMesh(GraphicsDevice device)
 		{

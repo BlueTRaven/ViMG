@@ -19,10 +19,10 @@ namespace ViMG.Entities
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("grave_ghost");
 
-        private float alive;
+        public float alive;
         private float hurtTimer;
 
-        private AIFlierMelee<Ghost> ai;
+        public  AIFlierMelee<Ghost> ai;
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
 
@@ -119,66 +119,66 @@ namespace ViMG.Entities
             else despawnTimer -= (float)deltaTime;
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
-            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
+        //    if (mesh.IBO == null)
+        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+        //    //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
 
-            RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+        //    RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
 
-            Vector3 velXZ = new Vector3(ai.Facing.X, 0, ai.Facing.Z);
-            velXZ.Normalize();
+        //    Vector3 velXZ = new Vector3(ai.Facing.X, 0, ai.Facing.Z);
+        //    velXZ.Normalize();
 
-            int direction = 0;
-            float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-            bool flipX = false;
+        //    int direction = 0;
+        //    float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
+        //    bool flipX = false;
 
-            if (facingDotCamera < -0.3f)
-            {
-                direction = 2;
-                sourceRect.y = 64;
-            }
-            else if (facingDotCamera < 0.2f)
-            {
-                direction = 1;
-                sourceRect.y = 32;
+        //    if (facingDotCamera < -0.3f)
+        //    {
+        //        direction = 2;
+        //        sourceRect.y = 64;
+        //    }
+        //    else if (facingDotCamera < 0.2f)
+        //    {
+        //        direction = 1;
+        //        sourceRect.y = 32;
 
-                float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
+        //        float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
 
-                if (facing < 0)
-                {
-                    flipX = true;
-                }
-            }
+        //        if (facing < 0)
+        //        {
+        //            flipX = true;
+        //        }
+        //    }
 
-            if (flipX)
-            {
-                sourceRect.x += 32;
-                sourceRect.width = -32;
-            }
+        //    if (flipX)
+        //    {
+        //        sourceRect.x += 32;
+        //        sourceRect.width = -32;
+        //    }
 
-            if (ai.GetState() == AIFlierMelee<Ghost>.State.Attack)
-                sourceRect = new RectangleF(0, 96, 32, 32);
-            else if (ai.GetState() == AIFlierMelee<Ghost>.State.AttackStun)
-                sourceRect = new RectangleF(32, 96, 32, 32);
+        //    if (ai.GetState() == AIFlierMelee<Ghost>.State.Attack)
+        //        sourceRect = new RectangleF(0, 96, 32, 32);
+        //    else if (ai.GetState() == AIFlierMelee<Ghost>.State.AttackStun)
+        //        sourceRect = new RectangleF(32, 96, 32, 32);
 
-            Vector3 offset = Vector3.Zero;
+        //    Vector3 offset = Vector3.Zero;
 
-            offset.Y = MathF.Sin(MathF.PI * 2 * (alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
+        //    offset.Y = MathF.Sin(MathF.PI * 2 * (alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
 
-            tintColor = Color.White;
+        //    tintColor = Color.White;
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-                Matrix.CreateTranslation(Position + offset), sourceRect, tintColor.ToVector3()));
+        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+        //        Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+        //        Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+        //        Matrix.CreateTranslation(Position + offset), sourceRect, tintColor.ToVector3()));
 
-            if (ai.Health < MAX_HEALTH)
-                DrawHelper3D.DrawHealthbar(device, ai.Health, MAX_HEALTH, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-        }
+        //    if (ai.Health < MAX_HEALTH)
+        //        DrawHelper3D.DrawHealthbar(device, ai.Health, MAX_HEALTH, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+        //}
 
         public Stats GetStats()
         {

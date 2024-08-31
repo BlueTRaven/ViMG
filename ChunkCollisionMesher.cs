@@ -130,9 +130,9 @@ namespace ViMG
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
-        public BufferPool bufferPool;
+        private BufferPool bufferPool;
 
-        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkRenderMesher mesher, int sizeInChunks)
+        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkRenderMesher mesher, int sizeInChunks, BufferPool bufferPool)
         {
             //bufferPool = new BufferPool();
 
@@ -140,6 +140,8 @@ namespace ViMG
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
             this.mesher = mesher;
             this.sizeInChunks = sizeInChunks;
+
+            this.bufferPool = bufferPool;
         }
 
         public void Update(World world)

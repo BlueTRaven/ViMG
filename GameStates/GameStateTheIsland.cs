@@ -173,6 +173,11 @@ namespace ViMG.GameStates
             base.Update(device, deltaTime);
         }
 
+        public World GetWorld()
+        {
+            return this.world;
+        }
+
         public void SetWorld(World world)
         {
             this.world = world;

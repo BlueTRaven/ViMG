@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Generation;
+using ViMG.IMGUIImpl;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.Rendering;
@@ -1109,5 +1111,75 @@ namespace ViMG
 			PhysicsInfo.Properties.Dispose();
 			PhysicsInfo.GlobalBufferPool.Clear();
         }
+
+		[ConsoleCommand("list_entities", "Lists all entities. Supply 'spawnable' to parameter 0 to list only entities that are spawnable.")]
+		public static void ListEntities(string[] parameters)
+		{
+			bool listParameterless = false;
+			if (parameters != null && parameters.Length > 0 && parameters[0] == "spawnable")
+			{
+				listParameterless = true;
+			}
+
+			foreach (Type entType in Utility.GetTypes<Entity>())
+			{
+				if (listParameterless && entType.GetConstructor(Type.EmptyTypes) != null)
+                    IMGUIConsole.LogLine(entType.Name);
+				else 
+					IMGUIConsole.LogLine(entType.Name);
+			}
+		}
+
+		[ConsoleCommand("spawn_entity", "Spawns an entity. Can be spawned on self or at the player's looking position.")]
+		public static void SpawnEntity(string[] parameters)
+		{
+			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			{
+				if (IMGUIConsole.RequireParam(parameters, 0, "location", ["self", "ray"]))
+				{
+					string location = parameters[0];
+
+					IMGUIConsole.RequireParam(parameters, 1, "entity");
+
+					string entityName = parameters[1];
+
+					Type entityType = Utility.GetType(Assembly.GetExecutingAssembly().GetName().Name, entityName);
+
+					if (entityType == null)
+					{
+                        IMGUIConsole.LogLine("[error] Entity " + entityName + " does not exist!");
+						return;
+                    }
+				
+					if (entityType.GetConstructor(Type.EmptyTypes) == null)
+					{
+						IMGUIConsole.LogLine("[error] Entity " + entityName + " exists, but has no parameterless constructor, and cannot be spawned.");
+						return;
+					}
+
+					var created = Activator.CreateInstance(entityType);
+
+					if (created != null && created is Entity ent)
+					{
+						if (location == "self")
+						{
+							ent.Position = gsIsland.GetWorld().EntityManager.GetFirst<Player>().Position;
+						}
+						else if (location == "ray")
+						{
+							CubePosition lookAt = gsIsland.GetWorld().EntityManager.GetFirst<Player>().LookAtPos;
+
+							ent.Position = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
+						}
+
+						gsIsland.GetWorld().EntityManager.Add(ent);
+					}
+				}
+			}
+			else
+			{
+				IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+			}
+		}
 	}
 }

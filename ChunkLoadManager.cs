@@ -14,11 +14,12 @@ using System.Windows.Forms;
 using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 
 namespace ViMG
 {
-	// TODO: are copies correctly returned if meshing is interrupted or unused?
-	public class ChunkLoadManager : IDisposable
+    // TODO: are copies correctly returned if meshing is interrupted or unused?
+    public class ChunkLoadManager : IDisposable
     {
 		private enum LoadingState : byte
         {
@@ -41,7 +42,6 @@ namespace ViMG
 
 		private const float DISTANCE_UNLOAD_CHECK_TIME = 4;
 		private float distanceUnloadCheckTimer;
-		private int loadIteration = 0;
 
 		private Vector3 loadTarget;
 
@@ -63,8 +63,6 @@ namespace ViMG
         private List<ChunkPosition> waitingToFinishMeshingChunks2 = new();
 		private List<ChunkPosition> waitingToFinishMeshingChunks;
 
-        private BufferPool bufferPool;
-		
 		public ChunkLoadManager(ChunkManager chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
 			ThreadPool.SetMaxThreads(8, 8);
@@ -75,10 +73,6 @@ namespace ViMG
 
 			this.chunkIO = chunkIO;
             this.entIO = entIO;
-
-			bufferPool = new BufferPool();
-			chunkManager.CollisionMesher.bufferPool = bufferPool;
-			chunkManager.RenderMesher.bufferPool = bufferPool;
 
 			waitingToFinishMeshingChunks = waitingToFinishMeshingChunks1;
         }
@@ -94,9 +88,7 @@ namespace ViMG
 			if (distanceUnloadCheckTimer <= 0)
 			{
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
-				LoadAroundTarget(world, loadIteration);
-
-				loadIteration = (loadIteration + 1) % 4;
+				LoadAroundTarget(world);
 			}
 
 			if (hasChanged)
@@ -415,26 +407,16 @@ namespace ViMG
 
 								var context = new CopyChunkTaskContext {
 									world = world,
-									pool = bufferPool,
+									pool = chunkManager.bufferPool,
 									position = pos,
 								};
 								var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
-								//task.Start();
+								// NOTE: tasks are not immediately started.
 								queue.EnqueueWithoutSorting(new QueuedChunk
 								{
 									copyTask = task,
 									position = pos,
 								});
-
-                                //things.Add((pos, task));
-
-								//Note that we add to the next batch directly instead of simply marking dirty
-								//This is because marking dirty isn't guaranteed to be finished any time soon,
-								//and will only ever enqueue one batch per frame.
-								//CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, pos);
-								//chunkManager.RenderMesher.AddToNextBatch(world, pos, copy);
-								//chunkManager.CollisionMesher.AddToNextBatch(world, pos, copy);
-								//ProfilingHelper.AddBatch();
 
 								hasChanged = true;
 
