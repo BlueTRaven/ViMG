@@ -31,6 +31,23 @@ namespace ViMG.Entities.Renderers
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
+            // NOTE:
+            // RendererOpaqueBillboardedEntity is made with opaques in mind. Transparents are only somewhat supported and aren't going to be super optimized.
+            // This is because opaques can be easily batched into instances, but transparents, because they must be sorted with respect to many other
+            // things, cannnot. (We use a deferred renderer, after all.)
+            // Therefore, if you have a transparent entity, consider making it its own EntityRendererer instead, where you can optimize it better for that use case.
+            public virtual bool GetShouldDrawTransparent(Entity entity)
+            {
+                return false;
+            }
+
+            // NOTE:
+            // .A is discarded unless GetShouldDrawTransparent returns true, in which case it acts normally as alpha.
+            public virtual Vector4 GetColor(Entity entity)
+            {
+                return Color.White.ToVector4();
+            }
+
             public virtual Vector3 GetPosition(Entity entity)
             {
                 return entity.Position;
@@ -239,6 +256,122 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class TypeStatsDucken : TypeStats
+        {
+            public TypeStatsDucken() : base(new RendererDeferred.DrawMaterial("ducken"))
+            {
+            }
+
+            public override RendererDeferred.DrawSourceRectParameters GetSourceRect(Entity entity)
+            {
+                Ducken ducken = (Ducken)entity;
+
+                RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+
+                Vector3 velXZ = new Vector3(ducken.ai.Facing.X, 0, ducken.ai.Facing.Z);
+                velXZ.Normalize();
+
+                int direction = 0;
+                float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
+                bool flipX = false;
+
+                if (facingDotCamera < -0.3f)
+                {
+                    direction = 2;
+                    sourceRect.y = 64;
+                }
+                else if (facingDotCamera < 0.2f)
+                {
+                    direction = 1;
+                    sourceRect.y = 32;
+
+                    float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
+
+                    if (facing < 0)
+                    {
+                        flipX = true;
+                    }
+                }
+
+                if (ducken.ai.GetState() == AIPassive<Ducken>.State.Normal)
+                {
+                    if (ducken.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    {
+                        int numFrames;
+
+                        if (direction == 0 || direction == 2)
+                            numFrames = 4;
+                        else if (direction == 1)
+                            numFrames = 2;
+                        else numFrames = 0;
+
+                        float animP = (entity.Alive % 0.75f) / 0.75f;
+
+                        int frame = (int)(animP * numFrames);
+
+                        sourceRect.x += 32 * frame;
+
+                        if (flipX)
+                        {
+                            sourceRect.x += 32;
+                            sourceRect.width = -32;
+                        }
+                    }
+                }
+
+                return new RendererDeferred.DrawSourceRectParameters(sourceRect);
+            }
+        }
+
+        private class TypeStatsGhoul : TypeStats
+        {
+            public TypeStatsGhoul() : base(new RendererDeferred.DrawMaterial("ghoul"), new Vector2(1, 2))
+            {
+
+            }
+
+            public override bool GetShouldDrawTransparent(Entity entity)
+            {
+                Ghoul ghoul = entity as Ghoul;
+                return ghoul.IsInLight();
+            }
+
+            public override Vector4 GetColor(Entity entity)
+            {
+                Ghoul ghoul = entity as Ghoul;
+                return base.GetColor(entity) * ghoul.GetAlpha();
+            }
+
+            public override RendererDeferred.DrawSourceRectParameters GetSourceRect(Entity entity)
+            {
+                return new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 16, 32));
+            }
+        }
+
+        private class TypeStatsLeviathan : TypeStats
+        {
+            public TypeStatsLeviathan() : base(new RendererDeferred.DrawMaterial("leviathan"), new Vector2(6))
+            {
+            }
+
+            public override bool GetShouldDrawTransparent(Entity entity)
+            {
+                EntityLeviathan leviathan = entity as EntityLeviathan;
+                return leviathan.state == EntityLeviathan.State.Watching;
+            }
+
+            public override Vector4 GetColor(Entity entity)
+            {
+                EntityLeviathan leviathan = entity as EntityLeviathan;
+                return base.GetColor(entity) * leviathan.GetAlpha();
+            }
+
+            public override RendererDeferred.DrawSourceRectParameters GetSourceRect(Entity entity)
+            {
+                return new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 64, 64));
+            }
+        }
+
         private TypeStats[] typeStats =
         [
             new TypeStatsSourceRect(new RendererDeferred.DrawMaterial("imp"), new Rectangle(0, 16, 16, 16)),
@@ -248,6 +381,11 @@ namespace ViMG.Entities.Renderers
             new TypeStatsCaveSlime(),
             new TypeStatsGhost(),
             new TypeStatsCultist(),
+            new TypeStatsSourceRect(new RendererDeferred.DrawMaterial("salamander"), new Rectangle(0, 0, 16, 16)),
+            new TypeStatsDucken(),
+            new TypeStatsGhoul(),
+            new TypeStats(new RendererDeferred.DrawMaterial("glow_node")),
+            new TypeStatsLeviathan(),
         ];
         private Type[] renderedTypes =
         [
@@ -258,6 +396,11 @@ namespace ViMG.Entities.Renderers
             typeof(CaveSlime),
             typeof(Ghost),
             typeof(Cultist),
+            typeof(CaveSalamander),
+            typeof(Ducken),
+            typeof(Ghoul),
+            typeof(GlowNode),
+            typeof(EntityLeviathan),
         ];
 
         public VerySimpleMesh mesh;
@@ -298,15 +441,34 @@ namespace ViMG.Entities.Renderers
                     Matrix.CreateTranslation(stats.GetPosition(entity));
                 Matrix.Transpose(ref mat, out mat);
 
-                RendererDeferred.InstancedDraw draw = baseDraw with
+                if (!stats.GetShouldDrawTransparent(entity))
                 {
-                    World = mat,
-                    WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                };
+                    RendererDeferred.InstancedDraw draw = baseDraw with
+                    {
+                        World = mat,
+                        WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
+                        SourceRect = stats.GetSourceRect(entity),
+                        TintColor = stats.GetColor(entity).ToVector3(),
+                    };
 
-                draw.SourceRect = stats.GetSourceRect(entity);
+                    stats.Draws.Add(draw);
+                }
+                else
+                {
+                    float distance = (Main.camera.Position - entity.Position).Length();
 
-                stats.Draws.Add(draw);
+                    RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
+                    {
+                        Material = stats.Material,
+                        SourceRect = stats.GetSourceRect(entity),
+                        TintColor = stats.GetColor(entity),
+                        Mesh = mesh,
+                        Transform = mat,
+                        SortValue = distance,
+                    };
+
+                    Main.Renderer.AddTransparentDraw(draw);
+                }
             }
 
             if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)

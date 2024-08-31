@@ -76,7 +76,7 @@ namespace ViMG.ChunkStuff
 
         public void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             if (count == -1)
                 count = positions.Length;
@@ -96,7 +96,7 @@ namespace ViMG.ChunkStuff
 
         public MeshHelper.CubeFace GetFace(CubePosition position)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 

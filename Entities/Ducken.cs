@@ -20,9 +20,11 @@ namespace ViMG.Entities
 
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
-        private AIPassive<Ducken> ai;
+        public AIPassive<Ducken> ai;
 
         private float alive;
+
+        public Ducken() { }
 
         public Ducken(Vector3 position)
         {
@@ -56,79 +58,79 @@ namespace ViMG.Entities
             ai.OnUnload();
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-            {
-                //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-            }
+        //    if (mesh.IBO == null)
+        //    {
+        //        //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+        //    }
 
-            RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+        //    RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
 
-            Vector3 velXZ = new Vector3(ai.Facing.X, 0, ai.Facing.Z);
-            velXZ.Normalize();
+        //    Vector3 velXZ = new Vector3(ai.Facing.X, 0, ai.Facing.Z);
+        //    velXZ.Normalize();
 
-            int direction = 0;
-            float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-            bool flipX = false;
+        //    int direction = 0;
+        //    float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
+        //    bool flipX = false;
 
-            if (facingDotCamera < -0.3f)
-            {
-                direction = 2;
-                sourceRect.y = 64;
-            }
-            else if (facingDotCamera < 0.2f)
-            {
-                direction = 1;
-                sourceRect.y = 32;
+        //    if (facingDotCamera < -0.3f)
+        //    {
+        //        direction = 2;
+        //        sourceRect.y = 64;
+        //    }
+        //    else if (facingDotCamera < 0.2f)
+        //    {
+        //        direction = 1;
+        //        sourceRect.y = 32;
 
-                float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
+        //        float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
 
-                if (facing < 0)
-                {
-                    flipX = true;
-                }
-            }
+        //        if (facing < 0)
+        //        {
+        //            flipX = true;
+        //        }
+        //    }
 
-            if (ai.GetState() == AIPassive<Ducken>.State.Normal)
-            {
-                if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
-                {
-                    int numFrames;
+        //    if (ai.GetState() == AIPassive<Ducken>.State.Normal)
+        //    {
+        //        if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+        //        {
+        //            int numFrames;
 
-                    if (direction == 0 || direction == 2)
-                        numFrames = 4;
-                    else if (direction == 1)
-                        numFrames = 2;
-                    else numFrames = 0;
+        //            if (direction == 0 || direction == 2)
+        //                numFrames = 4;
+        //            else if (direction == 1)
+        //                numFrames = 2;
+        //            else numFrames = 0;
 
-                    float animP = (alive % 0.75f) / 0.75f;
+        //            float animP = (alive % 0.75f) / 0.75f;
 
-                    int frame = (int)(animP * numFrames);
+        //            int frame = (int)(animP * numFrames);
 
-                    sourceRect.x += 32 * frame;
+        //            sourceRect.x += 32 * frame;
 
-                    if (flipX)
-                    {
-                        sourceRect.x += 32;
-                        sourceRect.width = -32;
-                    }
-                }
-            }
+        //            if (flipX)
+        //            {
+        //                sourceRect.x += 32;
+        //                sourceRect.width = -32;
+        //            }
+        //        }
+        //    }
 
-            Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+        //    Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-                Matrix.CreateTranslation(Position), sourceRect, tintColor));
+        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+        //        Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+        //        Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+        //        Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-            if (ai.Health < MAX_HEALTH)
-                DrawHelper3D.DrawHealthbar(device, ai.Health, MAX_HEALTH, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-        }
+        //    if (ai.Health < MAX_HEALTH)
+        //        DrawHelper3D.DrawHealthbar(device, ai.Health, MAX_HEALTH, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+        //}
 
         public Stats GetStats()
         {

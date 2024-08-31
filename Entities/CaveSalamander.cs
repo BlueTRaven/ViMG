@@ -45,21 +45,21 @@ namespace ViMG.Entities
 
 		public CaveSalamander(Vector3 position)
         {
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 12, false);
-			contactChecker = new Physics.ContactChecker();
-
 			this.Position = position;
-
-			target = position + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-				Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-				Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
-			var physicsShape = new Sphere(Cube.CUBE_SCALE / 2f);
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 12, false);
+            contactChecker = new Physics.ContactChecker();
+
+            target = Position + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+                Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+                Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
+
+            var physicsShape = new Sphere(Cube.CUBE_SCALE / 2f);
 			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
 			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
 				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f }, physicsShapeIndex, 0.001f));
@@ -160,20 +160,20 @@ namespace ViMG.Entities
 			//Position += Velocity * (float)deltaTime;
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+  //      {
+  //          base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-                //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+		//	if (mesh.IBO == null)
+		//		mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+  //              //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-                Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));
+  //          Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+  //              Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+  //              Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+  //              Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));
 
-            DrawHelper3D.DrawHealthbar(device, 4, 4, Position);
-        }
+  //          DrawHelper3D.DrawHealthbar(device, 4, 4, Position);
+  //      }
     }
 }

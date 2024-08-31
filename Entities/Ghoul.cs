@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
+	// TODO: this should check for sunlight too somehow!
     public class Ghoul : Entity, IHasStats
     {
         private static VerySimpleMesh mesh;
@@ -126,38 +128,41 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+		public bool IsInLight() => this.inLight;
+		public float GetAlpha() => inLightTimer / CHECK_LIGHT_TIME;
 
-			if (mesh.IBO== null)
-				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
-            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
+  //      public override void Draw(GraphicsDevice device, Effect effect)
+  //      {
+  //          base.Draw(device, effect);
 
-            if (!inLight)
-			{
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-					Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 32)));
-			}
-            else
-            {
-				float distance = (Main.camera.Position - Position).Length();
+		//	if (mesh.IBO== null)
+		//		mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2, Enums.Alignment.Bottom);
+  //          //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2);
 
-				float alpha = MathHelper.Lerp(0.5f, 1f, inLightTimer / CHECK_LIGHT_TIME);
+  //          if (!inLight)
+		//	{
+		//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//			Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//			Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//			Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 32)));
+		//	}
+  //          else
+  //          {
+		//		float distance = (Main.camera.Position - Position).Length();
 
-				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-					material, mesh,
-                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-                    Matrix.CreateTranslation(Position), 
-					new RectangleF(0, 0, 16, 32), Color.White * alpha));
-            }
+		//		float alpha = MathHelper.Lerp(0.5f, 1f, inLightTimer / CHECK_LIGHT_TIME);
 
-			if (ai.Health < ai.MaxHealth)
-				DrawHelper3D.DrawHealthbar(device, ai.Health, ai.MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-		}
+		//		Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+		//			material, mesh,
+  //                  Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+  //                  Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+  //                  Matrix.CreateTranslation(Position), 
+		//			new RectangleF(0, 0, 16, 32), Color.White * alpha));
+  //          }
+
+		//	if (ai.Health < ai.MaxHealth)
+		//		DrawHelper3D.DrawHealthbar(device, ai.Health, ai.MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+		//}
 
         public Stats GetStats()
         {

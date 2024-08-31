@@ -77,18 +77,18 @@ namespace ViMG.Entities
 				world.LightManager.Remove(light);
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-				MakeMesh(device);
+		//	if (mesh.IBO == null)
+		//		MakeMesh(device);
 
-			/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
-				mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), null));*/
-		}
+		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
+		//		mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(Position), null));*/
+		//}
 
 		private void MakeMesh(GraphicsDevice device)
 		{

@@ -234,6 +234,13 @@ namespace ViMG.IMGUIImpl
 
         public static unsafe void Console()
         {
+            bool shouldFocus = false;
+            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde)) 
+            {
+                Show = true;
+                shouldFocus = true;
+            }
+
             if (Show)
             {
                 if (ImGui.Begin("Console", ref Show))
@@ -292,6 +299,10 @@ namespace ViMG.IMGUIImpl
 
                     bool reclaim_focus = false;
                     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.EscapeClearsAll | ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.CallbackHistory;
+                    if (shouldFocus)
+                    {
+                        ImGui.SetKeyboardFocusHere(0);
+                    }
                     if (ImGui.InputText("Input", ref editingString, (uint)500, input_text_flags, Callback, (nint)null))
                     {
                         if (editingString != "")

@@ -1112,6 +1112,49 @@ namespace ViMG
 			PhysicsInfo.GlobalBufferPool.Clear();
         }
 
+		[ConsoleCommand("give", "Gives the player an item.")]
+		public static void GiveItem(string[] parameters)
+		{
+			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			{
+				if (IMGUIConsole.RequireParam(parameters, 0, "item_name"))
+				{
+					Item item;
+					if (int.TryParse(parameters[0], out int itemIndex))
+						item = Main.Registry.ItemRegistry.Get(itemIndex);
+					else item = Main.Registry.ItemRegistry.Get(parameters[0]);
+
+					if (item != null)
+					{
+						int num = 1;
+						if (parameters.Length >= 2)
+						{
+							num = int.Parse(parameters[1]);
+						}
+
+						int damage = 0;
+						if (parameters.Length >= 3)
+						{
+							damage = int.Parse(parameters[2]);
+						}
+
+						World world = gsIsland.GetWorld();
+						Player player = world.EntityManager.GetFirst<Player>();
+
+						player.GetInventory().Add(new ItemInstance(item, num, damage));
+					}
+					else
+					{
+						IMGUIConsole.LogLine("[error] Tried to give item with name " + parameters[0] + ", but an item by that name did not exist.");
+					}
+				}
+			}
+			else 
+			{
+                IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+			}
+		}
+
 		[ConsoleCommand("list_entities", "Lists all entities. Supply 'spawnable' to parameter 0 to list only entities that are spawnable.")]
 		public static void ListEntities(string[] parameters)
 		{
@@ -1130,7 +1173,7 @@ namespace ViMG
 			}
 		}
 
-		[ConsoleCommand("spawn_entity", "Spawns an entity. Can be spawned on self or at the player's looking position.")]
+		[ConsoleCommand("spawn", "Spawns an entity. Can be spawned on self or at the player's looking position.")]
 		public static void SpawnEntity(string[] parameters)
 		{
 			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)

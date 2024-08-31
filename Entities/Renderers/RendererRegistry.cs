@@ -24,6 +24,7 @@ namespace ViMG.Entities.Renderers
             base.DoRegistration();
 
             Register(new RendererTree(device));
+            Register(new RendererDoor(device));
             Register(new RendererOpaqueBillboardedEntity(device));
         }
 
