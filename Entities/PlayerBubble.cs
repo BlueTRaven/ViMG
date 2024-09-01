@@ -19,7 +19,7 @@ namespace ViMG.Entities
         private float alive;
 
         private int hitbox = -1;
-        private bool exploding;
+        public bool exploding;
 
         private Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f));
         private float explodingTime;
@@ -64,35 +64,35 @@ namespace ViMG.Entities
                 world.HitboxManager.Remove(hitbox);
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f, Enums.Alignment.Bottom);
-            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
+        //    if (mesh.IBO == null)
+        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f, Enums.Alignment.Bottom);
+        //    //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f);
 
-            //Don't draw while exploding
-            //TODO: instead of not drawing, draw some "bubble pop" sprite
-            if (exploding)
-                return;
+        //    //Don't draw while exploding
+        //    //TODO: instead of not drawing, draw some "bubble pop" sprite
+        //    if (exploding)
+        //        return;
 
-            float t0 = (alive % 1.75f) / 1.75f;
-            float t1 = ((alive + 0.45f) % 2.05f) / 2.05f;
-            float s0 = MathF.Sin(MathF.PI * 2 * t0) * 0.5f + 0.5f;
-            float s1 = MathF.Sin(MathF.PI * 2 * t1) * 0.5f + 0.5f;
+        //    float t0 = (alive % 1.75f) / 1.75f;
+        //    float t1 = ((alive + 0.45f) % 2.05f) / 2.05f;
+        //    float s0 = MathF.Sin(MathF.PI * 2 * t0) * 0.5f + 0.5f;
+        //    float s1 = MathF.Sin(MathF.PI * 2 * t1) * 0.5f + 0.5f;
 
-            float scaleX = MathHelper.Lerp(1f, 1.15f, s0);
-            float scaleY = MathHelper.Lerp(0.95f, 1.15f, s1);
+        //    float scaleX = MathHelper.Lerp(1f, 1.15f, s0);
+        //    float scaleY = MathHelper.Lerp(0.95f, 1.15f, s1);
 
-            Matrix mat = Matrix.CreateTranslation(0, -Cube.CUBE_SCALE, 0) *
-                Matrix.CreateScale(scaleX, scaleY, 1) *
-                Matrix.CreateBillboard(Position, Main.camera.Position, Main.camera.Up, Main.camera.Forward);
+        //    Matrix mat = Matrix.CreateTranslation(0, -Cube.CUBE_SCALE, 0) *
+        //        Matrix.CreateScale(scaleX, scaleY, 1) *
+        //        Matrix.CreateBillboard(Position, Main.camera.Position, Main.camera.Up, Main.camera.Forward);
 
-            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((Main.camera.Position - Position).Length(),
-                material, mesh, mat,
-                new RectangleF(0, 0, 64, 64), Color.White * 0.85f));
-        }
+        //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((Main.camera.Position - Position).Length(),
+        //        material, mesh, mat,
+        //        new RectangleF(0, 0, 64, 64), Color.White * 0.85f));
+        //}
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {

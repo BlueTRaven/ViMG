@@ -733,8 +733,8 @@ namespace ViMG
 					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
 					RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
-					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube,
-						Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
+					//Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube,
+					//	Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
 				}
 			}
 
@@ -1110,6 +1110,36 @@ namespace ViMG
 			PhysicsInfo.Simulation.Dispose();
 			PhysicsInfo.Properties.Dispose();
 			PhysicsInfo.GlobalBufferPool.Clear();
+        }
+
+		[ConsoleCommand("set_time", "Sets the world's time. Param 0: time to set to, between 0 and 600 (wraps around), 0 being dawn, 300 being dusk. " +
+			"Alternatively, Param 0 can be \"dawn\", \"noon\", \"dusk\", or \"midnight\", for those respective times.")]
+		public static void SetTime(string[] parameters)
+		{
+			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			{
+				if (IMGUIConsole.RequireParam(parameters, 0, "time"))
+				{
+					if (int.TryParse(parameters[0], out int timeSetTo))
+						gsIsland.GetWorld().alive = timeSetTo;
+					else
+					{
+						if (parameters[0] == "dawn")
+							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 0;
+						else if (parameters[0] == "noon")
+							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 1;
+						else if (parameters[0] == "dusk")
+							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 2;
+						else if (parameters[0] == "midnight")
+							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 3;
+						else IMGUIConsole.LogLine("[error] Time not recognized.");
+                    }
+				}
+			}
+            else
+            {
+                IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+            }
         }
 
 		[ConsoleCommand("give", "Gives the player an item.")]

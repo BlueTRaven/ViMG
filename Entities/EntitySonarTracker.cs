@@ -74,11 +74,11 @@ namespace ViMG.Entities
             Main.Renderer.EffectEmpty.Parameters["PositionRadius"].SetValue(new Vector4(Main.camera.Position, sonarr));
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
 
-        }
+        //}
     }
 }

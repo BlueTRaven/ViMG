@@ -198,7 +198,9 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
-            if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
+            // FIXME: for some reason, air meshes are getting passed in with some indices, but no vertices. The attributes.position.Get()== null is to catch that.
+            // This is a bug, it should be fixed at the root eventually.
+            if (attributes.indices == null || attributes.indices.Count == 0 || attributes.position.Get() == null) return mesh;
 
             if (attributes.position.GetOut(out var positions))
             {

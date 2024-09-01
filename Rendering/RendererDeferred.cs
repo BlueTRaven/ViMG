@@ -50,6 +50,14 @@ namespace ViMG.Rendering
                     throw new Exception("AAAAA");
             }
 
+            public DrawMaterial(Texture2D diffuse, Texture2D normal = null, Texture2D specular = null, Texture2D emissive = null)
+            {
+                Diffuse = diffuse;
+                Normal = normal ?? DrawHelper.NormalPixel;
+                Specular = specular ?? DrawHelper.BlackPixel;
+                Emissive = emissive ?? DrawHelper.BlackPixel;
+            }
+
             public DrawMaterial(string name)
             {
                 Diffuse = Main.assetsManager.GetAsset<Texture2D>(name);

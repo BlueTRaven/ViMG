@@ -95,36 +95,36 @@ namespace ViMG.Entities
 			}
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-            //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
+		//	if (mesh.IBO == null)
+  //              mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+  //          //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
 
-            float healthPercent = (float)Health / (float)MaxHealth;
+  //          float healthPercent = (float)Health / (float)MaxHealth;
 
-			float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
+		//	float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
 
-			float t = (alive % interval) / interval;
+		//	float t = (alive % interval) / interval;
 
-			float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
+		//	float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
 
-			float scale = MathHelper.Lerp(0.75f, 1.15f, s);
+		//	float scale = MathHelper.Lerp(0.75f, 1.15f, s);
 
-			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-				Matrix.CreateTranslation(-new Vector3(0, Cube.CUBE_SCALE / 2f, 0)) *
-				Matrix.CreateScale(scale) *
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 21), tintColor));
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//		Matrix.CreateTranslation(-new Vector3(0, Cube.CUBE_SCALE / 2f, 0)) *
+		//		Matrix.CreateScale(scale) *
+		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 21), tintColor));
 
-			if (Health < MaxHealth)
-				DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);
-		}
+		//	if (Health < MaxHealth)
+		//		DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);
+		//}
 
         public override void OnSave(List<byte> saveBytes)
         {
