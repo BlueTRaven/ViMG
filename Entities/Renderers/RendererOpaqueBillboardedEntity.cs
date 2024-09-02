@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -33,57 +34,64 @@ namespace ViMG.Entities.Renderers
             public TypeStatsDrawStats() { }
         }
 
-        private class TypeStats
+        private abstract class TypeStats
         {
             public RendererDeferred.DrawMaterial Material;
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
 
-            public Vector2 Scale;
-            public Vector3 Offset;
-
-            public TypeStats(RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null)
+            public TypeStats(RendererDeferred.DrawMaterial material)
             {
                 this.Material = material;
-                this.Scale = scale ?? Vector2.One;
-                this.Offset = offset ?? Vector3.Zero;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
-            public virtual TypeStatsDrawStats GetDrawStats(Entity entity)
-            {
-                var drawStats = new TypeStatsDrawStats
-                {
-                    position = entity.Position + Offset,
-                    scale = Scale,
-                };
-
-                return drawStats;
-            }
+            public abstract TypeStatsDrawStats[] GetDrawStats(Entity entity);
         }
 
-        private class TypeStatsSourceRect : TypeStats
+        private class TypeStatsGeneric : TypeStats
         {
-            private readonly Rectangle sourceRect;
+            private readonly RendererDeferred.DrawMaterial material;
+            private readonly Vector2 scale;
+            private readonly Vector3 offset;
+            private readonly Color color;
+            private readonly RectangleF? sourceRect;
 
-            public TypeStatsSourceRect(RendererDeferred.DrawMaterial material, Rectangle sourceRect, Vector2? scale = null) : base(material, scale)
+            public TypeStatsGeneric(RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null, Color? color = null, RectangleF? sourceRect = null) : base(material)
             {
+                this.material = material;
+                this.scale = scale ?? new Vector2(1);
+                this.offset = offset ?? new Vector3();
+                this.color = color ?? Color.White;
                 this.sourceRect = sourceRect;
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
-                return base.GetDrawStats(entity) with { sourceRect = this.sourceRect.ToRectangleF() };
+                TypeStatsDrawStats stats = new TypeStatsDrawStats
+                {
+                    position = entity.Position + offset,
+                    scale = scale,
+                    color = color,
+                    sourceRect = sourceRect,
+                    shouldDraw = true,
+                };
+
+                cachedStats[0] = stats;
+                return cachedStats;
             }
         }
 
         private class TypeStatsSkeleton : TypeStats
         {
-            public TypeStatsSkeleton() : base(new RendererDeferred.DrawMaterial("skeleton"), new Vector2(1, 2))
+            public TypeStatsSkeleton() : base(new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Skeleton skeleton = (Skeleton)entity;
 
@@ -92,15 +100,21 @@ namespace ViMG.Entities.Renderers
                 if (skeleton.state != Skeleton.State.Active)
                     sourceRect = new RectangleF(16, 0, 16, 32);
 
-                return base.GetDrawStats(entity) with { sourceRect = sourceRect };
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    scale = new Vector2(1, 2),
+                    sourceRect = sourceRect,
+                };
+                return cachedStats;
             }
         }
         
         private class TypeStatsBigSlime : TypeStats
         {
-            public TypeStatsBigSlime() : base(new RendererDeferred.DrawMaterial("slime"), new Vector2(2)) { }
+            public TypeStatsBigSlime() : base(new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 SlimeBig slime = entity as SlimeBig;
 
@@ -114,18 +128,22 @@ namespace ViMG.Entities.Renderers
                 if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
                     ysrc = 64;
 
-                return base.GetDrawStats(entity) with 
-                { 
+                cachedStats[0] = new TypeStatsDrawStats
+                {
                     sourceRect = slime.noticeHandler.Noticed ? new RectangleF(32, ysrc, 32, 32) : new RectangleF(0, ysrc, 32, 32),
+                    scale = new Vector2(2),
                 };
+
+                return cachedStats;
             }
         }
 
         private class TypeStatsSlime : TypeStats
         {
-            public TypeStatsSlime() : base(new RendererDeferred.DrawMaterial("slime"), new Vector2(1)) { }
+            public TypeStatsSlime() : base(new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Slime slime = entity as Slime;
 
@@ -139,18 +157,21 @@ namespace ViMG.Entities.Renderers
                 if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
                     ysrc = 16;
 
-                return base.GetDrawStats(entity) with
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     sourceRect = slime.noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
                 };
+
+                return cachedStats;
             }
         }
 
         private class TypeStatsCaveSlime : TypeStats
         {
-            public TypeStatsCaveSlime() : base(new RendererDeferred.DrawMaterial("slime"), new Vector2(1)) { }
+            public TypeStatsCaveSlime() : base(new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Slime slime = entity as Slime;
 
@@ -164,20 +185,23 @@ namespace ViMG.Entities.Renderers
                 if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
                     ysrc = 16;
 
-                return base.GetDrawStats(entity) with
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     sourceRect = slime.noticeHandler.Noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16),
                 };
+
+                return cachedStats;
             }
         }
 
         private class TypeStatsGhost : TypeStats
         {
-            public TypeStatsGhost() : base(new RendererDeferred.DrawMaterial("grave_ghost"), new Vector2(2))
+            public TypeStatsGhost() : base(new RendererDeferred.DrawMaterial("grave_ghost"))
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Ghost ghost = (Ghost)entity;
 
@@ -223,21 +247,24 @@ namespace ViMG.Entities.Renderers
 
                 offset.Y = MathF.Sin(MathF.PI * 2 * (entity.Alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     position = entity.Position + offset,
                     sourceRect = sourceRect,
+                    scale = new Vector2(2),
                 };
+                return cachedStats;
             }
         }
 
         private class TypeStatsCultist : TypeStats
         {
-            public TypeStatsCultist() : base(new RendererDeferred.DrawMaterial("cultist"), new Vector2(19f / 16f, 32f / 16f))
+            public TypeStatsCultist() : base(new RendererDeferred.DrawMaterial("cultist"))
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Cultist cultist = (Cultist)entity;
 
@@ -259,10 +286,13 @@ namespace ViMG.Entities.Renderers
                     sourceRect = new RectangleF(65, 0, 19, 32);
                 }
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     sourceRect = sourceRect,
+                    scale = new Vector2(19f / 16f, 32f / 16f),
                 };
+
+                return cachedStats;
             }
         }
 
@@ -272,7 +302,8 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Ducken ducken = (Ducken)entity;
 
@@ -329,48 +360,57 @@ namespace ViMG.Entities.Renderers
                     }
                 }
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     sourceRect = sourceRect,
                 };
+                return cachedStats;
             }
         }
 
         private class TypeStatsGhoul : TypeStats
         {
-            public TypeStatsGhoul() : base(new RendererDeferred.DrawMaterial("ghoul"), new Vector2(1, 2))
+            public TypeStatsGhoul() : base(new RendererDeferred.DrawMaterial("ghoul"))
             {
 
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Ghoul ghoul = entity as Ghoul;
                 Color color = Color.White * ghoul.GetAlpha();
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     color = color,
                     sourceRect = new RectangleF(0, 0, 16, 32),
+                    scale = new Vector2(1, 2),
                 };
+
+                return cachedStats;
             }
         }
 
         private class TypeStatsLeviathan : TypeStats
         {
-            public TypeStatsLeviathan() : base(new RendererDeferred.DrawMaterial("leviathan"), new Vector2(6))
+            public TypeStatsLeviathan() : base(new RendererDeferred.DrawMaterial("leviathan"))
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 EntityLeviathan leviathan = entity as EntityLeviathan;
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     color = Color.White * leviathan.GetAlpha(),
                     sourceRect = new RectangleF(0, 0, 64, 64),
+                    scale = new Vector2(6),
                 };
+
+                return cachedStats;
             }
         }
 
@@ -380,7 +420,8 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 Heart heart = entity as Heart;
                 float healthPercent = (float)heart.Health / (float)heart.MaxHealth;
@@ -393,11 +434,13 @@ namespace ViMG.Entities.Renderers
 
                 float scale = MathHelper.Lerp(0.75f, 1.15f, s);
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     sourceRect = new RectangleF(0, 0, 16, 21),
                     scale = new Vector2(scale),
                 };
+
+                return cachedStats;
             }
         }
 
@@ -407,7 +450,8 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override TypeStatsDrawStats GetDrawStats(Entity entity)
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 float t0 = (entity.Alive % 1.75f) / 1.75f;
                 float t1 = ((entity.Alive + 0.45f) % 2.05f) / 2.05f;
@@ -417,31 +461,141 @@ namespace ViMG.Entities.Renderers
                 float scaleX = MathHelper.Lerp(1f, 1.15f, s0);
                 float scaleY = MathHelper.Lerp(0.95f, 1.15f, s1);
 
-                return new TypeStatsDrawStats
+                cachedStats[0] = new TypeStatsDrawStats
                 {
                     scale = new Vector2(scaleX, scaleY),
                     shouldDraw = !(entity as PlayerBubble).exploding,
                     sourceRect = new RectangleF(0, 0, 64, 64),
                 };
+
+                return cachedStats;
+            }
+        }
+
+        private class TypeStatsSnake : TypeStats
+        {
+            public TypeStatsSnake() : base(new RendererDeferred.DrawMaterial("snake"))
+            {
+            }
+
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                Snake snake = entity as Snake;
+
+                Vector3 velXZ = new Vector3(snake.ai.Velocity.X, 0, snake.ai.Velocity.Z);
+                velXZ.Normalize();
+
+                float facingDotCamera = Vector3.Dot(velXZ, -Main.camera.Forward);
+
+                //Facing within 45 degrees of the camera.
+                bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);
+
+                RectangleF sourceRect = new RectangleF(0, 0, 32, 16);
+                Vector2 scale = Vector2.One;
+
+                if (isFacingCamera)
+                {
+                    sourceRect = new RectangleF(0, 16, 16, 16);
+                }
+
+                if (snake.ai.GetState() == AIWalkerMelee<Snake>.State.Normal)
+                {
+                    if (snake.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    {
+                        float animP = (entity.Alive % 0.75f) / 0.75f;
+
+                        int frame = (int)(animP * 2f);
+
+                        sourceRect.x += sourceRect.width * frame;
+                    }
+                }
+                else if (snake.ai.GetState() == AIWalkerMelee<Snake>.State.Attack)
+                {
+                    scale = new Vector2(2);
+                    sourceRect.y = 32;
+                    sourceRect.width = 32;
+                    sourceRect.height = 32;
+                    const int NUM_FRAMES = 4;
+
+                    int frame = (int)((1 - (snake.ai.AttackTimer / snake.ai.AttackLockTime)) * NUM_FRAMES);
+
+                    sourceRect.x = 32 * frame;
+                }
+
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    sourceRect = sourceRect,
+                    scale = scale,
+                };
+
+                return cachedStats;
+            }
+        }
+
+        private class TypeStatsSnakeFlying : TypeStats
+        {
+            public TypeStatsSnakeFlying() : base(new RendererDeferred.DrawMaterial("snake"))
+            {
+            }
+
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[2];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                SnakeFlying snake = entity as SnakeFlying;
+
+                RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
+
+                if (snake.aiFlying.GetState() == AIFlierMelee<SnakeFlying>.State.Attack)
+                {
+                    const int ATT_NUM_FRAMES = 4;
+                    int frame = (int)((1 - (snake.aiFlying.AttackTimer / snake.aiFlying.AttackLockTime)) * ATT_NUM_FRAMES);
+                    sourceRectSnake = new RectangleF(32 * frame, 34, 32, 32);
+                }
+
+                RectangleF sourceRectWings = new RectangleF(0, 64, 32, 32);
+
+                const int WINGS_NUM_FRAMES = 3;
+                int wingFrame = (int)((1 - ((entity.Alive % 0.25f) / 0.25f)) * WINGS_NUM_FRAMES);
+                sourceRectWings.x = 32 * wingFrame;
+
+
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    sourceRect = sourceRectWings,
+                    scale = new Vector2(2),
+                    position = entity.Position,
+                };
+
+                cachedStats[1] = new TypeStatsDrawStats
+                {
+                    sourceRect = sourceRectSnake,
+                    scale = new Vector2(2),
+                    position = entity.Position,
+                };
+
+                return cachedStats;
             }
         }
 
         private TypeStats[] typeStats =
         [
-            new TypeStatsSourceRect(new RendererDeferred.DrawMaterial("imp"), new Rectangle(0, 16, 16, 16)),
+            new TypeStatsGeneric(new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)),
             new TypeStatsSkeleton(),
             new TypeStatsSlime(),
             new TypeStatsBigSlime(),
             new TypeStatsCaveSlime(),
             new TypeStatsGhost(),
             new TypeStatsCultist(),
-            new TypeStatsSourceRect(new RendererDeferred.DrawMaterial("salamander"), new Rectangle(0, 0, 16, 16)),
+            new TypeStatsGeneric(new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)),
             new TypeStatsDucken(),
             new TypeStatsGhoul(),
-            new TypeStats(new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)),
+            new TypeStatsGeneric(new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)),
             new TypeStatsLeviathan(),
             new TypeStatsHeart(),
             new TypeStatsPlayerBubble(),
+            new TypeStatsSnake(),
+            new TypeStatsSnakeFlying(),
         ];
         private Type[] renderedTypes =
         [
@@ -459,6 +613,8 @@ namespace ViMG.Entities.Renderers
             typeof(EntityLeviathan),
             typeof(Heart),
             typeof(PlayerBubble),
+            typeof(Snake),
+            typeof(SnakeFlying),
         ];
 
         public VerySimpleMesh mesh;
@@ -495,17 +651,17 @@ namespace ViMG.Entities.Renderers
 
             foreach (Entity entity in entities)
             {
-                if (true)
+                TypeStatsDrawStats[] drawStats = stats.GetDrawStats(entity);
+                foreach (TypeStatsDrawStats drawStat in drawStats)
                 {
-                    TypeStatsDrawStats drawStats = stats.GetDrawStats(entity);
-                    Vector2 scale = drawStats.scale ?? new Vector2(1);
-                    Color color = drawStats.color ?? Color.White;
-                    Vector3 position = drawStats.position ?? entity.Position;
+                    Vector2 scale = drawStat.scale ?? new Vector2(1);
+                    Color color = drawStat.color ?? Color.White;
+                    Vector3 position = drawStat.position ?? entity.Position;
 
                     RendererDeferred.DrawSourceRectParameters sourceRect;
-                    if (drawStats.sourceRect.HasValue)
+                    if (drawStat.sourceRect.HasValue)
                     {
-                        sourceRect = new RendererDeferred.DrawSourceRectParameters(drawStats.sourceRect.Value);
+                        sourceRect = new RendererDeferred.DrawSourceRectParameters(drawStat.sourceRect.Value);
                     }
                     else sourceRect = new RendererDeferred.DrawSourceRectParameters();
 
@@ -544,45 +700,42 @@ namespace ViMG.Entities.Renderers
                         Main.Renderer.AddTransparentDraw(draw);
                     }
                 }
-                else
-                {
-                    //if (!stats.ShouldDraw(entity))
-                    //    continue;
-                    //Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                    //    Matrix.CreateScale(stats.GetScale(entity).X, stats.GetScale(entity).Y, 1) *
-                    //    billboard *
-                    //    Matrix.CreateTranslation(stats.GetPosition(entity));
-                    //Matrix.Transpose(ref mat, out mat);
+                //if (!stats.ShouldDraw(entity))
+                //    continue;
+                //Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
+                //    Matrix.CreateScale(stats.GetScale(entity).X, stats.GetScale(entity).Y, 1) *
+                //    billboard *
+                //    Matrix.CreateTranslation(stats.GetPosition(entity));
+                //Matrix.Transpose(ref mat, out mat);
 
-                    //if (!stats.GetShouldDrawTransparent(entity))
-                    //{
-                    //    RendererDeferred.InstancedDraw draw = baseDraw with
-                    //    {
-                    //        World = mat,
-                    //        WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                    //        SourceRect = stats.GetSourceRect(entity),
-                    //        TintColor = stats.GetColor(entity).ToVector3(),
-                    //    };
+                //if (!stats.GetShouldDrawTransparent(entity))
+                //{
+                //    RendererDeferred.InstancedDraw draw = baseDraw with
+                //    {
+                //        World = mat,
+                //        WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
+                //        SourceRect = stats.GetSourceRect(entity),
+                //        TintColor = stats.GetColor(entity).ToVector3(),
+                //    };
 
-                    //    stats.Draws.Add(draw);
-                    //}
-                    //else
-                    //{
-                    //    float distance = (Main.camera.Position - entity.Position).Length();
+                //    stats.Draws.Add(draw);
+                //}
+                //else
+                //{
+                //    float distance = (Main.camera.Position - entity.Position).Length();
 
-                    //    RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
-                    //    {
-                    //        Material = stats.Material,
-                    //        SourceRect = stats.GetSourceRect(entity),
-                    //        TintColor = stats.GetColor(entity),
-                    //        Mesh = mesh,
-                    //        Transform = mat,
-                    //        SortValue = distance,
-                    //    };
+                //    RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
+                //    {
+                //        Material = stats.Material,
+                //        SourceRect = stats.GetSourceRect(entity),
+                //        TintColor = stats.GetColor(entity),
+                //        Mesh = mesh,
+                //        Transform = mat,
+                //        SortValue = distance,
+                //    };
 
-                    //    Main.Renderer.AddTransparentDraw(draw);
-                    //}
-                }
+                //    Main.Renderer.AddTransparentDraw(draw);
+                //}
             }
 
             if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
