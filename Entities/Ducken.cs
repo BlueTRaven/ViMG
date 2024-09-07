@@ -20,7 +20,7 @@ namespace ViMG.Entities
 
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
-        public AIPassive<Ducken> ai;
+        public AIPassive ai;
 
         private float alive;
 
@@ -38,7 +38,7 @@ namespace ViMG.Entities
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
             buffManager = new BuffManager(this);
 
-            ai = new AIPassive<Ducken>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
+            ai = new AIPassive(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
                 new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, MAX_HEALTH);
         }
 
@@ -48,14 +48,16 @@ namespace ViMG.Entities
 
             alive += (float)deltaTime;
 
-            ai.Update(deltaTime);
+            AIPassive.Funcs<Ducken> funcs = new AIPassive.Funcs<Ducken> { ai = ai, entity = this };
+            funcs.Update(deltaTime);
         }
 
         public override void OnUnload()
         {
             base.OnUnload();
 
-            ai.OnUnload();
+            AIPassive.Funcs<Ducken> funcs = new AIPassive.Funcs<Ducken> { ai = ai, entity = this };
+            funcs.OnUnload();
         }
 
         //public override void Draw(GraphicsDevice device, Effect effect)

@@ -10,7 +10,7 @@ using BrUtility;
 
 namespace ViMG.Entities
 {
-    public class AIWalkerMelee<T> : IHitboxOwner where T : Entity, IHasStats
+    public class AIWalkerMelee
     {
 		public enum State
 		{
@@ -24,7 +24,6 @@ namespace ViMG.Entities
 		public Vector3 Velocity;
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-		private readonly T entity;
 		private float idleTimer;
 		private float idleMoveTimer;
 		private int idleMovements;
@@ -69,11 +68,10 @@ namespace ViMG.Entities
 		private Rectangle3D attackHitboxBounds;
 		private int attackHitbox = -1;
 
-		public AIWalkerMelee(T entity, Rectangle3D touchHitboxBounds, Rectangle3D attackHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
+		public AIWalkerMelee(Rectangle3D touchHitboxBounds, Rectangle3D attackHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
 		{
 			this.noticeHandler = noticeHandler;
 			this.buffManager = buffManager;
-			this.entity = entity;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -82,334 +80,341 @@ namespace ViMG.Entities
             this.attackHitboxBounds = attackHitboxBounds;
         }
 
-		public void OnUnload()
+		public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
 		{
-			if (touchHitbox != -1)
-				entity.world.HitboxManager.Remove(touchHitbox);
+			public AIWalkerMelee ai;
+			public T entity;
 
-			if (attackHitbox != -1)
-				entity.world.HitboxManager.Remove(attackHitbox);
-		}
-
-		public void Update(double deltaTime)
-		{
-			InvulnTimer -= (float)deltaTime;
-
-			if (touchHitbox == -1)
-				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
-			else entity.world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
-
-			Vector3 actualMaxVel = MaxVelocity;
-
-			Velocity.Y += World.GRAVITY;
-
-			noticeHandler.Update(deltaTime);
-			buffManager.Update(deltaTime);
-
-			isInRangeOfTarget = false;
-
-			if (InvulnTimer <= 0 && onGround)
+			public void OnUnload()
 			{
-				shouldJumpLockTimer -= (float)deltaTime;
+				if (ai.touchHitbox != -1)
+					entity.world.HitboxManager.Remove(ai.touchHitbox);
 
-				if (shouldJump && shouldJumpLockTimer <= 0)
+				if (ai.attackHitbox != -1)
+					entity.world.HitboxManager.Remove(ai.attackHitbox);
+			}
+
+			public void Update(double deltaTime)
+			{
+                ai.InvulnTimer -= (float)deltaTime;
+
+				if (ai.touchHitbox == -1)
+                    ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+
+				Vector3 actualMaxVel = ai.MaxVelocity;
+
+                ai.Velocity.Y += World.GRAVITY;
+
+                ai.noticeHandler.Update(deltaTime);
+                ai.buffManager.Update(deltaTime);
+
+                ai.isInRangeOfTarget = false;
+
+				if (ai.InvulnTimer <= 0 && ai.onGround)
 				{
-					Velocity.Y = Cube.CUBE_SCALE * 10;
-					shouldJump = false;
-				}
+                    ai.shouldJumpLockTimer -= (float)deltaTime;
 
-				if (noticeHandler.Noticed)
-				{
-					idleMovements = 0;
-
-					if (state == State.Paused)
-                    {
-						//In paused state, slow down and attempt to transition into Normal state.
-						Velocity.X *= 0.95f;
-						Velocity.Z *= 0.95f;
-
-						state = State.Normal;
-                    }
-					else if (state == State.Normal)
+					if (ai.shouldJump && ai.shouldJumpLockTimer <= 0)
 					{
-						Vector3 dir = noticeHandler.GetNoticedEntity().Position - entity.Position;
-						dir.Normalize();
-						dir *= MoveSpeed;
+                        ai.Velocity.Y = Cube.CUBE_SCALE * 10;
+                        ai.shouldJump = false;
+					}
 
-						float distance = XZDistance(noticeHandler.GetNoticedEntity().Position, entity.Position);
+					if (ai.noticeHandler.Noticed)
+					{
+                        ai.idleMovements = 0;
 
-						if (distance > MoveTowardsTargetDistance)
+						if (ai.state == State.Paused)
 						{
-							EntityHelper.AddCappedVelocityHorizontal(ref Velocity, dir, actualMaxVel);
+                            //In paused state, slow down and attempt to transition into Normal state.
+                            ai.Velocity.X *= 0.95f;
+                            ai.Velocity.Z *= 0.95f;
+
+                            ai.state = State.Normal;
 						}
-						else
+						else if (ai.state == State.Normal)
 						{
-							Velocity.X *= 0.95f;
-							Velocity.Z *= 0.95f;
-						}
+							Vector3 dir = ai.noticeHandler.GetNoticedEntity().Position - entity.Position;
+							dir.Normalize();
+							dir *= ai.MoveSpeed;
 
-						if (distance < AttackTargetDistance)
-						{
-							isInRangeOfTarget = true;
+							float distance = XZDistance(ai.noticeHandler.GetNoticedEntity().Position, entity.Position);
 
-							attackTimer -= (float)deltaTime;
-
-							if (attackTimer <= 0)
+							if (distance > ai.MoveTowardsTargetDistance)
 							{
-								attackTimer = AttackLockTime;
-								state = State.Attack;
+								EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, dir, actualMaxVel);
+							}
+							else
+							{
+                                ai.Velocity.X *= 0.95f;
+                                ai.Velocity.Z *= 0.95f;
+							}
+
+							if (distance < ai.AttackTargetDistance)
+							{
+                                ai.isInRangeOfTarget = true;
+
+                                ai.attackTimer -= (float)deltaTime;
+
+								if (ai.attackTimer <= 0)
+								{
+                                    ai.attackTimer = ai.AttackLockTime;
+                                    ai.state = State.Attack;
+								}
+							}
+						}
+						else if (ai.state == State.Attack)
+						{
+                            ai.isInRangeOfTarget = true;
+
+                            ai.Velocity.X *= 0.95f;
+                            ai.Velocity.Z *= 0.95f;
+
+                            ai.attackTimer -= (float)deltaTime;
+
+							if (ai.attackTimer <= 0)
+							{
+								Vector3 dir = (ai.noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
+								if (ai.attackHitbox == -1)
+                                    ai.attackHitbox = entity.world.HitboxManager.Add(this, ai.attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
+										Vector3.Normalize(ai.Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.AttackDamage, 1);
+
+                                ai.state = State.AttackStun;
+                                ai.attackTimer = ai.AttackStunTime;
+							}
+						}
+						else if (ai.state == State.AttackStun)
+						{
+                            ai.isInRangeOfTarget = true;
+
+							if (ai.attackTimer <= ai.AttackStunTime - ai.AttackHitboxTime)
+							{
+								if (ai.attackHitbox != -1)
+								{
+									entity.world.HitboxManager.Remove(ai.attackHitbox);
+                                    ai.attackHitbox = -1;
+								}
+							}
+
+                            ai.Velocity.X *= 0.5f;
+                            ai.Velocity.Z *= 0.5f;
+
+                            ai.attackTimer -= (float)deltaTime;
+
+							if (ai.attackTimer <= 0)
+							{
+                                ai.state = State.Normal;
+                                ai.attackTimer = ai.AttackCooldownTime;
 							}
 						}
 					}
-					else if (state == State.Attack)
-					{
-						isInRangeOfTarget = true;
-
-						Velocity.X *= 0.95f;
-						Velocity.Z *= 0.95f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
-						{
-							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
-							if (attackHitbox == -1)
-								attackHitbox = entity.world.HitboxManager.Add(this, attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
-									Vector3.Normalize(Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, AttackDamage, 1);
-
-							state = State.AttackStun;
-							attackTimer = AttackStunTime;
-						}
-					}
-					else if (state == State.AttackStun)
-					{
-						isInRangeOfTarget = true;
-
-						if (attackTimer <= AttackStunTime - AttackHitboxTime)
-                        {
-							if (attackHitbox != -1)
-                            {
-								entity.world.HitboxManager.Remove(attackHitbox);
-								attackHitbox = -1;
-                            }
-                        }
-
-						Velocity.X *= 0.5f;
-						Velocity.Z *= 0.5f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
-						{
-							state = State.Normal;
-							attackTimer = AttackCooldownTime;
-						}
-					}
-				}
-				else
-				{
-					state = State.Normal;
-					attackTimer = AttackCooldownTime;
-
-					idleTimer -= (float)deltaTime;
-
-					if (idleTimer <= 0)
-						idleMoveTimer -= (float)deltaTime;
-
-					if (idleMovements == 0 && idleTimer <= 0 && idleMoveTimer <= 0)
-					{
-						idleHome = new Vector2(entity.Position.X, entity.Position.Z);
-
-						idleTimer = Main.random.NextFloat(4f, 12f);
-						idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-						idleMovements = Main.random.Next(2, 6);
-
-						idleDirection = Main.random.NextAngle();
-					}
 					else
 					{
-						float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - idleHome).Length();
+                        ai.state = State.Normal;
+                        ai.attackTimer = ai.AttackCooldownTime;
 
-						if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-							idleDirection = -idleDirection;
+                        ai.idleTimer -= (float)deltaTime;
 
-						if (idleTimer <= 0 && idleMoveTimer <= 0)
+						if (ai.idleTimer <= 0)
+                            ai.idleMoveTimer -= (float)deltaTime;
+
+						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
 						{
-							idleMovements--;
-							idleDirection = Main.random.NextAngle();
-							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+                            ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
+
+                            ai.idleTimer = Main.random.NextFloat(4f, 12f);
+                            ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+                            ai.idleMovements = Main.random.Next(2, 6);
+
+                            ai.idleDirection = Main.random.NextAngle();
+						}
+						else
+						{
+							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
+
+							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
+                                ai.idleDirection = -ai.idleDirection;
+
+							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
+							{
+                                ai.idleMovements--;
+                                ai.idleDirection = Main.random.NextAngle();
+                                ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+							}
+						}
+
+						if (ai.idleTimer <= 0)
+						{
+							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
+						}
+						else
+						{
+                            ai.Velocity.X *= 0.85f;
+                            ai.Velocity.Z *= 0.85f;
 						}
 					}
-
-					if (idleTimer <= 0)
-					{
-                        EntityHelper.AddCappedVelocityHorizontal(ref Velocity, idleDirection, actualMaxVel);
-					}
-					else
-					{
-						Velocity.X *= 0.85f;
-						Velocity.Z *= 0.85f;
-					}
 				}
+
+				if (ai.Velocity.Y < -actualMaxVel.Y)
+                    ai.Velocity.Y = -actualMaxVel.Y;
+
+				entity.Position += ai.Velocity * (float)deltaTime;
+
+                ai.onGround = false;
+                ai.shouldJump = false;
+				UpdateCollision();
+
+				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+					entity.world.EntityManager.Remove(entity);
 			}
 
-			if (Velocity.Y < -actualMaxVel.Y)
-				Velocity.Y = -actualMaxVel.Y;
-
-			entity.Position += Velocity * (float)deltaTime;
-
-			onGround = false;
-			shouldJump = false;
-			UpdateCollision();
-
-			if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-				entity.world.EntityManager.Remove(entity);
-		}
-
-		private void UpdateCollision()
-		{
-			const int checkSize = 1;
-
-			int total = (int)Math.Pow(checkSize * 2 + 1, 3);
-			int pi = 0;
-			Span<CubePosition> positions = stackalloc CubePosition[total];
-			Span<ushort> ids = stackalloc ushort[total];
-
-			for (int x = -checkSize; x <= checkSize; x++)
+			private void UpdateCollision()
 			{
-				for (int y = -checkSize; y <= checkSize; y++)
+				const int checkSize = 1;
+
+				int total = (int)Math.Pow(checkSize * 2 + 1, 3);
+				int pi = 0;
+				Span<CubePosition> positions = stackalloc CubePosition[total];
+				Span<ushort> ids = stackalloc ushort[total];
+
+				for (int x = -checkSize; x <= checkSize; x++)
 				{
-					for (int z = -checkSize; z <= checkSize; z++)
+					for (int y = -checkSize; y <= checkSize; y++)
 					{
-						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
-
-						positions[pi] = pos;
-						pi++;
-					}
-				}
-			}
-
-			entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
-
-			for (int i = 0; i < total; i++)
-			{
-				CubePosition pos = positions[i];
-				ushort id = ids[i];
-
-				if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
-				{
-					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-					Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
-					Vector3 checkPos = entity.Position + offset;
-
-					if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
-					{
-						entity.Position = (checkPos - offset) + change;
-
-						if (change.Y > 0)
+						for (int z = -checkSize; z <= checkSize; z++)
 						{
-							Velocity.Y = 0;
-							onGround = true;
+							CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+
+							positions[pi] = pos;
+							pi++;
 						}
-						else if (change.Y < 0)
-							Velocity.Y = 0;
-						else if (change.X != 0)
-							Velocity.X = 0;
-						else if (change.Z != 0)
-							Velocity.Z = 0;
 					}
 				}
-			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0 && shouldJumpLockTimer <= 0)
-			{
-				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
+				entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+
+				for (int i = 0; i < total; i++)
 				{
-					var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 1.15f,
-						(Vector3 pos) =>
+					CubePosition pos = positions[i];
+					ushort id = ids[i];
+
+					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					{
+						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+						Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+						Vector3 checkPos = entity.Position + offset;
+
+						if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
 						{
-							Cube cube = entity.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							entity.Position = (checkPos - offset) + change;
 
-							return cube.Collision != Cube.CollisionValue.None;
-						});
+							if (change.Y > 0)
+							{
+                                ai.Velocity.Y = 0;
+                                ai.onGround = true;
+							}
+							else if (change.Y < 0)
+                                ai.Velocity.Y = 0;
+							else if (change.X != 0)
+                                ai.Velocity.X = 0;
+							else if (change.Z != 0)
+                                ai.Velocity.Z = 0;
+						}
+					}
+				}
 
-					if (ray.hasHit)
+				if (ai.onGround && ai.state == State.Normal && ai.InvulnTimer <= 0 && ai.shouldJumpLockTimer <= 0)
+				{
+					if (ai.Velocity.Length() > Cube.CUBE_SCALE / 4f)
 					{
-						shouldJump = true;
+						var entity = this.entity;
+						var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 1.15f,
+							(Vector3 pos) =>
+							{
+								Cube cube = entity.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+								return cube.Collision != Cube.CollisionValue.None;
+							});
+
+						if (ray.hasHit)
+						{
+                            ai.shouldJump = true;
+						}
+					}
+				}
+
+				foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
+				{
+					if (otherEntity != entity)
+					{
+						Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
+
+						if (distXZ.Length() < Cube.CUBE_SCALE)
+						{
+							Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+
+							entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+						}
 					}
 				}
 			}
 
-			foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
+			public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 			{
-				if (otherEntity != entity)
+				if (ai.InvulnTimer <= 0)
 				{
-					Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
-
-					if (distXZ.Length() < Cube.CUBE_SCALE)
+					if (other.group == HitboxManager.Group.PLAYER_DEAL)
 					{
-						Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+						EntityHelper.CalculateKnockback(ref ai.Velocity, other);
 
-						entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+						Hurt(other.damage);
+
+                        ai.buffManager.AddBuffs(other.applyBuffs);
+
+                        ai.noticeHandler.OnTakeDamage(other.owner);
 					}
 				}
 			}
-		}
 
-		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
-		{
-			if (InvulnTimer <= 0)
+			public void Hurt(int damage)
 			{
-				if (other.group == HitboxManager.Group.PLAYER_DEAL)
+                ai.Health -= damage;
+
+				if (ai.Health <= 0)
 				{
-                    EntityHelper.CalculateKnockback(ref Velocity, other);
+                    ai.Health = 0;
+					entity.world.EntityManager.Remove(entity);
 
-					Hurt(other.damage);
-
-					buffManager.AddBuffs(other.applyBuffs);
-
-					noticeHandler.OnTakeDamage(other.owner);
+					if (ai.touchHitbox != -1)
+						entity.world.HitboxManager.Remove(ai.touchHitbox);
 				}
+
+                ai.shouldJumpLockTimer = 1f;
+                ai.InvulnTimer = 0.25f;
+
+				//interrupt current attack
+				if (ai.state == State.Attack || ai.state == State.AttackStun)
+                    ai.state = State.Normal;
+
+                ai.attackTimer = 0;    //immediately attempt to attack?
 			}
-		}
 
-		public void Hurt(int damage)
-		{
-            Health -= damage;
+			public State GetState()
+			{
+				return ai.state;
+			}
 
-            if (Health <= 0)
-            {
-                Health = 0;
-                entity.world.EntityManager.Remove(entity);
+			public void SetPaused()
+			{
+                ai.state = State.Paused;
+			}
 
-                if (touchHitbox != -1)
-                    entity.world.HitboxManager.Remove(touchHitbox);
-            }
-
-            shouldJumpLockTimer = 1f;
-            InvulnTimer = 0.25f;
-
-            //interrupt current attack
-            if (state == State.Attack || state == State.AttackStun)
-                state = State.Normal;
-
-            attackTimer = 0;    //immediately attempt to attack?
-        }
-
-		public State GetState()
-		{
-			return state;
-		}
-
-		public void SetPaused()
-        {
-			state = State.Paused;
-        }
-
-		private static float XZDistance(Vector3 otherPosition, Vector3 position)
-		{
-			return (new Vector2(otherPosition.X, otherPosition.Z) - new Vector2(position.X, position.Z)).Length();
+			private static float XZDistance(Vector3 otherPosition, Vector3 position)
+			{
+				return (new Vector2(otherPosition.X, otherPosition.Z) - new Vector2(position.X, position.Z)).Length();
+			}
 		}
 	}
 }

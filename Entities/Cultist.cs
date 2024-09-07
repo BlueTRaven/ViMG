@@ -24,7 +24,7 @@ namespace ViMG.Entities
 
 		private float alive;
 
-		public AIWalkerShooter<Cultist> ai;
+		public AIWalkerShooter ai;
 
 		public Cultist()
         {
@@ -47,7 +47,7 @@ namespace ViMG.Entities
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 			buffManager = new BuffManager(this);
 
-			ai = new AIWalkerShooter<Cultist>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+			ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, visStats);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
@@ -58,7 +58,8 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
-			ai.Update(deltaTime);
+			AIWalkerShooter.Funcs<Cultist> funcs = new AIWalkerShooter.Funcs<Cultist> { ai = ai, entity = this };
+			funcs.Update(deltaTime);
 		}
 
 		//public override void Draw(GraphicsDevice device, Effect effect)

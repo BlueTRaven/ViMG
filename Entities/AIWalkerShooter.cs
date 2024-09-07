@@ -12,7 +12,7 @@ using ViMG.Cubes;
 namespace ViMG.Entities
 {
 	//Walks towards, then shoots at, the player.
-    public class AIWalkerShooter<T> : IHitboxOwner where T : Entity, IHasStats
+    public class AIWalkerShooter
     {
         public enum State
         {
@@ -27,7 +27,6 @@ namespace ViMG.Entities
         private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
         private readonly World world;
-        private readonly T entity;
 		private readonly bool projectileBatch;
 		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
@@ -67,14 +66,13 @@ namespace ViMG.Entities
 		private Rectangle3D bounds;
 		private int touchHitbox = -1;
 
-		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
+		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
 			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
         {
             this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
             this.world = world;
-            this.entity = entity;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -86,7 +84,7 @@ namespace ViMG.Entities
 			this.bounds = hitboxBounds;
         }
 
-		public AIWalkerShooter(World world, T entity, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
+		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
 			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
 			ProjectileManager.ProjectileStats shotProjectileStats,
 			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
@@ -94,7 +92,6 @@ namespace ViMG.Entities
 			this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
             this.world = world;
-			this.entity = entity;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -108,321 +105,327 @@ namespace ViMG.Entities
 			this.bounds = hitboxBounds;
 		}
 
-		public void OnUnload()
+		public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
 		{
-			if (touchHitbox != -1)
-				entity.world.HitboxManager.Remove(touchHitbox);
-		}
-
-		public void Update(double deltaTime)
-		{
-			InvulnTimer -= (float)deltaTime;
-
-			if (touchHitbox == -1)
-				touchHitbox = world.HitboxManager.Add(this, bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, InvulnTimer <= 0);
-			else world.HitboxManager.Update(touchHitbox, bounds.Offset(entity.Position), InvulnTimer <= 0);
-
-			Vector3 actualMaxVel = MaxVelocity;
-
-			Velocity.Y += World.GRAVITY;
-
-			noticeHandler.Update(deltaTime);
-			buffManager.Update(deltaTime);
-
-			isInRangeOfTarget = false;
-
-			if (InvulnTimer <= 0 && onGround)
+			public T entity;
+			public AIWalkerShooter ai;
+			public void OnUnload()
 			{
-                shouldJumpLockTimer -= (float)deltaTime;
+				if (ai.touchHitbox != -1)
+					entity.world.HitboxManager.Remove(ai.touchHitbox);
+			}
 
-                if (shouldJump && shouldJumpLockTimer <= 0)
-                {
-                    Velocity.Y = Cube.CUBE_SCALE * 10;
-                    shouldJump = false;
-                }
+			public void Update(double deltaTime)
+			{
+                ai.InvulnTimer -= (float)deltaTime;
 
-                if (noticeHandler.Noticed)
+				if (ai.touchHitbox == -1)
+                    ai.touchHitbox = ai.world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
+				else ai.world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+
+				Vector3 actualMaxVel = ai.MaxVelocity;
+
+				ai.Velocity.Y += World.GRAVITY;
+
+				ai.noticeHandler.Update(deltaTime);
+				ai.buffManager.Update(deltaTime);
+
+				ai.isInRangeOfTarget = false;
+
+				if (ai.InvulnTimer <= 0 && ai.onGround)
 				{
-					idleMovements = 0;
+					ai.shouldJumpLockTimer -= (float)deltaTime;
 
-					if (state == State.Normal)
+					if (ai.shouldJump && ai.shouldJumpLockTimer <= 0)
 					{
-						Vector3 dir = noticeHandler.GetNoticedEntity().Position - entity.Position;
-						float distance = dir.Length();
-						dir = Vector3.Normalize(dir) * MoveSpeed;
+						ai.Velocity.Y = Cube.CUBE_SCALE * 10;
+						ai.shouldJump = false;
+					}
 
-						if (distance > MoveTowardsTargetDistance)
+					if (ai.noticeHandler.Noticed)
+					{
+						ai.idleMovements = 0;
+
+						if (ai.state == State.Normal)
 						{
-                            EntityHelper.AddCappedVelocityHorizontal(ref Velocity, dir, actualMaxVel);
-							Facing = Vector3.Normalize(dir);
+							Vector3 dir = ai.noticeHandler.GetNoticedEntity().Position - entity.Position;
+							float distance = dir.Length();
+							dir = Vector3.Normalize(dir) * ai.MoveSpeed;
+
+							if (distance > ai.MoveTowardsTargetDistance)
+							{
+								EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, dir, actualMaxVel);
+								ai.Facing = Vector3.Normalize(dir);
+							}
+							else
+							{
+								ai.Velocity.X *= 0.95f;
+								ai.Velocity.Z *= 0.95f;
+							}
+
+							if (distance < ai.AttackTargetDistance)
+							{
+								ai.isInRangeOfTarget = true;
+
+								ai.attackTimer -= (float)deltaTime;
+
+								if (ai.attackTimer <= 0)
+								{
+									ai.attackTimer = ai.AttackLockTime;
+									ai.state = State.Attack;
+								}
+							}
+						}
+						else if (ai.state == State.Attack)
+						{
+							ai.isInRangeOfTarget = true;
+
+							ai.Velocity.X *= 0.95f;
+							ai.Velocity.Z *= 0.95f;
+
+							ai.attackTimer -= (float)deltaTime;
+
+							if (ai.attackTimer <= 0)
+							{
+								Vector3 dir = (ai.noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
+
+								if (!ai.projectileBatch)
+								{
+                                    ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
+										Vector3.Normalize(dir) * ai.ShootSpeed,
+										8, ai.shotProjectileVisStats, ai.shotProjectileStats),
+										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+								}
+								else
+								{
+                                    ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
+										ai.shotProjectileBatchStats, ai.shotProjectileVisStats, ai.shotProjectileStats,
+										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+								}
+
+								ai.Facing = Vector3.Normalize(dir);
+
+								ai.state = State.AttackStun;
+								ai.attackTimer = ai.AttackStunTime;
+							}
+						}
+						else if (ai.state == State.AttackStun)
+						{
+							ai.isInRangeOfTarget = true;
+
+							ai.Velocity.X *= 0.5f;
+							ai.Velocity.Z *= 0.5f;
+
+							ai.attackTimer -= (float)deltaTime;
+
+							if (ai.attackTimer <= 0)
+							{
+								ai.state = State.Normal;
+								ai.attackTimer = ai.AttackCooldownTime;
+							}
+						}
+					}
+					else
+					{
+						ai.state = State.Normal;
+						ai.attackTimer = ai.AttackCooldownTime;
+
+						ai.idleTimer -= (float)deltaTime;
+
+						if (ai.idleTimer <= 0)
+							ai.idleMoveTimer -= (float)deltaTime;
+
+						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
+						{
+							ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
+
+							ai.idleTimer = Main.random.NextFloat(4f, 12f);
+							ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+							ai.idleMovements = Main.random.Next(2, 6);
+
+							ai.idleDirection = Main.random.NextAngle();
 						}
 						else
 						{
-							Velocity.X *= 0.95f;
-							Velocity.Z *= 0.95f;
-						}
+							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
 
-						if (distance < AttackTargetDistance)
-						{
-							isInRangeOfTarget = true;
+							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
+								ai.idleDirection = -ai.idleDirection;
 
-							attackTimer -= (float)deltaTime;
-
-							if (attackTimer <= 0)
+							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
 							{
-								attackTimer = AttackLockTime;
-								state = State.Attack;
+								ai.idleMovements--;
+								ai.idleDirection = Main.random.NextAngle();
+								ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
 							}
 						}
-					}
-					else if (state == State.Attack)
-					{
-						isInRangeOfTarget = true;
 
-						Velocity.X *= 0.95f;
-						Velocity.Z *= 0.95f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
+						if (ai.idleTimer <= 0)
 						{
-							Vector3 dir = (noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
+							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
+							ai.Facing = Vector3.Normalize(new Vector3(ai.idleDirection.X, 0, ai.idleDirection.Y));
+						}
+						else
+						{
+							ai.Velocity.X *= 0.85f;
+							ai.Velocity.Z *= 0.85f;
+						}
+					}
+				}
 
-							if (!projectileBatch)
+				if (ai.Velocity.Y < -actualMaxVel.Y)
+					ai.Velocity.Y = -actualMaxVel.Y;
+
+				entity.Position += ai.Velocity * (float)deltaTime;
+
+				ai.onGround = false;
+				ai.shouldJump = false;
+				UpdateCollision();
+
+				if ((ai.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+                    ai.world.EntityManager.Remove(entity);
+			}
+
+			private void UpdateCollision()
+			{
+				const int checkSize = 1;
+
+				int total = (int)Math.Pow(checkSize * 2 + 1, 3);
+				int pi = 0;
+				Span<CubePosition> positions = stackalloc CubePosition[total];
+				Span<ushort> ids = stackalloc ushort[total];
+
+				for (int x = -checkSize; x <= checkSize; x++)
+				{
+					for (int y = -checkSize; y <= checkSize; y++)
+					{
+						for (int z = -checkSize; z <= checkSize; z++)
+						{
+							CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+
+							positions[pi] = pos;
+							pi++;
+						}
+					}
+				}
+
+				entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+
+				for (int i = 0; i < total; i++)
+				{
+					CubePosition pos = positions[i];
+					ushort id = ids[i];
+
+					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					{
+						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+
+						Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+						Vector3 checkPos = entity.Position + offset;
+
+						if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
+						{
+							entity.Position = (checkPos - offset) + change;
+
+							if (change.Y > 0)
 							{
-								world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
-									Vector3.Normalize(dir) * ShootSpeed,
-									8, shotProjectileVisStats, shotProjectileStats),
-									new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+                                ai.Velocity.Y = 0;
+                                ai.onGround = true;
 							}
-                            else
-                            {
-								world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ShootSpeed, 8, 
-									shotProjectileBatchStats, shotProjectileVisStats, shotProjectileStats,
-									new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
-                            }
-
-							Facing = Vector3.Normalize(dir);
-
-							state = State.AttackStun;
-							attackTimer = AttackStunTime;
-						}
-					}
-					else if (state == State.AttackStun)
-					{
-						isInRangeOfTarget = true;
-
-						Velocity.X *= 0.5f;
-						Velocity.Z *= 0.5f;
-
-						attackTimer -= (float)deltaTime;
-
-						if (attackTimer <= 0)
-						{
-							state = State.Normal;
-							attackTimer = AttackCooldownTime;
+							else if (change.Y < 0)
+                                ai.Velocity.Y = 0;
+							else if (change.X != 0)
+                                ai.Velocity.X = 0;
+							else if (change.Z != 0)
+                                ai.Velocity.Z = 0;
 						}
 					}
 				}
-				else
+
+				if (ai.onGround && ai.state == State.Normal && ai.InvulnTimer <= 0)
 				{
-					state = State.Normal;
-					attackTimer = AttackCooldownTime;
-
-					idleTimer -= (float)deltaTime;
-
-					if (idleTimer <= 0)
-						idleMoveTimer -= (float)deltaTime;
-
-					if (idleMovements == 0 && idleTimer <= 0 && idleMoveTimer <= 0)
+					if (ai.Velocity.Length() > Cube.CUBE_SCALE / 4f)
 					{
-						idleHome = new Vector2(entity.Position.X, entity.Position.Z);
+						var ai = this.ai;
+						var ray = ai.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
+							(Vector3 pos) =>
+							{
+								Cube cube = ai.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-						idleTimer = Main.random.NextFloat(4f, 12f);
-						idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-						idleMovements = Main.random.Next(2, 6);
+								return cube.Collision != Cube.CollisionValue.None;
+							});
 
-						idleDirection = Main.random.NextAngle();
-					}
-					else
-					{
-						float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - idleHome).Length();
-
-						if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-							idleDirection = -idleDirection;
-
-						if (idleTimer <= 0 && idleMoveTimer <= 0)
+						if (ray.hasHit)
 						{
-							idleMovements--;
-							idleDirection = Main.random.NextAngle();
-							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+                            ai.shouldJump = true;
 						}
 					}
+				}
 
-					if (idleTimer <= 0)
+				foreach (T otherEntity in ai.world.EntityManager.GetAll<T>())
+				{
+					if (otherEntity != entity)
 					{
-                        EntityHelper.AddCappedVelocityHorizontal(ref Velocity, idleDirection, actualMaxVel);
-                        Facing = Vector3.Normalize(new Vector3(idleDirection.X, 0, idleDirection.Y));
-                    }
-					else
-					{
-						Velocity.X *= 0.85f;
-						Velocity.Z *= 0.85f;
+						Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
+
+						if (distXZ.Length() < Cube.CUBE_SCALE)
+						{
+							Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+
+							entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+						}
 					}
 				}
 			}
 
-			if (Velocity.Y < -actualMaxVel.Y)
-				Velocity.Y = -actualMaxVel.Y;
-
-			entity.Position += Velocity * (float)deltaTime;
-
-			onGround = false;
-			shouldJump = false;
-			UpdateCollision();
-
-			if ((world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(entity);
-		}
-
-		private void UpdateCollision()
-		{
-			const int checkSize = 1;
-
-			int total = (int)Math.Pow(checkSize * 2 + 1, 3);
-			int pi = 0;
-			Span<CubePosition> positions = stackalloc CubePosition[total];
-			Span<ushort> ids = stackalloc ushort[total];
-
-			for (int x = -checkSize; x <= checkSize; x++)
+			public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 			{
-				for (int y = -checkSize; y <= checkSize; y++)
+				if (ai.InvulnTimer <= 0)
 				{
-					for (int z = -checkSize; z <= checkSize; z++)
+					if (other.group == HitboxManager.Group.PLAYER_DEAL)
 					{
-						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+						EntityHelper.CalculateKnockback(ref ai.Velocity, other);
 
-						positions[pi] = pos;
-						pi++;
+						Hurt(other.damage);
+
+                        //Kind of hacky - but we can assume that we want to face the source of knockback,
+                        //and we can do that by just using the negative velocity.
+                        ai.Facing = Vector3.Normalize(-ai.Velocity);
+
+                        ai.buffManager.AddBuffs(other.applyBuffs);
+
+                        ai.noticeHandler.OnTakeDamage(other.owner);
 					}
 				}
 			}
 
-			entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
-
-			for (int i = 0; i < total; i++)
+			public void Hurt(int damage)
 			{
-				CubePosition pos = positions[i];
-				ushort id = ids[i];
+                ai.Health -= damage;
 
-				if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+				if (ai.Health <= 0)
 				{
-					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
+                    ai.Health = 0;
+                    ai.world.EntityManager.Remove(entity);
 
-					Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
-					Vector3 checkPos = entity.Position + offset;
-
-					if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
-					{
-						entity.Position = (checkPos - offset) + change;
-
-						if (change.Y > 0)
-						{
-							Velocity.Y = 0;
-							onGround = true;
-						}
-						else if (change.Y < 0)
-							Velocity.Y = 0;
-						else if (change.X != 0)
-							Velocity.X = 0;
-						else if (change.Z != 0)
-							Velocity.Z = 0;
-					}
+					if (ai.touchHitbox != -1)
+                        ai.world.HitboxManager.Remove(ai.touchHitbox);
 				}
+
+                ai.shouldJumpLockTimer = 1f;
+				ai.InvulnTimer = 0.25f;
+
+				//interrupt current attack
+				if (ai.state == State.Attack || ai.state == State.AttackStun)
+                    ai.state = State.Normal;
+
+                ai.attackTimer = 0;    //immediately attempt to attack?
 			}
 
-			if (onGround && state == State.Normal && InvulnTimer <= 0)
+			public State GetState()
 			{
-				if (Velocity.Length() > Cube.CUBE_SCALE / 4f)
-				{
-					var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
-						(Vector3 pos) =>
-						{
-							Cube cube = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-							return cube.Collision != Cube.CollisionValue.None;
-						});
-
-					if (ray.hasHit)
-					{
-						shouldJump = true;
-					}
-				}
-			}
-
-			foreach (T otherEntity in world.EntityManager.GetAll<T>())
-			{
-				if (otherEntity != entity)
-				{
-					Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
-
-					if (distXZ.Length() < Cube.CUBE_SCALE)
-					{
-						Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
-
-						entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
-					}
-				}
+				return ai.state;
 			}
 		}
-
-		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
-        {
-			if (InvulnTimer <= 0)
-			{
-				if (other.group == HitboxManager.Group.PLAYER_DEAL)
-				{
-					EntityHelper.CalculateKnockback(ref Velocity, other);
-
-					Hurt(other.damage);
-
-					//Kind of hacky - but we can assume that we want to face the source of knockback,
-					//and we can do that by just using the negative velocity.
-                    Facing = Vector3.Normalize(-Velocity);
-
-                    buffManager.AddBuffs(other.applyBuffs);
-
-					noticeHandler.OnTakeDamage(other.owner);
-				}
-			}
-		}
-
-		public void Hurt(int damage)
-		{
-            Health -= damage;
-
-            if (Health <= 0)
-            {
-                Health = 0;
-                world.EntityManager.Remove(entity);
-
-                if (touchHitbox != -1)
-                    world.HitboxManager.Remove(touchHitbox);
-            }
-
-            shouldJumpLockTimer = 1f;
-            InvulnTimer = 0.25f;
-
-            //interrupt current attack
-            if (state == State.Attack || state == State.AttackStun)
-                state = State.Normal;
-
-            attackTimer = 0;    //immediately attempt to attack?
-        }
-
-		public State GetState()
-        {
-			return state;
-        }
 	}
 }

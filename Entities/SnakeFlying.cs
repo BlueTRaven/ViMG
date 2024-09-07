@@ -23,7 +23,7 @@ namespace ViMG.Entities
 
 		private float alive;
 
-		public AIFlierMelee<SnakeFlying> aiFlying;
+		public AIFlierMelee aiFlying;
 
 		private BuffManager buffManager;
 		private NoticeHandler<Player> noticeHandler;
@@ -44,7 +44,7 @@ namespace ViMG.Entities
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 			buffManager = new BuffManager(this);
 
-			aiFlying = new AIFlierMelee<SnakeFlying>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+			aiFlying = new AIFlierMelee(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
 				new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
 				noticeHandler, buffManager, MaxHealth);
@@ -54,7 +54,8 @@ namespace ViMG.Entities
 		{
 			base.OnUnload();
 
-			aiFlying.OnUnload();
+            AIFlierMelee.Funcs<SnakeFlying> funcsFlying = new AIFlierMelee.Funcs<SnakeFlying> { ai = aiFlying, entity = this };
+            funcsFlying.OnUnload();
 		}
 
 		public override void Update(double deltaTime)
@@ -63,7 +64,8 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
-			aiFlying.Update(deltaTime);
+            AIFlierMelee.Funcs<SnakeFlying> funcsFlying = new AIFlierMelee.Funcs<SnakeFlying> { ai = aiFlying, entity = this };
+            funcsFlying.Update(deltaTime);
 
 			if (aiFlying.Health <= aiFlying.MaxHealth / 2f)
             {

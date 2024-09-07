@@ -22,7 +22,7 @@ namespace ViMG.Entities
         public float alive;
         private float hurtTimer;
 
-        public  AIFlierMelee<Ghost> ai;
+        public  AIFlierMelee ai;
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
 
@@ -43,7 +43,8 @@ namespace ViMG.Entities
         {
             base.OnUnload();
 
-            ai.OnUnload();
+            var funcs = new AIFlierMelee.Funcs<Ghost> { ai = ai, entity = this };
+            funcs.OnUnload();
         }
 
         public override void Initialize(World world)
@@ -53,7 +54,7 @@ namespace ViMG.Entities
             buffManager = new BuffManager(this);
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-            ai = new AIFlierMelee<Ghost>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.5f), new Vector3(Cube.CUBE_SCALE)),
+            ai = new AIFlierMelee(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.5f), new Vector3(Cube.CUBE_SCALE)),
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.75f), new Vector3(Cube.CUBE_SCALE * 0.75f * 2f)),
                 noticeHandler, buffManager, 30);
 
@@ -65,7 +66,8 @@ namespace ViMG.Entities
             base.Update(deltaTime);
 
             alive += (float)deltaTime;
-            ai.Update(deltaTime);
+            var funcs = new AIFlierMelee.Funcs<Ghost> { ai = ai, entity = this };
+            funcs.Update(deltaTime);
 
             AncientAltar nearest = null;
             Vector3 nearestDir = Vector3.Zero;
@@ -105,7 +107,7 @@ namespace ViMG.Entities
                 {
                     hurtTimer = 1f;
 
-                    ai.Hurt(2);
+                    funcs.Hurt(2);
                 }
             }
             else

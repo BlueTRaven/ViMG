@@ -20,7 +20,7 @@ namespace ViMG.Entities
         private static VerySimpleMesh mesh;
         private static VerySimpleMesh lineMesh;
 
-        public AIFlierMelee<SkullheadEye> ai;
+        public AIFlierMelee ai;
 
         private BuffManager buffManager;
         private NoticeHandler<Player> noticeHandler;
@@ -80,7 +80,7 @@ namespace ViMG.Entities
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
             buffManager = new BuffManager(this);
 
-            ai = new AIFlierMelee<SkullheadEye>(world, this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+            ai = new AIFlierMelee(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
                 new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
                 noticeHandler, buffManager, MaxHealth);
@@ -94,7 +94,8 @@ namespace ViMG.Entities
         {
             base.OnUnload();
 
-            ai.OnUnload();
+            var funcs = new AIFlierMelee.Funcs<SkullheadEye> { ai = ai, entity = this };
+            funcs.OnUnload();
         }
 
         public override void Update(double deltaTime)
@@ -113,7 +114,8 @@ namespace ViMG.Entities
                 ai.Velocity -= dir * Cube.CUBE_SCALE * 1.5f;
             }
 
-            ai.Update(deltaTime);
+            var funcs = new AIFlierMelee.Funcs<SkullheadEye> { ai = ai, entity = this };
+            funcs.Update(deltaTime);
 
             if (newAnchorTimer > 0)
                 newAnchorTimer -= (float)deltaTime;

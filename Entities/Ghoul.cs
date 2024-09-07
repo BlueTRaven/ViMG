@@ -19,7 +19,7 @@ namespace ViMG.Entities
         private static VerySimpleMesh mesh;
 		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("ghoul");
 
-        public AIWalkerMelee<Ghoul> ai;
+        public AIWalkerMelee ai;
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
@@ -50,7 +50,8 @@ namespace ViMG.Entities
 		{
 			base.OnUnload();
 
-			ai.OnUnload();
+            var funcs = new AIWalkerMelee.Funcs<Ghoul> { ai = ai, entity = this };
+            funcs.OnUnload();
 		}
 
 		public override void Initialize(World world)
@@ -60,7 +61,7 @@ namespace ViMG.Entities
 			buffManager = new BuffManager(this);
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-			ai = new AIWalkerMelee<Ghoul>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+			ai = new AIWalkerMelee(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.7f)),
 				new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
 				noticeHandler,
@@ -119,10 +120,11 @@ namespace ViMG.Entities
             }
 
 			prevInLight = inLight;
-			if (inLight)
-				ai.SetPaused();
+            var funcs = new AIWalkerMelee.Funcs<Ghoul> { ai = ai, entity = this };
+            if (inLight)
+				funcs.SetPaused();
 
-			ai.Update(deltaTime);
+			funcs.Update(deltaTime);
 
 			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
 				world.EntityManager.Remove(this);

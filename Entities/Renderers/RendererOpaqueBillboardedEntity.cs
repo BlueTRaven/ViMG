@@ -239,9 +239,10 @@ namespace ViMG.Entities.Renderers
                     sourceRect.width = -32;
                 }
 
-                if (ghost.ai.GetState() == AIFlierMelee<Ghost>.State.Attack)
+                AIFlierMelee.Funcs<Ghost> funcs = new AIFlierMelee.Funcs<Ghost> { ai = ghost.ai, entity = ghost };
+                if (funcs.GetState() == AIFlierMelee.State.Attack)
                     sourceRect = new RectangleF(0, 96, 32, 32);
-                else if (ghost.ai.GetState() == AIFlierMelee<Ghost>.State.AttackStun)
+                else if (funcs.GetState() == AIFlierMelee.State.AttackStun)
                     sourceRect = new RectangleF(32, 96, 32, 32);
 
                 Vector3 offset = Vector3.Zero;
@@ -271,7 +272,8 @@ namespace ViMG.Entities.Renderers
 
                 RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
 
-                if (cultist.ai.GetState() == AIWalkerShooter<Cultist>.State.Normal)
+                AIWalkerShooter.Funcs<Cultist> funcs = new AIWalkerShooter.Funcs<Cultist> { ai = cultist.ai, entity = cultist };
+                if (funcs.GetState() == AIWalkerShooter.State.Normal)
                 {
                     if (cultist.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
@@ -282,7 +284,7 @@ namespace ViMG.Entities.Renderers
                         sourceRect = new RectangleF(22 + frame * 22, 0, 19, 32);
                     }
                 }
-                else if (cultist.ai.GetState() == AIWalkerShooter<Cultist>.State.Attack)
+                else if (funcs.GetState() == AIWalkerShooter.State.Attack)
                 {
                     sourceRect = new RectangleF(65, 0, 19, 32);
                 }
@@ -335,7 +337,8 @@ namespace ViMG.Entities.Renderers
                     }
                 }
 
-                if (ducken.ai.GetState() == AIPassive<Ducken>.State.Normal)
+                AIPassive.Funcs<Ducken> funcs = new AIPassive.Funcs<Ducken> { ai = ducken.ai, entity = ducken};
+                if (funcs.GetState() == AIPassive.State.Normal)
                 {
                     if (ducken.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
@@ -500,7 +503,8 @@ namespace ViMG.Entities.Renderers
                     sourceRect = new RectangleF(0, 16, 16, 16);
                 }
 
-                if (snake.ai.GetState() == AIWalkerMelee<Snake>.State.Normal)
+                var funcs = new AIWalkerMelee.Funcs<Snake> { ai = snake.ai, entity = snake };
+                if (funcs.GetState() == AIWalkerMelee.State.Normal)
                 {
                     if (snake.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
@@ -511,7 +515,7 @@ namespace ViMG.Entities.Renderers
                         sourceRect.x += sourceRect.width * frame;
                     }
                 }
-                else if (snake.ai.GetState() == AIWalkerMelee<Snake>.State.Attack)
+                else if (funcs.GetState() == AIWalkerMelee.State.Attack)
                 {
                     scale = new Vector2(2);
                     sourceRect.y = 32;
@@ -547,7 +551,8 @@ namespace ViMG.Entities.Renderers
 
                 RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
 
-                if (snake.aiFlying.GetState() == AIFlierMelee<SnakeFlying>.State.Attack)
+                AIFlierMelee.Funcs<SnakeFlying> funcs = new AIFlierMelee.Funcs<SnakeFlying> { ai = snake.aiFlying, entity = snake };
+                if (funcs.GetState() == AIFlierMelee.State.Attack)
                 {
                     const int ATT_NUM_FRAMES = 4;
                     int frame = (int)((1 - (snake.aiFlying.AttackTimer / snake.aiFlying.AttackLockTime)) * ATT_NUM_FRAMES);
@@ -599,7 +604,8 @@ namespace ViMG.Entities.Renderers
 
                 RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(beetle.ai.Facing, directionalSourceRect);
 
-                if (beetle.ai.GetState() == AIWalkerShooter<StoneBeetle>.State.Normal)
+                AIWalkerShooter.Funcs<StoneBeetle> funcs = new AIWalkerShooter.Funcs<StoneBeetle> { ai = beetle.ai, entity = beetle };
+                if (funcs.GetState() == AIWalkerShooter.State.Normal)
                 {
                     if (beetle.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {

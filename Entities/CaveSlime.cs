@@ -23,7 +23,7 @@ namespace ViMG.Entities
 
 		private BuffManager buffManager;
 		public NoticeHandler<Player> noticeHandler;
-		public AISlime<CaveSlime> ai;
+		public AISlime ai;
 
 		public CaveSlime(Vector3 position)
 		{
@@ -37,7 +37,7 @@ namespace ViMG.Entities
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 			buffManager = new BuffManager(this);
 
-			ai = new AISlime<CaveSlime>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
+			ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
 				new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
 		}
 
@@ -47,7 +47,8 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
-			ai.Update(deltaTime);
+			AISlime.Funcs<CaveSlime> funcs = new AISlime.Funcs<CaveSlime> { ai = ai, entity = this };
+			funcs.Update(deltaTime);
 
 			//Kill self if too far away
 			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
@@ -69,7 +70,8 @@ namespace ViMG.Entities
 		{
 			base.OnUnload();
 
-			ai.OnUnload();
+            AISlime.Funcs<CaveSlime> funcs = new AISlime.Funcs<CaveSlime> { ai = ai, entity = this };
+            funcs.OnUnload();
 		}
 
 		//public override void Draw(GraphicsDevice device, Effect effect)

@@ -11,7 +11,7 @@ using BepuPhysics.CollisionDetection;
 
 namespace ViMG.Entities
 {
-    public class AISlime<T> : IHitboxOwner where T : Entity, IHasStats
+	public class AISlime
 	{
 		public float InvulnTimer;
 
@@ -21,8 +21,8 @@ namespace ViMG.Entities
 		public Vector3 Velocity;
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-		private readonly T entity;
-		
+		//private readonly T entity;
+
 		private bool onGround;
 		public bool OnGround => onGround;
 
@@ -43,207 +43,212 @@ namespace ViMG.Entities
 		private Rectangle3D touchHitboxBounds;
 		private int touchHitbox = -1;
 
-		public AISlime(T entity, Rectangle3D touchHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
+		public AISlime(Rectangle3D touchHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth)
 		{
 			this.noticeHandler = noticeHandler;
 			this.buffManager = buffManager;
-			this.entity = entity;
+			//this.entity = entity;
 			this.touchHitboxBounds = touchHitboxBounds;
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
 		}
 
-		public void OnUnload()
+		public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
 		{
-			if (touchHitbox != -1)
-				entity.world.HitboxManager.Remove(touchHitbox);
-		}
+			public T entity;
+			public AISlime ai;
 
-		public void Update(double deltaTime)
-		{
-			InvulnTimer -= (float)deltaTime;
-
-			if (touchHitbox == -1)
-				touchHitbox = entity.world.HitboxManager.Add(this, touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, TouchDamage, 1f, InvulnTimer <= 0);
-			else entity.world.HitboxManager.Update(touchHitbox, touchHitboxBounds.Offset(entity.Position), InvulnTimer <= 0);
-
-			Vector3 actualMaxVel = MaxVelocity;
-
-			Velocity.Y += World.GRAVITY;
-
-			noticeHandler.Update(deltaTime);
-			buffManager.Update(deltaTime);
-
-			if (InvulnTimer <= 0 && onGround)
+			public void OnUnload()
 			{
-				jumpTimer -= (float)deltaTime;
+				if (ai.touchHitbox != -1)
+					entity.world.HitboxManager.Remove(ai.touchHitbox);
+			}
+			public void Update(double deltaTime)
+			{
+				ai.InvulnTimer -= (float)deltaTime;
 
-				if (jumpTimer <= 0)
+				if (ai.touchHitbox == -1)
+                    ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+
+				Vector3 actualMaxVel = ai.MaxVelocity;
+
+                ai.Velocity.Y += World.GRAVITY;
+
+                ai.noticeHandler.Update(deltaTime);
+                ai.buffManager.Update(deltaTime);
+
+				if (ai.InvulnTimer <= 0 && ai.onGround)
 				{
-					jumpTime = Main.random.NextFloat(0.25f, 3);
-					jumpTimer = jumpTime;
+                    ai.jumpTimer -= (float)deltaTime;
 
-					if (!noticeHandler.Noticed)
+					if (ai.jumpTimer <= 0)
 					{
-						if (numJumps == 0)
-						{
-							numJumps = Main.random.Next(1, 6);
-							jumpTime = Main.random.NextFloat(2, 6);
-							jumpTimer = jumpTime;
+                        ai.jumpTime = Main.random.NextFloat(0.25f, 3);
+                        ai.jumpTimer = ai.jumpTime;
 
-							if (ShouldJumpAwayFromPlayer)
+						if (!ai.noticeHandler.Noticed)
+						{
+							if (ai.numJumps == 0)
 							{
-								jumpDir = entity.Position - entity.world.player.Position;
-								jumpDir.Normalize();
+                                ai.numJumps = Main.random.Next(1, 6);
+                                ai.jumpTime = Main.random.NextFloat(2, 6);
+                                ai.jumpTimer = ai.jumpTime;
+
+								if (ai.ShouldJumpAwayFromPlayer)
+								{
+                                    ai.jumpDir = entity.Position - entity.world.player.Position;
+                                    ai.jumpDir.Normalize();
+								}
+								else
+								{
+                                    //During the day time, jump in random directions
+                                    ai.jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+                                    ai.jumpDir.Normalize();
+								}
 							}
-							else
-							{
-								//During the day time, jump in random directions
-								jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
-								jumpDir.Normalize();
-							}
+
+                            ai.Velocity = new Vector3(ai.jumpDir.X * 1.6f * Cube.CUBE_SCALE, ai.MaxVelocity.Y * 0.75f, ai.jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
+
+                            ai.numJumps--;
+						}
+						else
+						{
+							Vector2 playerDir = Vector2.Normalize(new Vector2(ai.noticeHandler.Target.Position.X, ai.noticeHandler.Target.Position.Z) - new Vector2(entity.Position.X, entity.Position.Z));
+                            ai.Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, ai.MaxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
 						}
 
-						Velocity = new Vector3(jumpDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, jumpDir.Y * 1.6f * Cube.CUBE_SCALE);
-
-						numJumps--;
-					}
-					else
-					{
-						Vector2 playerDir = Vector2.Normalize(new Vector2(noticeHandler.Target.Position.X, noticeHandler.Target.Position.Z) - new Vector2(entity.Position.X, entity.Position.Z));
-						Velocity = new Vector3(playerDir.X * 1.6f * Cube.CUBE_SCALE, MaxVelocity.Y * 0.75f, playerDir.Y * 1.6f * Cube.CUBE_SCALE);
-					}
-
-					onGround = false;
-				}
-			}
-
-			if (Velocity.Y < -actualMaxVel.Y)
-				Velocity.Y = -actualMaxVel.Y;
-
-			if (onGround)
-			{
-				Vector2 velocitySlowed = new Vector2(Velocity.X, Velocity.Z);
-				if (velocitySlowed.Length() > 0)
-				{
-					velocitySlowed = Vector2.Normalize(velocitySlowed) * velocitySlowed.Length() * 0.85f;
-				}
-
-				Velocity = new Vector3(velocitySlowed.X, Velocity.Y, velocitySlowed.Y);
-			}
-
-			entity.Position += Velocity * (float)deltaTime;
-
-			onGround = false;
-			UpdateCollision();
-
-			if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-				entity.world.EntityManager.Remove(entity);
-		}
-
-		private void UpdateCollision()
-		{
-			const int checkSize = 1;
-			
-			int total = (int)Math.Pow(checkSize * 2 + 1, 3);
-			int pi = 0;
-			Span<CubePosition> positions = stackalloc CubePosition[total];
-			Span<ushort> ids = stackalloc ushort[total];
-
-			for (int x = -checkSize; x <= checkSize; x++)
-			{
-				for (int y = -checkSize; y <= checkSize; y++)
-				{
-					for (int z = -checkSize; z <= checkSize; z++)
-					{
-						CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
-
-						positions[pi] = pos;
-						pi++;
+                        ai.onGround = false;
 					}
 				}
+
+				if (ai.Velocity.Y < -actualMaxVel.Y)
+                    ai.Velocity.Y = -actualMaxVel.Y;
+
+				if (ai.onGround)
+				{
+					Vector2 velocitySlowed = new Vector2(ai.Velocity.X, ai.Velocity.Z);
+					if (velocitySlowed.Length() > 0)
+					{
+						velocitySlowed = Vector2.Normalize(velocitySlowed) * velocitySlowed.Length() * 0.85f;
+					}
+
+                    ai.Velocity = new Vector3(velocitySlowed.X, ai.Velocity.Y, velocitySlowed.Y);
+				}
+
+				entity.Position += ai.Velocity * (float)deltaTime;
+
+                ai.onGround = false;
+				UpdateCollision();
+
+				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+					entity.world.EntityManager.Remove(entity);
 			}
 
-			entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
-
-			for (int i = 0; i < total; i++)
+			private void UpdateCollision()
 			{
-				CubePosition pos = positions[i];
-				ushort id = ids[i];
+				const int checkSize = 1;
 
-				if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+				int total = (int)Math.Pow(checkSize * 2 + 1, 3);
+				int pi = 0;
+				Span<CubePosition> positions = stackalloc CubePosition[total];
+				Span<ushort> ids = stackalloc ushort[total];
+
+				for (int x = -checkSize; x <= checkSize; x++)
 				{
-					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
-
-					Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
-					Vector3 checkPos = entity.Position + offset;
-
-					if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
+					for (int y = -checkSize; y <= checkSize; y++)
 					{
-						entity.Position = (checkPos - offset) + change;
-
-						if (change.Y > 0)
+						for (int z = -checkSize; z <= checkSize; z++)
 						{
-							Velocity.Y = 0;
-							onGround = true;
+							CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+
+							positions[pi] = pos;
+							pi++;
 						}
-						else if (change.Y < 0)
-							Velocity.Y = 0;
-						else if (change.X != 0)
-							Velocity.X = 0;
-						else if (change.Z != 0)
-							Velocity.Z = 0;
 					}
 				}
-			}
 
-			foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
-			{
-				if (otherEntity != entity)
+				entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+
+				for (int i = 0; i < total; i++)
 				{
-					Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
+					CubePosition pos = positions[i];
+					ushort id = ids[i];
 
-					if (distXZ.Length() < Cube.CUBE_SCALE)
+					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
 					{
-						Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
-						entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+						Vector3 offset = new Vector3(0, Cube.CUBE_SCALE * 0.25f, 0);
+						Vector3 checkPos = entity.Position + offset;
+
+						if (CollisionHelper.CheckCollision(cubeBounds, checkPos, Cube.CUBE_SCALE * 0.25f, out Vector3 change))
+						{
+							entity.Position = (checkPos - offset) + change;
+
+							if (change.Y > 0)
+							{
+                                ai.Velocity.Y = 0;
+                                ai.onGround = true;
+							}
+							else if (change.Y < 0)
+                                ai.Velocity.Y = 0;
+							else if (change.X != 0)
+                                ai.Velocity.X = 0;
+							else if (change.Z != 0)
+                                ai.Velocity.Z = 0;
+						}
+					}
+				}
+
+				foreach (T otherEntity in entity.world.EntityManager.GetAll<T>())
+				{
+					if (otherEntity != entity)
+					{
+						Vector2 distXZ = new Vector2(entity.Position.X, entity.Position.Z) - new Vector2(otherEntity.Position.X, otherEntity.Position.Z);
+
+						if (distXZ.Length() < Cube.CUBE_SCALE)
+						{
+							Vector2 correctPos = new Vector2(otherEntity.Position.X, otherEntity.Position.Z) + Vector2.Normalize(distXZ) * Cube.CUBE_SCALE;
+
+							entity.Position = new Vector3(correctPos.X, entity.Position.Y, correctPos.Y);
+						}
 					}
 				}
 			}
-		}
 
-		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
-		{
-			if (InvulnTimer <= 0)
+			public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 			{
-				if (other.group == HitboxManager.Group.PLAYER_DEAL)
+				if (ai.InvulnTimer <= 0)
 				{
-					EntityHelper.CalculateKnockback(ref Velocity, other);
+					if (other.group == HitboxManager.Group.PLAYER_DEAL)
+					{
+						EntityHelper.CalculateKnockback(ref ai.Velocity, other);
 
-					Hurt(other.damage);
+						Hurt(other.damage);
 
-					buffManager.AddBuffs(other.applyBuffs);
+                        ai.buffManager.AddBuffs(other.applyBuffs);
 
-					noticeHandler.OnTakeDamage(other.owner);
+                        ai.noticeHandler.OnTakeDamage(other.owner);
+					}
 				}
 			}
+
+			public void Hurt(int damage)
+			{
+                ai.Health -= damage;
+
+				if (ai.Health <= 0)
+				{
+                    ai.Health = 0;
+					entity.world.EntityManager.Remove(entity);
+
+					if (ai.touchHitbox != -1)
+						entity.world.HitboxManager.Remove(ai.touchHitbox);
+				}
+
+                ai.InvulnTimer = 0.25f;
+			}
 		}
-
-		public void Hurt(int damage)
-		{
-            Health -= damage;
-
-            if (Health <= 0)
-            {
-                Health = 0;
-                entity.world.EntityManager.Remove(entity);
-
-                if (touchHitbox != -1)
-                    entity.world.HitboxManager.Remove(touchHitbox);
-            }
-
-            InvulnTimer = 0.25f;
-        }
 	}
 }

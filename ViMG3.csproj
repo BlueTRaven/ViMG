@@ -8,6 +8,7 @@
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<ApplicationIcon>logo.ico</ApplicationIcon>
 	<Configurations>Debug;Release;DebugNoTracy</Configurations>
+	<LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='DebugNoTracy|net8.0-windows|AnyCPU'">

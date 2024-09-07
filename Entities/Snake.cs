@@ -19,7 +19,7 @@ namespace ViMG.Entities
 		private static VerySimpleMesh mesh2x2;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
 
-        public AIWalkerMelee<Snake> ai;
+        public AIWalkerMelee ai;
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
@@ -44,7 +44,7 @@ namespace ViMG.Entities
 			this.buffManager = buffManager;
 			this.noticeHandler = noticeHandler;
 
-			ai = new AIWalkerMelee<Snake>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+			ai = new AIWalkerMelee(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 					new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
 					new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
 					noticeHandler,
@@ -61,7 +61,8 @@ namespace ViMG.Entities
         {
             base.OnUnload();
 
-			ai.OnUnload();
+            var funcs = new AIWalkerMelee.Funcs<Snake> { ai = ai, entity = this };
+            funcs.OnUnload();
         }
 
         public override void Initialize(World world)
@@ -73,7 +74,7 @@ namespace ViMG.Entities
 				buffManager = new BuffManager(this);
 				noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 
-				ai = new AIWalkerMelee<Snake>(this, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+				ai = new AIWalkerMelee(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 					new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
 					new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
 					noticeHandler,
@@ -89,7 +90,8 @@ namespace ViMG.Entities
 			base.Update(deltaTime);
 			alive += (float)deltaTime;
 
-			ai.Update(deltaTime);
+            var funcs = new AIWalkerMelee.Funcs<Snake> { ai = ai, entity = this };
+            funcs.Update(deltaTime);
 
 			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
 				world.EntityManager.Remove(this);

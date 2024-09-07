@@ -19,7 +19,7 @@ namespace ViMG.Entities
 
 		private BuffManager buffManager;
         public NoticeHandler<Player> noticeHandler;
-		public  AISlime<SlimeBig> ai;
+		public  AISlime ai;
 
 		private int maxHealth = 16;
 
@@ -43,7 +43,7 @@ namespace ViMG.Entities
 			buffManager = new BuffManager(this);
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
 
-			ai = new AISlime<SlimeBig>(this, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
+			ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
 				new Vector3(Cube.CUBE_SCALE * 1.5f)), noticeHandler, buffManager, maxHealth);
 		}
 
@@ -53,7 +53,8 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
-			ai.Update(deltaTime);
+            AISlime.Funcs<SlimeBig> funcs = new AISlime.Funcs<SlimeBig> { ai = ai, entity = this };
+            funcs.Update(deltaTime);
         }
 		
 		public override void OnDelete()
@@ -71,7 +72,8 @@ namespace ViMG.Entities
 		{
 			base.OnUnload();
 
-			ai.OnUnload();
+            AISlime.Funcs<SlimeBig> funcs = new AISlime.Funcs<SlimeBig> { ai = ai, entity = this };
+            funcs.OnUnload();
         }
 
 		//public override void Draw(GraphicsDevice device, Effect effect)
