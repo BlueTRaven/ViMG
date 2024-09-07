@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.UIs
 {
@@ -83,6 +84,7 @@ namespace ViMG.UIs
 
         public void AddChatMessage(string message, Color? color = null)
         {
+            IMGUIConsole.LogLine("<color(" + color.Value.PackedValue.ToString("X") + ")> " + message);
             messages.Add(new ChatMessage(message, color ?? Color.White));
             latestChatMessage++;
         }

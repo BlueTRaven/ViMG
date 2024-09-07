@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -200,6 +201,15 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        [ConsoleCommand("print", "Prints a line to the console.")]
+        public static void Print(string[] parameters)
+        {
+            if (parameters != null && parameters.Length != 0)
+            {
+                LogLine(parameters[0]);
+            }
+        }
+
         public static bool RequireParam(string[] parameters, int index, string paramName, string[] options = null)
         {
             if (parameters == null)
@@ -277,6 +287,55 @@ namespace ViMG.IMGUIImpl
                             {
                                 color = new(0.8f, 0.8f, 0.8f, 1.0f);
                                 has_color = true;
+                            }
+                            else if (item.StartsWith("<"))
+                            {
+                                int formatcommandStart = 1;
+                                int formatcommandEnd = 0;
+                                for (int j = 1; j < item.Length; j++)
+                                {
+                                    if (item[j] == '>')
+                                    {
+                                        formatcommandEnd = j;
+                                        break;
+                                    }
+                                }
+
+                                if (formatcommandEnd != 0)
+                                {
+
+                                    string formatcommand = item[formatcommandStart..formatcommandEnd];
+
+                                    if (formatcommand.StartsWith("color("))
+                                    {
+                                        int colStart = "color(".Length;
+
+                                        int colEnd = 0;
+
+                                        for (int j = 0; j < formatcommand.Length; j++)
+                                        {
+                                            if (formatcommand[j] == ')')
+                                            {
+                                                colEnd = j;
+                                                break;
+                                            }
+                                        }
+
+                                        if (colEnd != 0)
+                                        {
+                                            string colStr = formatcommand[colStart..colEnd];
+
+                                            if (uint.TryParse(colStr, System.Globalization.NumberStyles.HexNumber, null, out uint colInt))
+                                            {
+                                                Color xnaColor = new Color(colInt);
+                                                color = xnaColor.ToVector4().ToNumerics();
+                                                has_color = true;
+
+                                                item = item[(formatcommandEnd + 2)..];
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             if (has_color)

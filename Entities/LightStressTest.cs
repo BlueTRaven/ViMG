@@ -21,9 +21,19 @@ namespace ViMG.Entities
         private int[] lights;
         private bool[] shadowmapped;
 
+        public LightStressTest()
+        {
+
+        }
+
         public LightStressTest(Vector3 position)
         {
             this.Position = position;
+        }
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
 
             lights = new int[64];
             shadowmapped = new bool[64];

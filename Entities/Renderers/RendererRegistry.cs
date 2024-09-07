@@ -27,6 +27,8 @@ namespace ViMG.Entities.Renderers
             Register(new RendererDoor(device));
             Register(new RendererOpaqueBillboardedEntity(device));
             Register(new RendererManaStar(device));
+            Register(new RendererSkullheadEye(device));
+            Register(new RendererSkullhead(device));
         }
 
         protected override void Register(EntityRenderer obj)

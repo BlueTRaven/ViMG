@@ -16,6 +16,7 @@ using System.Xml.Linq;
 using ViMG.Cubes;
 using ViMG.Items;
 using ViMG.Rendering;
+using static ViMG.Entities.EntityHelper;
 
 namespace ViMG.Entities.Renderers
 {
@@ -578,6 +579,52 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class TypeStatsStoneBeetle : TypeStats
+        {
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
+            {
+                front = new RectangleF(0, 0, 16, 16),
+                sideLeft = new RectangleF(0, 16, 16, 16),
+                back = new RectangleF(0, 32, 16, 16)
+            };
+
+            public TypeStatsStoneBeetle() : base(new RendererDeferred.DrawMaterial("stone_beetle"))
+            {
+            }
+
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                StoneBeetle beetle = entity as StoneBeetle;
+
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(beetle.ai.Facing, directionalSourceRect);
+
+                if (beetle.ai.GetState() == AIWalkerShooter<StoneBeetle>.State.Normal)
+                {
+                    if (beetle.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    {
+                        float animP = (entity.Alive % 0.75f) / 0.75f;
+
+                        int frame = (int)(animP * 2f);
+
+                        sourceRect.x += 16 * frame;
+                    }
+                }
+
+                if (beetle.ai.IsInRangeOfTarget)
+                {
+                    sourceRect = new RectangleF(0, 48, 16, 16);
+                }
+
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    position = entity.Position,
+                    sourceRect = sourceRect,
+                };
+                return cachedStats;
+            }
+        }
+
         private TypeStats[] typeStats =
         [
             new TypeStatsGeneric(new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)),
@@ -596,6 +643,7 @@ namespace ViMG.Entities.Renderers
             new TypeStatsPlayerBubble(),
             new TypeStatsSnake(),
             new TypeStatsSnakeFlying(),
+            new TypeStatsStoneBeetle(),
         ];
         private Type[] renderedTypes =
         [
@@ -615,6 +663,7 @@ namespace ViMG.Entities.Renderers
             typeof(PlayerBubble),
             typeof(Snake),
             typeof(SnakeFlying),
+            typeof(StoneBeetle),
         ];
 
         public VerySimpleMesh mesh;
@@ -651,6 +700,11 @@ namespace ViMG.Entities.Renderers
 
             foreach (Entity entity in entities)
             {
+                if (entity == null)
+                {
+                    Console.WriteLine("Entity was null");
+                    continue;
+                }
                 TypeStatsDrawStats[] drawStats = stats.GetDrawStats(entity);
                 foreach (TypeStatsDrawStats drawStat in drawStats)
                 {

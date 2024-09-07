@@ -1,8 +1,10 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +19,8 @@ namespace ViMG.Entities
         private const float CLAMP_DIST = Cube.CUBE_SCALE * 4f;
         private static VerySimpleMesh mesh;
         private static VerySimpleMesh lineMesh;
-        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead_eye");
 
-        private AIFlierMelee<SkullheadEye> ai;
+        public AIFlierMelee<SkullheadEye> ai;
 
         private BuffManager buffManager;
         private NoticeHandler<Player> noticeHandler;
@@ -35,9 +36,13 @@ namespace ViMG.Entities
         };
 
         private Vector3 anchor;
-        private Entity parent;
+        public Entity parent;
 
-        private int MaxHealth = 10;
+        public int MaxHealth = 10;
+
+        private float newAnchorTimer = 5;
+
+        public SkullheadEye() {}
 
         public SkullheadEye(Vector3 position, Entity parent)
         {
@@ -48,6 +53,29 @@ namespace ViMG.Entities
         public override void Initialize(World world)
         {
             base.Initialize(world);
+            
+            if (parent == null)
+            {
+                //This is really just in case we spawned this via the console.
+                // Just choose the nearest entity. Probably the player.
+                float nearestDistance = float.MaxValue;
+                Entity nearest = null;
+
+                var entities = world.EntityManager.GetEntities();
+
+                foreach (Entity entity in entities)
+                {
+                    float dist = (entity.Position - Position).Length();
+                    if (dist < nearestDistance) 
+                    {
+                        nearestDistance = dist;
+                        nearest = entity;
+                    }
+                }
+
+                Debug.Assert(nearest != null);
+                parent = nearest;
+            }
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
             buffManager = new BuffManager(this);
@@ -87,6 +115,18 @@ namespace ViMG.Entities
 
             ai.Update(deltaTime);
 
+            if (newAnchorTimer > 0)
+                newAnchorTimer -= (float)deltaTime;
+            else
+            {
+                anchor = new Vector3(
+                    Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
+                    Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
+                    Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
+
+                newAnchorTimer = 5;
+            }
+
             if (parent.Dead)
                 world.EntityManager.Remove(this);
         }
@@ -101,35 +141,35 @@ namespace ViMG.Entities
             throw new NotImplementedException();
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-            {
-                mesh = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32, Enums.Alignment.Center);
-                //mesh = MeshHelper.MakeCenteredQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32);
-                lineMesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-                //lineMesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-            }
+        //    if (mesh.IBO == null)
+        //    {
+        //        mesh = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32, Enums.Alignment.Center);
+        //        //mesh = MeshHelper.MakeCenteredQuad(device, Cube.PIXEL_SCALE * 32, Cube.PIXEL_SCALE * 32);
+        //        lineMesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+        //        //lineMesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+        //    }
 
-            RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, dsr);
+        //    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, dsr);
 
-            Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+        //    Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-                Matrix.CreateTranslation(Position), sourceRect, tintColor));
+        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+        //        Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+        //        Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+        //        Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-            if (ai.Health < MaxHealth)
-                DrawHelper3D.DrawHealthbar(device, ai.Health, MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
+        //    if (ai.Health < MaxHealth)
+        //        DrawHelper3D.DrawHealthbar(device, ai.Health, MaxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
 
-            Vector3 offsetAnchor = parent.Position;
-            //Offset it slightly so we don't see the line poking through the billboard
-            Vector3 offset = Vector3.Normalize(offsetAnchor - Position) * Cube.CUBE_SCALE / 10f;
-            DrawHelper3D.DrawLineTiled(Position + offset, offsetAnchor - offset, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, material, 
-                lineMesh, new RectangleF(52, 0, 4, 16), Color.White);
-        }
+        //    Vector3 offsetAnchor = parent.Position;
+        //    //Offset it slightly so we don't see the line poking through the billboard
+        //    Vector3 offset = Vector3.Normalize(offsetAnchor - Position) * Cube.CUBE_SCALE / 10f;
+        //    DrawHelper3D.DrawLineTiled(Position + offset, offsetAnchor - offset, Cube.PIXEL_SCALE * 2f, Cube.CUBE_SCALE, material, 
+        //        lineMesh, new RectangleF(52, 0, 4, 16), Color.White);
+        //}
     }
 }

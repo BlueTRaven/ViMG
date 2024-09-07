@@ -15,7 +15,7 @@ namespace ViMG.Entities
 {
     public class Skullhead : Entity, IHitboxOwner, IHasStats
     {
-		private enum State
+		public enum State
         {
 			Chase,
 			SetupDash,
@@ -26,35 +26,38 @@ namespace ViMG.Entities
 			PostTransitionWait,
         }
 
-		private const float CHASE_TIME = 1f;//6f;
-		private const float SETUPDASH_TIME = 3f;
-		private const float DASH_TIME = 0.75f;
-		private const float ROTATE_TIME = 1.4f; //or, in other words, time between each skull fire
-		private const float SLOW_CHASE_TIME = 8f;
-		private const float TRANSITIONP2_TIME = 3f;
-		private const float POSTTRANSITIONWAIT_TIME = 1.3f;
+		public static class Constants
+		{
+            public const float CHASE_TIME = 1f;//6f;
+            public const float SETUPDASH_TIME = 3f;
+            public const float DASH_TIME = 0.75f;
+            public const float ROTATE_TIME = 1.4f; //or, in other words, time between each skull fire
+            public const float SLOW_CHASE_TIME = 8f;
+            public const float TRANSITIONP2_TIME = 3f;
+            public const float POSTTRANSITIONWAIT_TIME = 1.3f;
 
-		private const float CHASE_DISTANCE = Cube.CUBE_SCALE * 12f;
-		private const float DASH_DISTANCE = Cube.CUBE_SCALE * 8f;
-		private const float SLOWCHASE_DISTANCE = Cube.CUBE_SCALE * 1.5f;
+            public const float CHASE_DISTANCE = Cube.CUBE_SCALE * 12f;
+            public const float DASH_DISTANCE = Cube.CUBE_SCALE * 8f;
+            public const float SLOWCHASE_DISTANCE = Cube.CUBE_SCALE * 1.5f;
+        }
 
         private static VerySimpleMesh meshHead;
         private static VerySimpleMesh meshVertibrae;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead");
 
-        private Color tintColor = Color.White;
+        public Color tintColor = Color.White;
 
-		private float invulnTimer;
+		public float invulnTimer;
 		private float alive;
-		private State state;
-		private float stateTimer;
+		public State state;
+		public float stateTimer;
 		private float stateTime;
 		private int stateCounter;
 
 		private Vector3 velocity;
 
 		private float TRAIN_RADIUS = Cube.CUBE_SCALE;
-		private Vector3[] trainPositions = new Vector3[8];
+		public Vector3[] trainPositions = new Vector3[8];
 
 		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 2f), new Vector3(Cube.CUBE_SCALE * 4));
 		private int hitbox = -1;
@@ -64,7 +67,7 @@ namespace ViMG.Entities
 
 		private float kbScale = 1.5f;
 
-		private bool transitioned = false;
+		public bool transitioned = false;
 
 		private Vector3 targetOffset;
 		private Vector3 targetPosition;
@@ -74,6 +77,8 @@ namespace ViMG.Entities
 		private ProjectileManager.ProjectileBatchStats batchStats;
 		private ProjectileManager.ProjectileStats stats;
 		private ProjectileManager.ProjectileVisStats visStats;
+
+		public Skullhead() { }
 
 		public Skullhead(Vector3 position)
         {
@@ -93,8 +98,8 @@ namespace ViMG.Entities
             buffManager = new BuffManager(this);
 
             state = State.Chase;
-            stateTimer = CHASE_TIME;
-            stateTime = CHASE_TIME;
+            stateTimer = Constants.CHASE_TIME;
+            stateTime = Constants.CHASE_TIME;
 
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
@@ -171,7 +176,7 @@ namespace ViMG.Entities
 
 				stateTimer -= (float)deltaTime;
 
-				if (direction.Length() > CHASE_DISTANCE)
+				if (direction.Length() > Constants.CHASE_DISTANCE)
 				{
                     EntityHelper.AddCappedVelocity(ref velocity, Vector3.Normalize(direction) * Cube.CUBE_SCALE,
                         new Vector3(Cube.CUBE_SCALE * 5.5f));
@@ -184,10 +189,10 @@ namespace ViMG.Entities
 					if (stateTimer <= 0)
 					{
 						state = State.SetupDash;
-						stateTimer = SETUPDASH_TIME;
-						stateTime = SETUPDASH_TIME;
+						stateTimer = Constants.SETUPDASH_TIME;
+						stateTime = Constants.SETUPDASH_TIME;
 
-						targetOffset = -Vector3.Normalize(new Vector3(direction.X, 0, direction.Z)) * DASH_DISTANCE;
+						targetOffset = -Vector3.Normalize(new Vector3(direction.X, 0, direction.Z)) * Constants.DASH_DISTANCE;
 					}
 				}
 
@@ -220,8 +225,8 @@ namespace ViMG.Entities
 					if (stateTimer <= 0)
                     {
 						state = State.Dash;
-						stateTimer = DASH_TIME;
-						stateTime = DASH_TIME;
+						stateTimer = Constants.DASH_TIME;
+						stateTime = Constants.DASH_TIME;
 
 						targetOffset = -targetOffset;
 						//targetPosition = targetPosition - targetOffset;
@@ -250,8 +255,8 @@ namespace ViMG.Entities
 				if (inRange || stateTimer <= 0)
 				{
 					state = State.Rotate;
-					stateTimer = ROTATE_TIME;
-					stateTime = ROTATE_TIME;
+					stateTimer = Constants.ROTATE_TIME;
+					stateTime = Constants.ROTATE_TIME;
 
 					stateCounter = Main.random.NextCoinFlip() ? -1 : 1;
 				}
@@ -293,15 +298,15 @@ namespace ViMG.Entities
 					if (Math.Abs(stateCounter) >= 4)
                     {
 						state = State.SlowChase;
-						stateTimer = SLOW_CHASE_TIME;
-						stateTime = SLOW_CHASE_TIME;
+						stateTimer = Constants.SLOW_CHASE_TIME;
+						stateTime = Constants.SLOW_CHASE_TIME;
 
 						stateCounter = 0;
 					}
                     else
                     {
 						stateCounter += Math.Sign(stateCounter);
-						stateTimer = ROTATE_TIME;
+						stateTimer = Constants.ROTATE_TIME;
 
 						world.ProjectileManager.AddBatch(this, Position, Vector3.Normalize(targetPosition - Position) * Cube.CUBE_SCALE * 12f, 4f,
 							batchStats, visStats, stats, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
@@ -317,7 +322,7 @@ namespace ViMG.Entities
 
 				stateTimer -= (float)deltaTime;
 
-				if (direction.Length() > SLOWCHASE_DISTANCE)
+				if (direction.Length() > Constants.SLOWCHASE_DISTANCE)
 				{
 					//if we get knocked back too far away, clamp velocity
 					if (direction.Length() > Cube.CUBE_SCALE * 16 * 2.5f)
@@ -327,15 +332,15 @@ namespace ViMG.Entities
 						new Vector3(Cube.CUBE_SCALE * 5.5f));
 				}
 				
-				if (direction.Length() < SLOWCHASE_DISTANCE || stateTimer <= 4f)
+				if (direction.Length() < Constants.SLOWCHASE_DISTANCE || stateTimer <= 4f)
 				{
 					//velocity *= 0.98f;
 
 					if (stateTimer <= 0)
 					{
 						state = State.Chase;
-						stateTimer = CHASE_TIME;
-						stateTime = CHASE_TIME;
+						stateTimer = Constants.CHASE_TIME;
+						stateTime = Constants.CHASE_TIME;
 					}
 				}
 
@@ -352,8 +357,8 @@ namespace ViMG.Entities
 				if (stateTimer <= 0)
 				{
 					state = State.PostTransitionWait;
-                    stateTimer = POSTTRANSITIONWAIT_TIME;
-                    stateTime = POSTTRANSITIONWAIT_TIME;
+                    stateTimer = Constants.POSTTRANSITIONWAIT_TIME;
+                    stateTime = Constants.POSTTRANSITIONWAIT_TIME;
 					transitioned = true;
 
                     for (int i = 0; i < 8; i++)
@@ -370,8 +375,8 @@ namespace ViMG.Entities
 					kbScale = 1;	//more resistance to knockback
 
                     state = State.Chase;
-                    stateTimer = CHASE_TIME;
-                    stateTime = CHASE_TIME;
+                    stateTimer = Constants.CHASE_TIME;
+                    stateTime = Constants.CHASE_TIME;
                 }
             }
 
@@ -413,55 +418,55 @@ namespace ViMG.Entities
 				velocity = Vector3.Normalize(velocity) * maxVel;
 		}
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+  //      public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (meshHead.IBO == null)
-				meshHead = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128, Enums.Alignment.Bottom);
-				//meshHead = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128);
+		//	if (meshHead.IBO == null)
+		//		meshHead = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128, Enums.Alignment.Bottom);
+		//		//meshHead = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128);
 
-			if (meshVertibrae.IBO == null)
-                meshVertibrae = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16, Enums.Alignment.Bottom);
-            //meshVertibrae = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16);
+		//	if (meshVertibrae.IBO == null)
+  //              meshVertibrae = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16, Enums.Alignment.Bottom);
+  //          //meshVertibrae = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16);
 
-			RectangleF sourceRect = new RectangleF(0, 0, 128, 128);
-			Vector3 scale = Vector3.One;
+		//	RectangleF sourceRect = new RectangleF(0, 0, 128, 128);
+		//	Vector3 scale = Vector3.One;
 
-			if (state == State.Dash || (state == State.Rotate && stateTimer >= ROTATE_TIME - Main.FIXED_STEP * 10f))
-			{
-				sourceRect = new RectangleF(128, 0, 128, 160);
-				scale = new Vector3(1, 160f / 128f, 1);
-			}
+		//	if (state == State.Dash || (state == State.Rotate && stateTimer >= Constants.ROTATE_TIME - Main.FIXED_STEP * 10f))
+		//	{
+		//		sourceRect = new RectangleF(128, 0, 128, 160);
+		//		scale = new Vector3(1, 160f / 128f, 1);
+		//	}
 
-			if (transitioned)
-				sourceRect.x += 256f;
+		//	if (transitioned)
+		//		sourceRect.x += 256f;
 
-			Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
+		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshHead,
-				Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
-				Matrix.CreateScale(scale) *
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-				Matrix.CreateTranslation(Position), sourceRect, tintColor));
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshHead,
+		//		Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
+		//		Matrix.CreateScale(scale) *
+		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));
 
-			for (int i = 0; i < trainPositions.Length; i++)
-            {
-				float ioff = (float)i * 0.63f;
-				float t = ((alive + ioff) % 2f) / 2f;
+		//	for (int i = 0; i < trainPositions.Length; i++)
+  //          {
+		//		float ioff = (float)i * 0.63f;
+		//		float t = ((alive + ioff) % 2f) / 2f;
 
-				float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
+		//		float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
 
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae,
-					Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-					Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-					Matrix.CreateTranslation(trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));
-			}
+		//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae,
+		//			Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+		//			Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+		//			Matrix.CreateTranslation(trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));
+		//	}
 
-			if (health < maxHealth)
-				DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE * 4, 0));
-		}
+		//	if (health < maxHealth)
+		//		DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE * 4, 0));
+		//}
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
@@ -488,7 +493,7 @@ namespace ViMG.Entities
 					if (state != State.Transition && !transitioned && (float)health / (float)maxHealth <= 0.3f)
 					{
 						state = State.Transition;
-						stateTime = TRANSITIONP2_TIME;
+						stateTime = Constants.TRANSITIONP2_TIME;
 						stateTimer = stateTime;
 
 						//velocity = Vector3.Normalize(other.direction) * Cube.CUBE_SCALE * 8f;
