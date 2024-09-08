@@ -14,12 +14,12 @@ namespace ViMG.Entities
     public class Line : Entity
     {
         private static VerySimpleMesh mesh;
-        private readonly Vector3 endPosition;
-        private readonly float width;
-        private readonly float tileHeight;
-        private readonly RendererDeferred.DrawMaterial material;
-        private readonly RectangleF sourceRectangle;
-        private readonly Color color;
+        public readonly Vector3 endPosition;
+        public readonly float width;
+        public readonly float tileHeight;
+        public readonly RendererDeferred.DrawMaterial material;
+        public readonly RectangleF sourceRectangle;
+        public readonly Color color;
 
 		private float alive;
 		private float time;
@@ -57,17 +57,27 @@ namespace ViMG.Entities
 				world.EntityManager.Remove(this);
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
-
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-				//mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-
-            if (tileHeight != -1)
-                DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
-            else DrawHelper3D.DrawLine(Position, endPosition, width, material, mesh, sourceRectangle, color);
+        public Color GetColor()
+        {
+            if (Alive > time - 2)
+            {
+                float p = (Alive - (time - 2f)) / 2f;
+                return color * p;
+            }
+            else return color;
         }
-	}
+
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
+
+        //    if (mesh.IBO == null)
+        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+        //    //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+
+        //    if (tileHeight != -1)
+        //        DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
+        //    else DrawHelper3D.DrawLine(Position, endPosition, width, material, mesh, sourceRectangle, color);
+        //}
+    }
 }

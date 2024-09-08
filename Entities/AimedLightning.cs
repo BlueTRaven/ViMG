@@ -24,7 +24,7 @@ namespace ViMG.Entities
         private readonly HitboxManager.HitboxStats stats;
 
         private float advanceTimer;
-        private FastList<Vector3> positions = new FastList<Vector3>();
+        public FastList<Vector3> positions = new FastList<Vector3>();
         private FastList<Vector3> basePositions = new FastList<Vector3>();
 
         private bool hasTouched;
@@ -120,27 +120,27 @@ namespace ViMG.Entities
                 world.EntityManager.Remove(this);
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-                //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
+        //    if (mesh.IBO == null)
+        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
+        //        //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
 
-            for (int i = 0; i < positions.Length; i++)
-            {
-                Vector3 prev;
-                if (i == 0)
-                    prev = Position;
-                else prev = positions[i - 1];
+        //    for (int i = 0; i < positions.Length; i++)
+        //    {
+        //        Vector3 prev;
+        //        if (i == 0)
+        //            prev = Position;
+        //        else prev = positions[i - 1];
 
-                Vector3 current = positions[i];
+        //        Vector3 current = positions[i];
 
-                DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), 
-                    mesh, RectangleF.Empty, Lightning.LightningColor);
-            }
-        }
+        //        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), 
+        //            mesh, RectangleF.Empty, Lightning.LightningColor);
+        //    }
+        //}
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {

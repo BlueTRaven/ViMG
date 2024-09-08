@@ -75,19 +75,19 @@ namespace ViMG.Entities
 			world.EntityManager.Remove(this);
 		}
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+  //      public override void Draw(GraphicsDevice device, Effect effect)
+  //      {
+  //          base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-				MakeMesh(device);
+		//	if (mesh.IBO == null)
+		//		MakeMesh(device);
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
-				StaticMaterials.Cubes, mesh,
-				Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), GetSourceRect()));
-		}
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+		//		StaticMaterials.Cubes, mesh,
+		//		Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), GetSourceRect()));
+		//}
 
-		private RectangleF GetSourceRect()
+		public RectangleF GetSourceRect()
         {
 			float percent = (world.GetTime() - startTime) / (toGrowTime - startTime);
 			int i = (int)(3f * percent);

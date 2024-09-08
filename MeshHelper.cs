@@ -193,6 +193,89 @@ namespace ViMG
 			}
         }
 
+		public static VerySimpleMesh MakeXMesh(GraphicsDevice device, Vector3 pos, float size)
+		{
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
+
+            Vector3 min = -new Vector3(size / 2, 0, size / 2);
+            Vector3 max = new Vector3(size / 2, size, size / 2);
+
+            Vector3 a = pos + new Vector3(min.X, min.Y, min.Z);
+            Vector3 b = pos + new Vector3(min.X, max.Y, min.Z);
+            Vector3 c = pos + new Vector3(max.X, max.Y, min.Z);
+            Vector3 d = pos + new Vector3(max.X, min.Y, min.Z);
+
+            Vector3 e = pos + new Vector3(min.X, min.Y, max.Z);
+            Vector3 f = pos + new Vector3(min.X, max.Y, max.Z);
+            Vector3 g = pos + new Vector3(max.X, max.Y, max.Z);
+            Vector3 h = pos + new Vector3(max.X, min.Y, max.Z);
+
+            Vector3 anrm = new Vector3(0.5f, 0, 0.5f);
+            Vector3 bnrm = new Vector3(0.5f, 0, 0.5f);
+            Vector3 cnrm = new Vector3(-0.5f, 0, 0.5f);
+            Vector3 dnrm = new Vector3(-0.5f, 0, 0.5f);
+
+            Vector3 enrm = new Vector3(-0.5f, 0, 0.5f);
+            Vector3 fnrm = new Vector3(-0.5f, 0, 0.5f);
+            Vector3 gnrm = new Vector3(0.5f, 0, 0.5f);
+            Vector3 hnrm = new Vector3(0.5f, 0, 0.5f);
+
+            int offset = vertices.Length;
+
+            vertices.Add(new VertexCube(a, Color.White, new Vector2(0, 1), anrm));
+            vertices.Add(new VertexCube(b, Color.White, new Vector2(0, 0), bnrm));
+            vertices.Add(new VertexCube(c, Color.White, new Vector2(1, 0), cnrm));
+            vertices.Add(new VertexCube(d, Color.White, new Vector2(1, 1), dnrm));
+
+            vertices.Add(new VertexCube(e, Color.White, new Vector2(0, 1), enrm));
+            vertices.Add(new VertexCube(f, Color.White, new Vector2(0, 0), fnrm));
+            vertices.Add(new VertexCube(g, Color.White, new Vector2(1, 0), gnrm));
+            vertices.Add(new VertexCube(h, Color.White, new Vector2(1, 1), hnrm));
+
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 6);
+            indices.Add(offset + 6);
+            indices.Add(offset + 7);
+            indices.Add(offset + 0);
+
+            indices.Add(offset + 4);
+            indices.Add(offset + 5);
+            indices.Add(offset + 2);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+            indices.Add(offset + 4);
+
+            offset = vertices.Length;
+
+            vertices.Add(new VertexCube(a, Color.White, new Vector2(0, 1), -anrm));
+            vertices.Add(new VertexCube(b, Color.White, new Vector2(0, 0), -bnrm));
+            vertices.Add(new VertexCube(c, Color.White, new Vector2(1, 0), -cnrm));
+            vertices.Add(new VertexCube(d, Color.White, new Vector2(1, 1), -dnrm));
+
+            vertices.Add(new VertexCube(e, Color.White, new Vector2(0, 1), -enrm));
+            vertices.Add(new VertexCube(f, Color.White, new Vector2(0, 0), -fnrm));
+            vertices.Add(new VertexCube(g, Color.White, new Vector2(1, 0), -gnrm));
+            vertices.Add(new VertexCube(h, Color.White, new Vector2(1, 1), -hnrm));
+
+            indices.Add(offset + 6);
+            indices.Add(offset + 1);
+            indices.Add(offset + 0);
+            indices.Add(offset + 0);
+            indices.Add(offset + 7);
+            indices.Add(offset + 6);
+
+            indices.Add(offset + 2);
+            indices.Add(offset + 5);
+            indices.Add(offset + 4);
+            indices.Add(offset + 4);
+            indices.Add(offset + 3);
+            indices.Add(offset + 2);
+
+			return VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices), true);
+        }
+
         public static VerySimpleMesh MakeUVSphere(GraphicsDevice device, float radius, bool flip = false)
         {
             FastList<VertexCube> vertices = new FastList<VertexCube>();

@@ -34,7 +34,7 @@ namespace ViMG.Entities
 		{
 			TrackedPosition = position;
 			this.radius = radius;
-			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.25f, Cube.CUBE_SCALE / 2f);
+			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2f);
 		}
 
         public override void Initialize(World world)
@@ -86,20 +86,20 @@ namespace ViMG.Entities
 				sphere, ref light, ref isShadowmapped, true);
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	base.Draw(device, effect);
 
-			if (mesh.IBO == null)
-				MakeMesh(device);
+		//	if (mesh.IBO == null)
+		//		MakeMesh(device);
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-				Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
-			/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-				DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
-				Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
-				Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));*/
-		}
+		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//		Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
+		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+		//		DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
+		//		Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
+		//		Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));*/
+		//}
 
 		public override void OnSave(List<byte> saveBytes)
 		{

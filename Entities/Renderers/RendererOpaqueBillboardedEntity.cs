@@ -174,7 +174,7 @@ namespace ViMG.Entities.Renderers
             private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
             public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
-                Slime slime = entity as Slime;
+                CaveSlime slime = entity as CaveSlime;
 
                 int ysrc = 0;
 
@@ -631,6 +631,27 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class TypeStatsTestNPC : TypeStats
+        {
+            public TypeStatsTestNPC() : base(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
+            {
+            }
+
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[1];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    color = Color.White,
+                    position = entity.Position,
+                    scale = new Vector2(1, 2),
+                    shouldDraw = true,
+                };
+
+                return cachedStats;
+            }
+        }
+
         private TypeStats[] typeStats =
         [
             new TypeStatsGeneric(new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)),
@@ -650,6 +671,7 @@ namespace ViMG.Entities.Renderers
             new TypeStatsSnake(),
             new TypeStatsSnakeFlying(),
             new TypeStatsStoneBeetle(),
+            new TypeStatsTestNPC(),
         ];
         private Type[] renderedTypes =
         [
@@ -670,6 +692,7 @@ namespace ViMG.Entities.Renderers
             typeof(Snake),
             typeof(SnakeFlying),
             typeof(StoneBeetle),
+            typeof(TestNPC),
         ];
 
         public VerySimpleMesh mesh;
@@ -760,42 +783,6 @@ namespace ViMG.Entities.Renderers
                         Main.Renderer.AddTransparentDraw(draw);
                     }
                 }
-                //if (!stats.ShouldDraw(entity))
-                //    continue;
-                //Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                //    Matrix.CreateScale(stats.GetScale(entity).X, stats.GetScale(entity).Y, 1) *
-                //    billboard *
-                //    Matrix.CreateTranslation(stats.GetPosition(entity));
-                //Matrix.Transpose(ref mat, out mat);
-
-                //if (!stats.GetShouldDrawTransparent(entity))
-                //{
-                //    RendererDeferred.InstancedDraw draw = baseDraw with
-                //    {
-                //        World = mat,
-                //        WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                //        SourceRect = stats.GetSourceRect(entity),
-                //        TintColor = stats.GetColor(entity).ToVector3(),
-                //    };
-
-                //    stats.Draws.Add(draw);
-                //}
-                //else
-                //{
-                //    float distance = (Main.camera.Position - entity.Position).Length();
-
-                //    RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
-                //    {
-                //        Material = stats.Material,
-                //        SourceRect = stats.GetSourceRect(entity),
-                //        TintColor = stats.GetColor(entity),
-                //        Mesh = mesh,
-                //        Transform = mat,
-                //        SortValue = distance,
-                //    };
-
-                //    Main.Renderer.AddTransparentDraw(draw);
-                //}
             }
 
             if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)

@@ -18,7 +18,7 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class EntityCaveRoot : Entity, ICubeTracker
     {
-        private record struct Save
+        public record struct Save
         {
             public CubePosition trackedPosition;
             public float creationTime;
@@ -28,7 +28,7 @@ namespace ViMG.Entities
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
-        private Save save;
+        public Save save;
         public CubePosition TrackedPosition => save.trackedPosition;
 
         public EntityCaveRoot()
@@ -76,37 +76,37 @@ namespace ViMG.Entities
             world.EntityManager.Remove(this);
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-            {
-                FastList<VertexCube> vertices = new FastList<VertexCube>();
-                List<int> indices = new List<int>();
-                DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
+        //    if (mesh.IBO == null)
+        //    {
+        //        FastList<VertexCube> vertices = new FastList<VertexCube>();
+        //        List<int> indices = new List<int>();
+        //        DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
 
-                mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-                //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-            }
+        //        mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+        //        //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+        //    }
 
-            RectangleF sourceRect = new RectangleF(0, 176, 16, 16);
+        //    RectangleF sourceRect = new RectangleF(0, 176, 16, 16);
 
-            if (world.GetTime() <= save.grownTime)
-            {
-                float growthP = (world.GetTime() - save.creationTime) / (save.grownTime - save.creationTime);
+        //    if (world.GetTime() <= save.grownTime)
+        //    {
+        //        float growthP = (world.GetTime() - save.creationTime) / (save.grownTime - save.creationTime);
 
-                const int stages = 3;
+        //        const int stages = 3;
 
-                int currentStage = (int)((float)stages * growthP);
+        //        int currentStage = (int)((float)stages * growthP);
 
-                sourceRect.x = currentStage * 16;
-            }
-            else sourceRect.x = 2 * 16;
+        //        sourceRect.x = currentStage * 16;
+        //    }
+        //    else sourceRect.x = 2 * 16;
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
-                material, mesh, Matrix.CreateTranslation(Position), sourceRect));
-        }
+        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+        //        material, mesh, Matrix.CreateTranslation(Position), sourceRect));
+        //}
 
         public unsafe override void OnSave(List<byte> saveBytes)
         {
