@@ -58,16 +58,21 @@ namespace ViMG.IMGUIImpl
             Ao,
         }
 
+        [ConsoleCommandVar("show_settings", "Show settings menu")]
         public static bool Show = false;
+        [ConsoleCommandVar("show_debug_info", "Show debug info")]
         public static bool ShowDebugInfo = false;
+        [ConsoleCommandVar("show_console", "Show console")]
         public static bool ShowConsole = false;
+        [ConsoleCommandVar("show_ent_io", "Show Ent IO Debug")]
+        public static bool ShowEntIODebug = false;
 
         [IMGUIAutoSlider<int>(1, 10, 1)]
         [ConsoleCommandVar("CopiesPerFrame", "The number of chunk copies that can be produced in one frame.")]
         public static int CopiesPerFrame = 1;
 
         [IMGUIAutoCombo]
-        [ConsoleCommandVar("GBufferOverrideDraw", "If not 'Composite', will override the backbuffer with the given gbuffer.")]
+        [ConsoleCommandVar("GBufferOverrideDraw", "Composite: full rendering output\nOtherwise: gbuffer output")]
         public static RendererGBufferOverrideDraw GBufferOverrideDraw = RendererGBufferOverrideDraw.Composited;
 
         public static void AutoIMGUI()

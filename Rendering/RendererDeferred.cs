@@ -270,8 +270,8 @@ namespace ViMG.Rendering
         private List<TransparentDraw> DrawsTransparentPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsEmptyPass = new List<TransparentDraw>();
         public List<TransparentDraw> DrawsSkyboxPass = new List<TransparentDraw>();
-        //Note that DEBUG markers ARE NOT RESET EVERY FRAME.
-        //If you want to add a different type of data, RESET THEM YOURSELF!
+        
+        // Transient debug markers that can draw simple primitives. These do NOT use the depth buffer! They will be drawn over everything else!
         public List<DEBUGDraw> DEBUGMarkersSphere = new List<DEBUGDraw>();
         public List<DEBUGDraw> DEBUGMarkersRect = new List<DEBUGDraw>();
 
@@ -400,6 +400,9 @@ namespace ViMG.Rendering
             DrawsTransparentPass.Clear();
             DrawsSkyboxPass.Clear();
             DrawsEmptyPass.Clear();
+
+            DEBUGMarkersSphere.Clear();
+            DEBUGMarkersRect.Clear();
 
             NumDrawCalls = 0;
             NumPointLightsRendered = 0;

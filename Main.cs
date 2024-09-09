@@ -463,8 +463,9 @@ namespace ViMG
 					ImGui.Text(string.Format("Facing: {0}", FormatFacing()));
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera.Position).ToString()));
 				}
-				ImGui.End();
+                ImGui.End();
 
+				IMGUIEntIODebug.Show();
 				IMGUIConsole.Console();
 
 				imguiRenderer.EndLayout();

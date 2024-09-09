@@ -210,6 +210,18 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        [ConsoleCommand("quit", "Exits the program.")]
+        public static void QuitCommand(string[] parameters)
+        {
+            Main.Exit = true;
+        }
+
+        [ConsoleCommand("exit", "Exits the program.")]
+        public static void ExitCommand(string[] parameters)
+        {
+            Main.Exit = true;
+        }
+
         public static bool RequireParam(string[] parameters, int index, string paramName, string[] options = null)
         {
             if (parameters == null)
