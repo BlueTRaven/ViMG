@@ -353,6 +353,8 @@ namespace ViMG
 
             var zone = TracyImpl.Tracy.BeginZone();
 
+            imguiRenderer.BeginLayout(gameTime);
+
             Renderer.FrameStart();
 
 			GraphicsDevice.Clear(Color.White);
@@ -363,10 +365,11 @@ namespace ViMG
 			
 			gameStateManager.Draw(GraphicsDevice);
 
-			//if (WorldLoaded)
-				//world.Draw(GraphicsDevice, CubeLitEffect);
+            //if (WorldLoaded)
+            //world.Draw(GraphicsDevice, CubeLitEffect);
+            IMGUIEntIODebug.Show();
 
-			Renderer.Draw(batch);
+            Renderer.Draw(batch);
 
 			GraphicsDevice.SetRenderTarget(null);
 
@@ -424,7 +427,6 @@ namespace ViMG
 				//	Color.White, new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
 				//	Enums.Alignment.Left, Options.CurrentWindowResolution.X, 0, TextHelper.OverFlowAction.None);
 
-				imguiRenderer.BeginLayout(gameTime);
 
 				if (ImGui.GetIO().WantCaptureKeyboard)
 				{
@@ -465,11 +467,7 @@ namespace ViMG
 				}
                 ImGui.End();
 
-				IMGUIEntIODebug.Show();
 				IMGUIConsole.Console();
-
-				imguiRenderer.EndLayout();
-
 			}
 
 
@@ -482,7 +480,9 @@ namespace ViMG
 				Console.WriteLine(message);
             }
 
-			zone.End();
+            imguiRenderer.EndLayout();
+
+            zone.End();
         }
 
 		private string FormatPos()

@@ -1,13 +1,18 @@
-﻿using ImGuiNET;
+﻿using BrUtility;
+using ImGuiNET;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities;
 using ViMG.GameStates;
 
 namespace ViMG.IMGUIImpl
@@ -21,6 +26,7 @@ namespace ViMG.IMGUIImpl
             TypeAscending,
             IDDescending,
             IDAscending,
+            Distance,
         }
 
         private static string selectedFolder = null;
@@ -35,6 +41,11 @@ namespace ViMG.IMGUIImpl
         private static Sort currentSort = Sort.None;
 
         private static ulong? debugDraw = null;
+        // So in order to properly draw the entity we gotta do some weird stuff...
+        // We don't keep position information outside of the entity data, only the contained-in chunk data.
+        // We have to FULLY deserialize the entity in order to get the position.
+        // A little hacky, sure, but whatever.
+        private static Entity loadedEnt;
 
         public static void Show()
         {
@@ -72,7 +83,7 @@ namespace ViMG.IMGUIImpl
                 if (selectedFolder != null)
                 {
                     ImGui.InputInt("Layer", ref selectedLayer);
-                    
+
                     if (error != null)
                     {
                         ImGui.TextColored(new System.Numerics.Vector4(1, 0, 0, 1), error.ToString());
@@ -127,7 +138,12 @@ namespace ViMG.IMGUIImpl
                                 ImGui.SameLine();
                                 if (ImGui.Button("Reset")) debugDraw = null;
                                 ImGui.SameLine();
-                                if (ImGui.Button("Scroll To")) scrollToDebug = true;   
+                                if (ImGui.Button("Scroll To")) scrollToDebug = true;
+
+                                if (ImGui.CollapsingHeader("Inspector"))
+                                {
+                                    EntityInspector(loadedEnt);
+                                }
                             }
 
                             if (rebuildFilter)
@@ -159,6 +175,12 @@ namespace ViMG.IMGUIImpl
                                     case Sort.IDAscending:
                                         filterCache = filterCache.OrderBy(x => x.id).ToList();
                                         break;
+                                    case Sort.Distance:
+                                        if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+                                        {
+                                            filterCache = filterCache.OrderBy(x => (x.position.InWorldSpace() - gsIsland.GetWorld().EntityManager.GetFirst<Player>().Position).Length()).ToList();
+                                        }
+                                        break;
                                     case Sort.None:
                                     default:
                                         break;
@@ -168,7 +190,7 @@ namespace ViMG.IMGUIImpl
                             foreach (var entityData in filterCache)
                             {
                                 ImGui.PushID((int)entityData.id);
-                                
+
                                 if (scrollToDebug)
                                     ImGui.SetScrollHereY();
                                 if (ImGui.TreeNode(entityData.id + ": " + entityData.type))
@@ -187,7 +209,7 @@ namespace ViMG.IMGUIImpl
                                     ImGui.SameLine();
                                     ImGui.Text("X: " + entityData.position.X + " Y: " + entityData.position.Y + " Z: " + entityData.position.Z);
 
-                                    if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland) 
+                                    if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
                                     {
                                         if (lookAt)
                                         {
@@ -197,6 +219,7 @@ namespace ViMG.IMGUIImpl
                                         }
                                         if (ImGui.Button("Draw in world"))
                                         {
+                                            loadedEnt = LoadEnt(entityData);
                                             debugDraw = entityData.id;
                                         }
 
@@ -204,9 +227,16 @@ namespace ViMG.IMGUIImpl
                                         {
                                             Main.Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
                                             {
-                                                Color = Color.Purple,
+                                                Color = new Color(Color.Purple, 0.2f),
                                                 Position = entityData.position.InWorldSpace(),
                                                 Scale = new Vector3(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE),
+                                            });
+
+                                            Main.Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
+                                            {
+                                                Color = new Color(Color.Purple, 0.2f),
+                                                Position = loadedEnt.Position,
+                                                Scale = new Vector3(Cubes.Cube.CUBE_SCALE),
                                             });
                                         }
                                     }
@@ -220,5 +250,50 @@ namespace ViMG.IMGUIImpl
             }
             ImGui.End();
         }
+
+        private static Entity LoadEnt(EntityManagerIO.EntityData entData)
+        {
+            Type entityType = Utility.GetType(Assembly.GetExecutingAssembly().GetName().Name, entData.type);
+
+            if (entityType == null)
+            {
+                Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
+            }
+            else
+            {
+                var created = Activator.CreateInstance(entityType);
+
+                if (created != null && created is Entity ent)
+                {
+                    ent.OnLoad(entData.data, entData.version);
+
+                    return ent;
+                }
+                else
+                {
+                    Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+                }
+            }
+
+            return null;
+        }
+
+        public static void EntityInspector(Entity entity)
+        {
+            Type entityType = entity.GetType();
+            FieldInfo[] fields = entityType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            foreach (FieldInfo field in fields)
+            {
+                ImGui.Text(field.Name + ":");
+                ImGui.SameLine();
+                var value = field.GetValue(entity);
+
+                if (value == null)
+                    ImGui.Text("null");
+                else ImGui.Text(field.GetValue(entity).ToString());
+            }
+        }
     }
+
 }

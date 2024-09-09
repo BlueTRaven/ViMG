@@ -956,6 +956,8 @@ namespace ViMG.Rendering
 
             //DEBUG
             //===============================================================================================================================================
+            device.RasterizerState = RasterizerState.CullNone;
+            
             foreach (DEBUGDraw draw in DEBUGMarkersSphere)
             {
                 EffectTransparent.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
@@ -998,7 +1000,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
+                    device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
                 }
             }
             //===============================================================================================================================================
