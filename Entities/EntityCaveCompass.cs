@@ -15,8 +15,8 @@ namespace ViMG.Entities
     //TODO this thing's broke
     public class EntityCaveCompass : Entity, ICubeTracker
     {
-		private static VerySimpleMesh mesh;
-        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
+        //private static VerySimpleMesh mesh;
+        //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
 
         private Quaternion target;
         private Quaternion current;
@@ -24,7 +24,7 @@ namespace ViMG.Entities
         private Vector3 center;
         private float density;
 
-		public CubePosition TrackedPosition { get; private set; }
+        public CubePosition TrackedPosition { get; private set; }
 
         public EntityCaveCompass()
         {
@@ -112,28 +112,33 @@ namespace ViMG.Entities
             world.EntityManager.Remove(this);
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
+        public Matrix GetMatrix()
         {
-            base.Draw(device, effect);
-
-			if (mesh.IBO == null)
-				MakeMesh(device);
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateTranslation(0, -Cube.CUBE_SCALE / 2f, 0) *
+            return Matrix.CreateTranslation(0, -Cube.CUBE_SCALE / 2f, 0) *
                 Matrix.CreateFromQuaternion(current) *
                 Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
-                Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f)), new RectangleF(16, 16, 16, 16)));
-		}
+                Matrix.CreateTranslation(Position + new Vector3(Cube.CUBE_SCALE / 2f, 0, Cube.CUBE_SCALE / 2f));
+        }
 
-        private static void MakeMesh(GraphicsDevice device)
-        {
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
+        //      public override void Draw(GraphicsDevice device, Effect effect)
+        //      {
+        //          base.Draw(device, effect);
 
-			DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
+        //	if (mesh.IBO == null)
+        //		MakeMesh(device);
 
-            mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); // MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-		}
+        //	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+        //              GetMatrix(), new RectangleF(16, 16, 16, 16)));
+        //}
+
+        //      private static void MakeMesh(GraphicsDevice device)
+        //      {
+        //          FastList<VertexCube> vertices = new FastList<VertexCube>();
+        //          List<int> indices = new List<int>();
+
+        //	DrawHelper3D.MakeXMeshRaw(vertices, indices, Vector3.Zero, Vector3.One, new RectangleF(0, 0, 1, 1));
+
+        //          mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); // MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+        //}
     }
 }

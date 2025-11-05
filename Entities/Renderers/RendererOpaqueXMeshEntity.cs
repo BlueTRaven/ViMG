@@ -21,6 +21,7 @@ namespace ViMG.Entities.Renderers
             public bool shouldDraw = true;
 
             public RectangleF? sourceRect;
+            public Matrix? matrix;  //Overrides position and scale if valid
             public Vector3? position; //if null, just uses entity position!
             public Vector2? scale;
 
@@ -115,6 +116,26 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class RenderedEntityCaveCompass : RenderedEntity
+        {
+            public RenderedEntityCaveCompass() : base(new RendererDeferred.DrawMaterial("cubes_textures"))
+            {
+            }
+
+            private static RenderedEntityDrawStats[] cachedStats = new RenderedEntityDrawStats[1];
+            public override RenderedEntityDrawStats[] GetDrawStats(Entity entity)
+            {
+                cachedStats[0] = new RenderedEntityDrawStats
+                {
+                    matrix = (entity as EntityCaveCompass).GetMatrix(),
+                    sourceRect = new RectangleF(16, 16, 16, 16),
+                    shouldDraw = true,
+                    color = Color.White,
+                };
+                return cachedStats;
+            }
+        }
+
         private static VerySimpleMesh mesh;
 
         private static RenderedEntity[] renderedTypes = [
@@ -138,12 +159,12 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
             Type type = types[renderedTypeIndex];
             RenderedEntity stats = renderedTypes[renderedTypeIndex];
 
-            var entities = entityManager.GetAll(type);
+            //var entities = entityManager.GetAll(type);
 
             stats.Draws.Clear();
 
@@ -177,7 +198,7 @@ namespace ViMG.Entities.Renderers
                     }
                     else sourceRect = new RendererDeferred.DrawSourceRectParameters();
 
-                    Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
+                    Matrix mat = drawStat.matrix ?? Matrix.CreateScale(Cube.CUBE_SCALE) *
                         Matrix.CreateScale(scale.X, scale.Y, 1) *
                         Matrix.CreateTranslation(position);
                     Matrix.Transpose(ref mat, out mat);

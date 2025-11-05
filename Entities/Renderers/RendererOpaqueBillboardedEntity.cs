@@ -16,6 +16,7 @@ using System.Xml.Linq;
 using ViMG.Cubes;
 using ViMG.Items;
 using ViMG.Rendering;
+using static ViMG.Collision3D;
 using static ViMG.Entities.EntityHelper;
 
 namespace ViMG.Entities.Renderers
@@ -652,6 +653,65 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class TypeStatsLightStressTest : TypeStats
+        {
+            public TypeStatsLightStressTest() : base(new RendererDeferred.DrawMaterial("glow_node"))
+            {
+            }
+
+            private TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[64];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                for (int i = 0; i < 64; i++)
+                {
+                    var worldTime = entity.world.GetTime() * LightStressTest.Speed;
+                    float t = ((worldTime + 0.03f * i) % 2f) / 2f;
+                    float zt = ((worldTime + 0.03f * i + 0.3f) % 2f) / 2f;
+
+                    float x = MathF.Cos(MathF.PI * 2 * t) * LightStressTest.RADIUS_XZ;
+                    float y = MathF.Sin(MathF.PI * 2 * t) * LightStressTest.RADIUS_Y;
+                    float z = -MathF.Sin(MathF.PI * 2 * zt) * LightStressTest.RADIUS_XZ;
+                    
+                    Vector3 lightPos = entity.Position + new Vector3(x, y, z);
+
+
+                    cachedStats[i].position = lightPos;
+                }
+
+                return cachedStats;
+            }
+        }
+
+        private class TypeStatsWorm : TypeStats
+        {
+            public TypeStatsWorm() : base(new RendererDeferred.DrawMaterial("worm"))
+            {
+            }
+
+            private static TypeStatsDrawStats[] cachedStats = new TypeStatsDrawStats[9];
+            public override TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                Worm worm = entity as Worm;
+
+                cachedStats[0] = new TypeStatsDrawStats
+                {
+                    position = entity.Position,
+                    sourceRect = new RectangleF(0, 0, 16, 16),
+                };
+
+                for (int i = 0; i < 8; i++)
+                {
+                    cachedStats[i + 1] = new TypeStatsDrawStats
+                    {
+                        position = worm.trainPositions[i],
+                        sourceRect = new RectangleF(16, 0, 16, 16),
+                    };
+                }
+
+                return cachedStats;
+            }
+        }
+        
         private TypeStats[] typeStats =
         [
             new TypeStatsGeneric(new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)),
@@ -672,6 +732,8 @@ namespace ViMG.Entities.Renderers
             new TypeStatsSnakeFlying(),
             new TypeStatsStoneBeetle(),
             new TypeStatsTestNPC(),
+            new TypeStatsLightStressTest(),
+            new TypeStatsWorm(),
         ];
         private Type[] renderedTypes =
         [
@@ -693,6 +755,8 @@ namespace ViMG.Entities.Renderers
             typeof(SnakeFlying),
             typeof(StoneBeetle),
             typeof(TestNPC),
+            typeof(LightStressTest),
+            typeof(Worm),
         ];
 
         public VerySimpleMesh mesh;
@@ -709,12 +773,12 @@ namespace ViMG.Entities.Renderers
             return renderedTypes;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
         {
             Type type = renderedTypes[renderedTypeIndex];
             TypeStats stats = typeStats[renderedTypeIndex];
 
-            var entities = entityManager.GetAll(type);
+            var entities = renderedEntities;//entityManager.GetAll(type);
 
             stats.Draws.Clear();
 

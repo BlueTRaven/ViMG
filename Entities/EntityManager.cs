@@ -523,8 +523,8 @@ namespace ViMG.Entities
                     for (int i = 0; i < renderedTypes.Length; i++)
 					{
                         Type renderedType = renderedTypes[i];
-                        if (entitiesByType.ContainsKey(renderedType))
-							r.Render(device, 0, this, i);
+						if (entitiesByType.TryGetValue(renderedType, out var renderedEntities))// entitiesByType.ContainsKey(renderedType))
+							r.Render(device, 0, this, i, renderedEntities);
 					}
 				}
 			}

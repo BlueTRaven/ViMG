@@ -29,40 +29,52 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            var lightnings = entityManager.GetAll<Lightning>();
+            //var lightnings = entityManager.GetAll<Lightning>();
 
-            foreach (Lightning lightning in lightnings)
+            //foreach (Lightning lightning in lightnings)
+
+            if (renderedTypeIndex == 0)
             {
-                for (int i = 0; i < lightning.positions.Length; i++)
+                var iter = new Iterator<Lightning>(entities);
+                while (iter.Next(out Lightning lightning))
                 {
-                    Vector3 prev;
-                    if (i == 0)
-                        prev = lightning.Position;
-                    else prev = lightning.positions[i - 1];
+                    for (int i = 0; i < lightning.positions.Length; i++)
+                    {
+                        Vector3 prev;
+                        if (i == 0)
+                            prev = lightning.Position;
+                        else prev = lightning.positions[i - 1];
 
-                    Vector3 current = lightning.positions[i];
+                        Vector3 current = lightning.positions[i];
 
-                    DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
+                        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
+                    }
                 }
             }
 
-            var aimedLightnings = entityManager.GetAll<AimedLightning>();
+            //var aimedLightnings = entityManager.GetAll<AimedLightning>();
 
-            foreach (AimedLightning lightning in aimedLightnings)
+            //foreach (AimedLightning lightning in aimedLightnings)
+            if (renderedTypeIndex == 1)
             {
-                for (int i = 0; i < lightning.positions.Length; i++)
+                var iter = new Iterator<AimedLightning>(entities);
+
+                while (iter.Next(out AimedLightning lightning)) 
                 {
-                    Vector3 prev;
-                    if (i == 0)
-                        prev = lightning.Position;
-                    else prev = lightning.positions[i - 1];
+                    for (int i = 0; i < lightning.positions.Length; i++)
+                    {
+                        Vector3 prev;
+                        if (i == 0)
+                            prev = lightning.Position;
+                        else prev = lightning.positions[i - 1];
 
-                    Vector3 current = lightning.positions[i];
+                        Vector3 current = lightning.positions[i];
 
-                    DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                        mesh, RectangleF.Empty, LightningColor);
+                        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                            mesh, RectangleF.Empty, LightningColor);
+                    }
                 }
             }
         }

@@ -35,14 +35,16 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
             if (mesh.IBO == null)
                 mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
 
-            var entities = entityManager.GetAll<ManaStar>();
+            //var entities = entityManager.GetAll<ManaStar>();
 
-            foreach (ManaStar manaStar in entities)
+            //foreach (ManaStar manaStar in entities)
+            var iter = new Iterator<ManaStar>(entities);
+            while(iter.Next(out ManaStar manaStar))
             {
                 if (manaStar.state == ManaStar.State.InSky || manaStar.state == ManaStar.State.DivingInSky)
                 {

@@ -67,6 +67,32 @@ namespace ViMG.Entities.Renderers
 
         public abstract Type[] GetRenderedTypes();
 
-        public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex);
+        public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType);
+
+        protected ref struct Iterator<T> where T : Entity
+        {
+            int current;
+            List<Entity> entities;
+
+            public Iterator(List<Entity> renderedEntities)
+            {
+                entities = renderedEntities;
+            }
+
+            public bool Next(out T ent)
+            {
+                if (current == entities.Count)
+                {
+                    ent = null;
+                    return false;
+                }
+                else
+                {
+                    ent = entities[current] as T;
+                    current++;
+                    return true;
+                }
+            }
+        }
     }
 }

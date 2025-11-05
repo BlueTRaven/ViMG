@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.Client;
 using ViMG.Cubes;
 using ViMG.Entities.Renderers;
 using ViMG.Items;
@@ -17,6 +18,7 @@ namespace ViMG
 		public RecipeRegistry RecipeRegistry;
 		public BuffRegistry BuffRegistry;
 		public RendererRegistry RendererRegistry;
+		public RegistryClientEntity ClientEntityRegistry;
 
 		public RegistryService(GraphicsDevice device)
 		{
@@ -25,6 +27,7 @@ namespace ViMG
 			RecipeRegistry = new RecipeRegistry();
 			BuffRegistry = new BuffRegistry();
 			RendererRegistry = new RendererRegistry(device);
+			ClientEntityRegistry = new RegistryClientEntity();
 		}
 
 		public void Register()
@@ -34,6 +37,7 @@ namespace ViMG
 			RecipeRegistry.RegisterAll();
 			BuffRegistry.RegisterAll();
 			RendererRegistry.RegisterAll();
+			ClientEntityRegistry.RegisterAll();
 		}
 	}
 }

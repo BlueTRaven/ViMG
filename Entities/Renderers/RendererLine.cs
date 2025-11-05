@@ -25,11 +25,14 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            var lines = entityManager.GetAll<Line>();
+            //var lines = entityManager.GetAll<Line>();
 
-            foreach (Line line in lines)
+            //foreach (Line line in lines)
+            var iter = new Iterator<Line>(entities);
+
+            while (iter.Next(out Line line))
             {
                 if (line.tileHeight != -1)
                     DrawHelper3D.DrawLineTiled(line.Position, line.endPosition, line.width, line.tileHeight, line.material, mesh, line.sourceRectangle, line.GetColor());

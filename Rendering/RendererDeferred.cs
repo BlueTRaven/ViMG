@@ -293,7 +293,7 @@ namespace ViMG.Rendering
         public RendererDeferred(GraphicsDevice device)
         {
             DEBUGCubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
-            DEBUGSphereMesh = MeshHelper.MakeUVSphere(device, Cubes.Cube.CUBE_SCALE);
+            DEBUGSphereMesh = MeshHelper.MakeUVSphere(device, 1);
 
             FastList<VertexCube> cubeVertices = new FastList<VertexCube>();
             List<int> cubeIndices = new List<int>();
@@ -540,6 +540,9 @@ namespace ViMG.Rendering
 
             switch (IMGUISettings.GBufferOverrideDraw)
             {
+                case IMGUISettings.RendererGBufferOverrideDraw.All:
+                    currentOutput = -2;
+                    break;
                 case IMGUISettings.RendererGBufferOverrideDraw.Composited:
                     currentOutput = -1;
                     break;
@@ -957,7 +960,13 @@ namespace ViMG.Rendering
             //DEBUG
             //===============================================================================================================================================
             device.RasterizerState = RasterizerState.CullNone;
-            
+
+            device.SetVertexBuffers(DEBUGSphereMesh.Bindings);
+            device.Indices = DEBUGSphereMesh.IBO;
+
+            device.DepthStencilState = noDepthReadWriteDSS;
+            device.BlendState = BlendState.AlphaBlend;
+
             foreach (DEBUGDraw draw in DEBUGMarkersSphere)
             {
                 EffectTransparent.Parameters["Diffuse"].SetValue(DrawHelper.WhitePixel);
@@ -967,20 +976,18 @@ namespace ViMG.Rendering
 
                 EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
 
-                device.SetVertexBuffers(DEBUGSphereMesh.Bindings);
-                device.Indices = DEBUGSphereMesh.IBO;
-                //device.SetVertexBuffer(DEBUGSphereMesh.VBO);
-                //device.Indices = DEBUGSphereMesh.IBO;
-
-                device.DepthStencilState = noDepthReadWriteDSS;
-                device.BlendState = BlendState.Opaque;
-
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGSphereMesh.IBO.IndexCount / 3);
                 }
             }
+
+            device.SetVertexBuffer(DEBUGCubeMesh.VBO);
+            device.Indices = DEBUGCubeMesh.IBO;
+
+            device.DepthStencilState = noDepthReadWriteDSS;
+            device.BlendState = BlendState.AlphaBlend;
 
             foreach (DEBUGDraw draw in DEBUGMarkersRect)
             {
@@ -991,16 +998,10 @@ namespace ViMG.Rendering
 
                 EffectTransparent.Parameters["UseSourceRect"].SetValue(false);
 
-                device.SetVertexBuffer(DEBUGCubeMesh.VBO);
-                device.Indices = DEBUGCubeMesh.IBO;
-
-                device.DepthStencilState = noDepthReadWriteDSS;
-                device.BlendState = BlendState.Opaque;
-
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
                 }
             }
             //===============================================================================================================================================
@@ -1118,12 +1119,14 @@ namespace ViMG.Rendering
         {
             if (currentOutput == -1)
                 return "Composite";
+            else if (currentOutput == -2) 
+                return "All";
             else return gbufferTargets[currentOutput].RenderTarget.Name;
         }
 
         public RenderTargetBinding GetOutput()
         {
-            if (currentOutput == -1)
+            if (currentOutput == -1 || currentOutput == -2)
                 return outputRT;
             else return gbufferTargets[currentOutput];
         }

@@ -42,11 +42,13 @@ namespace ViMG.Entities.Renderers
             return renderedTypes;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            var eyes = entityManager.GetAll<SkullheadEye>();
+            var iter = new Iterator<SkullheadEye>(entities);
+            //var eyes = entityManager.GetAll<SkullheadEye>();
 
-            foreach (SkullheadEye eye in eyes)
+            //foreach (SkullheadEye eye in eyes)
+            while (iter.Next(out SkullheadEye eye))
             {
                 RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(eye.ai.Facing, dsr);
 

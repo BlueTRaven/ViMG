@@ -30,10 +30,10 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
             // NOTE: only one skullhead at a time is supported?
-            Skullhead skullhead = entityManager.GetFirst<Skullhead>();
+            Skullhead skullhead = entities[0] as Skullhead;// entityManager.GetFirst<Skullhead>();
             if (skullhead == null) return;
 
             RectangleF sourceRect = new RectangleF(0, 0, 128, 128);

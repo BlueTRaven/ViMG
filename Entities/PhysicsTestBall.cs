@@ -69,23 +69,23 @@ namespace ViMG.Entities
             }
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-            {
-                FastList<VertexCube> vertices = new FastList<VertexCube>();
-                List<int> indices = new List<int>();
-                MeshHelper.MakeUVSphereRaw(vertices, indices, new Vector3(Cube.CUBE_SCALE / 2f), BrUtility.RectangleF.Empty, Cube.CUBE_SCALE / 2f);
+        //    if (mesh.IBO == null)
+        //    {
+        //        FastList<VertexCube> vertices = new FastList<VertexCube>();
+        //        List<int> indices = new List<int>();
+        //        MeshHelper.MakeUVSphereRaw(vertices, indices, new Vector3(Cube.CUBE_SCALE / 2f), BrUtility.RectangleF.Empty, Cube.CUBE_SCALE / 2f);
 
-                mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-                //mesh = new VerySimpleMesh(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-                //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-            }
+        //        mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+        //        //mesh = new VerySimpleMesh(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+        //        //mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+        //    }
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), sourceRect: new RectangleF(0, 0, 16, 16)));
-        }
+        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+        //        Matrix.CreateTranslation(Position - new Vector3(Cube.CUBE_SCALE / 2f)), sourceRect: new RectangleF(0, 0, 16, 16)));
+        //}
     }
 }

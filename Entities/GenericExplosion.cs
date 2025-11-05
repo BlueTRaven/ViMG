@@ -12,18 +12,18 @@ namespace ViMG.Entities
 {
     public class GenericExplosion : Entity, IHitboxOwner
     {
-        private VerySimpleMesh mesh;
+        //private VerySimpleMesh mesh;
 
-        private const float EXPLOSION_TIME = 10f / 60f;
+        public const float EXPLOSION_TIME = 10f / 60f;
         private const float HITBOX_TIME = 4f / 60f;
         
         private readonly HitboxManager.Group group;
         private readonly int damage;
         private readonly float knockback;
-        private readonly float radius;
+        public readonly float radius;
 
         private float hitboxTimer;
-        private float timer;
+        public float timer;
 
         private int hitbox = -1;
 
@@ -76,19 +76,19 @@ namespace ViMG.Entities
                 world.HitboxManager.Remove(hitbox);
         }
 
-        public override void Draw(GraphicsDevice device, Effect effect)
-        {
-            base.Draw(device, effect);
+        //public override void Draw(GraphicsDevice device, Effect effect)
+        //{
+        //    base.Draw(device, effect);
 
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeUVSphere(device, 1f);
+        //    if (mesh.IBO == null)
+        //        mesh = MeshHelper.MakeUVSphere(device, 1f);
 
-            float radius = (1 - timer / EXPLOSION_TIME) * this.radius;
-            float sort = (Position - Main.camera.Position).Length();
-            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
-                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
-                Matrix.CreateScale(radius) * Matrix.CreateTranslation(Position), null, Color.Red * 0.5f));
-        }
+        //    float radius = (1 - timer / EXPLOSION_TIME) * this.radius;
+        //    float sort = (Position - Main.camera.Position).Length();
+        //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
+        //        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
+        //        Matrix.CreateScale(radius) * Matrix.CreateTranslation(Position), null, Color.Red * 0.5f));
+        //}
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {

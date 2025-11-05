@@ -232,7 +232,7 @@ namespace ViMG
 		private int attackStateInitiatedWeapon; //the weapon that initiated the attack state.
 
         private float preUseTimer;
-		private float useTimer;
+		public float useTimer;
 		private float useAnimTimer;
 		private UseAnimationType useAnimType;
 		private ActionStats currentActionStats;
@@ -285,13 +285,13 @@ namespace ViMG
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
 
-		private Inventory inventory;
-		private Inventory craftInventory;
-		private Inventory gearInventory;
-		private Inventory accessoryInventory;
+		public Inventory inventory;
+		public Inventory craftInventory;
+		public Inventory gearInventory;
+		public Inventory accessoryInventory;
 		public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
-		private MenuPlayer menuPlayer;
+		public MenuPlayer menuPlayer;
 
 		public int Health;
 		public int MaxHealth = 20;
@@ -1433,7 +1433,7 @@ namespace ViMG
 				{
 					EntityItem item = ent as EntityItem;
 
-					if (!inventory.CanAdd(item.Item.item))
+					if (!inventory.CanAdd(item.ItemInstance.item))
 						continue;
 
 					Vector3 dir = Position - ent.Position;
@@ -1442,22 +1442,22 @@ namespace ViMG
 					{
 						//coins are handled manually due to the fact that they should add themselves to the player currency value
 						//instead of to the inventory.
-						if (item.Item.item is ItemCoin coin)
+						if (item.ItemInstance.item is ItemCoin coin)
 						{
                             world.EntityManager.Remove(ent);
 
-                            Currency += item.Item.num * coin.Value;
+                            Currency += item.ItemInstance.num * coin.Value;
 
-                            menuPlayer.AddPickedUpItem(item.Item);
+                            menuPlayer.AddPickedUpItem(item.ItemInstance);
                         }
 						else
 						{
-							if (inventory.Add(item.Item, out int index))
+							if (inventory.Add(item.ItemInstance, out int index))
 							{
 								world.EntityManager.Remove(ent);
-								item.Item.item.StartHold(this, inventory, index);
+								item.ItemInstance.item.StartHold(this, inventory, index);
 
-								menuPlayer.AddPickedUpItem(item.Item);
+								menuPlayer.AddPickedUpItem(item.ItemInstance);
 							}
 						}
 					}

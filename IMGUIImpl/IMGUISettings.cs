@@ -50,6 +50,7 @@ namespace ViMG.IMGUIImpl
         public enum RendererGBufferOverrideDraw
         {
             Composited,
+            All,
             Diffuse,
             LightAccum,
             Depth,

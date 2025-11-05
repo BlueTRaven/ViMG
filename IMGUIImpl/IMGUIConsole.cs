@@ -5,6 +5,7 @@ using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
@@ -73,6 +74,10 @@ namespace ViMG.IMGUIImpl
         private static List<(FieldInfo, ConsoleCommandVarAttribute)> vars = new();
         private static Dictionary<string, (FieldInfo, ConsoleCommandVarAttribute)> varsByName = new();
 
+        private static float lastRunTime;
+        private static int lastRunLines = 0;
+        private static int lastRunLines1 = 0;
+
         static IMGUIConsole()
         {
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -139,6 +144,23 @@ namespace ViMG.IMGUIImpl
             historyPos = 0;
             //TODO: history should be kept by clear command
             commandHistory.Clear();
+        }
+
+        [ConsoleCommand("run_script", "Runs a script, which is a collection of commands stored in plain-text, newline-separated format.")]
+        public static void LoadScript(string[] parameters)
+        {
+            RequireParam(parameters, 0, "script_name");
+
+            string scriptName = parameters[0];
+
+            string[] allLines = File.ReadAllLines(scriptName);
+
+            foreach (string line in allLines)
+            {
+                // running scripts in scripts not supported because we can EASILY deadlock ourselves...
+                if (!line.StartsWith("run_script") && line != "")
+                    HandleCommand(line);
+            }
         }
 
         [ConsoleCommand("get", "Get the value of a console variable.")]
@@ -254,8 +276,22 @@ namespace ViMG.IMGUIImpl
             return false;
         }
 
+        public static void OnExiting()
+        {
+            if (File.Exists("current_run.txt"))
+                File.Copy("current_run.txt", "previous_run.txt", true);
+        }
+
         public static unsafe void Console()
         {
+            if (Main.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
+            {
+                lastRunTime = (float)Main.Time;
+                File.WriteAllLines("current_run.txt", commandHistory.Buffer[0..commandHistory.Length]);
+
+                lastRunLines1 = lastRunLines;
+            }
+
             bool shouldFocus = false;
             if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde)) 
             {
@@ -379,10 +415,6 @@ namespace ViMG.IMGUIImpl
                         if (editingString != "")
                         {
                             HandleCommand(editingString);
-                            historyPos = -1;
-                            if (commandHistory.Length == MAX_HISTORY)
-                                commandHistory.RemoveAt(0);
-                            commandHistory.Add(editingString);
                         }
 
                         editingString = "";
@@ -424,6 +456,11 @@ namespace ViMG.IMGUIImpl
                 }
             }
             else LogLine("[error] No command with name " + commandName + ".");
+
+            historyPos = -1;
+            if (commandHistory.Length == MAX_HISTORY)
+                commandHistory.RemoveAt(0);
+            commandHistory.Add(editingString);
         }
 
         private static unsafe int Callback(ImGuiInputTextCallbackData* data)
@@ -597,6 +634,8 @@ namespace ViMG.IMGUIImpl
             if (lines.Length == MAX_LINES)
                 lines.RemoveAt(0);
             lines.Add(line);
+
+            lastRunLines++;
         }
     }
 }

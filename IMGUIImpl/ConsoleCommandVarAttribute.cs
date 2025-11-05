@@ -11,7 +11,7 @@ namespace ViMG.IMGUIImpl
     {
         public string name;
         public string description;
-        public ConsoleCommandVarAttribute(string name, string description)
+        public ConsoleCommandVarAttribute(string name, string description = "")
         {
             this.name = name;
             this.description = description;

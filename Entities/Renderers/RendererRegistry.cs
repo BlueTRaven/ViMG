@@ -32,6 +32,8 @@ namespace ViMG.Entities.Renderers
             Register(new RendererSkullhead(device));
             Register(new RendererLine(device));
             Register(new RendererLightning(device));
+            Register(new RendererGenericExplosion(device));
+            Register(new RendererEntityItem(device));
         }
 
         protected override void Register(EntityRenderer obj)

@@ -97,13 +97,14 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            IReadOnlyList<Entity> ents = entityManager.GetAll<Tree>();
+            //IReadOnlyList<Entity> ents = entityManager.GetAll<Tree>();
 
-            for (int i = 0; i < ents.Count; i++)
+            var iter = new Iterator<Tree>(entities);
+
+            while (iter.Next(out Tree tree))
             {
-                Tree tree = ents.ElementAt(i) as Tree;
                 if (tree.NeedsRerender)
                 {
                     //if the tree needs to be updated, just rerender the entire list
@@ -112,6 +113,10 @@ namespace ViMG.Entities.Renderers
                     tree.NeedsRerender = false;
                 }
             }
+            //for (int i = 0; i < ents.Count; i++)
+            //{
+            //    //Tree tree = ents.ElementAt(i) as Tree;
+            //}
 
             if (needsRebuild)
             {

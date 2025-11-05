@@ -27,7 +27,7 @@ namespace ViMG.Entities.Renderers
             return [typeof(Door)];
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
             if (doorMesh.IBO == null)
             {
@@ -35,9 +35,12 @@ namespace ViMG.Entities.Renderers
                 doorMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2f, Enums.Alignment.Center);
             }
 
-            var doors = entityManager.GetAll<Door>();
+            //var doors = entityManager.GetAll<Door>();
 
-            foreach (Door door in doors)
+            //foreach (Door door in doors)
+
+            var iter = new Iterator<Door>(entities);
+            while (iter.Next(out Door door))
             {
                 var position = door.world.PhysicsInfo.Simulation.Bodies[door.mountHandle].Pose.Position;
                 var orientation = door.world.PhysicsInfo.Simulation.Bodies[door.mountHandle].Pose.Orientation;

@@ -18,7 +18,7 @@ namespace ViMG.Entities
 		public readonly Vector3 InitialVelocity;
 		public Vector3 MaxVelocity = new Vector3(10, 15, 10) * Cube.CUBE_SCALE;
 		
-		public readonly ItemInstance Item;
+		public readonly ItemInstance ItemInstance;
 
 		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE / 2f));
 		public Rectangle3D Bounds => bounds.Offset(Position);
@@ -29,13 +29,13 @@ namespace ViMG.Entities
 
 		private Box box;
 		private TypedIndex physicsShapeIndex;
-		private BodyHandle physicsHandle;
+		public BodyHandle physicsHandle;
 
 		public EntityItem(Vector3 position, Vector3 initialVelocity, ItemInstance item)
 		{
 			this.Position = position;
             InitialVelocity = initialVelocity;
-            this.Item = item;
+            this.ItemInstance = item;
 
 			noPickupTimer = 1;
 		}
@@ -44,7 +44,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			if (Item.item is ItemCube)
+			if (ItemInstance.item is ItemCube)
 				box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f);
 			else box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
 
@@ -85,7 +85,7 @@ namespace ViMG.Entities
 			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
 
-			if (Item.item is ItemCube)
+			if (ItemInstance.item is ItemCube)
 				origin.Z = Cube.CUBE_SCALE / 4f;
 
 			Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + origin;
@@ -108,19 +108,19 @@ namespace ViMG.Entities
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 		}
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+		//public override void Draw(GraphicsDevice device, Effect effect)
+		//{
+		//	Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-			if (Item.item is ItemCube)
-				origin.Z = Cube.CUBE_SCALE / 4f;
+		//	if (Item.item is ItemCube)
+		//		origin.Z = Cube.CUBE_SCALE / 4f;
 
-			var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
-			Item.item.DrawInWorld(device, world, Item,
-				Matrix.CreateTranslation(-origin) *
-				Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
-				Matrix.CreateTranslation(reference.Pose.Position)
-				);
-		}
+		//	var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
+		//	Item.item.DrawInWorld(device, world, Item,
+		//		Matrix.CreateTranslation(-origin) *
+		//		Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
+		//		Matrix.CreateTranslation(reference.Pose.Position)
+		//		);
+		//}
 	}
 }
