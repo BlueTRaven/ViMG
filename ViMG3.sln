@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepuUtilities", "bepuphysic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monogame.ImGuiNet", "MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj", "{FBEA270C-2159-44D6-B37A-F9A8F503B6C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csproj", "{E2411739-FB1C-4E60-96A7-B929276B6210}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,14 @@ Global
 		{FBEA270C-2159-44D6-B37A-F9A8F503B6C2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FBEA270C-2159-44D6-B37A-F9A8F503B6C2}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
 		{FBEA270C-2159-44D6-B37A-F9A8F503B6C2}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.DebugNoTracy|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.DebugNoTracy|Any CPU.Build.0 = Debug|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
+		{E2411739-FB1C-4E60-96A7-B929276B6210}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

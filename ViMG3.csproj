@@ -18,16 +18,19 @@
   <ItemGroup>
     <Compile Remove="bepuphysics2\**" />
     <Compile Remove="BrUtility\**" />
+    <Compile Remove="Engine\**" />
     <Compile Remove="MigrationBackup\**" />
     <Compile Remove="MonoGame.ImGuiNet\**" />
     <Compile Remove="MonoGame\**" />
     <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
+    <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="MonoGame.ImGuiNet\**" />
     <EmbeddedResource Remove="MonoGame\**" />
     <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
+    <None Remove="Engine\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="MonoGame.ImGuiNet\**" />
     <None Remove="MonoGame\**" />
@@ -48,6 +51,7 @@
     <ProjectReference Include="BrUtility\BrAssetsManager\BrAssetsManager.csproj" PrivateAssets="All" />
     <ProjectReference Include="BrUtility\BrNineSlice\BrNineSlice.csproj" PrivateAssets="All" />
     <ProjectReference Include="BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />
+    <ProjectReference Include="Engine\Engine.csproj" />
     <ProjectReference Include="MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj" />
     <ProjectReference Include="MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj" />
   </ItemGroup>
