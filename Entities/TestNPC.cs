@@ -128,7 +128,7 @@ namespace ViMG.Entities
 
             Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 
-            if (world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(Position))
+            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position))
                 .GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("water"))
             {
                 Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;

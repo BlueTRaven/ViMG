@@ -5,35 +5,36 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ViMG.Cubes;
+using static ViMG.UIs.UI;
 
 namespace ViMG
 {
     //A cube view intended for initialization of the world.
     //This view does not support any multithreading.
     //Therefore it should only be used on contexts where multithreading may not be running or where threads cannot overlap.
-    public class InitializerCubeView
+    public class CubeView
     {
         private readonly ChunkManager chunkManager;
         private readonly ChunkManagerIO io;
-        private ChunkManager.GetCubeIdDel getCubeId;
-        private ChunkManager.GetCubeDel getCube;
-        private ChunkManager.GetFacesDel getCachedFaces;
-        private ChunkManager.SetCubeDel setCube;
 
-        public InitializerCubeView(ChunkManager chunkManager, ChunkManagerIO io, ChunkManager.GetCubeIdDel getCubeId, ChunkManager.GetCubeDel getCube, ChunkManager.GetFacesDel getCachedFaces, ChunkManager.SetCubeDel setCube)
+        public CubeView(ChunkManager chunkManager, ChunkManagerIO io)
         {
             this.chunkManager = chunkManager;
             this.io = io;
-            this.getCubeId = getCubeId;
-            this.getCube = getCube;
-            this.getCachedFaces = getCachedFaces;
-            this.setCube = setCube;
         }
 
         public ushort GetId(CubePosition position)
         {
-            return getCubeId(position);
+            byte[] bytes = io.GetBytes();
+
+            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            ushort id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+
+            //BitConverter is apparently faster than fixed cast of bytes to ushort
+            return id;
         }
 
         public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
@@ -57,7 +58,12 @@ namespace ViMG
 
         public Optional<Cube> GetCube(CubePosition position)
         {
-            return getCube(position);
+            if (!chunkManager.IsInWorldBounds(position))
+                return new Optional<Cube>();
+
+            ushort id = GetId(position);
+
+            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
         }
 
         public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def, int offset = 0, int count = -1)
@@ -77,11 +83,6 @@ namespace ViMG
                     cubes[i] = def;
                 else cubes[i] = registry[id - 1];
             }
-        }
-
-        public MeshHelper.CubeFace GetFace(CubePosition position)
-        {
-            return getCachedFaces(position);
         }
 
         private static CubePosition[] adjacentOffsets = new CubePosition[6]
@@ -104,57 +105,56 @@ namespace ViMG
             MeshHelper.CubeFace.BACK
         };
 
-        public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces, int offset = 0, int count = -1)
+        public void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
-            if (count == -1)
-                count = positions.Length;
+            byte[] bytes = io.GetBytes();
 
-            byte[] idBytes = io.GetBytes();
-            var registry = Main.Registry.CubeRegistry.GetIterable();
+            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            CubePosition positionChS = position.InChunkSpace(chunkPos);
+            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
 
-            for (int i = offset; i < offset + count; i++)
+            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            ushort oldId = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+            Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+
+            if (markDirty)
             {
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
-
-                Cube cube = registry[id];
-
-                faces[i] = MeshHelper.CubeFace.NONE;
-
-                for (int j = 0; j < 6; j++)
-                {
-                    int adjacentOffset = ChunkManagerIO.GetCubeOffset(positions[i] + adjacentOffsets[j]);
-                    ushort adjacentId = Unsafe.ReadUnaligned<ushort>(ref idBytes[adjacentOffset * sizeof(ushort)]);
-
-                    Cube adjacentCube = registry[adjacentId];
-
-                    if (cube.Transparency != Cube.TransparencyValue.Air)
-                    {
-                        switch (adjacentCube.Transparency)
-                        {
-                            case (Cube.TransparencyValue.Transparent):
-                            case (Cube.TransparencyValue.Invisible):
-                            case (Cube.TransparencyValue.Air):
-                                faces[i] |= adjacentFaces[j];
-                                break;
-                            case (Cube.TransparencyValue.TransparentOccludesSiblings):
-                                if (cube != adjacentCube)
-                                    faces[i] |= adjacentFaces[j];
-                                break;
-                            default:
-                                break;
-                        }
-
-                    }
-                    else if (cube.Transparency == Cube.TransparencyValue.Air && cube != adjacentCube)
-                        faces[i] |= adjacentFaces[j];
-                }
+                chunkManager.MarkCubeMeshInfoDirty(position, oldId, id);
+                chunkManager.MarkChunkDirty(chunkPos);
             }
         }
 
-        public void SetCube(CubePosition position, ushort id, bool markDirty = false)
+        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
         {
-            setCube(position, id, markDirty);
+            byte[] bytes = io.GetBytes();
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var position = positions[i];
+                CubePosition positionChS = position.InChunkSpace();
+                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+
+                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], ids[i]);
+            } 
+        }
+
+        public void SetCubes(Span<CubePosition> positions, ushort id, int offset = 0, int count = -1)
+        {
+            byte[] bytes = io.GetBytes();
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var position = positions[i];
+                CubePosition positionChS = position.InChunkSpace();
+                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+
+                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+            }
         }
 
         public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start)

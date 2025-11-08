@@ -76,7 +76,7 @@ namespace ViMG.Items
                     }
                 }
 
-                player.world.ChunkManager.ThreadedView.SetCubes(positions, pasted.original.AsSpan());
+                player.world.ChunkManager.CubeView.SetCubes(positions, pasted.original.AsSpan());
             }
 
             Main.DEBUGPopupText = "Currently Selected Structure:\n" + assetKeysList[currentStructure] + ".\n" +
@@ -112,8 +112,8 @@ namespace ViMG.Items
                 }
             }
 
-            player.world.ChunkManager.ThreadedView.GetIds(positions, pasted.original.AsSpan());
-            player.world.ChunkManager.ThreadedView.SetCubes(positions, structure.data.AsSpan());
+            player.world.ChunkManager.CubeView.GetIds(positions, pasted.original.AsSpan());
+            player.world.ChunkManager.CubeView.SetCubes(positions, structure.data.AsSpan());
 
             pastedStructures.Push(pasted);
 

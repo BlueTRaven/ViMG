@@ -64,8 +64,8 @@ namespace ViMG.Generation
                         if ((simplex * attenuationX < 0.25f && xDistance.Length() < SIZE) || 
                             (simplex * attenuationZ < 0.25f && zDistance.Length() < SIZE) || 
                             (simplex * attenuationY < 0.25f && yDistance.Length() < SIZE)) 
-                            state.world.ChunkManager.InitializerView.SetCube(cubeSpacePos, 0);
-                        else state.world.ChunkManager.InitializerView.SetCube(cubeSpacePos, stone.Id);
+                            state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, 0);
+                        else state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, stone.Id);
                     }
                 }
             }

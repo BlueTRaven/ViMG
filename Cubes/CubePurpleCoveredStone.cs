@@ -102,7 +102,7 @@ namespace ViMG.Cubes
 
                 if (smallMushroom)
                 {
-                    manager.ThreadedView.SetCube(abovePosition, mushroomSmall.Id);
+                    manager.CubeView.SetCube(abovePosition, mushroomSmall.Id);
                 }
                 else
                 {
@@ -187,7 +187,7 @@ namespace ViMG.Cubes
                             //manager.SetCube(offsetPosition, mushroomTop.Id);
                         }
 
-                        manager.ThreadedView.SetCubes(positions, ids);
+                        manager.CubeView.SetCubes(positions, ids);
                     }
                 }
             }

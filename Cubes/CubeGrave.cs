@@ -44,7 +44,7 @@ namespace ViMG.Cubes
 
             for (int i = 0; i < 6; i++)
             {
-                if (player.world.ChunkManager.ThreadedView.GetId(position + adjacents[i]) == Id)
+                if (player.world.ChunkManager.CubeView.GetId(position + adjacents[i]) == Id)
                     numNearby++;
             }
 

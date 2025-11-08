@@ -26,7 +26,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
-					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -38,7 +38,7 @@ namespace ViMG.Items
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
 						Cube glowNode = Main.Registry.CubeRegistry.Get("glow_node");
-						player.world.ChunkManager.ThreadedView.SetCube(placeAtPos, glowNode.Id);
+						player.world.ChunkManager.CubeView.SetCube(placeAtPos, glowNode.Id);
 						glowNode.OnPlayerPlaced(player, placeAtPos);
 						inventory.Remove(index, 1);
 

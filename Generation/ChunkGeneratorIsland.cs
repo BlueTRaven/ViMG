@@ -165,7 +165,7 @@ namespace ViMG.Generation
 			playerPos.Y = chunkManager.SizeInCubes;
 
 			//TODO this should use initializer view
-			return chunkManager.InitializerView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
+			return chunkManager.CubeView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
 		}
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -183,7 +183,7 @@ namespace ViMG.Generation
 						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
 						//TODO: 
-						state.world.ChunkManager.InitializerView.SetCube(pos.InCubeSpace(state.position), id);
+						state.world.ChunkManager.CubeView.SetCube(pos.InCubeSpace(state.position), id);
 						//cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
@@ -209,7 +209,7 @@ namespace ViMG.Generation
 						{
 							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-							if (world.ChunkManager.InitializerView.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
+							if (world.ChunkManager.CubeView.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
 							{
 								int val = GetRandom().Next(0, 256);
 								if (val == 0)
@@ -220,11 +220,11 @@ namespace ViMG.Generation
 										num, pos), true);
 								}
 								else if (val == 1)
-									world.ChunkManager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
 								else if (val == 2)
-									world.ChunkManager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
 								else if (val == 3)
-									world.ChunkManager.InitializerView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
 							}
 						}
 					}
@@ -368,9 +368,9 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
-					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
                     {
@@ -378,7 +378,7 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							world.ChunkManager.InitializerView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
+							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
 
 							int randomFace = GetRandom().Next();
 
@@ -405,7 +405,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
@@ -434,9 +434,9 @@ namespace ViMG.Generation
                 CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
                     layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-                if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+                if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 {
-                    var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
+                    var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
                     if (solidDown.HasValue())
                     {
@@ -448,11 +448,11 @@ namespace ViMG.Generation
                         {
                             positions[lastPosition++] = actualGenPos;
                             
-							world.ChunkManager.InitializerView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id);
-                            world.ChunkManager.InitializerView.SetCube(actualGenPos + new CubePosition(0, 1, 0), 
+							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id);
+                            world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 1, 0), 
 								Main.Registry.CubeRegistry.Get("grave").Id);
 							if (which == 1)
-								world.ChunkManager.InitializerView.SetCube(actualGenPos + new CubePosition(0, 2, 0), 
+								world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 2, 0), 
 									Main.Registry.CubeRegistry.Get("grave").Id);
 
                             world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "grave", 1));
@@ -475,9 +475,9 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
 					{
@@ -496,7 +496,7 @@ namespace ViMG.Generation
 							if (which < 2)
 								ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.ChunkManager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar, false);
-							else world.ChunkManager.InitializerView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
+							else world.ChunkManager.CubeView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
 
 							world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
 
@@ -517,9 +517,9 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
 				{
-					var solidDown = world.ChunkManager.InitializerView.GetFirstSolidDown(pos);
+					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
 					if (solidDown.HasValue())
 					{
@@ -545,7 +545,7 @@ namespace ViMG.Generation
 			{
 				Vector2 offset = GetRandom().NextAngle() * (holeRadius + 16);
 
-				var solidPos = world.ChunkManager.GetFirstSolidDown(new Vector3(holePos.X + offset.X, 512, holePos.Y + offset.Y) * Cube.CUBE_SCALE);
+				var solidPos = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(new Vector3(holePos.X + offset.X, 512, holePos.Y + offset.Y) * Cube.CUBE_SCALE));
 
 				if (solidPos.HasValue())
 				{
@@ -566,7 +566,7 @@ namespace ViMG.Generation
 				ang += Angle.FromDegrees(GetRandom().Next(45, 360 - 45));
 
 				housePos += ang.Vector * (GetRandom().NextFloat(64, 196) * Cube.CUBE_SCALE);
-				var solidPos = world.ChunkManager.GetFirstSolidDown(new Vector3(housePos.X, 512, housePos.Y) * Cube.CUBE_SCALE);
+				var solidPos = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(new Vector3(housePos.X, 512, housePos.Y) * Cube.CUBE_SCALE));
 
 				if (solidPos.HasValue())
 				{
@@ -729,7 +729,7 @@ namespace ViMG.Generation
 						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
 						{
 							used.Add(toFill);
-							manager.InitializerView.SetCube(toFill, 0);
+							manager.CubeView.SetCube(toFill, 0);
 							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));

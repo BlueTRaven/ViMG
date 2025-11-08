@@ -55,7 +55,7 @@ namespace ViMG.Items
                     actionStats.useAnimTime = useTime;
 
                     Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
-					player.world.ChunkManager.ThreadedView.GetIds(affectedPositions.AsSpan(), ids);
+					player.world.ChunkManager.CubeView.GetIds(affectedPositions.AsSpan(), ids);
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
@@ -68,7 +68,7 @@ namespace ViMG.Items
 				}
                 else
                 {
-					if (player.world.ChunkManager.ThreadedView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+					if (player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 						player.GetWorld().TryMineCube(player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 				}
 			}

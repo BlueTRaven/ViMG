@@ -346,13 +346,16 @@ namespace ViMG.Entities
 							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) +
 								new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-							positions[pi] = pos;
-							pi++;
+							if (world.ChunkManager.IsInWorldBounds(pos))
+							{
+								positions[pi] = pos;
+								pi++;
+							}
 						}
 					}
 				}
 
-				world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+				world.ChunkManager.CubeView.GetIds(positions[..pi], ids[..pi]);
 
 				for (int j = 0; j < 3 * 3 * 3; j++)
                 {

@@ -32,7 +32,7 @@ namespace ViMG.Spawners
 
             Vector3 startPosition = new Vector3(islandCenter.X + angleVector.X, world.sizeInCubes * Cube.CUBE_SCALE, islandCenter.Y + angleVector.Y);
 
-            var p = world.ChunkManager.ThreadedView.GetFirstSolidDown(CubePosition.FromWorldSpace(startPosition));
+            var p = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(startPosition));
 
             position = p.Get();
 

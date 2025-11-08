@@ -31,7 +31,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.world.ChunkManager.IsInWorldBounds(pos) &&
-					player.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+					player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			if (lookAtResult.hasHit)
@@ -41,7 +41,7 @@ namespace ViMG.Items
 					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
 
-					player.world.ChunkManager.ThreadedView.GetIds(affectedPositions.AsSpan(), ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+					player.world.ChunkManager.CubeView.GetIds(affectedPositions.AsSpan(), ids);
 
 					float useTime =  GetStats(inventory.Get(index)).cooldownTime;
 					useTime -= useTime * (player.GetStats().MiningScale);
@@ -59,7 +59,7 @@ namespace ViMG.Items
 				{
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 					{
-						if (player.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
 							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
@@ -168,7 +168,7 @@ namespace ViMG.Items
 			int rangeY = maxy - miny + 1;
 			int rangeZ = maxz - minz + 1;
 
-			if (cachedAffectedPositions == null)
+			if (cachedAffectedPositions == null || cachedAffectedPositions.Length < rangeX * rangeY * rangeZ)
 				cachedAffectedPositions = new CubePosition[rangeX * rangeY * rangeZ];
 
 			int i = 0;
@@ -183,13 +183,17 @@ namespace ViMG.Items
 						minePos.Y += y;
 						minePos.Z += z;
 
-						cachedAffectedPositions[i++] = minePos;
+						if (player.world.ChunkManager.IsInWorldBounds(minePos))
+						{
+							cachedAffectedPositions[i] = minePos;
+							i++;
+						}
 					}
 				}
 			}
 
-			num = cachedAffectedPositions.Length;
-			return cachedAffectedPositions;
+			num = i;
+			return cachedAffectedPositions[..i];
 		}
 
 		public ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item)

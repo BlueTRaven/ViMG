@@ -20,7 +20,7 @@ namespace ViMG.Cubes
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
-            var above = manager.ThreadedView.GetCube(position + new CubePosition(0, 1, 0));
+            var above = manager.CubeView.GetCube(position + new CubePosition(0, 1, 0));
 
             if (above.GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
                 return true;
@@ -32,7 +32,7 @@ namespace ViMG.Cubes
             base.OnPlayerPlaced(player, position);
 
             CubePosition top = position + new CubePosition(0, 1, 0);
-            player.world.ChunkManager.ThreadedView.SetCube(top, Id);
+            player.world.ChunkManager.CubeView.SetCube(top, Id);
 
             MeshHelper.CubeFace face = CubeHelper.GetFaceFromPlayerPos(player, position, false);
 

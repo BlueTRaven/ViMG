@@ -54,14 +54,14 @@ namespace ViMG.Items
             (Vector3 pos) =>
             {
                 return player.world.ChunkManager.IsInWorldBounds(pos) &&
-                    player.world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+                    player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
             });
 
             if (lookAtResult.hasHit)
             {
                 CubePosition pos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
-                Cube cube = player.world.ChunkManager.ThreadedView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                 bool a = cube == Main.Registry.CubeRegistry.Get("ancient_altar_placeable");
                 bool b = cube == Main.Registry.CubeRegistry.Get("ancient_altar_generated");
 

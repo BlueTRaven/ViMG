@@ -82,8 +82,7 @@ namespace ViMG
         public readonly ChunkRenderMesher RenderMesher;
         public readonly ChunkCollisionMesher CollisionMesher;
 
-        public InitializerCubeView InitializerView;
-        public ThreadedCubeView ThreadedView;
+        public CubeView CubeView;
 
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
@@ -141,7 +140,7 @@ namespace ViMG
                             multiTracker.TrackingCubeUpdated(world, this, updated.updated, updated.newId, updated.timeUpdated);
                     }
                 }
-                else ThreadedView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
+                else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
                         .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);
 
                 updatedThisFrame++;
@@ -152,64 +151,6 @@ namespace ViMG
         {
             RenderMesher.Unload(pos);
             CollisionMesher.Unload(pos);
-        }
-
-        //TODO: separate out visual stuff, not sure how yet
-        private MeshHelper.CubeFace GetClearSides(CubePosition position)
-        {
-            Cube cube = InitializerView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-            if (cube.Transparency == Cube.TransparencyValue.Invisible)
-                return MeshHelper.CubeFace.NONE;
-
-            MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
-
-            if (HasClearSide(position.X + 1, position.Y, position.Z, cube))
-                faces |= MeshHelper.CubeFace.LEFT;
-            if (HasClearSide(position.X - 1, position.Y, position.Z, cube))
-                faces |= MeshHelper.CubeFace.RIGHT;
-
-            if (HasClearSide(position.X, position.Y - 1, position.Z, cube))
-                faces |= MeshHelper.CubeFace.DOWN;
-            if (HasClearSide(position.X, position.Y + 1, position.Z, cube))
-                faces |= MeshHelper.CubeFace.UP;
-
-            if (HasClearSide(position.X, position.Y, position.Z - 1, cube))
-                faces |= MeshHelper.CubeFace.FRONT;
-            if (HasClearSide(position.X, position.Y, position.Z + 1, cube))
-                faces |= MeshHelper.CubeFace.BACK;
-
-            return faces;
-        }
-
-        //TODO: separate out visual stuff, not sure how yet
-        private bool HasClearSide(int x, int y, int z, Cube currentCube)
-        {
-            CubePosition pos = new CubePosition(x, y, z);
-            if (IsInWorldBounds(pos))
-            {
-                Cube adjacentCube = InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-                if (currentCube.Transparency != Cube.TransparencyValue.Air)
-                {
-                    switch (adjacentCube.Transparency)
-                    {
-                        case (Cube.TransparencyValue.Transparent):
-                        case (Cube.TransparencyValue.Invisible):
-                        case (Cube.TransparencyValue.Air):
-                            return true;
-                        case (Cube.TransparencyValue.TransparentOccludesSiblings):
-                            return currentCube != adjacentCube;
-                        default:
-                            return false;
-                    }
-
-                }
-                else if (currentCube.Transparency == Cube.TransparencyValue.Air)
-                    return currentCube != adjacentCube;
-            }
-            
-            return false;
         }
 
         public bool IsInWorldBounds(Vector3 position)
@@ -265,54 +206,7 @@ namespace ViMG
             CollisionMesher.MarkDirty(position);
         }
 
-        //public (VertexBuffer VBO, IndexBuffer IBO) GetMesh(ChunkPosition position, Cube.RenderPass pass)
-        //{
-        //    return RenderMesher.GetMesh(position, pass);
-        //}
-
-        public delegate MeshHelper.CubeFace GetFacesDel(CubePosition position);
-        private MeshHelper.CubeFace GetCachedFaces(CubePosition position)
-        {
-            return GetClearSides(position);
-
-            /*ref CubeMeshInfo meshInfo = ref GetCubeMeshInfo(position);
-
-            if (meshInfo.version != meshInfo.meshVersion)
-            {
-                meshInfo.meshVersion = meshInfo.version;
-
-                meshInfo.faces = GetClearSides(position);
-            }
-
-            return meshInfo.faces;*/
-        }
-
-        public MeshHelper.CubeFace GetFaces(CubePosition position)
-        {
-            return GetClearSides(position);
-        }
-
-        /*private ref CubeMeshInfo GetCubeMeshInfo(CubePosition position)
-        {
-            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(SizeInCubes), out int i);
-            return ref cubeMeshInfos[i];
-        }*/
-
-        public OptionalValue<CubePosition> GetFirstSolidDown(Vector3 start)
-        {
-            CubePosition startPos = CubePosition.FromWorldSpace(start);
-
-            for (int y = 0; y < SizeInCubes; y++)
-            {
-                CubePosition pos = new CubePosition(startPos.X, startPos.Y - y, startPos.Z);
-                if (IsInWorldBounds(pos) && GetCubeId(pos) != 0)
-                    return new OptionalValue<CubePosition>(pos);
-            }
-
-            return new OptionalValue<CubePosition>();
-        }
-
-        private void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
+        public void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             //GetCubeMeshInfo(position).version++;
             updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, position, oldId, updatedId));
@@ -333,75 +227,6 @@ namespace ViMG
             }
         }
 
-        public delegate void SetCubeDel(CubePosition position, ushort id, bool markDirty = true);
-        private unsafe void SetCube(CubePosition position, ushort id, bool markDirty = true)
-        {
-            byte[] bytes = io.GetBytes();
-
-            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-            Util.ThreeDToOneD(new ValuePoint3D(chunkPos.X, chunkPos.Y, chunkPos.Z), new ValuePoint3D(SizeInChunksXZ), out int chi);
-            int chunkOffset = Chunk.NUM_CUBES_IN_CHUNK * chi;
-            CubePosition positionChS = position.InChunkSpace(chunkPos);
-            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
-            //int cbi = ci * sizeof(ushort);
-            //cbi += chunkOffset;
-
-            ushort oldId;
-
-            fixed (byte* bytesRaw = &bytes[0])
-            {
-                ushort* asIds = (ushort*)bytesRaw;
-
-                oldId = asIds[ci + chunkOffset];
-                asIds[ci + chunkOffset] = id;
-            }
-            
-            /*bytes[cbi++] = (byte)id;
-            bytes[cbi++] = (byte)(id >> 8);*/
-
-            if (markDirty)
-            {
-                MarkCubeMeshInfoDirty(position, oldId, id);
-                //GetCubeMeshInfo(position).version++;
-                MarkChunkDirty(chunkPos);
-
-                //updatedCubePositions.Enqueue(new CubeUpdated(position, position, oldId, id));
-            }
-
-        }
-
-        public delegate ushort GetCubeIdDel(CubePosition position);
-        private ushort GetCubeId(CubePosition position)
-        {
-            byte[] bytes = io.GetBytes();
-
-            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
-
-            ushort id;
-
-            id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]); //BitConverter.ToUInt16(bytes, cubeOffset * sizeof(ushort));
-
-            //BitConverter is apparently faster than fixed cast of bytes to ushort
-            return id;
-            /*fixed (byte* bytesRaw = &bytes[0])
-            {
-                ushort* asIds = (ushort*)bytesRaw;
-                return asIds[ci];
-            }*/
-        }
-
-        public delegate Optional<Cube> GetCubeDel(CubePosition position);
-        //Really minor cache speedup
-        private Optional<Cube> GetCube(CubePosition position)
-        {
-            if (!IsInWorldBounds(position))
-                return new Optional<Cube>();
-
-            ushort id = GetCubeId(position);
-
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
-        }
-
         public void Dispose()
         {
             //There may still be things in the queue, including active threads, so wait on those
@@ -413,18 +238,11 @@ namespace ViMG
             CollisionMesher.UnloadAll();
         }
 
-        public ThreadedCubeView CreateThreadedCubeView(ChunkLoadManager loadManager)
+        public CubeView CreateCubeView()
         {
-            ThreadedView = new ThreadedCubeView(this, loadManager, GetCubeId, GetCube, GetCachedFaces, SetCube);
+            CubeView = new CubeView(this, io);
 
-            return ThreadedView;
-        }
-        
-        public InitializerCubeView CreateInitializerCubeView()
-        {
-            InitializerView = new InitializerCubeView(this, io, GetCubeId, GetCube, GetCachedFaces, SetCube);
-
-            return InitializerView;
+            return CubeView;
         }
     }
 }

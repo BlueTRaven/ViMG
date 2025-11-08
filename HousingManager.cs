@@ -199,7 +199,7 @@ namespace ViMG
 
                 CubePosition fillPosition = floodFills.Dequeue();
 
-                Cube cube = world.ChunkManager.ThreadedView.GetCube(fillPosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = world.ChunkManager.CubeView.GetCube(fillPosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
                 bool isWall = cube.Solid || cube is CubeDoor;
                 bool isAir = !cube.Solid;
@@ -216,7 +216,7 @@ namespace ViMG
                         interiorPositions.Add(fillPosition);
 
                         visited.Add(fillPosition);
-                        world.ChunkManager.InitializerView.SetCube(fillPosition, 0);
+                        world.ChunkManager.CubeView.SetCube(fillPosition, 0);
                         floodFills.Enqueue(new CubePosition(fillPosition.X - 1, fillPosition.Y, fillPosition.Z));
                         floodFills.Enqueue(new CubePosition(fillPosition.X + 1, fillPosition.Y, fillPosition.Z));
                         floodFills.Enqueue(new CubePosition(fillPosition.X, fillPosition.Y - 1, fillPosition.Z));

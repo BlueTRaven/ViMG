@@ -430,7 +430,7 @@ namespace ViMG
 			//SpawnPosition got corrupted or something or is a version that doesn't have it
 			if (SpawnPosition == new CubePosition())
 			{
-				SpawnPosition = world.ChunkManager.ThreadedView.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
+				SpawnPosition = world.ChunkManager.CubeView.GetFirstSolidDown(new CubePosition(world.sizeInCubes / 2, world.sizeInCubes, world.sizeInCubes / 2)).GetOrDefault(new CubePosition());
 			}
 		}
 
@@ -742,7 +742,7 @@ namespace ViMG
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
-				Cube cube = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
 				
 				//if we're climbing a rope, ignore the rope
@@ -758,7 +758,7 @@ namespace ViMG
 			{
 				if (world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
-					var c = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit));
+					var c = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit));
 					IsLooking = true;
 					this.LookAtPos = CubePosition.FromWorldSpace(lookAtResult.hit);
 					this.LookAtNormal = lookAtResult.normal;
@@ -772,7 +772,7 @@ namespace ViMG
 			if (world.ChunkManager.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
-			if (lookAtResult.hasHit && world.ChunkManager.InitializerView.GetCube(LookAtPos)
+			if (lookAtResult.hasHit && world.ChunkManager.CubeView.GetCube(LookAtPos)
 				.GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(world, LookAtPos))
 			{
 				//? crosshair
@@ -812,7 +812,7 @@ namespace ViMG
 			inWater = false;
 			inRope = false;
 
-			Cube cube = world.ChunkManager.InitializerView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
             
 			if (cube.Collision == Cube.CollisionValue.LiquidWater)
 				inWater = true;
@@ -1280,7 +1280,7 @@ namespace ViMG
                         PerformAction(actionStats);
 					else
 					{
-                        Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                        Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                         cube.OnLeftClick(world, LookAtPos);
 
 						PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
@@ -1321,7 +1321,7 @@ namespace ViMG
 
 					if (!performedAction)
 					{
-						Cube cube = world.ChunkManager.InitializerView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 						if (cube.CanRightClick(world, LookAtPos))
 						{
@@ -1732,7 +1732,7 @@ namespace ViMG
 					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[positions.Length];
 
-					world.ChunkManager.ThreadedView.GetIds(positions.AsSpan(), ids);
+					world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);
 
 					for (int i = 0; i < positions.Length; i++)
 					{

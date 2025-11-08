@@ -66,7 +66,7 @@ namespace ViMG.Entities
                     //Set position to be the point where we end up being eventually.
                     
                     Vector2 startXZ = world.player.Position.XZ() + new Vector2(Main.random.Next(-32, 32) * Cube.CUBE_SCALE, Main.random.Next(-32, 32) * Cube.CUBE_SCALE);
-                    CubePosition endPos = world.ChunkManager.InitializerView.GetFirstSolidDown(
+                    CubePosition endPos = world.ChunkManager.CubeView.GetFirstSolidDown(
                         CubePosition.FromWorldSpace(new Vector3(startXZ.X, world.sizeInCubes * Cube.CUBE_SCALE, startXZ.Y))).Get() +
                         new CubePosition(0, 1, 0);
                     Position = endPos.InWorldSpace();
@@ -84,7 +84,7 @@ namespace ViMG.Entities
             }
             else if (state == State.Finished)
             {
-                world.ChunkManager.InitializerView.SetCube(CubePosition.FromWorldSpace(Position), 
+                world.ChunkManager.CubeView.SetCube(CubePosition.FromWorldSpace(Position), 
                     Main.Registry.CubeRegistry.Get("mana_star").Id, true);
                 //if (timer <= 0)
                     world.EntityManager.Remove(this);

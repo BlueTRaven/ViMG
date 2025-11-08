@@ -198,7 +198,7 @@ namespace ViMG.Entities
             {
                 for (int i = 0; i < TrackedPositions.Count(); i++)
                 {
-                    cm.ThreadedView.SetCube(TrackedPositions.ElementAt(i), 0);
+                    cm.CubeView.SetCube(TrackedPositions.ElementAt(i), 0);
                 }
 
                 world.EntityManager.Remove(this);

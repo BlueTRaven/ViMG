@@ -28,7 +28,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -41,7 +41,7 @@ namespace ViMG.Items
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos)
 						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
 					{
-						player.GetWorld().ChunkManager.ThreadedView.SetCube(placeAtPos, cube.Id);
+						player.GetWorld().ChunkManager.CubeView.SetCube(placeAtPos, cube.Id);
 
 						cube.OnPlayerPlaced(player, placeAtPos);
 

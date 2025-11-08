@@ -93,7 +93,7 @@ namespace ViMG.Entities
             {
                 world.EntityManager.Remove(this);
 
-                world.ChunkManager.ThreadedView.SetCube(TrackedPosition, 0);
+                world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
             }
         }
 

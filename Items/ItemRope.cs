@@ -32,7 +32,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -40,7 +40,7 @@ namespace ViMG.Items
 				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
 					//we're placing on a pre-existing rope block.
-					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
+					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
 						.GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
 					{
 						Cube currentCube = cube;
@@ -50,7 +50,7 @@ namespace ViMG.Items
                         {
 							nextPos -= new CubePosition(0, 1, 0);
 
-							currentCube = player.GetWorld().ChunkManager.ThreadedView.GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							currentCube = player.GetWorld().ChunkManager.CubeView.GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 							//if not in world bounds, then we can't place it, so just return false.
 							if (!player.GetWorld().ChunkManager.IsInWorldBounds(nextPos))
@@ -63,7 +63,7 @@ namespace ViMG.Items
 							{
 								if (player.GetWorld().ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(nextPos)))
 								{
-									player.GetWorld().ChunkManager.ThreadedView.SetCube(nextPos, cube.Id);
+									player.GetWorld().ChunkManager.CubeView.SetCube(nextPos, cube.Id);
 									inventory.Remove(index, 1);
 
 									cube.OnPlayerPlaced(player, nextPos);
@@ -85,7 +85,7 @@ namespace ViMG.Items
 						{
 							if (player.GetWorld().ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(placeAtPos)))
 							{
-								player.GetWorld().ChunkManager.ThreadedView.SetCube(placeAtPos, cube.Id);
+								player.GetWorld().ChunkManager.CubeView.SetCube(placeAtPos, cube.Id);
 								inventory.Remove(index, 1);
 
 								cube.OnPlayerPlaced(player, placeAtPos);

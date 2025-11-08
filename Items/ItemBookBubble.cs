@@ -38,7 +38,7 @@ namespace ViMG.Items
                 {
                     //TODO check solidity, not id != 0
                     return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
-                        player.GetWorld().ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+                        player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
                 });
 
                 Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;

@@ -89,7 +89,7 @@ namespace ViMG.ChunkStuff
                 }
             }
 
-            world.ChunkManager.InitializerView.GetIds(queryPositions, copied.Ids);
+            world.ChunkManager.CubeView.GetIds(queryPositions, copied.Ids);
             world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
 
             return copied;

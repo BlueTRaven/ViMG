@@ -101,10 +101,10 @@ namespace ViMG.Spawners
             //if (world.ChunkManager.GetChunk(CubePosition.FromWorldSpace(v)).Initialized)
             if (world.ChunkManager.IsInWorldBounds(ChunkPosition.WorldSpaceChunk(v)) && world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(v)))
             {
-                var cubeAtPos = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(v)).Get();
+                var cubeAtPos = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(v)).Get();
                 if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
-                    CubePosition pos = world.ChunkManager.ThreadedView.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
+                    CubePosition pos = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 
                     position = pos;
                     return true;

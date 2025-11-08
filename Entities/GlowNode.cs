@@ -143,7 +143,7 @@ namespace ViMG.Entities
 		{
 			//world.MineCube(TrackedPosition, true);
 			//TODO this had killtrackedentities false?
-			world.ChunkManager.ThreadedView.SetCube(TrackedPosition, 0);
+			world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
 			world.EntityManager.Remove(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();

@@ -36,7 +36,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-            bottomPosition = world.ChunkManager.InitializerView.GetFirstSolidDown(CubePosition.FromWorldSpace(Position)).Get().InWorldSpaceCenter();
+            bottomPosition = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(Position)).Get().InWorldSpaceCenter();
 
             float SPLIT_DISTANCE = Cube.CUBE_SCALE * 4f;
 

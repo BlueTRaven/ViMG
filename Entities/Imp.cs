@@ -259,13 +259,16 @@ namespace ViMG.Entities
 					{
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						positions[pi] = pos;
-						pi++;
+						if (world.ChunkManager.IsInWorldBounds(pos))
+						{
+							positions[pi] = pos;
+							pi++;
+						}
 					}
 				}
 			}
 
-			world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+			world.ChunkManager.CubeView.GetIds(positions[..pi], ids[..pi]);
 
 			for (int i = 0; i < total; i++)
 			{
@@ -303,7 +306,7 @@ namespace ViMG.Entities
 				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 					(Vector3 pos) =>
 					{
-						Cube cube = world.ChunkManager.ThreadedView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 						return cube.Collision != Cube.CollisionValue.None;
 					});

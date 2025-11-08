@@ -60,7 +60,7 @@ namespace ViMG.Cubes
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
-            return manager.ThreadedView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+            return manager.CubeView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
         }
 
         public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId, double updatedTime)
@@ -71,7 +71,7 @@ namespace ViMG.Cubes
                 Cube cube = Main.Registry.CubeRegistry.Get(updatedId);
 
                 if (cube == null || !cube.Solid)
-                    manager.ThreadedView.SetCube(position, 0);
+                    manager.CubeView.SetCube(position, 0);
             }
 
             base.OnAdjacentUpdated(world, manager, position, updating, updatedId, updatedTime);

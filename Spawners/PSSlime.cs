@@ -50,7 +50,7 @@ namespace ViMG.Spawners
             if (position.Y < 181)
                 return false;
 
-            Cube c = manager.ThreadedView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = manager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
             if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
                 return true;
 

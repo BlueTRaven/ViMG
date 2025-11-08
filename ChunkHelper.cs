@@ -56,7 +56,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -66,7 +66,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								manager.InitializerView.SetCube(realPos, structure.data[i], markDirty);
+								manager.CubeView.SetCube(realPos, structure.data[i], markDirty);
 						}
 					}
 				}
@@ -97,7 +97,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = chunkManager.InitializerView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = chunkManager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -107,7 +107,7 @@ namespace ViMG
 							}
 
 							if (canWrite)
-								chunkManager.InitializerView.SetCube(realPos, placeId, markDirty);
+								chunkManager.CubeView.SetCube(realPos, placeId, markDirty);
 						}
 					}
 				}
@@ -140,7 +140,7 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = manager.InitializerView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				offsetCube = manager.CubeView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				if (!offsetCube.Solid)
 				{
 					return true;
@@ -243,7 +243,7 @@ namespace ViMG
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (manager.IsInWorldBounds(pos) && manager.InitializerView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+						if (manager.IsInWorldBounds(pos) && manager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
                         {
 							selected.Add(pos);
                         }

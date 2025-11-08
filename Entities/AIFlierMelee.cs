@@ -231,13 +231,16 @@ namespace ViMG.Entities
 						{
 							CubePosition pos = CubePosition.FromWorldSpace(entity.Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-							positions[pi] = pos;
-							pi++;
+							if (entity.world.ChunkManager.IsInWorldBounds(pos))
+							{
+								positions[pi] = pos;
+								pi++;
+							}
 						}
 					}
 				}
 
-				entity.world.ChunkManager.ThreadedView.GetIds(positions, ids, ThreadedCubeView.SafetyCheck.InWorldBounds);
+				entity.world.ChunkManager.CubeView.GetIds(positions[..pi], ids[..pi]);
 
 				for (int i = 0; i < total; i++)
 				{

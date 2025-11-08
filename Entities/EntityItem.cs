@@ -77,7 +77,7 @@ namespace ViMG.Entities
 			velocity.X = Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
 			velocity.Z = Math.Clamp(velocity.Z, -MaxVelocity.Z, MaxVelocity.Z);
 
-            if (world.ChunkManager.InitializerView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
                 velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime * 4f;
 
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();

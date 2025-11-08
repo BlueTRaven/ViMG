@@ -63,7 +63,7 @@ namespace ViMG.Entities
             {
                 var posOffset = trackedPositions[0] + new CubePosition(0, i, 0);
 
-                world.ChunkManager.ThreadedView.SetCube(posOffset, cube.Id);
+                world.ChunkManager.CubeView.SetCube(posOffset, cube.Id);
 
                 trackedPositions[i] = posOffset;
             }

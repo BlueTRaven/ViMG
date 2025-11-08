@@ -202,7 +202,7 @@ namespace ViMG.Entities
             {
 				targetPosition = world.player.Position;
 
-				Vector3 ground = world.ChunkManager.ThreadedView.GetFirstSolidDown(
+				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
 					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace() +
 					new Vector3(0, Cube.CUBE_SCALE * 4, 0);
@@ -267,7 +267,7 @@ namespace ViMG.Entities
             {
 				targetPosition = world.player.Position;
 
-				Vector3 ground = world.ChunkManager.ThreadedView.GetFirstSolidDown(
+				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
 					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace() +
 					new Vector3(0, Cube.CUBE_SCALE * 4, 0);
