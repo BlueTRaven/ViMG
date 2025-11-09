@@ -21,7 +21,7 @@ namespace ViMG.Items
                 "Consumed on use.";
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             if (player.Magic >= 5)
             {
@@ -31,12 +31,12 @@ namespace ViMG.Items
 
                 inventory.Remove(index, 1);
 
-                actionStats = new Player.ActionStats(0.5f);
+                actionStats = new ActionStats(0.5f);
 
                 return true;
             }
 
-            actionStats = new Player.ActionStats();
+            actionStats = new ActionStats();
             return false;
         }
     }

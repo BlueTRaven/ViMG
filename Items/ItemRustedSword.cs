@@ -17,7 +17,7 @@ namespace ViMG.Items
         private Buff.BuffInstance[] applyBuffs;
 
         private static MeleeAttackStats meleeStats =
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats()
+            new MeleeAttackStats(new AttackStats(DamageType.Melee, new ActionStats()
             {
                 useTime = 0.85f,
                 useAnimTime = 8f / 60f,
@@ -34,7 +34,7 @@ namespace ViMG.Items
             scale = 1f;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             base.LeftClick(player, inventory, index, facing, out actionStats);
 
@@ -43,14 +43,14 @@ namespace ViMG.Items
                 applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("bleeding"), 7) };
             }
 
-            actionStats = new Player.ActionStats(meleeStats.attackStats);
+            actionStats = new ActionStats(meleeStats.attackStats);
             int damage = meleeStats.attackStats.damage;
             float knockback = meleeStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
+            player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
+            player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
 
-            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+            actionStats.animationType = UseAnimationType.SwingHorizontal;
 
             return true;
         }

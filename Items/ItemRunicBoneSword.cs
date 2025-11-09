@@ -18,7 +18,7 @@ namespace ViMG.Items
         private static ProjectileManager.ProjectileVisStats visStats;
         private static ProjectileManager.ProjectileBatchStats batchStats;
         private static MeleeAttackStats meleeStats = 
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats() 
+            new MeleeAttackStats(new AttackStats(DamageType.Melee, new ActionStats() 
             {
                 useTime = 1.85f,
                 useAnimTime = 20f / 60f,
@@ -41,18 +41,18 @@ namespace ViMG.Items
             visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 0, 16, 16), Cube.CUBE_SCALE / 3f);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             base.LeftClick(player, inventory, index, facing, out actionStats);
 
-            actionStats = new Player.ActionStats(meleeStats.attackStats);
+            actionStats = new ActionStats(meleeStats.attackStats);
             int damage = meleeStats.attackStats.damage;
             float knockback = meleeStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
+            player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
+            player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
 
-            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+            actionStats.animationType = UseAnimationType.SwingHorizontal;
 
             return true;
         }

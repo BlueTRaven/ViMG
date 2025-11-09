@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities;
 using ViMG.Cubes;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;

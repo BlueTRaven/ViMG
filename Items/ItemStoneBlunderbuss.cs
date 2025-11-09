@@ -14,8 +14,8 @@ namespace ViMG.Items
 {
     public class ItemStoneBlunderbuss : Item
 	{
-		private static AttackStats attackStatsWithMusketballs = new AttackStats(Player.DamageType.Ranged, 0.95f, 4, 1);
-		private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.95f, 1, 1f);
+		private static AttackStats attackStatsWithMusketballs = new AttackStats(DamageType.Ranged, 0.95f, 4, 1);
+		private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 0.95f, 1, 1f);
 
 		private ProjectileManager.ProjectileBatchStats batchStatsWithMusketballs = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-45, 45), new Vector2(-45, 45));
 		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
@@ -37,7 +37,7 @@ namespace ViMG.Items
 			flipXInHand = true;
         }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			ItemInstance ammo = inventory.FindTag("ammo_bullet", out int ammoIndex);
 
@@ -47,10 +47,10 @@ namespace ViMG.Items
 				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
 				if (ammo.item == Main.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
                 {
-                    actionStats = new Player.ActionStats(attackStatsWithMusketballs);
+                    actionStats = new ActionStats(attackStatsWithMusketballs);
 					int damage = attackStatsWithMusketballs.damage;
 					float knockback = attackStatsWithMusketballs.knockback;
-					player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
+					player.PerformAttack(DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 					statsWithMusketballs.damage = damage;
 					statsWithMusketballs.knockback = knockback;
 
@@ -59,10 +59,10 @@ namespace ViMG.Items
                 }
                 else
                 {
-                    actionStats = new Player.ActionStats(attackStats);
+                    actionStats = new ActionStats(attackStats);
                     int damage = attackStats.damage;
 					float knockback = attackStats.knockback;
-					player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
+					player.PerformAttack(DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 					stats.damage = damage;
 					stats.knockback = knockback;
 
@@ -74,7 +74,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			actionStats = new Player.ActionStats();
+			actionStats = new ActionStats();
 			return false;
 		}
 	}

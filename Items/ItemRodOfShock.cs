@@ -15,7 +15,7 @@ namespace ViMG.Items
 {
     public class ItemRodOfShock : Item
     {
-        private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 6, 1f), 3);  //TODO 3 magic use
+        private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 6, 1f), 3);  //TODO 3 magic use
 
         public ItemRodOfShock() : base("staff_spell_shock", StaticMaterials.Items, new RectangleF(112, 96, 16, 16))
         {
@@ -24,7 +24,7 @@ namespace ViMG.Items
                 magicStats.GetTooltip();
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             base.LeftClick(player, inventory, index, facing, out actionStats);
 

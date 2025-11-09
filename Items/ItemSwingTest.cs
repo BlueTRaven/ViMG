@@ -18,14 +18,14 @@ namespace ViMG.Items
             name = "Swing Test";
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             base.LeftClick(player, inventory, index, facing, out actionStats);
 
             actionStats.useTime = 0.5f;
             actionStats.useAnimTime = 0.5f;
 
-            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+            actionStats.animationType = UseAnimationType.SwingHorizontal;
 
             return true;
         }

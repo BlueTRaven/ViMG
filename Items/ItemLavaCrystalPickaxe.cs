@@ -23,7 +23,7 @@ namespace ViMG.Items
 			flipXInHand = true;
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 

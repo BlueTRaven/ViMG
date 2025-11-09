@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemBoneStaff : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 0.68f, 6, 1), 3);
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 0.68f, 6, 1), 3);
 
         private ProjectileManager.ProjectileVisStats visStats;
         private ProjectileManager.ProjectileStats stats;
@@ -30,15 +30,15 @@ namespace ViMG.Items
                 magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             if (magicStats.CanUse(player))
             {
                 magicStats.Use(player);
-                actionStats = new Player.ActionStats(magicStats.attackStats);
+                actionStats = new ActionStats(magicStats.attackStats);
                 int damage = magicStats.attackStats.damage;
                 float knockback = magicStats.attackStats.knockback;
-                player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
+                player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
                 stats.damage = damage;
                 stats.knockback = knockback;
 
@@ -49,7 +49,7 @@ namespace ViMG.Items
                 return true;
             }
 
-            actionStats = new Player.ActionStats();
+            actionStats = new ActionStats();
             return false;
         }
     }

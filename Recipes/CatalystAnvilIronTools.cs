@@ -15,7 +15,7 @@ namespace ViMG.Recipes
     {
         public void RegisterRecipes(List<Recipe> recipes)
 		{
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_pickaxe_lavacrystal", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -24,7 +24,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_lavacrystal"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_book_spell_lava_spout", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -33,7 +33,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("book_spell_lava_spout"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_cannon_lavacrystal", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 6, 1),
@@ -42,7 +42,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("cannon_lavacrystal"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_pickaxe_head_iron", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(), 
@@ -51,7 +51,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_sword_blade_iron", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -60,7 +60,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_bow_iron", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -69,7 +69,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_pickaxe_head_tin", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -78,7 +78,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_sword_blade_tin", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -87,7 +87,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_bow_tin", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -96,7 +96,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_pickaxe_head_copper", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -105,7 +105,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_sword_blade_copper", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -114,7 +114,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_bow_copper", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -123,7 +123,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("bow_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_pickaxe_head_bronze", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -132,7 +132,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_bronze"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_sword_blade_bronze", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),
@@ -141,7 +141,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_bronze"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_bow_bronze", this,
 				new ItemInstance[] 
 				{
 					new ItemInstance(),

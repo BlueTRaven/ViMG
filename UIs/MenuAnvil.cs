@@ -174,7 +174,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst, new ItemInstance()));
+				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"], new ItemInstance()));
 			}
 
 			UI.EndParent();
@@ -183,8 +183,8 @@ namespace ViMG.UIs
 
 		private Recipe FindRecipe(Inventory inventory)
 		{
-			var recipesTools = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.AnvilIronToolsCatalyst);
-			var recipesArmor = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.AnvilIronArmorCatalyst);
+			var recipesTools = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"]);
+			var recipesArmor = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Anvil (Armor)"]);
 
 			Recipe foundRecipe = null;
 

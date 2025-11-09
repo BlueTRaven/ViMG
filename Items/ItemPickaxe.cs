@@ -36,7 +36,7 @@ namespace ViMG.Items
 			else return base.GetDescription(item);
 		}
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 
@@ -78,7 +78,7 @@ namespace ViMG.Items
 
 		public static ItemInstance CreatePickaxe(ItemInstance itemHead)
 		{
-			return new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
+			return new ItemInstance(Main.Registry.GetCurrentMod().Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
 		}
 
         public ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item)

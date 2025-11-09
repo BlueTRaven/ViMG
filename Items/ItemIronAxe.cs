@@ -15,7 +15,7 @@ namespace ViMG.Items
     public class ItemIronAxe : Item
     {
         private static MeleeAttackStats meleeStats =
-            new MeleeAttackStats(new AttackStats(Player.DamageType.Melee, new Player.ActionStats()
+            new MeleeAttackStats(new AttackStats(DamageType.Melee, new ActionStats()
             {
                 useTime = 1.6f,
                 useAnimTime = 20f / 60f,
@@ -31,11 +31,11 @@ namespace ViMG.Items
             flipXInHand = true; 
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             origin = new Vector2(MESH_SIZE * 12f / 16f, MESH_SIZE * 4f / 16f);
             PlayerHelper.MeleeWeaponLeftClick(player, index, meleeStats, out actionStats);
-            actionStats.animationType = Player.UseAnimationType.SwingVertical;
+            actionStats.animationType = UseAnimationType.SwingVertical;
             return true;
         }
     }

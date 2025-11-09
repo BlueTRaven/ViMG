@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Rendering;
-using ViMG.UIs;
 
 namespace ViMG.Entities.Renderers
 {

@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemHandmadeAutoGun : Item
     {
-        private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 0.8f, 1, 1);
+        private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 0.8f, 1, 1);
 
         private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(2, 0, 0);
         private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
@@ -30,16 +30,16 @@ namespace ViMG.Items
             flipXInHand = true;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             ItemInstance ammo = inventory.FindTag("ammo_bullet", out int ammoIndex);
 
             if (ammo.valid && ammo.num >= 2)
             {
-                actionStats = new Player.ActionStats(attackStats);
+                actionStats = new ActionStats(attackStats);
                 int damage = attackStats.damage;
                 float knockback = attackStats.knockback;
-                player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
+                player.PerformAttack(DamageType.Ranged, ref actionStats, ref damage, ref knockback);
                 stats.damage = damage;
                 stats.knockback = knockback;
 
@@ -54,7 +54,7 @@ namespace ViMG.Items
                 return true;
             }
 
-            actionStats = new Player.ActionStats();
+            actionStats = new ActionStats();
             return false;
         }
     }

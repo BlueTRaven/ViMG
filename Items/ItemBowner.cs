@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemBowner : Item
     {
-        private static AttackStats attackStats = new AttackStats(Player.DamageType.Ranged, 1.1f, 12, 1);
+        private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 1.1f, 12, 1);
 
 		private ProjectileManager.ProjectileVisStats visStats;
 		private ProjectileManager.ProjectileStats stats;
@@ -33,15 +33,15 @@ namespace ViMG.Items
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			var item = inventory.FindTag("ammo_arrow", out int ammoIndex);
 			if (item.valid && item.num >= 2)
 			{
-                actionStats = new Player.ActionStats(attackStats);
+                actionStats = new ActionStats(attackStats);
 				int damage = attackStats.damage;
 				float knockback = attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
+				player.PerformAttack(DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 				stats.damage = damage;
 				stats.knockback = knockback;
 
@@ -52,7 +52,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			actionStats = new Player.ActionStats();
+			actionStats = new ActionStats();
 			return false;
 		}
 	}

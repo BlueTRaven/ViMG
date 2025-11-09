@@ -22,7 +22,7 @@ namespace ViMG.Items
                 "Grants Well Fed for 5 minutes.";
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             base.RightClick(player, inventory, index, facing, out actionStats);
 

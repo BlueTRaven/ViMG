@@ -23,7 +23,7 @@ namespace ViMG.Items
 			cube = Main.Registry.CubeRegistry.Get("rope");
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.RightClick(player, inventory, index, facing, out actionStats);
 

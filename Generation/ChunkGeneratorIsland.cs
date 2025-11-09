@@ -78,7 +78,7 @@ namespace ViMG.Generation
         {
 		}
 
-		public override void Initialize(int sizeInCubesXZ, int sizeInChunksY)
+        public override void Initialize(int sizeInCubesXZ, int sizeInChunksY)
 		{
 			base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
@@ -183,7 +183,7 @@ namespace ViMG.Generation
 						ushort id = GenerateCubeBroad(pos, heightMap, state);
 
 						//TODO: 
-						state.world.ChunkManager.CubeView.SetCube(pos.InCubeSpace(state.position), id);
+						state.world.ChunkManager.CubeView.SetCube(pos.InCubeSpace(state.position), id, false);
 						//cubes[x + Chunk.CHUNK_SIZE * (y + Chunk.CHUNK_SIZE * z)] = id;
 					}
 				}
@@ -220,11 +220,11 @@ namespace ViMG.Generation
 										num, pos), true);
 								}
 								else if (val == 1)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id);    //Sapling
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id, false);    //Sapling
 								else if (val == 2)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id); //Fibrous plant
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id, false); //Fibrous plant
 								else if (val == 3)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id); //Azure flower
+									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id, false); //Azure flower
 							}
 						}
 					}
@@ -378,7 +378,7 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id);
+							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false);
 
 							int randomFace = GetRandom().Next();
 
@@ -448,12 +448,12 @@ namespace ViMG.Generation
                         {
                             positions[lastPosition++] = actualGenPos;
                             
-							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id);
+							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id, false);
                             world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 1, 0), 
-								Main.Registry.CubeRegistry.Get("grave").Id);
+								Main.Registry.CubeRegistry.Get("grave").Id, false);
 							if (which == 1)
 								world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 2, 0), 
-									Main.Registry.CubeRegistry.Get("grave").Id);
+									Main.Registry.CubeRegistry.Get("grave").Id, false);
 
                             world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "grave", 1));
 
@@ -496,7 +496,7 @@ namespace ViMG.Generation
 							if (which < 2)
 								ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.ChunkManager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar, false);
-							else world.ChunkManager.CubeView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id);
+							else world.ChunkManager.CubeView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false);
 
 							world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "shrine", 1));
 
@@ -729,7 +729,7 @@ namespace ViMG.Generation
 						if (distance < radii[i] && !used.Contains(toFill) && manager.IsInWorldBounds(toFill))
 						{
 							used.Add(toFill);
-							manager.CubeView.SetCube(toFill, 0);
+							manager.CubeView.SetCube(toFill, 0, false);
 							floodFills.Enqueue(new CubePosition(toFill.X - 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X + 1, toFill.Y, toFill.Z));
 							floodFills.Enqueue(new CubePosition(toFill.X, toFill.Y - 1, toFill.Z));

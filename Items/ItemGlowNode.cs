@@ -17,7 +17,7 @@ namespace ViMG.Items
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.RightClick(player, inventory, index, facing, out actionStats);
 

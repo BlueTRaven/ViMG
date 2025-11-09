@@ -18,7 +18,7 @@ namespace ViMG.Cubes
 
 		public CubeFurnace() : base("furnace_t1", new CubeFacingLayout(new RectangleF(144, 32, 16, 16), new RectangleF(160, 32, 16, 16), new RectangleF(160, 32, 16, 16)), Color.White, 6)
 		{
-			Main.Registry.RecipeRegistry.RegisterCatalyst(this);
+			Main.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
 
 			buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), 
 				Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
@@ -67,31 +67,31 @@ namespace ViMG.Cubes
 
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("sand_to_flask", this,
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("sand_to_glass", this,
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_glass"), 1, 1) }));
 
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("iron_chunk_to_ingot",this,
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 1, 1) },
 							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("tin_chunk_to_ingot", this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("copper_chunk_to_ingot", this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 1, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("tin_copper_chunk_to_bronze_ingot", this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 2, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }, 2));
 
-			recipes.Add(new RecipeFuzzy(this,
+			recipes.Add(new RecipeFuzzy("tin_copper_ingot_to_bronze_ingot", this,
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1) },
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }));
 		}

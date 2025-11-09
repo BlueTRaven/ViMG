@@ -15,7 +15,7 @@ namespace ViMG.Recipes
 	{
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_helmet_tin", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -24,7 +24,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_legs_tin", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 3, 1),
@@ -33,7 +33,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_body_tin", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 2, 1),
@@ -42,7 +42,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_tin"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_helmet_copper", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -51,7 +51,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_anvil_legs_copper", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 3, 1),
@@ -60,7 +60,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_body_copper", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1),
@@ -69,7 +69,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_copper"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_helmet_iron", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -78,7 +78,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_legs_iron", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 3, 1),
@@ -87,7 +87,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_body_iron", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 2, 1),
@@ -96,7 +96,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_iron"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_helmet_bronze", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -105,7 +105,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_bronze"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_legs_bronze", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1),
@@ -114,7 +114,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_bronze"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_body_bronze", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 2, 1),
@@ -123,7 +123,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("body_bronze"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_helmet_bone", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(),
@@ -132,7 +132,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_bone"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_legs_bone", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_enchanted_bone"), 7, 1),
@@ -141,7 +141,7 @@ namespace ViMG.Recipes
 				},
 				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("legs_bone"), 1, 1) }));
 
-			recipes.Add(new RecipeLayout(this,
+			recipes.Add(new RecipeLayout("anvil_body_bone", this,
 				new ItemInstance[]
 				{
 					new ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 3, 1),

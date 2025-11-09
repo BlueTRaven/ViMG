@@ -46,7 +46,7 @@ namespace ViMG.Items
             }
         }
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             bool valid = base.RightClick(player, inventory, index, facing, out actionStats);
 
@@ -69,7 +69,7 @@ namespace ViMG.Items
                 {
                     inventory.Remove(index, 1);
 
-                    actionStats = new Player.ActionStats(6f);
+                    actionStats = new ActionStats(6f);
 
                     player.world.EntityManager.Add(new Entities.Skullhead(pos.InWorldSpace() - new Vector3(0, Cube.CUBE_SCALE * 16f, 0)));
                 }

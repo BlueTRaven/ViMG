@@ -15,7 +15,7 @@ namespace ViMG.Items
     public class ItemBookWinds : Item
     {
         private static MagicAttackStats magicStats = 
-            new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
+            new MagicAttackStats(new AttackStats(DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
 
         public ItemBookWinds() : base("book_spell_winds", StaticMaterials.Items, new RectangleF(80, 32, 16, 16))
         {
@@ -29,23 +29,23 @@ namespace ViMG.Items
             flipXInHand = true;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             bool val = base.LeftClick(player, inventory, index, facing, out actionStats);
 
             if (player.Magic < 2)
             {
-                actionStats = new Player.ActionStats();
+                actionStats = new ActionStats();
                 return false;
             }
 
-            actionStats = new Player.ActionStats(magicStats.attackStats);
+            actionStats = new ActionStats(magicStats.attackStats);
             int damage = magicStats.attackStats.damage;
             float knockback = magicStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
+            player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
             player.Magic -= 2;
-            player.SpawnHitboxLater(index, damage, Player.DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
+            player.SpawnHitboxLater(index, damage, DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
             
             return val;
         }

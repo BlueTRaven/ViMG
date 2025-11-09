@@ -4,21 +4,22 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Items;
 
 namespace ViMG.Entities
 {
     public static class PlayerHelper
     {
-        public static void MeleeWeaponLeftClick(Player player, int inventorySlot, Items.Item.MeleeAttackStats attackStats, out Player.ActionStats actionStats)
+        public static void MeleeWeaponLeftClick(Player player, int inventorySlot, Items.Item.MeleeAttackStats attackStats, out ActionStats actionStats)
         {
-            actionStats = new Player.ActionStats(attackStats.attackStats);
+            actionStats = new ActionStats(attackStats.attackStats);
             int damage = attackStats.attackStats.damage;
             float knockback = attackStats.attackStats.knockback;
-            player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
+            player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(inventorySlot, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, attackStats.range);
+            player.SpawnHitboxLater(inventorySlot, damage, DamageType.Melee, -Main.camera.Forward, knockback, attackStats.range);
 
-            actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+            actionStats.animationType = UseAnimationType.SwingHorizontal;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace ViMG.Items
             description = "A tinderbox, as well as a set of flint and steel, used to light fires. Right-click on the ground to create a fire that should last you for some time.";
         }
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.RightClick(player, inventory, index, facing, out actionStats);
 
@@ -46,7 +46,7 @@ namespace ViMG.Items
 						cube.OnPlayerPlaced(player, placeAtPos);
 
 						//cubes can be placed as fast as possible
-						actionStats = new Player.ActionStats();
+						actionStats = new ActionStats();
 
 						return true;
 					}

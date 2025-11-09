@@ -13,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemBookOfEmber : Item
     {
-		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 0.25f, 1, 0f), 1);
+		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 0.25f, 1, 0f), 1);
         public ItemBookOfEmber() : base("book_spell_ember", StaticMaterials.Items, new RectangleF(64, 32, 16, 16))
         {
 			name = "Spellbook: Ember";
@@ -24,13 +24,13 @@ namespace ViMG.Items
 			flipXInHand = true;
         }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			if (!magicStats.CanUse(player))
 			{
-				actionStats = new Player.ActionStats();
+				actionStats = new ActionStats();
 				return false;
 			}
 
@@ -40,10 +40,10 @@ namespace ViMG.Items
 
 			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
             {
-                actionStats = new Player.ActionStats(magicStats.attackStats);
+                actionStats = new ActionStats(magicStats.attackStats);
 				int damage = magicStats.attackStats.damage;
 				float knockback = magicStats.attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
+				player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
 				magicStats.Use(player);
 

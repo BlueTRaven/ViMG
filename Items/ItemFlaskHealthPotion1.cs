@@ -16,7 +16,7 @@ namespace ViMG.Items
 			description = "A health potion. It smells surprisingly nice.";
 		}
 
-        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
 			player.Heal(10);
 

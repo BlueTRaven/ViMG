@@ -37,20 +37,20 @@ namespace ViMG.Items
             return base.GetDescription(item);
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			ItemSwordBlade meta = Get(inventory.Get(index));
 
-            actionStats = new Player.ActionStats(meta.GetStats().attackStats);
+            actionStats = new ActionStats(meta.GetStats().attackStats);
 			int damage = meta.GetStats().attackStats.damage;
 			float knockback = meta.GetStats().attackStats.knockback;
-			player.PerformAttack(Player.DamageType.Melee, ref actionStats, ref damage, ref knockback);
+			player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-			player.SpawnHitboxLater(index, damage, Player.DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
+			player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
 
-			actionStats.animationType = Player.UseAnimationType.SwingHorizontal;
+			actionStats.animationType = UseAnimationType.SwingHorizontal;
 
 			return true;
 		}

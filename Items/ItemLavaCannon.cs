@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemLavaCannon : Item, IProjectileEffects
     {
-        private RangedAttackStats rangeAttackStats = new RangedAttackStats(new AttackStats(Player.DamageType.Ranged, 2f, 14, 4), Cube.CUBE_SCALE * 20, 0);
+        private RangedAttackStats rangeAttackStats = new RangedAttackStats(new AttackStats(DamageType.Ranged, 2f, 14, 4), Cube.CUBE_SCALE * 20, 0);
 
         private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats;
@@ -32,15 +32,15 @@ namespace ViMG.Items
 			flipXInHand = true;
 		}
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			var bulletItem = inventory.FindTag("ammo_bullet", out int ammoIndex);
 			if (bulletItem.valid && bulletItem.num >= 4)
 			{
-                actionStats = new Player.ActionStats(rangeAttackStats.attackStats);
+                actionStats = new ActionStats(rangeAttackStats.attackStats);
 				int damage = rangeAttackStats.attackStats.damage;
 				float knockback = rangeAttackStats.attackStats.knockback;
-				player.PerformAttack(Player.DamageType.Ranged, ref actionStats, ref damage, ref knockback);
+				player.PerformAttack(DamageType.Ranged, ref actionStats, ref damage, ref knockback);
 				stats.damage = damage;
 				stats.knockback = knockback;
 
@@ -53,7 +53,7 @@ namespace ViMG.Items
 				return true;
 			}
 
-			actionStats = new Player.ActionStats();
+			actionStats = new ActionStats();
 			return false;
 		}
 

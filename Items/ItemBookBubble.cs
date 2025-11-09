@@ -14,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemBookBubble : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(Player.DamageType.Magic, 1f, 8, 8), 5);
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 8, 8), 5);
 
         public ItemBookBubble() : base("book_spell_bubble", StaticMaterials.Items, new RectangleF(64, 48, 16, 16))
         {
@@ -27,7 +27,7 @@ namespace ViMG.Items
             flipXInHand = true;
         }
 
-        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out Player.ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             bool valid = base.LeftClick(player, inventory, index, facing, out actionStats);
 
@@ -46,7 +46,7 @@ namespace ViMG.Items
 
                 int damage = magicStats.attackStats.damage;
                 float knockback = magicStats.attackStats.knockback;
-                player.PerformAttack(Player.DamageType.Magic, ref actionStats, ref damage, ref knockback);
+                player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
                 player.GetWorld().EntityManager.Add(new PlayerBubble(hitPos + placeOffset, damage, knockback, index));
 
                 magicStats.Use(player);
@@ -54,7 +54,7 @@ namespace ViMG.Items
                 return true;
             }
 
-            actionStats = new Player.ActionStats();
+            actionStats = new ActionStats();
             return false;
         }
     }

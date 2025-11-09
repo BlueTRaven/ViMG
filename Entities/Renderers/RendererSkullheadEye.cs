@@ -1,16 +1,10 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
-using SharpDX.Direct3D9;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using ViMG.Cubes;
 using ViMG.Rendering;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace ViMG.Entities.Renderers
 {
