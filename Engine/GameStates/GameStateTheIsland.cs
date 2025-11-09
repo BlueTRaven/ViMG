@@ -237,6 +237,8 @@ namespace ViMG.GameStates
             Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
             player.Position = playerSpawnPosition;
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
+            worldInfoIO.Info.spawnPosition = player.Position;
+            worldInfoIO.Info.spawnLayer = 0;
             prototype.WorldInfo.playerPosition = player.Position;
             prototype.WorldInfo.playerLayer = 0;
 

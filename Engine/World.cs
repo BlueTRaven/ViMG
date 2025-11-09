@@ -42,7 +42,6 @@ namespace ViMG
 		public readonly int sizeInCubes;
 
 		public ChunkManager ChunkManager;
-		public ChunkGenerator ChunkGenerator;
 
 		private static VerySimpleMesh meshMiningCube;
 		private static VerySimpleMesh skyboxMesh;
@@ -306,7 +305,8 @@ namespace ViMG
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
-			ChunkLoadManager.UpdateLoadTarget(player.Position);
+			if (player != null)
+				ChunkLoadManager.UpdateLoadTarget(player.Position);
 
 			alive += (float)deltaTime;
 
@@ -453,83 +453,86 @@ namespace ViMG
 			}
 
 			//if in the middle 22 chunks (> 0-5 chunks && < 32-27 chunks), unload the loaded world.
-			if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
+			if (player != null)
+			{
+				if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
 				player.Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
-			{
-				if (nextWorld.IsCompleted)
 				{
-					nextWorld.Result.Dispose();
-					nextWorld = null;
-				}
-			}
-
-			if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4 ||
-				player.Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
-			{
-                GameStateTheIsland.LoadMessage = "Waiting for world to finish loading...";
-				if (!nextWorld.IsCompleted)
-					nextWorld.Wait();
-
-                GameStateTheIsland.LoadMessage = "Moving to new world...";
-				World loadedWorld = nextWorld.Result;
-
-				if (nextLayer == Layer + 1)
-				{
-					player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
-
-					ProfilingHelper.Start("Copying Layer");
-					for (int x = 0; x < sizeInCubes; x++)
+					if (nextWorld.IsCompleted)
 					{
-						for (int z = 0; z < sizeInCubes; z++)
-						{
-							for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-							{
-								Cube cube = ChunkManager.CubeView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						nextWorld.Result.Dispose();
+						nextWorld = null;
+					}
+				}
 
-								loadedWorld.ChunkManager.CubeView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
+				if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4 ||
+					player.Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
+				{
+					GameStateTheIsland.LoadMessage = "Waiting for world to finish loading...";
+					if (!nextWorld.IsCompleted)
+						nextWorld.Wait();
+
+					GameStateTheIsland.LoadMessage = "Moving to new world...";
+					World loadedWorld = nextWorld.Result;
+
+					if (nextLayer == Layer + 1)
+					{
+						player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+
+						ProfilingHelper.Start("Copying Layer");
+						for (int x = 0; x < sizeInCubes; x++)
+						{
+							for (int z = 0; z < sizeInCubes; z++)
+							{
+								for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+								{
+									Cube cube = ChunkManager.CubeView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+									loadedWorld.ChunkManager.CubeView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
+								}
 							}
 						}
+						ProfilingHelper.End("Done");
 					}
-					ProfilingHelper.End("Done");
+					else if (nextLayer == Layer - 1)
+						player.Position.Y = player.Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+
+					EntityManager.Unload(player);
+					player.world = loadedWorld;
+					loadedWorld.EntityManager.Add(player);
+					loadedWorld.player = player;
+
+					WorldInfo.playerLayer = loadedWorld.Layer;
+					WorldInfo.playerPosition = loadedWorld.player.Position;
+
+					loadedWorld.ChunkLoadManager.UpdateLoadTarget(player.Position);
+					loadedWorld.ChunkLoadManager.LoadAroundTarget(loadedWorld);
+
+					//Finally, tell the ChunkLoadManager to actually load the things.
+					//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
+					//as it normally does.)
+					loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
+
+					GameStateManager.TheIsland.SetWorld(loadedWorld);
+
+					GameStateTheIsland.LoadMessage = "Saving...";
+					//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
+					//Note that we don't save chunks because they shouldn't be modified by any operation here.
+					entIO.Save(LoadedFolderName);
+					worldInfoIO.Save(LoadedFolderName, WorldInfo);
+
+					//Then save the entire nextWorld. We save chunks here since we may have modified them.
+					//This should also update worldInfo.
+					loadedWorld.SaveWorld();
+
+					//TODO: why are we disposing this when we haven't even exited the load boundary?
+					//We should be reusing this so we can reload super fast
+					//Dispose();
+
+					loadedWorld.nextWorld = new Task<World>(() => { return this; });
+					loadedWorld.nextWorld.Start();
+					loadedWorld.nextLayer = Layer;
 				}
-				else if (nextLayer == Layer - 1)
-					player.Position.Y = player.Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
-
-				EntityManager.Unload(player);
-				player.world = loadedWorld;
-				loadedWorld.EntityManager.Add(player);
-				loadedWorld.player = player;
-
-				WorldInfo.playerLayer = loadedWorld.Layer;
-				WorldInfo.playerPosition = loadedWorld.player.Position;
-
-				loadedWorld.ChunkLoadManager.UpdateLoadTarget(player.Position);
-				loadedWorld.ChunkLoadManager.LoadAroundTarget(loadedWorld);
-
-				//Finally, tell the ChunkLoadManager to actually load the things.
-				//(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
-				//as it normally does.)
-				loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
-
-				GameStateManager.TheIsland.SetWorld(loadedWorld);
-
-                GameStateTheIsland.LoadMessage = "Saving...";
-				//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
-				//Note that we don't save chunks because they shouldn't be modified by any operation here.
-				entIO.Save(LoadedFolderName);   
-				worldInfoIO.Save(LoadedFolderName, WorldInfo);
-
-				//Then save the entire nextWorld. We save chunks here since we may have modified them.
-				//This should also update worldInfo.
-				loadedWorld.SaveWorld();
-
-				//TODO: why are we disposing this when we haven't even exited the load boundary?
-				//We should be reusing this so we can reload super fast
-				//Dispose();
-
-				loadedWorld.nextWorld = new Task<World>(() => { return this; });
-				loadedWorld.nextWorld.Start();
-				loadedWorld.nextLayer = Layer;
 			}
 		}
 

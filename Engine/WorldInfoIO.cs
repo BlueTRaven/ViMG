@@ -18,6 +18,8 @@ namespace ViMG
             //this will probably need to change to a list or dictionary?
             public Vector3 playerPosition;
             public int playerLayer;
+            public Vector3 spawnPosition;
+            public int spawnLayer;
             public int furthestLayer;   //the furthest the player has traveled - i.e. layer+1 has NOT been generated yet.
             public List<PointOfInterest> pointsOfInterest;
 

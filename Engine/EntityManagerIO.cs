@@ -510,6 +510,11 @@ namespace ViMG
         {
 			if (playerChunkPositionLoaded)
 				Deserialize(playerChunkPosition);
+
+			if (manager.GetAll<Player>().Count <= 0) 
+			{
+				Console.WriteLine("Failed to load a player at some point.");
+			}
         }
 
 		public void Deserialize(ChunkPosition pos)

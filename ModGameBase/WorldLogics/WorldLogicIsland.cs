@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
@@ -126,7 +127,23 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
+			if (world.player == null)
+			{
+				Console.WriteLine("Player was not found. Creating new one...");
+                var player = new Player();
+                player.FirstCreated();
+				world.EntityManager.Add(player, true);
+
+				// TODO: load spawn layer.
+				// Right now this will just spawn the player at the spawn point in the currently loaded layer, which is probably not correct
+                Vector3 playerSpawnPosition = world.WorldInfo.spawnPosition;
+                player.Position = playerSpawnPosition;
+                player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
+
+				world.player = player;
+            }
+
+			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player != null && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
 
@@ -174,7 +191,7 @@ namespace ViMG.WorldLogics
 			else weatherChangeTimer -= (float)deltaTime;
 
             //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-            if (CubePosition.FromWorldSpace(world.player.Position).Y > 140)
+            if (world.player != null && CubePosition.FromWorldSpace(world.player.Position).Y > 140)
 			{
 				Main.Renderer.DoCSMLight = true;
 
