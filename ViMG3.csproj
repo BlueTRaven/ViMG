@@ -20,18 +20,21 @@
     <Compile Remove="BrUtility\**" />
     <Compile Remove="Engine\**" />
     <Compile Remove="MigrationBackup\**" />
+    <Compile Remove="ModGameBase\**" />
     <Compile Remove="MonoGame.ImGuiNet\**" />
     <Compile Remove="MonoGame\**" />
     <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
+    <EmbeddedResource Remove="ModGameBase\**" />
     <EmbeddedResource Remove="MonoGame.ImGuiNet\**" />
     <EmbeddedResource Remove="MonoGame\**" />
     <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
     <None Remove="Engine\**" />
     <None Remove="MigrationBackup\**" />
+    <None Remove="ModGameBase\**" />
     <None Remove="MonoGame.ImGuiNet\**" />
     <None Remove="MonoGame\**" />
   </ItemGroup>

@@ -9,5 +9,6 @@ namespace ViMG
     public class SessionInformation
     {
         public string LastLoadedSave;
+        public string[] LoadedMods = new[] { "ModGameBase" }; // Mods to load
     }
 }

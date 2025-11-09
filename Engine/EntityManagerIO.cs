@@ -523,7 +523,7 @@ namespace ViMG
             {
 				foreach (EntityData entData in datas.entityDatas[pos])
                 {
-					Type entityType = Utility.GetType(Assembly.GetExecutingAssembly().GetName().Name, entData.type);
+					Type entityType = Utility.GetType(entData.type);
 
 					if (entityType == null)
 					{

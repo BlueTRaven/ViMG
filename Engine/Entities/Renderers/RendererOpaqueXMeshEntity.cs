@@ -82,7 +82,7 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
+            RenderedEntity stats = registry.Get(renderedTypeIndex);
             Type type = stats.EntityType;
 
             //var entities = entityManager.GetAll(type);

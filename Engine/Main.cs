@@ -17,6 +17,7 @@ using TracyNative = Tracy;
 using ViMG.TracyImpl;
 using System.Diagnostics;
 using ViMG.IMGUIImpl;
+using Engine.Mods;
 
 //Client-server separation
 //Specifically, stuff like the player needs a way of separating client code from server code, as they should not be shipped together.
@@ -133,6 +134,8 @@ namespace ViMG
 		private int numFrameTimes = 0;
 		private float[] frameTimes = new float[256];
 
+		private ModManager modManager = new ModManager();
+
         public Main()
         {
 			MainThread = Thread.CurrentThread;
@@ -239,6 +242,7 @@ namespace ViMG
 
 			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
+			modManager.LoadModDlls();
 			Registry = new RegistryService(GraphicsDevice);
 			Registry.Register();
 

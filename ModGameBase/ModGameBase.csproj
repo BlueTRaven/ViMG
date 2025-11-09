@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	  <MonoGamePlatform>Windows</MonoGamePlatform>
+	  <OutputPath>$(SolutionDir)\bin\$(Configuration)\mods</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Content.Builder.Task.Compute" Version="3.8.1.2" PrivateAssets="All" />
+		<PackageReference Include="Tracy-CSharp" Version="0.10.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\bepuphysics2\BepuPhysics\BepuPhysics.csproj" />
+		<ProjectReference Include="..\bepuphysics2\BepuUtilities\BepuUtilities.csproj" />
+		<ProjectReference Include="..\BrUtility\BrAssetsManager\BrAssetsManager.csproj" PrivateAssets="All" />
+		<ProjectReference Include="..\BrUtility\BrNineSlice\BrNineSlice.csproj" PrivateAssets="All" />
+		<ProjectReference Include="..\BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />
+		<ProjectReference Include="..\MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj" />
+		<ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj" />
+		<ProjectReference Include="..\Engine\Engine.csproj" />
+	</ItemGroup>
+</Project>

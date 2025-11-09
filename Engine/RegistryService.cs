@@ -52,9 +52,12 @@ namespace ViMG
 			foreach (Mod mod in ModRegistry.GetIterable())
 			{
 				var service = mod.CreateModRegistryService(device);
-				service.CubeRegistry?.RegisterAll();
-                service.CubeRegistry?.PostRegistration();
-                CubeRegistry.AddFromOther(service.CubeRegistry);
+                if (service != null)
+                {
+                    service.CubeRegistry?.RegisterAll();
+                    service.CubeRegistry?.PostRegistration();
+                    CubeRegistry.AddFromOther(service.CubeRegistry);
+                }
             }
 
             CubeRegistry.PostRegistration();
@@ -62,12 +65,15 @@ namespace ViMG
             foreach (Mod mod in ModRegistry.GetIterable())
 			{
                 var service = mod.Registry;
-                service.ItemRegistry?.RegisterAll();
-                // Don't perform post-registration as for item registries this is responsible for creating cube items.
-                // FIXME
-                // This should probably be done in a different order so this isn't a problem. What if a mod wants to override PostRegistration? They'd override it and
-                // wonder why it's not getting called only for ItemRegistry...
-                ItemRegistry.AddFromOther(service.ItemRegistry);
+                if (service != null)
+                {
+                    service.ItemRegistry?.RegisterAll();
+                    // Don't perform post-registration as for item registries this is responsible for creating cube items.
+                    // FIXME
+                    // This should probably be done in a different order so this isn't a problem. What if a mod wants to override PostRegistration? They'd override it and
+                    // wonder why it's not getting called only for ItemRegistry...
+                    ItemRegistry.AddFromOther(service.ItemRegistry);
+                }
             }
 
             ItemRegistry.PostRegistration();
@@ -75,32 +81,44 @@ namespace ViMG
             foreach (Mod mod in ModRegistry.GetIterable())
             {
                 var service = mod.Registry;
-                service.RecipeRegistry?.RegisterAll();
-                service.RecipeRegistry?.PostRegistration();
-                RecipeRegistry.AddFromOther(service.RecipeRegistry);
+                if (service != null)
+                {
+                    service.RecipeRegistry?.RegisterAll();
+                    service.RecipeRegistry?.PostRegistration();
+                    RecipeRegistry.AddFromOther(service.RecipeRegistry);
+                }
             }
 
             foreach (Mod mod in ModRegistry.GetIterable())
             {
                 var service = mod.Registry;
-                service.BuffRegistry?.RegisterAll();
-                service.BuffRegistry?.PostRegistration();
-                BuffRegistry.AddFromOther(service.BuffRegistry);
+                if (service != null)
+                {
+                    service.BuffRegistry?.RegisterAll();
+                    service.BuffRegistry?.PostRegistration();
+                    BuffRegistry.AddFromOther(service.BuffRegistry);
+                }
             }
 
             foreach (Mod mod in ModRegistry.GetIterable())
             {
                 var service = mod.Registry;
-                service.RendererRegistry?.RegisterAll();
-                service.RendererRegistry?.PostRegistration();
-                RendererRegistry.AddFromOther(service.RendererRegistry);
+                if (service != null)
+                {
+                    service.RendererRegistry?.RegisterAll();
+                    service.RendererRegistry?.PostRegistration();
+                    RendererRegistry.AddFromOther(service.RendererRegistry);
+                }
             }
 
             foreach (Mod mod in ModRegistry.GetIterable())
             {
                 var service = mod.Registry;
-                service.WorldLogicRegistry?.RegisterAll();
-                WorldLogicRegistry.AddFromOther(service.WorldLogicRegistry);
+                if (service != null)
+                {
+                    service.WorldLogicRegistry?.RegisterAll();
+                    WorldLogicRegistry.AddFromOther(service.WorldLogicRegistry);
+                }
             }
 
             foreach (Mod mod in ModRegistry.GetIterable())
