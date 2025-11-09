@@ -1,6 +1,7 @@
 [submodule "BrUtility"]
 	path = BrUtility
 	url = https://github.com/BlueTRaven/BrUtility.git
+	branch = vimg
 [submodule "MonoGame"]
 	path = MonoGame
 	url = git@github.com:cpt-max/MonoGame.git
