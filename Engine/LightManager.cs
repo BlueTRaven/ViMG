@@ -378,7 +378,7 @@ namespace ViMG
 
 								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									versionSum += world.ChunkManager.RenderMesher.GetMeshVersionCode(chunkPos);
+									versionSum += world.ChunkManager.ChunkMesher.RenderMesher.GetMeshVersionCode(chunkPos);
 								}
 							}
 						}
@@ -412,7 +412,7 @@ namespace ViMG
 
 								if (world.ChunkManager.IsInWorldBounds(chunkPos))
 								{
-									VerySimpleMesh mesh = world.ChunkManager.RenderMesher.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
+									VerySimpleMesh mesh = world.ChunkManager.ChunkMesher.RenderMesher.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly);
                                     //Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 

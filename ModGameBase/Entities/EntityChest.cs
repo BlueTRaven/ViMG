@@ -63,7 +63,7 @@ namespace ViMG.Entities
 			if (!tracker.HasValue() || tracker.Get() != this)
 				world.EntityManager.Remove(this);
 
-			world.ChunkManager.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
+			world.ChunkManager.ChunkMesher.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)

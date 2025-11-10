@@ -283,7 +283,7 @@ namespace ViMG
 
 			for (int i = 0; i < cachedChunkPositions.Length; i++)
 			{
-                VerySimpleMesh mesh = world.ChunkManager.RenderMesher.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
+                VerySimpleMesh mesh = world.ChunkManager.ChunkMesher.RenderMesher.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
                 //Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
 				if (mesh.VBOPosition != null && mesh.VBOTexCoord != null)

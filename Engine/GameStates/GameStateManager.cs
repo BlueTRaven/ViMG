@@ -16,7 +16,7 @@ namespace ViMG.GameStates
 
         public bool Paused;
 
-        private GameState currentGameState;
+        private GameState currentGameState = null;
 
         public virtual void Initialize(GraphicsDevice device)
         {

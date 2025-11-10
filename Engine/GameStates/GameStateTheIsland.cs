@@ -2,6 +2,7 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -93,8 +94,6 @@ namespace ViMG.GameStates
 
                 LoadMessage = "Loading World...\nFinishing...";
                 world.FinishLoading(device);
-                //World world = new World(manager, device, 512);
-                //world.LoadWorld(device, worldName);
 
                 IsLoading = false;
                 ProfilingHelper.End("Finished Loading and Flushing World.");
@@ -191,11 +190,11 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
+            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
             var entityManager = new EntityManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
-            chunkManager.CreateCubeView();
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
 
             WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
             {
@@ -228,7 +227,7 @@ namespace ViMG.GameStates
 
             ProfilingHelper.End("Done.");
 
-            var chunkLoadManager = new ChunkLoadManager(prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
+            var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
             var player = new Player();
             player.FirstCreated();
@@ -302,9 +301,10 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
+            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
@@ -320,8 +320,7 @@ namespace ViMG.GameStates
             if (entIO.HandleError(error, worldName))
                 return null;
 
-            var ChunkLoadManager = new ChunkLoadManager(prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
-            prototype.ChunkManager.CreateCubeView();
+            var ChunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
             LoadMessage = "Loading World...\n" +
                 "Deserializing...";
@@ -381,10 +380,10 @@ namespace ViMG.GameStates
                 
                 var physicsInfo = new PhysicsInfo();
 
+                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
-                chunkManager.CreateCubeView();
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
 
                 Skybox skybox = new Skybox();
 
@@ -402,7 +401,7 @@ namespace ViMG.GameStates
 
                 ProfilingHelper.End("Done.");
 
-                var chunkLoadManager = new ChunkLoadManager(prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
+                var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
                 World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
                 prototype.Logic.Initialize(world);
@@ -438,9 +437,10 @@ namespace ViMG.GameStates
 
                 var physicsInfo = new PhysicsInfo();
 
+                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, physicsInfo, device);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
 
                 var housingManager = new HousingManager();
                 housingManager.FinishLoading(worldInfo);
@@ -459,8 +459,7 @@ namespace ViMG.GameStates
                 if (entIO.HandleError(error, worldName))
                     return null;
 
-                var ChunkLoadManager = new ChunkLoadManager(prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
-                prototype.ChunkManager.CreateCubeView();
+                var ChunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
                 LoadMessage = "Loading World...\n" +
                     "Deserializing...";

@@ -31,27 +31,11 @@ namespace ViMG.UIs
 
         private string worldName;
 
-        //TODO remove
-        private UI.LabelConstructionParameters[] options;
-        private int currentOption;
-        private bool open;
-        private UI.Button[] outputs;
-
         public MenuMain(GameStateManager gsManager) : base(gsManager)
         {
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;
-
-            options = new UI.LabelConstructionParameters[4]
-            {
-                new UI.LabelConstructionParameters("Test 0", fi, 128, Vector2.Zero),
-                new UI.LabelConstructionParameters("Test 1", fi, 128, Vector2.Zero),
-                new UI.LabelConstructionParameters("Test 2", fi, 128, Vector2.Zero),
-                new UI.LabelConstructionParameters("Test 3", fi, 128, Vector2.Zero),
-            };
-
-            outputs = new UI.Button[4];
         }
 
         public override void OnOpen()
@@ -70,8 +54,6 @@ namespace ViMG.UIs
             Main.DrawCursor = false;
         }
 
-        private string a = "";
-        private string b = "";
         public override void Update(GraphicsDevice device, double deltaTime)
         {
             UI.Start();

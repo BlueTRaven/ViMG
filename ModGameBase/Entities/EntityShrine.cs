@@ -49,7 +49,7 @@ namespace ViMG.Entities
             {
                 hasUpdatedChunk = true;
                 //Mark the tracked chunk as dirty; this will force the cube to change its source rectangle.
-                world.ChunkManager.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));
+                world.ChunkManager.ChunkMesher.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));
             }
         }
 
@@ -63,7 +63,7 @@ namespace ViMG.Entities
                 player.GetBuffManager().AddBuff(new Buff.BuffInstance(buff, 5f * 60f));
 
                 //Mark the tracked chunk as dirty; this will force the cube to change its source rectangle.
-                world.ChunkManager.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));
+                world.ChunkManager.ChunkMesher.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));
                 hasUpdatedChunk = true;
                 return true;
             }

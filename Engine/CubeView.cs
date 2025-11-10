@@ -120,7 +120,7 @@ namespace ViMG
             if (markDirty)
             {
                 chunkManager.MarkCubeMeshInfoDirty(position, oldId, id);
-                chunkManager.MarkChunkDirty(chunkPos);
+                chunkManager.ChunkMesher.MarkChunkDirty(chunkPos);
             }
         }
 

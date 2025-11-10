@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +17,7 @@ using ViMG.Entities;
 namespace ViMG
 {
     //Try to stay away from dependance on World if possible
-    public class ChunkManager : IDisposable
+    public class ChunkManager
     {
         private readonly struct CubeUpdated
         {
@@ -79,34 +80,24 @@ namespace ViMG
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
         private readonly ChunkManagerIO io;
-        public readonly ChunkRenderMesher RenderMesher;
-        public readonly ChunkCollisionMesher CollisionMesher;
+        public readonly ChunkMesher? ChunkMesher;
 
         public CubeView CubeView;
 
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
-        public BufferPool bufferPool;
-
-        public bool LockSet;    //If true, a lock on the manager must first be obtained before setting a cube.
-        public bool LockGet;    //If true, a lock on the manager must first be obtained before getting a cube.
-
-        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, Physics.PhysicsInfo physicsInfo, GraphicsDevice device)
+        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, ChunkMesher? chunkMesher)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
             this.io = io;
 
-            //cubeMeshInfos = new CubeMeshInfo[sizeInChunksXZ * sizeInChunksXZ * sizeInChunksXZ * Chunk.NUM_CUBES_IN_CHUNK];
-
-            //Array.Fill(cubeMeshInfos, new CubeMeshInfo(MeshHelper.CubeFace.NONE));
-
-            this.bufferPool = new BufferPool();
-            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ, bufferPool);
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ, bufferPool);
+            ChunkMesher = chunkMesher;
 
             int size = Marshal.SizeOf<CubeMeshInfo>();
+            
+            CubeView = new CubeView(this, io);
         }
 
         private FastList<CubeUpdated> uniqueUpdates = new FastList<CubeUpdated>();
@@ -116,8 +107,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            RenderMesher.Update(world);
-            CollisionMesher.Update(world);
+            ChunkMesher?.Update(world);
 
             const int MAX_UPDATE_PER_FRAME = 20;
             int updatedThisFrame = 0; 
@@ -131,7 +121,7 @@ namespace ViMG
                 {
                     world.OnCubeUpdate(updated.updated, updated.newId);
                     var entityTracking = world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null);
-
+                    
                     if (entityTracking != null)
                     {
                         if (entityTracking is ICubeTracker tracker)
@@ -145,12 +135,6 @@ namespace ViMG
 
                 updatedThisFrame++;
             }
-        }
-
-        public void Unload(ChunkPosition pos)
-        {
-            RenderMesher.Unload(pos);
-            CollisionMesher.Unload(pos);
         }
 
         public bool IsInWorldBounds(Vector3 position)
@@ -200,12 +184,6 @@ namespace ViMG
                     position.Z >= 0 && position.Z < SizeInChunksXZ;
         }
 
-        public void MarkChunkDirty(ChunkPosition position)
-        {
-            RenderMesher.MarkDirty(position);
-            CollisionMesher.MarkDirty(position);
-        }
-
         public void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
         {
             //GetCubeMeshInfo(position).version++;
@@ -220,29 +198,11 @@ namespace ViMG
                     //GetCubeMeshInfo(adjacentPosition).version++;
 
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
-                    MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
+                    ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
                     updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, adjacentPosition, oldId, updatedId));
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            //There may still be things in the queue, including active threads, so wait on those
-            //TODO: maybe this isn't necessary? Mesh Resources aren't created anywhere but the main thread
-            RenderMesher.FinishFlush();
-            CollisionMesher.FinishFlush();
-
-            RenderMesher.UnloadAll();
-            CollisionMesher.UnloadAll();
-        }
-
-        public CubeView CreateCubeView()
-        {
-            CubeView = new CubeView(this, io);
-
-            return CubeView;
         }
     }
 }

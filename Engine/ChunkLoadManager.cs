@@ -1,6 +1,7 @@
 ﻿using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility.Ported;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D11;
 using System;
@@ -29,6 +30,7 @@ namespace ViMG
 			Loaded
         }
 
+		private readonly ChunkMesher chunkMesher;
 		private readonly ChunkManager chunkManager;
 		private readonly EntityManager entityManager;
 		private readonly ChunkManagerIO chunkIO;
@@ -63,11 +65,12 @@ namespace ViMG
         private List<ChunkPosition> waitingToFinishMeshingChunks2 = new();
 		private List<ChunkPosition> waitingToFinishMeshingChunks;
 
-		public ChunkLoadManager(ChunkManager chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
+		public ChunkLoadManager(ChunkMesher chunkMesher, ChunkManager chunkManager, EntityManager entityManager, ChunkManagerIO chunkIO, EntityManagerIO entIO)
 		{
 			ThreadPool.SetMaxThreads(8, 8);
 
 			loadedChunksFastLookup = new LoadingState[chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ];
+			this.chunkMesher = chunkMesher;
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
 
@@ -129,14 +132,14 @@ namespace ViMG
 			{ 
                 queuedChunk.copyTask.Wait();
                 
-				chunkManager.RenderMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
-                chunkManager.CollisionMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
+				chunkMesher.RenderMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
+                chunkMesher.CollisionMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
             }
 
-            chunkManager.RenderMesher.BeginFlush();
-			chunkManager.CollisionMesher.BeginFlush();
-			chunkManager.RenderMesher.FinishFlush();
-			chunkManager.CollisionMesher.FinishFlush();
+            chunkMesher.RenderMesher.BeginFlush();
+			chunkMesher.CollisionMesher.BeginFlush();
+			chunkMesher.RenderMesher.FinishFlush();
+            chunkMesher.CollisionMesher.FinishFlush();
 
 			int max = queue.Count;
             GameStateTheIsland.ProgressMax = max;
@@ -238,8 +241,8 @@ namespace ViMG
                 loadedChunks[copyingChunk.position] = LoadingState.Loading;
                 loadedChunksFastLookup[i] = LoadingState.Loading;
 
-                chunkManager.RenderMesher.AddToNextBatch(world, copyingChunk.position, copy);
-                chunkManager.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
+                chunkMesher.RenderMesher.AddToNextBatch(world, copyingChunk.position, copy);
+                chunkMesher.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks1.Add(copyingChunk.position);
             }
@@ -253,7 +256,7 @@ namespace ViMG
             var otherBuffer = waitingToFinishMeshingChunks == waitingToFinishMeshingChunks1 ? waitingToFinishMeshingChunks2 : waitingToFinishMeshingChunks1;
 			foreach (ChunkPosition position in waitingToFinishMeshingChunks)
 			{
-                if (chunkManager.RenderMesher.IsMeshed(position) && chunkManager.CollisionMesher.IsMeshed(position))
+                if (chunkMesher.RenderMesher.IsMeshed(position) && chunkMesher.CollisionMesher.IsMeshed(position))
                 {
                     Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
@@ -299,10 +302,10 @@ namespace ViMG
 				{
 					Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 					loadedChunksFastLookup[i] = LoadingState.Loaded;
-					//queue.EnqueueWithoutSorting(position);
+                    //queue.EnqueueWithoutSorting(position);
 
-					chunkManager.RenderMesher.ImmediatelyMesh(world, position);
-					chunkManager.CollisionMesher.ImmediatelyMesh(world, position);
+                    chunkMesher.RenderMesher.ImmediatelyMesh(world, position);
+                    chunkMesher.CollisionMesher.ImmediatelyMesh(world, position);
 
 					entIO.Deserialize(position);
 					//CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);
@@ -407,7 +410,7 @@ namespace ViMG
 
 								var context = new CopyChunkTaskContext {
 									world = world,
-									pool = chunkManager.bufferPool,
+									pool = chunkMesher.bufferPool,
 									position = pos,
 								};
 								var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
@@ -457,7 +460,7 @@ namespace ViMG
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);
-					chunkManager.Unload(pos);
+                    chunkMesher.Unload(pos);
 				}
 
 				loadedChunksFastLookup[i] = LoadingState.Unloaded;
@@ -494,11 +497,11 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             //TODO: there may still be meshes in the queue.
-            chunkManager.RenderMesher.FinishFlush();
-			chunkManager.CollisionMesher.FinishFlush();
+            chunkMesher.RenderMesher.FinishFlush();
+            chunkMesher.CollisionMesher.FinishFlush();
 
-			chunkManager.RenderMesher.UnloadAll();
-			chunkManager.CollisionMesher.UnloadAll();
+            chunkMesher.RenderMesher.UnloadAll();
+            chunkMesher.CollisionMesher.UnloadAll();
 			
 			entityManager.UnloadAll();
 			
@@ -507,7 +510,7 @@ namespace ViMG
 
         public void Dispose()
         {
-			chunkManager.Dispose();
+            chunkMesher.Dispose();
 			entityManager.Dispose();
 
 			loadedChunks = null;
