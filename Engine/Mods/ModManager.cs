@@ -16,10 +16,16 @@ namespace Engine.Mods
         {
             foreach (string str in Main.SessionInformation.LoadedMods)
             {
-                string basePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                string relativePath = string.Format("../mods/{0}/{1}.dll", "net8.0-windows", str);
-                string path = Path.Combine(basePath, relativePath);
-                loadedAssemblies.Add(Assembly.LoadFile(path));
+                string? modsFolder = Main.SessionInformation.ModsFolder;
+
+                if (modsFolder == null)
+                {
+                    string basePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+                    string relativePath = string.Format("../mods/{0}", "net8.0-windows");
+                    modsFolder = Path.Combine(basePath, relativePath);
+                }
+                loadedAssemblies.Add(Assembly.LoadFile(string.Format("{0}/{1}.dll", modsFolder, str)));
             }
         }
     }

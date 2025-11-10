@@ -15,7 +15,7 @@ namespace ViMG
 {
 	public class RegistryService
 	{
-        private readonly GraphicsDevice device;
+        private readonly GraphicsDevice? device;
 
         public ModRegistry ModRegistry;
 		public ItemRegistry ItemRegistry;
@@ -25,14 +25,15 @@ namespace ViMG
 		public RendererRegistry RendererRegistry;
 		public WorldLogicRegistry WorldLogicRegistry;
 
-		public RegistryService(GraphicsDevice device)
+		public RegistryService(GraphicsDevice? device)
 		{
 			ModRegistry = new ModRegistry(device);
 			ItemRegistry = new ItemRegistry();
 			CubeRegistry = new CubeRegistry();
 			RecipeRegistry = new RecipeRegistry();
 			BuffRegistry = new BuffRegistry();
-			RendererRegistry = new RendererRegistry(device);
+            if (device != null)
+			    RendererRegistry = new RendererRegistry(device);
 			WorldLogicRegistry = new WorldLogicRegistry();
             this.device = device;
         }

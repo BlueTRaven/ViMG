@@ -10,7 +10,6 @@ using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 using System.Reflection.Metadata;
 
 namespace ViMG.WorldLogics

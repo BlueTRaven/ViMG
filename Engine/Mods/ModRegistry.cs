@@ -11,11 +11,11 @@ namespace Engine.Mods
 {
     public class ModRegistry : ObjRegistry<Mod>
     {
-        private readonly GraphicsDevice device;
+        private readonly GraphicsDevice? device;
 
         private Dictionary<Assembly, int> assemblyToMod = new();
 
-        public ModRegistry(GraphicsDevice device)
+        public ModRegistry(GraphicsDevice? device)
         {
             this.device = device;
         }
@@ -24,15 +24,18 @@ namespace Engine.Mods
         {
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                Type[] allTypes = assembly.GetTypes();
-
-                foreach (Type type in allTypes)
+                if (assembly.GetCustomAttribute<Engine.Mods.ModAssemblyAttribute>() != null)
                 {
-                    if (type.IsSubclassOf(typeof(Mod)))
+                    Type[] allTypes = assembly.GetTypes();
+
+                    foreach (Type type in allTypes)
                     {
-                        Mod created = (Mod)Activator.CreateInstance(type);
-                        Register(created);
-                        assemblyToMod.Add(assembly, Count);
+                        if (type.IsSubclassOf(typeof(Mod)))
+                        {
+                            Mod created = (Mod)Activator.CreateInstance(type);
+                            Register(created);
+                            assemblyToMod.Add(assembly, Count);
+                        }
                     }
                 }
             }

@@ -136,7 +136,7 @@ namespace ViMG
 
 		private ModManager modManager = new ModManager();
 
-        public Main()
+        public Main(bool headless = false, bool cli = false) : base()
         {
 			MainThread = Thread.CurrentThread;
 

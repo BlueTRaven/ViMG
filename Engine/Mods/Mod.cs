@@ -18,7 +18,7 @@ namespace Engine.Mods
 
         }
 
-        public abstract ModRegistryService CreateModRegistryService(GraphicsDevice device);
+        public abstract ModRegistryService CreateModRegistryService(GraphicsDevice? device);
 
         public virtual void AddSpawnInventoryItems(Inventory inventory) { }
     }

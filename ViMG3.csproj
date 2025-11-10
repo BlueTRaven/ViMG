@@ -19,6 +19,7 @@
     <Compile Remove="bepuphysics2\**" />
     <Compile Remove="BrUtility\**" />
     <Compile Remove="Engine\**" />
+    <Compile Remove="GenerateWorld\**" />
     <Compile Remove="MigrationBackup\**" />
     <Compile Remove="ModGameBase\**" />
     <Compile Remove="MonoGame.ImGuiNet\**" />
@@ -26,6 +27,7 @@
     <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="Engine\**" />
+    <EmbeddedResource Remove="GenerateWorld\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="ModGameBase\**" />
     <EmbeddedResource Remove="MonoGame.ImGuiNet\**" />
@@ -33,6 +35,7 @@
     <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
     <None Remove="Engine\**" />
+    <None Remove="GenerateWorld\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="ModGameBase\**" />
     <None Remove="MonoGame.ImGuiNet\**" />

@@ -22,7 +22,7 @@ namespace Engine.Mods
         public RendererRegistry? RendererRegistry;
         public WorldLogicRegistry? WorldLogicRegistry;
 
-        public ModRegistryService(GraphicsDevice device)
+        public ModRegistryService(GraphicsDevice? device)
         {
 
         }

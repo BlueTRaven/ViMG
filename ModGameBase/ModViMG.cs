@@ -18,13 +18,14 @@ namespace ViMG
     {
         public class ModRegistryServiceViMG : ModRegistryService
         {
-            public ModRegistryServiceViMG(GraphicsDevice device) : base(device)
+            public ModRegistryServiceViMG(GraphicsDevice? device) : base(device)
             {
                 this.CubeRegistry = new CubeRegistryViMG();
                 this.ItemRegistry = new ItemRegistryViMG();
                 this.BuffRegistry = new BuffRegistryViMG();
                 this.RecipeRegistry = new RecipeRegistryViMG();
-                this.RendererRegistry = new RendererRegistryViMG(device);
+                if (device != null)
+                    this.RendererRegistry = new RendererRegistryViMG(device);
                 this.WorldLogicRegistry = new WorldLogicRegistryViMG();
             }
         }
@@ -37,11 +38,14 @@ namespace ViMG
         {
             base.OnRegister();
 
-            RendererOpaqueBillboardedEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("generic_billboard") as RendererOpaqueBillboardedEntity);
-            RendererOpaqueXMeshEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("xmesh") as RendererOpaqueXMeshEntity);
+            if (Main.Registry.RecipeRegistry != null)
+            {
+                RendererOpaqueBillboardedEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("generic_billboard") as RendererOpaqueBillboardedEntity);
+                RendererOpaqueXMeshEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("xmesh") as RendererOpaqueXMeshEntity);
+            }
         }
 
-        public override ModRegistryService CreateModRegistryService(GraphicsDevice device)
+        public override ModRegistryService CreateModRegistryService(GraphicsDevice? device)
         {
             registry ??= new ModRegistryServiceViMG(device);
             return registry;

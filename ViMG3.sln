@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModGameBase", "ModGameBase\ModGameBase.csproj", "{33DEA714-8BC8-40CA-817A-DF3BCA7635D7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateWorld", "GenerateWorld\GenerateWorld.csproj", "{310C897F-2B10-400C-B52A-5029FF16C1F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,14 @@ Global
 		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
 		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.DebugNoTracy|Any CPU.ActiveCfg = Debug|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.DebugNoTracy|Any CPU.Build.0 = Debug|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
+		{310C897F-2B10-400C-B52A-5029FF16C1F9}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

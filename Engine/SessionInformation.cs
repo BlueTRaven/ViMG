@@ -10,5 +10,6 @@ namespace ViMG
     {
         public string LastLoadedSave;
         public string[] LoadedMods = new[] { "ModGameBase" }; // Mods to load
+        public string? ModsFolder = null; // Must be ABSOLUTE
     }
 }
