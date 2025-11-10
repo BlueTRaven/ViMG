@@ -15,7 +15,6 @@ namespace ViMG
     {
 		private readonly struct BroadChunkTaskState
 		{
-			public readonly GameStates.GameStateManager gsManager;
 			public readonly WorldPrototype world;
 			public readonly int chunkStart;
 			public readonly int chunkEnd;
@@ -23,9 +22,8 @@ namespace ViMG
 			public readonly ChunkPosition[] chunks;
 			public readonly ChunkGenerator generator;
 
-			public BroadChunkTaskState(GameStates.GameStateManager gsManager, WorldPrototype world, int chunkStart, int chunkEnd, int totalChunks, ChunkPosition[] chunks, ChunkGenerator generator)
+			public BroadChunkTaskState(WorldPrototype world, int chunkStart, int chunkEnd, int totalChunks, ChunkPosition[] chunks, ChunkGenerator generator)
 			{
-				this.gsManager = gsManager;
 				this.world = world;
 				this.chunkStart = chunkStart;
 				this.chunkEnd = chunkEnd;
@@ -52,7 +50,7 @@ namespace ViMG
 			}
 		}
 
-		public static void GenerateWorld(GameStates.GameStateManager gsManager, WorldPrototype world, ChunkGenerator generator)
+		public static void GenerateWorld(WorldPrototype world, ChunkGenerator generator)
 		{
 			int num = 0;
 			int total = world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ;
@@ -82,7 +80,7 @@ namespace ViMG
 				int chunkStart = i;
 				int chunkEnd = i + split;
 
-				BroadChunkTaskState state = new BroadChunkTaskState(gsManager, world, chunkStart, chunkEnd, total, positions, generator);
+				BroadChunkTaskState state = new BroadChunkTaskState(world, chunkStart, chunkEnd, total, positions, generator);
 				Task task = new Task(GenerateChunkDetailTaskFn, state);
 
 				if (Main.MULTITHREAD_BROAD_PHASE)

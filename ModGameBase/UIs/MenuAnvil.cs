@@ -174,7 +174,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"], new ItemInstance()));
+                gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"], new ItemInstance()));
 			}
 
 			UI.EndParent();

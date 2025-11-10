@@ -239,42 +239,14 @@ namespace ViMG.Entities
 
 		private World world;
 
-		public ProjectileManager(World world, GraphicsDevice device)
+		public ProjectileManager(World world)
 		{
-            /*Vector3 min = new Vector3(-0.5f, -0.5f, 0);
-			Vector3 max = new Vector3(0.5f, 0.5f, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
-
-			List<VertexCube> vertices = new List<VertexCube>();
-			List<int> indices = new List<int>();
-
-			int offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));*/
-
-            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
-            //mesh = MeshHelper.MakeCenteredQuad(device, 1, 1);
-			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-            //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices);
             this.world = world;
+        }
+
+		public void InitMeshes(GraphicsDevice device)
+		{
+            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
         }
 
 

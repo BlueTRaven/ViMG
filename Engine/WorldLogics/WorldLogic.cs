@@ -9,7 +9,7 @@ namespace ViMG.WorldLogics
 {
     public abstract class WorldLogic : IDisposable
     {
-        public WorldLogic(GraphicsDevice device)
+        public WorldLogic()
         {
 
         }

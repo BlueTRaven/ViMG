@@ -140,7 +140,7 @@ namespace ViMG.Entities
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
             }
 
-            if (world.GameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
             {
                 Ray ray = new Ray(world.player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
 
@@ -154,10 +154,10 @@ namespace ViMG.Entities
             }
 
             //When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
-            if (world.GameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
+            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
             {
                 if (world.MenuDialogue.SelectedOption == 1)
-                    world.GameStateManager.TheIsland.PushMenu(new MenuShop(world.GameStateManager, world.player, stockedItems));
+                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.player, stockedItems));
 
                 shouldFollowUpMenu = false;
             }
@@ -172,7 +172,7 @@ namespace ViMG.Entities
             }
             else world.MenuDialogue.StartOptions(options);
 
-            world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
             shouldFollowUpMenu = true;
         }

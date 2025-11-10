@@ -378,7 +378,7 @@ namespace ViMG.UIs
 				
 				if (recipeBookButton.clickLeft)
 				{
-					player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Inventory"], new ItemInstance()));
+                    Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Inventory"], new ItemInstance()));
 				}
 
 				UI.EndParent();

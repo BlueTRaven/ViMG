@@ -30,7 +30,7 @@ namespace ViMG.Items
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             player.world.MenuDialogue.StartText(text);
-            player.world.GameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
+            Main.gameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
 
             return base.RightClick(player, inventory, index, facing, out actionStats);
         }

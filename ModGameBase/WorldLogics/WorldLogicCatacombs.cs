@@ -12,7 +12,7 @@ namespace ViMG.WorldLogics
     {
         private bool firstUpdate;
 
-        public WorldLogicCatacombs(GraphicsDevice device) : base(device)
+        public WorldLogicCatacombs() : base()
         {
         }
 

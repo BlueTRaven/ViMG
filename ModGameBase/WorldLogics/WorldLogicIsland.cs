@@ -29,7 +29,7 @@ namespace ViMG.WorldLogics
 
 
         private float alive;
-        private DirectionalLight directionalLight;
+        private DirectionalLight? directionalLight = null;
 		//1 and last are replaced by the previous directional light color to prevent jumping colors.
 		private static Color[] duskColors = new Color[] 
 		{ 
@@ -42,64 +42,57 @@ namespace ViMG.WorldLogics
         
 		private int lavaLight;
 
-		private WeatherManager weatherManager;
+		private WeatherManager? weatherManager = null;
 
 		private float weatherChangeTimer;
 		private static Vector2 passiveWeatherTime = new Vector2(60 * 4f, 60 * 12f);
 		private static Vector2 activeWeatherTime = new Vector2(60 * 2f, 60 * 12f);
 		private const float ACTIVE_WEATHER_CHANCE = 0.25f;
 
-        public WorldLogicIsland(string worldName, GraphicsDevice device) : base(device)
+        public WorldLogicIsland() : base()
         {
-			weatherManager = new WeatherManager(device);
+			
+        }
 
-			float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
+        public override void FinishLoading(GraphicsDevice device)
+        {
+            base.FinishLoading(device);
+
+            weatherManager = new WeatherManager(device);
+
+            float[] splits = [1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f];
 
             directionalLight = new DirectionalLight(device, Main.camera, splits);
-			
+
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
             FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
+            List<int> indices = [0, 1, 3, 1, 2, 3];
 
-			indices.Add(0);
-			indices.Add(1);
-			indices.Add(3);
-			indices.Add(1);
-			indices.Add(2);
-			indices.Add(3);
+            Color sunColor = Color.White;
+            float sunVertDist = Cube.CUBE_SCALE * 12;
 
-			Color sunColor = Color.White;
-			float sunVertDist = Cube.CUBE_SCALE * 12;
+            if (Main.SessionInformation.LastLoadedSave == "coconut")
+            {
+                sunVertDist = Cube.CUBE_SCALE * 128;
+                sunColor = Color.White;
+            }
 
-			if (worldName == "coconut")
-			{
-				sunVertDist = Cube.CUBE_SCALE * 128;
-				sunColor = Color.White;
-			}
+            vertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
 
-			vertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
-
-			meshSun = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
-			//meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+            meshSun = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+            //meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
 
             vertices = new FastList<VertexCube>();
-            indices = new List<int>();
+            indices = [3, 1, 0, 3, 2, 1];
 
-			indices.Add(3);
-			indices.Add(1);
-			indices.Add(0);
-			indices.Add(3);
-			indices.Add(2);
-			indices.Add(1);
-
-			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
 
             meshLavaQuad = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
             //meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);

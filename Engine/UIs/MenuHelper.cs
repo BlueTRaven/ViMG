@@ -190,7 +190,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
 			{
-				player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(player.world.GameStateManager, 
+                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.gameStateManager, 
 					null, inventory.Get(index)));
 
 				return ItemSlotClickOutput.FilterRecipe;
@@ -231,7 +231,7 @@ namespace ViMG.UIs
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
-			ItemSlotClickOutput reciperval = HandleRecipeFilter(player.world.GameStateManager, inventory.Get(index), itemSlot.button);
+			ItemSlotClickOutput reciperval = HandleRecipeFilter(Main.gameStateManager, inventory.Get(index), itemSlot.button);
 
 			if (reciperval != ItemSlotClickOutput.None)
 				return reciperval;

@@ -79,7 +79,7 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-			player.world.GameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace(world.GameStateManager, player, player.GetInventory(), inventory, this));
+            Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace(Main.gameStateManager, player, player.GetInventory(), inventory, this));
 
 			return true;
 		}

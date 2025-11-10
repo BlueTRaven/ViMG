@@ -182,7 +182,7 @@ namespace ViMG.GameStates
             this.world = world;
         }
 
-        public World CreateWorld(GraphicsDevice device, string worldName)
+        public static World CreateWorld(GraphicsDevice? device, string worldName)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -190,7 +190,7 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
-            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+            ChunkMesher? chunkMesher = device != null ? new(SIZE_IN_CHUNKS, physicsInfo, device) : null;
             var entityManager = new EntityManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
@@ -213,14 +213,17 @@ namespace ViMG.GameStates
 
             Skybox skybox = new Skybox();
 
+            // This is up here so we can use this information when loading a world (coconut easter egg)
+            // but it also might present a problem; if we error at any point during the creation/loading process,
+            // pressing "Continue" will just try to load the same world that caused the error instead of staying the same.
+            Main.SessionInformation.LastLoadedSave = worldName;
+
             var generator = CreateLayerGenerator(0);
-            var logic = CreateLayerLogic(0, worldName, device);
+            var logic = CreateLayerLogic(0);
 
             WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
-            ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
-
-            Main.SessionInformation.LastLoadedSave = worldName;
+            ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
             ProfilingHelper.Start("Saving Chunks...");
             chunkIO.Save(worldName);
@@ -241,7 +244,9 @@ namespace ViMG.GameStates
             prototype.WorldInfo.playerPosition = player.Position;
             prototype.WorldInfo.playerLayer = 0;
 
-            World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            if (device != null)
+                world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
 
@@ -308,7 +313,9 @@ namespace ViMG.GameStates
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
-            var logic = CreateLayerLogic(worldInfo.playerLayer, worldName, device);
+            Main.SessionInformation.LastLoadedSave = worldName;
+
+            var logic = CreateLayerLogic(worldInfo.playerLayer);
 
             WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
@@ -325,16 +332,10 @@ namespace ViMG.GameStates
             LoadMessage = "Loading World...\n" +
                 "Deserializing...";
 
-            //Deserialize this player chunk; the player entity is created.
-            //We do this this way since the player is, really, just another entity. Treating it otherwise (with its own deserialization routine)
-            //is overcomplicating the problem.
-            //entIO.DeserializePlayerChunk();
-
-            Main.SessionInformation.LastLoadedSave = worldName;
-
             ProfilingHelper.End("World loading done.");
 
-            World world = new World(manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             return world;
 
@@ -387,14 +388,14 @@ namespace ViMG.GameStates
 
                 Skybox skybox = new Skybox();
 
+                Main.SessionInformation.LastLoadedSave = worldName;
+
                 var generator = CreateLayerGenerator(layer);
-                var logic = CreateLayerLogic(layer, worldName, device);
+                var logic = CreateLayerLogic(layer);
 
                 WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
-                ChunkGeneratorTasker.GenerateWorld(manager, prototype, generator);
-
-                Main.SessionInformation.LastLoadedSave = worldName;
+                ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
                 ProfilingHelper.Start("Saving Chunks...");
                 chunkIO.Save(worldName);
@@ -403,7 +404,7 @@ namespace ViMG.GameStates
 
                 var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-                World world = new World(manager, prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+                World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
                 prototype.Logic.Initialize(world);
                 entityManager.AddLaterEntities();
 
@@ -445,7 +446,8 @@ namespace ViMG.GameStates
                 var housingManager = new HousingManager();
                 housingManager.FinishLoading(worldInfo);
 
-                var logic = CreateLayerLogic(layer, worldName, device);
+                Main.SessionInformation.LastLoadedSave = worldName;
+                var logic = CreateLayerLogic(layer);
 
                 Skybox skybox = new Skybox();
 
@@ -464,16 +466,10 @@ namespace ViMG.GameStates
                 LoadMessage = "Loading World...\n" +
                     "Deserializing...";
 
-                //Deserialize this player chunk; the player entity is created.
-                //We do this this way since the player is, really, just another entity. Treating it otherwise (with its own deserialization routine)
-                //is overcomplicating the problem.
-                //entIO.DeserializePlayerChunk();
-
-                Main.SessionInformation.LastLoadedSave = worldName;
-
                 ProfilingHelper.End("World loading done.");
 
-                World world = new World(manager, prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, device, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+                World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+                world.InitMeshes(device);
                 prototype.Logic.Initialize(world);
                 return world;
             }
@@ -492,7 +488,7 @@ namespace ViMG.GameStates
             }
         }
 
-        private ChunkGenerator CreateLayerGenerator(int layer)
+        private static ChunkGenerator CreateLayerGenerator(int layer)
         {
             if (Main.Registry.WorldLogicRegistry.generators == null || Main.Registry.WorldLogicRegistry.generators.Length < layer || Main.Registry.WorldLogicRegistry.generators[layer] == null) 
                 throw new Exception(string.Format("No LayerGenerator defined for layer {0}", layer));
@@ -515,12 +511,12 @@ namespace ViMG.GameStates
             return generator;
         }
 
-        private WorldLogics.WorldLogic CreateLayerLogic(int layer, string worldName, GraphicsDevice device)
+        private static WorldLogics.WorldLogic CreateLayerLogic(int layer)
         {
             if (Main.Registry.WorldLogicRegistry.logics == null || Main.Registry.WorldLogicRegistry.logics.Length < layer || Main.Registry.WorldLogicRegistry.logics[layer] == null)
                 throw new Exception(string.Format("No WorldLogic defined for layer {0}", layer));
 
-            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.logics[layer], worldName, device);
+            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.logics[layer]);
 
             //switch (layer)
             //{

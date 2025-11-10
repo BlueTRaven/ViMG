@@ -85,7 +85,7 @@ namespace ViMG.UIs
                 new UI.LabelConstructionParameters("Exit To Title", fi, 128, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
             {
-                world.GameStateManager.SetGameState(world.GameStateManager.MainMenu);
+                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
             }
 
             y += 32 + MARGIN;

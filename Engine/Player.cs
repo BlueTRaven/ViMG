@@ -373,9 +373,9 @@ namespace ViMG
 
 			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
-			menuPlayer = new MenuPlayer(world.GameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
+			menuPlayer = new MenuPlayer(Main.gameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
-			world.GameStateManager.TheIsland.SetMenu(menuPlayer);
+            Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
@@ -628,8 +628,8 @@ namespace ViMG
 
 			if (Main.inputManager.JustPressed(Keys.E))
 			{
-				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-					world.GameStateManager.GetCurrentGameState().PopMenu();
+				if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+                    Main.gameStateManager.GetCurrentGameState().PopMenu();
 				else menuPlayer.Toggle();
 			}
 
@@ -1096,7 +1096,7 @@ namespace ViMG
 			if (Main.inputManager.JustReleased(Keys.LeftShift))
 				IsRunning = false;
 
-			if (inputLockupTimer <= 0 && world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
+			if (inputLockupTimer <= 0 && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
 			{
 				if (contactChecker.OnGround && Main.inputManager.IsHeld(Keys.LeftShift))
 					IsRunning = true;
@@ -1226,7 +1226,7 @@ namespace ViMG
 
 		private void UpdatePerformAction()
 		{
-            if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
+            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
                 !menuPlayer.IsOpened && useTimer <= 0)
             {
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
@@ -1483,7 +1483,7 @@ namespace ViMG
 				Main.camera.Position = Position + Main.camera.Forward * currentThirdPersonDistance + Main.camera.Right * (maxToSide * pToSide);
 			}
 
-			if (menuPlayer.IsOpened || world.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+			if (menuPlayer.IsOpened || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
 				return;
 
 			currentMS = Mouse.GetState();

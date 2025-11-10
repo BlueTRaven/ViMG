@@ -24,7 +24,7 @@ namespace ViMG.Cubes
         {
             base.OnRightClick(world, position);
 
-            world.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
             world.MenuDialogue.StartText("Here lies our sins\r\n" +
                 "Wicked were we, and so here our guilt lies\r\n" +

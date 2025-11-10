@@ -43,14 +43,13 @@ namespace ViMG
 
 		public ChunkManager ChunkManager;
 
-		private static VerySimpleMesh meshMiningCube;
-		private static VerySimpleMesh skyboxMesh;
-		private static bool meshesLoaded;
+		// TODO reimplement
+		private static VerySimpleMesh? meshMiningCube = null;
+		private static VerySimpleMesh? skyboxMesh = null;
 		public Skybox Skybox;
 		public float WeatherSkyboxAlpha;
 		public Color WeatherSkyboxColor;
 
-		public GameStateManager GameStateManager;
 		public Player player;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
@@ -62,7 +61,7 @@ namespace ViMG
 		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
-		public LightManager LightManager;
+		public LightManager? LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
 		public WorldInfoIO.WorldInfo WorldInfo;
 		public ChunkLoadManager ChunkLoadManager;
@@ -102,15 +101,13 @@ namespace ViMG
 		private int nextLayer;
 		private Task<World> nextWorld;
 
-		public World(GameStateManager gameStateManager, WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
-			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, GraphicsDevice device, int worldSize)
+		public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
+			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, int worldSize)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
             this.Layer = prototype.Layer;
 			this.LoadedFolderName = prototype.WorldName;
-
-			this.GameStateManager = gameStateManager;
 
 			ChunkManager = prototype.ChunkManager;
 			EntityManager = prototype.EntityManager;
@@ -122,7 +119,7 @@ namespace ViMG
 			HousingManager = prototype.HousingManager;
 
 			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
-			MenuDialogue = new MenuDialogue(gameStateManager);
+			MenuDialogue = new MenuDialogue(Main.gameStateManager);
 			//DialogueManager = new DialogueManager();
 
 			this.ChunkLoadManager = chunkLoadManager;
@@ -138,125 +135,125 @@ namespace ViMG
 
 			sizeInChunks = (int)((float)worldSize / Chunk.CHUNK_SIZE);
 
-			if (!meshesLoaded)
-				CreateMeshes(device);
-
-			ProjectileManager = new ProjectileManager(this, device);
+			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
-			LightManager = new LightManager(device);
-
+			
 			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 		}
 
-		private void CreateMeshes(GraphicsDevice device)
+		public void InitMeshes(GraphicsDevice device)
         {
-            //meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
+			ProjectileManager.InitMeshes(device);
+            LightManager = new LightManager(device);
 
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
+			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
 
-			Vector3 l_b_f = new Vector3(0, 0, 1);
-			Vector3 r_b_f = new Vector3(1, 0, 1);
-			Vector3 r_b_n = new Vector3(1, 0, 0);
-			Vector3 l_b_n = new Vector3(0, 0, 0);
+			if (skyboxMesh == null)
+			{
+				FastList<VertexCube> vertices = new FastList<VertexCube>();
+				List<int> indices = new List<int>();
 
-			Vector3 l_t_n = new Vector3(0, 1, 0);
-			Vector3 r_t_n = new Vector3(1, 1, 0);
-			Vector3 r_t_f = new Vector3(1, 1, 1);
-			Vector3 l_t_f = new Vector3(0, 1, 1);
+				Vector3 l_b_f = new Vector3(0, 0, 1);
+				Vector3 r_b_f = new Vector3(1, 0, 1);
+				Vector3 r_b_n = new Vector3(1, 0, 0);
+				Vector3 l_b_n = new Vector3(0, 0, 0);
 
-			const float SKYBOX_SIDE_SIZE = 1024f;
-			const float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * 4f;
-			const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
+				Vector3 l_t_n = new Vector3(0, 1, 0);
+				Vector3 r_t_n = new Vector3(1, 1, 0);
+				Vector3 r_t_f = new Vector3(1, 1, 1);
+				Vector3 l_t_f = new Vector3(0, 1, 1);
 
-			//front face
-			int offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				const float SKYBOX_SIDE_SIZE = 1024f;
+				const float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * 4f;
+				const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
 
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
+				//front face
+				int offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
 
-			//right face
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
 
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
-			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
+				//right face
+				offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
 
-			//back face
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
+				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
 
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
+				//back face
+				offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
 
-			//left face
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
+				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
 
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
-			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
+				//left face
+				offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
 
-			//top face
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
+				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
 
-			vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-			vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+				//top face
+				offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
+
+				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
 
 
-			//bottom face
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+				//bottom face
+				offset = vertices.Length;
+				indices.Add(offset + 0);
+				indices.Add(offset + 1);
+				indices.Add(offset + 3);
+				indices.Add(offset + 1);
+				indices.Add(offset + 2);
+				indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-			vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
 
-			skyboxMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-
-			meshesLoaded = true;
+				skyboxMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+			}
 		}
 
 		public void FinishLoading(GraphicsDevice device)
@@ -449,7 +446,7 @@ namespace ViMG
 				else nextLayer = Layer;
 
 				if (nextLayer != Layer)
-					nextWorld = GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, nextLayer);
+					nextWorld = Main.gameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, nextLayer);
 			}
 
 			//if in the middle 22 chunks (> 0-5 chunks && < 32-27 chunks), unload the loaded world.
@@ -513,7 +510,7 @@ namespace ViMG
 					//as it normally does.)
 					loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
 
-					GameStateManager.TheIsland.SetWorld(loadedWorld);
+                    Main.gameStateManager.TheIsland.SetWorld(loadedWorld);
 
 					GameStateTheIsland.LoadMessage = "Saving...";
 					//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
@@ -684,7 +681,7 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
 						new RendererDeferred.DrawMaterial(Skybox.Night),
-                        skyboxMesh,
+                        skyboxMesh.Value,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateFromYawPitchRoll(y, p, 0) *
 						Matrix.CreateTranslation(Main.camera.Position),
@@ -697,7 +694,7 @@ namespace ViMG
 
 					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
 						new RendererDeferred.DrawMaterial(Skybox.Day),
-                        skyboxMesh,
+                        skyboxMesh.Value,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
 						Matrix.CreateTranslation(Main.camera.Position),
 						null, Color.White * alphaDay));
@@ -712,7 +709,7 @@ namespace ViMG
 						TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
 						Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
 							Matrix.CreateTranslation(Main.camera.Position),
-						Mesh = skyboxMesh,
+						Mesh = skyboxMesh.Value,
 					});
 				}
 
