@@ -25,8 +25,7 @@ namespace ViMG.WorldLogics
 		private static VerySimpleMesh meshSun;
 		private static VerySimpleMesh meshLavaQuad;
         private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("sun"));
-        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("lava"));
-
+        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("lava"), emissive: Main.assetsManager.GetAsset<Texture2D>("lava"));
 
         private float alive;
         private DirectionalLight? directionalLight = null;
@@ -138,7 +137,7 @@ namespace ViMG.WorldLogics
 
 			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player != null && world.player.Position.Y / Cube.CUBE_SCALE < 140)
 			{
-				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT, world.player.Position.Z);
+				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), world.player.Position.Z);
 
 				if (world.player.Position.Y < lavaPosition.Y)
 					world.player.Kill();
@@ -273,8 +272,15 @@ namespace ViMG.WorldLogics
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
 					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);
 
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava, 
-					meshLavaQuad, mat));
+				RectangleF sourceRect = new RectangleF()
+				{
+					x = -world.player.Position.Z * 128 + this.alive,
+					y = -world.player.Position.X * 128 + this.alive,
+					width = 128 * 16,
+					height = 128 * 16,
+				};
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava,
+					meshLavaQuad, mat, sourceRect));
 			}
 		}
 
