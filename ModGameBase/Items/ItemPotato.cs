@@ -18,7 +18,7 @@ namespace ViMG.Items
             new(Main.Registry.BuffRegistry.Get("str_up"), 3f * 60f, 5)
         };
 
-        public ItemPotato() : base("food_potato", StaticMaterials.Items, new RectangleF(192, 80, 16, 16))
+        public ItemPotato() : base("food_potato", new RectangleF(192, 80, 16, 16))
         {
             name = "Potato";
             description = "A hearty potato.\n" +

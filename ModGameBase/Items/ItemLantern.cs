@@ -23,7 +23,7 @@ namespace ViMG.Items
             color.W = 1.5f;
         }
 
-        public ItemLantern() : base("lantern", StaticMaterials.Items, new RectangleF(32, 64, 16, 16))
+        public ItemLantern() : base("lantern", new RectangleF(32, 64, 16, 16))
         {
         }
 

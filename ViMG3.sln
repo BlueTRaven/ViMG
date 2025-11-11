@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViMG3", "ViMG3.csproj", "{172B53B9-824D-4B4D-8502-737CC0A6FC16}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7} = {33DEA714-8BC8-40CA-817A-DF3BCA7635D7}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrAssetsManager", "BrUtility\BrAssetsManager\BrAssetsManager.csproj", "{A57BDD8D-EF30-42DB-AC43-54D7681FFA7A}"
 EndProject
@@ -24,6 +27,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModGameBase", "ModGameBase\ModGameBase.csproj", "{33DEA714-8BC8-40CA-817A-DF3BCA7635D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateWorld", "GenerateWorld\GenerateWorld.csproj", "{310C897F-2B10-400C-B52A-5029FF16C1F9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7} = {33DEA714-8BC8-40CA-817A-DF3BCA7635D7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

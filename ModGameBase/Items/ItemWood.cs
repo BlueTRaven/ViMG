@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public class ItemWood : Item
 	{
-		public ItemWood() : base("wood", StaticMaterials.Items, new RectangleF(0, 32, 16, 16))
+		public ItemWood() : base("wood", new RectangleF(0, 32, 16, 16))
 		{
 			name = "Wood Log";
 			description = "A log of wood. ...kinda looks like bacon, doesn't it? No, you can't eat it.";

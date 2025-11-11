@@ -43,7 +43,7 @@ namespace ViMG.Items
 		private string materialName;
 
 		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material,
-            StaticMaterials.Items, new RectangleF(0, 144, 16, 16))
+            new RectangleF(0, 144, 16, 16))
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 
@@ -51,7 +51,7 @@ namespace ViMG.Items
 			this.stats = stats;
 		}
 
-		public string GetMaterial()
+		public string GetItemMaterial()
 		{
 			return materialName;
 		}
@@ -200,7 +200,7 @@ namespace ViMG.Items
 			if (meshItemQuadInWorld.IBO == null)
 				MakeMesh(device);
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
 		}
 
@@ -208,7 +208,7 @@ namespace ViMG.Items
 		{
 			//base.DrawInInventory(batch, position, scale);
 
-			batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 	}
 }

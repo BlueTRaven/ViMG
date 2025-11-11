@@ -15,7 +15,7 @@ namespace ViMG.Items
     {
         private const int MAX_PLACEABLE_BLOCKS = 80;
 
-        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", StaticMaterials.Items, new RectangleF(64, 64, 16, 16))
+        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", new RectangleF(64, 64, 16, 16))
         {
             name = "DEBUG Place block wand";
             description = "Places blocks. For use in building.";

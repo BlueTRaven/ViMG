@@ -15,7 +15,7 @@ namespace ViMG.Items
     {
         private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 30f);
 
-        public ItemCaveRoot() : base("food_root1", StaticMaterials.Items, new RectangleF(128, 96, 16, 16))
+        public ItemCaveRoot() : base("food_root1", new RectangleF(128, 96, 16, 16))
         {
             name = "Cave Root Tuber";
             description = "The tuber of a Cave Root. Hardy and nutrituous, but bitter tasting.\n" +

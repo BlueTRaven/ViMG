@@ -13,7 +13,7 @@ namespace ViMG.Items
 	{
 		private ushort cubeId;
 
-		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, StaticMaterials.Cubes, 
+		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, 
 			cube.GetHeldSourceRect())
 		{
 			this.cubeId = cubeId;
@@ -49,7 +49,12 @@ namespace ViMG.Items
 			return false;
 		}
 
-		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+        public override RendererDeferred.DrawMaterial GetMaterial()
+        {
+            return StaticMaterials.Cubes;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, transform);
 
@@ -58,7 +63,7 @@ namespace ViMG.Items
 
 			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
 			if (mesh.IBO != null)
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
 					mesh, scaled, cube.GetHeldSourceRect(world)));
 		}
 	}

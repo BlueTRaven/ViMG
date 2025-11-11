@@ -14,15 +14,11 @@ namespace ViMG.Cubes
 {
 	public class CubeFurnace : Cube, IRecipeCatalyst
 	{
-		private UI.ButtonConstructionParameters buttonParameters;
+		private UI.ButtonConstructionParameters? buttonParameters;
 
 		public CubeFurnace() : base("furnace_t1", new CubeFacingLayout(new RectangleF(144, 32, 16, 16), new RectangleF(160, 32, 16, 16), new RectangleF(160, 32, 16, 16)), Color.White, 6)
 		{
 			Main.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
-
-			buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), 
-				Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
-				new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
         }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -103,9 +99,16 @@ namespace ViMG.Cubes
 
 		public void DoRecipeUI2(UI.ItemSlot[] itemSlots, Recipe recipe)
 		{
+			if (buttonParameters == null)
+			{
+                buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2),
+					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
+            }
+
 			RectangleF bounds = new RectangleF(Vector2.Zero, UIConstants.SIZE, UIConstants.SIZE);
 
-			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), recipe.Layout[0]);
+			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(buttonParameters.Value), recipe.Layout[0]);
 
 			UI.StartParent(new Vector2(18f * 2f));
 
@@ -113,7 +116,7 @@ namespace ViMG.Cubes
 			if (recipe.Layout.Length > 1)
 				item = recipe.Layout[1];
 
-			itemSlots[1] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), item);
+			itemSlots[1] = UI.MakeItemSlot(UI.MakeButton(buttonParameters.Value), item);
 
 			UI.EndParent();
 			UI.StartParent(new Vector2(0, 18 * 4));
@@ -132,7 +135,7 @@ namespace ViMG.Cubes
 					instance = recipe.Outputs[i];
 				else instance = new ItemInstance();
 
-				itemSlots[2 + i] = UI.MakeItemSlot(UI.MakeButton(buttonParameters), instance);
+				itemSlots[2 + i] = UI.MakeItemSlot(UI.MakeButton(buttonParameters.Value), instance);
 
 				xOff += 18 * 2;
 

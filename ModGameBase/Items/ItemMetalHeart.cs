@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemMetalHeart : Item
     {
-        public ItemMetalHeart() : base("heart_metal", StaticMaterials.Items, new RectangleF(144, 43, 16, 21))
+        public ItemMetalHeart() : base("heart_metal", new RectangleF(144, 43, 16, 21))
         {
             name = "Metal Heart";
             description = "An intricately carved block of solid steel in the shape of a heart. Makes you feel uneasy.\n" +

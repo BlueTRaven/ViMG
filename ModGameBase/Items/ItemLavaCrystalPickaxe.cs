@@ -14,7 +14,7 @@ namespace ViMG.Items
 	{
 		private ItemPickaxeHead.PickaxeStats stats = new ItemPickaxeHead.PickaxeStats(0.55f, 1, 2, 1, 1, 0);
 
-		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", StaticMaterials.Items, new RectangleF(32, 144, 16, 16))
+		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", new RectangleF(32, 144, 16, 16))
 		{
 			name = "Lavacrystal Pickaxe";
 			description = "A pickaxe made of enchanted bones and lava crystal.\n" +

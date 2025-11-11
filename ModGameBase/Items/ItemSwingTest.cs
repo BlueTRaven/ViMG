@@ -13,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemSwingTest : Item
     {
-        public ItemSwingTest() : base("swing_test", StaticMaterials.Items, new RectangleF(48, 0, 16, 16))
+        public ItemSwingTest() : base("swing_test", new RectangleF(48, 0, 16, 16))
         {
             name = "Swing Test";
         }

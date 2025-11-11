@@ -12,7 +12,7 @@ namespace ViMG.Items
 {
     public class ItemBoneLegs : Item
     {
-        public ItemBoneLegs() : base("legs_bone", StaticMaterials.Items, new RectangleF(128, 80, 16, 16))
+        public ItemBoneLegs() : base("legs_bone", new RectangleF(128, 80, 16, 16))
         {
             name = "Bone Leggings";
             description = "Leggings produced from bone.";
@@ -38,7 +38,7 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 
@@ -46,7 +46,7 @@ namespace ViMG.Items
         {
             //base.DrawInInventory(batch, position, scale);
 
-            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace ViMG.Items
             new(Main.Registry.BuffRegistry.Get("fire_resist"), 3f * 30f),
         };
 
-        public ItemPinkPepper() : base("food_pink_pepper", StaticMaterials.Items, new RectangleF(176, 80, 16, 16))
+        public ItemPinkPepper() : base("food_pink_pepper", new RectangleF(176, 80, 16, 16))
         {
             name = "Pink Pepper";
             description = "A sweet-then-bitter tasting pepper. It appears to be native to this island...\n" +

@@ -20,7 +20,7 @@ namespace ViMG.Items
 
         private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 4f / 60f, 4, 1f), 1);
 
-        public ItemBookLavaSpout() : base("book_spell_lava_spout", StaticMaterials.Items, new RectangleF(144, 96, 16, 16))
+        public ItemBookLavaSpout() : base("book_spell_lava_spout", new RectangleF(144, 96, 16, 16))
         {
             name = "Spellbook: Lava Spout";
             description = "The book's pages erupt into lava.\n" +

@@ -45,7 +45,7 @@ namespace ViMG
 			ItemRegistry.RegisterAll();
 			RecipeRegistry.RegisterAll();
 			BuffRegistry.RegisterAll();
-			RendererRegistry.RegisterAll();
+			RendererRegistry?.RegisterAll();
 			WorldLogicRegistry.RegisterAll();
 
 			RecipeRegistry.PostRegistration();
@@ -63,6 +63,14 @@ namespace ViMG
 
             CubeRegistry.PostRegistration();
 
+            if (device != null)
+            {
+                foreach (Cube cube in CubeRegistry.GetIterable())
+                {
+                    (cube as IRegisterable).LoadContent(device);
+                }
+            }
+
             foreach (Mod mod in ModRegistry.GetIterable())
 			{
                 var service = mod.Registry;
@@ -79,6 +87,14 @@ namespace ViMG
 
             ItemRegistry.PostRegistration();
 
+            if (device != null)
+            {
+                foreach (Item item in ItemRegistry.GetIterable())
+                {
+                    (item as IRegisterable).LoadContent(device);
+                }
+            }
+
             foreach (Mod mod in ModRegistry.GetIterable())
             {
                 var service = mod.Registry;
@@ -87,6 +103,14 @@ namespace ViMG
                     service.RecipeRegistry?.RegisterAll();
                     service.RecipeRegistry?.PostRegistration();
                     RecipeRegistry.AddFromOther(service.RecipeRegistry);
+                }
+            }
+
+            if (device != null)
+            {
+                foreach (Recipe recipe in RecipeRegistry.GetIterable())
+                {
+                    (recipe as IRegisterable).LoadContent(device);
                 }
             }
 
@@ -101,14 +125,25 @@ namespace ViMG
                 }
             }
 
-            foreach (Mod mod in ModRegistry.GetIterable())
+            if (device != null)
             {
-                var service = mod.Registry;
-                if (service != null)
+                foreach (Buff buff in BuffRegistry.GetIterable())
                 {
-                    service.RendererRegistry?.RegisterAll();
-                    service.RendererRegistry?.PostRegistration();
-                    RendererRegistry.AddFromOther(service.RendererRegistry);
+                    (buff as IRegisterable).LoadContent(device);
+                }
+            }
+
+            if (RendererRegistry != null)
+            {
+                foreach (Mod mod in ModRegistry.GetIterable())
+                {
+                    var service = mod.Registry;
+                    if (service != null)
+                    {
+                        service.RendererRegistry?.RegisterAll();
+                        service.RendererRegistry?.PostRegistration();
+                        RendererRegistry.AddFromOther(service.RendererRegistry);
+                    }
                 }
             }
 
@@ -129,7 +164,7 @@ namespace ViMG
 
 			ModRegistry.PostRegistration();
             BuffRegistry.PostRegistration();
-            RendererRegistry.PostRegistration();
+            RendererRegistry?.PostRegistration();
         }
 
 		public Mod GetCurrentMod()

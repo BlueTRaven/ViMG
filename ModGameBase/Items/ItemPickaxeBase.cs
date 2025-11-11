@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public class ItemPickaxeBase : Item
 	{
-		public ItemPickaxeBase() : base("pickaxe_base", StaticMaterials.Items, new BrUtility.RectangleF(16, 0, 16, 16))
+		public ItemPickaxeBase() : base("pickaxe_base", new BrUtility.RectangleF(16, 0, 16, 16))
 		{
 		}
 

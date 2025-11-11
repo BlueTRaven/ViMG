@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
@@ -13,14 +14,19 @@ namespace ViMG.Items
 		public RenderTarget2D DepthTarget;
 
 		private static SimpleMesh<VertexPositionTexture, int> depthMesh;
-		public ItemDebugDepthTarget() : base("debug_depth_target", new Rendering.RendererDeferred.DrawMaterial(), new BrUtility.RectangleF(0, 0, 0, 0))
+		public ItemDebugDepthTarget() : base("debug_depth_target", new BrUtility.RectangleF(0, 0, 0, 0))
 		{
 			name = "DEBUG SHADOW DEPTH RENDERER";
 			description = "Renders the depth buffer into your very hands.\n" +
 				"Shadows are " + (Main.ENABLE_SHADOWS ? "enabled" : "disabled") + ".";
 		}
 
-		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+        public override RendererDeferred.DrawMaterial GetMaterial()
+        {
+            return new RendererDeferred.DrawMaterial();
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, item, transform);
 

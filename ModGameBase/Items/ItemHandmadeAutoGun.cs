@@ -21,7 +21,7 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
             Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-        public ItemHandmadeAutoGun() : base("handmade_autogun", StaticMaterials.Items, new RectangleF(96, 128, 16, 16))
+        public ItemHandmadeAutoGun() : base("handmade_autogun", new RectangleF(96, 128, 16, 16))
         {
             name = "Handmade Automatic Gun";
             description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.\n" +

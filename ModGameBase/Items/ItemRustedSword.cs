@@ -24,7 +24,7 @@ namespace ViMG.Items
                 preUseTime = 6f / 60f,
             }, 5, Cube.CUBE_SCALE * 0.5f), Cube.CUBE_SCALE * 1f);
 
-        public ItemRustedSword() : base("sword_rusted", StaticMaterials.Items, new RectangleF(32, 128, 16, 16))
+        public ItemRustedSword() : base("sword_rusted", new RectangleF(32, 128, 16, 16))
         {
             name = "Rusted Sword";
             description = "A rusted and ruined sword made of iron. Perhaps it had once been a fine blade, but it is now a shadow of its former self.\n" +

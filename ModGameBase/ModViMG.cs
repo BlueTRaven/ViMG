@@ -38,7 +38,7 @@ namespace ViMG
         {
             base.OnRegister();
 
-            if (Main.Registry.RecipeRegistry != null)
+            if (Main.Registry.RendererRegistry != null)
             {
                 RendererOpaqueBillboardedEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("generic_billboard") as RendererOpaqueBillboardedEntity);
                 RendererOpaqueXMeshEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("xmesh") as RendererOpaqueXMeshEntity);

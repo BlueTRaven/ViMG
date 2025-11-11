@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public class ItemPickaxe : ItemMetaItem<ItemPickaxeHead>, IHasAreaEffect
 	{
-		public ItemPickaxe() : base("pickaxe", StaticMaterials.Items, new RectangleF(16, 144, 16, 16))
+		public ItemPickaxe() : base("pickaxe", new RectangleF(16, 144, 16, 16))
 		{
 		}
 

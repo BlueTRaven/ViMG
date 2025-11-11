@@ -210,8 +210,8 @@ namespace ViMG.GameStates
             };
 
             var worldInfoIO = new WorldInfoIO();
-
-            Skybox skybox = new Skybox();
+               
+            Skybox? skybox = device != null ? new Skybox() : null;
 
             // This is up here so we can use this information when loading a world (coconut easter egg)
             // but it also might present a problem; if we error at any point during the creation/loading process,

@@ -12,7 +12,7 @@ namespace ViMG.Items
 {
     public class ItemFlaskMagicPotion1 : Item
     {
-        public ItemFlaskMagicPotion1() : base("flask_magicpotion1", StaticMaterials.Items, new RectangleF(48, 96, 16, 16))
+        public ItemFlaskMagicPotion1() : base("flask_magicpotion1", new RectangleF(48, 96, 16, 16))
         {
             name = "Magic Potion 1";
             description = "A potion that restores magic power. It smells like chalk and tastes like it too.";

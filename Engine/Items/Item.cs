@@ -120,7 +120,7 @@ namespace ViMG.Items
 		}
 
 		//public readonly Texture2D Texture;
-		public readonly RendererDeferred.DrawMaterial Material;
+		public RendererDeferred.DrawMaterial? Material = null;
 		public readonly RectangleF SourceRect;
 		protected float scale = 1f;
 		protected const float MESH_SIZE = Cube.CUBE_SCALE / 2f;
@@ -137,11 +137,16 @@ namespace ViMG.Items
 
 		protected static VerySimpleMesh meshItemQuadInWorld;
 
-		public Item(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect)
+		public Item(string identifier, RectangleF sourceRect)
 		{
 			this.Identifier = identifier;
-			this.Material = material;
 			this.SourceRect = sourceRect;
+		}
+
+		public virtual RendererDeferred.DrawMaterial GetMaterial()
+		{
+			Material ??= StaticMaterials.Items;
+			return Material.Value;
 		}
 
 		public virtual string GetName(ItemInstance item)
@@ -213,15 +218,21 @@ namespace ViMG.Items
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
 		{
+			if (!Material.HasValue)
+				return;
+
 			//fit to frame
 			scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
-
-			batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+			
+			batch.Draw(Material.GetValueOrDefault(StaticMaterials.Items).Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-			if (meshItemQuadInWorld.IBO == null)
+            if (!Material.HasValue)
+                return;
+
+            if (meshItemQuadInWorld.IBO == null)
 				MakeMesh(device);
 
 			RectangleF sourceRect = SourceRect;
@@ -231,7 +242,7 @@ namespace ViMG.Items
 				sourceRect.width = -sourceRect.width;
             }
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material.GetValueOrDefault(StaticMaterials.Items),
 				meshItemQuadInWorld, 
 				transform, sourceRect));
 		}

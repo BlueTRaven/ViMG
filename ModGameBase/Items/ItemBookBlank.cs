@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemBookBlank : Item
     {
-        public ItemBookBlank() : base("book_blank", StaticMaterials.Items, new RectangleF(48, 32, 16, 16))
+        public ItemBookBlank() : base("book_blank", new RectangleF(48, 32, 16, 16))
         {
             name = "Book";
             description = "A book made of paper bound together.\n" +

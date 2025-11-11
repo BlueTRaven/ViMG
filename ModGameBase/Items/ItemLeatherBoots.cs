@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemLeatherBoots : Item
     {
-        public ItemLeatherBoots() : base("run_leather_boots", StaticMaterials.Items, new RectangleF(96, 48, 16, 16))
+        public ItemLeatherBoots() : base("run_leather_boots", new RectangleF(96, 48, 16, 16))
         {
             name = "Leather Boots";
             description = "Sturdy leather boots. They fit your feet perfectly.\n" +

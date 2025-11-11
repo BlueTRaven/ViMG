@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public class ItemSword : ItemMetaItem<ItemSwordBlade>
 	{
-		public ItemSword() : base("sword", StaticMaterials.Items, new RectangleF(16, 128, 16, 16))
+		public ItemSword() : base("sword", new RectangleF(16, 128, 16, 16))
 		{
 		}
 

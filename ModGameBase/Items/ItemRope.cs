@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Rendering;
 
 namespace ViMG.Items
 {
@@ -15,7 +16,7 @@ namespace ViMG.Items
     {
 		private Cube cube;
 
-        public ItemRope() : base("rope", new Rendering.RendererDeferred.DrawMaterial("cubes_textures"), new RectangleF(112, 64, 16, 16))
+        public ItemRope() : base("rope", new RectangleF(112, 64, 16, 16))
         {
             name = "Rope";
             description = "Sturdy, strong rope. Use it to traverse big pits!";
@@ -23,7 +24,12 @@ namespace ViMG.Items
 			cube = Main.Registry.CubeRegistry.Get("rope");
 		}
 
-		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
+        public override RendererDeferred.DrawMaterial GetMaterial()
+        {
+			return StaticMaterials.Cubes;
+        }
+
+        public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.RightClick(player, inventory, index, facing, out actionStats);
 

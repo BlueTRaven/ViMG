@@ -20,7 +20,7 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileStats stats;
 		private ProjectileManager.ProjectileBatchStats batchStats;
 
-        public ItemBowner() : base("bow_bowner", StaticMaterials.Items, new RectangleF(160, 128, 16, 16))
+        public ItemBowner() : base("bow_bowner", new RectangleF(160, 128, 16, 16))
         {
             name = "Bowner";
             description = "A bow crafted from finely-carved bone.\n" +

@@ -27,7 +27,7 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE);
 
-		public ItemStoneBlunderbuss() : base("stone_blunderbuss", StaticMaterials.Items, new RectangleF(80, 128, 16, 16))
+		public ItemStoneBlunderbuss() : base("stone_blunderbuss", new RectangleF(80, 128, 16, 16))
         {
 			name = "Stone Blunderbuss";
 			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +

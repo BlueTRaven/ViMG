@@ -18,7 +18,7 @@ namespace ViMG.GameStates
         public EntityManager EntityManager;
         public WorldInfoIO.WorldInfo WorldInfo;
         public WorldLogic Logic;
-        public Skybox Skybox;
+        public Skybox? Skybox;
         public PhysicsInfo PhysicsInfo;
         public WorldFlags Flags;
         public HousingManager HousingManager;
@@ -27,7 +27,7 @@ namespace ViMG.GameStates
         public int Layer;
 
         public WorldPrototype(string worldName, int layer, EntityManager entityManager, ChunkManager chunkManager, WorldInfoIO.WorldInfo worldInfo, 
-            WorldLogics.WorldLogic logic, Skybox skybox, PhysicsInfo physicsInfo, HousingManager housingManager)
+            WorldLogics.WorldLogic logic, Skybox? skybox, PhysicsInfo physicsInfo, HousingManager housingManager)
         {
             this.WorldName = worldName;
             this.Layer = layer;

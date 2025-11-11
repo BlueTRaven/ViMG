@@ -17,7 +17,7 @@ namespace ViMG.Items
     {
         private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 6, 1f), 3);  //TODO 3 magic use
 
-        public ItemRodOfShock() : base("staff_spell_shock", StaticMaterials.Items, new RectangleF(112, 96, 16, 16))
+        public ItemRodOfShock() : base("staff_spell_shock", new RectangleF(112, 96, 16, 16))
         {
             name = "Staff of Shock";
             description = "Delivers a brief shock in a line in front of you. Ouch.\n" +

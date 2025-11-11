@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemString : Item
     {
-        public ItemString() : base("string", StaticMaterials.Items, new RectangleF(16, 32, 16, 16))
+        public ItemString() : base("string", new RectangleF(16, 32, 16, 16))
         {
             name = "String";
             description = "A simple piece of string extracted from Fibrous Plants.";

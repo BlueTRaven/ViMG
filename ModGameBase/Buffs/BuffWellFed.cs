@@ -10,12 +10,19 @@ namespace ViMG.Buffs
 {
     public class BuffWellFed : Buff
     {
-        public BuffWellFed() : base("well_fed", 999f, 8f, Main.assetsManager.GetAsset<Texture2D>("skill"), new RectangleF(192, 224, 16, 16))
+        public BuffWellFed() : base("well_fed", 999f, 8f, new RectangleF(192, 224, 16, 16))
         {
             Name = "Well Fed";
             Description = "Recently ate.\n" +
                 "Maximum health is increased.\n" +
                 "Regenerating Health Slowly.";
+        }
+
+        public override void LoadContent(GraphicsDevice device)
+        {
+            base.LoadContent(device);
+
+            this.texture = Main.assetsManager.GetAsset<Texture2D>("skill");
         }
 
         public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)

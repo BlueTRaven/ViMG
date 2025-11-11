@@ -10,10 +10,16 @@ namespace ViMG.Buffs
 {
     public class BuffStrUp : Buff
     {
-        public BuffStrUp() : base("str_up", 999f, 0, Main.assetsManager.GetAsset<Texture2D>("skill"), new RectangleF(32, 160, 16, 16))
+        public BuffStrUp() : base("str_up", 999f, 0, new RectangleF(32, 160, 16, 16))
         {
             Name = "Strength Up";
             Description = "You feel stronger.";
+        }
+
+        public override void LoadContent(GraphicsDevice device)
+        {
+            base.LoadContent(device);
+            this.texture = Main.assetsManager.GetAsset<Texture2D>("skill");
         }
 
         public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)

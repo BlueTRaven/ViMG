@@ -16,7 +16,7 @@ namespace ViMG.Items
 
         private readonly string realResourceName;
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
-            base("coin_" + resource, StaticMaterials.Items, sourceRect)
+            base("coin_" + resource, sourceRect)
         {
             this.resource = resource;
             this.Value = value;

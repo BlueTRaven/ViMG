@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public abstract class ItemMetaItem<T> : Item where T : Item
 	{
-		public ItemMetaItem(string identifier, RendererDeferred.DrawMaterial material, RectangleF sourceRect) : base(identifier, material, sourceRect)
+		public ItemMetaItem(string identifier, RectangleF sourceRect) : base(identifier, sourceRect)
 		{
 		}
 

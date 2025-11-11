@@ -22,7 +22,7 @@ namespace ViMG.Items
 		private static ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private static ProjectileManager.ProjectileStats stats;
 
-		public ItemPoisonGun() : base("poison_gun", StaticMaterials.Items, new RectangleF(112, 128, 16, 16))
+		public ItemPoisonGun() : base("poison_gun", new RectangleF(112, 128, 16, 16))
         {
             name = "Poison Gun";
 			//TODO normal bullets if not musketball

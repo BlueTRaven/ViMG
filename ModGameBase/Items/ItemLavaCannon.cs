@@ -19,7 +19,7 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats;
 
-        public ItemLavaCannon() : base("cannon_lavacrystal", StaticMaterials.Items, new RectangleF(128, 112, 32, 16))
+        public ItemLavaCannon() : base("cannon_lavacrystal", new RectangleF(128, 112, 32, 16))
         {
             name = "Lava Cannon";
             description = "Fires a crystal of lava that explodes upon impact.\n" +

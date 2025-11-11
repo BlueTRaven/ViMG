@@ -18,7 +18,7 @@ namespace ViMG.Items
         private readonly SetBonus setBonus;
 
         public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material,
-            StaticMaterials.Items, new RectangleF(128, 80, 16, 16))
+            new RectangleF(128, 80, 16, 16))
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;
@@ -50,13 +50,13 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
         }
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
         {
-            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

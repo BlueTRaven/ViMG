@@ -45,20 +45,21 @@ namespace ViMG.Buffs
 
         protected readonly float durationMax;
         protected readonly float tickIntervalMax;
-        public readonly Texture2D texture;
+        public Texture2D? texture;
         public readonly RectangleF sourceRect;
         public HashSet<string> Tags = new HashSet<string>();
 
         public string Identifier { get; private set; }
 
-        public Buff(string identifier, float durationMax, float tickIntervalMax, Texture2D texture = null, RectangleF? sourceRect = null)
+        public Buff(string identifier, float durationMax, float tickIntervalMax, RectangleF? sourceRect = null)
         {
             this.Identifier = identifier;
             this.durationMax = durationMax;
             this.tickIntervalMax = tickIntervalMax;
-            this.texture = texture;
             this.sourceRect = sourceRect ?? new RectangleF(0, 0, 16, 16);
         }
+
+        public virtual void LoadContent(GraphicsDevice device) { }
 
         public virtual void Update(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)
         {

@@ -29,7 +29,7 @@ namespace ViMG.Items
 
         private VerySimpleMesh meshWireframeCube;
 
-        public ItemDebugStructureCopier() : base("DEBUGStructureCopier", StaticMaterials.Items, new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructureCopier() : base("DEBUGStructureCopier", new RectangleF(112, 112, 16, 16))
         {
             name = "DEBUG STRUCTURE COPIER";
             description = "Right click to begin selecting.\n" +

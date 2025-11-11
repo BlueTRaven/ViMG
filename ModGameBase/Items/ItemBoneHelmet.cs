@@ -31,7 +31,7 @@ namespace ViMG.Items
             }
         }
 
-        public ItemBoneHelmet() : base("helmet_bone", StaticMaterials.Items, new RectangleF(96, 80, 16, 16))
+        public ItemBoneHelmet() : base("helmet_bone", new RectangleF(96, 80, 16, 16))
         {
             name = "Bone Helmet";
             description = "A helmet carved from bone. Ordinarily fairly inflexible, enchantments make this armor piece fairly competent.";
@@ -57,7 +57,7 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 
@@ -65,7 +65,7 @@ namespace ViMG.Items
         {
             //base.DrawInInventory(batch, position, scale);
 
-            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), new Color(191, 191, 139), 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace ViMG.Items
 {
     public class ItemBullet : Item
 	{
-		public ItemBullet() : base("bullet_base", StaticMaterials.Items, new RectangleF(0, 48, 16, 16))
+		public ItemBullet() : base("bullet_base", new RectangleF(0, 48, 16, 16))
 		{
 		}
 	}

@@ -13,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemScrollFind : Item
     {
-        public ItemScrollFind() : base("scroll_find", StaticMaterials.Items, new RectangleF(112, 32, 16, 16))
+        public ItemScrollFind() : base("scroll_find", new RectangleF(112, 32, 16, 16))
         {
         }
 

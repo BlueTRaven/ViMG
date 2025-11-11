@@ -28,7 +28,7 @@ namespace ViMG.Items
         private static int currentStructure;
         private static string[] assetKeysList;
 
-        public ItemDebugStructurePaster() : base("DEBUGStructurePaster", StaticMaterials.Items, new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructurePaster() : base("DEBUGStructurePaster", new RectangleF(112, 112, 16, 16))
         {
             name = "DEBUG Structure Paster";
             description = "Allows you to paste structures, as they are defined in their structure files, into the world.";

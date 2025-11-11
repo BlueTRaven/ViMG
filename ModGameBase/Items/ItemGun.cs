@@ -15,7 +15,7 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileVisStats projVisStats;
 		private ProjectileManager.ProjectileStats projStats;
 
-		public ItemGun() : base("gun_base", StaticMaterials.Items, new RectangleF(32, 0, 16, 16))
+		public ItemGun() : base("gun_base", new RectangleF(32, 0, 16, 16))
 		{
 			projVisStats = new ProjectileManager.ProjectileVisStats()
 			{ 

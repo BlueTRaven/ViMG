@@ -11,7 +11,7 @@ namespace ViMG.Items
 {
     public class ItemFeatherRelic : Item
     {
-        public ItemFeatherRelic() : base("dj_feather_relic", StaticMaterials.Items, new RectangleF(112, 48, 16, 16))
+        public ItemFeatherRelic() : base("dj_feather_relic", new RectangleF(112, 48, 16, 16))
         {
             name = "Feather Relic";
             description = "An ancient stone relic bearing the symbol of a feather. It feels as light as the symbol placed upon it would be.\n" +

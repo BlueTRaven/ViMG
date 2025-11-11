@@ -21,7 +21,7 @@ namespace ViMG.Items
                 preUseTime = 10f / 60f,
             }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
-        public ItemOrnamentalSword() : base("sword_ornamental", StaticMaterials.Items, new RectangleF(64, 128, 16, 16))
+        public ItemOrnamentalSword() : base("sword_ornamental", new RectangleF(64, 128, 16, 16))
         {
             name = "Ornamental Sword";
             description = "A large sword that looks fancy but in reality is pretty flimsy.\n" +

@@ -18,7 +18,7 @@ namespace ViMG.Items
         private readonly SetBonus setBonus;
 
         public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material, 
-            StaticMaterials.Items, new RectangleF(96, 80, 16, 16))
+            new RectangleF(96, 80, 16, 16))
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;
@@ -50,7 +50,7 @@ namespace ViMG.Items
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material,
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
         }
 
@@ -58,7 +58,7 @@ namespace ViMG.Items
         {
             //base.DrawInInventory(batch, position, scale);
 
-            batch.Draw(Material.Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

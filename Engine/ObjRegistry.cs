@@ -22,7 +22,6 @@ namespace ViMG
 
 		public virtual void PostRegistration()
         {
-
         }
 
 		public virtual void Register(T obj)

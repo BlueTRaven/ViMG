@@ -11,10 +11,16 @@ namespace ViMG.Buffs
     public class DebuffOnFire : Buff
     {
         private static Buff fireResist;
-        public DebuffOnFire() : base("on_fire", 999f, 1f, Main.assetsManager.GetAsset<Texture2D>("skill"), new RectangleF(176, 224, 16, 16))
+        public DebuffOnFire() : base("on_fire", 999f, 1f, new RectangleF(176, 224, 16, 16))
         {
             Name = "On Fire";
             Description = "It feels like maybe you're on fire.";
+        }
+
+        public override void LoadContent(GraphicsDevice device)
+        {
+            base.LoadContent(device);
+            this.texture = Main.assetsManager.GetAsset<Texture2D>("skill");
         }
 
         public override void Tick(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)

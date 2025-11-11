@@ -9,7 +9,7 @@ namespace ViMG.Items
 {
     public class ItemFlask : Item
 	{
-		public ItemFlask() : base("flask_empty", StaticMaterials.Items, new RectangleF(0, 96, 16, 16))
+		public ItemFlask() : base("flask_empty", new RectangleF(0, 96, 16, 16))
 		{
 			name = "Empty Flask";
 			description = "An empty flask without substance to fill its void.";

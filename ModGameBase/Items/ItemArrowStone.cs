@@ -9,7 +9,7 @@ namespace ViMG.Items
 {
     public class ItemArrowStone : Item
 	{
-		public ItemArrowStone() : base("ammo_arrow_stone", StaticMaterials.Items, new RectangleF(16, 48, 16, 16))
+		public ItemArrowStone() : base("ammo_arrow_stone", new RectangleF(16, 48, 16, 16))
 		{
 			Tags.Add("ammo_arrow");
 		}
