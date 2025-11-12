@@ -22,8 +22,8 @@ namespace ViMG.GameStates
 {
     public class GameStateTheIsland : GameState
     {
-        private readonly GraphicsDevice device;
-        private readonly TextHelper.FontInfo fi;
+        private GraphicsDevice device;
+        private TextHelper.FontInfo fi;
         private Task<World> worldTask;
         private World world;
 
@@ -52,10 +52,15 @@ namespace ViMG.GameStates
         public static int ProgressMin;
         public static int ProgressMax;
 
-        public GameStateTheIsland(GameStateManager manager, GraphicsDevice device) : base(manager)
+        public GameStateTheIsland(GameStateManager manager) : base(manager)
+        {
+        }
+
+        public override void LoadContent(GraphicsDevice device)
         {
             this.device = device;
-
+            base.LoadContent(device);
+            
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
@@ -245,7 +250,7 @@ namespace ViMG.GameStates
             prototype.WorldInfo.playerLayer = 0;
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            if (device != null)
+            if (!Main.IsHeadless)
                 world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
@@ -267,7 +272,7 @@ namespace ViMG.GameStates
             //chunkLoadManager.UnloadAll();
             
             worldInfoIO.Save(worldName, world.WorldInfo);
-            Main.SessionIO.Save();
+            Main.SessionIO?.Save();
 
             ProfilingHelper.End("Done.");
 
@@ -551,9 +556,12 @@ namespace ViMG.GameStates
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            base.DrawUI(batch);
+            if (!IsLoading)
+            {
+                base.DrawUI(batch);
+            }
 
-            if (world != null)
+            if (world != null && !IsLoading)
             {
                 world.DrawUI(batch);
             }

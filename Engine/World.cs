@@ -118,8 +118,6 @@ namespace ViMG
 
 			HousingManager = prototype.HousingManager;
 
-			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
-			MenuDialogue = new MenuDialogue(Main.gameStateManager);
 			//DialogueManager = new DialogueManager();
 
 			this.ChunkLoadManager = chunkLoadManager;
@@ -143,7 +141,10 @@ namespace ViMG
 
 		public void InitMeshes(GraphicsDevice device)
         {
-			ProjectileManager.InitMeshes(device);
+            ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
+            MenuDialogue = new MenuDialogue(Main.gameStateManager);
+
+            ProjectileManager.InitMeshes(device);
             LightManager = new LightManager(device);
 
 			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
@@ -285,7 +286,7 @@ namespace ViMG
 			if (player != null)
 				Main.camera.Position = player.Position;
 
-			logic.FinishLoading(device);
+			logic.FinishLoading(this, device);
 		}
 
 		public void UnfixedUpdate()

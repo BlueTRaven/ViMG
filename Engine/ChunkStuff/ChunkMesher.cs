@@ -12,6 +12,10 @@ using ViMG.Physics;
 
 namespace Engine.ChunkStuff
 {
+    // TODO: This should be valid to be created in headless mode
+    // This is because we need to be able to create collision meshes even if running headless
+    // This is an issue right now because the CollisionMesher depends on the RenderMesher (kinda gross)
+    // so these two just need to be separated better.
     public class ChunkMesher : IDisposable
     {
         private readonly struct CubeUpdated

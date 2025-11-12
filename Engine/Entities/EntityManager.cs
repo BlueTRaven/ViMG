@@ -28,6 +28,8 @@ namespace ViMG.Entities
 			public ICubeTracker[] cubeTrackers;
 			public IMultiCubeTracker[] multiCubeTrackers;
 
+			public ChunkPosition chunkPosition;
+
 			public int count;
 
 			public void Add(CubePosition chunkSpacePosition, Entity entity)
@@ -41,7 +43,8 @@ namespace ViMG.Entities
 
 					if (cubeTrackers[i] == null)
 						cubeTrackers[i] = tracker;
-                    else throw new Exception("???");
+                    else throw new Exception(string.Format("ICubeTracker {0} already present at position {1} while trying to place CubeTracker {2}", 
+						cubeTrackers[i], chunkSpacePosition.InCubeSpace(chunkPosition), entity));
                 }
 				else if (entity is IMultiCubeTracker multiTracker)
 				{
@@ -50,8 +53,9 @@ namespace ViMG.Entities
 
 					if (multiCubeTrackers[i] == null)
 						multiCubeTrackers[i] = multiTracker;
-					else throw new Exception("???");
-				}
+                    else throw new Exception(string.Format("IMultiCubeTracker {0} already present at position {1} while trying to place CubeTracker {2}",
+                        multiCubeTrackers[i], chunkSpacePosition.InCubeSpace(chunkPosition), entity));
+                }
 
 				count++;
 			}
@@ -113,20 +117,26 @@ namespace ViMG.Entities
 
 			this.sizeInCubes = world.sizeInCubes;
 
-            foreach (var r in Main.Registry.RendererRegistry.GetIterable())
-            {
-				if (r != null)
-					r.NewEntityManagerInitialized(this);
-            }
+			if (!Main.IsHeadless)
+			{
+				foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+				{
+					if (r != null)
+						r.NewEntityManagerInitialized(this);
+				}
+			}
         }
 
 		public void Dispose()
 		{
-            foreach (var r in Main.Registry.RendererRegistry.GetIterable())
-            {
-				if (r != null)
-					r.EntityManagerDisposed(this);
-            }
+			if (!Main.IsHeadless)
+			{
+				foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+				{
+					if (r != null)
+						r.EntityManagerDisposed(this);
+				}
+			}
 
             UnloadAll();
 		}
@@ -161,6 +171,10 @@ namespace ViMG.Entities
 			else entity.SetId((ulong)id);
 
 			entity.Initialize(world);
+			if (!Main.IsHeadless)
+			{
+				entity.LoadContent(world);
+			}
 
             if (entity is ICubeTracker tracker)
             {
@@ -173,6 +187,7 @@ namespace ViMG.Entities
                 else
                 {
                     CubeTrackers ts = new CubeTrackers();
+                    ts.chunkPosition = chunkPos;
                     ts.Add(position.InChunkSpace(chunkPos), entity);
 
                     cubeTrackers.Add(chunkPos, ts);
@@ -190,6 +205,7 @@ namespace ViMG.Entities
                     else
                     {
                         CubeTrackers ts = new CubeTrackers();
+						ts.chunkPosition = chunkPos;
                         ts.Add(position.InChunkSpace(chunkPos), entity);
 
                         cubeTrackers.Add(chunkPos, ts);

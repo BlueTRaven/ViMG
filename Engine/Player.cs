@@ -238,7 +238,7 @@ namespace ViMG
 		private VerySimpleMesh lookAtMesh;
 
 		private RendererDeferred.DrawMaterial material;
-		private RendererDeferred.DrawMaterial lookAtMaterial = StaticMaterials.Cubes;
+		private RendererDeferred.DrawMaterial lookAtMaterial;
 
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
@@ -375,7 +375,11 @@ namespace ViMG
 
 			menuPlayer = new MenuPlayer(Main.gameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
 			menuPlayer.Close();
-            Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
+			Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
+			if (!Main.IsHeadless)
+			{
+				menuPlayer.LoadContent();
+			}
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
@@ -1635,7 +1639,9 @@ namespace ViMG
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			if (inventory.Get(menuPlayer.HighlightIndex).item != null)
+			lookAtMaterial = StaticMaterials.Cubes;
+
+            if (inventory.Get(menuPlayer.HighlightIndex).item != null)
 			{
 				inventory.Get(menuPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(menuPlayer.HighlightIndex), this, -Main.camera.Forward);
 			}

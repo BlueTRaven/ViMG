@@ -85,16 +85,45 @@ namespace ViMG.Generation
 			holeLocationX = GetRandom().Next(192, 320);
 			holeLocationY = GetRandom().Next(192, 320);
 
-			Texture2D tex = Main.assetsManager.GetAsset<Texture2D>("island_preset_noise");
-			Color[] colors = new Color[tex.Width * tex.Height];
-			tex.GetData(colors);
-
-			presetHeightmap = new float[tex.Width, tex.Height];
-
-			for (int i = 0; i < tex.Width * tex.Height; i++)
+			int width = 0, height = 0;
+			Color[] colors;
+			using (FileStream fs = new FileStream("Content/Textures/island_preset_noise.xnb", FileMode.Open, FileAccess.Read))
 			{
-				int x = i % tex.Width;
-				int y = i / tex.Height;
+				fs.Seek(65, SeekOrigin.Begin);
+				using (BinaryReader reader = new BinaryReader(fs))
+				{
+					var surfaceFormat = (SurfaceFormat)reader.ReadInt32();
+					Debug.Assert(surfaceFormat == SurfaceFormat.Color);
+
+					width = reader.ReadInt32();
+					height = reader.ReadInt32();
+					colors = new Color[width * height];
+
+					fs.Seek(81, SeekOrigin.Begin);
+					int datalen = reader.ReadInt32();
+					var start = fs.Position;
+
+					int i = 0;
+					while (fs.Position < start + datalen)
+					{
+						byte r = reader.ReadByte();
+						byte g = reader.ReadByte();
+						byte b = reader.ReadByte();
+						byte a = reader.ReadByte();
+
+						Color c = new Color(r, g, b, a);
+						colors[i] = c;
+						i += 1;
+					}
+				}
+			}
+
+			presetHeightmap = new float[width, height];
+
+			for (int i = 0; i < width * height; i++)
+			{
+				int x = i % width;
+				int y = i / height;
 
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}

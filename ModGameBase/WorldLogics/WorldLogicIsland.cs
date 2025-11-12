@@ -53,9 +53,9 @@ namespace ViMG.WorldLogics
 			
         }
 
-        public override void FinishLoading(GraphicsDevice device)
+        public override void FinishLoading(World world, GraphicsDevice device)
         {
-            base.FinishLoading(device);
+            base.FinishLoading(world, device);
 
             weatherManager = new WeatherManager(device);
 
@@ -95,15 +95,15 @@ namespace ViMG.WorldLogics
 
             meshLavaQuad = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
             //meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
+
+            world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
+            world.Skybox.Weather = Main.assetsManager.GetAsset<Texture2D>("skybox_stormy");
+            world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
-
-			world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
-			world.Skybox.Weather = Main.assetsManager.GetAsset<Texture2D>("skybox_stormy");
-            world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
 
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSMerchant(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager.AddPassiveSpawner(new PSSlime(world.PassiveSpawnerManager, world.EntityManager));

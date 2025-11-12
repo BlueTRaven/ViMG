@@ -36,6 +36,11 @@ namespace ViMG.Entities
         public override void Initialize(World world)
         {
             base.Initialize(world);
+        }
+
+        public override void LoadContent(World world)
+        {
+            base.LoadContent(world);
 
             light = world.LightManager.Add(Position, lightExtents.X, lightExtents.Y, lightColor);
         }

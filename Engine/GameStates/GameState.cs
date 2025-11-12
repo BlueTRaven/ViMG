@@ -19,7 +19,12 @@ namespace ViMG.GameStates
             this.manager = manager;
         }
 
-        public virtual void Initialize(GraphicsDevice device)
+        public virtual void Initialize()
+        {
+
+        }
+
+        public virtual void LoadContent(GraphicsDevice device)
         {
 
         }

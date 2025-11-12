@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.GameStates;
 
@@ -23,6 +24,12 @@ namespace ViMG.UIs
         {
 			this.gsManager = gsManager;
         }
+
+		public virtual void LoadContent()
+		{
+			// It is invalid to call LoadContent while headless
+			Debug.Assert(!Main.IsHeadless);
+		}
 
 		public virtual void OnOpen()
         {

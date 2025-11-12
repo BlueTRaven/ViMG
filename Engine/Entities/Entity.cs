@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace ViMG.Entities
@@ -46,6 +47,11 @@ namespace ViMG.Entities
 			this.world = world;
 
 			TimeInitialized = Main.Time;
+		}
+
+		public virtual void LoadContent(World world)
+		{
+			Debug.Assert(!Main.IsHeadless);
 		}
 
 		public virtual void Update(double deltaTime)

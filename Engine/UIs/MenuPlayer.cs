@@ -112,11 +112,21 @@ namespace ViMG.UIs
             this.accessoryInventory = accessoryInventory;
 			this.gearInventory = gearInventory;
             playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
-
-			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
-		public void Open()
+        public override void LoadContent()
+        {
+            base.LoadContent();
+
+            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+
+			healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
+			healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
+			magicbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
+            magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
+        }
+
+        public void Open()
         {
 			opened = true;
 
@@ -746,10 +756,10 @@ namespace ViMG.UIs
 			}
 		}
 
-		private NineSlice healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
-        private NineSlice healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
-        private NineSlice magicbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
-        private NineSlice magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
+		private NineSlice healthbarLowerNS;
+        private NineSlice healthbarUpperNS;
+        private NineSlice magicbarLowerNS;
+		private NineSlice magicbarUpperNS;
 
         public override void Draw(SpriteBatch batch)
 		{

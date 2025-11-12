@@ -38,8 +38,6 @@ namespace ViMG.UIs
         public ChatManager(Vector2 position)
         {
             this.position = position;
-
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public void Update(double deltaTime)
@@ -54,6 +52,11 @@ namespace ViMG.UIs
 
         public void Draw(SpriteBatch batch)
         {
+            if (fi.font == null)
+            {
+                fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            }
+
             float yPos = 0;
             for (int i = latestChatMessage - 1; i >= Math.Max(0, latestChatMessage - MAX_CHAT_MESSAGES_TO_DISPLAY); i--)
             {

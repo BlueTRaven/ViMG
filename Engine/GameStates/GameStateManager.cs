@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.UIs;
 
 namespace ViMG.GameStates
 {
@@ -18,17 +19,24 @@ namespace ViMG.GameStates
 
         private GameState currentGameState = null;
 
-        public virtual void Initialize(GraphicsDevice device)
+        public virtual void Initialize()
         {
-            MainMenu = new GameStateMainMenu(this, device);
-            TheIsland = new GameStateTheIsland(this, device);
+            MainMenu = new GameStateMainMenu(this);
+            TheIsland = new GameStateTheIsland(this);
 
             gameStates.Add(MainMenu);
             gameStates.Add(TheIsland);
 
-            gameStates.ForEach(x => x.Initialize(device));
+            gameStates.ForEach(x => x.Initialize());
 
             SetGameState(MainMenu);
+        }
+
+        public virtual void LoadContent(GraphicsDevice device)
+        {
+            gameStates.ForEach(x => x.LoadContent(device));
+            // MenuMain.LoadContent is called by SetGameState->OnOpen, but occurs before we actually load our assets
+            MainMenu.LoadContent(device);
         }
 
         public void Update(GraphicsDevice device, double deltaTime)

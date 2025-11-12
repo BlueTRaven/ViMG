@@ -11,8 +11,13 @@ using ViMG.UIs;
 Console.WriteLine("Hello, World!");
 
 SessionInformation ses = new SessionInformation();
-ses.ModsFolder = "C:\\Users\\taylo\\Documents\\programming\\CS\\ViMG\\bin\\Debug\\mods\\net8.0-windows";
+// TODO this is hardcoded...
+ses.ModsFolder = "C:\\Users\\taylo\\Documents\\programming\\CS\\ViMG2\\bin\\Debug\\mods\\net8.0-windows";
 Main.SessionInformation = ses;
+Main.IsHeadless = true;
+Main.gameStateManager = new GameStateManager();
+Main.gameStateManager.Initialize();
+Main.camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
 var _services = new GameServiceContainer();
 var _content = new ContentManager(_services);

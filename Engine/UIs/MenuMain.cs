@@ -33,9 +33,15 @@ namespace ViMG.UIs
 
         public MenuMain(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;
+        }
+
+        public override void LoadContent()
+        {
+            base.LoadContent();
+
+            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public override void OnOpen()

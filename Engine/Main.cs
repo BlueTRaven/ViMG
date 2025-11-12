@@ -39,7 +39,7 @@ namespace ViMG
         GraphicsDeviceManager graphics;
         SpriteBatch batch;
 
-		private const float FOV_DEGREES = 90f;
+		public const float FOV_DEGREES = 90f;
 		public const float NEAR = 0.005f;
 		public const float FAR = 12 * Chunk.CHUNK_SIZE * Cubes.Cube.CUBE_SCALE;
 
@@ -122,8 +122,9 @@ namespace ViMG
 		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
 
 		public static double Time;
+        public static bool IsHeadless = false;
 
-		public static bool Exit = false;
+        public static bool Exit = false;
 
 		//public static bool WorldLoaded = false;
 
@@ -234,7 +235,10 @@ namespace ViMG
 			imguiRenderer = new ImGuiRenderer(this);
 			imguiRenderer.RebuildFontAtlas();
 
-			base.Initialize();
+            gameStateManager = new GameStateManager();
+            gameStateManager.Initialize();
+
+            base.Initialize();
 
 			Window.TextInput += WindowTextInput;
 			Window.ClientSizeChanged += WindowResolutionChanged;
@@ -253,8 +257,6 @@ namespace ViMG
 			//Main.MouseControl = false;
 			//Main.DrawCursor = false;
 #endif
-			gameStateManager = new GameStateManager();
-			gameStateManager.Initialize(GraphicsDevice);
 
 			Renderer = new RendererDeferred(GraphicsDevice);
 		}
@@ -279,6 +281,7 @@ namespace ViMG
         {
 			batch = new SpriteBatch(GraphicsDevice);
 			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
+			gameStateManager.LoadContent(GraphicsDevice);
 		}
 
 		protected override void Update(GameTime gt)

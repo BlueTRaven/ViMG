@@ -14,21 +14,28 @@ namespace ViMG.GameStates
 
         private World world;
 
-        private GraphicsDevice device;
-
-        public GameStateMainMenu(GameStateManager manager, GraphicsDevice device) : base(manager)
+        public GameStateMainMenu(GameStateManager manager) : base(manager)
         {
-            this.device = device;
         }
 
-        public override void Initialize(GraphicsDevice device)
+        public override void Initialize()
         {
-            base.Initialize(device);
+            base.Initialize();
+        }
+
+        public override void LoadContent(GraphicsDevice device)
+        {
+            base.LoadContent(device);
+
+            if (!Main.IsHeadless)
+                menuMain.LoadContent();
         }
 
         public override void OnOpen(GameState changingFrom)
         {
             menuMain = new MenuMain(manager);
+            if (!Main.IsHeadless)
+                menuMain.LoadContent();
             SetMenu(menuMain);
 
             base.OnOpen(changingFrom);
