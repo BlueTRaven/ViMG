@@ -118,9 +118,9 @@ namespace ViMG.UIs
             playingType = PlayingType.Options;
         }
 
-        public override void Update(GraphicsDevice device, double deltaTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(device, deltaTime);
+            base.Update(deltaTime);
 
             if (!playing)
             {

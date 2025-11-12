@@ -50,9 +50,9 @@ namespace ViMG.UIs
 			Main.MouseControl = false;
 		}
 
-		public override void Update(GraphicsDevice device, double deltaTime)
+		public override void Update(double deltaTime)
 		{
-			base.Update(device, deltaTime);
+			base.Update(deltaTime);
 
 			TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 

@@ -58,9 +58,9 @@ namespace ViMG.UIs
 			Main.MouseControl = false;
 		}
 
-        public override void Update(GraphicsDevice device, double deltaTime)
+        public override void Update(double deltaTime)
 		{
-			base.Update(device, deltaTime);
+			base.Update(deltaTime);
 
 			//TODO: size should be determined statically for each catalyst rather than asking to do a UI.
 			Size eachSize = Size.Zero;

@@ -41,7 +41,7 @@ namespace ViMG.UIs
 
         }
 
-		public virtual void Update(GraphicsDevice device, double deltaTime)
+		public virtual void Update(double deltaTime)
 		{
 
 		}

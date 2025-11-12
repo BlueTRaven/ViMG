@@ -42,9 +42,9 @@ namespace ViMG.UIs
             Main.DrawCursor = false;
         }
 
-        public override void Update(GraphicsDevice device, double deltaTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(device, deltaTime);
+            base.Update(deltaTime);
 
             UI.Start();
 

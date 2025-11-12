@@ -29,9 +29,9 @@ namespace ViMG.GameStates
 
         }
 
-        public virtual void Update(GraphicsDevice device, double deltaTime)
+        public virtual void Update(double deltaTime)
         {
-            currentMenu?.Update(device, deltaTime);
+            currentMenu?.Update(deltaTime);
         }
 
         public virtual void DrawUI(SpriteBatch batch)

@@ -156,7 +156,7 @@ namespace ViMG.GameStates
             SetMenu(null);
         }
 
-        public override void Update(GraphicsDevice device, double deltaTime)
+        public override void Update(double deltaTime)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -174,7 +174,7 @@ namespace ViMG.GameStates
                 world.Update(deltaTime);
             }
 
-            base.Update(device, deltaTime);
+            base.Update(deltaTime);
         }
 
         public World GetWorld()

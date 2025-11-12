@@ -339,7 +339,7 @@ namespace ViMG
 				if (inputManager.JustPressed(Keys.O))
 					Options.CenterMouse();
 
-				gameStateManager.Update(GraphicsDevice, deltaTime);
+				gameStateManager.Update(deltaTime);
 				//if (WorldLoaded)
 					//world.Update(deltaTime);
 			}

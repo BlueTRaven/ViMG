@@ -164,9 +164,9 @@ namespace ViMG.UIs
         }
 
 		private UI.ItemSlot[] inventoryItemSlots = new UI.ItemSlot[Player.INVENTORY_ROWS * Player.INVENTORY_COLUMNS];
-		public override void Update(GraphicsDevice device, double deltaTime)
+		public override void Update(double deltaTime)
 		{
-			base.Update(device, deltaTime);
+			base.Update(deltaTime);
 
 			UI.Start();
 

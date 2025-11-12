@@ -41,14 +41,14 @@ namespace ViMG.GameStates
             base.OnOpen(changingFrom);
         }
 
-        public override void Update(GraphicsDevice device, double deltaTime)
+        public override void Update(double deltaTime)
         {
             /*if (world.LoadedFolderName != null)
             {
                 world.Update(deltaTime);
             }*/
 
-            base.Update(device, deltaTime);
+            base.Update(deltaTime);
         }
 
         public override void Draw(GraphicsDevice device)
