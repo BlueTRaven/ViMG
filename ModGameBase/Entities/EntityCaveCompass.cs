@@ -84,7 +84,7 @@ namespace ViMG.Entities
 
             //if (c != null && ChunkPosition.WorldSpaceChunk(world.player.Position) == c.Position)
             {
-                dir = world.player.Position - Position;
+                dir = world.player[world.localPlayerIndex].Position - Position;
             }
 
             if (CubePosition.FromWorldSpace(Position).Y > 180f)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ViMG.Items;
@@ -9,6 +10,51 @@ namespace ViMG
 {
 	public static class SaveHelper
 	{
+		public enum SaveContext
+		{
+			World, // Save when serializing the world
+			Network, // Save when sending over the network
+		}
+		public class SaveFieldAttribute : Attribute
+		{
+            public readonly SaveContext context;
+
+            public SaveFieldAttribute(SaveContext saveType)
+			{
+                this.context = saveType;
+            }
+		}
+
+		public static void SaveStructFieldsWithAttr<T>(SaveContext context, List<byte> data, T obj)
+		{
+			foreach (var field in obj.GetType().GetFields())
+			{
+				var attr = field.GetCustomAttribute<SaveFieldAttribute>();
+				if (attr != null)
+				{
+					if (attr.context == context)
+					{
+						switch (field.GetValue(obj))
+						{
+							case int i:
+								SaveInt32(data, i);
+								break;
+							case bool b:
+								SaveBool(data, b);
+								break;
+							case float f:
+								SaveFloat32(data, f);
+								break;
+							case string str:
+								SaveString(data, str);
+								break;
+						}
+					}
+				}
+			}
+		}
+		
+
 		//Saves a struct.
 		//I don't really recommend using this method. Manually saving/loading is a better approach
 		//since you can manually handle error cases. For instance, if you add a new float in the middle of a struct,

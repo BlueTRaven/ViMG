@@ -44,7 +44,7 @@ namespace ViMG.Entities
 
 			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
 			Vector2 worldCenter = new Vector2(worldRadius, worldRadius);
-			Vector2 dirWorldCenter = new Vector2(worldCenter.X - world.player.Position.X, worldCenter.Y - world.player.Position.Z);
+			Vector2 dirWorldCenter = new Vector2(worldCenter.X - world.player[world.localPlayerIndex].Position.X, worldCenter.Y - world.player[world.localPlayerIndex].Position.Z);
 			float dist = dirWorldCenter.Length();
 
 			const float MAX_DIST = Cube.CUBE_SCALE * 232;
@@ -53,7 +53,7 @@ namespace ViMG.Entities
             {
 				state = State.Enraged;
 
-				Position = world.player.Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 8;
+				Position = world.player[world.localPlayerIndex].Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 8;
 
 				if (hitbox == -1)
 					hitbox = world.HitboxManager.Add(this, 
@@ -64,7 +64,7 @@ namespace ViMG.Entities
             if (state == State.Enraged)
             {
 				world.HitboxManager.Update(hitbox, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 3), new Vector3(Cube.CUBE_SCALE * 6)).Offset(Position));
-                Vector3 direction = world.player.Position - Position;
+                Vector3 direction = world.player[world.localPlayerIndex].Position - Position;
                 direction.Normalize();
 
 				Position += direction * Cube.CUBE_SCALE;
@@ -75,7 +75,7 @@ namespace ViMG.Entities
 		{
             float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
             Vector2 worldCenter = new Vector2(worldRadius, worldRadius);
-            Vector2 dirWorldCenter = new Vector2(worldCenter.X - world.player.Position.X, worldCenter.Y - world.player.Position.Z);
+            Vector2 dirWorldCenter = new Vector2(worldCenter.X - world.player[world.localPlayerIndex].Position.X, worldCenter.Y - world.player[world.localPlayerIndex].Position.Z);
             float dist = dirWorldCenter.Length();
 
             const float MIN_DIST = Cube.CUBE_SCALE * 180;

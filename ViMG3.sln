@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateWorld", "GenerateWo
 		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7} = {33DEA714-8BC8-40CA-817A-DF3BCA7635D7}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteNetLib", "LiteNetLib\LiteNetLib\LiteNetLib.csproj", "{062BDDCC-828F-24CE-266B-4B9883A5A85B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,14 @@ Global
 		{310C897F-2B10-400C-B52A-5029FF16C1F9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{310C897F-2B10-400C-B52A-5029FF16C1F9}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
 		{310C897F-2B10-400C-B52A-5029FF16C1F9}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.DebugNoTracy|Any CPU.ActiveCfg = Debug|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.DebugNoTracy|Any CPU.Build.0 = Debug|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
+		{062BDDCC-828F-24CE-266B-4B9883A5A85B}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

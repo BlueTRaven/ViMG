@@ -142,7 +142,7 @@ namespace ViMG.Entities
 
             if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
             {
-                Ray ray = new Ray(world.player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
+                Ray ray = new Ray(world.player[world.localPlayerIndex].Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
 
                 BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
                     Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
@@ -157,7 +157,7 @@ namespace ViMG.Entities
             if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
             {
                 if (world.MenuDialogue.SelectedOption == 1)
-                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.player, stockedItems));
+                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.player[world.localPlayerIndex], stockedItems));
 
                 shouldFollowUpMenu = false;
             }

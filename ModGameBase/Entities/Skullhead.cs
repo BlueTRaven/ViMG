@@ -13,6 +13,8 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
+	// TODO refactor multiplayer
+	// Add some sort of targeting mechanism. Right now targets only player index 0
     public class Skullhead : Entity, IHitboxOwner, IHasStats
     {
 		public enum State
@@ -171,7 +173,7 @@ namespace ViMG.Entities
 
 			if (state == State.Chase)
 			{
-				targetPosition = world.player.Position;
+				targetPosition = world.player[0].Position;
 				Vector3 direction = targetPosition - Position;
 
 				stateTimer -= (float)deltaTime;
@@ -200,7 +202,7 @@ namespace ViMG.Entities
 			}
 			else if (state == State.SetupDash)
             {
-				targetPosition = world.player.Position;
+				targetPosition = world.player[0].Position;
 
 				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
@@ -237,7 +239,7 @@ namespace ViMG.Entities
 			}
 			else if (state == State.Dash)
             {
-				targetPosition = world.player.Position;
+				targetPosition = world.player[0].Position;
 
 				Vector3 direction = (targetPosition + targetOffset) - Position;
 
@@ -265,7 +267,7 @@ namespace ViMG.Entities
 			}
 			else if (state == State.Rotate)
             {
-				targetPosition = world.player.Position;
+				targetPosition = world.player[0].Position;
 
 				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
@@ -317,7 +319,7 @@ namespace ViMG.Entities
 			}
 			else if (state == State.SlowChase)
             {
-				targetPosition = world.player.Position;
+				targetPosition = world.player[0].Position;
 				Vector3 direction = targetPosition - Position;
 
 				stateTimer -= (float)deltaTime;
@@ -380,7 +382,7 @@ namespace ViMG.Entities
                 }
             }
 
-			if (world.player.Health <= 0)
+			if (world.player[0].Health <= 0)
             {
 				//limit max upwards velocity so other forces can't prevent us from moving downwards.
 				if (velocity.Y > -Cube.CUBE_SCALE)
@@ -388,7 +390,7 @@ namespace ViMG.Entities
 
 				velocity.Y -= Cube.CUBE_SCALE * 32;
 
-				if ((world.player.Position - Position).Length() > Cube.CUBE_SCALE * 128f)
+				if ((world.player[0].Position - Position).Length() > Cube.CUBE_SCALE * 128f)
                 {
 					world.EntityManager.Remove(this);
                 }

@@ -57,12 +57,19 @@ namespace ViMG.Entities
 				hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_TAKE, 1, 1);
 			else world.HitboxManager.Update(hitbox, bounds.Offset(Position));
 
-			if ((world.player.Position - Position).Length() < Cube.CUBE_SCALE * 32)
-            {
-				world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
-				world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
-				world.player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
-            }
+			for (int i = 0; i < World.MAX_PLAYERS; i++)
+			{
+				Player player = world.player[i];
+				if (player != null)
+				{
+					if ((player.Position - Position).Length() < Cube.CUBE_SCALE * 32)
+					{
+						world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
+						world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
+						player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
+					}
+				}
+			}
         }
 
         public override void OnUnload()

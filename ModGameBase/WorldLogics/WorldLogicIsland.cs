@@ -119,28 +119,12 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			if (world.player == null)
+			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player[world.localPlayerIndex] != null && world.player[world.localPlayerIndex].Position.Y / Cube.CUBE_SCALE < 140)
 			{
-				Console.WriteLine("Player was not found. Creating new one...");
-                var player = new Player();
-                player.FirstCreated();
-				world.EntityManager.Add(player, true);
+				Vector3 lavaPosition = new Vector3(world.player[world.localPlayerIndex].Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), world.player[world.localPlayerIndex].Position.Z);
 
-				// TODO: load spawn layer.
-				// Right now this will just spawn the player at the spawn point in the currently loaded layer, which is probably not correct
-                Vector3 playerSpawnPosition = world.WorldInfo.spawnPosition;
-                player.Position = playerSpawnPosition;
-                player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-
-				world.player = player;
-            }
-
-			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player != null && world.player.Position.Y / Cube.CUBE_SCALE < 140)
-			{
-				Vector3 lavaPosition = new Vector3(world.player.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), world.player.Position.Z);
-
-				if (world.player.Position.Y < lavaPosition.Y)
-					world.player.Kill();
+				if (world.player[world.localPlayerIndex].Position.Y < lavaPosition.Y)
+					world.player[world.localPlayerIndex].Kill();
 
 				if (lavaLight == -1)
 					lavaLight = world.LightManager.Add(lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
@@ -183,7 +167,7 @@ namespace ViMG.WorldLogics
 			else weatherChangeTimer -= (float)deltaTime;
 
             //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-            if (world.player != null && CubePosition.FromWorldSpace(world.player.Position).Y > 140)
+            if (world.player != null && CubePosition.FromWorldSpace(world.player[world.localPlayerIndex].Position).Y > 140)
 			{
 				Main.Renderer.DoCSMLight = true;
 
@@ -264,18 +248,18 @@ namespace ViMG.WorldLogics
 				materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(world.player.Position),
+				Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position),
 				tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
 
-            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player.Position.Y / Cube.CUBE_SCALE < 140)
+            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player[world.localPlayerIndex].Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
-					Matrix.CreateTranslation(world.player.Position.X, Cube.CUBE_SCALE * 40.5f, world.player.Position.Z);
+					Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.player[world.localPlayerIndex].Position.Z);
 
 				RectangleF sourceRect = new RectangleF()
 				{
-					x = -world.player.Position.Z * 128 + this.alive,
-					y = -world.player.Position.X * 128 + this.alive,
+					x = -world.player[world.localPlayerIndex].Position.Z * 128 + this.alive,
+					y = -world.player[world.localPlayerIndex].Position.X * 128 + this.alive,
 					width = 128 * 16,
 					height = 128 * 16,
 				};

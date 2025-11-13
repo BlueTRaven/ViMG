@@ -223,8 +223,8 @@ namespace ViMG.Entities
 			onGround = false;
 			UpdateCollision();
 
-			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(this);
+            if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
+                world.EntityManager.Remove(this);
 		}
 
 		public override void OnUnload()

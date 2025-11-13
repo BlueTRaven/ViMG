@@ -52,7 +52,8 @@ namespace ViMG.Entities
 
             if (cubeBounds.Contains(Position))
             {
-                Vector3 playerDir = world.player.Position - Position;
+                // TODO MULTIPLAYER REFACTOR
+                Vector3 playerDir = world.player[world.localPlayerIndex].Position - Position;
                 playerDir.Normalize();
 
                 if (Velocity.Length() > 0)

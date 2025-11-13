@@ -532,7 +532,7 @@ namespace ViMG.WorldLogics
 
                         Vector2 ang = Main.random.NextAngle();
                         particles[i].inUse = true;
-                        particles[i].position = world.player.Position + new Vector3(ang.X * r, 0, ang.Y * r);
+                        particles[i].position = world.player[world.localPlayerIndex].Position + new Vector3(ang.X * r, 0, ang.Y * r);
                         particles[i].position.Y = Cube.CUBE_SCALE * world.sizeInCubes;  //place at the top of the world for now
 
                         num--;

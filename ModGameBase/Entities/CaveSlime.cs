@@ -50,9 +50,9 @@ namespace ViMG.Entities
 			AISlime.Funcs<CaveSlime> funcs = new AISlime.Funcs<CaveSlime> { ai = ai, entity = this };
 			funcs.Update(deltaTime);
 
-			//Kill self if too far away
-			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(this);
+            //Kill self if too far away
+            if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
+                world.EntityManager.Remove(this);
 		}
 
 		public override void OnDelete()

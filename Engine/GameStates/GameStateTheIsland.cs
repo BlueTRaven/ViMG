@@ -3,6 +3,7 @@ using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +17,6 @@ using ViMG.Entities;
 using ViMG.Generation;
 using ViMG.Physics;
 using ViMG.UIs;
-using static ViMG.WorldInfoIO;
 
 namespace ViMG.GameStates
 {
@@ -52,8 +52,13 @@ namespace ViMG.GameStates
         public static int ProgressMin;
         public static int ProgressMax;
 
+        private NetworkManager netmanagerClient;
+        private NetworkManager netmanagerServer;
+
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
+            netmanagerServer = new NetworkManager(true);
+            netmanagerClient = new NetworkManager(false);
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -66,6 +71,9 @@ namespace ViMG.GameStates
 
         public void BeginLoadWorld(string worldName)
         {
+            // TODO MULTIPLAYER REFACTOR
+            // revisit this; how does loading the world operate when we're a client?
+            // Server/singleplayer should be identical.
             using var zone = TracyImpl.Tracy.BeginZone();
 
             IsLoading = true;
@@ -87,7 +95,7 @@ namespace ViMG.GameStates
                 LoadMessage = "Loading World...";
                 ProfilingHelper.Start("Building Meshes...");
                 //Now we can tell the ChunkLoadManager what should be loaded.
-                world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
+                world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPositions[world.localPlayerIndex]);
                 world.ChunkLoadManager.LoadAroundTarget(world, tempRenderDistance: 1);
 
                 LoadMessage = "Loading World...\nFlushing queue...";
@@ -142,11 +150,15 @@ namespace ViMG.GameStates
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
+            netmanagerServer.Connect();
+            netmanagerClient.Connect();
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
+            netmanagerServer.Disconnect();
+            netmanagerClient.Disconnect();
 
             if (world != null)
             {
@@ -173,6 +185,9 @@ namespace ViMG.GameStates
             {
                 world.Update(deltaTime);
             }
+
+            netmanagerServer.PollEvents();
+            netmanagerClient.PollEvents();
 
             base.Update(deltaTime);
         }
@@ -203,8 +218,8 @@ namespace ViMG.GameStates
 
             WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
             {
-                playerPosition = new Vector3(-1),
-                playerLayer = 0,
+                playerPositions = new Vector3[World.MAX_PLAYERS],
+                playerLayers = new int[World.MAX_PLAYERS],
                 furthestLayer = 0,
                 time = 0,
                 pointsOfInterest = new List<PointOfInterest>(),
@@ -246,8 +261,11 @@ namespace ViMG.GameStates
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
             worldInfoIO.Info.spawnPosition = player.Position;
             worldInfoIO.Info.spawnLayer = 0;
-            prototype.WorldInfo.playerPosition = player.Position;
-            prototype.WorldInfo.playerLayer = 0;
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                prototype.WorldInfo.playerPositions[i] = player.Position;
+                prototype.WorldInfo.playerLayers[i] = 0;
+            }
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             if (!Main.IsHeadless)
@@ -306,23 +324,21 @@ namespace ViMG.GameStates
             if (worldInfoIO.HandleError(error, worldName))
                 return null;
 
-            if (worldInfo.playerPosition.LengthSquared() < 0)
-                worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
-
             var physicsInfo = new PhysicsInfo();
 
             var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
-            var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
+            // TODO MULTIPLAYER REFACTOR
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayers[0]);
+            var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayers[0]);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
             Main.SessionInformation.LastLoadedSave = worldName;
 
-            var logic = CreateLayerLogic(worldInfo.playerLayer);
+            var logic = CreateLayerLogic(worldInfo.playerLayers[0]);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayers[0], entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -372,9 +388,6 @@ namespace ViMG.GameStates
             
             if (worldInfoIO.HandleError(error, worldName))
                 return null;
-
-            if (worldInfo.playerPosition.LengthSquared() < 0)
-                worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
 
             if (worldInfo.furthestLayer < layer)
             {

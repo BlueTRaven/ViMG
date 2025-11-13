@@ -50,7 +50,9 @@ namespace ViMG
 		public float WeatherSkyboxAlpha;
 		public Color WeatherSkyboxColor;
 
-		public Player player;
+		public const int MAX_PLAYERS = 4;
+		public Player[] player = new Player[4];
+		public int localPlayerIndex;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
 		public int DrawDistanceVert = 6;
@@ -262,29 +264,33 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             //The player reference will not be set up after loading. We need to do that ourselves.
-            //TODO multiplayer
-            //Don't know how we'll handle this in multiplayer, but suffice to say this won't work.
-            player = EntityManager.GetFirst<Player>();
+			foreach (Player p in EntityManager.GetAll<Player>())
+			{
+				player[p.playerIndex] = p;
+			}
 
-			if (player == null)
+			if (player.All(x => x == null))
 			{
 				//If we didn't manage to find the player using the new method, fall back to the old method.
 				//This deserializes the player manually then loads the chunks around them.
 				//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
 				//TODO obsolete/deprecated
 				entIO.DeserializePlayerChunk();
-				player = EntityManager.GetFirst<Player>();
+                foreach (Player p in EntityManager.GetAll<Player>())
+                {
+                    player[p.playerIndex] = p;
+                }
 
 				if (player != null)
 				{
-					ChunkLoadManager.UpdateLoadTarget(player.Position);
+					ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
 					ChunkLoadManager.LoadAroundTarget(this);
 					ChunkLoadManager.FlushLoadQueue(this);
 				}
 			}
 
 			if (player != null)
-				Main.camera.Position = player.Position;
+				Main.camera.Position = player[localPlayerIndex].Position;
 
 			logic.FinishLoading(this, device);
 		}
@@ -304,7 +310,7 @@ namespace ViMG
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			if (player != null)
-				ChunkLoadManager.UpdateLoadTarget(player.Position);
+				ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
 
 			alive += (float)deltaTime;
 
@@ -440,9 +446,9 @@ namespace ViMG
 
             if (logic.AllowsLoadingNextLayer(this) && nextWorld == null)
 			{
-				if (player.Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
+				if (player[localPlayerIndex].Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
 					nextLayer = Layer + 1;
-				else if (player.Position.Y >= Cube.CUBE_SCALE * sizeInCubes - (Chunk.CHUNK_SIZE * 3 * Cube.CUBE_SCALE))
+				else if (player[localPlayerIndex].Position.Y >= Cube.CUBE_SCALE * sizeInCubes - (Chunk.CHUNK_SIZE * 3 * Cube.CUBE_SCALE))
 					nextLayer = Layer - 1;
 				else nextLayer = Layer;
 
@@ -451,10 +457,10 @@ namespace ViMG
 			}
 
 			//if in the middle 22 chunks (> 0-5 chunks && < 32-27 chunks), unload the loaded world.
-			if (player != null)
+			if (player[localPlayerIndex] != null)
 			{
-				if (player.Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
-				player.Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
+				if (player[localPlayerIndex].Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
+                player[localPlayerIndex].Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
 				{
 					if (nextWorld.IsCompleted)
 					{
@@ -463,8 +469,8 @@ namespace ViMG
 					}
 				}
 
-				if (nextWorld != null && player.Position.Y < Cube.CUBE_SCALE * 4 ||
-					player.Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
+				if (nextWorld != null && player[localPlayerIndex].Position.Y < Cube.CUBE_SCALE * 4 ||
+                    player[localPlayerIndex].Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
 				{
 					GameStateTheIsland.LoadMessage = "Waiting for world to finish loading...";
 					if (!nextWorld.IsCompleted)
@@ -475,7 +481,7 @@ namespace ViMG
 
 					if (nextLayer == Layer + 1)
 					{
-						player.Position.Y = player.Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+                        player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
 						ProfilingHelper.Start("Copying Layer");
 						for (int x = 0; x < sizeInCubes; x++)
@@ -493,17 +499,17 @@ namespace ViMG
 						ProfilingHelper.End("Done");
 					}
 					else if (nextLayer == Layer - 1)
-						player.Position.Y = player.Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+                        player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
-					EntityManager.Unload(player);
-					player.world = loadedWorld;
-					loadedWorld.EntityManager.Add(player);
+					EntityManager.Unload(player[localPlayerIndex]);
+                    player[localPlayerIndex].world = loadedWorld;
+					loadedWorld.EntityManager.Add(player[localPlayerIndex]);
 					loadedWorld.player = player;
 
-					WorldInfo.playerLayer = loadedWorld.Layer;
-					WorldInfo.playerPosition = loadedWorld.player.Position;
+					WorldInfo.playerLayers[localPlayerIndex] = loadedWorld.Layer;
+					WorldInfo.playerPositions[localPlayerIndex] = loadedWorld.player[localPlayerIndex].Position;
 
-					loadedWorld.ChunkLoadManager.UpdateLoadTarget(player.Position);
+					loadedWorld.ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
 					loadedWorld.ChunkLoadManager.LoadAroundTarget(loadedWorld);
 
 					//Finally, tell the ChunkLoadManager to actually load the things.
@@ -555,12 +561,13 @@ namespace ViMG
 			//Deduplicate/decache serialized entity data
 			entIO.DecacheCurrentlySerialized();
 
-			if (player != null)
+			for (int i = 0; i < MAX_PLAYERS; i++)
 			{
-				WorldInfo.playerPosition = player.Position;
-				WorldInfo.playerLayer = Layer;
-				worldInfoIO.Save(LoadedFolderName, WorldInfo);
+				WorldInfo.playerPositions[i] = player[i].Position;
+				WorldInfo.playerLayers[i] = Layer;
 			}
+				
+			worldInfoIO.Save(LoadedFolderName, WorldInfo);
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
@@ -603,7 +610,7 @@ namespace ViMG
 				Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
 
 				RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
-				if (player.GetBuffManager().HasBuff("emissive_ores"))
+				if (player[localPlayerIndex].GetBuffManager().HasBuff("emissive_ores"))
 					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
                 VerySimpleMesh mesh = ChunkManager.ChunkMesher.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
@@ -752,7 +759,7 @@ namespace ViMG
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            player.DrawUI(batch);
+			player[localPlayerIndex].DrawUI(batch);
 
 			ChatManager.Draw(batch);
 			//DialogueManager.Draw(batch);
@@ -923,7 +930,9 @@ namespace ViMG
 						EntityManager.Add(ent);
 					}
 
-					cube.OnMined(player, position);
+					// TODO MULTIPLAYER REFACTOR
+					// This should be the player that actually performed the mining
+					cube.OnMined(player[localPlayerIndex], position);
 
 					return true;
 				}
@@ -947,7 +956,7 @@ namespace ViMG
 							EntityManager.Add(ent);
 						}
 
-						cube.OnMined(player, position);
+						cube.OnMined(player[localPlayerIndex], position);
 
 						return true;
 					}
@@ -972,7 +981,7 @@ namespace ViMG
 							EntityManager.Add(ent);
 						}
 
-						cube.OnMined(player, position);
+						cube.OnMined(player[localPlayerIndex], position);
 
 						return true;
 					} 

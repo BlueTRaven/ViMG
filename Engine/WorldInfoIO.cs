@@ -14,10 +14,8 @@ namespace ViMG
         public struct WorldInfo
         {
             public float time;
-            //TODO multiplayer
-            //this will probably need to change to a list or dictionary?
-            public Vector3 playerPosition;
-            public int playerLayer;
+            public Vector3[] playerPositions;
+            public int[] playerLayers;
             public Vector3 spawnPosition;
             public int spawnLayer;
             public int furthestLayer;   //the furthest the player has traveled - i.e. layer+1 has NOT been generated yet.
@@ -175,8 +173,8 @@ namespace ViMG
                 SaveHelper.SaveFloat32(bytes, info.time); //wi-t
 
                 SaveHelper.SaveInt32(bytes, info.furthestLayer);
-                SaveHelper.SaveVector3(bytes, info.playerPosition);
-                SaveHelper.SaveInt32(bytes, info.playerLayer);
+                SaveHelper.SaveVector3(bytes, info.playerPositions[0]);
+                SaveHelper.SaveInt32(bytes, info.playerLayers[0]);
                 info.flags.OnSave(bytes);
 
                 List<byte> poisBlock = new List<byte>();    //wi-pois
@@ -223,8 +221,8 @@ namespace ViMG
             info = new WorldInfo()
             {
                 time = 0,
-                playerPosition = new Vector3(-1),
-                playerLayer = 0,
+                playerPositions = new Vector3[World.MAX_PLAYERS],
+                playerLayers = new int[World.MAX_PLAYERS],
                 furthestLayer = -1,
                 pointsOfInterest = new List<PointOfInterest>(),
                 flags = new WorldFlags(),
@@ -262,14 +260,14 @@ namespace ViMG
 
                     if (version >= 1)
                     {
-                        info.playerPosition.X = reader.ReadSingle();
-                        info.playerPosition.Y = reader.ReadSingle();
-                        info.playerPosition.Z = reader.ReadSingle();
+                        info.playerPositions[0].X = reader.ReadSingle();
+                        info.playerPositions[0].Y = reader.ReadSingle();
+                        info.playerPositions[0].Z = reader.ReadSingle();
                     }
 
                     if (version >= 2)
                     {
-                        info.playerLayer = reader.ReadInt32();
+                        info.playerLayers[0] = reader.ReadInt32();
                     }
 
                     if (version >= 3)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BepuPhysics.Constraints;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -208,9 +209,10 @@ namespace ViMG.Entities
 				entity.Position += ai.Velocity * (float)deltaTime;
 
 				if (ai.CollidesWithWorld)
-					UpdateCollision();
+                    UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+				// TODO MULTIPLAYER REFACTOR
+				if ((entity.world.player[0].Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
 					entity.world.EntityManager.Remove(entity);
 			}
 

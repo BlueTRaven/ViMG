@@ -97,7 +97,8 @@ namespace ViMG.Entities
 
 								if (ai.ShouldJumpAwayFromPlayer)
 								{
-                                    ai.jumpDir = entity.Position - entity.world.player.Position;
+									// TODO MULTIPLAYER REFACTOR
+                                    ai.jumpDir = entity.Position - entity.world.player[0].Position;
                                     ai.jumpDir.Normalize();
 								}
 								else
@@ -141,7 +142,8 @@ namespace ViMG.Entities
                 ai.onGround = false;
 				UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
+				var ent = this.entity;
+				if (entity.world.player.All(x => x == null || (x.Position - ent.Position).Length() > 128 * Cube.CUBE_SCALE))
 					entity.world.EntityManager.Remove(entity);
 			}
 

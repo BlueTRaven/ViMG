@@ -140,11 +140,11 @@ namespace ViMG
 		public Vector3 Rotation;
 		public Vector3 Facing;	//The direction the player is facing.
 
-		private float moveSpeed = Cube.CUBE_SCALE * 0.8f;
-		public Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
-		public Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
-		public Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
-		public float MaxFallVelocity;
+		private static float moveSpeed = Cube.CUBE_SCALE * 0.8f;
+		public static Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
+		public static Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
+		public static Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
+		public static float MaxFallVelocity;
 		private float fallStartY;   //the upper-most point of the current jump. If the player hits something > FALL_HEIGHT_FATAL, they will die.
 		private const float FALL_HEIGHT_DAMAGE_START = Cube.CUBE_SCALE * 5;
 		private const float FALL_HEIGHT_FATAL = Cube.CUBE_SCALE * 18;
@@ -273,6 +273,8 @@ namespace ViMG
 
 		private bool respawnInit;
 		private Player respawnPlayer;
+
+		public int playerIndex;
 
 		public Player()
 		{
@@ -412,7 +414,7 @@ namespace ViMG
 			//TODO death screen and stuff
 			Player p = new Player(this);
 			world.EntityManager.Add(p);
-			world.player = p;
+			world.player[this.playerIndex] = p;
 		}
 
         public override void OnUnload()

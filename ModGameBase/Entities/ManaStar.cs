@@ -65,7 +65,7 @@ namespace ViMG.Entities
 
                     //Set position to be the point where we end up being eventually.
                     
-                    Vector2 startXZ = world.player.Position.XZ() + new Vector2(Main.random.Next(-32, 32) * Cube.CUBE_SCALE, Main.random.Next(-32, 32) * Cube.CUBE_SCALE);
+                    Vector2 startXZ = world.player[world.localPlayerIndex].Position.XZ() + new Vector2(Main.random.Next(-32, 32) * Cube.CUBE_SCALE, Main.random.Next(-32, 32) * Cube.CUBE_SCALE);
                     CubePosition endPos = world.ChunkManager.CubeView.GetFirstSolidDown(
                         CubePosition.FromWorldSpace(new Vector3(startXZ.X, world.sizeInCubes * Cube.CUBE_SCALE, startXZ.Y))).Get() +
                         new CubePosition(0, 1, 0);

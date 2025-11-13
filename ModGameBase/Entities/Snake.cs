@@ -93,8 +93,8 @@ namespace ViMG.Entities
             var funcs = new AIWalkerMelee.Funcs<Snake> { ai = ai, entity = this };
             funcs.Update(deltaTime);
 
-			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(this);
+            if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
+                world.EntityManager.Remove(this);
 		}
 
 		//public override void Draw(GraphicsDevice device, Effect effect)

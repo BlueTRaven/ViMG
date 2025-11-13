@@ -20,6 +20,7 @@
     <Compile Remove="BrUtility\**" />
     <Compile Remove="Engine\**" />
     <Compile Remove="GenerateWorld\**" />
+    <Compile Remove="LiteNetLib\**" />
     <Compile Remove="MigrationBackup\**" />
     <Compile Remove="ModGameBase\**" />
     <Compile Remove="MonoGame.ImGuiNet\**" />
@@ -28,6 +29,7 @@
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="GenerateWorld\**" />
+    <EmbeddedResource Remove="LiteNetLib\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="ModGameBase\**" />
     <EmbeddedResource Remove="MonoGame.ImGuiNet\**" />
@@ -36,6 +38,7 @@
     <None Remove="BrUtility\**" />
     <None Remove="Engine\**" />
     <None Remove="GenerateWorld\**" />
+    <None Remove="LiteNetLib\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="ModGameBase\**" />
     <None Remove="MonoGame.ImGuiNet\**" />

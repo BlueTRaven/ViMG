@@ -168,8 +168,9 @@ namespace ViMG.Entities
                 ai.shouldJump = false;
 				UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Remove(entity);
+                var ent = this.entity;
+                if (entity.world.player.All(x => x == null || (x.Position - ent.Position).Length() > 128 * Cube.CUBE_SCALE))
+                    entity.world.EntityManager.Remove(entity);
 			}
 
 			private void UpdateCollision()
