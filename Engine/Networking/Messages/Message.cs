@@ -1,23 +1,32 @@
-﻿using System;
+﻿using LiteNetLib;
+using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
+using ViMG.GameStates;
 
 namespace Engine.Networking.Messages
 {
-    public static class MessageHelper
+    public abstract class Message : IRegisterable
     {
-        public enum MessageType
+        public string Identifier => GetType().FullName;
+        public int Id;
+
+        public abstract NetworkManager.NetworkSide SendableFrom { get; }
+
+        protected GameStateTheIsland GS => Main.gameStateManager.TheIsland;
+
+        public virtual void SendMessage(NetDataWriter writer, object? addData)
         {
-            SendChunk,
-            SendEnt,
-            Custom
+
         }
 
-        public struct MessageHeader 
+        public virtual void ReceiveMessage(NetPacketReader reader)
         {
-            MessageType messageType;
+            
         }
     }
 }

@@ -127,14 +127,7 @@ namespace ViMG
 			//FileStream is probably unnecessary since we're saving the everything all at once
 			using (FileStream fs = new FileStream(GetSaveName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
 			{
-				fs.Write(BitConverter.GetBytes(VERSION));
-				fs.Write(BitConverter.GetBytes(layer));
-
-				//Write unused remaining header bytes
-				long remainingBytes = SIZEOF_HEADER - fs.Position;
-				fs.Write(new byte[remainingBytes]);
-
-				fs.Write(allBytes);
+				SaveToStream(fs);
 			}
 
 			bool anyNotZero = false;
@@ -149,6 +142,18 @@ namespace ViMG
 			}
 		}
 
+		public void SaveToStream(Stream stream)
+		{
+            stream.Write(BitConverter.GetBytes(VERSION));
+            stream.Write(BitConverter.GetBytes(layer));
+
+            //Write unused remaining header bytes
+            long remainingBytes = SIZEOF_HEADER - stream.Position;
+            stream.Write(new byte[remainingBytes]);
+
+            stream.Write(allBytes);
+        }
+
 		public LoadError Load(string folderName)
 		{
 			if (!File.Exists(GetLoadName(folderName)))
@@ -156,35 +161,10 @@ namespace ViMG
 				
 			using (FileStream fs = new FileStream(GetLoadName(folderName), FileMode.Open, FileAccess.Read, FileShare.None))
 			{
-				using (BinaryReader br = new BinaryReader(fs, Encoding.ASCII, true))
-				{
-					Version = br.ReadInt32();
+				var result = LoadFromStream(fs);
 
-					if (Version >= 2)
-					{
-						var loadedLayer = br.ReadInt32();
-						if (loadedLayer != layer)
-						{
-							OtherError = string.Format("Tried to load a chunk file as layer {0}, but it actually belongs to layer {1}!", layer, loadedLayer);
-							return LoadError.Other;
-						}
-					}
-
-					if (Version < MIN_VERSION)
-						return LoadError.InvalidVersion;
-					else
-					{
-						//Discard the rest of the buffer.
-						int remainingBytes = (int)(SIZEOF_HEADER - fs.Position);
-						br.Read(new byte[remainingBytes], 0, remainingBytes);
-					}
-				}
-
-				Stopwatch watch = Stopwatch.StartNew();
-
-				fs.Read(allBytes, 0, (int)(numChunks * SIZEOF_CHUNK));
-
-				watch.Stop();
+				if (result != LoadError.Success)
+					return result;
 			}
 
 			loaded = true;
@@ -208,6 +188,37 @@ namespace ViMG
 
 			return LoadError.Success;
 		}
+
+		public LoadError LoadFromStream(Stream stream)
+		{
+            using (BinaryReader br = new BinaryReader(stream, Encoding.ASCII, true))
+            {
+                Version = br.ReadInt32();
+
+                if (Version >= 2)
+                {
+                    var loadedLayer = br.ReadInt32();
+                    if (loadedLayer != layer)
+                    {
+                        OtherError = string.Format("Tried to load a chunk file as layer {0}, but it actually belongs to layer {1}!", layer, loadedLayer);
+                        return LoadError.Other;
+                    }
+                }
+
+                if (Version < MIN_VERSION)
+                    return LoadError.InvalidVersion;
+                else
+                {
+                    //Discard the rest of the buffer.
+                    int remainingBytes = (int)(SIZEOF_HEADER - stream.Position);
+                    br.Read(new byte[remainingBytes], 0, remainingBytes);
+                }
+            }
+
+            stream.Read(allBytes, 0, (int)(numChunks * SIZEOF_CHUNK));
+
+			return LoadError.Success;
+        }
 
 		//Deserializes a chunk from the local byte stream into the world. This does not load anything from the disk! If nothing has been loaded yet, this will error!
 		/*public void DeserializeChunk(World world, ChunkPosition pos)

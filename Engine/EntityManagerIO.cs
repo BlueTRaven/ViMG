@@ -521,10 +521,7 @@ namespace ViMG
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (datas == null)
-				throw new Exception("Attempted to deserialize when nothing has been loaded. Call Load first!");
-
-			if (datas.entityDatas.ContainsKey(pos))
+			if (datas != null && datas.entityDatas.ContainsKey(pos))
             {
 				foreach (EntityData entData in datas.entityDatas[pos])
                 {

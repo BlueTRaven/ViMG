@@ -5,6 +5,8 @@ using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.MediaFoundation;
+
 //using SimplexNoise;
 using System;
 using System.Collections.Generic;
@@ -73,8 +75,8 @@ namespace ViMG
 		//public DialogueManager DialogueManager;
 
 		private WorldInfoIO worldInfoIO;
-		private ChunkManagerIO chunkIO;
-		private EntityManagerIO entIO;
+		public ChunkManagerIO ChunkIO;
+		public EntityManagerIO EntIO;
 		private WorldLogic logic;
 
 		public HousingManager HousingManager;
@@ -125,8 +127,8 @@ namespace ViMG
 			this.ChunkLoadManager = chunkLoadManager;
 
             worldInfoIO = winfoIO;
-			entIO = entityIO;
-			this.chunkIO = chunkIO;
+			EntIO = entityIO;
+			this.ChunkIO = chunkIO;
 
 			//TEMP start in night time
 			//alive = DAY_CYCLE_TIME * 0.65f;
@@ -275,22 +277,22 @@ namespace ViMG
 				//This deserializes the player manually then loads the chunks around them.
 				//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
 				//TODO obsolete/deprecated
-				entIO.DeserializePlayerChunk();
+				EntIO.DeserializePlayerChunk();
                 foreach (Player p in EntityManager.GetAll<Player>())
                 {
                     player[p.playerIndex] = p;
                 }
 
-				if (player != null)
+				if (GetLocalPlayer() != null)
 				{
-					ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
+					ChunkLoadManager.UpdateLoadTarget(GetLocalPlayer().Position);
 					ChunkLoadManager.LoadAroundTarget(this);
 					ChunkLoadManager.FlushLoadQueue(this);
 				}
 			}
 
-			if (player != null)
-				Main.camera.Position = player[localPlayerIndex].Position;
+			if (GetLocalPlayer() != null)
+				Main.camera.Position = GetLocalPlayer().Position;
 
 			logic.FinishLoading(this, device);
 		}
@@ -309,8 +311,8 @@ namespace ViMG
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
-			if (player != null)
-				ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
+			if (GetLocalPlayer() != null)
+				ChunkLoadManager.UpdateLoadTarget(GetLocalPlayer().Position);
 
 			alive += (float)deltaTime;
 
@@ -522,7 +524,7 @@ namespace ViMG
 					GameStateTheIsland.LoadMessage = "Saving...";
 					//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
 					//Note that we don't save chunks because they shouldn't be modified by any operation here.
-					entIO.Save(LoadedFolderName);
+					EntIO.Save(LoadedFolderName);
 					worldInfoIO.Save(LoadedFolderName, WorldInfo);
 
 					//Then save the entire nextWorld. We save chunks here since we may have modified them.
@@ -552,14 +554,14 @@ namespace ViMG
 			ChunkLoadManager.FlushLoadQueue(this);
 			//Serialize all the chunks that are currently loaded
 			//chunkIO.Serialize(ChunkLoadManager.GetLoaded());
-			entIO.Serialize(ChunkLoadManager.GetLoaded());
+			EntIO.Serialize(ChunkLoadManager.GetLoaded());
 
 			//Save serialized data to disk
-			chunkIO.Save(LoadedFolderName);
-			entIO.Save(LoadedFolderName);
+			ChunkIO.Save(LoadedFolderName);
+			EntIO.Save(LoadedFolderName);
 
 			//Deduplicate/decache serialized entity data
-			entIO.DecacheCurrentlySerialized();
+			EntIO.DecacheCurrentlySerialized();
 
 			for (int i = 0; i < MAX_PLAYERS; i++)
 			{
@@ -568,6 +570,38 @@ namespace ViMG
 			}
 				
 			worldInfoIO.Save(LoadedFolderName, WorldInfo);
+		}
+
+		public Player? GetLocalPlayer()
+		{
+			if (localPlayerIndex >= 0 && localPlayerIndex < MAX_PLAYERS)
+			{
+				return player[localPlayerIndex];
+			}
+			else return null;
+		}
+
+		private static List<int> validIndices = new List<int>();
+		/// <summary>
+		/// Gets a random player.
+		/// </summary>
+		/// <returns>A random player, or null if there were no active players.</returns>
+		public Player? GetRandomPlayer()
+		{
+			validIndices.Clear();
+			for (int i = 0; i < MAX_PLAYERS; i++)
+			{
+				if (player[i] != null)
+				{
+					validIndices.Add(i);
+				}
+			}
+
+			if (validIndices.Count > 0)
+			{
+				return player[validIndices[Main.random.Next(validIndices.Count)]];
+			}
+			else return null;
 		}
 
 		//Gets a list of all chunks that should be rendered by the main camera.
@@ -610,7 +644,7 @@ namespace ViMG
 				Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
 
 				RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
-				if (player[localPlayerIndex].GetBuffManager().HasBuff("emissive_ores"))
+				if (GetLocalPlayer()?.GetBuffManager().HasBuff("emissive_ores") ?? false)
 					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
                 VerySimpleMesh mesh = ChunkManager.ChunkMesher.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
@@ -759,7 +793,7 @@ namespace ViMG
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			player[localPlayerIndex].DrawUI(batch);
+			GetLocalPlayer()?.DrawUI(batch);
 
 			ChatManager.Draw(batch);
 			//DialogueManager.Draw(batch);

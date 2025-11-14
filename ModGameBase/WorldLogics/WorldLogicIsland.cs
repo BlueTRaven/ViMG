@@ -119,12 +119,21 @@ namespace ViMG.WorldLogics
             base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player[world.localPlayerIndex] != null && world.player[world.localPlayerIndex].Position.Y / Cube.CUBE_SCALE < 140)
+			foreach (Player player in world.player)
 			{
-				Vector3 lavaPosition = new Vector3(world.player[world.localPlayerIndex].Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), world.player[world.localPlayerIndex].Position.Z);
+				if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && player != null && player.Position.Y / Cube.CUBE_SCALE < 140)
+				{
+					Vector3 lavaPosition = new Vector3(player.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), player.Position.Z);
 
-				if (world.player[world.localPlayerIndex].Position.Y < lavaPosition.Y)
-					world.player[world.localPlayerIndex].Kill();
+					if (player.Position.Y < lavaPosition.Y)
+                        player.Kill();
+				}
+			}
+
+			var localPlayer = world.GetLocalPlayer();
+            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer != null && localPlayer.Position.Y / Cube.CUBE_SCALE < 140)
+			{
+				Vector3 lavaPosition = new Vector3(localPlayer.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), localPlayer.Position.Z);
 
 				if (lavaLight == -1)
 					lavaLight = world.LightManager.Add(lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
@@ -167,7 +176,7 @@ namespace ViMG.WorldLogics
 			else weatherChangeTimer -= (float)deltaTime;
 
             //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-            if (world.player != null && CubePosition.FromWorldSpace(world.player[world.localPlayerIndex].Position).Y > 140)
+            if (localPlayer != null && CubePosition.FromWorldSpace(localPlayer.Position).Y > 140)
 			{
 				Main.Renderer.DoCSMLight = true;
 
@@ -248,13 +257,13 @@ namespace ViMG.WorldLogics
 				materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position),
+				Matrix.CreateTranslation(Main.camera.Position),
 				tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
 
-            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.player[world.localPlayerIndex].Position.Y / Cube.CUBE_SCALE < 140)
+            if (world.GetLocalPlayer() != null && !world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.GetLocalPlayer().Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
-					Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.player[world.localPlayerIndex].Position.Z);
+					Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.GetLocalPlayer().Position.Z);
 
 				RectangleF sourceRect = new RectangleF()
 				{

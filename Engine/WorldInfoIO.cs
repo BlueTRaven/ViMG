@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,8 +12,10 @@ namespace ViMG
 {
     public class WorldInfoIO : WorldIO
     {
-        public struct WorldInfo
+        public struct WorldInfo : INetSerializable
         {
+            public int version;
+
             public float time;
             public Vector3[] playerPositions;
             public int[] playerLayers;
@@ -24,6 +27,37 @@ namespace ViMG
             public WorldFlags flags;
 
             public List<Housing> housings;
+
+            public static WorldInfo Empty => new WorldInfo()
+            {
+                version = 0,
+                time = 0,
+                playerPositions = { },
+                playerLayers = { },
+                spawnPosition = Vector3.Zero,
+                spawnLayer = 0,
+                furthestLayer = 0,
+                pointsOfInterest = { },
+                flags = new WorldFlags(),
+                housings = { },
+            };
+
+            public void Deserialize(NetDataReader reader)
+            {
+                int len = reader.GetInt();
+                byte[] bytes = new byte[len];
+                reader.GetBytes(bytes, len);
+                MemoryStream stream = new MemoryStream(bytes);
+                new WorldInfoIO().LoadFromStream(stream, out this);
+            }
+
+            public void Serialize(NetDataWriter writer)
+            {
+                MemoryStream stream = new MemoryStream();
+                new WorldInfoIO().SaveToStream(this, stream);
+                writer.Put(stream.Length);
+                writer.PutBytesWithLength(stream.GetBuffer());
+            }
         }
         /*private struct WorldInfo
         {
@@ -90,7 +124,6 @@ namespace ViMG
 
         public int Version;
 
-        public WorldInfo Info;
         public WorldInfoIO()
         {
         }
@@ -164,56 +197,59 @@ namespace ViMG
             //FileStream is probably unnecessary since we're saving the everything all at once
             using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
             {
-                //fs.Write(BitConverter.GetBytes(VERSION));
-
-                List<byte> bytes = new List<byte>();
-
-                SaveHelper.SaveInt32(bytes, VERSION); //h-v
-
-                SaveHelper.SaveFloat32(bytes, info.time); //wi-t
-
-                SaveHelper.SaveInt32(bytes, info.furthestLayer);
-                SaveHelper.SaveVector3(bytes, info.playerPositions[0]);
-                SaveHelper.SaveInt32(bytes, info.playerLayers[0]);
-                info.flags.OnSave(bytes);
-
-                List<byte> poisBlock = new List<byte>();    //wi-pois
-
-                List<byte> poiBlock = new List<byte>();     //wi-pois-poi
-
-                foreach (PointOfInterest poi in info.pointsOfInterest)
-                {
-                    int lastIndex = poiBlock.Count;
-                    poi.OnSave(poiBlock);                                       //wi-pois-poi-d
-
-                    int size = poiBlock.Count - lastIndex;
-
-                    SaveHelper.SaveInt32(poisBlock, size);                      //wi-pois-poi-h-s
-                    SaveHelper.SaveInt32(poisBlock, PointOfInterest.VERSION);   //wi-pois-poi-h-v
-                    SaveHelper.SaveBytesFlat(poisBlock, poiBlock, lastIndex, size);
-                }
-
-                List<byte> poisHeaderBlock = new List<byte>();                      //wi-pois-h
-                SaveHelper.SaveInt32(poisHeaderBlock, poisBlock.Count);             //wi-pois-h-s
-                SaveHelper.SaveInt32(poisHeaderBlock, info.pointsOfInterest.Count); //wi-pois-h-c
-
-                SaveHelper.SaveBytesFlat(bytes, poisHeaderBlock.ToArray());
-                SaveHelper.SaveBytesFlat(bytes, poisBlock.ToArray());
-
-                List<byte> housingsDataBlock = new List<byte>();
-
-                foreach (Housing housing in info.housings)
-                    housing.OnSave(housingsDataBlock);
-
-                List<byte> housingsHeaderBlock = new List<byte>();
-                SaveHelper.SaveInt32(housingsHeaderBlock, housingsDataBlock.Count);
-                SaveHelper.SaveInt32(housingsHeaderBlock, info.housings.Count);
-
-                SaveHelper.SaveBytesFlat(bytes, housingsHeaderBlock);
-                SaveHelper.SaveBytesFlat(bytes, housingsDataBlock);
-
-                fs.Write(bytes.ToArray());
+                SaveToStream(info, fs);
             }
+        }
+
+        public void SaveToStream(WorldInfo info, Stream stream)
+        {
+            List<byte> bytes = new List<byte>();
+
+            SaveHelper.SaveInt32(bytes, VERSION); //h-v
+
+            SaveHelper.SaveFloat32(bytes, info.time); //wi-t
+
+            SaveHelper.SaveInt32(bytes, info.furthestLayer);
+            SaveHelper.SaveVector3(bytes, info.playerPositions[0]);
+            SaveHelper.SaveInt32(bytes, info.playerLayers[0]);
+            info.flags.OnSave(bytes);
+
+            List<byte> poisBlock = new List<byte>();    //wi-pois
+
+            List<byte> poiBlock = new List<byte>();     //wi-pois-poi
+
+            foreach (PointOfInterest poi in info.pointsOfInterest)
+            {
+                int lastIndex = poiBlock.Count;
+                poi.OnSave(poiBlock);                                       //wi-pois-poi-d
+
+                int size = poiBlock.Count - lastIndex;
+
+                SaveHelper.SaveInt32(poisBlock, size);                      //wi-pois-poi-h-s
+                SaveHelper.SaveInt32(poisBlock, PointOfInterest.VERSION);   //wi-pois-poi-h-v
+                SaveHelper.SaveBytesFlat(poisBlock, poiBlock, lastIndex, size);
+            }
+
+            List<byte> poisHeaderBlock = new List<byte>();                      //wi-pois-h
+            SaveHelper.SaveInt32(poisHeaderBlock, poisBlock.Count);             //wi-pois-h-s
+            SaveHelper.SaveInt32(poisHeaderBlock, info.pointsOfInterest.Count); //wi-pois-h-c
+
+            SaveHelper.SaveBytesFlat(bytes, poisHeaderBlock.ToArray());
+            SaveHelper.SaveBytesFlat(bytes, poisBlock.ToArray());
+
+            List<byte> housingsDataBlock = new List<byte>();
+
+            foreach (Housing housing in info.housings)
+                housing.OnSave(housingsDataBlock);
+
+            List<byte> housingsHeaderBlock = new List<byte>();
+            SaveHelper.SaveInt32(housingsHeaderBlock, housingsDataBlock.Count);
+            SaveHelper.SaveInt32(housingsHeaderBlock, info.housings.Count);
+
+            SaveHelper.SaveBytesFlat(bytes, housingsHeaderBlock);
+            SaveHelper.SaveBytesFlat(bytes, housingsDataBlock);
+
+            stream.Write(bytes.ToArray());
         }
 
         public LoadError Load(string folderName, out WorldInfo info)
@@ -240,91 +276,112 @@ namespace ViMG
 
             using (FileStream fs = new FileStream(loadName, FileMode.Open, FileAccess.Read, FileShare.None, 1024))
             {
-                using (BinaryReader reader = new BinaryReader(fs, Encoding.ASCII, false))
+                var result = LoadFromStream(fs, out info);
+                if (result != LoadError.Success)
+                    return result; 
+            }
+            
+            return LoadError.Success;
+        }
+
+        public LoadError LoadFromStream(Stream stream, out WorldInfo info)
+        {
+            info = new WorldInfo()
+            {
+                time = 0,
+                playerPositions = new Vector3[World.MAX_PLAYERS],
+                playerLayers = new int[World.MAX_PLAYERS],
+                furthestLayer = -1,
+                pointsOfInterest = new List<PointOfInterest>(),
+                flags = new WorldFlags(),
+
+                housings = new List<Housing>(),
+            };
+
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, false))
+            {
+                int version = reader.ReadInt32();   //h-v
+
+                if (version < MIN_VERSION)
+                    return LoadError.InvalidVersion;
+
+                float worldTime = reader.ReadSingle();
+                info.time = worldTime;
+
+                if (version == 0)
+                    _ = reader.ReadInt32(); //idk why this is here, but there's a random 4-byte padding in between these for some reason.
+
+                if (version >= 2)
                 {
-                    int version = reader.ReadInt32();   //h-v
+                    info.furthestLayer = reader.ReadInt32();
+                }
 
-                    if (version < MIN_VERSION)
-                        return LoadError.InvalidVersion;
+                if (version >= 1)
+                {
+                    info.playerPositions[0].X = reader.ReadSingle();
+                    info.playerPositions[0].Y = reader.ReadSingle();
+                    info.playerPositions[0].Z = reader.ReadSingle();
+                }
 
-                    float worldTime = reader.ReadSingle();
-                    info.time = worldTime;
+                if (version >= 2)
+                {
+                    info.playerLayers[0] = reader.ReadInt32();
+                }
 
-                    if (version == 0)
-                        _ = reader.ReadInt32(); //idk why this is here, but there's a random 4-byte padding in between these for some reason.
+                if (version >= 3)
+                {
+                    info.flags.Version = reader.ReadInt32();
+                    info.flags.Size = reader.ReadInt32();
+                    info.flags.Flags = (WorldFlags.FlagValues)reader.ReadInt32();
+                }
 
-                    if (version >= 2)
+                int sizePois = reader.ReadInt32();
+                int numPois = reader.ReadInt32();
+
+                byte[] poisBuffer = new byte[sizePois];
+                reader.Read(poisBuffer);
+
+                int index = 0;
+                for (int i = 0; i < numPois; i++)
+                {
+                    int sizePoi = SaveHelper.LoadInt32(poisBuffer, ref index);
+                    int versionPoi = SaveHelper.LoadInt32(poisBuffer, ref index);
+
+                    if (versionPoi < PointOfInterest.MIN_VERSION)
+                        index += sizePoi;    //skip loading the rest of this point of interest
+                    else
                     {
-                        info.furthestLayer = reader.ReadInt32();
+                        PointOfInterest poi = new PointOfInterest();
+                        poi.OnLoad(poisBuffer, ref index, in versionPoi);
+                        info.pointsOfInterest.Add(poi);
                     }
+                }
 
-                    if (version >= 1)
+                if (version >= 4)
+                {
+                    //  hs: housing block
+                    //      h:
+                    //          s: size (int) of data block
+                    //          n: number of elements
+                    //      h: housing data blocks
+                    //          See HousingTasker.cs for serialization info
+                    int size = reader.ReadInt32();
+                    int num = reader.ReadInt32();
+
+                    byte[] bytes = new byte[size];
+                    reader.Read(bytes, 0, size);
+
+                    int offset = 0;
+                    for (int i = 0; i < num; i++)
                     {
-                        info.playerPositions[0].X = reader.ReadSingle();
-                        info.playerPositions[0].Y = reader.ReadSingle();
-                        info.playerPositions[0].Z = reader.ReadSingle();
-                    }
+                        Housing housing = new Housing();
+                        housing.OnLoad(bytes, ref offset);
 
-                    if (version >= 2)
-                    {
-                        info.playerLayers[0] = reader.ReadInt32();
-                    }
-
-                    if (version >= 3)
-                    {
-                        info.flags.Version = reader.ReadInt32();
-                        info.flags.Size = reader.ReadInt32();
-                        info.flags.Flags = (WorldFlags.FlagValues)reader.ReadInt32();
-                    }
-
-                    int sizePois = reader.ReadInt32();
-                    int numPois = reader.ReadInt32();
-
-                    byte[] poisBuffer = new byte[sizePois];
-                    reader.Read(poisBuffer);
-
-                    int index = 0;
-                    for (int i = 0; i < numPois; i++)
-                    {
-                        int sizePoi = SaveHelper.LoadInt32(poisBuffer, ref index);
-                        int versionPoi = SaveHelper.LoadInt32(poisBuffer, ref index);
-
-                        if (versionPoi < PointOfInterest.MIN_VERSION)
-                            index += sizePoi;    //skip loading the rest of this point of interest
-                        else
-                        {
-                            PointOfInterest poi = new PointOfInterest();
-                            poi.OnLoad(poisBuffer, ref index, in versionPoi);
-                            info.pointsOfInterest.Add(poi);
-                        }
-                    }
-
-                    if (version >= 4)
-                    {
-                        //  hs: housing block
-                        //      h:
-                        //          s: size (int) of data block
-                        //          n: number of elements
-                        //      h: housing data blocks
-                        //          See HousingTasker.cs for serialization info
-                        int size = reader.ReadInt32();
-                        int num = reader.ReadInt32();
-
-                        byte[] bytes = new byte[size];
-                        reader.Read(bytes, 0, size);
-
-                        int offset = 0;
-                        for (int i = 0; i < num; i++)
-                        {
-                            Housing housing = new Housing();
-                            housing.OnLoad(bytes, ref offset);
-
-                            info.housings.Add(housing);
-                        }
+                        info.housings.Add(housing);
                     }
                 }
             }
-            
+
             return LoadError.Success;
         }
 

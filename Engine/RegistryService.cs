@@ -1,4 +1,5 @@
 ﻿using Engine.Mods;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ namespace ViMG
 		public BuffRegistry BuffRegistry;
 		public RendererRegistry RendererRegistry;
 		public WorldLogicRegistry WorldLogicRegistry;
+        public MessageRegistry MessageRegistry;
 
 		public RegistryService(GraphicsDevice? device)
 		{
@@ -35,6 +37,7 @@ namespace ViMG
             if (device != null)
 			    RendererRegistry = new RendererRegistry(device);
 			WorldLogicRegistry = new WorldLogicRegistry();
+            MessageRegistry = new MessageRegistry();
             this.device = device;
         }
 
@@ -47,6 +50,7 @@ namespace ViMG
 			BuffRegistry.RegisterAll();
 			RendererRegistry?.RegisterAll();
 			WorldLogicRegistry.RegisterAll();
+            MessageRegistry.RegisterAll();
 
 			RecipeRegistry.PostRegistration();
 

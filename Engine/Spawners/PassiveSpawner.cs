@@ -92,9 +92,10 @@ namespace ViMG.Spawners
             v = Vector3.Transform(v,
                 Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
             v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
-            // TODO MULTIPLAYER REFACTOR
-            // This should probably be a random player
-            v += world.player[world.localPlayerIndex].Position;
+            
+            Player? player = world.GetRandomPlayer();
+            if (player is not null)
+                v += player.Position;
 
             //TODO clamping to bounds can cause min to no longer be taken into account.
             v = spawnBounds.Clamp(v);

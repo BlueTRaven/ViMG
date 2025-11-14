@@ -52,13 +52,22 @@ namespace ViMG.GameStates
         public static int ProgressMin;
         public static int ProgressMax;
 
-        private NetworkManager netmanagerClient;
-        private NetworkManager netmanagerServer;
+        public NetworkManager? netManager;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
-            netmanagerServer = new NetworkManager(true);
-            netmanagerClient = new NetworkManager(false);
+            switch (manager.connectedType)
+            {
+                case GameStateManager.ConnectedType.Server:
+                    netManager = new NetworkManager(true);
+                    break;
+                case GameStateManager.ConnectedType.Client:
+                    netManager = new NetworkManager(false);
+                    break;
+                case GameStateManager.ConnectedType.Singleplayer:
+                default:
+                    break;
+            }
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -150,15 +159,13 @@ namespace ViMG.GameStates
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
-            netmanagerServer.Connect();
-            netmanagerClient.Connect();
+            netManager?.Connect();
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
-            netmanagerServer.Disconnect();
-            netmanagerClient.Disconnect();
+            netManager?.Disconnect();
 
             if (world != null)
             {
@@ -174,7 +181,7 @@ namespace ViMG.GameStates
 
             if (world == null)
             {
-                if (worldTask.IsCompleted)
+                if (worldTask != null && worldTask.IsCompleted)
                 {
                     world = worldTask.Result;
                     worldTask = null;
@@ -186,8 +193,7 @@ namespace ViMG.GameStates
                 world.Update(deltaTime);
             }
 
-            netmanagerServer.PollEvents();
-            netmanagerClient.PollEvents();
+            netManager?.PollEvents();
 
             base.Update(deltaTime);
         }
@@ -259,8 +265,6 @@ namespace ViMG.GameStates
             Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
             player.Position = playerSpawnPosition;
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-            worldInfoIO.Info.spawnPosition = player.Position;
-            worldInfoIO.Info.spawnLayer = 0;
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
                 prototype.WorldInfo.playerPositions[i] = player.Position;
@@ -295,6 +299,62 @@ namespace ViMG.GameStates
             ProfilingHelper.End("Done.");
 
             return world;
+        }
+
+        public void LoadNone()
+        {
+            // TODO: This should initialize an empty world.
+            //World world = new World()
+
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            const int SIZE_IN_CHUNKS = 32;
+            const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
+
+            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+
+            CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
+                new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
+            defaultPlayerSpawnLocation.X = spawnX;
+            defaultPlayerSpawnLocation.Z = spawnZ;
+            defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
+
+            ProfilingHelper.Start("Loading world...");
+            LoadMessage = "Loading World...";
+            var entityManager = new EntityManager();
+            var worldInfoIO = new WorldInfoIO();
+
+            LoadMessage = "Loading World...\n" +
+                "Reading from disk...";
+            var physicsInfo = new PhysicsInfo();
+
+            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+            // TODO MULTIPLAYER REFACTOR
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
+            var entIO = new EntityManagerIO(entityManager, 0);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var housingManager = new HousingManager();
+
+            var logic = CreateLayerLogic(0);
+
+            WorldPrototype prototype = new WorldPrototype(null, 0, entityManager, chunkManager, WorldInfoIO.WorldInfo.Empty, logic, new Skybox(), physicsInfo, housingManager);
+
+            var ChunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
+
+            LoadMessage = "Loading World...\n" +
+                "Deserializing...";
+
+            ProfilingHelper.End("World loading done.");
+
+            World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
+            world.InitMeshes(device);
+            prototype.Logic.Initialize(world);
+
+            this.world = world;
+            world.FinishLoading(device);
+
+            IsLoading = false;
         }
 
         public World LoadWorld(GraphicsDevice device, string worldName)

@@ -10,6 +10,13 @@ namespace ViMG.GameStates
 {
     public class GameStateManager
     {
+        public enum ConnectedType
+        {
+            Server, // Acting as host. Can play
+            Client, // Acting as client
+            Singleplayer, // Singleplayer. 
+        }
+
         private List<GameState> gameStates = new List<GameState>();
 
         public GameStateMainMenu MainMenu;
@@ -18,6 +25,8 @@ namespace ViMG.GameStates
         public bool Paused;
 
         private GameState currentGameState = null;
+
+        public ConnectedType connectedType = ConnectedType.Singleplayer;
 
         public virtual void Initialize()
         {

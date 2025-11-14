@@ -251,19 +251,22 @@ namespace ViMG
                 //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
-            foreach (Housing housing in world.WorldInfo.housings)
+            if (world.WorldInfo.housings != null)
             {
-                foreach (CubePosition pos in housing.interiorPositions)
+                foreach (Housing housing in world.WorldInfo.housings)
                 {
-                    Vector3 worldPos = pos.InWorldSpace();
-                    float distance = (worldPos - Main.camera.Position).Length();
-                    Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                        Matrix.CreateTranslation(worldPos);
+                    foreach (CubePosition pos in housing.interiorPositions)
+                    {
+                        Vector3 worldPos = pos.InWorldSpace();
+                        float distance = (worldPos - Main.camera.Position).Length();
+                        Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
+                            Matrix.CreateTranslation(worldPos);
 
-                    //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-                        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
-                        tintColor: Color.Green * 0.125f));
+                        //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+                        Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+                            new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
+                            tintColor: Color.Green * 0.125f));
+                    }
                 }
             }
         }
