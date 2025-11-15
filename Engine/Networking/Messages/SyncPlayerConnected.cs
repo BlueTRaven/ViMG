@@ -44,7 +44,7 @@ namespace Engine.Networking.Messages
             int numPlayers = reader.GetInt();
             for (int i = 0; i < numPlayers; i++)
                 GS.netManager.netPlayers.Add(reader.Get<NetworkManager.NetPlayer>());
-
+            Console.WriteLine("Our player id: {0}", whoAmI);
             GS.GetWorld().localPlayerIndex = whoAmI;
         }
     }

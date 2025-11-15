@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,7 +7,7 @@ using ViMG.Cubes;
 
 namespace ViMG
 {
-	public struct ChunkPosition
+	public struct ChunkPosition : INetSerializable
 	{
 		public int X;
 		public int Y;
@@ -68,7 +69,21 @@ namespace ViMG
 				   Z == position.Z;
 		}
 
-		public static bool operator ==(ChunkPosition first, ChunkPosition second)
+        public void Serialize(NetDataWriter writer)
+        {
+			writer.Put(X);
+            writer.Put(Y);
+            writer.Put(Z);
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+			X = reader.GetInt();
+            Y = reader.GetInt();
+            Z = reader.GetInt();
+        }
+
+        public static bool operator ==(ChunkPosition first, ChunkPosition second)
 		{
 			return first.X == second.X && first.Y == second.Y && first.Z == second.Z;
 		}

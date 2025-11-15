@@ -1,6 +1,7 @@
 ﻿using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -52,6 +53,32 @@ namespace ViMG
                     idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
                 }
             }
+        }
+
+        public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
+        {
+            Debug.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);
+
+            CubePosition basePosition = chunkPosition.InCubeSpace();
+
+            Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
+            fixed (CubePosition* queryPositionsPtr = queryPositions)
+            {
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                {
+                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                    {
+                        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                        {
+                            Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                            CubePosition pos = basePosition + new CubePosition(x, y, z);
+                            queryPositionsPtr[i] = pos;
+                        }
+                    }
+                }
+            }
+
+            GetIds(queryPositions, queryIds);
         }
 
         public Optional<Cube> GetCube(CubePosition position)

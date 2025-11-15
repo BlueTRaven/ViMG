@@ -486,10 +486,44 @@ namespace ViMG
 			return CopiedChunkPool.MakeCopy(copyContext.world, copyContext.pool, copyContext.position);
 		}
 
+		public void MarkDirty(ChunkPosition chunkPosition)
+		{
+			chunkMesher?.MarkChunkDirty(chunkPosition);
+        }
+
 		public void UpdateLoadTarget(Vector3 position)
 		{
 			this.loadTarget = position;
 		}
+
+		public void Unload(ChunkPosition chunkPosition)
+		{
+            Util.ThreeDToOneD(new ValuePoint3D(chunkPosition.X, chunkPosition.Y, chunkPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+
+            if (loadedChunks.TryGetValue(chunkPosition, out var loadingState) && loadingState == LoadingState.Loaded)
+            {
+                //chunkIO.SerializeChunk(chunks, pos);
+                //entIO.Serialize(chunkPosition);
+
+                entityManager.Unload(chunkPosition);
+                chunkMesher?.Unload(chunkPosition);
+            }
+
+            loadedChunksFastLookup[i] = LoadingState.Unloaded;
+            loadedChunks.Remove(chunkPosition);
+
+            hasChanged = true;
+
+            //chunkMesher?.RenderMesher.FinishFlush();
+            //chunkMesher?.CollisionMesher.FinishFlush();
+
+            //chunkMesher?.Unload(chunkPosition);
+
+            //Util.ThreeDToOneD(new ValuePoint3D(chunkPosition.X, chunkPosition.Y, chunkPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+
+            //loadedChunksFastLookup[i] = LoadingState.Unloaded;
+            //loadedChunks[chunkPosition] = LoadingState.Unloaded;
+        }
 
 		public void UnloadAll()
 		{

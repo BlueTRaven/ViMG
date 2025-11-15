@@ -18,6 +18,7 @@ namespace Engine.Networking.Messages
 
             Register(new SyncPlayerConnected());
             Register(new SyncAllWorldState());
+            Register(new SyncChunk());
         }
 
         public override void Register(Message obj)

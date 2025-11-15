@@ -604,15 +604,18 @@ namespace ViMG.Entities.Renderers
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
                 var drawPos = entity.Position - new Vector3(0, Cube.CUBE_SCALE * 1.5f, 0);
-                var distFromCam = (Main.camera.Position - drawPos).Length();
 
                 var color = Color.White;
 
-                if (distFromCam < Cube.CUBE_SCALE * 2f)
+                if (entity is Player player && player.IsLocalPlayer)
                 {
-                    var min = Cube.CUBE_SCALE * 1.5f;
-                    var max = Cube.CUBE_SCALE * 2f;
-                    color *= (distFromCam - min) / (max - min);
+                    var distFromCam = (Main.camera.Position - drawPos).Length();
+                    if (distFromCam < Cube.CUBE_SCALE * 2f)
+                    {
+                        var min = Cube.CUBE_SCALE * 1.5f;
+                        var max = Cube.CUBE_SCALE * 2f;
+                        color *= (distFromCam - min) / (max - min);
+                    }
                 }
 
                 cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats

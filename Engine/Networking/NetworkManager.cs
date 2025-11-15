@@ -1,4 +1,5 @@
-﻿using Engine.Networking.Messages;
+﻿using BepuPhysics.Constraints;
+using Engine.Networking.Messages;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -135,6 +136,7 @@ namespace Engine.Networking
         {
             if (isServer)
             {
+                var world = Main.gameStateManager.TheIsland.GetWorld();
                 int index = netPlayers.Count;
                 netPlayers.Add(new NetPlayer
                 {
@@ -144,12 +146,21 @@ namespace Engine.Networking
                 Player p = new Player();
                 p.playerIndex = index;
                 // TODO
-                p.FirstCreated(Main.gameStateManager.TheIsland.GetWorld().WorldInfo);
-                Main.gameStateManager.TheIsland.GetWorld().EntityManager.Add(p);
-                Main.gameStateManager.TheIsland.GetWorld().player[index] = p;
+                p.FirstCreated(world.WorldInfo);
+                world.EntityManager.Add(p);
+                world.player[index] = p;
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
-                Console.WriteLine("Peer connected from {0}:{1}. Player id: {2}", peer.Address, peer.Port, netPlayers[index].playerId);
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncChunk.Instance, netManager, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
+                foreach (var chunkPosition in world.ChunkLoadManager.GetLoaded())
+                {
+                    Main.Registry.MessageRegistry.SendMessageToAll(SyncChunk.Instance, netManager, chunkPosition);
+                }
+                Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
+            }
+            else
+            {
+                Console.WriteLine("Connected to server at {0}.", peer);
             }
         }
 
@@ -162,11 +173,17 @@ namespace Engine.Networking
                 int playerIndex = netPlayers[index].playerId;
                 Debug.Assert(world.localPlayerIndex != playerIndex);
                 Debug.Assert(world.player[playerIndex] != null);
-                Console.WriteLine("Peer {0}:{1} disconnected. Player id: {2}\nReason: {3}", peer.Address, peer.Port, playerIndex, disconnectInfo.ToString());
+                Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {1}", peer, playerIndex, disconnectInfo.ToString());
                 world.EntityManager.Remove(world.player[playerIndex]);
                 world.player[playerIndex] = null;
                 netPlayers.RemoveAt(index);
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
+            }
+            else
+            {
+                // Server has disconnected from us? We should go back to main menu.
+                Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.ToString());
+                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
             }
         }
     }
