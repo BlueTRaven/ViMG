@@ -596,17 +596,29 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsTestNPC : RendererOpaqueBillboardedEntity.TypeStats
         {
-            public TypeStatsTestNPC() : base("test_npc", typeof(TestNPC), new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
+            public TypeStatsTestNPC(Type type) : base(type.FullName, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
             {
             }
 
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
+                var drawPos = entity.Position - new Vector3(0, Cube.CUBE_SCALE * 1.5f, 0);
+                var distFromCam = (Main.camera.Position - drawPos).Length();
+
+                var color = Color.White;
+
+                if (distFromCam < Cube.CUBE_SCALE * 2f)
+                {
+                    var min = Cube.CUBE_SCALE * 1.5f;
+                    var max = Cube.CUBE_SCALE * 2f;
+                    color *= (distFromCam - min) / (max - min);
+                }
+
                 cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
                 {
-                    color = Color.White,
-                    position = entity.Position,
+                    color = color,
+                    position = drawPos,
                     scale = new Vector2(1, 2),
                     shouldDraw = true,
                 };
@@ -695,7 +707,8 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new TypeStatsSnake());
             renderer.registry.Register(new TypeStatsSnakeFlying());
             renderer.registry.Register(new TypeStatsStoneBeetle());
-            renderer.registry.Register(new TypeStatsTestNPC());
+            renderer.registry.Register(new TypeStatsTestNPC(typeof(TestNPC)));
+            renderer.registry.Register(new TypeStatsTestNPC(typeof(Player)));
             renderer.registry.Register(new TypeStatsLightStressTest());
             renderer.registry.Register(new TypeStatsWorm());
         }

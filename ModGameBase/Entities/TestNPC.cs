@@ -99,11 +99,10 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-            var shape = new Sphere(Cube.CUBE_SCALE / 2f);
-            physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shape);
-            physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(
-                BodyDescription.CreateDynamic(new RigidPose(Position.ToNumerics()), 
-                new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
+            var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
+            physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
+            physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
+                new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
         }
 
         public override void OnUnload()

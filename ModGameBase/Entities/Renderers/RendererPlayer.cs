@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,11 +29,16 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
         {
-            var player = renderedEntities[0] as Player;
-
-            if (player.inventory.Get(player.highlightIndex).item != null)
+            foreach (Entity ent in renderedEntities)
             {
-                player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
+                var player = ent as Player;
+                if (player.IsLocalPlayer)
+                {
+                    if (player.inventory.Get(player.highlightIndex).item != null)
+                    {
+                        player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
+                    }
+                }
             }
         }
     }
