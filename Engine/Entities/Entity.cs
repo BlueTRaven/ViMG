@@ -81,6 +81,8 @@ namespace ViMG.Entities
 
 		}
 
+		// TODO: List<byte> to something better. Maybe NetWriter?
+		// TODO: include a serialization context. World save or Net save
 		public virtual void OnSave(List<byte> saveBytes)
 		{
 

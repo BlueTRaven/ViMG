@@ -152,6 +152,8 @@ namespace ViMG
             stream.Write(new byte[remainingBytes]);
 
             stream.Write(allBytes);
+
+			Console.WriteLine("Wrote {0} bytes", stream.Length);
         }
 
 		public LoadError Load(string folderName)
@@ -191,6 +193,8 @@ namespace ViMG
 
 		public LoadError LoadFromStream(Stream stream)
 		{
+			Console.WriteLine("Reading {0} bytes", stream.Length);
+
             using (BinaryReader br = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 Version = br.ReadInt32();

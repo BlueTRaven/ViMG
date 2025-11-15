@@ -1,12 +1,15 @@
 ﻿using BrUtility;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using static ViMG.EntityManagerIO;
 
 namespace ViMG
 {
@@ -145,6 +148,8 @@ namespace ViMG
 			public byte[] header;
 			public byte[] data;
 
+			public bool IsValid => header != null && data != null;
+
 			public EntityData(Entity entity)
 			{
 				//e: entity data block
@@ -205,6 +210,63 @@ namespace ViMG
 				header = headerBlock.ToArray();
 				data = dataBlock.ToArray();
 			}
+
+			public void Save(List<byte> bytes)
+			{
+				SaveHelper.SaveInt32(bytes, header.Length + data.Length);
+				SaveHelper.SaveBytesFlat(bytes, header);
+                SaveHelper.SaveBytesFlat(bytes, data);
+            }
+
+			public void Load(byte[] entityDataBytes)
+			{
+				int edbI = 0;
+
+                int headerSize = SaveHelper.LoadInt32(entityDataBytes, ref edbI);
+                byte[] bytes = SaveHelper.LoadBytes(entityDataBytes, headerSize, ref edbI);
+
+                int index = 0;
+                ulong entId = SaveHelper.LoadUInt64(bytes, ref index);
+                string entType = SaveHelper.LoadString(bytes, ref index);
+
+                int cx = SaveHelper.LoadInt32(bytes, ref index);
+                int cy = SaveHelper.LoadInt32(bytes, ref index);
+                int cz = SaveHelper.LoadInt32(bytes, ref index);
+                ChunkPosition position = new ChunkPosition(cx, cy, cz);
+
+                int entVersion = SaveHelper.LoadInt32(bytes, ref index);
+                int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
+                int entChksum = SaveHelper.LoadInt32(bytes, ref index);
+
+                byte[] entHeader = bytes[..index];
+                byte[] entBody = bytes[index..];
+
+                if (entBody.Length != entDataSize)
+                {
+                    Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+                }
+
+                int chksum = 0;
+                for (int d = 0; d < entDataSize; d++)
+                    chksum += entBody[d];
+
+                if (entChksum != chksum)
+                {
+                    Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+                }
+                else
+                {
+                    id = entId;
+                    type = entType;
+                    this.position = position;
+                    size = entDataSize;
+                    this.chksum = chksum;
+                    version = entVersion;
+                    header = entHeader;
+
+					data = entBody;
+                }
+            }
 		}
 
 		private const int VERSION = 6;
@@ -583,6 +645,18 @@ namespace ViMG
 				default:
 					return true;
 			}
+		}
+
+		public void TestConsistency(Entity entity)
+		{
+			List<byte> bytes = new();
+			var entData = new EntityData(entity);
+			entData.Save(bytes);
+
+			var loadedEntData = new EntityData();
+			loadedEntData.Load(bytes.ToArray());
+
+			Debug.Assert(loadedEntData.IsValid);
 		}
 	}
 }

@@ -56,18 +56,6 @@ namespace ViMG.GameStates
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
-            switch (manager.connectedType)
-            {
-                case GameStateManager.ConnectedType.Server:
-                    netManager = new NetworkManager(true);
-                    break;
-                case GameStateManager.ConnectedType.Client:
-                    netManager = new NetworkManager(false);
-                    break;
-                case GameStateManager.ConnectedType.Singleplayer:
-                default:
-                    break;
-            }
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -159,6 +147,22 @@ namespace ViMG.GameStates
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
+
+            netManager?.Disconnect();
+
+            switch (manager.connectedType)
+            {
+                case GameStateManager.ConnectedType.Server:
+                    netManager = new NetworkManager(true);
+                    break;
+                case GameStateManager.ConnectedType.Client:
+                    netManager = new NetworkManager(false);
+                    break;
+                case GameStateManager.ConnectedType.Singleplayer:
+                default:
+                    break;
+            }
+
             netManager?.Connect();
         }
 

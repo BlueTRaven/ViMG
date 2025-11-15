@@ -10,11 +10,31 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.IMGUIImpl;
 
 namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener
     {
+        [ConsoleCommand("list_players", "lists currently connected players")]
+        public static void ListPlayers(string[] parameters)
+        {
+            var players = Main.gameStateManager.TheIsland?.netManager?.netPlayers;
+            if (players != null)
+            {
+                IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count));
+                foreach (NetPlayer player in players)
+                {
+                    if (player.playerId == Main.gameStateManager.TheIsland?.GetWorld()?.localPlayerIndex)
+                    {
+                        IMGUIConsole.LogLine(string.Format("\tId: {0} (local player)", player.playerId));
+                    }
+                    else IMGUIConsole.LogLine(string.Format("\tId: {0}", player.playerId));
+                }
+            }
+        }
+
+
         [Flags]
         public enum NetworkSide
         {
@@ -58,6 +78,11 @@ namespace Engine.Networking
             if (isServer)
             {
                 netManager.Start(9050);
+                netPlayers.Add(new NetPlayer
+                {
+                    playerId = 0,
+                    peerId = -1,
+                });
                 Console.WriteLine("Started server on port 9050");
             }
             else
@@ -110,13 +135,19 @@ namespace Engine.Networking
         {
             if (isServer)
             {
+                int index = netPlayers.Count;
                 netPlayers.Add(new NetPlayer
                 {
-                    playerId = netPlayers.Count,
+                    playerId = index,
                     peerId = peer.Id,
                 });
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, netPlayers.Count - 1);
-                //Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer);
+                Player p = new Player();
+                p.playerIndex = index;
+                Main.gameStateManager.TheIsland.GetWorld().EntityManager.Add(p);
+                Main.gameStateManager.TheIsland.GetWorld().player[index] = p;
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
+                Console.WriteLine("Peer connected from {0}:{1}. Player id: {2}", peer.Address, peer.Port, netPlayers[index].playerId);
             }
         }
 
@@ -124,8 +155,13 @@ namespace Engine.Networking
         {
             if (isServer)
             {
-                netPlayers.RemoveAt(netPlayers.FindIndex(x => x.peerId == peer.Id));
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, -1);
+                int index = netPlayers.FindIndex(x => x.peerId == peer.Id);
+                Console.WriteLine("Peer {0}:{1} disconnected. Player id: {2}\nReason: {3}", peer.Address, peer.Port, netPlayers[index].playerId, disconnectInfo.ToString());
+                netPlayers.RemoveAt(index);
+                var world = Main.gameStateManager.TheIsland.GetWorld();
+                world.EntityManager.Remove(world.player[index]);
+                world.player[index] = null;
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
             }
         }
     }

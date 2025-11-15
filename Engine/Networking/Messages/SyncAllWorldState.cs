@@ -2,6 +2,7 @@
 using LiteNetLib.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,18 +25,49 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(writer, addObj);
 
-            MemoryStream ms = new MemoryStream();
-            GS.GetWorld()?.ChunkIO.SaveToStream(ms);
-            writer.Put(ms.Length);
-            writer.PutBytesWithLength(ms.GetBuffer());
+            NetworkManager.NetPlayer sendTo = addObj as NetworkManager.NetPlayer? ?? throw new NullReferenceException();
+            writer.Put(0);
+            var playerEntityData = new EntityManagerIO.EntityData(GS.GetWorld().player[sendTo.playerId]);
+            List<byte> bytes = new List<byte>();
+            playerEntityData.Save(bytes);
+            writer.PutArray(bytes.ToArray(), sizeof(byte));
+            writer.Put(-1);
+            //MemoryStream ms = new MemoryStream();
+            //GS.GetWorld()?.ChunkIO.SaveToStream(ms);
+            //int len = (int)ms.Length;
+            //writer.Put(len);
+            //writer.PutBytesWithLength(ms.GetBuffer(), 0, len);
         }
 
         public override void ReceiveMessage(NetPacketReader reader)
         {
             base.ReceiveMessage(reader);
 
-            var len = reader.GetInt();
-            reader.GetBytes(GS.GetWorld().ChunkIO.GetBytes(), len);
+            GS.GetWorld().ChunkLoadManager.UnloadAll();
+            //var len = reader.GetInt();
+            //reader.GetBytes(GS.GetWorld().ChunkIO.GetBytes(), len);
+            int section = reader.GetInt();
+            while (section != -1)
+            {
+                if (section == 0)
+                {
+                    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                    EntityManagerIO.EntityData data = new();
+                    data.Load(bytes);
+                    if (data.IsValid)
+                    {
+                        Player p = new Player();
+                        p.playerIndex = GS.GetWorld().localPlayerIndex;
+                        p.OnLoad(data.data, data.version);
+
+                        GS.GetWorld().EntityManager.Add(p);
+                        GS.GetWorld().player[GS.GetWorld().localPlayerIndex] = p;
+                        GS.GetWorld().ChunkLoadManager.UpdateLoadTarget(p.Position);
+                        GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
+                    }
+                }
+                section = reader.GetInt();
+            }
         }
     }
 }

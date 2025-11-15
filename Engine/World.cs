@@ -53,7 +53,7 @@ namespace ViMG
 		public Color WeatherSkyboxColor;
 
 		public const int MAX_PLAYERS = 4;
-		public Player[] player = new Player[4];
+		public Player?[] player = new Player[4];
 		public int localPlayerIndex;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
@@ -140,7 +140,8 @@ namespace ViMG
 			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
 			
-			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
+			if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
+				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 		}
 
 		public void InitMeshes(GraphicsDevice device)
@@ -305,6 +306,7 @@ namespace ViMG
 
 		public void Update(double deltaTime)
 		{
+			//EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
             deltaTime *= TimeScale;
@@ -406,7 +408,7 @@ namespace ViMG
 				else randomUpdatesTimer -= (float)deltaTime;
 			}
 
-			PassiveSpawnerManager.Update(deltaTime, this);
+			PassiveSpawnerManager?.Update(deltaTime, this);
 
 			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
 

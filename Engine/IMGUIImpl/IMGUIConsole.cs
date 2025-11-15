@@ -163,6 +163,16 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        [ConsoleCommand("list_vars", "List console variables.")]
+        public static void ListVars(string[] parameters)
+        {
+            foreach (var v in vars)
+            {
+                LogLine(v.Item2.name);
+                LogLine("\t" + v.Item2.description);
+            }
+        }
+
         [ConsoleCommand("get", "Get the value of a console variable.")]
         public static void Get(string[] parameters)
         {
