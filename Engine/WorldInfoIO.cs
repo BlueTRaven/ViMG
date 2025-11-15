@@ -119,7 +119,7 @@ namespace ViMG
         public const string FILE_NAME_WINFO = "winfo";
         public const string EXT_WINFO = ".vis";
 
-        private const int VERSION = 4;
+        private const int VERSION = 5;
         private const int MIN_VERSION = 0;
 
         public int Version;
@@ -210,8 +210,15 @@ namespace ViMG
             SaveHelper.SaveFloat32(bytes, info.time); //wi-t
 
             SaveHelper.SaveInt32(bytes, info.furthestLayer);
-            SaveHelper.SaveVector3(bytes, info.playerPositions[0]);
-            SaveHelper.SaveInt32(bytes, info.playerLayers[0]);
+
+            for (int i = 0; i < info.playerPositions.Length; i++)
+            {
+                SaveHelper.SaveVector3(bytes, info.playerPositions[i]);
+                SaveHelper.SaveInt32(bytes, info.playerLayers[i]);
+            }
+            SaveHelper.SaveVector3(bytes, info.spawnPosition);
+            SaveHelper.SaveInt32(bytes, info.spawnLayer);
+
             info.flags.OnSave(bytes);
 
             List<byte> poisBlock = new List<byte>();    //wi-pois
@@ -318,14 +325,26 @@ namespace ViMG
 
                 if (version >= 1)
                 {
-                    info.playerPositions[0].X = reader.ReadSingle();
-                    info.playerPositions[0].Y = reader.ReadSingle();
-                    info.playerPositions[0].Z = reader.ReadSingle();
-                }
-
-                if (version >= 2)
-                {
-                    info.playerLayers[0] = reader.ReadInt32();
+                    if (version <= 4)
+                    {
+                        info.playerPositions[0].X = reader.ReadSingle();
+                        info.playerPositions[0].Y = reader.ReadSingle();
+                        info.playerPositions[0].Z = reader.ReadSingle();
+                    } 
+                    else
+                    {
+                        for (int i = 0; i < info.playerPositions.Length; i++)
+                        {
+                            info.playerPositions[i].X = reader.ReadSingle();
+                            info.playerPositions[i].Y = reader.ReadSingle();
+                            info.playerPositions[i].Z = reader.ReadSingle();
+                            info.playerLayers[i] = reader.ReadInt32();
+                        }
+                        info.spawnPosition.X = reader.ReadSingle();
+                        info.spawnPosition.Y = reader.ReadSingle();
+                        info.spawnPosition.Z = reader.ReadSingle();
+                        info.spawnLayer = reader.ReadInt32();
+                    }
                 }
 
                 if (version >= 3)

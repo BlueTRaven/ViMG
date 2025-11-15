@@ -143,6 +143,8 @@ namespace Engine.Networking
                 });
                 Player p = new Player();
                 p.playerIndex = index;
+                // TODO
+                p.FirstCreated(Main.gameStateManager.TheIsland.GetWorld().WorldInfo);
                 Main.gameStateManager.TheIsland.GetWorld().EntityManager.Add(p);
                 Main.gameStateManager.TheIsland.GetWorld().player[index] = p;
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);

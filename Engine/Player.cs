@@ -315,9 +315,12 @@ namespace ViMG
             Health = MaxHealth / 4;
         }
 
-		public void FirstCreated()
+		public void FirstCreated(WorldInfoIO.WorldInfo worldInfo)
 		{
-			Main.Registry.ModRegistry.AddSpawnInventoryItems(inventory);
+			SpawnPosition = CubePosition.FromWorldSpace(worldInfo.spawnPosition);
+            Position = worldInfo.spawnPosition;
+
+            Main.Registry.ModRegistry.AddSpawnInventoryItems(inventory);
 		}
 
         public override void Initialize(World world)
@@ -420,8 +423,11 @@ namespace ViMG
 			hasMoved = false;
 			hasRotated = false;
 
-			if (Main.inputManager.JustPressed(Keys.G))
-				Main.Debug = !Main.Debug;
+			if (IsLocalPlayer)
+			{
+				if (Main.inputManager.JustPressed(Keys.G))
+					Main.Debug = !Main.Debug;
+			}
 
 			if (Main.Debug)
 				state = State.Noclip;

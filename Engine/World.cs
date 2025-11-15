@@ -567,7 +567,7 @@ namespace ViMG
 
 			for (int i = 0; i < MAX_PLAYERS; i++)
 			{
-				WorldInfo.playerPositions[i] = player[i].Position;
+				WorldInfo.playerPositions[i] = player[i]?.Position ?? WorldInfo.spawnPosition;
 				WorldInfo.playerLayers[i] = Layer;
 			}
 				

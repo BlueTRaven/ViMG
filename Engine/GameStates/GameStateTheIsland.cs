@@ -255,6 +255,15 @@ namespace ViMG.GameStates
 
             ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
+            Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                prototype.WorldInfo.playerPositions[i] = playerSpawnPosition;
+                prototype.WorldInfo.playerLayers[i] = 0;
+            }
+            prototype.WorldInfo.spawnPosition = playerSpawnPosition;
+            prototype.WorldInfo.spawnLayer = 0;
+
             ProfilingHelper.Start("Saving Chunks...");
             chunkIO.Save(worldName);
 
@@ -263,17 +272,11 @@ namespace ViMG.GameStates
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
             var player = new Player();
-            player.FirstCreated();
+            player.FirstCreated(worldInfo);
             prototype.EntityManager.Add(player, true);
 
-            Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
             player.Position = playerSpawnPosition;
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-            for (int i = 0; i < World.MAX_PLAYERS; i++)
-            {
-                prototype.WorldInfo.playerPositions[i] = player.Position;
-                prototype.WorldInfo.playerLayers[i] = 0;
-            }
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             if (!Main.IsHeadless)
