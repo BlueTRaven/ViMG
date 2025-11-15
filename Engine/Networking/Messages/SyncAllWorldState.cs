@@ -73,7 +73,6 @@ namespace Engine.Networking.Messages
 
                         GS.GetWorld().EntityManager.Add(p);
                         GS.GetWorld().player[GS.GetWorld().localPlayerIndex] = p;
-                        GS.GetWorld().ChunkLoadManager.UpdateLoadTarget(p.Position);
                         GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
                     }
                 }

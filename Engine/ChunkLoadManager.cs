@@ -2,11 +2,13 @@
 using BepuUtilities.Memory;
 using BrUtility.Ported;
 using Engine.ChunkStuff;
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D11;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -35,16 +37,16 @@ namespace ViMG
 		private readonly ChunkManagerIO chunkIO;
         private readonly EntityManagerIO entIO;
 		private LoadingState[] loadedChunksFastLookup;
+		private bool[][] loadedChunksAttribution = new bool[World.MAX_PLAYERS][];
 		private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
 		private IEnumerable<ChunkPosition> gettableLoadedChunks;
+		private IEnumerable<ChunkPosition>[] gettableLoadedChunksPlayer = new IEnumerable<ChunkPosition>[World.MAX_PLAYERS];
 
 		private bool hasChanged = false;
 
 		private const float DISTANCE_UNLOAD_CHECK_TIME = 4;
 		private float distanceUnloadCheckTimer;
-
-		private Vector3 loadTarget;
 
 		private struct QueuedChunk
 		{
@@ -69,6 +71,12 @@ namespace ViMG
 			ThreadPool.SetMaxThreads(8, 8);
 
 			loadedChunksFastLookup = new LoadingState[chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ];
+			for (int i = 0; i < World.MAX_PLAYERS; i++) 
+			{
+				loadedChunksAttribution[i] = new bool[chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ * chunkManager.SizeInChunksXZ];
+				//Array.Fill(loadedChunksAttribution[i], false);
+			}
+
 			this.chunkMesher = chunkMesher;
 			this.chunkManager = chunkManager;
 			this.entityManager = entityManager;
@@ -94,7 +102,22 @@ namespace ViMG
 			}
 
 			if (hasChanged)
+			{
 				gettableLoadedChunks = loadedChunks.Keys;
+				for (int i = 0; i < World.MAX_PLAYERS; i++)
+				{
+					var list = new List<ChunkPosition>();
+					for (int j = 0; j < loadedChunksAttribution[i].Length; j++)
+					{
+						if (loadedChunksAttribution[i][j])
+						{
+							Util.OneDToThreeD(j, new ValuePoint3D(world.sizeInChunks), out var point);
+							list.Append(new ChunkPosition(point.x, point.y, point.z));
+						}
+					}
+                    gettableLoadedChunksPlayer[i] = list;
+				}
+			}
 
 			hasChanged = false;
 		}
@@ -105,6 +128,11 @@ namespace ViMG
 				gettableLoadedChunks = loadedChunks.Keys;
 			return gettableLoadedChunks;
         }
+
+		public IEnumerable<ChunkPosition> GetLoaded(int playerId)
+		{
+			return gettableLoadedChunksPlayer[playerId];
+		}
 
 		public bool IsLoaded(ChunkPosition position)
         {
@@ -156,6 +184,10 @@ namespace ViMG
                 Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position.X, queuedChunk.position.Y, queuedChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 				loadedChunks[queuedChunk.position] = LoadingState.Loaded;
 				loadedChunksFastLookup[i] = LoadingState.Loaded;
+				//for (int j = 0; j < World.MAX_PLAYERS; j++) 
+				//{
+				//	loadedChunksAttribution[j][i] = -1;
+				//}
 
 				hasChanged = true;
 				//Chunk has been told to unload before we got to it.
@@ -316,136 +348,194 @@ namespace ViMG
 			}
 		}
 
-		public unsafe void LoadAroundTarget(World world, int iteration = 4, int? tempRenderDistance = null)
+		// Forcibly loads around the target.
+		// Always attributed to local player. Use for singleplayer and server only.
+		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client)
+				Debug.Assert(false);
 
-            ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(loadTarget);
+            int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
 
-			//ProfilingHelper.StartBatch("Beginning load around target...");
-
-			int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
-
-			List<(ChunkPosition, Task<CopiedChunkData>)> things = new List<(ChunkPosition, Task<CopiedChunkData>)>();
-
-			int minx = 0;
-			int maxx = 0;
-			int minz = 0;
-			int maxz = 0;
-
-			if (iteration == 0)
-			{
-				minx = -useRenderDistance;
-				maxx = 0;
-				minz = -useRenderDistance;
-				maxz = 0;
-			}
-			else if (iteration == 1)
-			{
-				minx = 0;
-				maxx = useRenderDistance;
-				minz = -useRenderDistance;
-				maxz = 0;
-			}
-			else if (iteration == 2)
-			{
-				minx = 0;
-				maxx = useRenderDistance;
-				minz = 0;
-				maxz = useRenderDistance;
-			}
-			else if (iteration == 3)
-			{
-                minx = -useRenderDistance;
-                maxx = 0; 
-				minz = 0;
-                maxz = useRenderDistance;
-            }
-			else if (iteration == 4)
-			{
-				minx = -useRenderDistance;
-				maxx = useRenderDistance;
-				minz = -useRenderDistance;
-				maxz = useRenderDistance;
-			}
+            int minx = -useRenderDistance;
+            int maxx = useRenderDistance;
+            int minz = -useRenderDistance;
+            int maxz = useRenderDistance;
 
             for (int z = minz; z < maxz; z++)
-			{
-				for (int y = -useRenderDistance; y <= useRenderDistance; y++)
-				{
-					for (int x = minx; x <= maxx; x++)
-					{
-						var pos = baseChunkPos + new ChunkPosition(x, y, z);
+            {
+                for (int y = -useRenderDistance; y <= useRenderDistance; y++)
+                {
+                    for (int x = minx; x <= maxx; x++)
+                    {
+                        var pos = target + new ChunkPosition(x, y, z);
 
-						Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
-						
-						if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
-						{
+                        Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(target.X, target.Z);
+
+                        if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
+                        {
                             Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-                            bool shouldLoad = false;
-							if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
-							{
-								shouldLoad = true;
-							}
-
-							//if (!loadedChunks.ContainsKey(pos))
-							//{
-							//	loadedChunks.Add(pos, LoadingState.Loading);
-							//	shouldLoad = true;
-							//}
-							//else if (loadedChunks[pos] == LoadingState.Unloaded)
-							//{
-							//	shouldLoad = true;
-							//}
-
-							if (shouldLoad)
-							{
+                            if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
+                            {
                                 if (!loadedChunks.ContainsKey(pos))
                                 {
                                     loadedChunks.Add(pos, LoadingState.Enqueued);
-                                } else loadedChunks[pos] = LoadingState.Enqueued;
+                                }
+                                else loadedChunks[pos] = LoadingState.Enqueued;
 
-								loadedChunksFastLookup[i] = LoadingState.Enqueued;
+                                loadedChunksFastLookup[i] = LoadingState.Enqueued;
+                                loadedChunksAttribution[world.localPlayerIndex][i] = true;
 
-								var context = new CopyChunkTaskContext {
-									world = world,
-									pool = chunkMesher.bufferPool,
-									position = pos,
-								};
-								var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
-								// NOTE: tasks are not immediately started.
-								queue.EnqueueWithoutSorting(new QueuedChunk
-								{
-									copyTask = task,
-									position = pos,
-								});
+                                var context = new CopyChunkTaskContext
+                                {
+                                    world = world,
+                                    pool = chunkMesher.bufferPool,
+                                    position = pos,
+                                };
+                                var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
+                                // NOTE: tasks are not immediately started.
+                                queue.EnqueueWithoutSorting(new QueuedChunk
+                                {
+                                    copyTask = task,
+                                    position = pos,
+                                });
 
-								hasChanged = true;
-
+                                hasChanged = true;
                             }
                         }
-					}
-				}
-			}
+                    }
+                }
+            }
+        }
 
-			//foreach ((ChunkPosition pos, Task<CopiedChunkData> task) thing in things)
-			//{
-			//	thing.task.Wait();
-			//	CopiedChunkData copy = thing.task.Result;
-   //             chunkManager.RenderMesher.AddToNextBatch(world, thing.pos, copy);
-   //             chunkManager.CollisionMesher.AddToNextBatch(world, thing.pos, copy);
-			//}
+		public unsafe void LoadAroundTarget(World world, int iteration = 4, int? tempRenderDistance = null)
+		{
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            //ProfilingHelper.EndBatch("Done.");
+            int minx = 0;
+            int maxx = 0;
+            int minz = 0;
+            int maxz = 0;
 
-            var zoneUnload = TracyImpl.Tracy.BeginZone(name: "Unload");
-            foreach (ChunkPosition pos in loadedChunks.Keys)
+            int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
+
+            if (iteration == 0)
+            {
+                minx = -useRenderDistance;
+                maxx = 0;
+                minz = -useRenderDistance;
+                maxz = 0;
+            }
+            else if (iteration == 1)
+            {
+                minx = 0;
+                maxx = useRenderDistance;
+                minz = -useRenderDistance;
+                maxz = 0;
+            }
+            else if (iteration == 2)
+            {
+                minx = 0;
+                maxx = useRenderDistance;
+                minz = 0;
+                maxz = useRenderDistance;
+            }
+            else if (iteration == 3)
+            {
+                minx = -useRenderDistance;
+                maxx = 0;
+                minz = 0;
+                maxz = useRenderDistance;
+            }
+            else if (iteration == 4)
+            {
+                minx = -useRenderDistance;
+                maxx = useRenderDistance;
+                minz = -useRenderDistance;
+                maxz = useRenderDistance;
+            }
+
+            foreach (Player? player in world.player)
 			{
-				Vector2 dist = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
+				if (player == null) continue;
+                // We don't care about players other than the local one if we're a client
+                if (!player.IsLocalPlayer && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client) continue;
 
-				float len = dist.Length();
+                ChunkPosition target = ChunkPosition.WorldSpaceChunk(player.Position);
 
-				if (len > Options.RenderDistance + 2)
+                for (int z = minz; z < maxz; z++)
+                {
+                    for (int y = -useRenderDistance; y <= useRenderDistance; y++)
+                    {
+                        for (int x = minx; x <= maxx; x++)
+                        {
+                            var pos = target + new ChunkPosition(x, y, z);
+
+                            Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(target.X, target.Z);
+
+                            if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
+                            {
+                                Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                                if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
+                                {
+                                    if (!loadedChunks.ContainsKey(pos))
+                                    {
+                                        loadedChunks.Add(pos, LoadingState.Enqueued);
+                                    }
+                                    else loadedChunks[pos] = LoadingState.Enqueued;
+
+                                    loadedChunksFastLookup[i] = LoadingState.Enqueued;
+                                    loadedChunksAttribution[player.playerIndex][i] = true;
+
+                                    var context = new CopyChunkTaskContext
+                                    {
+                                        world = world,
+                                        pool = chunkMesher.bufferPool,
+                                        position = pos,
+                                    };
+                                    var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
+                                    // NOTE: tasks are not immediately started.
+                                    queue.EnqueueWithoutSorting(new QueuedChunk
+                                    {
+                                        copyTask = task,
+                                        position = pos,
+                                    });
+
+                                    hasChanged = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+			var zoneUnload = TracyImpl.Tracy.BeginZone(name: "Unload");
+			foreach (ChunkPosition pos in loadedChunks.Keys)
+			{
+				bool remove = true;
+
+				foreach (Player? player in world.player)
+				{
+					if (player == null) continue;
+					// We don't care about players other than the local one if we're a client
+					if (!player.IsLocalPlayer && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client) continue;
+
+                    ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(player.Position);
+
+                    Vector2 dist = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
+
+					float len = dist.Length();
+
+					if (len < Options.RenderDistance + 2)
+						remove = false;
+					else
+                    {
+                        Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+						loadedChunksAttribution[player.playerIndex][i] = false;
+                    }
+                }
+
+				if (remove)
 					unloadChunks.Add(pos);
 			}
 
@@ -459,7 +549,7 @@ namespace ViMG
 					entIO.Serialize(pos);
 
 					entityManager.Unload(pos);
-                    chunkMesher?.Unload(pos);
+					chunkMesher?.Unload(pos);
 				}
 
 				loadedChunksFastLookup[i] = LoadingState.Unloaded;
@@ -491,11 +581,6 @@ namespace ViMG
 			chunkMesher?.MarkChunkDirty(chunkPosition);
         }
 
-		public void UpdateLoadTarget(Vector3 position)
-		{
-			this.loadTarget = position;
-		}
-
 		public void Unload(ChunkPosition chunkPosition)
 		{
             Util.ThreeDToOneD(new ValuePoint3D(chunkPosition.X, chunkPosition.Y, chunkPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
@@ -511,6 +596,8 @@ namespace ViMG
 
             loadedChunksFastLookup[i] = LoadingState.Unloaded;
             loadedChunks.Remove(chunkPosition);
+			for (int j = 0; j < World.MAX_PLAYERS; j++)
+				loadedChunksAttribution[j][i] = false;
 
             hasChanged = true;
 

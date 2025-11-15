@@ -272,25 +272,25 @@ namespace ViMG
 				player[p.playerIndex] = p;
 			}
 
-			if (player.All(x => x == null))
-			{
-				//If we didn't manage to find the player using the new method, fall back to the old method.
-				//This deserializes the player manually then loads the chunks around them.
-				//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
-				//TODO obsolete/deprecated
-				EntIO.DeserializePlayerChunk();
-                foreach (Player p in EntityManager.GetAll<Player>())
-                {
-                    player[p.playerIndex] = p;
-                }
+			// TODO: do we need this?
+			//if (player.All(x => x == null))
+			//{
+			//	//If we didn't manage to find the player using the new method, fall back to the old method.
+			//	//This deserializes the player manually then loads the chunks around them.
+			//	//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
+			//	//TODO obsolete/deprecated
+			//	EntIO.DeserializePlayerChunk();
+   //             foreach (Player p in EntityManager.GetAll<Player>())
+   //             {
+   //                 player[p.playerIndex] = p;
+   //             }
 
-				if (GetLocalPlayer() != null)
-				{
-					ChunkLoadManager.UpdateLoadTarget(GetLocalPlayer().Position);
-					ChunkLoadManager.LoadAroundTarget(this);
-					ChunkLoadManager.FlushLoadQueue(this);
-				}
-			}
+			//	if (GetLocalPlayer() != null)
+			//	{
+			//		ChunkLoadManager.LoadAroundTarget(this);
+			//		ChunkLoadManager.FlushLoadQueue(this);
+			//	}
+			//}
 
 			if (GetLocalPlayer() != null)
 				Main.camera.Position = GetLocalPlayer().Position;
@@ -312,9 +312,6 @@ namespace ViMG
             deltaTime *= TimeScale;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
-
-			if (GetLocalPlayer() != null)
-				ChunkLoadManager.UpdateLoadTarget(GetLocalPlayer().Position);
 
 			alive += (float)deltaTime;
 
@@ -513,7 +510,6 @@ namespace ViMG
 					WorldInfo.playerLayers[localPlayerIndex] = loadedWorld.Layer;
 					WorldInfo.playerPositions[localPlayerIndex] = loadedWorld.player[localPlayerIndex].Position;
 
-					loadedWorld.ChunkLoadManager.UpdateLoadTarget(player[localPlayerIndex].Position);
 					loadedWorld.ChunkLoadManager.LoadAroundTarget(loadedWorld);
 
 					//Finally, tell the ChunkLoadManager to actually load the things.

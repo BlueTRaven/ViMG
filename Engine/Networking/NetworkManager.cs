@@ -149,6 +149,7 @@ namespace Engine.Networking
                 p.FirstCreated(world.WorldInfo);
                 world.EntityManager.Add(p);
                 world.player[index] = p;
+                world.ChunkLoadManager.LoadAroundTarget(world);
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncChunk.Instance, netManager, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
