@@ -251,6 +251,7 @@ namespace ViMG
 		public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
 		public MenuPlayer menuPlayer;
+		public int highlightIndex;
 
 		public int Health;
 		public int MaxHealth = 20;
@@ -274,7 +275,7 @@ namespace ViMG
 
 		public int playerIndex;
 		public bool IsLocalPlayer =>
-            Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Client || playerIndex == world.localPlayerIndex;
+            Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		public Player()
 		{
@@ -308,8 +309,8 @@ namespace ViMG
 			craftInventory = deadPlayer.craftInventory;
             Currency = deadPlayer.Currency;
 
-            SpawnPosition = CubePosition.FromWorldSpace(world.WorldInfo.spawnPosition);
-            Position = world.WorldInfo.spawnPosition;
+            SpawnPosition = CubePosition.FromWorldSpace(deadPlayer.world.WorldInfo.spawnPosition);
+            Position = deadPlayer.world.WorldInfo.spawnPosition;
 
             Health = MaxHealth / 4;
         }
@@ -348,12 +349,15 @@ namespace ViMG
 
 			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
-			menuPlayer = new MenuPlayer(Main.gameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
-			menuPlayer.Close();
-			Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
-			if (!Main.IsHeadless)
+			if (IsLocalPlayer)
 			{
-				menuPlayer.LoadContent();
+				menuPlayer = new MenuPlayer(Main.gameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
+				menuPlayer.Close();
+				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
+				if (!Main.IsHeadless)
+				{
+					menuPlayer.LoadContent();
+				}
 			}
 
 			//If we loaded the time of day, set the world's time of day to it.
@@ -603,70 +607,74 @@ namespace ViMG
 				}
 			}
 
-			if (Main.inputManager.JustPressed(Keys.F3))
+			if (IsLocalPlayer)
 			{
-				Main.DebugChunks = !Main.DebugChunks;
-			}
-
-			if (Main.inputManager.JustPressed(Keys.E))
-			{
-				if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-                    Main.gameStateManager.GetCurrentGameState().PopMenu();
-				else menuPlayer.Toggle();
-			}
-
-			if (useTimer <= 0)
-			{
-				int oldHighlight = menuPlayer.HighlightIndex;
-				if (Main.inputManager.JustPressed(Keys.D1))
+				if (Main.inputManager.JustPressed(Keys.F3))
 				{
-					menuPlayer.HighlightIndex = 0;
+					Main.DebugChunks = !Main.DebugChunks;
 				}
 
-				if (Main.inputManager.JustPressed(Keys.D2))
+				if (Main.inputManager.JustPressed(Keys.E))
 				{
-					menuPlayer.HighlightIndex = 1;
+					if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+						Main.gameStateManager.GetCurrentGameState().PopMenu();
+					else menuPlayer.Toggle();
 				}
 
-				if (Main.inputManager.JustPressed(Keys.D3))
+				if (useTimer <= 0)
 				{
-					menuPlayer.HighlightIndex = 2;
-				}
-
-				if (Main.inputManager.JustPressed(Keys.D4))
-				{
-					menuPlayer.HighlightIndex = 3;
-				}
-
-				if (Main.inputManager.JustPressed(Keys.D5))
-				{
-					menuPlayer.HighlightIndex = 4;
-				}
-
-				if (Main.inputManager.JustPressed(Keys.D6))
-				{
-					menuPlayer.HighlightIndex = 5;
-				}
-
-				if (Main.inputManager.JustPressed(Keys.D7))
-				{
-					menuPlayer.HighlightIndex = 6;
-				}
-
-				if (Main.inputManager.JustPressed(Keys.D8))
-				{
-					menuPlayer.HighlightIndex = 7;
-				}
-
-				if (oldHighlight != menuPlayer.HighlightIndex)
-				{
-					if (inventory.Get(oldHighlight).valid)
+					int oldHighlight = menuPlayer.HighlightIndex;
+					if (Main.inputManager.JustPressed(Keys.D1))
 					{
-						inventory.Get(oldHighlight).item.EndHold(this, inventory, menuPlayer.HighlightIndex);
-
-						if (inventory.Get(menuPlayer.HighlightIndex).valid)
-							inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
+						menuPlayer.HighlightIndex = 0;
 					}
+
+					if (Main.inputManager.JustPressed(Keys.D2))
+					{
+						menuPlayer.HighlightIndex = 1;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D3))
+					{
+						menuPlayer.HighlightIndex = 2;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D4))
+					{
+						menuPlayer.HighlightIndex = 3;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D5))
+					{
+						menuPlayer.HighlightIndex = 4;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D6))
+					{
+						menuPlayer.HighlightIndex = 5;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D7))
+					{
+						menuPlayer.HighlightIndex = 6;
+					}
+
+					if (Main.inputManager.JustPressed(Keys.D8))
+					{
+						menuPlayer.HighlightIndex = 7;
+					}
+
+					if (oldHighlight != menuPlayer.HighlightIndex)
+					{
+						if (inventory.Get(oldHighlight).valid)
+						{
+							inventory.Get(oldHighlight).item.EndHold(this, inventory, menuPlayer.HighlightIndex);
+
+							if (inventory.Get(menuPlayer.HighlightIndex).valid)
+								inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
+						}
+					}
+					highlightIndex = menuPlayer.HighlightIndex;
 				}
 			}
 
@@ -675,8 +683,11 @@ namespace ViMG
 				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, world));
 			}*/
 
-			if (inventory.Get(menuPlayer.HighlightIndex).valid)
-				inventory.Get(menuPlayer.HighlightIndex).item.Hold(this, inventory, menuPlayer.HighlightIndex);
+			if (IsLocalPlayer)
+				highlightIndex = menuPlayer.HighlightIndex;
+			
+			if (inventory.Get(highlightIndex).valid)
+				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);
 
 			// TODO: this should use rotation instead of camera
 			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
@@ -722,9 +733,11 @@ namespace ViMG
 
 			//currentUI.Update(null, deltaTime);
 			if (IsLocalPlayer)
+			{
 				UpdateMouse();
 
-			UpdateThrowItem();
+				UpdateThrowItem();
+			}
 
             hitboxTimer -= (float)deltaTime;
 
@@ -1231,8 +1244,8 @@ namespace ViMG
             {
                 if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
                 {
-                    if (inventory.Get(menuPlayer.HighlightIndex).item != null && 
-						inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, 
+                    if (inventory.Get(highlightIndex).item != null && 
+						inventory.Get(highlightIndex).item.LeftClick(this, inventory, highlightIndex, 
 						-Main.camera.Forward, out ActionStats actionStats))
                         PerformAction(actionStats);
 					else
@@ -1269,8 +1282,8 @@ namespace ViMG
                         }
                     }
 
-					if (!performedAction && inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item
-						.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out ActionStats actionStats))
+					if (!performedAction && inventory.Get(highlightIndex).item != null && inventory.Get(highlightIndex).item
+						.RightClick(this, inventory, highlightIndex, -Main.camera.Forward, out ActionStats actionStats))
 					{
 						PerformAction(actionStats);
 						performedAction = true;
@@ -1569,7 +1582,7 @@ namespace ViMG
 			for (int i = 0; i < accessoryInventory.NumSlots; i++)
             {
 				if (accessoryInventory.Get(i).valid)
-					accessoryInventory.Get(i).item.OnAttack(this, inventory, menuPlayer.HighlightIndex);
+					accessoryInventory.Get(i).item.OnAttack(this, inventory, highlightIndex);
             }
 
 			actionStats.useTime -= (actionStats.useTime * speedScale);
@@ -1639,10 +1652,10 @@ namespace ViMG
 		{
 			lookAtMaterial = StaticMaterials.Cubes;
 
-            if (inventory.Get(menuPlayer.HighlightIndex).item != null)
+            if (inventory.Get(highlightIndex).item != null)
 			{
 				// TODO use Rotation
-				inventory.Get(menuPlayer.HighlightIndex).item.DrawInHand(device, inventory.Get(menuPlayer.HighlightIndex), this, -Main.camera.Forward);
+				inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -Main.camera.Forward);
 			}
 
 			if (mesh.IBO == null)
@@ -1690,9 +1703,9 @@ namespace ViMG
 				Color color = Color.Lerp(Color.White, Color.Black, s);
 
 				if (ExpandedMineState && 
-					inventory.Get(menuPlayer.HighlightIndex).valid && inventory.Get(menuPlayer.HighlightIndex).item is IHasAreaEffect pickStats)
+					inventory.Get(highlightIndex).valid && inventory.Get(highlightIndex).item is IHasAreaEffect pickStats)
 				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(menuPlayer.HighlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
+					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[positions.Length];
 
 					world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);

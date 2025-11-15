@@ -155,12 +155,15 @@ namespace Engine.Networking
         {
             if (isServer)
             {
-                int index = netPlayers.FindIndex(x => x.peerId == peer.Id);
-                Console.WriteLine("Peer {0}:{1} disconnected. Player id: {2}\nReason: {3}", peer.Address, peer.Port, netPlayers[index].playerId, disconnectInfo.ToString());
-                netPlayers.RemoveAt(index);
                 var world = Main.gameStateManager.TheIsland.GetWorld();
-                world.EntityManager.Remove(world.player[index]);
-                world.player[index] = null;
+                int index = netPlayers.FindIndex(x => x.peerId == peer.Id);
+                int playerIndex = netPlayers[index].playerId;
+                Debug.Assert(world.localPlayerIndex != playerIndex);
+                Debug.Assert(world.player[playerIndex] != null);
+                Console.WriteLine("Peer {0}:{1} disconnected. Player id: {2}\nReason: {3}", peer.Address, peer.Port, playerIndex, disconnectInfo.ToString());
+                world.EntityManager.Remove(world.player[playerIndex]);
+                world.player[playerIndex] = null;
+                netPlayers.RemoveAt(index);
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
             }
         }

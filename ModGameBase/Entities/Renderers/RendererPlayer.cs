@@ -30,9 +30,9 @@ namespace ViMG.Entities.Renderers
         {
             var player = renderedEntities[0] as Player;
 
-            if (player.inventory.Get(player.menuPlayer.HighlightIndex).item != null)
+            if (player.inventory.Get(player.highlightIndex).item != null)
             {
-                player.inventory.Get(player.menuPlayer.HighlightIndex).item.DrawInHand(device, player.inventory.Get(player.menuPlayer.HighlightIndex), player, -Main.camera.Forward);
+                player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
             }
         }
     }
