@@ -29,7 +29,7 @@ namespace ViMG
 			Unloaded,
 			Enqueued,
 			Loading,
-			Loaded
+			Loaded,
         }
 
 		private readonly ChunkMesher? chunkMesher;
@@ -39,7 +39,7 @@ namespace ViMG
         private readonly EntityManagerIO entIO;
 		private LoadingState[] loadedChunksFastLookup;
 		private bool[][] loadedChunksAttribution = new bool[World.MAX_PLAYERS][];
-		private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
+		//private Dictionary<ChunkPosition, LoadingState> loadedChunks = new Dictionary<ChunkPosition, LoadingState>();
 		private List<ChunkPosition> unloadChunks = new List<ChunkPosition>();
 		private IEnumerable<ChunkPosition> gettableLoadedChunks;
 		private IEnumerable<ChunkPosition>[] gettableLoadedChunksPlayer = new IEnumerable<ChunkPosition>[World.MAX_PLAYERS];
@@ -104,7 +104,18 @@ namespace ViMG
 
 			if (hasChanged)
 			{
-				gettableLoadedChunks = loadedChunks.Keys;
+				List<ChunkPosition> glc = new List<ChunkPosition>();
+                for (int i = 0; i < loadedChunksFastLookup.Length; i++)
+                {
+                    LoadingState item = loadedChunksFastLookup[i];
+                    if (item == LoadingState.Loaded)
+					{
+                        Util.OneDToThreeD(i, new ValuePoint3D(world.sizeInChunks), out var point);
+						glc.Add(new ChunkPosition(point.x, point.y, point.z));
+					}
+                }
+				gettableLoadedChunks = glc;
+
 				for (int i = 0; i < World.MAX_PLAYERS; i++)
 				{
 					var list = new List<ChunkPosition>();
@@ -125,8 +136,6 @@ namespace ViMG
 
 		public IEnumerable<ChunkPosition> GetLoaded()
         {
-			if (gettableLoadedChunks == null)
-				gettableLoadedChunks = loadedChunks.Keys;
 			return gettableLoadedChunks;
         }
 
@@ -183,45 +192,27 @@ namespace ViMG
                 entIO.Deserialize(queuedChunk.position);
 
                 Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position.X, queuedChunk.position.Y, queuedChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-				loadedChunks[queuedChunk.position] = LoadingState.Loaded;
 				loadedChunksFastLookup[i] = LoadingState.Loaded;
-				//for (int j = 0; j < World.MAX_PLAYERS; j++) 
-				//{
-				//	loadedChunksAttribution[j][i] = -1;
-				//}
 
 				hasChanged = true;
-				//Chunk has been told to unload before we got to it.
-				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
-				//Util.ThreeDToOneD(new ValuePoint3D(queuedPosition.X, queuedPosition.Y, queuedPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-				//if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
-				//	continue;
-				//else if (loadedChunksFastLookup[i] == LoadingState.Loading)
-				//{
-				//	//entIO.Deserialize(queuedPosition);
-				//	//chunkManager.Mesher.BatchMeshChunk(world, queuedPosition);
-				//	if (chunkManager.RenderMesher.IsMeshed(queuedPosition) && chunkManager.CollisionMesher.IsMeshed(queuedPosition))
-				//	{
-				//		loadedChunks[queuedPosition] = LoadingState.Loaded;
-				//		loadedChunksFastLookup[i] = LoadingState.Loaded;
-
-				//		hasChanged = true;
-				//	}
-				//	else
-				//	{
-				//		//not finished loading; re-queue
-				//		queue.EnqueueWithoutSorting(queuedPosition);
-				//	}
-				//}
 			}
 
 			waitingToFinishMeshingChunks.Clear();
 
-            //GameStateTheIsland.LoadMessage = "Flushing mesh queue...";
-            //chunkManager.RenderMesher.FinishFlush();
-
-            if (hasChanged)
-				gettableLoadedChunks = loadedChunks.Keys;
+			if (hasChanged)
+			{
+                List<ChunkPosition> glc = new List<ChunkPosition>();
+                for (int i = 0; i < loadedChunksFastLookup.Length; i++)
+                {
+                    LoadingState item = loadedChunksFastLookup[i];
+                    if (item == LoadingState.Loaded)
+                    {
+                        Util.OneDToThreeD(i, new ValuePoint3D(world.sizeInChunks), out var point);
+                        glc.Add(new ChunkPosition(point.x, point.y, point.z));
+                    }
+                }
+                gettableLoadedChunks = glc;
+            }
 
 			hasChanged = false;
 		}
@@ -270,7 +261,6 @@ namespace ViMG
                 CopiedChunkData copy = copyingChunk.copyTask.Result;
 
                 Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-                loadedChunks[copyingChunk.position] = LoadingState.Loading;
                 loadedChunksFastLookup[i] = LoadingState.Loading;
 
                 chunkMesher?.RenderMesher.AddToNextBatch(world, copyingChunk.position, copy);
@@ -312,7 +302,6 @@ namespace ViMG
                 {
                     Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
-                    loadedChunks[position] = LoadingState.Loaded;
                     loadedChunksFastLookup[i] = LoadingState.Loaded;
 
                     entIO.Deserialize(position);
@@ -337,38 +326,24 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (chunkManager.IsInWorldBounds(position) && (!loadedChunks.ContainsKey(position) || loadedChunks[position] == LoadingState.Unloaded))
-			{
-				bool shouldLoad = false;
-				if (!loadedChunks.ContainsKey(position))
-				{
-					loadedChunks.Add(position, LoadingState.Loaded);
-					shouldLoad = true;
-				}
-				else if (loadedChunks[position] == LoadingState.Unloaded)
-				{
-					loadedChunks[position] = LoadingState.Loaded;
-					shouldLoad = true;
-				}
+            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
-				if (shouldLoad)
-				{
-					Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-					loadedChunksFastLookup[i] = LoadingState.Loaded;
-					loadedChunksAttribution[world.localPlayerIndex][i] = true;
-                    //queue.EnqueueWithoutSorting(position);
+            if (chunkManager.IsInWorldBounds(position) && loadedChunksFastLookup[i] == LoadingState.Unloaded)
+            {
+                loadedChunksFastLookup[i] = LoadingState.Loaded;
+                loadedChunksAttribution[world.localPlayerIndex][i] = true;
+                //queue.EnqueueWithoutSorting(position);
 
-                    chunkMesher?.RenderMesher.ImmediatelyMesh(world, position);
-                    chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position);
+                chunkMesher?.RenderMesher.ImmediatelyMesh(world, position);
+                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position);
 
-					entIO.Deserialize(position);
-					//CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);
-					//chunkManager.RenderMesher.AddToNextBatch(world, position, copy);
-					//chunkManager.CollisionMesher.AddToNextBatch(world, position, copy);
+                entIO.Deserialize(position);
+                //CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+                //chunkManager.RenderMesher.AddToNextBatch(world, position, copy);
+                //chunkManager.CollisionMesher.AddToNextBatch(world, position, copy);
 
-					hasChanged = true;
-				}
-			}
+                hasChanged = true;
+            }
 		}
 
 		// Forcibly loads around the target.
@@ -400,12 +375,6 @@ namespace ViMG
                             Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
                             if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
                             {
-                                if (!loadedChunks.ContainsKey(pos))
-                                {
-                                    loadedChunks.Add(pos, LoadingState.Enqueued);
-                                }
-                                else loadedChunks[pos] = LoadingState.Enqueued;
-
                                 loadedChunksFastLookup[i] = LoadingState.Enqueued;
                                 loadedChunksAttribution[world.localPlayerIndex][i] = true;
 
@@ -508,12 +477,6 @@ namespace ViMG
 
                                 if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
                                 {
-                                    if (!loadedChunks.ContainsKey(pos))
-                                    {
-                                        loadedChunks.Add(pos, LoadingState.Enqueued);
-                                    }
-                                    else loadedChunks[pos] = LoadingState.Enqueued;
-
                                     loadedChunksFastLookup[i] = LoadingState.Enqueued;
 
                                     var context = new CopyChunkTaskContext
@@ -539,9 +502,11 @@ namespace ViMG
             }
 
 			var zoneUnload = TracyImpl.Tracy.BeginZone(name: "Unload");
-			foreach (ChunkPosition pos in loadedChunks.Keys)
-			{
-				bool remove = true;
+            for (int i = 0; i < loadedChunksFastLookup.Length; i++)
+            {
+                Util.OneDToThreeD(i, new ValuePoint3D(chunkManager.SizeInChunksXZ), out var point);
+			
+                bool remove = true;
 
 				foreach (Player? player in world.player)
 				{
@@ -551,7 +516,7 @@ namespace ViMG
 
                     ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(player.Position);
 
-                    Vector2 dist = new Vector2(pos.X, pos.Z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
+                    Vector2 dist = new Vector2(point.x, point.z) - new Vector2(baseChunkPos.X, baseChunkPos.Z);
 
 					float len = dist.Length();
 
@@ -559,20 +524,20 @@ namespace ViMG
 						remove = false;
 					else
                     {
-                        Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                        //Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 						loadedChunksAttribution[player.playerIndex][i] = false;
                     }
                 }
 
 				if (remove)
-					unloadChunks.Add(pos);
+					unloadChunks.Add(new ChunkPosition(point.x, point.y, point.z));
 			}
 
 			foreach (ChunkPosition pos in unloadChunks)
 			{
 				Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
-				if (loadedChunks[pos] == LoadingState.Loaded)
+				if (loadedChunksFastLookup[i] == LoadingState.Loaded)
 				{
 					//chunkIO.SerializeChunk(chunks, pos);
 					entIO.Serialize(pos);
@@ -582,7 +547,6 @@ namespace ViMG
 				}
 
 				loadedChunksFastLookup[i] = LoadingState.Unloaded;
-				loadedChunks.Remove(pos);
 
 				hasChanged = true;
 			}
@@ -614,7 +578,7 @@ namespace ViMG
 		{
             Util.ThreeDToOneD(new ValuePoint3D(chunkPosition.X, chunkPosition.Y, chunkPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 
-            if (loadedChunks.TryGetValue(chunkPosition, out var loadingState) && loadingState == LoadingState.Loaded)
+            if (loadedChunksFastLookup[i] == LoadingState.Loaded)
             {
                 //chunkIO.SerializeChunk(chunks, pos);
                 //entIO.Serialize(chunkPosition);
@@ -624,7 +588,6 @@ namespace ViMG
             }
 
             loadedChunksFastLookup[i] = LoadingState.Unloaded;
-            loadedChunks.Remove(chunkPosition);
 			for (int j = 0; j < World.MAX_PLAYERS; j++)
 				loadedChunksAttribution[j][i] = false;
 
@@ -653,16 +616,14 @@ namespace ViMG
             chunkMesher?.CollisionMesher.UnloadAll();
 			
 			entityManager.UnloadAll();
-			
-			loadedChunks.Clear();
+
+            Array.Fill(loadedChunksFastLookup, LoadingState.Unloaded);
 		}
 
         public void Dispose()
         {
             chunkMesher?.Dispose();
 			entityManager.Dispose();
-
-			loadedChunks = null;
         }
     }
 }
