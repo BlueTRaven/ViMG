@@ -457,7 +457,7 @@ namespace ViMG
 					{
 						ImGui.MenuItem("Settings Menu", null, ref IMGUISettings.Show);
 						ImGui.MenuItem("Debug Info Menu", null, ref IMGUISettings.ShowDebugInfo);
-						ImGui.MenuItem("Console", null, ref IMGUIConsole.Show);
+						ImGui.MenuItem("Console", null, ref Options.ShowConsole);
                         ImGui.EndMenu();
 					}
 					

@@ -57,7 +57,7 @@ namespace ViMG
 
         public static float WindowAspectRatio => (float)CurrentWindowResolution.X / (float)CurrentWindowResolution.Y;
 
-        public static Point CurrentWindowResolution = Resolutions[3];
+        public static Point CurrentWindowResolution = Resolutions[2];
         public static Point CurrentInternalResolution = Resolutions[0];
 
         public static AntiAliasing CurrentAntiAliasing;
@@ -82,6 +82,8 @@ namespace ViMG
         public static Vector2 DefaultFogExtents => new Vector2(Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (RenderDistance - 3),
                 Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * (RenderDistance - 1));
 
+        public static bool ShowConsole;
+
         public static void CenterMouse()
         {
             if (Thread.CurrentThread == Main.MainThread)
@@ -100,6 +102,8 @@ namespace ViMG
 
             SaveHelper.SaveBool(saveBytes, UseInstancedLightVolumes);
             SaveHelper.SaveBool(saveBytes, BloomEnabled);
+
+            SaveHelper.SaveBool(saveBytes, ShowConsole);
         }
 
         public static void OnLoad(byte[] loadBytes, ref int index)
@@ -114,6 +118,8 @@ namespace ViMG
 
             UseInstancedLightVolumes = SaveHelper.LoadBool(loadBytes, ref index);
             BloomEnabled = SaveHelper.LoadBool(loadBytes, ref index);
+
+            ShowConsole = SaveHelper.LoadBool(loadBytes, ref index);
         }
 
         public static void OnSave(StreamWriter writer)
@@ -130,6 +136,8 @@ namespace ViMG
             writer.WriteLine("bloom " + BloomEnabled);
 
             writer.WriteLine("render_dist " + RenderDistance);
+
+            writer.WriteLine("show_console " + ShowConsole);
         }
 
         public static void OnLoad(List<string> lines, GraphicsDeviceManager graphics)
@@ -165,6 +173,9 @@ namespace ViMG
 
                 if (split[0] == "debug_timescale")
                     float.TryParse(split[1], out DEBUGTimescale);
+
+                if (split[0] == "show_connsole")
+                    bool.TryParse(split[1], out ShowConsole);
             }
 
             //graphics.PreferredBackBufferWidth = CurrentWindowResolution.X;

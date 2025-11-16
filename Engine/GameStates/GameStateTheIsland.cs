@@ -657,6 +657,28 @@ namespace ViMG.GameStates
                     new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), 
                     Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("This is a ");
+            switch (Main.gameStateManager.connectedType)
+            {
+                case GameStateManager.ConnectedType.Client:
+                    sb.Append("Client session. Connected to: ");
+                    sb.Append(netManager.netManager.FirstPeer.ToString());
+                    sb.Append(".");
+                    break;
+                case GameStateManager.ConnectedType.Server:
+                    sb.Append("Server session. There are ");
+                    sb.Append(netManager.netPlayers.Count);
+                    sb.Append(" connected players.");
+                    break;
+                case GameStateManager.ConnectedType.Singleplayer:
+                    sb.Append("Singleplayer session.");
+                    break;
+            }
+            TextHelper.DrawText(batch, fi, sb.ToString(), Color.White,
+                    new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+                    Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 1);
         }
     }
 }

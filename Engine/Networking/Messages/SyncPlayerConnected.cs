@@ -13,6 +13,9 @@ namespace Engine.Networking.Messages
 {
     public class SyncPlayerConnected : Message
     {
+        // The first time SyncPlayerConnected, it is sent with addData = the new net player id, our id.
+        public const int ONLY_SYNC = -1;
+
         public static SyncPlayerConnected Instance { get; private set; }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
@@ -21,16 +24,19 @@ namespace Engine.Networking.Messages
             Instance = this;
         }
 
-        public override void SendMessage(NetDataWriter writer, object? addData) 
+        public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
-            base.SendMessage(writer, addData);
+            base.SendMessage(netMessage, addData);
 
-            writer.Put(addData as int? ?? -1);
-            writer.Put(GS.netManager.netPlayers.Count);
+            int whoAmI = addData as int? ?? -1;
+            netMessage.writer.Put(whoAmI);
+            netMessage.writer.Put(GS.netManager.netPlayers.Count);
             foreach (NetworkManager.NetPlayer player in GS.netManager.netPlayers)
             {
-                writer.Put(player);
+                netMessage.writer.Put(player);
             }
+
+            netMessage.Send();
         }
 
         public override void ReceiveMessage(NetPacketReader reader)
@@ -44,8 +50,16 @@ namespace Engine.Networking.Messages
             int numPlayers = reader.GetInt();
             for (int i = 0; i < numPlayers; i++)
                 GS.netManager.netPlayers.Add(reader.Get<NetworkManager.NetPlayer>());
-            Console.WriteLine("Our player id: {0}", whoAmI);
-            GS.GetWorld().localPlayerIndex = whoAmI;
+            
+            if (whoAmI != -1)
+            {
+                Console.WriteLine("Our player id: {0}", whoAmI);
+                GS.GetWorld().localPlayerIndex = whoAmI;
+            } 
+            else
+            {
+                Console.WriteLine("Sync new player connected");
+            }
         }
     }
 }

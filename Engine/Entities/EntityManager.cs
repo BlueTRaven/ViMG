@@ -1,10 +1,12 @@
 ﻿using BepuUtilities.Memory;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using static ViMG.UIs.UI;
 
 namespace ViMG.Entities
 {
@@ -18,6 +20,7 @@ namespace ViMG.Entities
 		private ulong lastEntityId;
 
 		private List<Entity> entities = new List<Entity>();
+		private Dictionary<ulong, Entity> entitiesById = new Dictionary<ulong, Entity>();
 		private Dictionary<Type, List<Entity>> entitiesByType = new Dictionary<Type, List<Entity>>();
 
 		private List<Entity> toAddLater = new List<Entity>();
@@ -146,17 +149,21 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			ReallyAdd(entity, (long)id);
+            entity.SetId(id);
+
+            ReallyAdd(entity);
 		}
 
 		public void Add(Entity entity, bool delayAdding = false)
 		{
-			if (iteratingUpdate || delayAdding)
+            entity.SetId(GetUniqueId());
+
+            if (iteratingUpdate || delayAdding)
 				toAddLater.Add(entity);
 			else ReallyAdd(entity);
 		}
 
-		private void ReallyAdd(Entity entity, long id = -1)
+		private void ReallyAdd(Entity entity)
 		{
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
@@ -166,9 +173,7 @@ namespace ViMG.Entities
 				entitiesByType.Add(entity.GetType(), new List<Entity>());
 			entitiesByType[entity.GetType()].Add(entity);
 
-			if (id < 0)
-				entity.SetId(GetUniqueId());
-			else entity.SetId((ulong)id);
+			entitiesById.Add(entity.Id, entity);
 
 			entity.Initialize(world);
 			if (!Main.IsHeadless)
@@ -245,8 +250,11 @@ namespace ViMG.Entities
             //queue all entities in chunk to be unloaded
             foreach (Entity entity in entities)
             {
-				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
-					Unload(entity, true);
+				if (entity is not Player || world.isDisposed) // Players cannot be unloaded normally
+				{
+					if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
+						Unload(entity, true);
+				}
 			}
 
 			//Another flush, to remove any entities that are newly added to the queue...
@@ -305,8 +313,11 @@ namespace ViMG.Entities
 			//queue all entities to be unloaded
 			foreach (Entity entity in entities)
 			{
-				if (!toDeleteLater.Contains(entity))
-					Unload(entity, true);
+				if (entity is not Player || world.isDisposed) // Players cannot be unloaded normally
+				{
+					if (!toDeleteLater.Contains(entity))
+						Unload(entity, true);
+				}
 			}
 
 			//Now remove them, and whatever else was in the queue...
@@ -343,6 +354,40 @@ namespace ViMG.Entities
 			}
 
 			toDeleteLater.Clear();
+
+			if (Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Singleplayer)
+			{
+				if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Client)
+				{
+					// On the client, player state is authoratative (mostly?)
+					// So we inform the server of our changes.
+					if (world.GetLocalPlayer() != null && Main.Time - world.GetLocalPlayer().TimeSynced > 0.25)
+					{
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, world.GetLocalPlayer());
+                        //Console.WriteLine("Sent sync of player {0}:{1} to {2}", world.GetLocalPlayer().Id, world.GetLocalPlayer().playerIndex, Main.gameStateManager.TheIsland.netManager.netManager.FirstPeer);
+                    }
+                } 
+				else
+				{
+					// Sync players to other players.
+					// SyncPlayerConnected only tells us that other players are connected.
+					// We need to send entity serialization info continually.
+					foreach (var netPlayer in Main.gameStateManager.TheIsland.netManager.netPlayers)
+					{
+						var peer = Main.gameStateManager.TheIsland.netManager.GetPeer(netPlayer);
+
+						foreach (var player in world.player)
+						{
+							if (player != null && player.playerIndex == netPlayer.playerId && Main.Time - player.TimeSynced > 0.25)
+							{
+                                Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, player, peer);
+								
+                                //Console.WriteLine("Sent sync of player {0}:{1} {2} to all excluding {3}", player.Id, player.playerIndex, netPlayer.playerId, peer != null ? peer : "(none)");
+                            }
+                        }
+					}
+				}
+			}
 		}
 
 		public void AddLaterEntities()
@@ -368,6 +413,8 @@ namespace ViMG.Entities
 
 			if (entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType[entity.GetType()].Remove(entity);
+
+			entitiesById.Remove(entity.Id);
 
 			if (entity is ICubeTracker tracker)
             {
@@ -404,6 +451,19 @@ namespace ViMG.Entities
 			OnEntityRemoved?.Invoke(entity);
 		}
 
+		public Entity? GetById(ulong id)
+		{
+            if (entitiesById.TryGetValue(id, out Entity ent))
+                return ent;
+            else return null;
+        }
+
+		public T? GetById<T>(ulong id) where T : Entity
+		{
+			if (entitiesById.TryGetValue(id, out Entity ent))
+				return (T?)ent;
+			else return null;
+		}
 		public T GetFirst<T>() where T : Entity
         {
 			var all = GetAll<T>();

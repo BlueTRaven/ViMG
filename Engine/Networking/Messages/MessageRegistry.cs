@@ -19,6 +19,7 @@ namespace Engine.Networking.Messages
             Register(new SyncPlayerConnected());
             Register(new SyncAllWorldState());
             Register(new SyncChunk());
+            Register(new SyncBasicState());
         }
 
         public override void Register(Message obj)
@@ -29,22 +30,21 @@ namespace Engine.Networking.Messages
 
         public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
         {
-            NetDataWriter writer = new NetDataWriter();
-            writer.Put(message.Id);
+            NetworkMessage netMessage = new NetworkMessage(message.Id, Main.gameStateManager.TheIsland.netManager.netManager, peer);
+            netMessage.writer.Put(message.Id);
 
-            message.SendMessage(writer, addData);
-
-            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            message.SendMessage(netMessage, addData);
         }
 
-        public void SendMessageToAll(Message message, NetManager netManager, object? addData)
+        public void SendMessageToAll(Message message, NetManager netManager, object? addData, NetPeer? excludePeer = null)
         {
-            NetDataWriter writer = new NetDataWriter();
-            writer.Put(message.Id);
+            NetworkMessage netMessage = new NetworkMessage(message.Id, netManager, null);
+            netMessage.excludePeer = excludePeer;
+            netMessage.writer.Put(message.Id);
 
-            message.SendMessage(writer, addData);
+            message.SendMessage(netMessage, addData);
 
-            netManager.SendToAll(writer, DeliveryMethod.ReliableOrdered);
+            Console.WriteLine("Send message {0} to all excluding {1}", message.GetType().Name, excludePeer?.ToString());
         }
 
         public void Dispatch(NetPacketReader reader)

@@ -24,30 +24,11 @@ namespace Engine.Networking.Messages
             Instance = this;
         }
  
-        public unsafe override void SendMessage(NetDataWriter writer, object? addData)
+        public unsafe override void SendMessage(NetworkMessage netMessage, object? addData)
         {
-            base.SendMessage(writer, addData);
+            base.SendMessage(netMessage, addData);
 
             ChunkPosition chunkPos = addData as ChunkPosition? ?? throw new Exception();
-            //CubePosition basePosition = chunkPos.InCubeSpace();
-
-            //Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-
-            //fixed (CubePosition* queryPositionsPtr = queryPositions)
-            //{
-            //    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            //    {
-            //        for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-            //        {
-            //            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            //            {
-            //                Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-            //                CubePosition pos = basePosition + new CubePosition(x, y, z);
-            //                queryPositionsPtr[i] = pos; 
-            //            }
-            //        }
-            //    }
-            //}
 
             Span<ushort> queryIds = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
             GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkPos, queryIds);
@@ -55,11 +36,10 @@ namespace Engine.Networking.Messages
 
             Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
             //var writer1 = new NetDataWriter();
-            writer.Put(chunkPos);
-            writer.PutSpan(bytes);
-            //var writer2 = new NetDataWriter();
-            //writer2.Put(chunkPos);
-            //writer2.PutArray(bytes.ToArray(), sizeof(byte));
+            netMessage.writer.Put(chunkPos);
+            netMessage.writer.PutSpan(bytes);
+
+            netMessage.Send();
         }
 
         public unsafe override void ReceiveMessage(NetPacketReader reader)

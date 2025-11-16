@@ -88,7 +88,9 @@ namespace ViMG
 		private ChunkPosition oldChunkPosition;
 		private Vector3 oldCameraRotation;
 
-		private struct MinedCube
+        public bool isDisposed;
+
+        private struct MinedCube
 		{
 			public CubePosition position;
 			public ChunkPosition chunk;
@@ -611,7 +613,7 @@ namespace ViMG
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
 
-		public void Draw(GraphicsDevice device)
+        public void Draw(GraphicsDevice device)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -1145,6 +1147,7 @@ namespace ViMG
 
 		public void Dispose()
         {
+			isDisposed = true;
 			ChunkLoadManager.Dispose();
 			LightManager.Dispose();
 			logic.Dispose();

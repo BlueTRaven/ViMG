@@ -37,6 +37,8 @@ namespace ViMG.Entities
 		public float Alive;
         public double TimeInitialized;
 
+		public double TimeSynced;
+
         public void SetId(ulong id)
 		{
 			this.id = id;

@@ -19,7 +19,7 @@ namespace Engine.Networking.Messages
 
         protected GameStateTheIsland GS => Main.gameStateManager.TheIsland;
 
-        public virtual void SendMessage(NetDataWriter writer, object? addData)
+        public virtual void SendMessage(NetworkMessage netMessage, object? addData)
         {
 
         }

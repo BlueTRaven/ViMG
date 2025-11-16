@@ -11,9 +11,9 @@ namespace Engine.Networking.Messages
     {
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
 
-        public override void SendMessage(NetDataWriter writer, object? addData)
-        {
-            base.SendMessage(writer, addData);
-        }
+        //public override void SendMessage(NetDataWriter writer, object? addData)
+        //{
+        //    base.SendMessage(writer, addData);
+        //}
     }
 }

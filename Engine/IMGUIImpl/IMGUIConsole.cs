@@ -52,8 +52,6 @@ namespace ViMG.IMGUIImpl
             }
         }
 
-        public static bool Show = true;
-
         private const int MAX_LINES = 500;
         private const int MAX_HISTORY = 500;
         private static FastList<string> lines = new(MAX_LINES);
@@ -303,15 +301,15 @@ namespace ViMG.IMGUIImpl
             }
 
             bool shouldFocus = false;
-            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde)) 
+            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde))
             {
-                Show = true;
+                Options.ShowConsole = true;
                 shouldFocus = true;
             }
 
-            if (Show)
+            if (Options.ShowConsole)
             {
-                if (ImGui.Begin("Console", ref Show))
+                if (ImGui.Begin("Console", ref Options.ShowConsole))
                 {
                     float footer_height_to_reserve = ImGui.GetStyle().ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing();
 

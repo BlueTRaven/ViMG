@@ -46,15 +46,17 @@ namespace Engine.Networking
         };
 
         public readonly bool isServer;
-        private NetManager netManager;
+        public NetManager netManager;
 
         public int whoAmI = -1;
         public List<NetPlayer> netPlayers = new List<NetPlayer>();
 
         public struct NetPlayer : INetSerializable
         {
-            public int playerId;
-            public int peerId; // -1 if client (we can't send messages to other clients, just to server
+            public int playerId = -1;
+            public int peerId = -1; // -1 if client (we can't send messages to other clients, just to server
+
+            public NetPlayer() { }
 
             public void Deserialize(NetDataReader reader)
             {
@@ -150,12 +152,15 @@ namespace Engine.Networking
                 world.EntityManager.Add(p);
                 world.player[index] = p;
                 world.ChunkLoadManager.LoadAroundTarget(world);
+                // Inform peer of its id
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);
+                // Inform others of new id
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1, peer);
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncChunk.Instance, netManager, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
                 foreach (var chunkPosition in world.ChunkLoadManager.GetLoaded())
                 {
-                    Main.Registry.MessageRegistry.SendMessageToAll(SyncChunk.Instance, netManager, chunkPosition);
+                    Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, chunkPosition);
                 }
                 Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
             }
@@ -186,6 +191,21 @@ namespace Engine.Networking
                 Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.ToString());
                 Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
             }
+        }
+
+        public NetPeer? GetPeer(NetPlayer player)
+        {
+            if (player.peerId == -1) return null;
+
+            foreach (var peer in netManager.ConnectedPeerList)
+            {
+                if (peer.Id == player.peerId)
+                {
+                    return (NetPeer)peer;
+                }
+            }
+
+            return null;
         }
     }
 }

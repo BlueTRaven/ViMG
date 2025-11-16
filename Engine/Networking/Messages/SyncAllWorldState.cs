@@ -26,17 +26,28 @@ namespace Engine.Networking.Messages
             Instance = this;
         }
 
-        public override void SendMessage(NetDataWriter writer, object? addObj)
+        public override void SendMessage(NetworkMessage netMessage, object? addObj)
         {
-            base.SendMessage(writer, addObj);
+            base.SendMessage(netMessage, addObj);
 
             NetworkManager.NetPlayer sendTo = addObj as NetworkManager.NetPlayer? ?? throw new NullReferenceException();
             {
-                writer.Put(SECTION_PLAYERDATA);
-                var playerEntityData = new EntityManagerIO.EntityData(GS.GetWorld().player[sendTo.playerId]);
-                List<byte> bytes = new List<byte>();
-                playerEntityData.Save(bytes);
-                writer.PutArray(bytes.ToArray(), sizeof(byte));
+                netMessage.writer.Put(SECTION_PLAYERDATA);
+                netMessage.writer.Put(sendTo.playerId);
+                netMessage.writer.Put(GS.GetWorld().player.Where(x => x != null).Count());
+
+                foreach (var player in GS.GetWorld().player)
+                {
+                    if (player != null)
+                    {
+                        netMessage.writer.Put(player.playerIndex);
+
+                        var playerEntityData = new EntityManagerIO.EntityData(player);
+                        List<byte> bytes = new List<byte>();
+                        playerEntityData.Save(bytes);
+                        netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
+                    }
+                }
             }
 
             //{
@@ -49,7 +60,9 @@ namespace Engine.Networking.Messages
             //    Console.WriteLine("SyncAllWorldState: Writing {0} bytes", arr.Length);
             //    Debug.Assert(actuallyWritten == arr.Length + 2);
             //}
-            writer.Put(SECTION_END);
+            netMessage.writer.Put(SECTION_END);
+
+            netMessage.Send();
         }
 
         public override void ReceiveMessage(NetPacketReader reader)
@@ -62,19 +75,43 @@ namespace Engine.Networking.Messages
             {
                 if (section == SECTION_PLAYERDATA)
                 {
-                    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-                    EntityManagerIO.EntityData data = new();
-                    data.Load(bytes);
-                    if (data.IsValid)
-                    {
-                        Player p = new Player();
-                        p.playerIndex = GS.GetWorld().localPlayerIndex;
-                        p.OnLoad(data.data, data.version);
+                    int localPlayerId = reader.GetInt();
+                    int numPlayers = reader.GetInt();
 
-                        GS.GetWorld().EntityManager.Add(p);
-                        GS.GetWorld().player[GS.GetWorld().localPlayerIndex] = p;
-                        GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
+                    for (int i = 0; i < numPlayers; i++)
+                    {
+                        int playerIndex = reader.GetInt();
+
+                        byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                        EntityManagerIO.EntityData data = new();
+                        data.Load(bytes);
+                        if (data.IsValid)
+                        {
+                            Player p = new Player();
+                            p.playerIndex = playerIndex;
+                            p.OnLoad(data.data, data.version);
+
+                            GS.GetWorld().EntityManager.ForceAdd(p, data.id);
+                            GS.GetWorld().player[playerIndex] = p;
+
+                            if (playerIndex == localPlayerId)
+                            {
+                                GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
+                            }
+                        }
                     }
+                    //byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                    //EntityManagerIO.EntityData data = new();
+                    //data.Load(bytes);
+                    //if (data.IsValid)
+                    //{
+                    //    Player p = new Player();
+                    //    p.playerIndex = GS.GetWorld().localPlayerIndex;
+                    //    p.OnLoad(data.data, data.version);
+
+                    //    GS.GetWorld().EntityManager.ForceAdd(p, data.id);
+                    //    GS.GetWorld().player[GS.GetWorld().localPlayerIndex] = p;
+                    //}
                 }
                 else if (section == SECTION_CHUNKDATA)
                 {

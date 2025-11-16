@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using ViMG.Buffs;
@@ -404,9 +405,21 @@ namespace ViMG
         {
             base.OnUnload();
 
+			// Player should only ever be unloaded/removed in two scenarios:
+			// The world is being disposed (we're exiting the game),
+			// or a client disconnected from the server.
+			// Even if the player is off in the middle of nowhere in some unloaded area of the game (as might be the case with other clients),
+			// it should stay loaded.
+			// TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
+			// not the local player.
+			Debug.Assert(world.isDisposed || !world.player.Contains(this));
+
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
+			if (hurtbox != -1)
+				world.HitboxManager.Remove(hurtbox);
 			hitbox = -1;
+			hurtbox = -1;
 
 			world.PhysicsInfo.Simulation.Bodies.Remove(physicsHandle);
 			world.PhysicsInfo.Simulation.Shapes.Remove(physicsShapeIndex);
@@ -427,6 +440,15 @@ namespace ViMG
 			{
 				if (Main.inputManager.JustPressed(Keys.G))
 					Main.Debug = !Main.Debug;
+			}
+			else
+			{
+				// Check to make sure we're still alive
+				// This is the case if our playerIndex is present in the netPlayer array
+				if (Main.gameStateManager.TheIsland.netManager.netPlayers.Find(x => x.playerId == playerIndex).playerId != playerIndex)
+				{
+					world.EntityManager.Remove(this);
+				}
 			}
 
 			if (Main.Debug)
