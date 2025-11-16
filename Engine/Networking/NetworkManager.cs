@@ -175,11 +175,11 @@ namespace Engine.Networking
                 // Inform others of new entity and id
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
                 //Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
-                foreach (var chunkPosition in world.ChunkLoadManager.GetLoaded())
+                var sync = new SyncChunk.ChunkToSync
                 {
-                    Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, chunkPosition);
-                }
+                    chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),
+                };
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
                 Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
             }
             else
@@ -225,6 +225,19 @@ namespace Engine.Networking
             foreach (var peer in netManager.ConnectedPeerList)
             {
                 if (peer.Id == player.peerId)
+                {
+                    return (NetPeer)peer;
+                }
+            }
+
+            return null;
+        }
+
+        public NetPeer? GetPeer(int playerId)
+        {
+            foreach (var peer in netManager.ConnectedPeerList)
+            {
+                if (peer.Id == netPlayers[playerId].peerId)
                 {
                     return (NetPeer)peer;
                 }

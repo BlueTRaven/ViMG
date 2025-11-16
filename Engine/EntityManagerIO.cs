@@ -587,33 +587,42 @@ namespace ViMG
             {
 				foreach (EntityData entData in datas.entityDatas[pos])
                 {
-					Type entityType = Utility.GetType(entData.type);
-
-					if (entityType == null)
-					{
-						Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
-					}
-					else
-					{
-						var created = Activator.CreateInstance(entityType);
-
-						if (created != null && created is Entity ent)
-						{
-							ent.OnLoad(entData.data, entData.version);
-
-							manager.ForceAdd(ent, entData.id);
-						}
-						else
-						{
-							Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
-						}
-					}
+					DeserializeEntity(entData);
 				}
 
 				//Remove so we don't end up saving duplicate entities.
 				datas.entityDatas.Remove(pos);
 			}
 		}
+
+		public Entity? DeserializeEntity(EntityData entData)
+		{
+            Type entityType = Utility.GetType(entData.type);
+
+            if (entityType == null)
+            {
+                Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
+            }
+            else
+            {
+                var created = Activator.CreateInstance(entityType);
+
+                if (created != null && created is Entity ent)
+                {
+                    ent.OnLoad(entData.data, entData.version);
+
+                    manager.ForceAdd(ent, entData.id);
+
+					return ent;
+                }
+                else
+                {
+                    Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+                }
+            }
+
+			return null;
+        }
 
 		private static string GetSaveName(string folderName, int layer)
         {

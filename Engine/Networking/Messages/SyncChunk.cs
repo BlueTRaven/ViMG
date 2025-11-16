@@ -17,26 +17,37 @@ namespace Engine.Networking.Messages
     {
         public static SyncChunk Instance { get; private set; }
 
+        public struct ChunkToSync
+        {
+            public ChunkPosition chunkPosition;
+            public ushort[]? ids;
+        }
+
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
         public SyncChunk()
         {
             Instance = this;
         }
- 
+
+        private static ushort[] idsCache = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
         public unsafe override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
 
-            ChunkPosition chunkPos = addData as ChunkPosition? ?? throw new Exception();
+            Span<ushort> queryIds = idsCache;
 
-            Span<ushort> queryIds = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
-            GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkPos, queryIds);
-            //GS.GetWorld().ChunkManager.CubeView.GetIds(queryPositions, queryIds);
+            var chunkToSync = addData as ChunkToSync? ?? throw new Exception();
+
+            if (chunkToSync.ids != null)
+                queryIds = chunkToSync.ids;
+            else
+            {
+                GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkToSync.chunkPosition, idsCache);
+            }
 
             Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
-            //var writer1 = new NetDataWriter();
-            netMessage.writer.Put(chunkPos);
+            netMessage.writer.Put(chunkToSync.chunkPosition);
             netMessage.writer.PutSpan(bytes);
 
             netMessage.Send();

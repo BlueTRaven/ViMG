@@ -16,7 +16,9 @@ namespace Engine.Networking.Messages
     {
         public enum SyncType
         {
-            FullSync, // Sync with full serialization of entity
+            // Sync with full serialization of entity
+            // Entity is created if not already present
+            FullSync, 
             // Sync with ISyncBasicState implementation if available
             // (if not, does not do anything)
             BasicState, 
@@ -92,6 +94,8 @@ namespace Engine.Networking.Messages
             SyncType type = (SyncType)reader.GetInt();
 
             Entity? ent = GS.GetWorld().EntityManager.GetById(id);
+            // NOTE: sync state is completely ignored if the entity does not exist.
+            // It is not an error for a client to receive sync state for an entity that does not exist.
             if (ent != null)
             {
                 switch (type)
@@ -109,18 +113,27 @@ namespace Engine.Networking.Messages
                         }
                         break;
                     case SyncType.FullSync:
-                        byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-                        EntityManagerIO.EntityData data = new();
-                        data.Load(bytes);
-                        if (data.IsValid)
-                        {
-                            ent.OnLoad(data.data, data.version);
-                            // TODO get by id and set. If not created, add
-                        }
                         break;
                 }
 
                 ent.TimeSynced = time;
+            } 
+            
+            // Full Sync has special behavior; if an entity does not already exist, it is created
+            if (type == SyncType.FullSync)
+            {
+                byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                EntityManagerIO.EntityData data = new();
+                data.Load(bytes);
+                if (data.IsValid)
+                {
+                    if (ent == null)
+                        ent = GS.GetWorld().EntIO.DeserializeEntity(data);
+                    else ent.OnLoad(data.data, data.version);
+
+                    if (ent != null)
+                        ent.TimeSynced = time;
+                }
             }
         }
     }

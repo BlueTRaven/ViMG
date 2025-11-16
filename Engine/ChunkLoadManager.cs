@@ -2,6 +2,7 @@
 using BepuUtilities.Memory;
 using BrUtility.Ported;
 using Engine.ChunkStuff;
+using Engine.Networking.Messages;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D11;
@@ -276,6 +277,26 @@ namespace ViMG
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks1.Add(copyingChunk.position);
+
+				if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Server)
+				{
+					for (int j = 0; j < World.MAX_PLAYERS; j++)
+					{
+						if (loadedChunksAttribution[j][i])
+						{
+							var peer = Main.gameStateManager.TheIsland.netManager?.GetPeer(j);
+                            if (peer != null)
+							{
+								var sync = new SyncChunk.ChunkToSync
+								{
+									chunkPosition = copyingChunk.position,
+									ids = copy.Ids,
+								};
+                                Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                            }
+                        }
+					}
+				}
             }
 
 			copyingChunks.Clear();
@@ -310,8 +331,9 @@ namespace ViMG
 			zoneWait.End();
 		}
 
-		// Loads a single chunk, blocking until it is fully loaded.
-		public void LoadChunk(World world, ChunkPosition position)
+        // Loads a single chunk, blocking until it is fully loaded.
+        // Always attributed to local player. Use for singleplayer and server only.
+        public void LoadChunk(World world, ChunkPosition position)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -333,6 +355,7 @@ namespace ViMG
 				{
 					Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 					loadedChunksFastLookup[i] = LoadingState.Loaded;
+					loadedChunksAttribution[world.localPlayerIndex][i] = true;
                     //queue.EnqueueWithoutSorting(position);
 
                     chunkMesher?.RenderMesher.ImmediatelyMesh(world, position);
@@ -408,6 +431,8 @@ namespace ViMG
             }
         }
 
+		// Load around players.
+		// Chunks that are within a player's load distance are attributed to them. (Even if they were not the initial loader).
 		public unsafe void LoadAroundTarget(World world, int iteration = 4, int? tempRenderDistance = null)
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();
@@ -473,9 +498,14 @@ namespace ViMG
 
                             Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(target.X, target.Z);
 
+                            Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                            loadedChunksAttribution[player.playerIndex][i] = false;
+
                             if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
                             {
-                                Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+
+                                loadedChunksAttribution[player.playerIndex][i] = true;
+
                                 if (loadedChunksFastLookup[i] == LoadingState.Unloaded)
                                 {
                                     if (!loadedChunks.ContainsKey(pos))
@@ -485,7 +515,6 @@ namespace ViMG
                                     else loadedChunks[pos] = LoadingState.Enqueued;
 
                                     loadedChunksFastLookup[i] = LoadingState.Enqueued;
-                                    loadedChunksAttribution[player.playerIndex][i] = true;
 
                                     var context = new CopyChunkTaskContext
                                     {

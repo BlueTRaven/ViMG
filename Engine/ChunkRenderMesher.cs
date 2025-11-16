@@ -699,7 +699,7 @@ namespace ViMG
                 {
                     for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                     {
-                        CubePosition cubePosition = new CubePosition(x, y, z);
+                        CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
                         Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
                         ushort id = data.GetId(cubePosition);
@@ -717,12 +717,13 @@ namespace ViMG
 
                             if (cube.ShouldMeshPass(pass))
                             {
+								CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                                 CubeMeshingParameters parameters = new CubeMeshingParameters()
                                 {
                                     cube = cube,
                                     id = id,
-                                    positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-                                    positionCS = data.BasePosition + cubePosition,
+                                    positionWS = positionCS.InWorldSpace(),
+                                    positionCS = positionCS,
                                     position = cubePosition,
                                     faces = renderingFaces
                                 };
@@ -812,7 +813,7 @@ namespace ViMG
 				{
 					for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 					{
-						CubePosition cubePosition = new CubePosition(x, y, z);
+						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
 						ushort id = data.GetId(cubePosition);
@@ -828,12 +829,14 @@ namespace ViMG
 
 							if (cube.ShouldMeshPass(pass))
 							{
-								CubeMeshingParameters parameters = new CubeMeshingParameters()
+                                CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
+
+                                CubeMeshingParameters parameters = new CubeMeshingParameters()
 								{
 									cube = cube,
 									id = id,
-									positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-									positionCS = data.BasePosition + cubePosition,
+									positionWS = positionCS.InWorldSpace(),
+									positionCS = positionCS,
 									position = cubePosition,
 									faces = renderingFaces
 								};
@@ -894,29 +897,29 @@ namespace ViMG
 
 					CubePosition nrm = new CubePosition(cubePosition.X + (int)vertex.Normal.X,
 						cubePosition.Y + (int)vertex.Normal.Y,
-						cubePosition.Z + (int)vertex.Normal.Z);
+						cubePosition.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.ChunkSpace);
 
 					CubePosition t = new CubePosition();
 					CubePosition bt = new CubePosition();
 
-					int sX = vertCubePos.X == cubePosition.X ? -1 : 1;
+                    int sX = vertCubePos.X == cubePosition.X ? -1 : 1;
 					int sY = vertCubePos.Y == cubePosition.Y ? -1 : 1;
 					int sZ = vertCubePos.Z == cubePosition.Z ? -1 : 1;
 
 					if (vertex.Normal.X != 0)
 					{
-						t = new CubePosition(0, sY, 0);
-						bt = new CubePosition(0, 0, sZ);
+						t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 					else if (vertex.Normal.Y != 0)
 					{
-						t = new CubePosition(sX, 0, 0);
-						bt = new CubePosition(0, 0, sZ);
+						t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 					else if (vertex.Normal.Z != 0)
 					{
-						t = new CubePosition(sX, 0, 0);
-						bt = new CubePosition(0, sY, 0);
+						t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 
 					checkPositions[0] = nrm;

@@ -137,7 +137,9 @@ namespace ViMG
 			Dead,
 		}
 
-		public CubePosition SpawnPosition;
+		public static Vector3 BODY_OFFSET = new Vector3(0, Cube.CUBE_SCALE * 0.6f, 0);
+
+        public CubePosition SpawnPosition;
 		private float loadedTimeOfDay = -1;
 
 		public Vector3 Rotation;
@@ -432,7 +434,7 @@ namespace ViMG
         public override void Update(double deltaTime)
 		{
 			if (state != State.Noclip)
-				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + new Vector3(0, Cube.CUBE_SCALE * 0.6f, 0);
+				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
 			hasMoved = false;
 			hasRotated = false;
@@ -452,7 +454,7 @@ namespace ViMG
 				}
 			}
 
-			if (Main.Debug)
+			if (Main.Debug && IsLocalPlayer)
 				state = State.Noclip;
 			else if (state == State.Noclip)
 				state = State.Normal;
@@ -2112,7 +2114,9 @@ namespace ViMG
         public void Set(ref readonly BasicState state)
         {
 			this.Position = state.position;
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (state.position - BODY_OFFSET).ToNumerics();
+            world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
 			this.Rotation = state.rotation;
 			this.Health = state.health;
 			this.state = (State)state.state;

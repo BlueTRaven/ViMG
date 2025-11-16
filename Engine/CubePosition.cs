@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
 
@@ -27,6 +28,15 @@ namespace ViMG
 			this.X = x;
 			this.Y = y;
 			this.Z = z;
+
+			this.Coord = coord;
+		}
+
+		public CubePosition(CubePosition other, CoordinateSpace coord)
+		{
+			this.X = other.X;
+			this.Y = other.Y;
+			this.Z = other.Z;
 
 			this.Coord = coord;
 		}
@@ -159,20 +169,14 @@ namespace ViMG
 
 		public static CubePosition operator +(CubePosition posA, CubePosition posB)
 		{
-			if (posA.Coord == posB.Coord)
-			{
-				return new CubePosition(posA.X + posB.X, posA.Y + posB.Y, posA.Z + posB.Z, posA.Coord);
-			}
-			else return new CubePosition();
+			Debug.Assert(posA.Coord == posB.Coord);
+			return new CubePosition(posA.X + posB.X, posA.Y + posB.Y, posA.Z + posB.Z, posA.Coord);
 		}
 
 		public static CubePosition operator -(CubePosition posA, CubePosition posB)
 		{
-			if (posA.Coord == posB.Coord)
-			{
-				return new CubePosition(posA.X - posB.X, posA.Y - posB.Y, posA.Z - posB.Z, posA.Coord);
-			}
-			else return new CubePosition();
+            Debug.Assert(posA.Coord == posB.Coord);
+			return new CubePosition(posA.X - posB.X, posA.Y - posB.Y, posA.Z - posB.Z, posA.Coord);
 		}
 	}
 }
