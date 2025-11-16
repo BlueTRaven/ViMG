@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -24,7 +25,7 @@ namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(10, 0)]
-	public class Player : Entity, IHitboxOwner
+	public class Player : Entity, IHitboxOwner, ISyncBasicState
 	{
         private struct HitboxToSpawnLater
         {
@@ -2095,5 +2096,26 @@ namespace ViMG
 			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
             SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 		}
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
+				rotation = Rotation,
+				health = Health,
+				state = (int)this.state,
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			this.Position = state.position;
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+			this.Rotation = state.rotation;
+			this.Health = state.health;
+			this.state = (State)state.state;
+        }
     }
 }

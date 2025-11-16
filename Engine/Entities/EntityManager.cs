@@ -363,7 +363,12 @@ namespace ViMG.Entities
 					// So we inform the server of our changes.
 					if (world.GetLocalPlayer() != null && Main.Time - world.GetLocalPlayer().TimeSynced > 0.25)
 					{
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, world.GetLocalPlayer());
+						var ent = new SyncBasicState.SyncEntity()
+						{
+							entity = world.GetLocalPlayer(),
+							type = SyncBasicState.SyncType.BasicState,
+						};
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
                         //Console.WriteLine("Sent sync of player {0}:{1} to {2}", world.GetLocalPlayer().Id, world.GetLocalPlayer().playerIndex, Main.gameStateManager.TheIsland.netManager.netManager.FirstPeer);
                     }
                 } 
@@ -380,7 +385,12 @@ namespace ViMG.Entities
 						{
 							if (player != null && player.playerIndex == netPlayer.playerId && Main.Time - player.TimeSynced > 0.25)
 							{
-                                Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, player, peer);
+                                var ent = new SyncBasicState.SyncEntity()
+                                {
+                                    entity = player,
+                                    type = SyncBasicState.SyncType.BasicState,
+                                };
+                                Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
 								
                                 //Console.WriteLine("Sent sync of player {0}:{1} {2} to all excluding {3}", player.Id, player.playerIndex, netPlayer.playerId, peer != null ? peer : "(none)");
                             }
