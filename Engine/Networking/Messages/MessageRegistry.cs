@@ -20,6 +20,7 @@ namespace Engine.Networking.Messages
             Register(new SyncAllWorldState());
             Register(new SyncChunk());
             Register(new SyncBasicState());
+            Register(new WhoAmI());
         }
 
         public override void Register(Message obj)
@@ -47,10 +48,18 @@ namespace Engine.Networking.Messages
             Console.WriteLine("Send message {0} to all excluding {1}", message.GetType().Name, excludePeer?.ToString());
         }
 
-        public void Dispatch(NetPacketReader reader)
+        public void Dispatch(NetPacketReader reader, NetPeer source)
         {
             int messageType = reader.GetInt();
 
+            if (Main.gameStateManager.connectedType == ViMG.GameStates.GameStateManager.ConnectedType.Server && Get(messageType).Passthrough)
+            {
+                reader.SetPosition(4);
+                var allBytes = reader.GetRemainingBytes();
+                reader.SetPosition(4);
+                reader.GetInt();
+                Main.gameStateManager.TheIsland.netManager.netManager.SendToAll(allBytes, DeliveryMethod.ReliableOrdered, source);
+            }
             Get(messageType).ReceiveMessage(reader);
         }
     }

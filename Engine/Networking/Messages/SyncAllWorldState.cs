@@ -45,6 +45,7 @@ namespace Engine.Networking.Messages
                         var playerEntityData = new EntityManagerIO.EntityData(player);
                         List<byte> bytes = new List<byte>();
                         playerEntityData.Save(bytes);
+                  
                         netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
                     }
                 }

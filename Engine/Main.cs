@@ -481,6 +481,9 @@ namespace ViMG
 					ImGui.Text(string.Format("Position: {0}", FormatPos()));
 					ImGui.Text(string.Format("Facing: {0}", FormatFacing()));
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera.Position).ToString()));
+
+					if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
+						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
 				}
                 ImGui.End();
 

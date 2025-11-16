@@ -20,6 +20,7 @@ namespace Engine.Networking.Messages
         public SyncBasicState()
         {
             Instance = this;
+            Passthrough = true;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)

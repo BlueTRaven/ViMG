@@ -123,7 +123,7 @@ namespace Engine.Networking
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
         {
-            Main.Registry.MessageRegistry.Dispatch(reader);
+            Main.Registry.MessageRegistry.Dispatch(reader, peer);
             //Console.WriteLine("Received {0} from {1}", result, peer);
 
             reader.Recycle();
@@ -153,10 +153,12 @@ namespace Engine.Networking
                 world.player[index] = p;
                 world.ChunkLoadManager.LoadAroundTarget(world);
                 // Inform peer of its id
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, index);
-                // Inform others of new id
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1, peer);
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
+                Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
+                // Inform peer of existant entities and ids, including its own Player
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, world.player.Where(x => x != null).ToArray());
+                // Inform others of new entity and id
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
+                //Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition));
                 foreach (var chunkPosition in world.ChunkLoadManager.GetLoaded())
                 {
@@ -183,7 +185,7 @@ namespace Engine.Networking
                 world.EntityManager.Remove(world.player[playerIndex]);
                 world.player[playerIndex] = null;
                 netPlayers.RemoveAt(index);
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
+                //Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
             }
             else
             {
