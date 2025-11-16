@@ -412,7 +412,7 @@ namespace ViMG
 			// it should stay loaded.
 			// TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
 			// not the local player.
-			Debug.Assert(world.isDisposed || !world.player.Contains(this));
+			Debug.Assert(world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -445,7 +445,7 @@ namespace ViMG
 			{
 				// Check to make sure we're still alive
 				// This is the case if our playerIndex is present in the netPlayer array
-				if (Main.gameStateManager.TheIsland.netManager.netPlayers.Find(x => x.playerId == playerIndex).playerId != playerIndex)
+				if (Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId != playerIndex)
 				{
 					world.EntityManager.Remove(this);
 				}

@@ -20,10 +20,10 @@ namespace Engine.Networking
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
         {
-            var players = Main.gameStateManager.TheIsland?.netManager?.netPlayers;
+            var players = Main.gameStateManager.TheIsland?.netManager?.netPlayers.Where(x => x.playerId != -1);
             if (players != null)
             {
-                IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count));
+                IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count()));
                 foreach (NetPlayer player in players)
                 {
                     if (player.playerId == Main.gameStateManager.TheIsland?.GetWorld()?.localPlayerIndex)
@@ -48,8 +48,10 @@ namespace Engine.Networking
         public readonly bool isServer;
         public NetManager netManager;
 
+        // Local player id
         public int whoAmI = -1;
-        public List<NetPlayer> netPlayers = new List<NetPlayer>();
+        public NetPlayer[] netPlayers = new NetPlayer[World.MAX_PLAYERS];
+        public int uniqueNetPlayers = 0;
 
         public struct NetPlayer : INetSerializable
         {
@@ -74,6 +76,8 @@ namespace Engine.Networking
         {
             netManager = new NetManager(this);
             this.isServer = isServer;
+
+            Array.Fill(netPlayers, new NetPlayer());
         }
 
         public void Connect()
@@ -81,11 +85,12 @@ namespace Engine.Networking
             if (isServer)
             {
                 netManager.Start(9050);
-                netPlayers.Add(new NetPlayer
+                netPlayers[0] = new NetPlayer
                 {
                     playerId = 0,
                     peerId = -1,
-                });
+                };
+                uniqueNetPlayers += 1;
                 Console.WriteLine("Started server on port 9050");
             }
             else
@@ -98,6 +103,7 @@ namespace Engine.Networking
 
         public void Disconnect()
         {
+            uniqueNetPlayers = 0;
             netManager.DisconnectAll();
             Console.WriteLine("Disconnected");
         }
@@ -139,12 +145,22 @@ namespace Engine.Networking
             if (isServer)
             {
                 var world = Main.gameStateManager.TheIsland.GetWorld();
-                int index = netPlayers.Count;
-                netPlayers.Add(new NetPlayer
+                int index = -1;
+                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                {
+                    if (netPlayers[i].playerId == -1)
+                    {
+                        index = i;
+                    }
+                }
+
+                netPlayers[index] = new NetPlayer
                 {
                     playerId = index,
                     peerId = peer.Id,
-                });
+                };
+                uniqueNetPlayers += 1;
+
                 Player p = new Player();
                 p.playerIndex = index;
                 // TODO
@@ -177,15 +193,22 @@ namespace Engine.Networking
             if (isServer)
             {
                 var world = Main.gameStateManager.TheIsland.GetWorld();
-                int index = netPlayers.FindIndex(x => x.peerId == peer.Id);
+                int index = -1; 
+                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                {
+                    if (netPlayers[i].peerId == peer.Id)
+                        index = i;
+                }
                 int playerIndex = netPlayers[index].playerId;
+                uniqueNetPlayers -= 1;
+
                 Debug.Assert(world.localPlayerIndex != playerIndex);
                 Debug.Assert(world.player[playerIndex] != null);
                 Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {1}", peer, playerIndex, disconnectInfo.ToString());
                 world.EntityManager.Remove(world.player[playerIndex]);
                 world.player[playerIndex] = null;
-                netPlayers.RemoveAt(index);
-                //Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, -1);
+                netPlayers[index] = new NetPlayer();
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
             }
             else
             {

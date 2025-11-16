@@ -45,7 +45,7 @@ namespace Engine.Networking.Messages
 
             message.SendMessage(netMessage, addData);
 
-            Console.WriteLine("Send message {0} to all excluding {1}", message.GetType().Name, excludePeer?.ToString());
+            //Console.WriteLine("Send message {0} to all excluding {1}", message.GetType().Name, excludePeer?.ToString());
         }
 
         public void Dispatch(NetPacketReader reader, NetPeer source)

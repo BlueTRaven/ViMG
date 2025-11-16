@@ -669,7 +669,7 @@ namespace ViMG.GameStates
                     break;
                 case GameStateManager.ConnectedType.Server:
                     sb.Append("Server session. There are ");
-                    sb.Append(netManager.netPlayers.Count);
+                    sb.Append(netManager.uniqueNetPlayers);
                     sb.Append(" connected players.");
                     break;
                 case GameStateManager.ConnectedType.Singleplayer:

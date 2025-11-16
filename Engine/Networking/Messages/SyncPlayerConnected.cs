@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using static Engine.Networking.NetworkManager;
 
 namespace Engine.Networking.Messages
 {
@@ -28,7 +29,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
-            netMessage.writer.Put(GS.netManager.netPlayers.Count);
+            netMessage.writer.Put(World.MAX_PLAYERS);
             foreach (NetworkManager.NetPlayer player in GS.netManager.netPlayers)
             {
                 netMessage.writer.Put(player);
@@ -51,19 +52,39 @@ namespace Engine.Networking.Messages
                     netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
                 }
             }
+            else netMessage.writer.Put((int)0);
 
-            netMessage.Send();
+                netMessage.Send();
         }
 
         public override void ReceiveMessage(NetPacketReader reader)
         {
             base.ReceiveMessage(reader);
 
-            GS.netManager.netPlayers.Clear();
+            var old = GS.netManager.netPlayers.ToArray();
+            Array.Fill(GS.netManager.netPlayers, new NetworkManager.NetPlayer());
+            GS.netManager.uniqueNetPlayers = 0;
             int numNetPlayers = reader.GetInt();
             for (int i = 0; i < numNetPlayers; i++)
-                GS.netManager.netPlayers.Add(reader.Get<NetworkManager.NetPlayer>());
-            GS.GetWorld().localPlayerIndex = GS.netManager.netPlayers[GS.netManager.whoAmI].playerId;
+            {
+                var netPlayer = reader.Get<NetworkManager.NetPlayer>();
+                if (netPlayer.playerId != -1)
+                {
+                    GS.netManager.netPlayers[netPlayer.playerId] = netPlayer;
+                    GS.netManager.uniqueNetPlayers += 1;
+                }
+            }
+            GS.GetWorld().localPlayerIndex = GS.netManager.whoAmI;
+            
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                if (old[i].playerId != -1 && GS.netManager.netPlayers[i].playerId == -1)
+                {
+                    var disconnectedPlayer = GS.GetWorld().player[old[i].playerId];
+                    if (disconnectedPlayer != null)
+                        GS.GetWorld().EntityManager.Remove(disconnectedPlayer);
+                }
+            }
 
             // NOTE: numPlayers != numNetPlayers. We always sync netPlayers, whereas we only send
             // the new Players.
