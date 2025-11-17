@@ -47,6 +47,12 @@ namespace Engine.Networking.Messages
             SyncEntity entity = addData as SyncEntity? ?? throw new Exception();
             if (entity.entity == null) Debug.Assert(false);
 
+            if (entity.type == SyncType.BasicState && entity.entity is not ISyncBasicState)
+            {
+                Console.WriteLine("Couldn't do BasicState sync for entity {0} - it does not implement ISyncBasicState!", entity.entity);
+                return;
+            }
+
             netMessage.writer.Put(Main.Time);
             entity.entity.TimeSynced = Main.Time;
 
@@ -67,15 +73,17 @@ namespace Engine.Networking.Messages
                         syncer.Get(out BasicState bstate);
                         netMessage.writer.Put(bstate);
                     }
+                    else
+                    {
+                        netMessage.writer.Put(new BasicState());
+                    }
                     break;
                 case SyncType.FullSync:
-                    if (entity.entity.Serialize)
-                    {
-                        var entityData = new EntityManagerIO.EntityData(entity.entity);
-                        List<byte> bytes = new List<byte>();
-                        entityData.Save(bytes);
-                        netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
-                    }
+                    entity.entity.TimeMajorSynced = Main.Time;
+                    var entityData = new EntityManagerIO.EntityData(entity.entity);
+                    List<byte> bytes = new List<byte>();
+                    entityData.Save(bytes);
+                    netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
                     break;
             }
             
@@ -106,9 +114,9 @@ namespace Engine.Networking.Messages
                         ent.Position.Z = reader.GetFloat();
                         break;
                     case SyncType.BasicState:
+                        var bstate = reader.Get<BasicState>();
                         if (ent is ISyncBasicState syncer)
                         {
-                            var bstate = reader.Get<BasicState>();
                             syncer.Set(ref bstate);
                         }
                         break;

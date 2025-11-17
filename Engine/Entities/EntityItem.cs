@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,13 +13,14 @@ using ViMG.Physics;
 
 namespace ViMG.Entities
 {
-	public class EntityItem : Entity
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+	public class EntityItem : Entity, ISyncBasicState
 	{
 		//public Vector3 Velocity;
 		public readonly Vector3 InitialVelocity;
 		public Vector3 MaxVelocity = new Vector3(10, 15, 10) * Cube.CUBE_SCALE;
 		
-		public readonly ItemInstance ItemInstance;
+		public ItemInstance ItemInstance;
 
 		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE / 2f));
 		public Rectangle3D Bounds => bounds.Offset(Position);
@@ -30,6 +32,8 @@ namespace ViMG.Entities
 		private Box box;
 		private TypedIndex physicsShapeIndex;
 		public BodyHandle physicsHandle;
+
+		public EntityItem() { }
 
 		public EntityItem(Vector3 position, Vector3 initialVelocity, ItemInstance item)
 		{
@@ -84,7 +88,6 @@ namespace ViMG.Entities
 
 			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-
 			if (ItemInstance.item is ItemCube)
 				origin.Z = Cube.CUBE_SCALE / 4f;
 
@@ -108,19 +111,38 @@ namespace ViMG.Entities
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
 
-		//	if (Item.item is ItemCube)
-		//		origin.Z = Cube.CUBE_SCALE / 4f;
+			SaveHelper.SaveItemInstance(saveBytes, ItemInstance);
+        }
 
-		//	var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
-		//	Item.item.DrawInWorld(device, world, Item,
-		//		Matrix.CreateTranslation(-origin) *
-		//		Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
-		//		Matrix.CreateTranslation(reference.Pose.Position)
-		//		);
-		//}
-	}
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+			int index = 0;
+			ItemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position,
+                velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
+                rotation = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation,
+                health = 0,
+                state = 0,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = state.position.ToNumerics();
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation = state.rotation.ToNumerics();
+        }
+    }
 }

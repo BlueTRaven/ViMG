@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +13,9 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class SlimeBig : Entity, IHasStats
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class SlimeBig : Entity, IHasStats, ISyncBasicState
     {
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
@@ -124,5 +127,49 @@ namespace ViMG.Entities
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
 				world.EntityManager.Remove(this);
 		}
-	}
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            Get(out var state);
+            state.OnSave(saveBytes);
+            SaveHelper.SaveInt32(saveBytes, ai?.MaxHealth ?? 0);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+            int index = 0;
+            var bs = new BasicState();
+            bs.OnLoad(loadBytes, ref index);
+            Set(ref bs);
+
+            maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+            if (ai != null) ai.MaxHealth = maxHealth;
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                rotation = Quaternion.Identity,
+                velocity = ai?.Velocity ?? Vector3.Zero,
+                health = ai?.Health ?? 0,
+                state = 0,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            if (ai != null)
+            {
+                ai.Velocity = state.velocity;
+                ai.Health = state.health;
+            }
+        }
+    }
 }

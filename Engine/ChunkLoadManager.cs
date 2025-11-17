@@ -104,38 +104,35 @@ namespace ViMG
 				LoadAroundTarget(world);
 			}
 
-			if (hasChanged)
-			{
+            if (hasChanged)
+            {
+                List<ChunkPosition>[] glcP = new List<ChunkPosition>[World.MAX_PLAYERS];
                 List<ChunkPosition> glc = new List<ChunkPosition>();
                 for (int j = 0; j < loadedChunks.Length; j++)
                 {
+                    bool any = false;
                     for (int i = 0; i < World.MAX_PLAYERS; i++)
                     {
                         LoadingState item = loadedChunks[i][j];
                         if (item == LoadingState.Loaded)
                         {
                             Util.OneDToThreeD(j, new ValuePoint3D(world.sizeInChunks), out var point);
-                            glc.Add(new ChunkPosition(point.x, point.y, point.z));
+                            var chunkPos = new ChunkPosition(point.x, point.y, point.z);
+                            if (!any)
+                            {
+                                glc.Add(chunkPos);
 
-                            break;
+                                any = true;
+                            }
+                            glcP[i].Add(chunkPos);
                         }
                     }
                 }
                 gettableLoadedChunks = glc;
-
-                //for (int i = 0; i < World.MAX_PLAYERS; i++)
-                //{
-                //	var list = new List<ChunkPosition>();
-                //	for (int j = 0; j < loadedChunksAttribution[i].Length; j++)
-                //	{
-                //		if (loadedChunksAttribution[i][j])
-                //		{
-                //			Util.OneDToThreeD(j, new ValuePoint3D(world.sizeInChunks), out var point);
-                //			list.Append(new ChunkPosition(point.x, point.y, point.z));
-                //		}
-                //	}
-                //                gettableLoadedChunksPlayer[i] = list;
-                //}
+                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                {
+                    gettableLoadedChunksPlayer[i] = glc;
+                }
             }
 
 			hasChanged = false;
@@ -213,22 +210,33 @@ namespace ViMG
 
 			if (hasChanged)
 			{
+                List<ChunkPosition>[] glcP = new List<ChunkPosition>[World.MAX_PLAYERS];
                 List<ChunkPosition> glc = new List<ChunkPosition>();
                 for (int j = 0; j < loadedChunks.Length; j++)
                 {
+                    bool any = false;
                     for (int i = 0; i < World.MAX_PLAYERS; i++)
                     {
                         LoadingState item = loadedChunks[i][j];
                         if (item == LoadingState.Loaded)
                         {
                             Util.OneDToThreeD(j, new ValuePoint3D(world.sizeInChunks), out var point);
-                            glc.Add(new ChunkPosition(point.x, point.y, point.z));
+                            var chunkPos = new ChunkPosition(point.x, point.y, point.z);
+                            if (!any)
+                            {
+                                glc.Add(chunkPos);
 
-                            break;
+                                any = true;
+                            }
+                            glcP[i].Add(chunkPos);
                         }
                     }
                 }
                 gettableLoadedChunks = glc;
+                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                {
+                    gettableLoadedChunksPlayer[i] = glc;
+                }
             }
 
 			hasChanged = false;
@@ -286,28 +294,22 @@ namespace ViMG
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
                 // TODO should this be _1?
-				waitingToFinishMeshingChunks1.Add(copyingChunk);
+				waitingToFinishMeshingChunks.Add(copyingChunk);
 
-                // TODO net sync
-				//if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Server)
-				//{
-				//	for (int j = 0; j < World.MAX_PLAYERS; j++)
-				//	{
-				//		if (loadedChunksAttribution[j][i])
-				//		{
-				//			var peer = Main.gameStateManager.TheIsland.netManager?.GetPeer(j);
-    //                        if (peer != null)
-				//			{
-				//				var sync = new SyncChunk.ChunkToSync
-				//				{
-				//					chunkPosition = copyingChunk.position,
-				//					ids = copy.Ids,
-				//				};
-    //                            Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-    //                        }
-    //                    }
-				//	}
-				//}
+                // Sync chunk loading to other players
+                if (copyingChunk.player != world.localPlayerIndex && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Server)
+                {
+                    var peer = Main.gameStateManager.TheIsland.netManager?.GetPeer(copyingChunk.player);
+                    if (peer != null)
+                    {
+                        var sync = new SyncChunk.ChunkToSync
+                        {
+                            chunkPosition = copyingChunk.position,
+                            ids = copy.Ids,
+                        };
+                        Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                    }
+                }
             }
 
 			copyingChunks.Clear();

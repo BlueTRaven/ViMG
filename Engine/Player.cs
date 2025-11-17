@@ -23,7 +23,7 @@ using static ViMG.Player;
 
 namespace ViMG
 {
-    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
 	[EntityMeta(10, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState
 	{
@@ -1450,7 +1450,8 @@ namespace ViMG
 
                             Currency += item.ItemInstance.num * coin.Value;
 
-                            menuPlayer.AddPickedUpItem(item.ItemInstance);
+							if (IsLocalPlayer)
+								menuPlayer.AddPickedUpItem(item.ItemInstance);
                         }
 						else
 						{
@@ -1459,7 +1460,8 @@ namespace ViMG
 								world.EntityManager.Remove(ent);
 								item.ItemInstance.item.StartHold(this, inventory, index);
 
-								menuPlayer.AddPickedUpItem(item.ItemInstance);
+								if (IsLocalPlayer)
+									menuPlayer.AddPickedUpItem(item.ItemInstance);
 							}
 						}
 					}
@@ -2105,7 +2107,7 @@ namespace ViMG
 			{
 				position = Position,
 				velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
-				rotation = Rotation,
+				rotation = new Quaternion(Rotation.X, Rotation.Y, Rotation.Z, 1),
 				health = Health,
 				state = (int)this.state,
 			};
@@ -2117,7 +2119,7 @@ namespace ViMG
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (state.position - BODY_OFFSET).ToNumerics();
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
 			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
-			this.Rotation = state.rotation;
+			this.Rotation = state.rotation.ToVector4().ToVector3();
 			this.Health = state.health;
 			this.state = (State)state.state;
         }

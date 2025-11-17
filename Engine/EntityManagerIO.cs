@@ -220,6 +220,7 @@ namespace ViMG
 
 			public void Load(byte[] entityDataBytes)
 			{
+				if (entityDataBytes.Length <= 0) return;
 				int edbI = 0;
 
                 int headerSize = SaveHelper.LoadInt32(entityDataBytes, ref edbI);
@@ -605,20 +606,32 @@ namespace ViMG
             }
             else
             {
-                var created = Activator.CreateInstance(entityType);
+				if (entityType.GetConstructor([]) != null)
+				{
+					var created = Activator.CreateInstance(entityType);
 
-                if (created != null && created is Entity ent)
-                {
-                    ent.OnLoad(entData.data, entData.version);
+					if (created != null && created is Entity ent)
+					{
+						try
+						{
+							ent.OnLoad(entData.data, entData.version);
 
-                    manager.ForceAdd(ent, entData.id);
-
-					return ent;
-                }
-                else
-                {
-                    Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
-                }
+							manager.ForceAdd(ent, entData.id);
+							return ent;
+						}
+						catch (Exception e)
+						{
+							Console.WriteLine("DeseerializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString());
+						}
+					}
+					else
+					{
+						Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+					}
+				} else
+				{
+					Console.WriteLine("Could not deserialize an entity with type name {0}. Forgot to add a parameterless constructor.");
+				}
             }
 
 			return null;

@@ -744,12 +744,13 @@ namespace ViMG
                             if (id != 0 || renderingFaces == MeshHelper.CubeFace.NONE)
                                 continue;
 
+                            CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                             CubeMeshingParameters parameters = new CubeMeshingParameters()
                             {
                                 cube = Main.Registry.CubeRegistry.Air,
                                 id = id,
-                                positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-                                positionCS = data.BasePosition + cubePosition,
+                                positionWS = positionCS.InWorldSpace(),
+                                positionCS = positionCS,
                                 position = cubePosition,
                                 faces = renderingFaces
                             };

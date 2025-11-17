@@ -987,7 +987,9 @@ namespace ViMG
 							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
 								new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
 									Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
-							EntityManager.Add(ent);
+
+							if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
+								EntityManager.Add(ent);
 						}
 
 						cube.OnMined(player[localPlayerIndex], position);

@@ -17,6 +17,7 @@ namespace ViMG
             Struct,    //serializable by structures. Any entities with this Serialization type will become serializable by the world if not already, if generated from a structure.
             Server,
             All = World | Struct,
+            AllWithServer = All | Server,
         }
 
         public readonly SerializationType serializationType;

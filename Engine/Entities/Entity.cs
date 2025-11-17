@@ -38,6 +38,7 @@ namespace ViMG.Entities
         public double TimeInitialized;
 
 		public double TimeSynced;
+		public double TimeMajorSynced;
 
         public void SetId(ulong id)
 		{
