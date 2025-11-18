@@ -28,7 +28,8 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
-            gsManager.Paused = true;
+            if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Singleplayer)
+                gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
         }
@@ -37,7 +38,8 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            gsManager.Paused = false;
+            if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Singleplayer)
+                gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;
         }

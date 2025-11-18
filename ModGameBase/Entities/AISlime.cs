@@ -8,11 +8,14 @@ using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
 using BepuPhysics.CollisionDetection;
+using Engine.Networking;
 
 namespace ViMG.Entities
 {
 	public class AISlime
 	{
+		public const int VERSION = 0;
+
 		public float InvulnTimer;
 
 		public float Acceleration = Cube.CUBE_SCALE / 2f;
@@ -65,6 +68,8 @@ namespace ViMG.Entities
 			}
 			public void Update(double deltaTime)
 			{
+				var randNum = entity.random.Next();
+
 				ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
@@ -84,15 +89,15 @@ namespace ViMG.Entities
 
 					if (ai.jumpTimer <= 0)
 					{
-                        ai.jumpTime = Main.random.NextFloat(0.25f, 3);
+                        ai.jumpTime = entity.random.NextFloat(0.25f, 3);
                         ai.jumpTimer = ai.jumpTime;
 
 						if (!ai.noticeHandler.Noticed)
 						{
 							if (ai.numJumps == 0)
 							{
-                                ai.numJumps = Main.random.Next(1, 6);
-                                ai.jumpTime = Main.random.NextFloat(2, 6);
+                                ai.numJumps = entity.random.Next(1, 6);
+                                ai.jumpTime = entity.random.NextFloat(2, 6);
                                 ai.jumpTimer = ai.jumpTime;
 
 								if (ai.ShouldJumpAwayFromPlayer)
@@ -104,7 +109,7 @@ namespace ViMG.Entities
 								else
 								{
                                     //During the day time, jump in random directions
-                                    ai.jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+                                    ai.jumpDir = new Vector3(entity.random.NextFloat(-1, 1), 0, entity.random.NextFloat(-1, 1));
                                     ai.jumpDir.Normalize();
 								}
 							}
@@ -254,6 +259,21 @@ namespace ViMG.Entities
 
                 ai.InvulnTimer = 0.25f;
 			}
-		}
-	}
+        }
+
+        public void OnSave(List<byte> saveBytes)
+        {
+			SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+            SaveHelper.SaveFloat32(saveBytes, JumpTimer);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+			int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+            jumpTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
+        }
+    }
 }

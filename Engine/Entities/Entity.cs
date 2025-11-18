@@ -17,6 +17,7 @@ namespace ViMG.Entities
 			Always
 		}
 
+		public Random? random;
 		public Vector3 Position;
 		public World world;
 
@@ -60,6 +61,8 @@ namespace ViMG.Entities
 		public virtual void Update(double deltaTime)
 		{
 			Alive += (float)deltaTime;
+
+			random = new Random((int)Id + Main.Frame);
 		}
 
 		//Called when an enemy is killed by normal means; I.e. the player has dealt enough damage to it.

@@ -134,7 +134,9 @@ namespace ViMG.Entities
 
             Get(out var state);
             state.OnSave(saveBytes);
-            SaveHelper.SaveInt32(saveBytes, ai?.MaxHealth ?? 0);
+
+            ai?.OnSave(saveBytes);
+            SaveHelper.SaveInt32(saveBytes, maxHealth);
         }
 
         public override void OnLoad(byte[] loadBytes, in int version)
@@ -146,8 +148,8 @@ namespace ViMG.Entities
             bs.OnLoad(loadBytes, ref index);
             Set(ref bs);
 
+            ai?.OnLoad(loadBytes, ref index);
             maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
-            if (ai != null) ai.MaxHealth = maxHealth;
         }
 
         public void Get(out BasicState state)

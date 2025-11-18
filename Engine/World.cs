@@ -2,6 +2,7 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -311,6 +312,11 @@ namespace ViMG
 			//EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
+			if (Main.Frame % 60 == 0)
+			{
+				Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
+			}
+
             deltaTime *= TimeScale;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
@@ -326,6 +332,8 @@ namespace ViMG
 
 			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
+
+			SyncBasicState.Instance.DoSync(EntityManager, EntIO);
 
 			logic.Update(this, deltaTime);
 

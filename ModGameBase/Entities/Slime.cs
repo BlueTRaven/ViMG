@@ -107,22 +107,24 @@ namespace ViMG.Entities
         {
             base.OnSave(saveBytes);
 
-			Get(out var state);
-			state.OnSave(saveBytes);
-			SaveHelper.SaveInt32(saveBytes, ai?.MaxHealth ?? 0);
+            Get(out var state);
+            state.OnSave(saveBytes);
+
+            ai?.OnSave(saveBytes);
+            SaveHelper.SaveInt32(saveBytes, maxHealth);
         }
 
         public override void OnLoad(byte[] loadBytes, in int version)
         {
             base.OnLoad(loadBytes, version);
 
-			int index = 0;
-			var bs = new BasicState();
-			bs.OnLoad(loadBytes, ref index);
-			Set(ref bs);
+            int index = 0;
+            var bs = new BasicState();
+            bs.OnLoad(loadBytes, ref index);
+            Set(ref bs);
 
-			maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
-			if (ai != null) ai.MaxHealth = maxHealth;
+            ai?.OnLoad(loadBytes, ref index);
+            maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
         public void Get(out BasicState state)

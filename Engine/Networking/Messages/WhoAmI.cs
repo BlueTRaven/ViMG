@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 
 namespace Engine.Networking.Messages
 {
@@ -24,6 +25,8 @@ namespace Engine.Networking.Messages
 
             int whoAmI = addData as int? ?? -1;
             netMessage.writer.Put(whoAmI);
+            netMessage.writer.Put(Main.Time - 1);
+            netMessage.writer.Put(Main.Frame - (Main.FIXED_FPS * 1));
 
             netMessage.Send();
         }
@@ -34,8 +37,10 @@ namespace Engine.Networking.Messages
 
             int whoAmI = reader.GetInt();
             GS.netManager.whoAmI = whoAmI;
+            Main.Time = reader.GetDouble();
+            Main.Frame = reader.GetInt();
 
-            Console.WriteLine("Our player id: {0}", whoAmI);
+            Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
         }
     }
 }

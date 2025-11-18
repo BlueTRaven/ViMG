@@ -630,7 +630,7 @@ namespace ViMG
 					}
 				} else
 				{
-					Console.WriteLine("Could not deserialize an entity with type name {0}. Forgot to add a parameterless constructor.");
+					Console.WriteLine("Could not deserialize an entity with type name {0}. Forgot to add a parameterless constructor.", entData.type);
 				}
             }
 

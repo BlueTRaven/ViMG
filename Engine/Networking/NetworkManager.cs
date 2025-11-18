@@ -58,17 +58,21 @@ namespace Engine.Networking
             public int playerId = -1;
             public int peerId = -1; // -1 if client (we can't send messages to other clients, just to server
 
+            public int latency = 0;
+
             public NetPlayer() { }
 
             public void Deserialize(NetDataReader reader)
             {
                 playerId = reader.GetInt();
                 peerId = -1;
+                latency = 0;
             }
 
             public void Serialize(NetDataWriter writer)
             {
                 writer.Put(playerId);
+                latency = 0;
             }
         }
 
@@ -125,6 +129,13 @@ namespace Engine.Networking
 
         public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
         {
+            for (int i = 0; i < netPlayers.Length; i++)
+            {
+                if (netPlayers[i].peerId == peer.Id)
+                {
+                    netPlayers[i].latency = latency;
+                }
+            }
         }
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)

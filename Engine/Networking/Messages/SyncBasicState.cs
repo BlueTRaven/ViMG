@@ -1,14 +1,18 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
+using SharpDX.MediaFoundation.DirectX;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.PortableExecutable;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using static ViMG.UIs.UI;
 
 namespace Engine.Networking.Messages
 {
@@ -23,6 +27,7 @@ namespace Engine.Networking.Messages
             // (if not, does not do anything)
             BasicState, 
             SuperSimple, // Just id and position
+            EntityUnloaded, // Entity has been unloaded
         }
 
         public struct SyncEntity
@@ -34,10 +39,26 @@ namespace Engine.Networking.Messages
         public static SyncBasicState Instance { get; private set; }
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Both;
 
+        private struct SyncEntityLocal
+        {
+            public SyncType type;
+            public BasicState basicState;
+            public EntityManagerIO.EntityData fullState;
+            public ulong entityId;
+            public double time;
+        }
+
+        private List<SyncEntityLocal> queuedToSync1 = new List<SyncEntityLocal>();
+        private List<SyncEntityLocal> queuedToSync2 = new List<SyncEntityLocal>();
+        private List<SyncEntityLocal> queuedToSync;
+
+
         public SyncBasicState()
         {
             Instance = this;
             Passthrough = true;
+
+            queuedToSync = queuedToSync1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -100,49 +121,141 @@ namespace Engine.Networking.Messages
             ulong id = reader.GetULong();
 
             SyncType type = (SyncType)reader.GetInt();
+            SyncEntityLocal local = new SyncEntityLocal();
+            local.entityId = id;
+            local.time = time;
 
-            Entity? ent = GS.GetWorld().EntityManager.GetById(id);
-            // NOTE: sync state is completely ignored if the entity does not exist.
-            // It is not an error for a client to receive sync state for an entity that does not exist.
-            if (ent != null)
+            switch (type)
             {
-                switch (type)
-                {
-                    case SyncType.SuperSimple:
-                        ent.Position.X = reader.GetFloat();
-                        ent.Position.Y = reader.GetFloat();
-                        ent.Position.Z = reader.GetFloat();
-                        break;
-                    case SyncType.BasicState:
-                        var bstate = reader.Get<BasicState>();
-                        if (ent is ISyncBasicState syncer)
-                        {
-                            syncer.Set(ref bstate);
-                        }
-                        break;
-                    case SyncType.FullSync:
-                        break;
-                }
+                case SyncType.SuperSimple:
+                    local.basicState.position.X = reader.GetFloat();
+                    local.basicState.position.Y = reader.GetFloat();
+                    local.basicState.position.Z = reader.GetFloat();
+                    break;
+                case SyncType.FullSync:
+                    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                    EntityManagerIO.EntityData data = new();
+                    data.Load(bytes);
+                    local.fullState = data;
+                    break;
+                case SyncType.BasicState:
+                    local.basicState = reader.Get<BasicState>();
+                    break;
+                case SyncType.EntityUnloaded:
+                    break;
+            }
 
-                ent.TimeSynced = time;
-            } 
+            queuedToSync.Add(local);
+
+            //Entity? ent = GS.GetWorld().EntityManager.GetById(id);
+            //// NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
+            //// It is not an error for a client to receive sync state for an entity that does not exist.
+            //if (ent != null)
+            //{
+            //    switch (type)
+            //    {
+            //        case SyncType.SuperSimple:
+            //            ent.Position.X = reader.GetFloat();
+            //            ent.Position.Y = reader.GetFloat();
+            //            ent.Position.Z = reader.GetFloat();
+            //            break;
+            //        case SyncType.BasicState:
+            //            var bstate = reader.Get<BasicState>();
+            //            if (ent is ISyncBasicState syncer)
+            //            {
+            //                syncer.Set(ref bstate);
+            //            }
+            //            break;
+            //        case SyncType.FullSync:
+            //            break;
+            //        case SyncType.EntityUnloaded:
+            //            GS.GetWorld().EntityManager.Unload(ent);
+            //            break;
+            //    }
+
+            //    ent.TimeSynced = time;
+            //} 
             
-            // Full Sync has special behavior; if an entity does not already exist, it is created
-            if (type == SyncType.FullSync)
-            {
-                byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-                EntityManagerIO.EntityData data = new();
-                data.Load(bytes);
-                if (data.IsValid)
-                {
-                    if (ent == null)
-                        ent = GS.GetWorld().EntIO.DeserializeEntity(data);
-                    else ent.OnLoad(data.data, data.version);
+            //// Full Sync has special behavior; if an entity does not already exist, it is created
+            //// TODO: what happens if we receive an EntityUnloaded and then this?
+            //if (type == SyncType.FullSync)
+            //{
+            //    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+            //    EntityManagerIO.EntityData data = new();
+            //    data.Load(bytes);
+            //    if (data.IsValid)
+            //    {
+            //        if (ent == null)
+            //            ent = GS.GetWorld().EntIO.DeserializeEntity(data);
+            //        else ent.OnLoad(data.data, data.version);
 
+            //        if (ent != null)
+            //            ent.TimeSynced = time;
+            //    }
+            //}
+        }
+
+        public void DoSync(EntityManager entityManager, EntityManagerIO entIO)
+        {
+            var otherBuffer = queuedToSync == queuedToSync1 ? queuedToSync2 : queuedToSync1;
+
+            foreach (SyncEntityLocal local in queuedToSync)
+            {
+                if (Main.Time > local.time)
+                {
+                    Entity? ent = entityManager.GetById(local.entityId);
+                    // NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
+                    // It is not an error for a client to receive sync state for an entity that does not exist.
                     if (ent != null)
-                        ent.TimeSynced = time;
+                    {
+                        switch (local.type)
+                        {
+                            case SyncType.SuperSimple:
+                                ent.Position.X = local.basicState.position.X;
+                                ent.Position.Y = local.basicState.position.Y;
+                                ent.Position.Z = local.basicState.position.Z;
+                                break;
+                            case SyncType.BasicState:
+                                if (ent is ISyncBasicState syncer)
+                                {
+                                    var bstate = local.basicState;
+                                    syncer.Set(ref bstate);
+                                }
+                                break;
+                            case SyncType.FullSync:
+                                ent.TimeMajorSynced = local.time;
+                                break;
+                            case SyncType.EntityUnloaded:
+                                entityManager.Unload(ent);
+                                break;
+                        }
+
+                        ent.TimeSynced = local.time;
+                    }
+
+                    // Full Sync has special behavior; if an entity does not already exist, it is created
+                    // TODO: what happens if we receive an EntityUnloaded and then this?
+                    if (local.type == SyncType.FullSync)
+                    {
+                        if (local.fullState.IsValid)
+                        {
+                            if (ent == null)
+                                ent = entIO.DeserializeEntity(local.fullState);
+                            else ent.OnLoad(local.fullState.data, local.fullState.version);
+
+                            if (ent != null)
+                                ent.TimeSynced = local.time;
+                        }
+                    }
+                }
+                else
+                {
+                    otherBuffer.Add(local);
                 }
             }
+            queuedToSync.Clear();
+            // Swap buffers
+            queuedToSync = otherBuffer;
         }
     }
 }

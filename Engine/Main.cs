@@ -57,6 +57,7 @@ namespace ViMG
 		public static RegistryService Registry;
 
 		public static FrameCounter frameCounter;
+		public static int Frame;
 
 		public static Random random = new Random(SEED);
 
@@ -319,6 +320,7 @@ namespace ViMG
 
 		private void FixedUpdate(double deltaTime)
 		{
+			Frame += 1;
 			Stopwatch watch = Stopwatch.StartNew();
             var zone = TracyImpl.Tracy.BeginZone();
 
@@ -483,7 +485,18 @@ namespace ViMG
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera.Position).ToString()));
 
 					if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
+					{
 						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
+
+						if (gameStateManager.connectedType != GameStateManager.ConnectedType.Singleplayer)
+						{
+							for (int i = 0; i < World.MAX_PLAYERS; i++)
+							{
+								if (theIsland.netManager.netPlayers[i].playerId != -1)
+									ImGui.Text(string.Format("Player {0}: {1}", i, theIsland.netManager.netPlayers[i].latency));
+							}
+						}
+					}
 				}
                 ImGui.End();
 
