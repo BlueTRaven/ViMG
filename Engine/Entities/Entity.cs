@@ -40,6 +40,8 @@ namespace ViMG.Entities
 
 		public double TimeSynced;
 		public double TimeMajorSynced;
+		public double SyncInterval {get; protected set; } = 0.25;
+		public double MajorSyncInterval { get; protected set; } = 5;
 
         public void SetId(ulong id)
 		{

@@ -21,6 +21,7 @@ namespace Engine.Networking.Messages
             Register(new SyncChunk());
             Register(new SyncBasicState());
             Register(new WhoAmI());
+            Register(new ClientSendInputs());
         }
 
         public override void Register(Message obj)

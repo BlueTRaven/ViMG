@@ -29,14 +29,16 @@ namespace ViMG.Entities
 		public NoticeHandler<Player> noticeHandler;
 		public AISlime? ai;
 
-		public Slime() { }
+		public Slime()
+		{
+		}
 
 		public Slime(Vector3 position)
 		{
-			this.Position = position;
-		}
+			this.Position = position; 
+        }
 
-		public override void Initialize(World world)
+        public override void Initialize(World world)
 		{
 			base.Initialize(world);
 

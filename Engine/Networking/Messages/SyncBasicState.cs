@@ -39,7 +39,7 @@ namespace Engine.Networking.Messages
         public static SyncBasicState Instance { get; private set; }
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Both;
 
-        private struct SyncEntityLocal
+        private struct QueuedSyncEntity
         {
             public SyncType type;
             public BasicState basicState;
@@ -48,9 +48,9 @@ namespace Engine.Networking.Messages
             public double time;
         }
 
-        private List<SyncEntityLocal> queuedToSync1 = new List<SyncEntityLocal>();
-        private List<SyncEntityLocal> queuedToSync2 = new List<SyncEntityLocal>();
-        private List<SyncEntityLocal> queuedToSync;
+        private List<QueuedSyncEntity> queued1 = new List<QueuedSyncEntity>();
+        private List<QueuedSyncEntity> queued2 = new List<QueuedSyncEntity>();
+        private List<QueuedSyncEntity> queued;
 
 
         public SyncBasicState()
@@ -58,7 +58,7 @@ namespace Engine.Networking.Messages
             Instance = this;
             Passthrough = true;
 
-            queuedToSync = queuedToSync1;
+            queued = queued1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -121,7 +121,8 @@ namespace Engine.Networking.Messages
             ulong id = reader.GetULong();
 
             SyncType type = (SyncType)reader.GetInt();
-            SyncEntityLocal local = new SyncEntityLocal();
+            QueuedSyncEntity local = new QueuedSyncEntity();
+            local.type = type;
             local.entityId = id;
             local.time = time;
 
@@ -145,7 +146,7 @@ namespace Engine.Networking.Messages
                     break;
             }
 
-            queuedToSync.Add(local);
+            queued.Add(local);
 
             //Entity? ent = GS.GetWorld().EntityManager.GetById(id);
             //// NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
@@ -195,67 +196,67 @@ namespace Engine.Networking.Messages
             //}
         }
 
-        public void DoSync(EntityManager entityManager, EntityManagerIO entIO)
+        public void Apply(EntityManager entityManager, EntityManagerIO entIO)
         {
-            var otherBuffer = queuedToSync == queuedToSync1 ? queuedToSync2 : queuedToSync1;
+            var otherBuffer = queued == queued1 ? queued2 : queued1;
 
-            foreach (SyncEntityLocal local in queuedToSync)
+            foreach (QueuedSyncEntity queuedSync in queued)
             {
-                if (Main.Time > local.time)
+                if (Main.Time > queuedSync.time)
                 {
-                    Entity? ent = entityManager.GetById(local.entityId);
+                    Entity? ent = entityManager.GetById(queuedSync.entityId);
                     // NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
                     // It is not an error for a client to receive sync state for an entity that does not exist.
                     if (ent != null)
                     {
-                        switch (local.type)
+                        switch (queuedSync.type)
                         {
                             case SyncType.SuperSimple:
-                                ent.Position.X = local.basicState.position.X;
-                                ent.Position.Y = local.basicState.position.Y;
-                                ent.Position.Z = local.basicState.position.Z;
+                                ent.Position.X = queuedSync.basicState.position.X;
+                                ent.Position.Y = queuedSync.basicState.position.Y;
+                                ent.Position.Z = queuedSync.basicState.position.Z;
                                 break;
                             case SyncType.BasicState:
                                 if (ent is ISyncBasicState syncer)
                                 {
-                                    var bstate = local.basicState;
+                                    var bstate = queuedSync.basicState;
                                     syncer.Set(ref bstate);
                                 }
                                 break;
                             case SyncType.FullSync:
-                                ent.TimeMajorSynced = local.time;
+                                ent.TimeMajorSynced = queuedSync.time;
                                 break;
                             case SyncType.EntityUnloaded:
                                 entityManager.Unload(ent);
                                 break;
                         }
 
-                        ent.TimeSynced = local.time;
+                        ent.TimeSynced = queuedSync.time;
                     }
 
                     // Full Sync has special behavior; if an entity does not already exist, it is created
                     // TODO: what happens if we receive an EntityUnloaded and then this?
-                    if (local.type == SyncType.FullSync)
+                    if (queuedSync.type == SyncType.FullSync)
                     {
-                        if (local.fullState.IsValid)
+                        if (queuedSync.fullState.IsValid)
                         {
                             if (ent == null)
-                                ent = entIO.DeserializeEntity(local.fullState);
-                            else ent.OnLoad(local.fullState.data, local.fullState.version);
+                                ent = entIO.DeserializeEntity(queuedSync.fullState);
+                            else ent.OnLoad(queuedSync.fullState.data, queuedSync.fullState.version);
 
                             if (ent != null)
-                                ent.TimeSynced = local.time;
+                                ent.TimeSynced = queuedSync.time;
                         }
                     }
                 }
                 else
                 {
-                    otherBuffer.Add(local);
+                    otherBuffer.Add(queuedSync);
                 }
             }
-            queuedToSync.Clear();
+            queued.Clear();
             // Swap buffers
-            queuedToSync = otherBuffer;
+            queued = otherBuffer;
         }
     }
 }

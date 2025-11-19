@@ -357,7 +357,7 @@ namespace ViMG.Entities
 					{
 						if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
 						{
-							if (Main.Time - entity.TimeMajorSynced > 5)
+							if (Main.Time - entity.TimeMajorSynced > entity.MajorSyncInterval)
 							{
 								var ent = new SyncBasicState.SyncEntity()
 								{
@@ -368,7 +368,7 @@ namespace ViMG.Entities
 							}
 							else
 							{
-								if (Main.Time - entity.TimeSynced > 0.25)
+								if (Main.Time - entity.TimeSynced > entity.SyncInterval)
 								{
 									var ent = new SyncBasicState.SyncEntity()
 									{
@@ -405,7 +405,7 @@ namespace ViMG.Entities
 					Player? localPlayer = world.GetLocalPlayer();
                     if (localPlayer != null)
 					{
-						if (Main.Time - localPlayer.TimeMajorSynced > 5)
+						if (Main.Time - localPlayer.TimeMajorSynced > localPlayer.MajorSyncInterval)
 						{
 							var ent = new SyncBasicState.SyncEntity()
 							{
@@ -416,7 +416,7 @@ namespace ViMG.Entities
 						}
 						else
 						{
-							if (Main.Time - localPlayer.TimeSynced > 0.25)
+							if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval)
 							{
                                 var ent = new SyncBasicState.SyncEntity()
                                 {
@@ -424,8 +424,10 @@ namespace ViMG.Entities
                                     type = SyncBasicState.SyncType.BasicState,
                                 };
                                 Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+
+                                Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
                             }
-						}
+                        }
                     }
 				}
 				else
@@ -441,7 +443,7 @@ namespace ViMG.Entities
 						{
 							if (player != null && player.playerIndex == netPlayer.playerId)
 							{
-								if (Main.Time - player.TimeMajorSynced > 5)
+								if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
 								{
 									var ent = new SyncBasicState.SyncEntity()
 									{
@@ -452,7 +454,7 @@ namespace ViMG.Entities
 								}
 								else
 								{
-									if (Main.Time - player.TimeSynced > 0.25)
+									if (Main.Time - player.TimeSynced > player.SyncInterval)
 									{
 										var ent = new SyncBasicState.SyncEntity()
 										{
@@ -460,7 +462,9 @@ namespace ViMG.Entities
 											type = SyncBasicState.SyncType.BasicState,
 										};
 										Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
-									}
+
+                                        Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+                                    }
 								}
 							}
 						}

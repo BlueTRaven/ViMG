@@ -333,7 +333,8 @@ namespace ViMG
 			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
 
-			SyncBasicState.Instance.DoSync(EntityManager, EntIO);
+			SyncBasicState.Instance.Apply(EntityManager, EntIO);
+			ClientSendInputs.Instance.Apply(player);
 
 			logic.Update(this, deltaTime);
 

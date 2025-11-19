@@ -1,6 +1,9 @@
-﻿using BepuPhysics;
+﻿using A1r.Input;
+using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
+using Engine.Entities;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -281,7 +284,21 @@ namespace ViMG
 		public bool IsLocalPlayer =>
             Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Singleplayer || playerIndex == world.localPlayerIndex;
 
-		public Player()
+		public bool IsInControl => inputLockupTimer <= 0 && 
+			((IsLocalPlayer && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened) ||
+			!IsLocalPlayer);
+
+		public PlayerInput MoveLeft;
+		public PlayerInput MoveRight;
+        public PlayerInput MoveForward;
+        public PlayerInput MoveBack;
+        public PlayerInput Jump;
+        public PlayerInput Run;
+        public PlayerInput MoveDown;
+        public PlayerInput LeftClick;
+        public PlayerInput RightClick;
+
+        public Player()
 		{
 			AlwaysRender = true;
 
@@ -367,6 +384,31 @@ namespace ViMG
 				}
 			}
 
+			if (IsLocalPlayer)
+			{
+				MoveLeft = new PlayerInput(Keys.A);
+				MoveRight = new PlayerInput(Keys.D);
+				MoveForward = new PlayerInput(Keys.W);
+				MoveBack = new PlayerInput(Keys.S);
+				Jump = new PlayerInput(Keys.Space);
+				Run = new PlayerInput(Keys.LeftShift);
+				MoveDown = new PlayerInput(Keys.LeftControl);
+				LeftClick = new PlayerInput(MouseInput.LeftButton);
+				RightClick = new PlayerInput(MouseInput.RightButton);
+			}
+			else
+			{
+                MoveLeft = PlayerInput.NonLocalInput(Keys.A, true);
+                MoveRight = PlayerInput.NonLocalInput(Keys.D, true);
+                MoveForward = PlayerInput.NonLocalInput(Keys.W, true);
+                MoveBack = PlayerInput.NonLocalInput(Keys.S, true);
+                Jump = PlayerInput.NonLocalInput(Keys.Space, false);
+                Run = PlayerInput.NonLocalInput(Keys.LeftShift, true);
+                MoveDown = PlayerInput.NonLocalInput(Keys.LeftControl, true);
+                LeftClick = PlayerInput.NonLocalInput(MouseInput.LeftButton, false);
+                RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, false);
+            }
+
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
 			{
@@ -436,7 +478,17 @@ namespace ViMG
 			if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
-			hasMoved = false;
+			MoveLeft.Update();
+            MoveRight.Update();
+            MoveForward.Update();
+            MoveBack.Update();
+            Jump.Update();
+            Run.Update();
+            MoveDown.Update();
+            LeftClick.Update();
+            RightClick.Update();
+
+            hasMoved = false;
 			hasRotated = false;
 
 			if (IsLocalPlayer)
@@ -972,13 +1024,13 @@ namespace ViMG
 
 		private void UpdateMovementWater(double deltaTime)
 		{
-            Vector3 actualMaxVel = MaxVelocitySwimming;
+			Vector3 actualMaxVel = MaxVelocitySwimming;
 
-            bool movementPressed = false;
-            //Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-            Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
+			bool movementPressed = false;
+			//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
 
-			if (Main.inputManager.IsHeld(Keys.LeftShift))
+			if (Run.Pressed())
 			{
 				IsRunning = true;
 				actualMaxVel = MaxVelocitySwimmingFast;
@@ -996,42 +1048,39 @@ namespace ViMG
 
 			Vector3 toAddToVelocity = Vector3.Zero;
 
-			if (IsLocalPlayer)
+			if (MoveForward.Pressed())
 			{
-				if (Main.inputManager.IsPressed(Keys.W))
-				{
-					toAddToVelocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.S))
-				{
-					toAddToVelocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.A))
-				{
-					toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.D))
-				{
-					toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-
-				if (Main.inputManager.IsPressed(Keys.Space))
-				{
-					toAddToVelocity += Vector3.Normalize(Vector3.Up) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.LeftControl))
-				{
-					toAddToVelocity -= Vector3.Normalize(Vector3.Up) * actualAcceleration;
-					movementPressed = true;
-				}
+				toAddToVelocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (MoveBack.Pressed())
+			{
+				toAddToVelocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (MoveLeft.Pressed())
+			{
+				toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (MoveRight.Pressed())
+			{
+				toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				movementPressed = true;
 			}
 
-			if ((contactChecker.OnGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
+			if (Jump.Pressed())
+			{
+				toAddToVelocity += Vector3.Normalize(Vector3.Up) * actualAcceleration;
+				movementPressed = true;
+			}
+			if (MoveDown.Pressed())
+			{
+				toAddToVelocity -= Vector3.Normalize(Vector3.Up) * actualAcceleration;
+				movementPressed = true;
+			}
+
+			if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed())
 			{
 				hasMoved = true;
 				if (!contactChecker.OnGround)
@@ -1068,14 +1117,14 @@ namespace ViMG
 				velocity += toAddToVelocity;
 			}
 
-            if (movementPressed || velocity.Length() > float.Epsilon)
-                hasMoved = true;
+			if (movementPressed || velocity.Length() > float.Epsilon)
+				hasMoved = true;
 
 			velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime;
 
-            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
 
-            UpdatePerformAction();
+			UpdatePerformAction();
 		}
 
 		private void UpdateMovementNoclip(double deltaTime)
@@ -1128,12 +1177,12 @@ namespace ViMG
 			//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
 			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
 
-			if (Main.inputManager.JustReleased(Keys.LeftShift))
+			if (!Run.Pressed())
 				IsRunning = false;
 
-			if (inputLockupTimer <= 0 && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
+			if (IsInControl)
 			{
-				if (contactChecker.OnGround && Main.inputManager.IsHeld(Keys.LeftShift))
+				if (contactChecker.OnGround && Run.Pressed())
 					IsRunning = true;
 
 				float actualAcceleration = moveSpeed + stats.Acceleration;
@@ -1147,41 +1196,38 @@ namespace ViMG
 				actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
 
 				Vector3 toAddToVelocity = Vector3.Zero;
-				if (IsLocalPlayer)
+				if (MoveForward.Pressed())
 				{
-					if (Main.inputManager.IsPressed(Keys.W))
+					toAddToVelocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (MoveBack.Pressed())
+				{
+					toAddToVelocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (MoveLeft.Pressed())
+				{
+					toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+				if (MoveRight.Pressed())
+				{
+					toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					movementPressed = true;
+				}
+				if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed())
+				{
+					hasMoved = true;
+					if (!contactChecker.OnGround)
 					{
-						toAddToVelocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
-						movementPressed = true;
-					}
-					if (Main.inputManager.IsPressed(Keys.S))
-					{
-						toAddToVelocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
-						movementPressed = true;
-					}
-					if (Main.inputManager.IsPressed(Keys.A))
-					{
-						toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-						movementPressed = true;
-					}
-					if (Main.inputManager.IsPressed(Keys.D))
-					{
-						toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-						movementPressed = true;
-					}
-					if ((contactChecker.OnGround || currentJumps > 0) && Main.inputManager.JustPressed(Keys.Space))
-					{
-						hasMoved = true;
-						if (!contactChecker.OnGround)
-						{
-							stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
+						stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
 
-							currentJumps--;
-						}
-						else
-						{
-							velocity.Y = JumpSpeed + stats.JumpSpeed;
-						}
+						currentJumps--;
+					}
+					else
+					{
+						velocity.Y = JumpSpeed + stats.JumpSpeed;
 					}
 				}
 
@@ -1190,13 +1236,13 @@ namespace ViMG
 
 				if (velXZ.Length() > maxVelXZ)
 				{
-                    //already above max velocity
+					//already above max velocity
 					//in this scenario just subtract some velocity.
-                    Vector2 xz = velXZ;
-                    xz -= Vector2.Normalize(xz) * actualAcceleration;
-                    velocity = new Vector3(xz.X, velocity.Y, xz.Y);
-                }
-                if ((velocity + toAddToVelocity).XZ().Length() > maxVelXZ)
+					Vector2 xz = velXZ;
+					xz -= Vector2.Normalize(xz) * actualAcceleration;
+					velocity = new Vector3(xz.X, velocity.Y, xz.Y);
+				}
+				if ((velocity + toAddToVelocity).XZ().Length() > maxVelXZ)
 				{
 					//not above max velocity; set velocity to max velocity.
 					velXZ = Vector2.Normalize((velocity + toAddToVelocity).XZ()) * maxVelXZ;
@@ -1216,9 +1262,10 @@ namespace ViMG
 				Facing = Vector3.Normalize(velocity);
 			}
 
-
-			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && Main.inputManager.JustReleased(Keys.Space))
+			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && !Jump.Pressed())
+			{
 				velocity.Y = Cube.CUBE_SCALE * 3.2f;
+			}
 
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
 
@@ -1273,7 +1320,7 @@ namespace ViMG
             if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
                 !menuPlayer.IsOpened && useTimer <= 0)
             {
-                if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
+                if (LeftClick.Pressed())
                 {
                     if (inventory.Get(highlightIndex).item != null && 
 						inventory.Get(highlightIndex).item.LeftClick(this, inventory, highlightIndex, 
@@ -1288,7 +1335,7 @@ namespace ViMG
                     }
                 }
 
-                if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
+                if (RightClick.Pressed())
                 {
                     bool performedAction = false;
                     var entityTracking = world.EntityManager.GetEntityTrackingPosition(LookAtPos).GetOrDefault(null);
@@ -1350,7 +1397,7 @@ namespace ViMG
 
 					if (dashSubstate == 0)
 					{
-						if (Main.inputManager.JustPressed(Keys.LeftShift))
+						if (Run.JustPressed())
 						{
 							dashSubstate++;
 							dashDoublePressTimer = DOUBLEPRESS_DURATION;
@@ -1360,7 +1407,7 @@ namespace ViMG
 					{
 						if (dashDoublePressTimer >= 0)
 						{
-							if (Main.inputManager.JustPressed(Keys.LeftShift))
+							if (Run.JustPressed())
 							{
 								state = State.Dash;
 
