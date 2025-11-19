@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +8,7 @@ using ViMG.Cubes;
 
 namespace ViMG
 {
-	public struct CubePosition
+	public struct CubePosition : INetSerializable
 	{
 		public enum CoordinateSpace
 		{
@@ -157,7 +158,21 @@ namespace ViMG
 			return new Rectangle3D(position.InWorldSpace(), new Vector3(Cube.CUBE_SCALE));
 		}
 
-		public static bool operator ==(CubePosition posA, CubePosition posB)
+        public void Serialize(NetDataWriter writer)
+        {
+			writer.Put(X);
+            writer.Put(Y);
+            writer.Put(Z);
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+			X = reader.GetInt();
+            Y = reader.GetInt();
+            Z = reader.GetInt();
+        }
+
+        public static bool operator ==(CubePosition posA, CubePosition posB)
 		{
 			return posA.X == posB.X && posA.Y == posB.Y && posA.Z == posB.Z;
 		}

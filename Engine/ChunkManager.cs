@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -19,7 +20,7 @@ namespace ViMG
     //Try to stay away from dependance on World if possible
     public class ChunkManager
     {
-        private readonly struct CubeUpdated
+        public readonly struct CubeUpdated
         {
             public readonly Player? player;
             public readonly double timeUpdated;
@@ -129,6 +130,11 @@ namespace ViMG
                             tracker.TrackingCubeUpdated(world, this, updated.player, updated.newId);
                         else if (entityTracking is IMultiCubeTracker multiTracker)
                             multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
+                    }
+
+                    if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server)
+                    {
+                        Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, updated);
                     }
                 }
                 else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)

@@ -22,6 +22,7 @@ namespace Engine.Networking.Messages
             Register(new SyncBasicState());
             Register(new WhoAmI());
             Register(new ClientSendInputs());
+            Register(new SyncCubeUpdate());
         }
 
         public override void Register(Message obj)
