@@ -22,13 +22,12 @@ using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
-using static ViMG.Player;
 
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
 	[EntityMeta(10, 0)]
-	public class Player : Entity, IHitboxOwner, ISyncBasicState
+	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
 	{
         private struct HitboxToSpawnLater
         {
@@ -145,7 +144,7 @@ namespace ViMG
         public CubePosition SpawnPosition;
 		private float loadedTimeOfDay = -1;
 
-		public Vector3 Rotation;
+		public Vector3 Rotation { get; set; }
 		public Vector3 Facing;	//The direction the player is facing.
 
 		private static float moveSpeed = Cube.CUBE_SCALE * 0.8f;
@@ -1198,22 +1197,22 @@ namespace ViMG
 				Vector3 toAddToVelocity = Vector3.Zero;
 				if (MoveForward.Pressed())
 				{
-					toAddToVelocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					toAddToVelocity -= Vector3.Normalize((this as IRotatable).ForwardYawOnly) * actualAcceleration;
 					movementPressed = true;
 				}
 				if (MoveBack.Pressed())
 				{
-					toAddToVelocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
+					toAddToVelocity += Vector3.Normalize((this as IRotatable).ForwardYawOnly) * actualAcceleration;
 					movementPressed = true;
 				}
 				if (MoveLeft.Pressed())
 				{
-					toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					toAddToVelocity -= Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
 					movementPressed = true;
 				}
 				if (MoveRight.Pressed())
 				{
-					toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+					toAddToVelocity += Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
 					movementPressed = true;
 				}
 				if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed())

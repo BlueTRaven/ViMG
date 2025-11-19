@@ -312,7 +312,7 @@ namespace ViMG
 			//EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			if (Main.Frame % 60 == 0)
+			if (Main.Frame % 240 == 0)
 			{
 				Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
 			}
