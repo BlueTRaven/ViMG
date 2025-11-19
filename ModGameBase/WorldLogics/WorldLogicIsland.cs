@@ -9,6 +9,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Rendering;
 using ViMG.Spawners;
@@ -114,9 +115,9 @@ namespace ViMG.WorldLogics
 			world.PassiveSpawnerManager?.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));
 		}
 
-        public override void Update(World world, double deltaTime)
-        {
-            base.Update(world, deltaTime);
+		public override void Update(World world, double deltaTime)
+		{
+			base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
 			foreach (Player player in world.player)
@@ -126,12 +127,12 @@ namespace ViMG.WorldLogics
 					Vector3 lavaPosition = new Vector3(player.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), player.Position.Z);
 
 					if (player.Position.Y < lavaPosition.Y)
-                        player.Kill();
+						player.Kill();
 				}
 			}
 
 			var localPlayer = world.GetLocalPlayer();
-            if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer != null && localPlayer.Position.Y / Cube.CUBE_SCALE < 140)
+			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer != null && localPlayer.Position.Y / Cube.CUBE_SCALE < 140)
 			{
 				Vector3 lavaPosition = new Vector3(localPlayer.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), localPlayer.Position.Z);
 
@@ -170,35 +171,35 @@ namespace ViMG.WorldLogics
 
 					WeatherManager.WeatherType nextWeather = types[Main.random.Next(0, types.Length)];
 
-                    weatherManager.DoTransition(nextWeather, 15f);
-                }
+					weatherManager.DoTransition(nextWeather, 15f);
+				}
 			}
 			else weatherChangeTimer -= (float)deltaTime;
 
-            //below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-            if (localPlayer != null && CubePosition.FromWorldSpace(localPlayer.Position).Y > 140)
+			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
+			if (localPlayer != null && CubePosition.FromWorldSpace(localPlayer.Position).Y > 140)
 			{
 				Main.Renderer.DoCSMLight = true;
 
-                Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
+				Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
 
-                if (world.GetDuskTime() > 0)
-                {
-                    duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
-                    duskColors[^1] = sunlightColor;
-                    sunlightColor = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
-                }
+				if (world.GetDuskTime() > 0)
+				{
+					duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
+					duskColors[^1] = sunlightColor;
+					sunlightColor = Utility.MultiLerp(world.GetDuskTime(), Color.Lerp, duskColors);
+				}
 
 				Vector4 lightColor = sunlightColor.ToVector4();
 
-                float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+				float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 				Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
 
-                weatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
+				weatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
 
-                if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
+				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
 				{
 					directionalLight.UpdateCameras(world, lightDir, lightColor);
 
@@ -210,7 +211,7 @@ namespace ViMG.WorldLogics
 					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
 					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				}
-            }
+			}
 			else
 			{
 				Main.Renderer.DoCSMLight = false;
@@ -218,6 +219,24 @@ namespace ViMG.WorldLogics
 				if (Main.inputManager.IsHeld(Keys.F6))
 					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 			}
+
+			if (Main.inputManager.JustPressed(Keys.V))
+			{
+				world.EntityManager.Add(new Slime(world.GetLocalPlayer().Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+
+                //var visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
+                //visStats.rollFollowsVelocity = true;
+
+                //world.ProjectileManager.Add(new ProjectileManager.Projectile(this, Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f,
+                //	-Main.camera.Forward * Cube.CUBE_SCALE * 0.25f, 10,
+                //	visStats, new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, Cube.CUBE_SCALE * 1f, Cube.CUBE_SCALE * 0.125f, Cube.CUBE_SCALE)),
+                //	new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.5f), new Vector3(Cube.CUBE_SCALE)));
+
+                //for (int i = 0; i < 8; i++)
+                //world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, slime));
+                //world.EntityManager.Add(new ManaStar(new Vector2(Main.random.NextFloat(-70, 70), Main.random.NextFloat(-180, 180))));
+                //world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
+            }
         }
 
         public override bool AllowsLoadingNextLayer(World world)

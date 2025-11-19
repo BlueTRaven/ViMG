@@ -186,45 +186,63 @@ namespace ViMG.Entities
 				entity.LoadContent(world);
 			}
 
-            if (entity is ICubeTracker tracker)
-            {
-                CubePosition position = tracker.TrackedPosition;
+			if (entity is ICubeTracker tracker)
+			{
+				CubePosition position = tracker.TrackedPosition;
 
-                ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-                if (cubeTrackers.ContainsKey(chunkPos))
-                    cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-                else
-                {
-                    CubeTrackers ts = new CubeTrackers();
-                    ts.chunkPosition = chunkPos;
-                    ts.Add(position.InChunkSpace(chunkPos), entity);
+				if (cubeTrackers.ContainsKey(chunkPos))
+					cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+				else
+				{
+					CubeTrackers ts = new CubeTrackers();
+					ts.chunkPosition = chunkPos;
+					ts.Add(position.InChunkSpace(chunkPos), entity);
 
-                    cubeTrackers.Add(chunkPos, ts);
-                }
-            }
+					cubeTrackers.Add(chunkPos, ts);
+				}
+			}
 
-            if (entity is IMultiCubeTracker multiTracker)
-            {
-                foreach (CubePosition position in multiTracker.TrackedPositions)
-                {
-                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+			if (entity is IMultiCubeTracker multiTracker)
+			{
+				foreach (CubePosition position in multiTracker.TrackedPositions)
+				{
+					ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-                    if (cubeTrackers.ContainsKey(chunkPos))
-                        cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-                    else
-                    {
-                        CubeTrackers ts = new CubeTrackers();
+					if (cubeTrackers.ContainsKey(chunkPos))
+						cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+					else
+					{
+						CubeTrackers ts = new CubeTrackers();
 						ts.chunkPosition = chunkPos;
-                        ts.Add(position.InChunkSpace(chunkPos), entity);
+						ts.Add(position.InChunkSpace(chunkPos), entity);
 
-                        cubeTrackers.Add(chunkPos, ts);
-                    }
-                }
-            }
+						cubeTrackers.Add(chunkPos, ts);
+					}
+				}
+			}
 
-            OnEntityAdded?.Invoke(entity);
-		}
+			OnEntityAdded?.Invoke(entity);
+
+			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server && entity is not Player)
+			{
+				var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+				if (entSerializableAttr != null)
+				{
+					if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+					{
+						// Send a full sync when entity is created. Disregard TimeSynced
+						var ent = new SyncBasicState.SyncEntity()
+						{
+							entity = entity,
+							type = SyncBasicState.SyncType.FullSync,
+						};
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+					}
+				}
+			}
+        }
 
 		public void Remove(Entity entity)
 		{
@@ -490,6 +508,26 @@ namespace ViMG.Entities
 
 			if (iteratingUpdate)
 				throw new Exception("Cannot remove entity while iterating");
+
+			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server && entity is not Player)
+			{
+				if (entity is not Player)
+				{
+					var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+					if (entSerializableAttr != null)
+					{
+						if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+						{
+							var ent = new SyncBasicState.SyncEntity()
+							{
+								entity = entity,
+								type = SyncBasicState.SyncType.EntityUnloaded,
+							};
+							Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+						}
+					}
+				}
+			}
 
 			entity.OnUnload();
 			entities.Remove(entity);

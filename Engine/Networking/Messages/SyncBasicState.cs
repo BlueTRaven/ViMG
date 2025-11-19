@@ -25,8 +25,11 @@ namespace Engine.Networking.Messages
             FullSync, 
             // Sync with ISyncBasicState implementation if available
             // (if not, does not do anything)
-            BasicState, 
-            SuperSimple, // Just id and position
+            // Unreliable
+            BasicState,
+            // Just id and position
+            // Unreliable
+            SuperSimple, 
             EntityUnloaded, // Entity has been unloaded
         }
 
@@ -66,6 +69,7 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             SyncEntity entity = addData as SyncEntity? ?? throw new Exception();
+
             if (entity.entity == null) Debug.Assert(false);
 
             if (entity.type == SyncType.BasicState && entity.entity is not ISyncBasicState)
@@ -73,6 +77,21 @@ namespace Engine.Networking.Messages
                 Console.WriteLine("Couldn't do BasicState sync for entity {0} - it does not implement ISyncBasicState!", entity.entity);
                 return;
             }
+
+            if (entity.type == SyncType.BasicState || entity.type == SyncType.SuperSimple)
+            {
+                netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            }
+
+            double time = Main.Time;
+
+            // TODO this may be necessary
+            // If we receive a FullSync and EntityUnloaded message together, the former might be processed AFTER the latter,
+            // and the entity would be re-created and exist on the client when it shouldn't
+            //if (entity.type == SyncType.EntityUnloaded)
+            //{
+            //    time += 0.25;
+            //}
 
             netMessage.writer.Put(Main.Time);
             entity.entity.TimeSynced = Main.Time;
@@ -107,8 +126,9 @@ namespace Engine.Networking.Messages
                     netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
                     break;
             }
-            
 
+            //if (entity.entity != null && entity.entity is Player)
+            //    Console.WriteLine("Do sync: {0}", entity.type.ToString());
             netMessage.Send();
         }
 
@@ -146,6 +166,7 @@ namespace Engine.Networking.Messages
                     break;
             }
 
+            //Console.WriteLine("Received player sync 2 {0} {1} {2}", time, type.ToString(), id);
             queued.Add(local);
 
             //Entity? ent = GS.GetWorld().EntityManager.GetById(id);
@@ -204,11 +225,17 @@ namespace Engine.Networking.Messages
             {
                 if (Main.Time > queuedSync.time)
                 {
+                    //Console.WriteLine("Received player sync 1 {0}", queuedSync.type.ToString());
+
                     Entity? ent = entityManager.GetById(queuedSync.entityId);
                     // NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
                     // It is not an error for a client to receive sync state for an entity that does not exist.
                     if (ent != null)
                     {
+                        //if (ent is Player)
+                        //{
+                        //    Console.WriteLine("Received player sync {0}", queuedSync.type.ToString());
+                        //}
                         switch (queuedSync.type)
                         {
                             case SyncType.SuperSimple:
@@ -254,6 +281,7 @@ namespace Engine.Networking.Messages
                     otherBuffer.Add(queuedSync);
                 }
             }
+
             queued.Clear();
             // Swap buffers
             queued = otherBuffer;

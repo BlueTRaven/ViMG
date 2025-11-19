@@ -31,7 +31,7 @@ namespace ViMG.Entities
 
 		private Vector3 jumpDir;
 		private int numJumps;
-		private float jumpTimer;
+		public float jumpTimer;
 		private float jumpTime;
 
 		public float JumpTimer => jumpTimer;
