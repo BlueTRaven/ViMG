@@ -187,7 +187,6 @@ namespace ViMG
 
         public void MarkCubeMeshInfoDirty(Player? player, CubePosition position, ushort oldId, ushort updatedId)
         {
-            //GetCubeMeshInfo(position).version++;
             updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
@@ -196,8 +195,6 @@ namespace ViMG
 
                 if (IsInWorldBounds(adjacentPosition))
                 {
-                    //GetCubeMeshInfo(adjacentPosition).version++;
-
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 

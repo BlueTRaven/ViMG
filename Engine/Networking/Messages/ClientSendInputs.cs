@@ -111,17 +111,19 @@ namespace Engine.Networking.Messages
                     if (player == null) continue;
                     var inp = qinput.inputs;
 
-                    player.Jump.artificialPress = (inp | InputTypes.Jump) == InputTypes.Jump;
-                    player.LeftClick.artificialPress = (inp | InputTypes.LeftClick) == InputTypes.LeftClick;
-                    player.MoveBack.artificialPress = (inp | InputTypes.MoveBack) == InputTypes.MoveBack;
-                    player.MoveDown.artificialPress = (inp | InputTypes.MoveDown) == InputTypes.MoveDown;
-                    player.MoveForward.artificialPress = (inp | InputTypes.MoveForward) == InputTypes.MoveForward;
-                    player.MoveLeft.artificialPress = (inp | InputTypes.MoveLeft) == InputTypes.MoveLeft;
-                    player.MoveRight.artificialPress = (inp | InputTypes.MoveRight) == InputTypes.MoveRight;
-                    player.RightClick.artificialPress = (inp | InputTypes.RightClick) == InputTypes.RightClick;
-                    player.Run.artificialPress = (inp | InputTypes.Run) == InputTypes.Run;
+                    player.Jump.artificialPress = (inp & InputTypes.Jump) == InputTypes.Jump;
+                    player.LeftClick.artificialPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
+                    player.MoveBack.artificialPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
+                    player.MoveDown.artificialPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
+                    player.MoveForward.artificialPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
+                    player.MoveLeft.artificialPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+                    player.MoveRight.artificialPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
+                    player.RightClick.artificialPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
+                    player.Run.artificialPress = (inp & InputTypes.Run) == InputTypes.Run;
 
                     player.highlightIndex = qinput.heldItem;
+
+                    //Console.WriteLine("{0} {1} {2}", qinput.playerIndex, inp.ToString(), player.LeftClick.artificialPress);
                 }
                 else
                 {

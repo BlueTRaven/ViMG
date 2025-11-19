@@ -482,16 +482,6 @@ namespace ViMG
 			if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
-			MoveLeft.Update();
-            MoveRight.Update();
-            MoveForward.Update();
-            MoveBack.Update();
-            Jump.Update();
-            Run.Update();
-            MoveDown.Update();
-            LeftClick.Update();
-            RightClick.Update();
-
             hasMoved = false;
 			hasRotated = false;
 
@@ -846,7 +836,17 @@ namespace ViMG
 			else preUseTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
-		}
+
+            MoveLeft.Update();
+            MoveRight.Update();
+            MoveForward.Update();
+            MoveBack.Update();
+            Jump.Update();
+            Run.Update();
+            MoveDown.Update();
+            LeftClick.Update();
+            RightClick.Update();
+        }
 
 		private void UpdateCollisionType()
 		{
@@ -1320,7 +1320,7 @@ namespace ViMG
 		{
             if (IsInControl && useTimer <= 0)
             {
-                if (LeftClick.Pressed())
+				if (LeftClick.Pressed())
                 {
                     if (inventory.Get(highlightIndex).item != null && 
 						inventory.Get(highlightIndex).item.LeftClick(this, inventory, highlightIndex, 

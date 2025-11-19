@@ -960,81 +960,63 @@ namespace ViMG
 			{
 				if (instant)
 				{
-					ChunkManager.CubeView.SetCube(position, 0, player);
-
-					List<ItemInstance> items = new List<ItemInstance>();
-					cube.GetDrops(items);
-
-					foreach (ItemInstance item in items)
-					{
-						EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
-							new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-								Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
-						EntityManager.Add(ent);
-					}
-
-					// TODO MULTIPLAYER REFACTOR
-					// This should be the player that actually performed the mining
-					cube.OnMined(player, position);
+					DoMineCube(position, player);
 
 					return true;
 				}
 
-				if (miningCubes.ContainsKey(position))
+				bool doRemove = false;
+				if (miningCubes.TryGetValue(position, out var currentMined))
 				{
-					mined.progress = miningCubes[position].progress + num;
-					if (mined.progress >= cube.MineProgressToBreak)
+					doRemove = true;
+					mined = currentMined with
 					{
-						miningCubes.Remove(position);
-						ChunkManager.CubeView.SetCube(position, 0, player);
-
-						List<ItemInstance> items = new List<ItemInstance>();
-						cube.GetDrops(items);
-
-						foreach (ItemInstance item in items)
-						{
-							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
-								new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-									Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
-
-							if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
-								EntityManager.Add(ent);
-						}
-
-						cube.OnMined(player, position);
-
-						return true;
-					}
-					else miningCubes[position] = mined;
+						progress = currentMined.progress + mined.progress
+					};
+					miningCubes[position] = mined;
 				}
 				else
 				{
 					if (mined.progress < cube.MineProgressToBreak)
-						miningCubes.Add(position, mined);
-					else
-					{
-						ChunkManager.CubeView.SetCube(position, 0, player);
-
-						List<ItemInstance> items = new List<ItemInstance>();
-						cube.GetDrops(items);
-
-						foreach (ItemInstance item in items)
-						{
-							EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
-								new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-									Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
-							EntityManager.Add(ent);
-						}
-
-						cube.OnMined(player, position);
-
-						return true;
-					} 
+						miningCubes.TryAdd(position, mined);
 				}
+
+                if (mined.progress >= cube.MineProgressToBreak)
+                {
+                    if (doRemove)
+						miningCubes.Remove(position);
+
+					// Client doesn't get to actually break blocks. Server does it for them
+                    if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
+                        DoMineCube(position, player);
+
+                    return true;
+                }
 			}
 
 			return false;
 		}
+
+		private void DoMineCube(CubePosition position, Player player)
+		{
+            Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+            ChunkManager.CubeView.SetCube(position, 0, player);
+
+            List<ItemInstance> items = new List<ItemInstance>();
+            cube.GetDrops(items);
+
+            foreach (ItemInstance item in items)
+            {
+                EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
+                    new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+                        Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
+
+                EntityManager.Add(ent);
+            }
+
+            cube.OnMined(player, position);
+        }
 
 		public struct RaycastResult 
 		{
