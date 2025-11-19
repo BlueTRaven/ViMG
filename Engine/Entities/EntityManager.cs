@@ -410,18 +410,32 @@ namespace ViMG.Entities
 
 			toDeleteLater.Clear();
 
-			// Handle syncing players separately from normal entities.
-			// This is mainly because of two factors:
-			// Clients send their player back to the server (client authoratative over its own player)
-			// and Servers will send player data to all clients but to the client whose player it represents
+			UpdateNetwork();
+		}
+
+		private void UpdateNetwork()
+		{
+            // Handle syncing players separately from normal entities.
+            // This is mainly because of two factors:
+            // Clients send their player back to the server (client authoratative over its own player)
+            // and Servers will send player data to all clients but to the client whose player it represents
+            var localPlayer = world.GetLocalPlayer();
+			if (localPlayer != null)
+			{
+				// Local player has all its inputs synced to all connections
+				if (Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
+				{
+					Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+					localPlayer.TimeSinceInputSynced = Main.Time;
+				}
+			}
 			if (Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Singleplayer)
 			{
 				if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Client)
 				{
 					// On the client, player state is authoratative (mostly?)
 					// So we inform the server of our changes.
-					Player? localPlayer = world.GetLocalPlayer();
-                    if (localPlayer != null)
+					if (localPlayer != null)
 					{
 						if (Main.Time - localPlayer.TimeMajorSynced > localPlayer.MajorSyncInterval)
 						{
@@ -436,17 +450,15 @@ namespace ViMG.Entities
 						{
 							if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval)
 							{
-                                var ent = new SyncBasicState.SyncEntity()
-                                {
-                                    entity = localPlayer,
-                                    type = SyncBasicState.SyncType.BasicState,
-                                };
-                                Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-
-                                Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
-                            }
-                        }
-                    }
+								var ent = new SyncBasicState.SyncEntity()
+								{
+									entity = localPlayer,
+									type = SyncBasicState.SyncType.BasicState,
+								};
+								Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+							}
+						}
+					}
 				}
 				else
 				{
@@ -480,9 +492,7 @@ namespace ViMG.Entities
 											type = SyncBasicState.SyncType.BasicState,
 										};
 										Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
-
-                                        Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
-                                    }
+									}
 								}
 							}
 						}

@@ -161,6 +161,7 @@ namespace ViMG.Entities
                 velocity = ai?.Velocity ?? Vector3.Zero,
                 health = ai?.Health ?? 0,
                 state = 0,
+                timers = { [0] = ai?.JumpTimer ?? 0 },
             };
         }
 
@@ -171,6 +172,7 @@ namespace ViMG.Entities
             {
                 ai.Velocity = state.velocity;
                 ai.Health = state.health;
+                ai.jumpTimer = state.timers[0];
             }
         }
     }

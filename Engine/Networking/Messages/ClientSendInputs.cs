@@ -18,7 +18,7 @@ namespace Engine.Networking.Messages
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
 
         [Flags]
-        public enum InputTypes
+        public enum InputTypes : ushort
         {
             None,
             MoveLeft = 1 << 1,
@@ -34,7 +34,7 @@ namespace Engine.Networking.Messages
 
         private struct QueuedInput
         {
-            public int playerIndex;
+            public byte playerIndex;
             public double time;
             public InputTypes inputs;
         }
@@ -67,9 +67,9 @@ namespace Engine.Networking.Messages
             if (player.RightClick.Pressed()) inputTypes |= InputTypes.RightClick;
             if (player.Run.Pressed())  inputTypes |= InputTypes.Run;
 
-            netMessage.writer.Put(GS.GetWorld().localPlayerIndex);
             netMessage.writer.Put(Main.Time);
-            netMessage.writer.Put((int)inputTypes);
+            netMessage.writer.Put((ushort)inputTypes);
+            netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
 
             netMessage.Send();
         }
@@ -78,9 +78,9 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader);
 
-            int whoami = reader.GetInt();
             double time = reader.GetDouble();
-            InputTypes inp = (InputTypes)reader.GetInt();
+            InputTypes inp = (InputTypes)reader.GetUShort();
+            byte whoami = reader.GetByte();
 
             var player = GS.GetWorld().player[whoami];
             if (player != null)

@@ -287,6 +287,8 @@ namespace ViMG
 			((IsLocalPlayer && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened) ||
 			!IsLocalPlayer);
 
+		public double TimeSinceInputSynced;
+
 		public PlayerInput MoveLeft;
 		public PlayerInput MoveRight;
         public PlayerInput MoveForward;
