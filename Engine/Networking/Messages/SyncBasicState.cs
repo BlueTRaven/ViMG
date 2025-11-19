@@ -127,8 +127,6 @@ namespace Engine.Networking.Messages
                     break;
             }
 
-            //if (entity.entity != null && entity.entity is Player)
-            //    Console.WriteLine("Do sync: {0}", entity.type.ToString());
             netMessage.Send();
         }
 
@@ -166,55 +164,7 @@ namespace Engine.Networking.Messages
                     break;
             }
 
-            //Console.WriteLine("Received player sync 2 {0} {1} {2}", time, type.ToString(), id);
             queued.Add(local);
-
-            //Entity? ent = GS.GetWorld().EntityManager.GetById(id);
-            //// NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
-            //// It is not an error for a client to receive sync state for an entity that does not exist.
-            //if (ent != null)
-            //{
-            //    switch (type)
-            //    {
-            //        case SyncType.SuperSimple:
-            //            ent.Position.X = reader.GetFloat();
-            //            ent.Position.Y = reader.GetFloat();
-            //            ent.Position.Z = reader.GetFloat();
-            //            break;
-            //        case SyncType.BasicState:
-            //            var bstate = reader.Get<BasicState>();
-            //            if (ent is ISyncBasicState syncer)
-            //            {
-            //                syncer.Set(ref bstate);
-            //            }
-            //            break;
-            //        case SyncType.FullSync:
-            //            break;
-            //        case SyncType.EntityUnloaded:
-            //            GS.GetWorld().EntityManager.Unload(ent);
-            //            break;
-            //    }
-
-            //    ent.TimeSynced = time;
-            //} 
-            
-            //// Full Sync has special behavior; if an entity does not already exist, it is created
-            //// TODO: what happens if we receive an EntityUnloaded and then this?
-            //if (type == SyncType.FullSync)
-            //{
-            //    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-            //    EntityManagerIO.EntityData data = new();
-            //    data.Load(bytes);
-            //    if (data.IsValid)
-            //    {
-            //        if (ent == null)
-            //            ent = GS.GetWorld().EntIO.DeserializeEntity(data);
-            //        else ent.OnLoad(data.data, data.version);
-
-            //        if (ent != null)
-            //            ent.TimeSynced = time;
-            //    }
-            //}
         }
 
         public void Apply(EntityManager entityManager, EntityManagerIO entIO)
@@ -225,17 +175,11 @@ namespace Engine.Networking.Messages
             {
                 if (Main.Time > queuedSync.time)
                 {
-                    //Console.WriteLine("Received player sync 1 {0}", queuedSync.type.ToString());
-
                     Entity? ent = entityManager.GetById(queuedSync.entityId);
                     // NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.
                     // It is not an error for a client to receive sync state for an entity that does not exist.
                     if (ent != null)
                     {
-                        //if (ent is Player)
-                        //{
-                        //    Console.WriteLine("Received player sync {0}", queuedSync.type.ToString());
-                        //}
                         switch (queuedSync.type)
                         {
                             case SyncType.SuperSimple:

@@ -91,15 +91,6 @@ namespace Engine.Networking.Messages
                     playerIndex = whoami,
                     time = time,
                 });
-                //player.Jump.artificialPress = (inp | InputTypes.Jump) == InputTypes.Jump;
-                //player.LeftClick.artificialPress = (inp | InputTypes.LeftClick) == InputTypes.LeftClick;
-                //player.MoveBack.artificialPress = (inp | InputTypes.MoveBack) == InputTypes.MoveBack;
-                //player.MoveDown.artificialPress = (inp | InputTypes.MoveDown) == InputTypes.MoveDown;
-                //player.MoveForward.artificialPress = (inp | InputTypes.MoveForward) == InputTypes.MoveForward;
-                //player.MoveLeft.artificialPress = (inp | InputTypes.MoveLeft) == InputTypes.MoveLeft;
-                //player.MoveRight.artificialPress = (inp | InputTypes.MoveRight) == InputTypes.MoveRight;
-                //player.RightClick.artificialPress = (inp | InputTypes.RightClick) == InputTypes.RightClick;
-                //player.Run.artificialPress = (inp | InputTypes.Run) == InputTypes.Run;
             }
         }
 
