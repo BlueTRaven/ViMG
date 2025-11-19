@@ -71,7 +71,7 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? player, ushort updatedId)
         {
             world.EntityManager.Remove(this);
         }

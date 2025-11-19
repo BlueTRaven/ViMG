@@ -938,7 +938,7 @@ namespace ViMG
         }
         #endregion
 
-        public bool TryMineCube(CubePosition position, int level, int num, bool instant = false)
+        public bool TryMineCube(Player? player, CubePosition position, int level, int num, bool instant = false)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -960,7 +960,7 @@ namespace ViMG
 			{
 				if (instant)
 				{
-					ChunkManager.CubeView.SetCube(position, 0);
+					ChunkManager.CubeView.SetCube(position, 0, player);
 
 					List<ItemInstance> items = new List<ItemInstance>();
 					cube.GetDrops(items);
@@ -975,7 +975,7 @@ namespace ViMG
 
 					// TODO MULTIPLAYER REFACTOR
 					// This should be the player that actually performed the mining
-					cube.OnMined(player[localPlayerIndex], position);
+					cube.OnMined(player, position);
 
 					return true;
 				}
@@ -986,7 +986,7 @@ namespace ViMG
 					if (mined.progress >= cube.MineProgressToBreak)
 					{
 						miningCubes.Remove(position);
-						ChunkManager.CubeView.SetCube(position, 0);
+						ChunkManager.CubeView.SetCube(position, 0, player);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
@@ -1001,7 +1001,7 @@ namespace ViMG
 								EntityManager.Add(ent);
 						}
 
-						cube.OnMined(player[localPlayerIndex], position);
+						cube.OnMined(player, position);
 
 						return true;
 					}
@@ -1013,7 +1013,7 @@ namespace ViMG
 						miningCubes.Add(position, mined);
 					else
 					{
-						ChunkManager.CubeView.SetCube(position, 0);
+						ChunkManager.CubeView.SetCube(position, 0, player);
 
 						List<ItemInstance> items = new List<ItemInstance>();
 						cube.GetDrops(items);
@@ -1026,7 +1026,7 @@ namespace ViMG
 							EntityManager.Add(ent);
 						}
 
-						cube.OnMined(player[localPlayerIndex], position);
+						cube.OnMined(player, position);
 
 						return true;
 					} 

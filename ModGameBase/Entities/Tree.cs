@@ -79,7 +79,7 @@ namespace ViMG.Entities
 			return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition position, ushort updatedId, double updatedTime)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? playerWhoInitiated, CubePosition position, ushort updatedId, double updatedTime)
         {
 			if (updatedTime >= TimeInitialized && updatedId != cube.Id)
 			{
@@ -89,7 +89,7 @@ namespace ViMG.Entities
 
                     for (int i = position.Y; i < position.Y + size; i++)
                     {
-                        world.TryMineCube(new CubePosition(position.X, i, position.Z), 0, 0, true);
+                        world.TryMineCube(playerWhoInitiated, new CubePosition(position.X, i, position.Z), 0, 0, true);
                     }
 
 					size = 0;
@@ -99,7 +99,7 @@ namespace ViMG.Entities
 				{
 					for (int i = position.Y + 1; i < trackedPositions[0].Y + size; i++)
 					{
-						world.TryMineCube(new CubePosition(position.X, i, position.Z), 0, 0, true);
+						world.TryMineCube(playerWhoInitiated, new CubePosition(position.X, i, position.Z), 0, 0, true);
 					}
 
 					size = position.Y - trackedPositions[0].Y;

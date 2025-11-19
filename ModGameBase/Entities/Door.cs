@@ -192,7 +192,7 @@ namespace ViMG.Entities
             return true;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition position, ushort updatedId, double timeUpdated)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? player, CubePosition position, ushort updatedId, double timeUpdated)
         {
             if (timeUpdated > TimeInitialized)
             {

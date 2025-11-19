@@ -52,7 +52,7 @@ namespace ViMG.Items
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
 						if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
-							player.GetWorld().TryMineCube(affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
+							player.GetWorld().TryMineCube(player, affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 				else
@@ -60,7 +60,7 @@ namespace ViMG.Items
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 					{
 						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
+							player.GetWorld().TryMineCube(player, CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 			}

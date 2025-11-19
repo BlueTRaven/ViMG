@@ -37,6 +37,7 @@ namespace Engine.Networking.Messages
             public byte playerIndex;
             public double time;
             public InputTypes inputs;
+            public int heldItem;
         }
 
         private List<QueuedInput> queued1 = new List<QueuedInput>();
@@ -56,6 +57,8 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             var player = GS.GetWorld().GetLocalPlayer();
+            if (player == null) return;
+
             InputTypes inputTypes = InputTypes.None;
             if (player.Jump.Pressed()) inputTypes |= InputTypes.Jump;
             if (player.LeftClick.Pressed()) inputTypes |= InputTypes.LeftClick;
@@ -68,6 +71,7 @@ namespace Engine.Networking.Messages
             if (player.Run.Pressed())  inputTypes |= InputTypes.Run;
 
             netMessage.writer.Put(Main.Time);
+            netMessage.writer.Put(player.highlightIndex);
             netMessage.writer.Put((ushort)inputTypes);
             netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
 
@@ -79,6 +83,7 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader);
 
             double time = reader.GetDouble();
+            int heldItem = reader.GetInt();
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
 
@@ -115,6 +120,8 @@ namespace Engine.Networking.Messages
                     player.MoveRight.artificialPress = (inp | InputTypes.MoveRight) == InputTypes.MoveRight;
                     player.RightClick.artificialPress = (inp | InputTypes.RightClick) == InputTypes.RightClick;
                     player.Run.artificialPress = (inp | InputTypes.Run) == InputTypes.Run;
+
+                    player.highlightIndex = qinput.heldItem;
                 }
                 else
                 {

@@ -66,7 +66,7 @@ namespace ViMG.Entities
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
-		public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
 			world.EntityManager.Remove(this);
 		}

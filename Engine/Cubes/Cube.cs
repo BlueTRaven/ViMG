@@ -334,7 +334,7 @@ namespace ViMG.Cubes
 			return true;
 		}
 
-		public virtual void OnMined(Player player, CubePosition position)
+		public virtual void OnMined(Player? player, CubePosition position)
         {
 
         }

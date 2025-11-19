@@ -21,14 +21,16 @@ namespace ViMG
     {
         private readonly struct CubeUpdated
         {
+            public readonly Player? player;
             public readonly double timeUpdated;
             public readonly CubePosition updated;
             public readonly CubePosition notified;
             public readonly ushort oldId;
             public readonly ushort newId;
 
-            public CubeUpdated(double timeUpdated, CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
+            public CubeUpdated(Player? player, double timeUpdated, CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
             {
+                this.player = player;
                 this.timeUpdated = timeUpdated;
                 this.updated = updated;
                 this.notified = notified;
@@ -102,7 +104,6 @@ namespace ViMG
 
         private FastList<CubeUpdated> uniqueUpdates = new FastList<CubeUpdated>();
 
-        //Update queue of chunks to mesh
         public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
@@ -125,9 +126,9 @@ namespace ViMG
                     if (entityTracking != null)
                     {
                         if (entityTracking is ICubeTracker tracker)
-                            tracker.TrackingCubeUpdated(world, this, updated.newId);
+                            tracker.TrackingCubeUpdated(world, this, updated.player, updated.newId);
                         else if (entityTracking is IMultiCubeTracker multiTracker)
-                            multiTracker.TrackingCubeUpdated(world, this, updated.updated, updated.newId, updated.timeUpdated);
+                            multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
                     }
                 }
                 else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
@@ -184,10 +185,10 @@ namespace ViMG
                     position.Z >= 0 && position.Z < SizeInChunksXZ;
         }
 
-        public void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
+        public void MarkCubeMeshInfoDirty(Player? player, CubePosition position, ushort oldId, ushort updatedId)
         {
             //GetCubeMeshInfo(position).version++;
-            updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, position, oldId, updatedId));
+            updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
             {
@@ -200,7 +201,7 @@ namespace ViMG
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
-                    updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, adjacentPosition, oldId, updatedId));
+                    updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, adjacentPosition, oldId, updatedId));
                 }
             }
         }

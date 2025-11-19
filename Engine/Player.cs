@@ -257,6 +257,8 @@ namespace ViMG
 		public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
 		public MenuPlayer menuPlayer;
+		// The item currently selected in the main inventory bar. Different from the "held item", which is the item
+		// the player has held in hand after they click an item with the inventory open.
 		public int highlightIndex;
 
 		public int Health;
@@ -283,6 +285,7 @@ namespace ViMG
 		public bool IsLocalPlayer =>
             Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Singleplayer || playerIndex == world.localPlayerIndex;
 
+		// NOTE: the player is always "in control" if it's a remote player. It doesn't care about opened menus
 		public bool IsInControl => inputLockupTimer <= 0 && 
 			((IsLocalPlayer && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened) ||
 			!IsLocalPlayer);
@@ -774,7 +777,7 @@ namespace ViMG
 				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);
 
 			// TODO: this should use rotation instead of camera
-			lookAtResult = world.Raycast(Position, Position - Main.camera.Forward * INTERACT_DISTANCE,
+			lookAtResult = world.Raycast(Position, Position - (this as IRotatable).Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
@@ -1051,22 +1054,22 @@ namespace ViMG
 
 			if (MoveForward.Pressed())
 			{
-				toAddToVelocity -= Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				toAddToVelocity -= Vector3.Normalize((this as IRotatable).Forward) * actualAcceleration;
 				movementPressed = true;
 			}
 			if (MoveBack.Pressed())
 			{
-				toAddToVelocity += Vector3.Normalize(Main.camera.Forward) * actualAcceleration;
+				toAddToVelocity += Vector3.Normalize((this as IRotatable).Forward) * actualAcceleration;
 				movementPressed = true;
 			}
 			if (MoveLeft.Pressed())
 			{
-				toAddToVelocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				toAddToVelocity -= Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
 				movementPressed = true;
 			}
 			if (MoveRight.Pressed())
 			{
-				toAddToVelocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
+				toAddToVelocity += Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
 				movementPressed = true;
 			}
 
@@ -1146,13 +1149,13 @@ namespace ViMG
 			if (IsLocalPlayer)
 			{
 				if (Main.inputManager.IsPressed(Keys.W))
-					Position -= Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
+					Position -= Vector3.Normalize((this as IRotatable).ForwardYawOnly) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.S))
-					Position += Vector3.Normalize(Main.camera.ForwardYawOnly) * moveSpeed;
+					Position += Vector3.Normalize((this as IRotatable).ForwardYawOnly) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.A))
-					Position -= Vector3.Normalize(Main.camera.Right) * moveSpeed;
+					Position -= Vector3.Normalize((this as IRotatable).Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.D))
-					Position += Vector3.Normalize(Main.camera.Right) * moveSpeed;
+					Position += Vector3.Normalize((this as IRotatable).Right) * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.Space))
 					Position += Vector3.Up * moveSpeed;
 				if (Main.inputManager.IsPressed(Keys.LeftControl))
@@ -1315,17 +1318,13 @@ namespace ViMG
 
 		private void UpdatePerformAction()
 		{
-			// TODO handle server inputs? Actions?
-			if (!IsLocalPlayer) return;
-
-            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
-                !menuPlayer.IsOpened && useTimer <= 0)
+            if (IsInControl && useTimer <= 0)
             {
                 if (LeftClick.Pressed())
                 {
                     if (inventory.Get(highlightIndex).item != null && 
 						inventory.Get(highlightIndex).item.LeftClick(this, inventory, highlightIndex, 
-						-Main.camera.Forward, out ActionStats actionStats))
+						-(this as IRotatable).Forward, out ActionStats actionStats))
                         PerformAction(actionStats);
 					else
 					{
@@ -1362,7 +1361,7 @@ namespace ViMG
                     }
 
 					if (!performedAction && inventory.Get(highlightIndex).item != null && inventory.Get(highlightIndex).item
-						.RightClick(this, inventory, highlightIndex, -Main.camera.Forward, out ActionStats actionStats))
+						.RightClick(this, inventory, highlightIndex, -(this as IRotatable).Forward, out ActionStats actionStats))
 					{
 						PerformAction(actionStats);
 						performedAction = true;
@@ -1461,7 +1460,7 @@ namespace ViMG
 			{
 				// TODO Use rotation
 				ItemInstance thrownInstance = new ItemInstance(inventory.Get(index), num);
-				EntityItem ent = new EntityItem(Position, -Main.camera.Forward * Cube.CUBE_SCALE * 5, thrownInstance);
+				EntityItem ent = new EntityItem(Position, -(this as IRotatable).Forward * Cube.CUBE_SCALE * 5, thrownInstance);
 				world.EntityManager.Add(ent);
 
 				inventory.Remove(index, num);
@@ -1548,7 +1547,7 @@ namespace ViMG
 
 		private unsafe void UpdateMouse()
 		{
-			if (hasMoved)
+			if (hasMoved && IsLocalPlayer)
 			{
 				//Works fine, not geometry-aware
 				//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
@@ -1722,7 +1721,7 @@ namespace ViMG
             this.hitboxSize = toSpawnLater.hitboxSize;
 
 			// TODO use rotation
-            hitbox = world.HitboxManager.Add(this, rect, -Main.camera.Forward, HitboxManager.Group.PLAYER_DEAL,
+            hitbox = world.HitboxManager.Add(this, rect, -(this as IRotatable).Forward, HitboxManager.Group.PLAYER_DEAL,
                 DealDamageCalculation(toSpawnLater.damageType, toSpawnLater.damage), toSpawnLater.knockback,
                 applyBuffs: toSpawnLater.applyBuffs, inventorySlot: toSpawnLater.inventorySlot);
 
@@ -1736,7 +1735,7 @@ namespace ViMG
             if (inventory.Get(highlightIndex).item != null)
 			{
 				// TODO use Rotation
-				inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -Main.camera.Forward);
+				inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
 			}
 
 			if (mesh.IBO == null)
@@ -1884,8 +1883,8 @@ namespace ViMG
 							Matrix.CreateRotationX(-Rotation.X) *
 							Matrix.CreateRotationY(-Rotation.Y) *
 							Matrix.CreateTranslation(Position -
-							Main.camera.Forward * Cube.CUBE_SCALE / 4f -
-							Main.camera.Up * Cube.CUBE_SCALE / 4f);
+                            (this as IRotatable).Forward * Cube.CUBE_SCALE / 4f -
+                            (this as IRotatable).Up * Cube.CUBE_SCALE / 4f);
 					}
 				case UseAnimationType.SwingVertical:
 					{
@@ -1897,9 +1896,9 @@ namespace ViMG
 							Matrix.CreateRotationX(-Rotation.X) *
 							Matrix.CreateRotationY(-Rotation.Y) *
 							Matrix.CreateTranslation(Position -
-							Main.camera.Forward * Cube.CUBE_SCALE / 2 +
-							Main.camera.Right * Cube.CUBE_SCALE / 4 -
-							Main.camera.Up * Cube.CUBE_SCALE / 4);
+							(this as IRotatable).Forward * Cube.CUBE_SCALE / 2 +
+							(this as IRotatable).Right * Cube.CUBE_SCALE / 4 -
+                            (this as IRotatable).Up * Cube.CUBE_SCALE / 4);
 					}
                 case UseAnimationType.Use:
 				default:
@@ -1909,9 +1908,9 @@ namespace ViMG
 						Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
 						Matrix.CreateRotationX(-Rotation.X) *
 						Matrix.CreateRotationY(-Rotation.Y) *
-						Matrix.CreateTranslation(Position - Main.camera.Forward * Cube.CUBE_SCALE / 3f +
-						Main.camera.Right * Cube.CUBE_SCALE / 4f -
-						Main.camera.Up * Cube.CUBE_SCALE / 6f);
+						Matrix.CreateTranslation(Position - (this as IRotatable).Forward * Cube.CUBE_SCALE / 3f +
+						(this as IRotatable).Right * Cube.CUBE_SCALE / 4f -
+                        (this as IRotatable).Up * Cube.CUBE_SCALE / 6f);
 			}
 		}
 

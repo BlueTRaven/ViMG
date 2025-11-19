@@ -145,9 +145,26 @@ namespace ViMG
 
             if (markDirty)
             {
-                chunkManager.MarkCubeMeshInfoDirty(position, oldId, id);
+                chunkManager.MarkCubeMeshInfoDirty(null, position, oldId, id);
                 chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
             }
+        }
+
+        public void SetCube(CubePosition position, ushort id, Player player)
+        {
+            byte[] bytes = io.GetBytes();
+
+            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            CubePosition positionChS = position.InChunkSpace(chunkPos);
+            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+
+            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            ushort oldId = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+            Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+
+            chunkManager.MarkCubeMeshInfoDirty(player, position, oldId, id);
+            chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
         }
 
         public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
