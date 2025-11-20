@@ -38,6 +38,7 @@ namespace Engine.Networking.Messages
             public double time;
             public InputTypes inputs;
             public int heldItem;
+            public CubePosition lookAtPos;
         }
 
         private List<QueuedInput> queued1 = new List<QueuedInput>();
@@ -72,6 +73,7 @@ namespace Engine.Networking.Messages
 
             netMessage.writer.Put(Main.Time);
             netMessage.writer.Put(player.highlightIndex);
+            netMessage.writer.Put(player.LookAtPos);
             netMessage.writer.Put((ushort)inputTypes);
             netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
 
@@ -84,6 +86,7 @@ namespace Engine.Networking.Messages
 
             double time = reader.GetDouble();
             int heldItem = reader.GetInt();
+            var lookAtPos = reader.Get<CubePosition>();
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
 
@@ -95,6 +98,8 @@ namespace Engine.Networking.Messages
                     inputs = inp,
                     playerIndex = whoami,
                     time = time,
+                    heldItem = heldItem,
+                    lookAtPos = lookAtPos,
                 });
             }
         }
@@ -122,8 +127,9 @@ namespace Engine.Networking.Messages
                     player.Run.artificialPress = (inp & InputTypes.Run) == InputTypes.Run;
 
                     player.highlightIndex = qinput.heldItem;
+                    //player.LookAtPos = qinput.lookAtPos;
 
-                    //Console.WriteLine("{0} {1} {2}", qinput.playerIndex, inp.ToString(), player.LeftClick.artificialPress);
+                    //Console.WriteLine("{0} {1}", qinput.playerIndex, qinput.lookAtPos);
                 }
                 else
                 {

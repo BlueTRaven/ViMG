@@ -17,6 +17,8 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener
     {
+        public const double TIME_TRAVEL_DELAY = Main.FIXED_STEP * 3;
+
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
         {

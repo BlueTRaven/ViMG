@@ -25,8 +25,8 @@ namespace Engine.Networking.Messages
 
             int whoAmI = addData as int? ?? -1;
             netMessage.writer.Put(whoAmI);
-            netMessage.writer.Put(Main.Time - 1);
-            netMessage.writer.Put(Main.Frame - (Main.FIXED_FPS * 1));
+            netMessage.writer.Put(Main.Time - NetworkManager.TIME_TRAVEL_DELAY);
+            netMessage.writer.Put(Main.Frame - (int)Math.Floor((double)Main.FIXED_FPS * NetworkManager.TIME_TRAVEL_DELAY));
 
             netMessage.Send();
         }

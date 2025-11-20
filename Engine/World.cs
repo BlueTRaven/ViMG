@@ -335,6 +335,7 @@ namespace ViMG
 
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			ClientSendInputs.Instance.Apply(player);
+			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
 
 			logic.Update(this, deltaTime);
 
@@ -943,7 +944,7 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             //debug mode mines instantly
-            if (Main.Debug)
+            if (player != null && player.state == Player.State.Noclip)
 				instant = true;
 
 			MinedCube mined = new MinedCube()

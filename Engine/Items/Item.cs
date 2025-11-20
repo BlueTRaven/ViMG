@@ -211,6 +211,7 @@ namespace ViMG.Items
 			}
 
 			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
+			if (!player.IsLocalPlayer) correctedScale *= new Vector3(4);
 
 			DrawInWorld(device, player.GetWorld(), item, player.GetHeldMatrix(origin, 
 				correctedScale * new Vector3(scale, scale, 1)));

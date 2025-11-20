@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Cubes;
 using ViMG.Rendering;
 
 namespace ViMG.Items
@@ -61,14 +62,19 @@ namespace ViMG.Items
 					{
 						if (player.GetWorld().ChunkManager.IsInWorldBounds(affectedPositions[i]))
 						{
-							if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
+							var cube = Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air);
+                            Console.WriteLine("On left click {0}", cube.Name);
+
+                            if (cube.Touchable)
 								player.GetWorld().TryMineCube(player, affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 						}
 					}
 				}
                 else
                 {
-					if (player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+					var cube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                    
+                    if (cube.Touchable)
 						player.GetWorld().TryMineCube(player, player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 				}
 			}

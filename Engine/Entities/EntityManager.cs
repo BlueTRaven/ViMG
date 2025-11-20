@@ -422,6 +422,8 @@ namespace ViMG.Entities
 				}
 			}
 
+			bool forceLocalSync = false;
+
 			// Handle syncing players separately from normal entities.
 			// This is mainly because of two factors:
 			// Clients send their player back to the server (client authoratative over its own player)
@@ -430,12 +432,14 @@ namespace ViMG.Entities
 			if (localPlayer != null)
 			{
 				// Local player has all its inputs synced to all connections
-				if (Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
+				if (localPlayer.LeftClick.JustPressed() || Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
 				{
 					Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
-					localPlayer.TimeSinceInputSynced = Main.Time;
+					//forceLocalSync = true;
 				}
 			}
+			// Client and server are handled separately because logic is somewhat different;
+			// players need to be sent to all clients but the one they belong to
 			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Client)
 			{
 				// On the client, player state is authoratative (mostly?)
@@ -453,7 +457,7 @@ namespace ViMG.Entities
 					}
 					else
 					{
-						if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval)
+						if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval || forceLocalSync)
 						{
 							var ent = new SyncBasicState.SyncEntity()
 							{
@@ -489,7 +493,7 @@ namespace ViMG.Entities
 							}
 							else
 							{
-								if (Main.Time - player.TimeSynced > player.SyncInterval)
+								if (Main.Time - player.TimeSynced > player.SyncInterval || forceLocalSync)
 								{
 									var ent = new SyncBasicState.SyncEntity()
 									{

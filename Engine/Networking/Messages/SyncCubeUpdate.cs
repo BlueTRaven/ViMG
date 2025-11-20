@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -15,9 +16,22 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
+        private struct QueuedCubeUpdated
+        {
+            public int player;
+            public CubePosition position;
+            public ushort oldId, newId;
+            public double time;
+        }
+        private List<QueuedCubeUpdated> queued1 = new();
+        private List<QueuedCubeUpdated> queued2 = new();
+        private List<QueuedCubeUpdated> queued;
+
         public SyncCubeUpdate()
         {
             Instance = this;
+
+            queued = queued1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -47,9 +61,37 @@ namespace Engine.Networking.Messages
             ushort oldId = reader.GetUShort();
             ushort newId = reader.GetUShort();
 
-            var player = GS.GetWorld().player[playerId];
-            GS.GetWorld().ChunkManager.CubeView.SetCube(updatedPos, newId, false);
-            GS.GetWorld().ChunkManager.MarkCubeMeshInfoDirty(player, updatedPos, oldId, newId);
+            queued.Add(new QueuedCubeUpdated
+            {
+                oldId = oldId,
+                newId = newId,
+                position = updatedPos,
+                player = playerId,
+                time = time,
+            });
+        }
+
+        public void Apply(ChunkManager chunkManager, Player?[] players)
+        {
+            var otherBuffer = queued == queued1 ? queued2 : queued1;
+
+            foreach (QueuedCubeUpdated qcubeupdated in queued)
+            {
+                if (Main.Time > qcubeupdated.time)
+                {
+                    var player = players[qcubeupdated.player];
+                    chunkManager.CubeView.SetCube(qcubeupdated.position, qcubeupdated.newId, false);
+                    chunkManager.MarkCubeMeshInfoDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
+                    chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(qcubeupdated.position));
+                }
+                else
+                {
+                    otherBuffer.Add(qcubeupdated);
+                }
+            }
+
+            queued.Clear();
+            queued = otherBuffer;
         }
     }
 }

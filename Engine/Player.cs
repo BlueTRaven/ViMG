@@ -26,7 +26,7 @@ using ViMG.VertexDeclarations;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(10, 0)]
+	[EntityMeta(11, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
 	{
         private struct HitboxToSpawnLater
@@ -128,7 +128,7 @@ namespace ViMG
 
         public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
 
-		private enum State
+		public enum State
 		{
 			Noclip,
 			Normal,
@@ -164,7 +164,7 @@ namespace ViMG
 		private MouseState previousMS;
 		private Vector2 previousMousePosition;
 
-		private State state;
+		public State state;
 
 		//private bool onGround;
 		private bool inRope;
@@ -766,13 +766,12 @@ namespace ViMG
 			if (inventory.Get(highlightIndex).valid)
 				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);
 
-			// TODO: this should use rotation instead of camera
 			lookAtResult = world.Raycast(Position, Position - (this as IRotatable).Forward * INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
-				
+
 				//if we're climbing a rope, ignore the rope
 				if (inRope)
 					isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
@@ -796,21 +795,20 @@ namespace ViMG
 						CanPlace = true;
 				}
 			}
-			
+
 			if (world.ChunkManager.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
-			if (lookAtResult.hasHit && world.ChunkManager.CubeView.GetCube(LookAtPos)
-				.GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(world, LookAtPos))
-			{
-				//? crosshair
-				Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
-			}
-			else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
-
-			//currentUI.Update(null, deltaTime);
 			if (IsLocalPlayer)
 			{
+				if (lookAtResult.hasHit && world.ChunkManager.CubeView.GetCube(LookAtPos)
+					.GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(world, LookAtPos))
+				{
+					//? crosshair
+					Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
+				}
+				else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
+
 				UpdateMouse();
 
 				UpdateThrowItem();
@@ -2088,7 +2086,8 @@ namespace ViMG
 		{
 			base.OnSave(saveBytes);
 
-			SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
+			SaveHelper.SaveVector3(saveBytes, Position);
+			//SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
 			SaveHelper.SaveVector3(saveBytes, Rotation);
 
 			SaveHelper.SaveInt32(saveBytes, Health);
@@ -2104,6 +2103,9 @@ namespace ViMG
 
 			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
+
+			Get(out BasicState state);
+			state.OnSave(saveBytes);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2112,8 +2114,10 @@ namespace ViMG
 
 			int index = 0;
 
-			Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0);
-			Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
+			if (version < 11)
+				Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0);
+			else Position = SaveHelper.LoadVector3(loadBytes, ref index);
+				Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
 
 			Health = SaveHelper.LoadInt32(loadBytes, ref index);
 			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
@@ -2146,6 +2150,14 @@ namespace ViMG
 
 			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
             SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
+
+			if (version >= 11)
+			{
+				var basicState = new BasicState();
+				basicState.OnLoad(loadBytes, ref index);
+				if (world != null && TimeInitialized != 0)
+					Set(ref basicState);
+			}
 		}
 
         public void Get(out BasicState state)
@@ -2157,6 +2169,12 @@ namespace ViMG
 				rotation = new Quaternion(Rotation.X, Rotation.Y, Rotation.Z, 1),
 				health = Health,
 				state = (int)this.state,
+				timers = { 
+					[0] = this.useTimer,
+					[1] = this.preUseTimer,
+					[2] = this.invulnTimer,
+					[3] = this.hitboxTimer,
+				},
 			};
         }
 
@@ -2169,6 +2187,10 @@ namespace ViMG
 			this.Rotation = state.rotation.ToVector4().ToVector3();
 			this.Health = state.health;
 			this.state = (State)state.state;
+			this.useTimer = state.timers[0];
+			this.preUseTimer = state.timers[1];
+			this.invulnTimer = state.timers[2];
+			this.hitboxTimer = state.timers[3];
         }
     }
 }
