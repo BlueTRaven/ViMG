@@ -18,21 +18,13 @@ using ViMG.TracyImpl;
 using System.Diagnostics;
 using ViMG.IMGUIImpl;
 using Engine.Mods;
+using Engine;
 
-//Client-server separation
-//Specifically, stuff like the player needs a way of separating client code from server code, as they should not be shipped together.
-//Menus in particular
-//Inventories will be kept on server, but menus do not need to be there
-//We can rename renderer stuff to client stuff, and perform client-specific stuff there
-//Or, we can keep renderer stuff separate. Client stuff becomes a third thing. 
-//Client creates a list of ClientEntity that match Entities in EntityManager
-//If an entity does not need a client entity, it's just null, but still in the same spot as in the entity in EntityManager
-//This would require reworking how entities are laid out, since right now we do a naive O(n) remove when removing entities, which shuffles everything. 
-//This is already bad, but it gets worse with clients, which have to do the same thing, so we do it twice
 namespace ViMG
 {
     public class Main : Game
     {
+		public static ArgParser Args = new ArgParser();
 		public static event Action<Point> WindowResizedEvent;
 		public static event EventHandler<TextInputEventArgs> WindowTextInputEvent;
 
@@ -139,8 +131,10 @@ namespace ViMG
 
 		private ModManager modManager = new ModManager();
 
-        public Main(bool headless = false, bool cli = false) : base()
+        public Main(string[] args) : base()
         {
+			Args.ParseArgs(args);
+
 			MainThread = Thread.CurrentThread;
 
 			SessionInformation = new SessionInformation();
@@ -155,6 +149,11 @@ namespace ViMG
 				PreferredBackBufferWidth = Options.CurrentWindowResolution.X,
 				PreferredBackBufferHeight = Options.CurrentWindowResolution.Y,
 			};
+
+			if (Args.windowPosition != null)
+			{
+				this.Window.Position = Args.windowPosition.Value;
+			}
 
             Content.RootDirectory = "Content";
 
@@ -489,7 +488,7 @@ namespace ViMG
 					{
 						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
 
-						if (gameStateManager.connectedType != GameStateManager.ConnectedType.Singleplayer)
+						if (gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer)
 						{
 							for (int i = 0; i < World.MAX_PLAYERS; i++)
 							{

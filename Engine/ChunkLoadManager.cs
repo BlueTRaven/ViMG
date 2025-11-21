@@ -297,7 +297,7 @@ namespace ViMG
 				waitingToFinishMeshingChunks.Add(copyingChunk);
 
                 // Sync chunk loading to other players
-                if (copyingChunk.player != world.localPlayerIndex && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Server)
+                if (copyingChunk.player != world.localPlayerIndex && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server)
                 {
                     var peer = Main.gameStateManager.TheIsland.netManager?.GetPeer(copyingChunk.player);
                     if (peer != null)
@@ -382,7 +382,7 @@ namespace ViMG
 		// Always attributed to local player. Use for singleplayer and server only.
 		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
-			if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client)
+			if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
 				Debug.Assert(false);
 
             int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
@@ -485,7 +485,7 @@ namespace ViMG
 			{
 				if (player == null) continue;
                 // We don't care about players other than the local one if we're a client
-                if (!player.IsLocalPlayer && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client) continue;
+                if (!player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client) continue;
 
                 ChunkPosition target = ChunkPosition.WorldSpaceChunk(player.Position);
 
@@ -545,7 +545,7 @@ namespace ViMG
 				{
 					if (player == null) continue;
 					// We don't care about players other than the local one if we're a client
-					if (!player.IsLocalPlayer && Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Client) continue;
+					if (!player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client) continue;
 
                     ChunkPosition baseChunkPos = ChunkPosition.WorldSpaceChunk(player.Position);
 

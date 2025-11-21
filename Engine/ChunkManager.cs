@@ -132,7 +132,7 @@ namespace ViMG
                             multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
                     }
 
-                    if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server)
+                    if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
                     {
                         Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, updated);
                     }

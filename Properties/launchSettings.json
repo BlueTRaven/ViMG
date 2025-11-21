@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "ViMG3": {
+      "commandName": "Project"
+    },
+    "ViMG Quickstart Server": {
+      "commandName": "Project",
+      "commandLineArgs": "--mode TheIsland --netmode Server -p"
+    },
+    "ViMG Quickstart Client": {
+      "commandName": "Project",
+      "commandLineArgs": "--mode TheIsland --netmode Server"
+    }
+  }
+}

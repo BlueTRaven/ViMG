@@ -54,7 +54,7 @@ namespace Engine.Networking.Messages
         {
             int messageType = reader.GetInt();
 
-            if (Main.gameStateManager.connectedType == ViMG.GameStates.GameStateManager.ConnectedType.Server && Get(messageType).Passthrough)
+            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server && Get(messageType).Passthrough)
             {
                 reader.SetPosition(4);
                 var allBytes = reader.GetRemainingBytes();

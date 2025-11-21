@@ -84,37 +84,21 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    if (Main.SessionInformation.LastLoadedSave != null)
-                    {
-                        gsManager.connectedType = GameStateManager.ConnectedType.Singleplayer;
-                        gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
-                    }
+                    gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * 1, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    if (Main.SessionInformation.LastLoadedSave != null)
-                    {
-                        gsManager.connectedType = GameStateManager.ConnectedType.Server;
-                        gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
-                    }
+                    gsManager.Continue(GameStateManager.NetworkingMode.Server);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * 2, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    if (Main.SessionInformation.LastLoadedSave != null)
-                    {
-                        gsManager.connectedType = GameStateManager.ConnectedType.Client;
-                        gsManager.SetGameState(gsManager.TheIsland);
-                        gsManager.TheIsland.LoadNone();
-                        //gsManager.TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
-                    }
+                    gsManager.Continue(GameStateManager.NetworkingMode.Client);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 2, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),

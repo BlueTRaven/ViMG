@@ -283,7 +283,7 @@ namespace ViMG
 
 		public int playerIndex;
 		public bool IsLocalPlayer =>
-            Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Singleplayer || playerIndex == world.localPlayerIndex;
+            Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		// NOTE: the player is always "in control" if it's a remote player. It doesn't care about opened menus
 		public bool IsInControl => inputLockupTimer <= 0 && 
@@ -385,6 +385,11 @@ namespace ViMG
 				if (!Main.IsHeadless)
 				{
 					menuPlayer.LoadContent();
+				}
+
+				if (Main.Args.startPaused)
+				{
+					Main.gameStateManager.TheIsland.PushMenu(new MenuPause(Main.gameStateManager, world));
 				}
 			}
 
@@ -1275,7 +1280,7 @@ namespace ViMG
 
             DEBUGTimeSkipHeldTime += (float)deltaTime;
 
-			if (Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Client)
+			if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
 			{
 				if (Main.inputManager.JustPressed(Keys.T))
 				{

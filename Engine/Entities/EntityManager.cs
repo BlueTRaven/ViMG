@@ -159,7 +159,7 @@ namespace ViMG.Entities
 		{
 			// Shouldn't add entities if not server or singleplayer?
 			// What about player entities...?
-			Debug.Assert(Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Client);
+			Debug.Assert(Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client);
 
             entity.SetId(GetUniqueId());
 
@@ -225,7 +225,7 @@ namespace ViMG.Entities
 
 			OnEntityAdded?.Invoke(entity);
 
-			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server && entity is not Player)
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
 			{
 				var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
 				if (entSerializableAttr != null)
@@ -378,13 +378,13 @@ namespace ViMG.Entities
 
 			toDeleteLater.Clear();
 
-            if (Main.gameStateManager.connectedType != GameStates.GameStateManager.ConnectedType.Singleplayer)
+            if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Singleplayer)
                 UpdateNetwork();
 		}
 
 		private void UpdateNetwork()
 		{
-			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server)
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
 				foreach (Entity entity in entities)
 				{
@@ -440,7 +440,7 @@ namespace ViMG.Entities
 			}
 			// Client and server are handled separately because logic is somewhat different;
 			// players need to be sent to all clients but the one they belong to
-			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Client)
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
 			{
 				// On the client, player state is authoratative (mostly?)
 				// So we inform the server of our changes.
@@ -527,7 +527,7 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot remove entity while iterating");
 
-			if (Main.gameStateManager.connectedType == GameStates.GameStateManager.ConnectedType.Server && entity is not Player)
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
 			{
 				if (entity is not Player)
 				{

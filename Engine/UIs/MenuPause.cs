@@ -28,7 +28,7 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
-            if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Singleplayer)
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
                 gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
@@ -38,7 +38,7 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            if (Main.gameStateManager.connectedType == GameStateManager.ConnectedType.Singleplayer)
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
                 gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;

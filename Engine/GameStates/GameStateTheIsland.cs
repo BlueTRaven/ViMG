@@ -149,15 +149,15 @@ namespace ViMG.GameStates
 
             netManager?.Disconnect();
 
-            switch (manager.connectedType)
+            switch (manager.netMode)
             {
-                case GameStateManager.ConnectedType.Server:
+                case GameStateManager.NetworkingMode.Server:
                     netManager = new NetworkManager(true);
                     break;
-                case GameStateManager.ConnectedType.Client:
+                case GameStateManager.NetworkingMode.Client:
                     netManager = new NetworkManager(false);
                     break;
-                case GameStateManager.ConnectedType.Singleplayer:
+                case GameStateManager.NetworkingMode.Singleplayer:
                 default:
                     break;
             }
@@ -660,19 +660,19 @@ namespace ViMG.GameStates
 
             StringBuilder sb = new StringBuilder();
             sb.Append("This is a ");
-            switch (Main.gameStateManager.connectedType)
+            switch (Main.gameStateManager.netMode)
             {
-                case GameStateManager.ConnectedType.Client:
+                case GameStateManager.NetworkingMode.Client:
                     sb.Append("Client session. Connected to: ");
                     sb.Append(netManager.netManager.FirstPeer.ToString());
                     sb.Append(".");
                     break;
-                case GameStateManager.ConnectedType.Server:
+                case GameStateManager.NetworkingMode.Server:
                     sb.Append("Server session. There are ");
                     sb.Append(netManager.uniqueNetPlayers);
                     sb.Append(" connected players.");
                     break;
-                case GameStateManager.ConnectedType.Singleplayer:
+                case GameStateManager.NetworkingMode.Singleplayer:
                     sb.Append("Singleplayer session.");
                     break;
             }

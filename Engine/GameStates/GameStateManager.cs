@@ -10,7 +10,7 @@ namespace ViMG.GameStates
 {
     public class GameStateManager
     {
-        public enum ConnectedType
+        public enum NetworkingMode
         {
             Server, // Acting as host. Can play
             Client, // Acting as client
@@ -26,7 +26,7 @@ namespace ViMG.GameStates
 
         private GameState currentGameState = null;
 
-        public ConnectedType connectedType = ConnectedType.Singleplayer;
+        public NetworkingMode netMode = NetworkingMode.Singleplayer;
 
         public virtual void Initialize()
         {
@@ -48,8 +48,16 @@ namespace ViMG.GameStates
             MainMenu.LoadContent(device);
         }
 
+        private static bool parsedArgs = false;
         public void Update(double deltaTime)
         {
+            if (!parsedArgs && Main.Args.startMode == "TheIsland")
+            {
+                var netMode = Enum.Parse<NetworkingMode>(Main.Args.networkingMode);
+                Continue(netMode);
+                parsedArgs = true;
+            }
+
             currentGameState?.Update(deltaTime);
         }
 
@@ -74,6 +82,23 @@ namespace ViMG.GameStates
             currentGameState?.OnClose(state);
             currentGameState = state;
             currentGameState?.OnOpen(oldState);
+        }
+
+        public void Continue(NetworkingMode netMode)
+        {
+            if (Main.SessionInformation.LastLoadedSave != null)
+            {
+                this.netMode = netMode;
+                SetGameState(TheIsland);
+                if (netMode == NetworkingMode.Singleplayer || netMode == NetworkingMode.Server)
+                {
+                    TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
+                }
+                else
+                {
+                    TheIsland.LoadNone();
+                }
+            }
         }
     }
 }

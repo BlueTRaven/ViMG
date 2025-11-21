@@ -143,7 +143,7 @@ namespace ViMG
 			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
 			
-			if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
+			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
 				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 		}
 
@@ -988,7 +988,7 @@ namespace ViMG
 						miningCubes.Remove(position);
 
 					// Client doesn't get to actually break blocks. Server does it for them
-                    if (Main.gameStateManager.connectedType != GameStateManager.ConnectedType.Client)
+                    if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
                         DoMineCube(position, player);
 
                     return true;
