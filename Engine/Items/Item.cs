@@ -219,20 +219,14 @@ namespace ViMG.Items
 
 		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
 		{
-			if (!Material.HasValue)
-				return;
-
 			//fit to frame
 			scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
 			
-			batch.Draw(Material.GetValueOrDefault(StaticMaterials.Items).Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 		}
 
 		public virtual void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
 		{
-            if (!Material.HasValue)
-                return;
-
             if (meshItemQuadInWorld.IBO == null)
 				MakeMesh(device);
 
@@ -243,7 +237,7 @@ namespace ViMG.Items
 				sourceRect.width = -sourceRect.width;
             }
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Material.GetValueOrDefault(StaticMaterials.Items),
+			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
 				meshItemQuadInWorld, 
 				transform, sourceRect));
 		}
