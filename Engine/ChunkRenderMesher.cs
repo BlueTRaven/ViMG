@@ -349,15 +349,10 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
 			if (!currentBatch.isUsed)
-			{
-				Console.WriteLine("Current batch not used");
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
-			}
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-                Console.WriteLine("new batch");
-
                 EnqueueBatch(ref currentBatch);
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}

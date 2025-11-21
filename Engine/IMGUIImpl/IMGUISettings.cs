@@ -70,7 +70,7 @@ namespace ViMG.IMGUIImpl
 
         [IMGUIAutoSlider<int>(1, 10, 1)]
         [ConsoleCommandVar("CopiesPerFrame", "The number of chunk copies that can be produced in one frame.")]
-        public static int CopiesPerFrame = 30;
+        public static int CopiesPerFrame = 10;
 
         [IMGUIAutoCombo]
         [ConsoleCommandVar("GBufferOverrideDraw", "Composite: full rendering output\nOtherwise: gbuffer output")]

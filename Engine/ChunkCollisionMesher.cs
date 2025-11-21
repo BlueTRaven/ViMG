@@ -315,8 +315,6 @@ namespace ViMG
                                 //Unload the old mesh now
                                 Unload(ref meshInfoOld);
 
-                                Console.WriteLine("New mesh for {0}", meshInfoOld.position);
-
                                 //Then paste the result stuff over
                                 meshInfoOld.meshVersion = batchResult.versions[j];
                                 meshInfoOld.version = batchResult.versions[j];
