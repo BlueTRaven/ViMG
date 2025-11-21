@@ -279,7 +279,20 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-			/*a.Z = 0;
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 2);
+
+            vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+
+            /*a.Z = 0;
 			b.Z = 0;
 			c.Z = 0;
 			d.Z = 0;
@@ -297,7 +310,7 @@ namespace ViMG.Items
 			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
 			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));*/
 
-			meshItemQuadInWorld = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
+            meshItemQuadInWorld = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
 		}
 	}
 }

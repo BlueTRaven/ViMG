@@ -100,5 +100,14 @@ namespace ViMG.ChunkStuff
 
             return copied;
         }
+    
+        public static void Verify()
+        {
+            foreach (CopiedChunkData c in pooledCopies.Slice())
+            {
+                Debug.Assert(!c.GetValid());
+                Debug.Assert(c.refcount == 0);
+            }
+        }
     }
 }

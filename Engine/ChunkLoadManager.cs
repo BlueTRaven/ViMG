@@ -190,8 +190,9 @@ namespace ViMG
 			chunkMesher?.CollisionMesher.BeginFlush();
 			chunkMesher?.RenderMesher.FinishFlush();
             chunkMesher?.CollisionMesher.FinishFlush();
+            CopiedChunkPool.Verify();
 
-			int max = queue.Count;
+            int max = queue.Count;
             GameStateTheIsland.ProgressMax = max;
 
 			while (queue.Count > 0)
@@ -270,7 +271,6 @@ namespace ViMG
 				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 				if (loadedChunks[queuedChunk.player][i] == LoadingState.Unloaded)
 				{
-                    Debug.Assert(false);
 					// TODO: do we need to stop things?
 					continue;
 				}
@@ -370,7 +370,14 @@ namespace ViMG
 
             waitingToFinishMeshingChunks.Clear();
 			waitingToFinishMeshingChunks = otherBuffer;
-			zoneWait.End();
+
+#if DEBUG
+            if (waitingToFinishMeshingChunks.Count == 0 && queue.Count == 0 && copyingChunks.Count == 0 && chunkMesher.CollisionMesher.WorkFinished() && chunkMesher.RenderMesher.WorkFinished())
+            {
+                CopiedChunkPool.Verify();
+            }
+#endif
+            zoneWait.End();
 		}
 
         // Loads a single chunk, blocking until it is fully loaded.
@@ -629,7 +636,9 @@ namespace ViMG
 		{
 			var copyContext = (CopyChunkTaskContext)context;
 
-			return CopiedChunkPool.MakeCopy(copyContext.world, copyContext.pool, copyContext.position);
+			var copy = CopiedChunkPool.MakeCopy(copyContext.world, copyContext.pool, copyContext.position);
+            copy.loadAroundTarget = true;
+            return copy;
 		}
 
 		public void MarkDirty(ChunkPosition chunkPosition)
@@ -681,6 +690,7 @@ namespace ViMG
             //TODO: there may still be meshes in the queue.
             chunkMesher?.RenderMesher.FinishFlush();
             chunkMesher?.CollisionMesher.FinishFlush();
+            CopiedChunkPool.Verify();
 
             chunkMesher?.RenderMesher.UnloadAll();
             chunkMesher?.CollisionMesher.UnloadAll();

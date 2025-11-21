@@ -188,7 +188,9 @@ namespace ViMG
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
 					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
-					currentBatch.num++;
+					currentBatch.copies[currentBatch.num].refcount += 1;
+                    currentBatch.copies[currentBatch.num].render = true;
+                    currentBatch.num++;
 				}
 			}
 
@@ -201,7 +203,12 @@ namespace ViMG
 			}
 
 			StartActiveTasks(world);
-		}
+        }
+
+		public bool WorkFinished()
+		{
+            return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
+        }
 
 		public void BeginFlush()
 		{
@@ -299,6 +306,7 @@ namespace ViMG
 						{
                             //using var zoneLock = TracyImpl.Tracy.BeginZone(name: "Lock");
                             batchResult.copies[j].Return(bufferPool);
+							batchResult.copies[j].render = false;
 						}
 
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
@@ -344,9 +352,12 @@ namespace ViMG
 		}
 
 		//Adds a position in the current batch. 
-		public void AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
+		public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
+
+			copy.refcount += 1;
+			copy.render = true;
 
 			if (!currentBatch.isUsed)
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
@@ -363,8 +374,16 @@ namespace ViMG
 			{
 				currentBatch.meshInfos[currentBatch.num] = c;
 				currentBatch.copies[currentBatch.num] = copy;//CopiedChunkPool.MakeCopy(world, bufferPool, position);
-				currentBatch.copies[currentBatch.num].refcount += 1;
-				currentBatch.num++;
+                currentBatch.num++;
+				return true;
+			} 
+			else
+			{
+				lock (bufferPool)
+				{
+					copy.Return(bufferPool);
+				}
+				return false;
 			}
 		}
 
@@ -382,6 +401,7 @@ namespace ViMG
 			batch.meshInfos[0] = meshInfo;
 			batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
 			batch.copies[0].refcount += 1;
+			batch.copies[0].render = true;
 			batch.num = 1;
 
             var batchState = new BatchRenderMeshTaskState(batch, this);

@@ -23,7 +23,20 @@ namespace ViMG.ChunkStuff
         //I.e. padding left, front, top is -1.
         public CubePosition BasePosition;
 
-        public int refcount = 0;
+        private int _refcount;
+        public int refcount
+        {
+            get => _refcount; set
+            {
+                if (value > refmax)
+                    refmax = value;
+                _refcount = value;
+            }
+        }
+        private int refmax = 0;
+        public bool render = false;
+        public bool collision = false;
+        public bool loadAroundTarget = false;
         private bool valid;
 
         public readonly int Index;
@@ -62,7 +75,11 @@ namespace ViMG.ChunkStuff
                     if (EntityMeshingDatas[i].Allocated)
                         pool.Return(ref EntityMeshingDatas[i]);
 
+                render = false;
+                collision = false;
+                loadAroundTarget = false;
                 valid = false;
+                refmax = 0;
             }
         }
 
