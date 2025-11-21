@@ -54,8 +54,11 @@ namespace ViMG.GameStates
             if (!parsedArgs && Main.Args.startMode == "TheIsland")
             {
                 var netMode = Enum.Parse<NetworkingMode>(Main.Args.networkingMode);
-                Continue(netMode);
-                parsedArgs = true;
+                if ((netMode == NetworkingMode.Client && Main.Time > 1) || netMode != NetworkingMode.Client)
+                {
+                    Continue(netMode);
+                    parsedArgs = true;
+                }
             }
 
             currentGameState?.Update(deltaTime);

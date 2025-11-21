@@ -23,6 +23,7 @@ namespace ViMG.ChunkStuff
         //I.e. padding left, front, top is -1.
         public CubePosition BasePosition;
 
+        public int refcount = 0;
         private bool valid;
 
         public readonly int Index;
@@ -35,6 +36,7 @@ namespace ViMG.ChunkStuff
 
         public void Take(CubePosition position)
         {
+            Debug.Assert(!valid);
             this.BasePosition = position;
 
             if (Ids == null)
@@ -50,11 +52,18 @@ namespace ViMG.ChunkStuff
 
         public void Return(BufferPool pool)
         {
-            for (int i = 0; i < EntityMeshingDatas.Length; i++)
-                if (EntityMeshingDatas[i].Allocated)
-                    pool.Return(ref EntityMeshingDatas[i]);
+            refcount -= 1;
+            Debug.Assert(refcount >= 0);
+            if (refcount == 0)
+            {
+                Debug.Assert(valid);
 
-            valid = false;
+                for (int i = 0; i < EntityMeshingDatas.Length; i++)
+                    if (EntityMeshingDatas[i].Allocated)
+                        pool.Return(ref EntityMeshingDatas[i]);
+
+                valid = false;
+            }
         }
 
         public bool GetValid()

@@ -3,6 +3,7 @@ using BepuUtilities.Memory;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,8 +72,10 @@ namespace Engine.ChunkStuff
 
         public void MarkChunkDirty(ChunkPosition position)
         {
-            RenderMesher.MarkDirty(position);
-            CollisionMesher.MarkDirty(position);
+            var a = RenderMesher.MarkDirty(position);
+            var b = CollisionMesher.MarkDirty(position);
+
+            Debug.Assert(a == b);
         }
 
         public void Dispose()

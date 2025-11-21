@@ -101,8 +101,11 @@ namespace ViMG.Cubes
 		{
 			base.OnAdjacentUpdated(world, manager, position, updating, updatedId, updatedTime);
 
-			//top block is updating.
-			if (updating.Y == position.Y + 1)
+            if (dirt == null)
+                dirt = Main.Registry.CubeRegistry.Get("dirt");
+
+            //top block is updating.
+            if (updating.Y == position.Y + 1)
             {
 				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Solid)
                 {

@@ -286,8 +286,6 @@ namespace ViMG
 				{
                     using var zoneActive = TracyImpl.Tracy.BeginZone(name: "EndBatch");
 
-                    numActiveChunkMeshBatchTasks--;
-
 					var task = activeMeshBatchTasks[i];
 
 					if (!task.IsCompletedSuccessfully)
@@ -322,40 +320,45 @@ namespace ViMG
 							Unload(ref meshResult);
 						}
 					}
-
-					activeMeshBatchTasks[i] = null;
+                    
+					numActiveChunkMeshBatchTasks--;
+                    activeMeshBatchTasks[i] = null;
 				}
 
 				if (activeMeshBatchTasks[i] == null && meshBatchTasksQueue.Count > 0)
 				{
-                    using var zoneStart = TracyImpl.Tracy.BeginZone(name: "StartBatch");
+					using var zoneStart = TracyImpl.Tracy.BeginZone(name: "StartBatch");
 
-                    meshBatchTasksQueue.Sort();
-                    var task = meshBatchTasksQueue.Dequeue();
-                    activeMeshBatchTasks[i] = task.task;
-                    numActiveChunkMeshBatchTasks++;
+					meshBatchTasksQueue.Sort();
+					var task = meshBatchTasksQueue.Dequeue();
+					activeMeshBatchTasks[i] = task.task;
+					numActiveChunkMeshBatchTasks++;
 
-                    if (task.task.Status == TaskStatus.Created)
-                    {
-                        if (Main.MULTITHREAD_MESHING)
-                            task.task.Start();
-                        else task.task.RunSynchronously();
-                    }
-                }
+					Debug.Assert(task.task.Status == TaskStatus.Created);
+
+					if (Main.MULTITHREAD_MESHING)
+						task.task.Start();
+					else task.task.RunSynchronously();
+				}
 			}
 		}
 
 		//Adds a position in the current batch. 
 		public void AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
 		{
-			using var zone = TracyImpl.Tracy.BeginZone();
+            using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (!currentBatch.isUsed)
+			if (!currentBatch.isUsed)
+			{
+				Console.WriteLine("Current batch not used");
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			}
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				EnqueueBatch(ref currentBatch);
+                Console.WriteLine("new batch");
+
+                EnqueueBatch(ref currentBatch);
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
@@ -365,6 +368,7 @@ namespace ViMG
 			{
 				currentBatch.meshInfos[currentBatch.num] = c;
 				currentBatch.copies[currentBatch.num] = copy;//CopiedChunkPool.MakeCopy(world, bufferPool, position);
+				currentBatch.copies[currentBatch.num].refcount += 1;
 				currentBatch.num++;
 			}
 		}
@@ -382,6 +386,7 @@ namespace ViMG
             ref RenderMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 			batch.meshInfos[0] = meshInfo;
 			batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+			batch.copies[0].refcount += 1;
 			batch.num = 1;
 
             var batchState = new BatchRenderMeshTaskState(batch, this);
@@ -391,6 +396,8 @@ namespace ViMG
             meshInfo.meshVersion = result.meshInfos[0].meshVersion;
 
             meshInfo.meshes = result.meshInfos[0].meshes;
+
+			batch.copies[0].Return(bufferPool);
         }
 
 		private static unsafe BatchRenderMeshTaskResult MeshBatchFn(object obj)
@@ -505,7 +512,7 @@ namespace ViMG
 			bufferPool.Clear();
 		}
 
-		public void MarkDirty(ChunkPosition position)
+		public bool MarkDirty(ChunkPosition position)
 		{
 			GetChunkMeshInfo(position).version++;
 
@@ -513,7 +520,11 @@ namespace ViMG
 			{
 				dirtyChunkPositions.Enqueue(position);
 				dirtyChunkKnown.Add(position);
+
+				return true;
 			}
+
+			return false;
 		}
 
 		public bool IsMeshed(ChunkPosition position)

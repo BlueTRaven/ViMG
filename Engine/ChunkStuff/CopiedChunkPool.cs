@@ -2,6 +2,7 @@
 using BrUtility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,22 +18,24 @@ namespace ViMG.ChunkStuff
         private static CopiedChunkData TakeFromPool(CubePosition basePosition)
         {
             CopiedChunkData copied = null;
-
-            for (int i = 0; i < pooledCopies.Length; i++)
+            lock (pooledCopies)
             {
-                int ri = (lastUsedCopy + i) % pooledCopies.Length;
-
-                if (pooledCopies.Buffer[ri] == null)
-                    pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
-
-                if (!pooledCopies[ri].GetValid())
+                for (int i = 0; i < pooledCopies.Length; i++)
                 {
-                    copied = pooledCopies[ri];
-                    lastUsedCopy = ri;
+                    int ri = (lastUsedCopy + i) % pooledCopies.Length;
 
-                    copied.Take(basePosition);
+                    if (pooledCopies.Buffer[ri] == null)
+                        pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
 
-                    break;
+                    if (!pooledCopies[ri].GetValid())
+                    {
+                        copied = pooledCopies[ri];
+                        lastUsedCopy = ri;
+
+                        copied.Take(basePosition);
+
+                        break;
+                    }
                 }
             }
 
@@ -55,6 +58,7 @@ namespace ViMG.ChunkStuff
             CubePosition basePosition = position.InCubeSpace();
 
             CopiedChunkData copied = TakeFromPool(basePosition);
+            Debug.Assert(copied.GetValid());
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
 

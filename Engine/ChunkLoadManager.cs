@@ -92,6 +92,10 @@ namespace ViMG
 
 		public void Update(double deltaTime, World world)
 		{
+            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.M))
+            {
+                FlushLoadQueue(world);
+            }
             using var zone = TracyImpl.Tracy.BeginZone();
 
             ProcessLoadQueue(world);
@@ -266,15 +270,22 @@ namespace ViMG
 				//if (loadedChunks.ContainsKey(queuedPosition) && loadedChunks[queuedPosition] == LoadingState.Unloaded)
 				if (loadedChunks[queuedChunk.player][i] == LoadingState.Unloaded)
 				{
+                    Debug.Assert(false);
 					// TODO: do we need to stop things?
 					continue;
 				}
 				else if (loadedChunks[queuedChunk.player][i] == LoadingState.Enqueued)
 				{
-                    queuedChunk.copyTask.Start();
+                    if (Main.MULTITHREAD_MESHING)
+                        queuedChunk.copyTask.Start();
+                    else queuedChunk.copyTask.RunSynchronously();
                     copyingChunks.Add(queuedChunk);
 
                     currentNum++;
+                }
+                else
+                {
+                    Debug.Assert(false);
                 }
 			}
 			zoneQueue.End();
@@ -286,6 +297,7 @@ namespace ViMG
                 CopiedChunkData copy = copyingChunk.copyTask.Result;
 
                 Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                Debug.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
                 loadedChunks[copyingChunk.player][i] = LoadingState.Loading;
 
                 // Only enqueue rendering mesh for local player
@@ -293,7 +305,7 @@ namespace ViMG
                     chunkMesher?.RenderMesher.AddToNextBatch(world, copyingChunk.position, copy);
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
-                // TODO should this be _1?
+                // TODO This needs to be _1. Need to understand why.
 				waitingToFinishMeshingChunks.Add(copyingChunk);
 
                 // Sync chunk loading to other players
@@ -315,7 +327,6 @@ namespace ViMG
 			copyingChunks.Clear();
 			zoneWait.End();
 
-
             zoneWait = TracyImpl.Tracy.BeginZone(name: "WaitForMeshingFinished");
             // Double buffered. If a chunk is not finished, it is moved to the other buffer, and the buffers are swapped each ProcessLoadQueue call.
             var otherBuffer = waitingToFinishMeshingChunks == waitingToFinishMeshingChunks1 ? waitingToFinishMeshingChunks2 : waitingToFinishMeshingChunks1;
@@ -327,9 +338,19 @@ namespace ViMG
                 //  and the collision meshing is done,
                 // we're done.
                 // Non-local players will only have collision meshed.
-                bool isDone = chunkMesher == null || 
-                    (chunkMesher.RenderMesher.IsMeshed(queuedChunk.position) && chunkMesher.CollisionMesher.IsMeshed(queuedChunk.position)) ||
-                    (world.localPlayerIndex != queuedChunk.player && chunkMesher.CollisionMesher.IsMeshed(queuedChunk.position));
+                bool isDone = false;
+                if (chunkMesher == null)
+                {
+                    isDone = true;
+                }
+                else
+                {
+                    if (queuedChunk.player != world.localPlayerIndex && chunkMesher.CollisionMesher.IsMeshed(queuedChunk.position))
+                        isDone = true;
+                    if (chunkMesher.RenderMesher.IsMeshed(queuedChunk.position) && chunkMesher.CollisionMesher.IsMeshed(queuedChunk.position))
+                        isDone = true;
+                }
+
                 if (isDone)
                 {
                     Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position.X, queuedChunk.position.Y, queuedChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);

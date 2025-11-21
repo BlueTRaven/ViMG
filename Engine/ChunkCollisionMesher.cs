@@ -315,6 +315,8 @@ namespace ViMG
                                 //Unload the old mesh now
                                 Unload(ref meshInfoOld);
 
+                                Console.WriteLine("New mesh for {0}", meshInfoOld.position);
+
                                 //Then paste the result stuff over
                                 meshInfoOld.meshVersion = batchResult.versions[j];
                                 meshInfoOld.version = batchResult.versions[j];
@@ -389,6 +391,7 @@ namespace ViMG
                 currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                 currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
                 currentBatch.copies[currentBatch.num] = copy;// CopiedChunkPool.MakeCopy(world, bufferPool, position);
+                currentBatch.copies[currentBatch.num].refcount += 1;
                 currentBatch.num++;
             }
         }
@@ -405,6 +408,7 @@ namespace ViMG
             var batch = new CollisionMeshBatch(new CopiedChunkData[1]);
             ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
             batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+            batch.copies[0].refcount += 1;
             batch.pools[0] = meshInfo.bufferPool;
             batch.num = 1;
 
@@ -432,6 +436,8 @@ namespace ViMG
                 meshInfo.hasSimReferences = true;
                 meshInfo.hasMesh = true;
             }
+
+            batch.copies[0].Return(bufferPool);
         }
 
         private static BatchCollisionMeshTaskResult MeshBatchFn(object obj)
@@ -582,15 +588,20 @@ namespace ViMG
             bufferPool.Clear();
         }
 
-        public void MarkDirty(ChunkPosition position)
+        public bool MarkDirty(ChunkPosition position)
 		{
 			GetChunkMeshInfo(position).version++;
 
 			if (!dirtyChunkKnown.Contains(position))
 			{
+                Console.WriteLine("Marked collision {0} dirty", position);
 				dirtyChunkPositions.Enqueue(position);
 				dirtyChunkKnown.Add(position);
+
+                return true;
 			}
+
+            return false;
 		}
 
         private ref CollisionMeshInfo GetChunkMeshInfo(ChunkPosition pos)

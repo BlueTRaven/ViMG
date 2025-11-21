@@ -79,7 +79,7 @@ namespace Engine.Networking.Messages
             {
                 if (Main.Time > qcubeupdated.time)
                 {
-                    var player = players[qcubeupdated.player];
+                    var player = qcubeupdated.player == -1 ? null : players[qcubeupdated.player];
                     chunkManager.CubeView.SetCube(qcubeupdated.position, qcubeupdated.newId, false);
                     chunkManager.MarkCubeMeshInfoDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
                     chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(qcubeupdated.position));

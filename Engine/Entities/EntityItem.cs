@@ -14,6 +14,7 @@ using ViMG.Physics;
 namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+	[EntityMeta(0)]
 	public class EntityItem : Entity, ISyncBasicState
 	{
 		//public Vector3 Velocity;
