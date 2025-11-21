@@ -336,7 +336,7 @@ namespace ViMG.Entities
 			//queue all entities to be unloaded
 			foreach (Entity entity in entities)
 			{
-				if (entity is not Player || world.isDisposed) // Players cannot be unloaded normally
+				if (entity is not Player || world.isDisposed || world.isCreateWorldReloading) // Players cannot be unloaded normally
 				{
 					if (!toDeleteLater.Contains(entity))
 						Unload(entity, true);

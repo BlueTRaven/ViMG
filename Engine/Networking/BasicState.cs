@@ -11,6 +11,7 @@ namespace Engine.Networking
 {
     public struct BasicState : INetSerializable
     {
+        private const int VERSION = 1;
         [System.Runtime.CompilerServices.InlineArray(4)]
         public struct Arr4F
         {
@@ -34,6 +35,7 @@ namespace Engine.Networking
             }
         }
 
+        private int version;
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 velocity;
@@ -44,6 +46,7 @@ namespace Engine.Networking
 
         public void Deserialize(NetDataReader reader)
         {
+            version = reader.GetInt();
             position.X = reader.GetFloat();
             position.Y = reader.GetFloat();
             position.Z = reader.GetFloat();
@@ -65,6 +68,7 @@ namespace Engine.Networking
 
         public void Serialize(NetDataWriter writer)
         {
+            writer.Put(VERSION);
             writer.Put(position.X);
             writer.Put(position.Y);
             writer.Put(position.Z);

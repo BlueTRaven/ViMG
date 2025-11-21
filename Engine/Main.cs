@@ -101,7 +101,7 @@ namespace ViMG
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
-		public const bool DO_DETAIL = true;
+		public const bool DO_DETAIL = false;
 		public const bool TRANSPARENT_ORES = false;
 		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
 		public static bool ENABLE_ENT_SPAWNING = false;

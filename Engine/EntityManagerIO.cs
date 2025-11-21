@@ -612,16 +612,15 @@ namespace ViMG
 
 					if (created != null && created is Entity ent)
 					{
+						ent.OnLoad(entData.data, entData.version);
 						try
 						{
-							ent.OnLoad(entData.data, entData.version);
-
 							manager.ForceAdd(ent, entData.id);
 							return ent;
 						}
 						catch (Exception e)
 						{
-							Console.WriteLine("DeseerializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString());
+							Debug.Assert(false, string.Format("DeserializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString()));
 						}
 					}
 					else

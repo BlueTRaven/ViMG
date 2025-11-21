@@ -26,7 +26,7 @@ using ViMG.VertexDeclarations;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(11, 0)]
+	[EntityMeta(12, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
 	{
         private struct HitboxToSpawnLater
@@ -286,9 +286,11 @@ namespace ViMG
             Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		// NOTE: the player is always "in control" if it's a remote player. It doesn't care about opened menus
-		public bool IsInControl => inputLockupTimer <= 0 && 
+		public bool IsInControl => inputLockupTimer <= 0 && isInControlSync &&
 			((IsLocalPlayer && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened) ||
 			!IsLocalPlayer);
+		// Used for multiplayer sync
+		private bool isInControlSync;
 
 		public double TimeSinceInputSynced;
 
@@ -466,7 +468,7 @@ namespace ViMG
 			// it should stay loaded.
 			// TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
 			// not the local player.
-			Debug.Assert(world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
+			Debug.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -2111,6 +2113,8 @@ namespace ViMG
 
 			Get(out BasicState state);
 			state.OnSave(saveBytes);
+
+			SaveHelper.SaveBool(saveBytes, IsInControl);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2163,6 +2167,12 @@ namespace ViMG
 				if (world != null && TimeInitialized != 0)
 					Set(ref basicState);
 			}
+
+			if (version >= 12)
+			{
+				isInControlSync = SaveHelper.LoadBool(loadBytes, ref index);
+				if (IsLocalPlayer) isInControlSync = true;
+			}
 		}
 
         public void Get(out BasicState state)
@@ -2180,6 +2190,10 @@ namespace ViMG
 					[2] = this.invulnTimer,
 					[3] = this.hitboxTimer,
 				},
+				counters =
+				{
+					[0] = this.isInControlSync ? 1 : 0,
+				}
 			};
         }
 
@@ -2196,6 +2210,8 @@ namespace ViMG
 			this.preUseTimer = state.timers[1];
 			this.invulnTimer = state.timers[2];
 			this.hitboxTimer = state.timers[3];
+			this.isInControlSync = state.counters[0] == 1;
+            if (IsLocalPlayer) isInControlSync = true;
         }
     }
 }

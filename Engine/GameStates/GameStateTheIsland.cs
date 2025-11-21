@@ -296,7 +296,9 @@ namespace ViMG.GameStates
             //The World is responsible for the loading later.
             //Note that the ChunkLoadManager isn't aware that anything is loaded (since we don't use the ChunkLoadManager for world generation).
             //So we just call the raw Unload functions.
+            world.isCreateWorldReloading = true;
             entityManager.UnloadAll();
+            world.isCreateWorldReloading = false;
             //chunkLoadManager.UnloadAll();
             
             worldInfoIO.Save(worldName, world.WorldInfo);

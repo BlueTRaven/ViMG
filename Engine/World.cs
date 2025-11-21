@@ -90,6 +90,8 @@ namespace ViMG
 		private Vector3 oldCameraRotation;
 
         public bool isDisposed;
+		// TODO HACK
+		public bool isCreateWorldReloading;
 
         private struct MinedCube
 		{

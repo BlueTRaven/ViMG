@@ -105,8 +105,11 @@ namespace ViMG.ChunkStuff
         {
             foreach (CopiedChunkData c in pooledCopies.Slice())
             {
-                Debug.Assert(!c.GetValid());
-                Debug.Assert(c.refcount == 0);
+                if (c != null)
+                {
+                    Debug.Assert(!c.GetValid());
+                    Debug.Assert(c.refcount == 0);
+                }
             }
         }
     }
