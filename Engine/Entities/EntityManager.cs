@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using Engine.Networking.Messages;
+using LiteNetLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -384,6 +385,7 @@ namespace ViMG.Entities
 
 		private void UpdateNetwork()
 		{
+			// Update entities (excluding player)
 			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
 				foreach (Entity entity in entities)
@@ -432,7 +434,11 @@ namespace ViMG.Entities
 			if (localPlayer != null)
 			{
 				// Local player has all its inputs synced to all connections
-				if (localPlayer.LeftClick.JustPressed() || Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
+				if (localPlayer.LeftClick.Changed() || localPlayer.RightClick.Changed() ||
+                    localPlayer.MoveLeft.Changed() || localPlayer.MoveRight.Changed() ||
+                    localPlayer.MoveForward.Changed() || localPlayer.MoveBack.Changed() ||
+                    localPlayer.Jump.Changed() || localPlayer.Run.Changed() ||
+                    localPlayer.MoveDown.Changed() || Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
 				{
 					Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
 					//forceLocalSync = true;
@@ -440,68 +446,65 @@ namespace ViMG.Entities
 			}
 			// Client and server are handled separately because logic is somewhat different;
 			// players need to be sent to all clients but the one they belong to
-			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
-			{
-				// On the client, player state is authoratative (mostly?)
-				// So we inform the server of our changes.
-				if (localPlayer != null)
-				{
-					if (Main.Time - localPlayer.TimeMajorSynced > localPlayer.MajorSyncInterval)
-					{
-						var ent = new SyncBasicState.SyncEntity()
-						{
-							entity = localPlayer,
-							type = SyncBasicState.SyncType.FullSync,
-						};
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-					}
-					else
-					{
-						if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval || forceLocalSync)
-						{
-							var ent = new SyncBasicState.SyncEntity()
-							{
-								entity = localPlayer,
-								type = SyncBasicState.SyncType.BasicState,
-							};
-							Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-						}
-					}
-				}
-			}
-			else
+			//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+			//{
+			//	// On the client, player state is authoratative (mostly?)
+			//	// So we inform the server of our changes.
+			//	if (localPlayer != null)
+			//	{
+			//		if (Main.Time - localPlayer.TimeMajorSynced > localPlayer.MajorSyncInterval)
+			//		{
+			//			var ent = new SyncBasicState.SyncEntity()
+			//			{
+			//				entity = localPlayer,
+			//				type = SyncBasicState.SyncType.FullSync,
+			//			};
+			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+			//		}
+			//		else
+			//		{
+			//			if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval || forceLocalSync)
+			//			{
+			//				var ent = new SyncBasicState.SyncEntity()
+			//				{
+			//					entity = localPlayer,
+			//					type = SyncBasicState.SyncType.BasicState,
+			//				};
+			//				Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+			//			}
+			//		}
+			//	}
+			//}
+			//else
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
 				// Sync players to other players.
 				// SyncPlayerConnected only tells us that other players are connected.
 				// We need to send entity serialization info continually.
-				foreach (var netPlayer in Main.gameStateManager.TheIsland.netManager.netPlayers)
+				foreach (var player in world.player)
 				{
-					var peer = Main.gameStateManager.TheIsland.netManager.GetPeer(netPlayer);
-
-					foreach (var player in world.player)
+					if (player != null)
 					{
-						if (player != null && player.playerIndex == netPlayer.playerId)
+						NetPeer peer = null;// Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
+						//if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
+						//{
+						//	var ent = new SyncBasicState.SyncEntity()
+						//	{
+						//		entity = player,
+						//		type = SyncBasicState.SyncType.FullSync,
+						//	};
+						//	Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
+						//}
+						//else
 						{
-							if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
+							if (Main.Time - player.TimeSynced > player.SyncInterval || forceLocalSync)
 							{
 								var ent = new SyncBasicState.SyncEntity()
 								{
 									entity = player,
-									type = SyncBasicState.SyncType.FullSync,
+									type = SyncBasicState.SyncType.BasicState,
 								};
 								Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
-							}
-							else
-							{
-								if (Main.Time - player.TimeSynced > player.SyncInterval || forceLocalSync)
-								{
-									var ent = new SyncBasicState.SyncEntity()
-									{
-										entity = player,
-										type = SyncBasicState.SyncType.BasicState,
-									};
-									Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
-								}
 							}
 						}
 					}

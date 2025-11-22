@@ -1,6 +1,7 @@
 ﻿using Engine.Entities;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using SharpDX.Direct2D1;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace Engine.Networking.Messages
             public double time;
             public InputTypes inputs;
             public int heldItem;
-            public CubePosition lookAtPos;
+            public Vector3 rotation;
         }
 
         private List<QueuedInput> queued1 = new List<QueuedInput>();
@@ -73,7 +74,9 @@ namespace Engine.Networking.Messages
 
             netMessage.writer.Put(Main.Time);
             netMessage.writer.Put(player.highlightIndex);
-            netMessage.writer.Put(player.LookAtPos);
+            netMessage.writer.Put(player.Rotation.X);
+            netMessage.writer.Put(player.Rotation.Y);
+            netMessage.writer.Put(player.Rotation.Z);
             netMessage.writer.Put((ushort)inputTypes);
             netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
 
@@ -86,7 +89,10 @@ namespace Engine.Networking.Messages
 
             double time = reader.GetDouble();
             int heldItem = reader.GetInt();
-            var lookAtPos = reader.Get<CubePosition>();
+            Vector3 rotation = Vector3.Zero;
+            rotation.X = reader.GetFloat();
+            rotation.Y = reader.GetFloat();
+            rotation.Z = reader.GetFloat();
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
 
@@ -99,7 +105,7 @@ namespace Engine.Networking.Messages
                     playerIndex = whoami,
                     time = time,
                     heldItem = heldItem,
-                    lookAtPos = lookAtPos,
+                    rotation = rotation,
                 });
             }
         }
@@ -116,17 +122,18 @@ namespace Engine.Networking.Messages
                     if (player == null) continue;
                     var inp = qinput.inputs;
 
-                    player.Jump.artificialPress = (inp & InputTypes.Jump) == InputTypes.Jump;
-                    player.LeftClick.artificialPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
-                    player.MoveBack.artificialPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
-                    player.MoveDown.artificialPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
-                    player.MoveForward.artificialPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
-                    player.MoveLeft.artificialPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-                    player.MoveRight.artificialPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
-                    player.RightClick.artificialPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
-                    player.Run.artificialPress = (inp & InputTypes.Run) == InputTypes.Run;
+                    player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
+                    player.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
+                    player.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
+                    player.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
+                    player.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
+                    player.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+                    player.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
+                    player.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
+                    player.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
 
                     player.highlightIndex = qinput.heldItem;
+                    player.Rotation = qinput.rotation;
                     //player.LookAtPos = qinput.lookAtPos;
                 }
                 else

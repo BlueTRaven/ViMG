@@ -5,10 +5,10 @@ using BrUtility;
 using Engine;
 using Engine.Entities;
 using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,11 +22,12 @@ using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
+using static Engine.Networking.Messages.SyncPlayerInputs;
 
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(13, 0)]
+	[EntityMeta(14, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
 	{
         private struct HitboxToSpawnLater
@@ -303,6 +304,7 @@ namespace ViMG
 
         public Player()
 		{
+			SyncInterval = 1;
 			AlwaysRender = true;
 
 			//TODO serialize this maybe?
@@ -320,7 +322,8 @@ namespace ViMG
         //Creates a new player from a dead player.
         public Player(Player deadPlayer)
 		{
-			AlwaysRender = true;
+            SyncInterval = 1;
+            AlwaysRender = true;
 
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
@@ -410,11 +413,11 @@ namespace ViMG
                 MoveRight = PlayerInput.NonLocalInput(Keys.D, true);
                 MoveForward = PlayerInput.NonLocalInput(Keys.W, true);
                 MoveBack = PlayerInput.NonLocalInput(Keys.S, true);
-                Jump = PlayerInput.NonLocalInput(Keys.Space, false);
+                Jump = PlayerInput.NonLocalInput(Keys.Space, true);
                 Run = PlayerInput.NonLocalInput(Keys.LeftShift, true);
                 MoveDown = PlayerInput.NonLocalInput(Keys.LeftControl, true);
-                LeftClick = PlayerInput.NonLocalInput(MouseInput.LeftButton, false);
-                RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, false);
+                LeftClick = PlayerInput.NonLocalInput(MouseInput.LeftButton, true);
+                RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, true);
             }
 
 			//If we loaded the time of day, set the world's time of day to it.
@@ -2119,7 +2122,11 @@ namespace ViMG
 			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 
-			Get(out BasicState state);
+			if (world != null)
+				SaveHelper.SaveInt32(saveBytes, (int)GetInputBitSet());
+			else SaveHelper.SaveInt32(saveBytes, 0);
+
+				Get(out BasicState state);
 			state.OnSave(saveBytes);
 		}
 
@@ -2166,6 +2173,13 @@ namespace ViMG
 			loadedTimeOfDay = SaveHelper.LoadFloat32(loadBytes, ref index);
             SpawnPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 
+			if (version >= 14)
+			{
+				uint bitset = (uint)SaveHelper.LoadInt32(loadBytes, ref index);
+				if (world != null)
+					SetInputBitSet(bitset);
+			}
+
 			if (version >= 11)
 			{
 				var basicState = new BasicState();
@@ -2199,11 +2213,14 @@ namespace ViMG
 
         public void Set(ref readonly BasicState state)
         {
-			this.Position = state.position;
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (state.position - BODY_OFFSET).ToNumerics();
-            world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+			if ((this.Position - state.position).Length() > Cube.CUBE_SCALE)
+			{
+				this.Position = state.position;
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (state.position - BODY_OFFSET).ToNumerics();
+			}
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
 			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
-			this.Rotation = state.rotation.ToVector4().ToVector3();
+			//this.Rotation = state.rotation.ToVector4().ToVector3();
 			this.Health = state.health;
 			this.state = (State)state.state;
 			//this.useTimer = state.timers[0];
@@ -2211,6 +2228,60 @@ namespace ViMG
 			this.invulnTimer = state.timers[2];
 			this.inputLockupTimer = state.timers[3];
 			this.hasMenuOpen = state.counters[0] == 1;
+        }
+
+		public uint GetInputBitSet()
+		{
+			SyncPlayerInputs.InputTypes pressed = SyncPlayerInputs.InputTypes.None;
+			SyncPlayerInputs.InputTypes prevPressed = SyncPlayerInputs.InputTypes.None;
+
+            if (Jump.recordedPress) pressed |= InputTypes.Jump;
+            if (LeftClick.recordedPress) pressed |= InputTypes.LeftClick;
+            if (MoveBack.recordedPress) pressed |= InputTypes.MoveBack;
+            if (MoveDown.recordedPress) pressed |= InputTypes.MoveDown;
+            if (MoveForward.recordedPress) pressed |= InputTypes.MoveForward;
+            if (MoveLeft.recordedPress) pressed |= InputTypes.MoveLeft;
+            if (MoveRight.recordedPress) pressed |= InputTypes.MoveRight;
+            if (RightClick.recordedPress) pressed |= InputTypes.RightClick;
+            if (Run.recordedPress) pressed |= InputTypes.Run;
+
+            if (Jump.previousRecordedPress) prevPressed |= InputTypes.Jump;
+            if (LeftClick.previousRecordedPress) prevPressed |= InputTypes.LeftClick;
+            if (MoveBack.previousRecordedPress) prevPressed |= InputTypes.MoveBack;
+            if (MoveDown.previousRecordedPress) prevPressed |= InputTypes.MoveDown;
+            if (MoveForward.previousRecordedPress) prevPressed |= InputTypes.MoveForward;
+            if (MoveLeft.previousRecordedPress) prevPressed |= InputTypes.MoveLeft;
+            if (MoveRight.previousRecordedPress) prevPressed |= InputTypes.MoveRight;
+            if (RightClick.previousRecordedPress) prevPressed |= InputTypes.RightClick;
+            if (Run.previousRecordedPress) prevPressed |= InputTypes.Run;
+
+			return ((uint)pressed << sizeof(ushort)) | (uint)prevPressed;
+        }
+
+		public void SetInputBitSet(uint bits)
+		{
+            InputTypes presseds = (InputTypes)(ushort)(bits >> sizeof(ushort));
+            InputTypes prevPresseds = (InputTypes)(ushort)bits;
+
+            Jump.recordedPress = (presseds & InputTypes.Jump) == InputTypes.Jump;
+            LeftClick.recordedPress = (presseds & InputTypes.LeftClick) == InputTypes.LeftClick;
+            MoveBack.recordedPress = (presseds & InputTypes.MoveBack) == InputTypes.MoveBack;
+            MoveDown.recordedPress = (presseds & InputTypes.MoveDown) == InputTypes.MoveDown;
+            MoveForward.recordedPress = (presseds & InputTypes.MoveForward) == InputTypes.MoveForward;
+            MoveLeft.recordedPress = (presseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+            MoveRight.recordedPress = (presseds & InputTypes.MoveRight) == InputTypes.MoveRight;
+            RightClick.recordedPress = (presseds & InputTypes.RightClick) == InputTypes.RightClick;
+            Run.recordedPress = (presseds & InputTypes.Run) == InputTypes.Run;
+
+            Jump.previousRecordedPress = (prevPresseds & InputTypes.Jump) == InputTypes.Jump;
+            LeftClick.previousRecordedPress = (prevPresseds & InputTypes.LeftClick) == InputTypes.LeftClick;
+            MoveBack.previousRecordedPress = (prevPresseds & InputTypes.MoveBack) == InputTypes.MoveBack;
+            MoveDown.previousRecordedPress = (prevPresseds & InputTypes.MoveDown) == InputTypes.MoveDown;
+            MoveForward.previousRecordedPress = (prevPresseds & InputTypes.MoveForward) == InputTypes.MoveForward;
+            MoveLeft.previousRecordedPress = (prevPresseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+            MoveRight.previousRecordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
+            RightClick.previousRecordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
+            Run.previousRecordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
         }
     }
 }

@@ -84,6 +84,10 @@ namespace Engine.Networking
             this.isServer = isServer;
 
             Array.Fill(netPlayers, new NetPlayer());
+
+            //netManager.SimulateLatency = true;
+            //netManager.SimulationMaxLatency = 500;
+            //netManager.SimulationMinLatency = 200;
         }
 
         public void Connect()

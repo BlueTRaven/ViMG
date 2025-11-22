@@ -25,8 +25,8 @@ namespace Engine.Entities
 
         public bool isLocalInput = true;
         public bool continues; // If client input, if an artificialPress is received, artificialPress will not be reset
-        private bool previousArtificialPress;
-        public bool artificialPress;
+        public bool previousRecordedPress;
+        public bool recordedPress;
 
         public PlayerInput(Input input)
         {
@@ -78,30 +78,10 @@ namespace Engine.Entities
 
         public void Update()
         {
-            previousArtificialPress = artificialPress;
-            if (!continues) artificialPress = false;
-        }
-
-        public bool JustPressed()
-        {
+            previousRecordedPress = recordedPress;
             if (isLocalInput)
             {
-                return type switch
-                {
-                    Type.Mouse => Main.inputManager.JustPressed(mouse),
-                    Type.Key => Main.inputManager.JustPressed(key),
-                    Type.Controller => Main.inputManager.JustPressed(input),
-                    _ => throw new NotImplementedException(),
-                };
-            }
-            else return !previousArtificialPress && artificialPress;
-        }
-
-        public bool Pressed()
-        {
-            if (isLocalInput)
-            {
-                return type switch
+                recordedPress = type switch
                 {
                     Type.Mouse => Main.inputManager.IsPressed(mouse),
                     Type.Key => Main.inputManager.IsPressed(key),
@@ -109,7 +89,51 @@ namespace Engine.Entities
                     _ => throw new NotImplementedException(),
                 };
             }
-            else return artificialPress;
+            else
+            {
+                if (!continues) recordedPress = false;
+            }
+        }
+
+        public bool Changed()
+        {
+            return previousRecordedPress != recordedPress;
+        }
+
+        public bool JustPressed()
+        {
+            //if (isLocalInput)
+            //{
+            //    recordedPress = type switch
+            //    {
+            //        Type.Mouse => Main.inputManager.JustPressed(mouse),
+            //        Type.Key => Main.inputManager.JustPressed(key),
+            //        Type.Controller => Main.inputManager.JustPressed(input),
+            //        _ => throw new NotImplementedException(),
+            //    };
+
+            //    return recordedPress;
+            //}
+            //else
+                return !previousRecordedPress && recordedPress;
+        }
+
+        public bool Pressed()
+        {
+            //if (isLocalInput)
+            //{
+            //    recordedPress = type switch
+            //    {
+            //        Type.Mouse => Main.inputManager.IsPressed(mouse),
+            //        Type.Key => Main.inputManager.IsPressed(key),
+            //        Type.Controller => Main.inputManager.IsPressed(input),
+            //        _ => throw new NotImplementedException(),
+            //    };
+
+            //    return recordedPress;
+            //}
+            //else
+                return recordedPress;
         }
     }
 }
