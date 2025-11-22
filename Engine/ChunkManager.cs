@@ -111,7 +111,7 @@ namespace ViMG
 
             ChunkMesher?.Update(world);
 
-            const int MAX_UPDATE_PER_FRAME = 20;
+            const int MAX_UPDATE_PER_FRAME = 200;
             int updatedThisFrame = 0; 
 
             //Notify anyone who might want to know that a cube was updated. This includes adjacents.

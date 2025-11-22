@@ -1,10 +1,13 @@
 ﻿using BrUtility;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.GameStates;
 using ViMG.Rendering;
 
 namespace ViMG.Items
@@ -28,22 +31,15 @@ namespace ViMG.Items
 
 			if (player.IsLooking && player.CanPlace)
 			{
-				if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
+				if (player.world.PlaceCube(player, player.PlaceAtPos, cubeId))
 				{
-					player.world.ChunkManager.CubeView.SetCube(player.PlaceAtPos, cubeId, player);
-					inventory.Remove(index, 1);
-					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-					cube.OnPlayerPlaced(player, player.PlaceAtPos);
-					//player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
+                    inventory.Remove(index, 1);
 
-					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
+                    actionStats.useTime = 0.25f;
+                    actionStats.useAnimTime = 0.25f;
 
-					//cubes can be placed as fast as possible
-					actionStats.useTime = 0.25f;
-					actionStats.useAnimTime = 0.25f;
-
-					return true;
-				}
+                    return true;
+                }
 			}
 
 			return false;

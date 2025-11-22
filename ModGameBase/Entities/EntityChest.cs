@@ -37,7 +37,7 @@ namespace ViMG.Entities
 				facing = facing
 			};
 
-            inventory = new Inventory(rows * columns);
+            inventory = new Inventory(0, rows * columns);
 		}
 
 		//A separate constructor so world gen can provide prefilled inventory.

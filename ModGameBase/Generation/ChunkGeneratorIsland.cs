@@ -1005,7 +1005,7 @@ namespace ViMG.Generation
 			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("run_leather_boots"), 1, 1));
 			//inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_story_01"), 1, 1));	//TODO
 
-			Inventory inventory = new Inventory(9);
+			Inventory inventory = new Inventory(0, 9);
 
 			for (int i = 0; i < inventoryItems.Count; i++)
 			{
@@ -1044,7 +1044,7 @@ namespace ViMG.Generation
 				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 2), 1));
 			}
 
-			Inventory inventory = new Inventory(9);
+			Inventory inventory = new Inventory(0, 9);
 
 			for (int i = 0; i < inventoryItems.Count; i++)
             {

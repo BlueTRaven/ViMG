@@ -44,7 +44,7 @@ namespace ViMG.Entities
 
 			Position = position.InWorldSpace();
 
-			inventory = new Inventory(5);
+			inventory = new Inventory(0, 5);
 		}
 
 		public override void Initialize(World world)

@@ -310,13 +310,13 @@ namespace ViMG
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
             
-			inventory = new Inventory(INVENTORY_ROWS * INVENTORY_COLUMNS);
-            accessoryInventory = new Inventory(6);
-            gearInventory = new Inventory(10);
+			inventory = new Inventory(0, INVENTORY_ROWS * INVENTORY_COLUMNS);
+            accessoryInventory = new Inventory(1, 6);
+            gearInventory = new Inventory(2, 10);
             //Start with 10 gear slots so we don't have to worry about expanding in the future.
             //For now, we only have 3:
             //Heart, boots, and feather artefact.
-            craftInventory = new Inventory(8);
+            craftInventory = new Inventory(3, 8);
         }
 
         //Creates a new player from a dead player.
@@ -1793,7 +1793,7 @@ namespace ViMG
 				}*/
             }
 
-			if (lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
+			if (IsLocalPlayer && lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
 			{
 				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
 				Color color = Color.Lerp(Color.White, Color.Black, s);
@@ -2157,7 +2157,7 @@ namespace ViMG
 				accessoryInventory = Inventory.Load(loadBytes, ref index);
 				//version 6 uses an inventory with 3 slots, 7 uses 6 slots; it must be expanded.
 				if (version == 6)
-					accessoryInventory = new Inventory(accessoryInventory, 6);	//expand to be 6 slots
+					accessoryInventory = new Inventory(1, accessoryInventory, 6);	//expand to be 6 slots
 			}
 
 			if (version >= 9)

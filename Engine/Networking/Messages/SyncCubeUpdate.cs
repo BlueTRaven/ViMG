@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using ViMG;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditRequest;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditResponse;
-using static System.Collections.Specialized.BitVector32;
 using static ViMG.ChunkManager;
 
 namespace Engine.Networking.Messages
@@ -83,6 +82,15 @@ namespace Engine.Networking.Messages
             {
                 if (Main.Time > qcubeupdated.time)
                 {
+                    // Invalidate any audits that may be attempting to update this position
+                    for (int i = 0; i < MAX_AUDITS; i++)
+                    {
+                        ref var currAudit = ref SyncCubeUpdateAuditRequest.Instance.activeAudits[GS.GetWorld().localPlayerIndex][i];
+                        if (currAudit.active && currAudit.position == qcubeupdated.position && qcubeupdated.time > currAudit.time)
+                        {
+                            currAudit.active = false;
+                        }
+                    }
                     var player = qcubeupdated.player == -1 ? null : players[qcubeupdated.player];
                     chunkManager.CubeView.SetCube(qcubeupdated.position, qcubeupdated.newId, false);
                     chunkManager.MarkCubeMeshInfoDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
@@ -101,11 +109,13 @@ namespace Engine.Networking.Messages
 
     public class SyncCubeUpdateAuditRequest : Message
     {
+        public const int MAX_AUDITS = 32;
+
         public static SyncCubeUpdateAuditRequest Instance { get; private set; }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
 
-        public const double TIMEOUT = 5;
+        public const double TIMEOUT = 0.5;
 
         public struct AuditedCubeUpdate
         {
@@ -124,7 +134,7 @@ namespace Engine.Networking.Messages
             activeAudits = new AuditedCubeUpdate[World.MAX_PLAYERS][];
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
-                activeAudits[i] = new AuditedCubeUpdate[32];
+                activeAudits[i] = new AuditedCubeUpdate[MAX_AUDITS];
             }
             Instance = this;
         }
@@ -201,7 +211,7 @@ namespace Engine.Networking.Messages
         {
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
-                for (int j = 0; j < 32; j++)
+                for (int j = 0; j < MAX_AUDITS; j++)
                 {
                     if (activeAudits[i][j].active)
                     {
@@ -214,17 +224,24 @@ namespace Engine.Networking.Messages
                                 var accepted = true;
                                 ushort newId = action.newId;
                                 var player = players[action.player];
-                                if (action.oldId != 0 && action.newId == 0)
+                                ushort curId = chunkManager.CubeView.GetId(action.position); ;
+
+                                if (curId != newId)
                                 {
-                                    accepted = GS.GetWorld().TryMineCube(player, action.position, 0, 0, true);
-                                    if (!accepted) newId = chunkManager.CubeView.GetId(action.position);
+                                    accepted = false;
+                                    newId = curId;
                                 }
-                                else
-                                {
-                                    chunkManager.CubeView.SetCube(action.position, action.newId, false);
-                                    chunkManager.MarkCubeMeshInfoDirty(player, action.position, action.oldId, action.newId);
-                                    chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(action.position));
-                                }
+                                //if (action.oldId != 0 && action.newId == 0)
+                                //{
+                                //    accepted = GS.GetWorld().TryMineCube(player, action.position, 0, 0, true);
+                                //    if (!accepted) newId = chunkManager.CubeView.GetId(action.position);
+                                //}
+                                //else
+                                //{
+                                //    chunkManager.CubeView.SetCube(action.position, action.newId, false);
+                                //    chunkManager.MarkCubeMeshInfoDirty(player, action.position, action.oldId, action.newId);
+                                //    chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(action.position));
+                                //}
 
                                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncCubeUpdateAuditResponse.Instance, peer, new AcceptedCubeUpdate()
                                 {
@@ -252,7 +269,7 @@ namespace Engine.Networking.Messages
 
         public void RollbackAction(AuditedCubeUpdate action)
         {
-            Console.WriteLine("did rollback {0}", action.index);
+            //Console.WriteLine("did rollback {0}", action.index);
             Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
             var player = GS.GetWorld().player[action.player];
@@ -263,7 +280,7 @@ namespace Engine.Networking.Messages
 
         public void DoAction(AuditedCubeUpdate action)
         {
-            Console.WriteLine("did action {0}", action.index);
+            //Console.WriteLine("did action {0}", action.index);
             Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
             var player = GS.GetWorld().player[action.player];

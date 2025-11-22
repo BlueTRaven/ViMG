@@ -1039,6 +1039,35 @@ namespace ViMG
             cube.OnMined(player, position);
         }
 
+		public bool PlaceCube(Player? player, CubePosition position, ushort id)
+		{
+            if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
+            {
+				ushort oldId = ChunkManager.CubeView.GetId(position);
+                ChunkManager.CubeView.SetCube(player.PlaceAtPos, id, player);
+                Cube cube = Main.Registry.CubeRegistry.Get(id);
+                cube.OnPlayerPlaced(player, player.PlaceAtPos);
+
+                if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+                {
+                    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
+                    {
+                        position = player.PlaceAtPos,
+                        newId = id,
+                        oldId = oldId,
+                        player = (byte)player.playerIndex,
+                        time = Main.Time,
+                    };
+
+                    Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, action);
+                }
+
+                return true;
+            }
+
+			return false;
+        }
+
 		public struct RaycastResult 
 		{
 			public Vector3 start;

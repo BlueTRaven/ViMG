@@ -7,22 +7,25 @@ namespace ViMG
 {
 	public class Inventory
 	{
+		public readonly int id;
 		private int numSlots;
 		public int NumSlots => numSlots;
 		private ItemInstance[] items;
 
 		private int lastEmpty;
-		public Inventory(int numSlots)
+		public Inventory(int id, int numSlots)
 		{
+			this.id = id;
 			this.numSlots = numSlots;
 			items = new ItemInstance[numSlots];
 
 			lastEmpty = 0;
 		}
 
-		public Inventory(Inventory copyFrom, int newNum = -1)
+		public Inventory(int id, Inventory copyFrom, int newNum = -1)
         {
-			if (newNum == -1)
+            this.id = id;
+            if (newNum == -1)
 				numSlots = copyFrom.numSlots;
 			else numSlots = newNum;
 
@@ -192,6 +195,7 @@ namespace ViMG
 
 		public void Save(List<byte> saveBytes)
 		{
+			SaveHelper.SaveInt32(saveBytes, id);
 			SaveHelper.SaveInt32(saveBytes, numSlots);
 
 			int numValid = 0;
@@ -217,8 +221,9 @@ namespace ViMG
 
 		public static Inventory Load(byte[] loadBytes, ref int index)
 		{
+			int id = SaveHelper.LoadInt32(loadBytes, ref index);
 			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
-			Inventory inv = new Inventory(numSlots);
+			Inventory inv = new Inventory(id, numSlots);
 
 			int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
 

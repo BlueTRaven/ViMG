@@ -85,9 +85,13 @@ namespace Engine.Networking
 
             Array.Fill(netPlayers, new NetPlayer());
 
-            //netManager.SimulateLatency = true;
-            //netManager.SimulationMaxLatency = 500;
-            //netManager.SimulationMinLatency = 200;
+            if (isServer)
+            {
+                // SimulateLatency seems to be pretty buggy. It'll sometimes just hold onto packets for a long time for no apparent reason.
+                //netManager.SimulateLatency = true;
+                //netManager.SimulationMaxLatency = 500;
+                //netManager.SimulationMinLatency = 200;
+            }
         }
 
         public void Connect()

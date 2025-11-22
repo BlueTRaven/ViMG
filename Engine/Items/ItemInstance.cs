@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -39,5 +40,5 @@ namespace ViMG.Items
 		{
 			return new ItemInstance(item, num, damage);
 		}
-	}
+    }
 }

@@ -23,7 +23,7 @@ namespace ViMG.Entities
 			this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
 
-			inventory = new Inventory(8);
+			inventory = new Inventory(0, 8);
 		}
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
@@ -58,7 +58,7 @@ namespace ViMG.Entities
 			inventory = Inventory.Load(loadBytes, ref index);
 
 			if (version == 0)
-				inventory = new Inventory(8);
+				inventory = new Inventory(0, 8);
 		}
 	}
 }
