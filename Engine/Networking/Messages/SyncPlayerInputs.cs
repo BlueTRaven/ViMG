@@ -12,10 +12,10 @@ using ViMG;
 
 namespace Engine.Networking.Messages
 {
-    public class ClientSendInputs : Message
+    public class SyncPlayerInputs : Message
     {
-        public static ClientSendInputs Instance { get; private set; }
-        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
+        public static SyncPlayerInputs Instance { get; private set; }
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Both;
 
         [Flags]
         public enum InputTypes : ushort
@@ -45,7 +45,7 @@ namespace Engine.Networking.Messages
         private List<QueuedInput> queued2 = new List<QueuedInput>();
         private List<QueuedInput> queued;
 
-        public ClientSendInputs()
+        public SyncPlayerInputs()
         {
             Passthrough = true;
             Instance = this;

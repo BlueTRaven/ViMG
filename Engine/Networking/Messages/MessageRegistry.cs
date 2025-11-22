@@ -3,6 +3,7 @@ using LiteNetLib.Utils;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace Engine.Networking.Messages
             Register(new SyncChunk());
             Register(new SyncBasicState());
             Register(new WhoAmI());
-            Register(new ClientSendInputs());
+            Register(new SyncPlayerInputs());
             Register(new SyncCubeUpdate());
         }
 
@@ -33,6 +34,15 @@ namespace Engine.Networking.Messages
 
         public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
         {
+            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+            {
+                Debug.Assert((message.SendableFrom & NetworkManager.NetworkSide.Server) == NetworkManager.NetworkSide.Server);
+            } 
+            else
+            {
+                Debug.Assert((message.SendableFrom & NetworkManager.NetworkSide.Client) == NetworkManager.NetworkSide.Client);
+            }
+
             NetworkMessage netMessage = new NetworkMessage(message.Id, Main.gameStateManager.TheIsland.netManager.netManager, peer);
             netMessage.writer.Put(message.Id);
 

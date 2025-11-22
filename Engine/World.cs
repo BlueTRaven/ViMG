@@ -336,7 +336,7 @@ namespace ViMG
 			EntityManager.Update(deltaTime);
 
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
-			ClientSendInputs.Instance.Apply(player);
+			SyncPlayerInputs.Instance.Apply(player);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
 
 			logic.Update(this, deltaTime);

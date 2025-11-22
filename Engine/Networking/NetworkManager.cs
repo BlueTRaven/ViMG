@@ -42,8 +42,8 @@ namespace Engine.Networking
         public enum NetworkSide
         {
             None = 0,
-            Client,
-            Server,
+            Client = 1 << 0,
+            Server = 1 << 1,
             Both = Client | Server
         };
 

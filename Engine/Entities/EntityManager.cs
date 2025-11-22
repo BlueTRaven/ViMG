@@ -434,7 +434,7 @@ namespace ViMG.Entities
 				// Local player has all its inputs synced to all connections
 				if (localPlayer.LeftClick.JustPressed() || Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
 				{
-					Main.Registry.MessageRegistry.SendMessageToAll(ClientSendInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+					Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
 					//forceLocalSync = true;
 				}
 			}

@@ -26,7 +26,7 @@ using ViMG.VertexDeclarations;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(12, 0)]
+	[EntityMeta(13, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
 	{
         private struct HitboxToSpawnLater
@@ -285,12 +285,9 @@ namespace ViMG
 		public bool IsLocalPlayer =>
             Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
-		// NOTE: the player is always "in control" if it's a remote player. It doesn't care about opened menus
-		public bool IsInControl => inputLockupTimer <= 0 && isInControlSync &&
-			((IsLocalPlayer && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened) ||
-			!IsLocalPlayer);
+		public bool IsInControl => inputLockupTimer <= 0 && !hasMenuOpen;
 		// Used for multiplayer sync
-		private bool isInControlSync;
+		private bool hasMenuOpen;
 
 		public double TimeSinceInputSynced;
 
@@ -486,7 +483,7 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			if (state != State.Noclip)
+            if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
             hasMoved = false;
@@ -496,6 +493,15 @@ namespace ViMG
 			{
 				if (Main.inputManager.JustPressed(Keys.G))
 					Main.Debug = !Main.Debug;
+
+				if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) 
+				{
+					hasMenuOpen = true;
+				}
+				else
+				{
+					hasMenuOpen = false;
+				}
 			}
 			else
 			{
@@ -545,6 +551,10 @@ namespace ViMG
 					if (Magic > GetCalculatedMaxMagic())
 						Magic = GetCalculatedMaxMagic();
                 }
+			} 
+			else
+			{
+				inputLockupTimer -= (float)deltaTime;
 			}
 
 			if (state == State.Noclip)
@@ -552,12 +562,12 @@ namespace ViMG
 				UpdateMovementNoclip(deltaTime);
 			}
 			else if (state == State.Dead)
-            {
+			{
 				deadTimer -= (float)deltaTime;
 
 				if (deadTimer <= 0)
 					KillWithoutAnimation();
-            }
+			}
 			else if (state == State.Normal)
 			{
 				if (Main.inputManager.JustPressed(Keys.LeftControl))
@@ -584,11 +594,11 @@ namespace ViMG
 				}
 
 				//UpdateCollision(deltaTime);
-				
+
 				//Position += Velocity * (float)deltaTime;
 			}
 			else if (state == State.Dash)
-            {
+			{
 				//always invulnerable during a dash?
 				invulnTimer = 0.01f;
 
@@ -597,7 +607,7 @@ namespace ViMG
 				//UpdateCollision(deltaTime);
 
 				//Position += Velocity * (float)deltaTime;
-            }
+			}
 			else if (state == State.Attack)
 			{
 				invulnTimer -= (float)deltaTime;
@@ -625,13 +635,11 @@ namespace ViMG
 			}
 			else if (state == State.Hurt)
 			{
-				inputLockupTimer -= (float)deltaTime;
-
 				if (inputLockupTimer <= 0)
 					state = State.Normal;
 			}
 
-			contactChecker.Update(world, physicsHandle);
+            contactChecker.Update(world, physicsHandle);
 
 			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
 				hasMoved = true;
@@ -1323,6 +1331,11 @@ namespace ViMG
 
 		private void UpdatePerformAction()
 		{
+			//if (!IsLocalPlayer)
+			//{
+			//	Console.WriteLine("Remote Player: {0}", inputLockupTimer);
+			//}
+
             if (IsInControl && useTimer <= 0)
             {
 				if (LeftClick.Pressed())
@@ -2113,8 +2126,6 @@ namespace ViMG
 
 			Get(out BasicState state);
 			state.OnSave(saveBytes);
-
-			SaveHelper.SaveBool(saveBytes, IsInControl);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2167,12 +2178,6 @@ namespace ViMG
 				if (world != null && TimeInitialized != 0)
 					Set(ref basicState);
 			}
-
-			if (version >= 12)
-			{
-				isInControlSync = SaveHelper.LoadBool(loadBytes, ref index);
-				if (IsLocalPlayer) isInControlSync = true;
-			}
 		}
 
         public void Get(out BasicState state)
@@ -2188,11 +2193,11 @@ namespace ViMG
 					[0] = this.useTimer,
 					[1] = this.preUseTimer,
 					[2] = this.invulnTimer,
-					[3] = this.hitboxTimer,
+					[3] = this.inputLockupTimer,
 				},
 				counters =
 				{
-					[0] = this.isInControlSync ? 1 : 0,
+					[0] = this.hasMenuOpen ? 1 : 0,
 				}
 			};
         }
@@ -2209,9 +2214,8 @@ namespace ViMG
 			this.useTimer = state.timers[0];
 			this.preUseTimer = state.timers[1];
 			this.invulnTimer = state.timers[2];
-			this.hitboxTimer = state.timers[3];
-			this.isInControlSync = state.counters[0] == 1;
-            if (IsLocalPlayer) isInControlSync = true;
+			this.inputLockupTimer = state.timers[3];
+			this.hasMenuOpen = state.counters[0] == 1;
         }
     }
 }

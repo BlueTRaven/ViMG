@@ -52,6 +52,37 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        private class ConsoleTextWriter : TextWriter
+        {
+            private TextWriter originalConsoleOut;
+            public override Encoding Encoding => originalConsoleOut.Encoding;
+
+            public ConsoleTextWriter(TextWriter originalConsoleOut)
+            {
+                this.originalConsoleOut = originalConsoleOut;
+            }
+
+            public override void Write(char value)
+            {
+                LogLine(new string(value, 1));
+                originalConsoleOut.Write(value);
+            }
+
+            public override void Write(string value)
+            {
+                LogLine(value);
+                originalConsoleOut.Write(value);
+            }
+
+            // Override WriteLine methods as well
+            public override void WriteLine(string value)
+            {
+                LogLine(value);
+                originalConsoleOut.WriteLine(value);
+            }
+        }
+        private static ConsoleTextWriter textWriter;
+
         private const int MAX_LINES = 500;
         private const int MAX_HISTORY = 500;
         private static FastList<string> lines = new(MAX_LINES);
@@ -292,6 +323,12 @@ namespace ViMG.IMGUIImpl
 
         public static unsafe void Console()
         {
+            if (textWriter == null)
+            {
+                textWriter = new ConsoleTextWriter(System.Console.Out);
+                System.Console.SetOut(textWriter);
+            }
+
             if (Main.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
             {
                 lastRunTime = (float)Main.Time;
