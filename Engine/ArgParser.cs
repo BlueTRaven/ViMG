@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
+using ViMG.IMGUIImpl;
 
 namespace Engine
 {
@@ -39,6 +41,11 @@ namespace Engine
                 else if (currentArg == "--startpaused" || currentArg == "-p")
                 {
                     startPaused = true;
+                }
+                else if (currentArg == "--showconsole" || currentArg == "-c")
+                {
+                    IMGUISettings.ShowConsole = true;
+                    Options.ShowConsole = true;
                 }
                 else if (currentArg == "--windowpos")
                 {

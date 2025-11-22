@@ -128,8 +128,6 @@ namespace Engine.Networking.Messages
 
                     player.highlightIndex = qinput.heldItem;
                     //player.LookAtPos = qinput.lookAtPos;
-
-                    //Console.WriteLine("{0} {1}", qinput.playerIndex, qinput.lookAtPos);
                 }
                 else
                 {

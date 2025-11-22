@@ -335,9 +335,10 @@ namespace ViMG
 			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
 
-			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncPlayerInputs.Instance.Apply(player);
+			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
+			SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
 
 			logic.Update(this, deltaTime);
 
@@ -990,8 +991,20 @@ namespace ViMG
 						miningCubes.Remove(position);
 
 					// Client doesn't get to actually break blocks. Server does it for them
-                    if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
-                        DoMineCube(position, player);
+                    DoMineCube(position, player, Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+                    if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+					{
+                        var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
+						{
+							position = position,
+							newId = 0,
+							oldId = cube.Id,
+							player = (byte)localPlayerIndex,
+							time = Main.Time,
+						};
+
+                        Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, action);
+					}
 
                     return true;
                 }
@@ -1000,23 +1013,28 @@ namespace ViMG
 			return false;
 		}
 
-		private void DoMineCube(CubePosition position, Player player)
+		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
 		{
+			Console.WriteLine("DoMineCube");
+
             Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             ChunkManager.CubeView.SetCube(position, 0, player);
 
-            List<ItemInstance> items = new List<ItemInstance>();
-            cube.GetDrops(items);
+			if (doDrops)
+			{
+				List<ItemInstance> items = new List<ItemInstance>();
+				cube.GetDrops(items);
 
-            foreach (ItemInstance item in items)
-            {
-                EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
-                    new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-                        Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
+				foreach (ItemInstance item in items)
+				{
+					EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
+						new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+							Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
 
-                EntityManager.Add(ent);
-            }
+					EntityManager.Add(ent);
+				}
+			}
 
             cube.OnMined(player, position);
         }

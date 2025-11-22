@@ -63,7 +63,6 @@ namespace ViMG.Items
 						if (player.GetWorld().ChunkManager.IsInWorldBounds(affectedPositions[i]))
 						{
 							var cube = Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air);
-                            Console.WriteLine("On left click {0}", cube.Name);
 
                             if (cube.Touchable)
 								player.GetWorld().TryMineCube(player, affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);

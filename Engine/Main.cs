@@ -133,13 +133,14 @@ namespace ViMG
 
         public Main(string[] args) : base()
         {
-			Args.ParseArgs(args);
 
 			MainThread = Thread.CurrentThread;
 
 			SessionInformation = new SessionInformation();
 			SessionIO = new SessionIO();
 			SessionIO.Load(graphics);
+
+			Args.ParseArgs(args);
 
 			graphics = new GraphicsDeviceManager(this)
 			{

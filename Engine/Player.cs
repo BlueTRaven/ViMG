@@ -1331,12 +1331,7 @@ namespace ViMG
 
 		private void UpdatePerformAction()
 		{
-			//if (!IsLocalPlayer)
-			//{
-			//	Console.WriteLine("Remote Player: {0}", inputLockupTimer);
-			//}
-
-            if (IsInControl && useTimer <= 0)
+			if (IsInControl && useTimer <= 0)
             {
 				if (LeftClick.Pressed())
                 {
@@ -2211,8 +2206,8 @@ namespace ViMG
 			this.Rotation = state.rotation.ToVector4().ToVector3();
 			this.Health = state.health;
 			this.state = (State)state.state;
-			this.useTimer = state.timers[0];
-			this.preUseTimer = state.timers[1];
+			//this.useTimer = state.timers[0];
+			//this.preUseTimer = state.timers[1];
 			this.invulnTimer = state.timers[2];
 			this.inputLockupTimer = state.timers[3];
 			this.hasMenuOpen = state.counters[0] == 1;

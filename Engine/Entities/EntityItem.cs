@@ -117,6 +117,9 @@ namespace ViMG.Entities
             base.OnSave(saveBytes);
 
 			SaveHelper.SaveItemInstance(saveBytes, ItemInstance);
+
+			Get(out var state);
+			state.OnSave(saveBytes);
         }
 
         public override void OnLoad(byte[] loadBytes, in int version)
@@ -125,6 +128,11 @@ namespace ViMG.Entities
 
 			int index = 0;
 			ItemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
+
+			var state = new BasicState();
+			state.OnLoad(loadBytes, ref index);
+			if (world != null)
+				Set(ref state);
         }
 
         public void Get(out BasicState state)
