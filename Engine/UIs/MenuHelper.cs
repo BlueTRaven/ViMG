@@ -162,7 +162,7 @@ namespace ViMG.UIs
 
 					var oldItem = inventory.Get(i);
 
-					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory, new MenuHelper.WhiteListNone());
+					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory);
 
 					if (output == ItemSlotClickOutput.NeedsSwapInventory)
 					{
@@ -193,20 +193,20 @@ namespace ViMG.UIs
 			return new Size(columns * size + columns * padding + 32, rows * size + rows * padding + 32);
         }
 
-		public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot)
-		{
-			ItemSlotClickOutput output = ItemSlotClickOutput.None;
+		//public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot)
+		//{
+		//	ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
-			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
-			{
-                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.gameStateManager, 
-					null, inventory.Get(index)));
+		//	if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
+		//	{
+  //              Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.gameStateManager, 
+		//			null, inventory.Get(index)));
 
-				return ItemSlotClickOutput.FilterRecipe;
-			}
+		//		return ItemSlotClickOutput.FilterRecipe;
+		//	}
 
-			return output;
-		}
+		//	return output;
+		//}
 
 		public static ItemSlotClickOutput HandleRecipeFilter(GameStateManager gsManager, ItemInstance item, in UI.Button itemSlotButton)
         {
@@ -235,8 +235,7 @@ namespace ViMG.UIs
 			return ItemSlotClickOutput.None;
         }
 
-		public static ItemSlotClickOutput HandleItemSlot<TWhiteList>(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory, TWhiteList whiteList) 
-			where TWhiteList : struct, IWhiteList
+		public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
@@ -358,7 +357,7 @@ namespace ViMG.UIs
 					// Merge stacks
 					if (inventory.Get(index).item == heldInventory.Get(0).item && heldInventory.Get(0).damage == itemSlot.item.damage)
 					{
-						if (itemSlot.item.num != itemSlot.maxStackSize)
+						if (itemSlot.item.num != inventory.GetMaxStackSize(index))
 						{
 							inventory.Set(new ItemInstance(heldInventory.Get(0), itemSlot.item.num + 1), index);
 
@@ -377,7 +376,7 @@ namespace ViMG.UIs
 				{
 					// Place in slot. The held item is set to an empty item instance.
 
-					if (!whiteList.Matches(heldInventory.Get(0).item))
+					if (!inventory.GetWhiteList(index)?.Matches(heldInventory.Get(0).item) ?? false)
 						return ItemSlotClickOutput.None;
 
 					inventory.Set(new ItemInstance(heldInventory.Get(0), 1), index);
@@ -486,7 +485,7 @@ namespace ViMG.UIs
                     //int rem = heldInventory.Get(0).num - itemSlot.maxStackSize;
 
                     inventory.Set(new ItemInstance(heldInventory.Get(0), ourMaxStackSize), index);
-                    heldInventory.Remove(ourMaxStackSize);
+                    heldInventory.Remove(0, ourMaxStackSize);
 
                     output = ItemSlotClickOutput.PlaceInSlotSome;
                 }

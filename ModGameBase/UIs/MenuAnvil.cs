@@ -111,8 +111,8 @@ namespace ViMG.UIs
 
 			for (int i = 0; i < 7; i++)
             {
-				MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
-				if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+				MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], heldInventory);
+				if (output != MenuHelper.ItemSlotClickOutput.None)
 				{
 					if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						MenuHelper.SwapInventory(anvilInventory, playerInventory, i);

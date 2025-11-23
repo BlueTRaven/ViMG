@@ -307,8 +307,8 @@ namespace ViMG.UIs
 
 						var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(i));
 
-						var output = MenuHelper.ItemSlotClickOutput.None;
-						if ((output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+						var output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, heldInventory);
+						if (output != MenuHelper.ItemSlotClickOutput.None)
 						{
 							if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 							{
@@ -412,15 +412,14 @@ namespace ViMG.UIs
 				{
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i), 1);
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i));
 
 					if (!accessoryInventory.Get(i).valid)
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE), 
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
-					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory,
-						new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
+					var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory);
+					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
@@ -444,15 +443,14 @@ namespace ViMG.UIs
                 {
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
 
-                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i + 3), 1);
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i + 3));
 
                     if (!accessoryInventory.Get(i + 3).valid)
                         UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
                             Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
 
-                    var output = MenuHelper.ItemSlotClickOutput.None;
-                    if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory,
-                        new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i + 3]))) != MenuHelper.ItemSlotClickOutput.None)
+                    var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory);
+                    if (output != MenuHelper.ItemSlotClickOutput.None)
                     {
                         if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
                         {
@@ -483,7 +481,7 @@ namespace ViMG.UIs
 
 					//buttonParameters.bounds.Position = pos;
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i), 1);
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i));
 
 					if (!gearInventory.Get(i).valid)
 					{
@@ -494,9 +492,8 @@ namespace ViMG.UIs
 							UIWidgets.MakeTooltip(new Vector2(0, SIZE), tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
 					}
 
-					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, heldInventory,
-						new MenuHelper.WhitelistTag(tagsGearBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
+					var output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, heldInventory);
+					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
