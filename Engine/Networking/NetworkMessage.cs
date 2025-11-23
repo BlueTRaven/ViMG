@@ -18,6 +18,7 @@ namespace Engine.Networking
         public NetDataWriter writer;
 
         public DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered;
+        public byte channel = 0;
 
         public NetworkMessage(int messageType, NetManager netManager, NetPeer? peer)
         {
@@ -31,11 +32,11 @@ namespace Engine.Networking
         {
             if (peer != null)
             {
-                peer.Send(writer, deliveryMethod);
+                peer.Send(writer, channel, deliveryMethod);
             }
             else
             {
-                netManager.SendToAll(writer, deliveryMethod, excludePeer);
+                netManager.SendToAll(writer, channel, deliveryMethod, excludePeer);
             }
         }
     }

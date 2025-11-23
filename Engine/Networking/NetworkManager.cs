@@ -81,6 +81,7 @@ namespace Engine.Networking
         public NetworkManager(bool isServer)
         {
             netManager = new NetManager(this);
+            netManager.ChannelsCount = 4;
             this.isServer = isServer;
 
             Array.Fill(netPlayers, new NetPlayer());

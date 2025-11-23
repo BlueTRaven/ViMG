@@ -272,10 +272,10 @@ namespace Engine.Networking.Messages
                                     var inventory = hasInv.GetInventory(action.inventoryId);
                                     var curInstance = inventory.Get(action.inventoryIndex);
 
-                                    //if (curInstance.item == newInstance.item)
                                     // TODO: in what situations do we decline a request?
+                                    if (curInstance.item != action.oldInstance.item || curInstance.damage != action.oldInstance.damage) 
                                     {
-                                        accepted = true;
+                                        accepted = false;
                                     }
 
 

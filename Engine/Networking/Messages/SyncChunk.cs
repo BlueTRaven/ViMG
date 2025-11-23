@@ -34,7 +34,8 @@ namespace Engine.Networking.Messages
         public unsafe override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
-            //netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.channel = 1;
 
             Span<ushort> queryIds = idsCache;
 
