@@ -32,8 +32,9 @@ namespace ViMG.Entities
 
 		public EntityFurnace()
 		{
-
-		}
+            MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
+            inventory = new Inventory(0, 5, whitelists);
+        }
 
 		public EntityFurnace(CubePosition position, MeshHelper.CubeFace facing)
 		{
@@ -115,7 +116,7 @@ namespace ViMG.Entities
             //if (version == 2)
             MeshingDataInstance.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 			
-			inventory = Inventory.Load(loadBytes, ref index);
+			inventory.Load(loadBytes, ref index);
 		}
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)

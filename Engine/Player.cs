@@ -324,8 +324,9 @@ namespace ViMG
 
             MenuHelper.IWhiteList[] whitelistsGear = new MenuHelper.IWhiteList[10];
             int[] maxStackSizesGear = new int[10];
+			Array.Fill(maxStackSizesGear, 1);
             for (int i = 0; i < MenuPlayer.tagsGearBySlot.Length; i++)
-                whitelistsAccessory[i] = new MenuHelper.WhitelistTag(MenuPlayer.tagsGearBySlot[i]);
+                whitelistsGear[i] = new MenuHelper.WhitelistTag(MenuPlayer.tagsGearBySlot[i]);
             //Start with 10 gear slots so we don't have to worry about expanding in the future.
             //For now, we only have 3:
             //Heart, boots, and feather artefact.
@@ -2173,15 +2174,15 @@ namespace ViMG
 				MaxMagic = SaveHelper.LoadInt32(loadBytes, ref index);
             }
 
-			inventory = Inventory.Load(loadBytes, ref index);
+			inventory.Load(loadBytes, ref index);
 
 			if (version >= 6)
 			{
-				accessoryInventory = Inventory.Load(loadBytes, ref index);
+				accessoryInventory.Load(loadBytes, ref index);
 			}
 
 			if (version >= 9)
-				gearInventory = Inventory.Load(loadBytes, ref index);
+				gearInventory.Load(loadBytes, ref index);
 
 			if (version >= 10)
 				Currency = SaveHelper.LoadInt32(loadBytes, ref index);

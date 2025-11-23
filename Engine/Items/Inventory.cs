@@ -1,6 +1,7 @@
 ﻿using Engine.Networking.Messages;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG;
 using ViMG.Entities;
@@ -75,7 +76,7 @@ namespace Engine.Items
 			}
 			else this.maxStackSizes = maxStackSizes;
 
-				lastEmpty = 0;
+			lastEmpty = 0;
         }
 
 
@@ -388,11 +389,12 @@ namespace Engine.Items
 			}
 		}
 
-		public static Inventory Load(byte[] loadBytes, ref int index)
+		public void Load(byte[] loadBytes, ref int index)
 		{
 			int id = SaveHelper.LoadInt32(loadBytes, ref index);
 			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
-			Inventory inv = new Inventory(id, numSlots);
+
+			Debug.Assert(id == this.id);
 
 			int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
 
@@ -401,10 +403,8 @@ namespace Engine.Items
 				int itemIndex = SaveHelper.LoadInt32(loadBytes, ref index);
 				ItemInstance itemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
 
-				inv.Set(itemInstance, itemIndex);
+				ForceSet(itemInstance, itemIndex);
 			}
-
-			return inv;
 		}
 
 		public MenuHelper.IWhiteList? GetWhiteList(int index)

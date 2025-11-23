@@ -8,7 +8,7 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(2, 1)]
+	[EntityMeta(3, 1)]
 	public class EntityChest : Entity, ICubeTracker
 	{
 		public struct MeshingData
@@ -107,7 +107,8 @@ namespace ViMG.Entities
 			if (version >= 2)
                 meshingData.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 
-			inventory = Inventory.Load(loadBytes, ref index);
+			inventory = new Inventory(0, rows * columns);
+			inventory.Load(loadBytes, ref index);
 		}
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
