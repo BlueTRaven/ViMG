@@ -5,6 +5,7 @@ using System.Text;
 using ViMG;
 using ViMG.Entities;
 using ViMG.Items;
+using ViMG.UIs;
 
 namespace Engine.Items
 {
@@ -14,19 +15,23 @@ namespace Engine.Items
 		{
 			Add,
 			Set,
-			Remove
+			Remove,
+			Clicked,
 		}
 		private struct InventoryAction
 		{
 			public required InventoryActionType type;
-			public required int index;
+            public required int index;
             public required ItemInstance oldInstance, newInstance;
+			public MenuHelper.ItemSlotClickOutput outputType;
         }
 
 		public readonly int id;
 		private int numSlots;
 		public int NumSlots => numSlots;
 		private ItemInstance[] items;
+		private MenuHelper.IWhiteList?[] whitelists;
+		private int[] maxStackSizes;
 
 		private int lastEmpty;
 
@@ -37,25 +42,53 @@ namespace Engine.Items
 			this.id = id;
 			this.numSlots = numSlots;
 			items = new ItemInstance[numSlots];
+			whitelists = new MenuHelper.IWhiteList?[numSlots];
+			maxStackSizes = new int[numSlots];
+			Array.Fill(maxStackSizes, -1);
 
 			lastEmpty = 0;
 		}
 
-		public Inventory(int id, Inventory copyFrom, int newNum = -1)
+		public Inventory(int id, int numSlots, MenuHelper.IWhiteList whitelist, int maxStackSize = -1)
+		{
+            this.id = id;
+            this.numSlots = numSlots;
+            items = new ItemInstance[numSlots];
+            whitelists = new MenuHelper.IWhiteList?[numSlots];
+			Array.Fill(whitelists, whitelist);
+            maxStackSizes = new int[numSlots];
+			Array.Fill(maxStackSizes, maxStackSize);
+
+            lastEmpty = 0;
+        }
+
+        public Inventory(int id, int numSlots, MenuHelper.IWhiteList?[] whitelists, int[]? maxStackSizes = null)
         {
             this.id = id;
-            if (newNum == -1)
-				numSlots = copyFrom.numSlots;
-			else numSlots = newNum;
+            this.numSlots = numSlots;
+            items = new ItemInstance[numSlots];
+			this.whitelists = whitelists;
+			if (maxStackSizes == null)
+			{
+				this.maxStackSizes = new int[numSlots];
+				Array.Fill(this.maxStackSizes, -1);
+			}
+			else this.maxStackSizes = maxStackSizes;
 
-			items = new ItemInstance[numSlots];
+				lastEmpty = 0;
+        }
 
-			for (int i = 0; i < copyFrom.numSlots; i++)
-            {
-				items[i] = copyFrom.items[i];
-            }
 
-			lastEmpty = copyFrom.lastEmpty;
+        public void AddClick(Entity owner, int index, MenuHelper.ItemSlotClickOutput outputType)
+		{
+			actions.Add(new InventoryAction
+			{
+				index = index,
+				oldInstance = new(),
+				newInstance = new(),
+				type = InventoryActionType.Clicked,
+				outputType = outputType,
+			});
 		}
 
 		public void ProcessActions(Entity owner)
@@ -73,13 +106,23 @@ namespace Engine.Items
 					time = Main.Time
 				};
 
-				if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+				if (action.type != InventoryActionType.Clicked)
 				{
-					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+					if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+					{
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+					}
+					else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+					{
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+					}
 				}
-				else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+				else
 				{
-					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+					if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+					{
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+					}
 				}
 			}
 
@@ -362,6 +405,16 @@ namespace Engine.Items
 			}
 
 			return inv;
+		}
+
+		public MenuHelper.IWhiteList? GetWhiteList(int index)
+		{
+			return whitelists[index];
+		}
+
+		public int GetMaxStackSize(int index)
+		{
+			return maxStackSizes[index];
 		}
 	}
 }

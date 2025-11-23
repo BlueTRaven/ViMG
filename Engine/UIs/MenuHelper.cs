@@ -5,11 +5,13 @@ using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.UIs.MenuHelper;
 using static ViMG.UIs.UI;
 
 namespace ViMG.UIs
@@ -32,7 +34,7 @@ namespace ViMG.UIs
 
 		public interface IWhiteList
 		{
-			public bool Matches(Item item);
+			public bool Matches(Item? item);
 		}
 
 		public readonly struct WhiteListName : IWhiteList
@@ -44,9 +46,9 @@ namespace ViMG.UIs
 				this.names = names;
 			}
 
-			public bool Matches(Item item)
+			public bool Matches(Item? item)
 			{
-				return names.Contains(item.Identifier);
+				return names.Contains(item?.Identifier ?? "");
 			}
 		}
 
@@ -59,15 +61,15 @@ namespace ViMG.UIs
 				this.name = name;
 			}
 
-			public bool Matches(Item item)
+			public bool Matches(Item? item)
 			{
-				return item.Identifier == name;
+				return item?.Identifier == name;
 			}
 		}
 
 		public readonly struct WhiteListNone : IWhiteList
 		{
-			public bool Matches(Item item)
+			public bool Matches(Item? item)
 			{
 				return true;
 			}
@@ -81,11 +83,11 @@ namespace ViMG.UIs
 				this.tags = tags;
             }
 
-            public bool Matches(Item item)
+            public bool Matches(Item? item)
             {
 				foreach (string tag in tags)
                 {
-					if (item.Tags.Contains(tag))
+					if (item?.Tags.Contains(tag) ?? false)
 						return true;
                 }
 
@@ -175,6 +177,11 @@ namespace ViMG.UIs
 						}
 					}
 
+					if (output != ItemSlotClickOutput.None)
+					{
+						inventory.AddClick(player, i, output);
+					}
+
 					UI.EndParent();
 				}
 			}
@@ -240,99 +247,100 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.clickLeft)
 			{
-				if (Main.inputManager.IsHeld(Keys.LeftShift) && itemSlot.item.valid)
-				{
-					//defer this functionality to the user since we might need to swap between different inventories and this function can only see one inventory.
-					output = ItemSlotClickOutput.NeedsSwapInventory;
-				}
-				else if (!heldInventory.Get(0).valid&& itemSlot.item.valid)
-				{
-					//Pick up the item - put it in the held item instance
-					heldInventory.Set(itemSlot.item.Copy(), 0);
-					inventory.Remove(index, heldInventory.Get(0).num);
+				output = DoClick(player, inventory, heldInventory, index, Main.inputManager.IsHeld(Keys.LeftShift));
+				//if (Main.inputManager.IsHeld(Keys.LeftShift) && itemSlot.item.valid)
+				//{
+				//	//defer this functionality to the user since we might need to swap between different inventories and this function can only see one inventory.
+				//	output = ItemSlotClickOutput.NeedsSwapInventory;
+				//}
+				//else if (!heldInventory.Get(0).valid && itemSlot.item.valid)
+				//{
+				//	//Pick up the item - put it in the held item instance
+				//	heldInventory.Set(itemSlot.item.Copy(), 0);
+				//	inventory.Remove(index, heldInventory.Get(0).num);
 
-					output = ItemSlotClickOutput.PickupFromSlot;
+				//	output = ItemSlotClickOutput.PickupFromSlot;
 
-                    heldInventory.Get(0).item?.StartHold(player, inventory, -1);
-				}
-				else if (heldInventory.Get(0).valid && itemSlot.item.valid)
-				{
-					// Merge stacks
-					if (inventory.Get(index).item == heldInventory.Get(0).item && heldInventory.Get(0).damage == itemSlot.item.damage)
-					{
-						int total = itemSlot.item.num + heldInventory.Get(0).num;
+    //                heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+				//}
+				//else if (heldInventory.Get(0).valid && itemSlot.item.valid)
+				//{
+				//	// Merge stacks
+				//	if (inventory.Get(index).item == heldInventory.Get(0).item && heldInventory.Get(0).damage == itemSlot.item.damage)
+				//	{
+				//		int total = itemSlot.item.num + heldInventory.Get(0).num;
 
-						if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
-						{
-							var newItem = heldInventory.Get(0);
-							newItem = new ItemInstance(newItem, newItem.num + itemSlot.item.num);
+				//		if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
+				//		{
+				//			var newItem = heldInventory.Get(0);
+				//			newItem = new ItemInstance(newItem, newItem.num + itemSlot.item.num);
 
-                            inventory.Set(newItem, index);
-							heldInventory.Remove(0);
+    //                        inventory.Set(newItem, index);
+				//			heldInventory.Remove(0);
 
-							output = ItemSlotClickOutput.MergeInSlotCompletely;
-						}
-						else
-						{
-							//int rem = heldInventory.Get(0).num - (itemSlot.maxStackSize - itemSlot.item.num);
+				//			output = ItemSlotClickOutput.MergeInSlotCompletely;
+				//		}
+				//		else
+				//		{
+				//			//int rem = heldInventory.Get(0).num - (itemSlot.maxStackSize - itemSlot.item.num);
 
-							inventory.Set(new ItemInstance(itemSlot.item, itemSlot.maxStackSize), index);
-							heldInventory.Remove(itemSlot.maxStackSize - itemSlot.item.num);
+				//			inventory.Set(new ItemInstance(itemSlot.item, itemSlot.maxStackSize), index);
+				//			heldInventory.Remove(itemSlot.maxStackSize - itemSlot.item.num);
 
-                            //held = new ItemInstance(held, rem);
+    //                        //held = new ItemInstance(held, rem);
 
-							output = ItemSlotClickOutput.MergeInSlotSome;
-						}
-					}
-					else
-					{
-						// attempt to swap stacks
-						if (itemSlot.maxStackSize == -1 || heldInventory.Get(0).num <= itemSlot.maxStackSize)
-						{
-							if (!whiteList.Matches(heldInventory.Get(0).item))
-								return ItemSlotClickOutput.None;
+				//			output = ItemSlotClickOutput.MergeInSlotSome;
+				//		}
+				//	}
+				//	else
+				//	{
+				//		// attempt to swap stacks
+				//		if (itemSlot.maxStackSize == -1 || heldInventory.Get(0).num <= itemSlot.maxStackSize)
+				//		{
+				//			if (!whiteList.Matches(heldInventory.Get(0).item))
+				//				return ItemSlotClickOutput.None;
 
-							var oldHeld = heldInventory.Get(0);
-							heldInventory.Set(itemSlot.item.Copy(), 0);
-							inventory.Set(oldHeld, index);
+				//			var oldHeld = heldInventory.Get(0);
+				//			heldInventory.Set(itemSlot.item.Copy(), 0);
+				//			inventory.Set(oldHeld, index);
 
-							output = ItemSlotClickOutput.Swap;
+				//			output = ItemSlotClickOutput.Swap;
 
-							oldHeld.item.EndHold(player, inventory, -1);
-                            heldInventory.Get(0).item?.StartHold(player, inventory, -1);
-						}
-						//Cannot swap stacks if doing so would put us above the max stack size. Swapping would have to involve actively removing or dropping items.
-						else output = ItemSlotClickOutput.None;
-					}
-				}
-				else if (heldInventory.Get(0).valid && !itemSlot.item.valid)
-				{
-					// Place in slot. The held item is set to an empty item instance.
+				//			oldHeld.item.EndHold(player, inventory, -1);
+    //                        heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+				//		}
+				//		//Cannot swap stacks if doing so would put us above the max stack size. Swapping would have to involve actively removing or dropping items.
+				//		else output = ItemSlotClickOutput.None;
+				//	}
+				//}
+				//else if (heldInventory.Get(0).valid && !itemSlot.item.valid)
+				//{
+				//	// Place in slot. The held item is set to an empty item instance.
 
-					int total = heldInventory.Get(0).num;
+				//	int total = heldInventory.Get(0).num;
 
-					if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
-					{
-						if (!whiteList.Matches(heldInventory.Get(0).item))
-							return ItemSlotClickOutput.None;
+				//	if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
+				//	{
+				//		if (!whiteList.Matches(heldInventory.Get(0).item))
+				//			return ItemSlotClickOutput.None;
 
-                        heldInventory.Get(0).item.EndHold(player, inventory, index);
+    //                    heldInventory.Get(0).item.EndHold(player, inventory, index);
 
-						inventory.Set(heldInventory.Get(0), index);
-						heldInventory.Remove(0);
+				//		inventory.Set(heldInventory.Get(0), index);
+				//		heldInventory.Remove(0);
 
-						output = ItemSlotClickOutput.PlaceInSlotAll;
-					}
-                    else
-                    {
-						//int rem = heldInventory.Get(0).num - itemSlot.maxStackSize;
+				//		output = ItemSlotClickOutput.PlaceInSlotAll;
+				//	}
+    //                else
+    //                {
+				//		//int rem = heldInventory.Get(0).num - itemSlot.maxStackSize;
 
-						inventory.Set(new ItemInstance(heldInventory.Get(0), itemSlot.maxStackSize), index);
-						heldInventory.Remove(itemSlot.maxStackSize);
+				//		inventory.Set(new ItemInstance(heldInventory.Get(0), itemSlot.maxStackSize), index);
+				//		heldInventory.Remove(itemSlot.maxStackSize);
 
-						output = ItemSlotClickOutput.PlaceInSlotSome;
-					}
-				}
+				//		output = ItemSlotClickOutput.PlaceInSlotSome;
+				//	}
+				//}
 			}
 			else if (itemSlot.button.clickRight)
 			{
@@ -381,6 +389,111 @@ namespace ViMG.UIs
 
 			return output;
 		}
+
+		public static ItemSlotClickOutput DoClick(Player player, Inventory inventory, Inventory heldInventory, int index, bool shiftHeld) 
+		{
+			ItemSlotClickOutput output = ItemSlotClickOutput.None;
+
+			var ourItem = inventory.Get(index);
+			var ourWhitelist = inventory.GetWhiteList(index);
+			var ourMaxStackSize = inventory.GetMaxStackSize(index);
+
+            if (shiftHeld && ourItem.valid)
+            {
+                //defer this functionality to the user since we might need to swap between different inventories and this function can only see one inventory.
+                output = ItemSlotClickOutput.NeedsSwapInventory;
+            }
+            else if (!heldInventory.Get(0).valid && ourItem.valid)
+            {
+                //Pick up the item - put it in the held item instance
+                heldInventory.Set(ourItem.Copy(), 0);
+                inventory.Remove(index);
+
+                output = ItemSlotClickOutput.PickupFromSlot;
+
+                heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+            }
+            else if (heldInventory.Get(0).valid && ourItem.valid)
+            {
+                // Merge stacks
+                if (ourItem.item == heldInventory.Get(0).item && heldInventory.Get(0).damage == ourItem.damage)
+                {
+                    int total = ourItem.num + heldInventory.Get(0).num;
+
+                    if (total <= ourMaxStackSize || ourMaxStackSize == -1)
+                    {
+                        var newItem = heldInventory.Get(0);
+                        newItem = new ItemInstance(newItem, newItem.num + ourItem.num);
+
+                        inventory.Set(newItem, index);
+                        heldInventory.Remove(0);
+
+                        output = ItemSlotClickOutput.MergeInSlotCompletely;
+                    }
+                    else
+                    {
+                        //int rem = heldInventory.Get(0).num - (itemSlot.maxStackSize - itemSlot.item.num);
+
+                        inventory.Set(new ItemInstance(ourItem, ourMaxStackSize), index);
+                        heldInventory.Remove(ourMaxStackSize - ourItem.num);
+
+                        //held = new ItemInstance(held, rem);
+
+                        output = ItemSlotClickOutput.MergeInSlotSome;
+                    }
+                }
+                else
+                {
+                    // attempt to swap stacks
+                    if (ourMaxStackSize == -1 || heldInventory.Get(0).num <= ourMaxStackSize)
+                    {
+                        if (!ourWhitelist?.Matches(heldInventory.Get(0).item) ?? false)
+                            return ItemSlotClickOutput.None;
+
+                        var oldHeld = heldInventory.Get(0);
+                        heldInventory.Set(ourItem.Copy(), 0);
+                        inventory.Set(oldHeld, index);
+
+                        output = ItemSlotClickOutput.Swap;
+
+                        oldHeld.item.EndHold(player, inventory, -1);
+                        heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+                    }
+                    //Cannot swap stacks if doing so would put us above the max stack size. Swapping would have to involve actively removing or dropping items.
+                    else output = ItemSlotClickOutput.None;
+                }
+            }
+            else if (heldInventory.Get(0).valid && !ourItem.valid)
+            {
+                // Place in slot. The held item is set to an empty item instance.
+
+                int total = heldInventory.Get(0).num;
+
+                if (total <= ourMaxStackSize || ourMaxStackSize == -1)
+                {
+                    if (!ourWhitelist?.Matches(heldInventory.Get(0).item) ?? false)
+                        return ItemSlotClickOutput.None;
+
+                    heldInventory.Get(0).item.EndHold(player, inventory, index);
+
+                    inventory.Set(heldInventory.Get(0), index);
+                    heldInventory.Remove(0);
+
+                    output = ItemSlotClickOutput.PlaceInSlotAll;
+                }
+                else
+                {
+                    //int rem = heldInventory.Get(0).num - itemSlot.maxStackSize;
+
+                    inventory.Set(new ItemInstance(heldInventory.Get(0), ourMaxStackSize), index);
+                    heldInventory.Remove(ourMaxStackSize);
+
+                    output = ItemSlotClickOutput.PlaceInSlotSome;
+                }
+            }
+
+			return output;
+        }
 
 		public static void SwapInventory(Inventory a, Inventory b, int indexA)
 		{

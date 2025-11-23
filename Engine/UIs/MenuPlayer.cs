@@ -60,7 +60,7 @@ namespace ViMG.UIs
 		private static string[] tagsHead = new string[1] { "armor_head" };
 		private static string[] tagsAccessories = new string[1] { "accessory" };
 
-		private static string[][] tagsGearBySlot = new string[4][]
+		public static string[][] tagsGearBySlot = new string[4][]
 		{
 			new string[1] { "gear_heart" },
 			new string[1] { "gear_run" },
@@ -79,7 +79,7 @@ namespace ViMG.UIs
             ("Feather Artifact", "Gear equipped here allows you to jump multiple times.")
         };
 
-		private static string[][] tagsAccessoriesBySlot = new string[6][]
+		public static string[][] tagsAccessoriesBySlot = new string[6][]
 		{
 			tagsLegs,
 			tagsBody,

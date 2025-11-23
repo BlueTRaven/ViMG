@@ -45,7 +45,8 @@ namespace ViMG.Entities
 
 			Position = position.InWorldSpace();
 
-			inventory = new Inventory(0, 5);
+			MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
+			inventory = new Inventory(0, 5, whitelists);
 		}
 
 		public override void Initialize(World world)

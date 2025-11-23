@@ -314,11 +314,22 @@ namespace ViMG
             
 			inventory = new Inventory(0, INVENTORY_ROWS * INVENTORY_COLUMNS);
 			heldInventory = new Inventory(1, 1);
-            accessoryInventory = new Inventory(2, 6);
+			
+			MenuHelper.IWhiteList[] whitelistsAccessory = new MenuHelper.IWhiteList[6];
+			int[] maxStackSizesAccessory = new int[6];
+			Array.Fill(maxStackSizesAccessory, 1);
+            accessoryInventory = new Inventory(2, 6, whitelistsAccessory, maxStackSizesAccessory);
+			for (int i = 0; i < 6; i++)
+                whitelistsAccessory[i] = new MenuHelper.WhitelistAccessories(accessoryInventory, MenuPlayer.tagsAccessoriesBySlot[i]);
+
+            MenuHelper.IWhiteList[] whitelistsGear = new MenuHelper.IWhiteList[10];
+            int[] maxStackSizesGear = new int[10];
+            for (int i = 0; i < MenuPlayer.tagsGearBySlot.Length; i++)
+                whitelistsAccessory[i] = new MenuHelper.WhitelistTag(MenuPlayer.tagsGearBySlot[i]);
             //Start with 10 gear slots so we don't have to worry about expanding in the future.
             //For now, we only have 3:
             //Heart, boots, and feather artefact.
-            gearInventory = new Inventory(3, 10);
+            gearInventory = new Inventory(3, 10, whitelistsGear, maxStackSizesGear);
             craftInventory = new Inventory(4, 8);
         }
 
@@ -2167,9 +2178,6 @@ namespace ViMG
 			if (version >= 6)
 			{
 				accessoryInventory = Inventory.Load(loadBytes, ref index);
-				//version 6 uses an inventory with 3 slots, 7 uses 6 slots; it must be expanded.
-				if (version == 6)
-					accessoryInventory = new Inventory(1, accessoryInventory, 6);	//expand to be 6 slots
 			}
 
 			if (version >= 9)
