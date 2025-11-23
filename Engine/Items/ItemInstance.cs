@@ -7,7 +7,7 @@ namespace ViMG.Items
 {
 	public readonly struct ItemInstance
 	{
-		public readonly Item item;
+		public readonly Item? item;
 		public readonly int num;
 
 		public readonly int damage;
@@ -24,16 +24,16 @@ namespace ViMG.Items
 			this.num = num;
 			damage = other.damage;
 
-			valid = true;
+			valid = other.item != null;
 		}
 
-		public ItemInstance(Item item, int num, int damage)
+		public ItemInstance(Item? item, int num, int damage)
 		{
 			this.item = item;
 			this.num = num;
 			this.damage = damage;
 
-			valid = true;
+			valid = item != null;
 		}
 
 		public ItemInstance Copy()

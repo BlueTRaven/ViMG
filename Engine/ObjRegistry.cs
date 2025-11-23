@@ -43,7 +43,7 @@ namespace ViMG
 			}
 		}
 
-		public T Get(int index)
+		public T? Get(int index)
 		{
 			if (index <= 0)
 				return null;

@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using ViMG.Entities;
 using ViMG.GameStates;
+using Engine.Items;
 
 namespace ViMG.Generation
 {

@@ -1,18 +1,37 @@
-﻿using System;
+﻿using Engine.Networking.Messages;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG;
+using ViMG.Entities;
 using ViMG.Items;
 
-namespace ViMG
+namespace Engine.Items
 {
 	public class Inventory
 	{
+		private enum InventoryActionType
+		{
+			Add,
+			Set,
+			Remove
+		}
+		private struct InventoryAction
+		{
+			public required InventoryActionType type;
+			public required int index;
+            public required ItemInstance oldInstance, newInstance;
+        }
+
 		public readonly int id;
 		private int numSlots;
 		public int NumSlots => numSlots;
 		private ItemInstance[] items;
 
 		private int lastEmpty;
+
+		private List<InventoryAction> actions = new List<InventoryAction>();
+
 		public Inventory(int id, int numSlots)
 		{
 			this.id = id;
@@ -39,7 +58,40 @@ namespace ViMG
 			lastEmpty = copyFrom.lastEmpty;
 		}
 
-		public bool CanAdd(Item item)
+		public void ProcessActions(Entity owner)
+		{
+			foreach (var action in actions)
+			{
+				Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
+				{
+					id = id,
+					entityId = owner.Id,
+					index = action.index,
+					oldInstance = action.oldInstance,
+					newInstance = action.newInstance,
+					time = Main.Time
+				};
+
+				if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+				{
+					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+				}
+				else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+				{
+					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+				}
+			}
+
+			actions.Clear();
+		}
+
+		public void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
+		{
+			items[action.index] = action.newInstance;
+		}
+
+        public bool CanAdd(Item item)
 		{
 			for (int i = 0; i < numSlots; i++)
 			{
@@ -57,8 +109,32 @@ namespace ViMG
 				// merge stacks
 				if (items[i].item == item.item && items[i].damage == item.damage)
 				{
+					var oldInstance = items[i];
 					items[i] = new ItemInstance(items[i], items[i].num + item.num);
 					placedIndex = i;
+
+					actions.Add(new InventoryAction
+					{
+						type = InventoryActionType.Add,
+						index = i,
+						oldInstance = oldInstance,
+						newInstance = items[i],
+					});
+					//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+					//{
+					//	var a = new SyncInventoryUpdate.QueuedInventoryUpdate
+					//	{
+					//		id = id,
+					//		index = placedIndex,
+					//		oldInstance = oldInstance,
+					//		newInstance = items[i],
+					//		player = -1,
+					//		time = Main.Time
+					//	};
+
+					//	Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, a);
+					//}
+
 					return true;
 				}
 			}
@@ -71,7 +147,16 @@ namespace ViMG
 				{
 					items[i] = item;
 					placedIndex = i;
-					return true;
+
+                    actions.Add(new InventoryAction
+                    {
+                        type = InventoryActionType.Add,
+						index = i,
+                        oldInstance = new ItemInstance(),
+                        newInstance = items[i],
+                    });
+
+                    return true;
 				}
 			}
 
@@ -86,8 +171,17 @@ namespace ViMG
 
 		public void Set(ItemInstance item, int index)
 		{
+			var oldInstance = items[index];
 			items[index] = item;
-		}
+
+            actions.Add(new InventoryAction
+            {
+                type = InventoryActionType.Set,
+                index = index,
+                oldInstance = oldInstance,
+                newInstance = items[index],
+            });
+        }
 
 		public ref readonly ItemInstance Find(Item item)
 		{
@@ -176,16 +270,35 @@ namespace ViMG
 		{
 			if (num == -1)
 			{
-				items[index] = new ItemInstance();
+                actions.Add(new InventoryAction
+                {
+                    type = InventoryActionType.Remove,
+                    index = index,
+                    oldInstance = items[index],
+                    newInstance = new ItemInstance(),
+                });
+
+                items[index] = new ItemInstance();
+
 				return;
 			}
 			else
 			{
+				var oldInstance = items[index];
+
 				items[index] = new ItemInstance(items[index], items[index].num - num);
 
 				if (items[index].num <= 0)
 					items[index] = ItemInstance.Empty;
-			}
+
+                actions.Add(new InventoryAction
+                {
+                    type = InventoryActionType.Remove,
+                    index = index,
+                    oldInstance = oldInstance,
+                    newInstance = items[index],
+                });
+            }
 		}
 
 		public ref readonly ItemInstance Get(int index)

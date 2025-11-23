@@ -1,4 +1,5 @@
-﻿using Engine.Mods;
+﻿using Engine.Items;
+using Engine.Mods;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;

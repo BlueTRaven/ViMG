@@ -4,6 +4,7 @@ using BepuPhysics.Collidables;
 using BrUtility;
 using Engine;
 using Engine.Entities;
+using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -28,7 +29,7 @@ namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
 	[EntityMeta(14, 0)]
-	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable
+	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
         {
@@ -491,6 +492,8 @@ namespace ViMG
 
             hasMoved = false;
 			hasRotated = false;
+
+			inventory.ProcessActions(this);
 
 			if (IsLocalPlayer)
 			{
@@ -2282,6 +2285,18 @@ namespace ViMG
             MoveRight.previousRecordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
             RightClick.previousRecordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
             Run.previousRecordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
+        }
+
+        public Inventory GetInventory(int id)
+        {
+			return id switch
+			{
+				0 => inventory,
+				1 => accessoryInventory,
+				2 => gearInventory,
+				3 => craftInventory,
+				_ => throw new InvalidOperationException(),
+			};
         }
     }
 }

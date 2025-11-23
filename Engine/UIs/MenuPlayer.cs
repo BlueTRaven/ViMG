@@ -1,5 +1,6 @@
 ﻿using BrNineSlice;
 using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -48,6 +49,7 @@ namespace ViMG.UIs
 		private const float HEALTHBAR_HEIGHT = 16;
 
 		private Player player;
+		private Inventory heldInventory;
 		private Inventory inventory;
 		private Inventory craftInventory;
 		private Inventory accessoryInventory;
@@ -92,7 +94,7 @@ namespace ViMG.UIs
 		private bool opened;
 		public bool IsOpened => opened;
 
-		private ItemInstance held;
+		//private ItemInstance held;
 		private FastList<PickedUpItem> pickedupItems = new FastList<PickedUpItem>();
 
 		private bool craftInventoryUpdated;
@@ -102,12 +104,12 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuPlayer(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory) : base(gsManager)
+		public MenuPlayer(GameStateManager gsManager, Player player, Inventory heldInventory, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory) : base(gsManager)
 		{
 			this.player = player;
 
+			this.heldInventory = heldInventory;
 			this.inventory = playerInventory;
-
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
 			this.gearInventory = gearInventory;

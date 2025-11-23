@@ -1,5 +1,6 @@
 ﻿using BrNineSlice;
 using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -133,7 +134,7 @@ namespace ViMG.UIs
         public static NineSlice MainPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
         public static NineSlice SecondaryPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
-        public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, 
+        public static void DoPlayerInventory(Player player, Inventory inventory, Inventory heldInventory, 
 			int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
 		{
 			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
@@ -226,7 +227,7 @@ namespace ViMG.UIs
 			return ItemSlotClickOutput.None;
         }
 
-		public static ItemSlotClickOutput HandleItemSlot<TWhiteList>(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, ref ItemInstance held, TWhiteList whiteList) 
+		public static ItemSlotClickOutput HandleItemSlot<TWhiteList>(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory, TWhiteList whiteList) 
 			where TWhiteList : struct, IWhiteList
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;

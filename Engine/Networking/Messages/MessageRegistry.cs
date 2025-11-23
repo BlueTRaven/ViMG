@@ -26,6 +26,9 @@ namespace Engine.Networking.Messages
             Register(new SyncCubeUpdate());
             Register(new SyncCubeUpdateAuditRequest());
             Register(new SyncCubeUpdateAuditResponse());
+            Register(new SyncInventoryUpdate());
+            Register(new SyncInventoryUpdateAuditRequest());
+            Register(new SyncInventoryUpdateAuditResponse());
         }
 
         public override void Register(Message obj)
