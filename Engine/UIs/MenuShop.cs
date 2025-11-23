@@ -62,7 +62,7 @@ namespace ViMG.UIs
 
             UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
             
-            MenuHelper.DoPlayerInventory(player, player.GetInventory(), ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
+            MenuHelper.DoPlayerInventory(player, player.GetInventory(), player.GetHeldInventory(), Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
 
             UI.StartParent(new Vector2(0, MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Height + MARGIN));
 

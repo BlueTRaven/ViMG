@@ -18,6 +18,7 @@ namespace ViMG.UIs
     {
         private Player player;
 		private Inventory playerInventory;
+		private Inventory heldInventory;
 		private Inventory furnaceInventory;
 		private bool furnaceInventoryUpdated;
 		private Recipe currentRecipe;
@@ -26,10 +27,11 @@ namespace ViMG.UIs
 
 		private Items.ItemInstance held;
 
-		public MenuFurnace(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
+		public MenuFurnace(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
+			this.heldInventory = heldInventory;
 			this.furnaceInventory = furnaceInventory;
 
 			this.furnace = furnace;
@@ -61,7 +63,7 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			MenuHelper.DoPlayerInventory(player, playerInventory, ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2);
+			MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2);
 
 			UI.EndParent();
 
@@ -89,7 +91,7 @@ namespace ViMG.UIs
 			//bounds.x -= SIZE + MARGIN;
 
 			MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
-			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 0, itemSlotA, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None);
+			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 0, itemSlotA, heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None);
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 					MenuHelper.SwapInventory(furnaceInventory, playerInventory, 0);
@@ -97,7 +99,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 1, itemSlotB, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 1, itemSlotB, heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 					MenuHelper.SwapInventory(furnaceInventory, playerInventory, 1);
@@ -105,7 +107,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 2, itemSlotFuel, ref held, new MenuHelper.WhiteListOneName("glowdust"))) != MenuHelper.ItemSlotClickOutput.None)
+			if ((output = MenuHelper.HandleItemSlot(player, furnaceInventory, 2, itemSlotFuel, heldInventory, new MenuHelper.WhiteListOneName("glowdust"))) != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 					MenuHelper.SwapInventory(furnaceInventory, playerInventory, 2);

@@ -87,7 +87,6 @@ namespace Engine.Networking.Messages
             if (entity != null && entity is IHasInventory hasInv)
             {
                 queued.Add(action);
-
             }
         }
 
@@ -142,7 +141,7 @@ namespace Engine.Networking.Messages
             public byte auditIndex;
             public byte auditingPlayer;
             public ulong entityId;
-            public int id;
+            public int inventoryId;
             public int inventoryIndex;
             public ItemInstance oldInstance, newInstance;
             public double time;
@@ -168,7 +167,7 @@ namespace Engine.Networking.Messages
             AuditedInventoryUpdate auditedAction = new AuditedInventoryUpdate
             {
                 entityId = action.entityId,
-                id = action.id,
+                inventoryId = action.id,
                 inventoryIndex = action.index,
                 newInstance = action.newInstance,
                 oldInstance = action.oldInstance,
@@ -195,6 +194,7 @@ namespace Engine.Networking.Messages
 
             if (!found)
             {
+                Console.WriteLine("Couldnt find open slot");
                 RollbackAction(auditedAction);
             }
             else
@@ -203,7 +203,7 @@ namespace Engine.Networking.Messages
                 netMessage.writer.Put(auditedAction.auditIndex);
                 netMessage.writer.Put(auditedAction.auditingPlayer);
                 netMessage.writer.Put(auditedAction.entityId);
-                netMessage.writer.Put((byte)auditedAction.id);
+                netMessage.writer.Put((byte)auditedAction.inventoryId);
                 netMessage.writer.Put((ushort)auditedAction.inventoryIndex);
                 netMessage.writer.Put(auditedAction.oldInstance.item?.Id ?? 0);
                 netMessage.writer.Put(auditedAction.oldInstance.num);
@@ -237,11 +237,12 @@ namespace Engine.Networking.Messages
 
             var action = new AuditedInventoryUpdate
             {
+                active = true,
                 time = time,
                 auditIndex = index,
                 auditingPlayer = player,
                 entityId = entityId,
-                id = id,
+                inventoryId = id,
                 inventoryIndex = inventoryIndex,
                 oldInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(oldInstanceItemId), oldInstanceNum, oldInstanceDamage),
                 newInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage),
@@ -265,11 +266,10 @@ namespace Engine.Networking.Messages
                             if (peer != null)
                             {
                                 var accepted = false;
-                                var newInstance = action.newInstance;
                                 var entity = entityManager.GetById(action.entityId);
                                 if (entity != null && entity is IHasInventory hasInv)
                                 {
-                                    var inventory = hasInv.GetInventory(action.id);
+                                    var inventory = hasInv.GetInventory(action.inventoryId);
                                     var curInstance = inventory.Get(action.inventoryIndex);
 
                                     //if (curInstance.item == newInstance.item)
@@ -278,14 +278,23 @@ namespace Engine.Networking.Messages
                                         accepted = true;
                                     }
 
-                                    if (!accepted) newInstance = curInstance;
+
+                                    if (accepted)
+                                    {
+                                        DoAction(action);
+                                    }
+                                    else
+                                    {
+                                        action.newInstance = curInstance;
+                                        RollbackAction(action);
+                                    }
                                 }
 
                                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncInventoryUpdateAuditResponse.Instance, peer, new SyncInventoryUpdateAuditResponse.AcceptedInventoryUpdate()
                                 {
                                     accepted = accepted,
                                     index = (byte)j,
-                                    newInstance = newInstance,
+                                    newInstance = action.newInstance,
                                 });
                             }
 
@@ -307,18 +316,38 @@ namespace Engine.Networking.Messages
 
         public void RollbackAction(AuditedInventoryUpdate action)
         {
-            Console.WriteLine("SyncInventoryUpdateAuditRequest: did rollback {0}", action.auditIndex);
-            Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
-
             var player = GS.GetWorld().player[action.auditingPlayer];
+            var inventory = player?.GetInventory(action.inventoryId);
+            if (inventory != null)
+            {
+                inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate
+                {
+                    entityId = action.entityId,
+                    id = action.inventoryId,
+                    index = action.inventoryIndex,
+                    newInstance = action.oldInstance,
+                    oldInstance = action.oldInstance,
+                    time = action.time,
+                });
+            }
         }
 
         public void DoAction(AuditedInventoryUpdate action)
         {
-            Console.WriteLine("SyncInventoryUpdateAuditRequest: did action {0}", action.auditIndex);
-            Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
-
             var player = GS.GetWorld().player[action.auditingPlayer];
+            var inventory = player?.GetInventory(action.inventoryId);
+            if (inventory != null)
+            {
+                inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate
+                {
+                    entityId = action.entityId,
+                    id = action.inventoryId,
+                    index = action.inventoryIndex,
+                    newInstance = action.newInstance,
+                    oldInstance = action.oldInstance,
+                    time = action.time,
+                });
+            }
         }
     }
 
@@ -346,7 +375,7 @@ namespace Engine.Networking.Messages
 
             var action = addData as AcceptedInventoryUpdate? ?? throw new Exception();
 
-            Console.WriteLine("Accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", action.index, action.accepted, action.newInstance.item?.Id ?? 0);
+            //Console.WriteLine("Accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", action.index, action.accepted, action.newInstance.item?.Id ?? 0);
 
             netMessage.writer.Put(action.accepted);
             netMessage.writer.Put(action.index);
@@ -368,7 +397,7 @@ namespace Engine.Networking.Messages
             var newInstanceDamage = reader.GetInt();
 
             var newInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage);
-            Console.WriteLine("Received accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", index, accepted, newInstanceItemId);
+            //Console.WriteLine("Received accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", index, accepted, newInstanceItemId);
 
             SyncInventoryUpdateAuditRequest.Instance.activeAudits[GS.GetWorld().localPlayerIndex][index].oldInstance = newInstance;
             SyncInventoryUpdateAuditRequest.Instance.activeAudits[GS.GetWorld().localPlayerIndex][index].newInstance = newInstance;

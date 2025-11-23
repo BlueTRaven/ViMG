@@ -187,7 +187,7 @@ namespace ViMG.UIs
 
 			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
 
-			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
+			MenuHelper.DoPlayerInventory(player, inventory, heldInventory, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
 
 			int s = Player.INVENTORY_COLUMNS;
 			if (opened)
@@ -308,7 +308,7 @@ namespace ViMG.UIs
 						var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(i));
 
 						var output = MenuHelper.ItemSlotClickOutput.None;
-						if ((output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+						if ((output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 						{
 							if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 							{
@@ -419,7 +419,7 @@ namespace ViMG.UIs
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, ref held,
+					if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory,
 						new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -451,7 +451,7 @@ namespace ViMG.UIs
                             Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
 
                     var output = MenuHelper.ItemSlotClickOutput.None;
-                    if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, ref held,
+                    if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory,
                         new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i + 3]))) != MenuHelper.ItemSlotClickOutput.None)
                     {
                         if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -495,7 +495,7 @@ namespace ViMG.UIs
 					}
 
 					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, ref held,
+					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, heldInventory,
 						new MenuHelper.WhitelistTag(tagsGearBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -771,7 +771,7 @@ namespace ViMG.UIs
 
 			if (opened)
 			{
-				MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
+				MenuHelper.DrawHeldItem(batch, heldInventory.Get(0), SIZE, SCALE);
 			}
 
 			Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 

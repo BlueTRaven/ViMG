@@ -28,7 +28,7 @@ using static Engine.Networking.Messages.SyncPlayerInputs;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(14, 0)]
+	[EntityMeta(15, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
@@ -253,6 +253,7 @@ namespace ViMG
 		public const int INVENTORY_COLUMNS = 8;
 
 		public Inventory inventory;
+		public Inventory heldInventory;
 		public Inventory craftInventory;
 		public Inventory gearInventory;
 		public Inventory accessoryInventory;
@@ -312,12 +313,13 @@ namespace ViMG
 			buffManager = new BuffManagerPlayer(this);
             
 			inventory = new Inventory(0, INVENTORY_ROWS * INVENTORY_COLUMNS);
-            accessoryInventory = new Inventory(1, 6);
-            gearInventory = new Inventory(2, 10);
+			heldInventory = new Inventory(1, 1);
+            accessoryInventory = new Inventory(2, 6);
             //Start with 10 gear slots so we don't have to worry about expanding in the future.
             //For now, we only have 3:
             //Heart, boots, and feather artefact.
-            craftInventory = new Inventory(3, 8);
+            gearInventory = new Inventory(3, 10);
+            craftInventory = new Inventory(4, 8);
         }
 
         //Creates a new player from a dead player.
@@ -331,6 +333,7 @@ namespace ViMG
 
 			Position = deadPlayer.Position;
 
+			heldInventory = deadPlayer.heldInventory;
 			inventory = deadPlayer.inventory;
 			accessoryInventory = deadPlayer.accessoryInventory;
 			gearInventory = deadPlayer.gearInventory;
@@ -382,7 +385,7 @@ namespace ViMG
 
 			if (IsLocalPlayer)
 			{
-				menuPlayer = new MenuPlayer(Main.gameStateManager, this, inventory, craftInventory, accessoryInventory, gearInventory);
+				menuPlayer = new MenuPlayer(Main.gameStateManager, this, heldInventory, inventory, craftInventory, accessoryInventory, gearInventory);
 				menuPlayer.Close();
 				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
 				if (!Main.IsHeadless)
@@ -494,6 +497,7 @@ namespace ViMG
 			hasRotated = false;
 
 			inventory.ProcessActions(this);
+			heldInventory.ProcessActions(this);
 
 			if (IsLocalPlayer)
 			{
@@ -1875,6 +1879,11 @@ namespace ViMG
 			return inventory;
 		}
 
+		public Inventory GetHeldInventory()
+		{
+			return heldInventory;
+		}
+
 		public Inventory GetAccessoryInventory()
         {
 			return accessoryInventory;
@@ -2289,14 +2298,18 @@ namespace ViMG
 
         public Inventory GetInventory(int id)
         {
-			return id switch
+			var ret = id switch
 			{
 				0 => inventory,
-				1 => accessoryInventory,
-				2 => gearInventory,
-				3 => craftInventory,
+				1 => heldInventory,
+				2 => accessoryInventory,
+				3 => gearInventory,
+				4 => craftInventory,
 				_ => throw new InvalidOperationException(),
 			};
+			Debug.Assert(ret.id == id);
+
+			return ret;
         }
     }
 }

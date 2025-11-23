@@ -16,6 +16,7 @@ namespace ViMG.UIs
 	{
 		private readonly Player player;
 		private readonly Inventory playerInventory;
+		private readonly Inventory heldInventory;
 		private readonly Inventory anvilInventory;
         private bool inventoryUpdated;
 		private Recipe currentRecipe;
@@ -26,10 +27,11 @@ namespace ViMG.UIs
 
 		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
 
-		public MenuAnvil(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory anvilInventory) : base(gsManager)
+		public MenuAnvil(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory heldInventory, Inventory anvilInventory) : base(gsManager)
 		{
 			this.player = player;
 			this.playerInventory = playerInventory;
+			this.heldInventory = heldInventory;
 			this.anvilInventory = anvilInventory;
 
 			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
@@ -60,7 +62,7 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			MenuHelper.DoPlayerInventory(player, playerInventory, ref held, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, SIZE, PADDING);
+			MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, SIZE, PADDING);
 
 			UI.EndParent();
 
@@ -110,7 +112,7 @@ namespace ViMG.UIs
 			for (int i = 0; i < 7; i++)
             {
 				MenuHelper.ItemSlotClickOutput output = MenuHelper.ItemSlotClickOutput.None;
-				if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+				if ((output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], heldInventory, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
 				{
 					if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						MenuHelper.SwapInventory(anvilInventory, playerInventory, i);

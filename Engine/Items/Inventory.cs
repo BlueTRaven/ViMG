@@ -62,7 +62,7 @@ namespace Engine.Items
 		{
 			foreach (var action in actions)
 			{
-				Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+				//Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
 				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
 				{
 					id = id,
@@ -169,19 +169,27 @@ namespace Engine.Items
 			return Add(item, out _);
         }
 
-		public void Set(ItemInstance item, int index)
+		public void Set(ItemInstance item, int index, bool markDirty = true)
 		{
 			var oldInstance = items[index];
 			items[index] = item;
 
-            actions.Add(new InventoryAction
-            {
-                type = InventoryActionType.Set,
-                index = index,
-                oldInstance = oldInstance,
-                newInstance = items[index],
-            });
+			if (markDirty)
+			{
+				actions.Add(new InventoryAction
+				{
+					type = InventoryActionType.Set,
+					index = index,
+					oldInstance = oldInstance,
+					newInstance = items[index],
+				});
+			}
         }
+
+		public void ForceSet(ItemInstance item, int index)
+		{
+			Set(item, index, false);
+		}
 
 		public ref readonly ItemInstance Find(Item item)
 		{
@@ -299,6 +307,11 @@ namespace Engine.Items
                     newInstance = items[index],
                 });
             }
+		}
+
+		public void Remove(int index)
+		{
+			Remove(index, -1);
 		}
 
 		public ref readonly ItemInstance Get(int index)
