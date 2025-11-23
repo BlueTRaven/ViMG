@@ -94,38 +94,38 @@ namespace Engine.Items
 
 		public void ProcessActions(Entity owner)
 		{
-			foreach (var action in actions)
-			{
-				//Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
-				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
-				{
-					id = id,
-					entityId = owner.Id,
-					index = action.index,
-					oldInstance = action.oldInstance,
-					newInstance = action.newInstance,
-					time = Main.Time
-				};
+			//foreach (var action in actions)
+			//{
+			//	//Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+			//	var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
+			//	{
+			//		id = id,
+			//		entityId = owner.Id,
+			//		index = action.index,
+			//		oldInstance = action.oldInstance,
+			//		newInstance = action.newInstance,
+			//		time = Main.Time
+			//	};
 
-				if (action.type != InventoryActionType.Clicked)
-				{
-					if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
-					{
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-					}
-					else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
-					{
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-					}
-				}
-				else
-				{
-					if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
-					{
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-					}
-				}
-			}
+			//	if (action.type != InventoryActionType.Clicked)
+			//	{
+			//		if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+			//		{
+			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+			//		}
+			//		else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+			//		{
+			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+			//		}
+			//	}
+			//	else
+			//	{
+			//		if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+			//		{
+			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+			//		}
+			//	}
+			//}
 
 			actions.Clear();
 		}
