@@ -1,4 +1,5 @@
-﻿using LiteNetLib;
+﻿using Engine.Items;
+using LiteNetLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,10 +66,12 @@ namespace Engine.Networking.Messages
             var player = GS.GetWorld().player[clickToSync.player];
             if (player != null)
             {
+                var entity = GS.GetWorld().EntityManager.GetById(clickToSync.entityId);
                 var inventory = player.GetInventory(clickToSync.inventoryId);
-                if (inventory != null)
+                if (inventory != null && entity != null && entity is IHasInventory hasInv)
                 {
-                    MenuHelper.DoClick(player, player.GetInventory(), player.GetHeldInventory(), clickToSync.inventoryIndex, false);
+                    Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventoryId);
+                    MenuHelper.DoClick(player, hasInv.GetInventory(clickToSync.inventoryId), player.GetHeldInventory(), clickToSync.inventoryIndex, false);
                 }
             }
         }

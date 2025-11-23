@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
@@ -15,6 +16,7 @@ namespace ViMG.UIs
 	public class MenuAnvil : Menu
 	{
 		private readonly Player player;
+		private readonly Entity owner;
 		private readonly Inventory playerInventory;
 		private readonly Inventory heldInventory;
 		private readonly Inventory anvilInventory;
@@ -27,10 +29,11 @@ namespace ViMG.UIs
 
 		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
 
-		public MenuAnvil(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory heldInventory, Inventory anvilInventory) : base(gsManager)
+		public MenuAnvil(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory anvilInventory) : base(gsManager)
 		{
 			this.player = player;
-			this.playerInventory = playerInventory;
+            this.owner = owner;
+            this.playerInventory = playerInventory;
 			this.heldInventory = heldInventory;
 			this.anvilInventory = anvilInventory;
 
@@ -111,7 +114,7 @@ namespace ViMG.UIs
 
 			for (int i = 0; i < 7; i++)
             {
-				MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, anvilInventory, i, itemSlots[i], heldInventory);
+				MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, owner, anvilInventory, i, itemSlots[i], heldInventory);
 				if (output != MenuHelper.ItemSlotClickOutput.None)
 				{
 					if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)

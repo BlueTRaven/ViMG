@@ -38,6 +38,8 @@ namespace ViMG.Entities
 		public float Alive;
         public double TimeInitialized;
 
+		public bool DoesSync = true;
+		public bool DoesMajorSync = true;
 		public double TimeSynced;
 		public double TimeMajorSynced;
 		public double SyncInterval {get; protected set; } = 0.25;

@@ -82,7 +82,8 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-            Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace(Main.gameStateManager, player, player.GetInventory(), player.GetHeldInventory(), inventory, this));
+			if (player.IsLocalPlayer)
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace(Main.gameStateManager, player, this, player.GetInventory(), player.GetHeldInventory(), inventory, this));
 
 			return true;
 		}

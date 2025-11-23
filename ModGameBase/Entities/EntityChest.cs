@@ -9,7 +9,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(3, 1)]
-	public class EntityChest : Entity, ICubeTracker
+	public class EntityChest : Entity, ICubeTracker, IHasInventory
 	{
 		public struct MeshingData
 		{
@@ -24,12 +24,16 @@ namespace ViMG.Entities
 
         public EntityChest()
         {
-
+			DoesSync = false;
+			MajorSyncInterval = 5;
         }
 
 		public EntityChest(CubePosition position, int rows, int columns, MeshHelper.CubeFace facing)
 		{
-			this.TrackedPosition = position;
+            DoesSync = false;
+            MajorSyncInterval = 5;
+
+            this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
@@ -67,6 +71,13 @@ namespace ViMG.Entities
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+			inventory.ProcessActions(this);
+        }
+
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
 			world.EntityManager.Remove(this);
@@ -74,7 +85,8 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-            Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, player.GetInventory(), player.GetHeldInventory(), inventory, rows, columns));
+			if (player.IsLocalPlayer)
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, this, player.GetInventory(), player.GetHeldInventory(), inventory, rows, columns));
 
 			return true;
 		}
@@ -117,6 +129,11 @@ namespace ViMG.Entities
             md.Memory->facing = meshingData.facing;
 
             return md.As<byte>();
+        }
+
+        public Inventory GetInventory(int id)
+        {
+			return inventory;
         }
     }
 }

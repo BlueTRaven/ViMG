@@ -10,6 +10,7 @@ using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 using static ViMG.UIs.MenuHelper;
@@ -163,7 +164,7 @@ namespace ViMG.UIs
 
 					var oldItem = inventory.Get(i);
 
-					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory);
+					var output = HandleItemSlot(player, player, inventory, i, itemslot, heldInventory);
 
 					if (output == ItemSlotClickOutput.NeedsSwapInventory)
 					{
@@ -183,6 +184,52 @@ namespace ViMG.UIs
 			}
 			UI.EndParent();
 		}
+
+		public static void DoEntityInventory(Player player, Entity owner, Inventory inventory, Inventory heldInventory,
+            int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
+        {
+            UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
+
+            UI.StartParent(new Vector2(16));
+
+            UI.ButtonConstructionParameters buttonParameters = ButtonParameters;
+            buttonParameters.bounds.Size = new Size(size);
+
+            for (int y = 0; y < rows; y++)
+            {
+                for (int x = 0; x < columns; x++)
+                {
+                    int i = y * columns + x;
+
+                    UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
+
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
+
+                    if (itemSlots != null)
+                        itemSlots[i] = itemslot;
+
+                    var oldItem = inventory.Get(i);
+
+                    var output = HandleItemSlot(player, owner, inventory, i, itemslot, heldInventory);
+
+                    if (output == ItemSlotClickOutput.NeedsSwapInventory)
+                    {
+                        ref readonly var item = ref inventory.Get(i);
+
+                        int first = inventory.FirstEmpty();
+
+                        if (first != -1)
+                        {
+                            inventory.Set(item, first);
+                            inventory.Remove(i, item.num);
+                        }
+                    }
+
+                    UI.EndParent();
+                }
+            }
+            UI.EndParent();
+        }
 
 		public static Size GetInventorySize(int rows, int columns, float size, float padding)
         {
@@ -216,7 +263,7 @@ namespace ViMG.UIs
 			return ItemSlotClickOutput.None;
         }
 
-		public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
+		public static ItemSlotClickOutput HandleItemSlot(Player player, Entity invOwner, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
@@ -234,11 +281,11 @@ namespace ViMG.UIs
 				output = DoRightClick(player, inventory, heldInventory, index);
 			}
 
-			if (output != ItemSlotClickOutput.None)
+			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer && output != ItemSlotClickOutput.None)
 			{
 				Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync { 
 					player = (byte)player.playerIndex,
-					entityId = player.Id,
+					entityId = invOwner.Id,
 					inventoryId = inventory.id,
 					inventoryIndex = index,
 					output = output,
@@ -366,7 +413,7 @@ namespace ViMG.UIs
             if (!heldInventory.Get(0).valid && ourItem.valid)
             {
                 //Pick up the item - put it in the held item instance
-                heldInventory.Set(ourItem, 1);
+                heldInventory.Set(new ItemInstance(ourItem, 1), 0);
                 inventory.Remove(index, 1);
 
                 output = ItemSlotClickOutput.PickupFromSlot;

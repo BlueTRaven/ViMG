@@ -17,7 +17,6 @@ namespace Engine.Items
 			Add,
 			Set,
 			Remove,
-			Clicked,
 		}
 		private struct InventoryAction
 		{
@@ -79,60 +78,38 @@ namespace Engine.Items
 			lastEmpty = 0;
         }
 
-
-        public void AddClick(Entity owner, int index, MenuHelper.ItemSlotClickOutput outputType)
+		public void ProcessActions<T>(T owner) where T : Entity, IHasInventory
 		{
-			actions.Add(new InventoryAction
+			foreach (var action in actions)
 			{
-				index = index,
-				oldInstance = new(),
-				newInstance = new(),
-				type = InventoryActionType.Clicked,
-				outputType = outputType,
-			});
-		}
+				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", Main.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
+				{
+					inventoryId = id,
+					entityId = owner.Id,
+					inventoryIndex = action.index,
+					oldInstance = action.oldInstance,
+					newInstance = action.newInstance,
+					time = Main.Time
+				};
 
-		public void ProcessActions(Entity owner)
-		{
-			//foreach (var action in actions)
-			//{
-			//	//Console.WriteLine("Inventory update: {0} {1} {2} -> {3}", id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
-			//	var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
-			//	{
-			//		id = id,
-			//		entityId = owner.Id,
-			//		index = action.index,
-			//		oldInstance = action.oldInstance,
-			//		newInstance = action.newInstance,
-			//		time = Main.Time
-			//	};
-
-			//	if (action.type != InventoryActionType.Clicked)
-			//	{
-			//		if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
-			//		{
-			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-			//		}
-			//		else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
-			//		{
-			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-			//		}
-			//	}
-			//	else
-			//	{
-			//		if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
-			//		{
-			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-			//		}
-			//	}
-			//}
+				if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+				{
+					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+				}
+				else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+				{
+					if (owner is Player player && player.IsLocalPlayer)
+						Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
+				}
+			}
 
 			actions.Clear();
 		}
 
 		public void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
 		{
-			items[action.index] = action.newInstance;
+			items[action.inventoryIndex] = action.newInstance;
 		}
 
         public bool CanAdd(Item item)

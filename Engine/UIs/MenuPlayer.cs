@@ -307,7 +307,7 @@ namespace ViMG.UIs
 
 						var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(i));
 
-						var output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, heldInventory);
+						var output = MenuHelper.HandleItemSlot(player, player, craftInventory, i, itemslot, heldInventory);
 						if (output != MenuHelper.ItemSlotClickOutput.None)
 						{
 							if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -418,7 +418,7 @@ namespace ViMG.UIs
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE), 
 							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
-					var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory);
+					var output = MenuHelper.HandleItemSlot(player, player, accessoryInventory, i, itemslot, heldInventory);
 					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -449,7 +449,7 @@ namespace ViMG.UIs
                         UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
                             Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
 
-                    var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory);
+                    var output = MenuHelper.HandleItemSlot(player, player, accessoryInventory, i + 3, itemslot, heldInventory);
                     if (output != MenuHelper.ItemSlotClickOutput.None)
                     {
                         if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -492,7 +492,7 @@ namespace ViMG.UIs
 							UIWidgets.MakeTooltip(new Vector2(0, SIZE), tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
 					}
 
-					var output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, heldInventory);
+					var output = MenuHelper.HandleItemSlot(player, player, gearInventory, i, itemslot, heldInventory);
 					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)

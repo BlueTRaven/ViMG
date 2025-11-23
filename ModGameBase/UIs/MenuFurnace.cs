@@ -17,6 +17,7 @@ namespace ViMG.UIs
 	public class MenuFurnace : Menu
     {
         private Player player;
+		private readonly Entity owner;
 		private Inventory playerInventory;
 		private Inventory heldInventory;
 		private Inventory furnaceInventory;
@@ -27,10 +28,11 @@ namespace ViMG.UIs
 
 		private Items.ItemInstance held;
 
-		public MenuFurnace(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
+        public MenuFurnace(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
 		{
 			this.player = player;
-			this.playerInventory = playerInventory;
+            this.owner = owner;
+            this.playerInventory = playerInventory;
 			this.heldInventory = heldInventory;
 			this.furnaceInventory = furnaceInventory;
 
@@ -90,7 +92,7 @@ namespace ViMG.UIs
 			UI.EndParent();
 			//bounds.x -= SIZE + MARGIN;
 
-			MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, furnaceInventory, 0, itemSlotA, heldInventory);
+			MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 0, itemSlotA, heldInventory);
 			if (output != MenuHelper.ItemSlotClickOutput.None);
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -99,7 +101,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			output = MenuHelper.HandleItemSlot(player, furnaceInventory, 1, itemSlotB, heldInventory);
+			output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 1, itemSlotB, heldInventory);
             if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -108,7 +110,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			output = MenuHelper.HandleItemSlot(player, furnaceInventory, 2, itemSlotFuel, heldInventory);
+			output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 2, itemSlotFuel, heldInventory);
             if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)

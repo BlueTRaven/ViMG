@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 
@@ -12,7 +13,8 @@ namespace ViMG.UIs
 	public class MenuChest : Menu
 	{
 		private readonly Player player;
-		private readonly Inventory playerInventory;
+        private readonly Entity owner;
+        private readonly Inventory playerInventory;
 		private readonly Inventory heldInventory;
 		private readonly Inventory chestInventory;
 		private readonly int rows;
@@ -20,10 +22,11 @@ namespace ViMG.UIs
 
 		private ItemInstance held;
 
-		public MenuChest(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory heldInventory, Inventory chestInventory, int rows, int columns) : base(gsManager)
+		public MenuChest(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory chestInventory, int rows, int columns) : base(gsManager)
 		{
 			this.player = player;
-			this.playerInventory = playerInventory;
+            this.owner = owner;
+            this.playerInventory = playerInventory;
             this.heldInventory = heldInventory;
             this.chestInventory = chestInventory;
 			this.rows = rows;
@@ -60,7 +63,7 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32 + Player.INVENTORY_ROWS * SIZE + MARGIN));
 
-			MenuHelper.DoPlayerInventory(player, chestInventory, heldInventory, rows, columns, SIZE, PADDING);
+			MenuHelper.DoEntityInventory(player, owner, chestInventory, heldInventory, rows, columns, SIZE, PADDING);
 
 			UI.EndParent();
 		}

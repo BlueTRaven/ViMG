@@ -11,6 +11,7 @@ using ViMG;
 using ViMG.Entities;
 using ViMG.Items;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditResponse;
+using static ViMG.UIs.UI;
 
 namespace Engine.Networking.Messages
 {
@@ -23,8 +24,8 @@ namespace Engine.Networking.Messages
         public struct QueuedInventoryUpdate
         {
             public ulong entityId;
-            public int id;
-            public int index;
+            public int inventoryId;
+            public int inventoryIndex;
             public ItemInstance oldInstance, newInstance;
             public double time;
         }
@@ -45,8 +46,8 @@ namespace Engine.Networking.Messages
             var action = addData as QueuedInventoryUpdate? ?? throw new Exception();
 
             netMessage.writer.Put(action.entityId);
-            netMessage.writer.Put((byte)action.id);
-            netMessage.writer.Put((ushort)action.index);
+            netMessage.writer.Put((byte)action.inventoryId);
+            netMessage.writer.Put((ushort)action.inventoryIndex);
             netMessage.writer.Put(action.oldInstance.item?.Id ?? 0);
             netMessage.writer.Put(action.oldInstance.num);
             netMessage.writer.Put(action.oldInstance.damage);
@@ -63,8 +64,8 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader);
 
             var entityId = reader.GetULong();
-            var id = reader.GetByte();
-            var index = reader.GetUShort();
+            var inventoryId = reader.GetByte();
+            var inventoryIndex = reader.GetUShort();
             var oldInstanceItemId = reader.GetInt();
             var oldInstanceNum = reader.GetInt();
             var oldInstanceDamage = reader.GetInt();
@@ -76,8 +77,8 @@ namespace Engine.Networking.Messages
             var action = new QueuedInventoryUpdate
             {
                 entityId = entityId,
-                id = id,
-                index = index,
+                inventoryId = inventoryId,
+                inventoryIndex = inventoryIndex,
                 oldInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(oldInstanceItemId), oldInstanceNum, oldInstanceDamage),
                 newInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage),
                 time = time,
@@ -110,10 +111,11 @@ namespace Engine.Networking.Messages
                     var entity = entityManager.GetById(action.entityId);
                     if (entity != null && entity is IHasInventory hasInv)
                     {
-                        var inventory = hasInv.GetInventory(action.id);
+                        var inventory = hasInv.GetInventory(action.inventoryId);
                         inventory.DoUpdateAction(action);
 
-                        Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
+                        Console.WriteLine("Remote Inventory action: {0:02} {1} {2} {3} -> {4}", Main.Time, entity.ToString(), action.inventoryId, action.oldInstance.item, action.newInstance.item);
+                        //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
                     }
                 }
                 else
@@ -167,8 +169,8 @@ namespace Engine.Networking.Messages
             AuditedInventoryUpdate auditedAction = new AuditedInventoryUpdate
             {
                 entityId = action.entityId,
-                inventoryId = action.id,
-                inventoryIndex = action.index,
+                inventoryId = action.inventoryId,
+                inventoryIndex = action.inventoryIndex,
                 newInstance = action.newInstance,
                 oldInstance = action.oldInstance,
                 time = action.time,
@@ -277,17 +279,6 @@ namespace Engine.Networking.Messages
                                     {
                                         accepted = false;
                                     }
-
-
-                                    if (accepted)
-                                    {
-                                        DoAction(action);
-                                    }
-                                    else
-                                    {
-                                        action.newInstance = curInstance;
-                                        RollbackAction(action);
-                                    }
                                 }
 
                                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncInventoryUpdateAuditResponse.Instance, peer, new SyncInventoryUpdateAuditResponse.AcceptedInventoryUpdate()
@@ -323,8 +314,8 @@ namespace Engine.Networking.Messages
                 inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate
                 {
                     entityId = action.entityId,
-                    id = action.inventoryId,
-                    index = action.inventoryIndex,
+                    inventoryId = action.inventoryId,
+                    inventoryIndex = action.inventoryIndex,
                     newInstance = action.oldInstance,
                     oldInstance = action.oldInstance,
                     time = action.time,
@@ -341,8 +332,8 @@ namespace Engine.Networking.Messages
                 inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate
                 {
                     entityId = action.entityId,
-                    id = action.inventoryId,
-                    index = action.inventoryIndex,
+                    inventoryId = action.inventoryId,
+                    inventoryIndex = action.inventoryIndex,
                     newInstance = action.newInstance,
                     oldInstance = action.oldInstance,
                     time = action.time,

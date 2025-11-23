@@ -160,7 +160,8 @@ namespace ViMG.Entities
 		{
 			// Shouldn't add entities if not server or singleplayer?
 			// What about player entities...?
-			Debug.Assert(Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client);
+			//Debug.Assert(Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client);
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client) return;
 
             entity.SetId(GetUniqueId());
 
@@ -180,12 +181,6 @@ namespace ViMG.Entities
 			entitiesByType[entity.GetType()].Add(entity);
 
 			entitiesById.Add(entity.Id, entity);
-
-			entity.Initialize(world);
-			if (!Main.IsHeadless)
-			{
-				entity.LoadContent(world);
-			}
 
 			if (entity is ICubeTracker tracker)
 			{
@@ -224,7 +219,13 @@ namespace ViMG.Entities
 				}
 			}
 
-			OnEntityAdded?.Invoke(entity);
+            entity.Initialize(world);
+            if (!Main.IsHeadless)
+            {
+                entity.LoadContent(world);
+            }
+
+            OnEntityAdded?.Invoke(entity);
 
 			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
 			{
@@ -397,7 +398,7 @@ namespace ViMG.Entities
 						{
 							if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
 							{
-								if (Main.Time - entity.TimeMajorSynced > entity.MajorSyncInterval)
+								if (entity.DoesMajorSync && Main.Time - entity.TimeMajorSynced > entity.MajorSyncInterval)
 								{
 									var ent = new SyncBasicState.SyncEntity()
 									{
@@ -408,7 +409,7 @@ namespace ViMG.Entities
 								}
 								else
 								{
-									if (Main.Time - entity.TimeSynced > entity.SyncInterval)
+									if (entity.DoesSync && Main.Time - entity.TimeSynced > entity.SyncInterval)
 									{
 										var ent = new SyncBasicState.SyncEntity()
 										{
