@@ -255,7 +255,10 @@ namespace ViMG
 					for (int j = 0; j < batchResult.num; j++)
 					{
 						lock (bufferPool)
+						{
 							batchResult.copies[j].Return(bufferPool);
+							batchResult.copies[j].render = false;
+                        }
 
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 

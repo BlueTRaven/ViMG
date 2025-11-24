@@ -112,7 +112,7 @@ namespace ViMG
             {
                 List<ChunkPosition>[] glcP = new List<ChunkPosition>[World.MAX_PLAYERS];
                 List<ChunkPosition> glc = new List<ChunkPosition>();
-                for (int j = 0; j < loadedChunks.Length; j++)
+                for (int j = 0; j < loadedChunks[0].Length; j++)
                 {
                     bool any = false;
                     for (int i = 0; i < World.MAX_PLAYERS; i++)
@@ -128,6 +128,7 @@ namespace ViMG
 
                                 any = true;
                             }
+                            if (glcP[i] == null) glcP[i] = new List<ChunkPosition>();
                             glcP[i].Add(chunkPos);
                         }
                     }
@@ -135,7 +136,7 @@ namespace ViMG
                 gettableLoadedChunks = glc;
                 for (int i = 0; i < World.MAX_PLAYERS; i++)
                 {
-                    gettableLoadedChunksPlayer[i] = glc;
+                    gettableLoadedChunksPlayer[i] = glcP[i];
                 }
             }
 
@@ -190,7 +191,6 @@ namespace ViMG
 			chunkMesher?.CollisionMesher.BeginFlush();
 			chunkMesher?.RenderMesher.FinishFlush();
             chunkMesher?.CollisionMesher.FinishFlush();
-            CopiedChunkPool.Verify();
 
             int max = queue.Count;
             GameStateTheIsland.ProgressMax = max;
@@ -213,7 +213,9 @@ namespace ViMG
 
 			waitingToFinishMeshingChunks.Clear();
 
-			if (hasChanged)
+            CopiedChunkPool.Verify();
+
+            if (hasChanged)
 			{
                 List<ChunkPosition>[] glcP = new List<ChunkPosition>[World.MAX_PLAYERS];
                 List<ChunkPosition> glc = new List<ChunkPosition>();

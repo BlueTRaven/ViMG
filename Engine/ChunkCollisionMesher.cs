@@ -239,7 +239,10 @@ namespace ViMG
                     for (int j = 0; j < batchResult.num; j++)
                     {
                         lock (bufferPool)
+                        {
                             batchResult.copies[j].Return(bufferPool);
+                            batchResult.copies[j].collision = false;
+                        }
 
                         //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
