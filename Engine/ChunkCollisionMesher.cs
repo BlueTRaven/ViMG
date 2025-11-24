@@ -1,5 +1,6 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
+using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
@@ -194,12 +195,17 @@ namespace ViMG
             return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
         }
 
-        public void BeginFlush()
+        public void BeginFlush(World world)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
             currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+
+            //while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
+            //{
+            //    StartActiveTasks(world);
+            //}
 
             while (meshBatchTasksQueue.Count > 0)
             {

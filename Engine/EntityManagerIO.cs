@@ -324,8 +324,6 @@ namespace ViMG
 					writer.Write(layer);					//h-l: file layer
 					writer.Write(manager.GetUniqueId());	//h-emi: entity manager last saved entity id
 
-					var entities = manager.GetEntities();
-
 					int serializableEntities = 0;
 
 					List<byte> entitiesDataBlock = new List<byte>();

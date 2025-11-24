@@ -98,8 +98,6 @@ namespace ViMG
             }
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            ProcessLoadQueue(world);
-
 			distanceUnloadCheckTimer -= (float)deltaTime;
 
 			if (distanceUnloadCheckTimer <= 0)
@@ -107,6 +105,8 @@ namespace ViMG
 				distanceUnloadCheckTimer = DISTANCE_UNLOAD_CHECK_TIME;
 				LoadAroundTarget(world);
 			}
+            
+            ProcessLoadQueue(world);
 
             if (hasChanged)
             {
@@ -168,6 +168,17 @@ namespace ViMG
             return false;
         }
 
+        public void PrintLoadState(ChunkPosition position)
+        {
+            Console.WriteLine("{0}:", position);
+            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
+
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                Console.WriteLine(loadedChunks[i][j].ToString());
+            }
+        }
+
 		//Loads the entirety of the loading queue at once.
 		//It's best practice to use this before saving, so as not to miss loading chunks!
 		public void FlushLoadQueue(World world)
@@ -187,8 +198,8 @@ namespace ViMG
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
             }
 
-            chunkMesher?.RenderMesher.BeginFlush();
-			chunkMesher?.CollisionMesher.BeginFlush();
+            chunkMesher?.RenderMesher.BeginFlush(world);
+			chunkMesher?.CollisionMesher.BeginFlush(world);
 			chunkMesher?.RenderMesher.FinishFlush();
             chunkMesher?.CollisionMesher.FinishFlush();
 
@@ -587,6 +598,7 @@ namespace ViMG
 						remove = false;
 					else
                     {
+                        loadedChunks[player.playerIndex][i] = LoadingState.Unloaded;
                         //Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 						//loadedChunksAttribution[player.playerIndex][i] = false;
                     }
@@ -601,18 +613,22 @@ namespace ViMG
 			{
 				Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
 
+                bool allUnloaded = true;
                 for (int i = 0; i < World.MAX_PLAYERS; i++)
                 {
                     if (loadedChunks[i][j] == LoadingState.Loaded)
                     {
-                        //chunkIO.SerializeChunk(chunks, pos);
-                        entIO.Serialize(pos);
-
-                        entityManager.Unload(pos);
-                        chunkMesher?.Unload(pos);
-
+                        allUnloaded = false;
                         break;
                     }
+                }
+
+                if (allUnloaded)
+                {
+                    entIO.Serialize(pos);
+
+                    entityManager.Unload(pos);
+                    chunkMesher?.Unload(pos);
                 }
 
                 for (int i = 0; i < World.MAX_PLAYERS; i++)
@@ -702,6 +718,36 @@ namespace ViMG
             for (int i = 0; i < World.MAX_PLAYERS; i++)
                 Array.Fill(loadedChunks[i], LoadingState.Unloaded);
 		}
+
+        public void UnloadAllFor(int playerIndex)
+        {
+            //NOTE: this assumes that at least one player remains!
+            Debug.Assert(Main.gameStateManager.TheIsland.netManager.uniqueNetPlayers > 0);
+
+            for (int j = 0; j < chunkManager.SizeInChunksXZ; j++)
+            {
+                bool anyLoaded = false;
+                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                {
+                    if (i == playerIndex)
+                    {
+                        loadedChunks[i][j] = LoadingState.Unloaded;
+                    }
+
+                    if (loadedChunks[i][j] == LoadingState.Loaded)
+                    {
+                        anyLoaded = true;
+                    }
+                }
+
+                if (!anyLoaded)
+                {
+                    Util.OneDToThreeD(j, new ValuePoint3D(chunkManager.SizeInChunksXZ), out var pos);
+                    Unload(new ChunkPosition(pos.x, pos.y, pos.z));
+                }
+            }
+            Array.Fill(loadedChunks[playerIndex], LoadingState.Unloaded);
+        }
 
         public void Dispose()
         {

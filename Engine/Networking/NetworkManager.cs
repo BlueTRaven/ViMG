@@ -232,6 +232,8 @@ namespace Engine.Networking
                 world.player[playerIndex] = null;
                 netPlayers[index] = new NetPlayer();
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
+
+                Main.gameStateManager.TheIsland.GetWorld().ChunkLoadManager.UnloadAllFor(playerIndex);
             }
             else
             {
