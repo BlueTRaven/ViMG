@@ -57,6 +57,8 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.channel = 2;
 
             var player = GS.GetWorld().GetLocalPlayer();
             if (player == null) return;

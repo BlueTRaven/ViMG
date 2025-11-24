@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using ViMG.Entities;
 using ViMG.GameStates;
@@ -497,6 +498,28 @@ namespace ViMG.UIs
                     numString, Color.White, bounds.ToRectangle(), Enums.Alignment.BottomRight,
                     64, 1f, overflowAction: TextHelper.OverFlowAction.None);
 			}
+		}
+
+		/// <summary>
+		/// Wrapper function for inventory actions; does network synchronization
+		/// </summary>
+		/// <returns></returns>
+		public static bool InventoryAction<T>(T entity, Player? activatingPlayer, int action) where T : Entity, IHasInventory
+		{
+			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer)
+			{
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync
+                {
+                    player = (byte)(activatingPlayer?.playerIndex ?? 255),
+                    entityId = entity.Id,
+                    inventoryId = 0,
+                    inventoryIndex = 0,
+                    output = ItemSlotClickOutput.None,
+					action = action,
+                });
+            }
+
+			return entity.InventoryAction(activatingPlayer, action);
 		}
 	}
 }

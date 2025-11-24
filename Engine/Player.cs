@@ -2320,5 +2320,10 @@ namespace ViMG
 
 			return ret;
         }
+
+        public bool InventoryAction(Player? activatingPlayer, int action)
+        {
+			return false;
+        }
     }
 }

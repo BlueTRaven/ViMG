@@ -76,7 +76,7 @@ namespace ViMG.Entities
             base.Update(deltaTime);
 
 			inventory.ProcessActions(this);
-        }
+        }	
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
@@ -119,7 +119,7 @@ namespace ViMG.Entities
 			if (version >= 2)
                 meshingData.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 
-			inventory = new Inventory(0, rows * columns);
+			//inventory = new Inventory(0, rows * columns);
 			inventory.Load(loadBytes, ref index);
 		}
 
@@ -134,6 +134,11 @@ namespace ViMG.Entities
         public Inventory GetInventory(int id)
         {
 			return inventory;
+        }
+
+		public bool InventoryAction(Player? activatingPlayer, int action)
+        {
+			return false;
         }
     }
 }

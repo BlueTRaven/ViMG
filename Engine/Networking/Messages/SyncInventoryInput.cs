@@ -21,6 +21,7 @@ namespace Engine.Networking.Messages
             public ulong entityId;
             public int inventoryId;
             public int inventoryIndex;
+            public int action;
             public MenuHelper.ItemSlotClickOutput output;
         }
 
@@ -35,6 +36,8 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.channel = 2;
 
             var clickToSync = addData as ClickToSync? ?? throw new Exception();
 
@@ -42,6 +45,7 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(clickToSync.entityId);
             netMessage.writer.Put(clickToSync.inventoryId);
             netMessage.writer.Put(clickToSync.inventoryIndex);
+            netMessage.writer.Put(clickToSync.action);
 
             netMessage.Send();
         }
@@ -54,6 +58,7 @@ namespace Engine.Networking.Messages
             var entityId = reader.GetULong();
             var inventoryId = reader.GetInt();
             var inventoryIndex = reader.GetInt();
+            var action = reader.GetInt();
 
             var clickToSync = new ClickToSync
             {
@@ -61,6 +66,7 @@ namespace Engine.Networking.Messages
                 entityId = entityId,
                 inventoryId = inventoryId,
                 inventoryIndex = inventoryIndex,
+                action = action,
             };
 
             var player = GS.GetWorld().player[clickToSync.player];
@@ -72,6 +78,12 @@ namespace Engine.Networking.Messages
                 {
                     Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventoryId);
                     MenuHelper.DoClick(player, hasInv.GetInventory(clickToSync.inventoryId), player.GetHeldInventory(), clickToSync.inventoryIndex, false);
+
+                    if (clickToSync.action > 0)
+                    {
+                        Console.WriteLine("Remove Inventory Input: Do Action {0}", clickToSync.action);
+                        hasInv.InventoryAction(player, clickToSync.action);
+                    }
                 }
             }
         }

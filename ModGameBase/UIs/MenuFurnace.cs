@@ -14,10 +14,10 @@ using ViMG.Recipes;
 
 namespace ViMG.UIs
 {
-	public class MenuFurnace : Menu
+	public class MenuFurnace<T> : Menu where T : Entity, IHasInventory
     {
         private Player player;
-		private readonly Entity owner;
+		private readonly T owner;
 		private Inventory playerInventory;
 		private Inventory heldInventory;
 		private Inventory furnaceInventory;
@@ -28,7 +28,7 @@ namespace ViMG.UIs
 
 		private Items.ItemInstance held;
 
-        public MenuFurnace(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
+        public MenuFurnace(GameStateManager gsManager, Player player, T owner, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
 		{
 			this.player = player;
             this.owner = owner;
@@ -77,23 +77,25 @@ namespace ViMG.UIs
 
 			RectangleF bounds = new RectangleF(Vector2.Zero, SIZE, SIZE);
 
-			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(MenuHelper.ButtonParameters), furnaceInventory.Get(0));
+			var buttonParams = MenuHelper.ButtonParameters;
+			buttonParams.bounds.Size = new Size(18 * 2);
+			var itemSlotA = UI.MakeItemSlot(UI.MakeButton(buttonParams), furnaceInventory.Get(0));
 
 			UI.StartParent(new Vector2(18 * 2, 0));
 			//bounds.x += SIZE;
 
-			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(MenuHelper.ButtonParameters), furnaceInventory.Get(1));
+			var itemSlotB = UI.MakeItemSlot(UI.MakeButton(buttonParams), furnaceInventory.Get(1));
 
             UI.StartParent(new Vector2(18 * 2 + 16, 0));
             //bounds.x += SIZE + MARGIN;
 
-			var itemSlotFuel = UI.MakeItemSlot(UI.MakeButton(MenuHelper.ButtonParameters), furnaceInventory.Get(2));
+			var itemSlotFuel = UI.MakeItemSlot(UI.MakeButton(buttonParams), furnaceInventory.Get(2));
 
 			UI.EndParent();
 			//bounds.x -= SIZE + MARGIN;
 
 			MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 0, itemSlotA, heldInventory);
-			if (output != MenuHelper.ItemSlotClickOutput.None);
+			if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 					MenuHelper.SwapInventory(furnaceInventory, playerInventory, 0);
@@ -121,7 +123,8 @@ namespace ViMG.UIs
 
 			if (furnaceInventoryUpdated)
 			{
-				currentRecipe = FindRecipe(furnaceInventory);
+				furnaceInventoryUpdated = false;
+				currentRecipe = furnace.FindRecipe();
 
 				if (currentRecipe != null)
 				{
@@ -146,12 +149,12 @@ namespace ViMG.UIs
             UI.StartParent(new Vector2(0, 18 * 2));
             //bounds.y += SIZE;
 
-			UI.MakeItemSlot(UI.MakeButton(MenuHelper.ButtonParameters), furnaceInventory.Get(3));
+			UI.MakeItemSlot(UI.MakeButton(buttonParams), furnaceInventory.Get(3));
 
             UI.StartParent(new Vector2(18 * 2, 0));
             //bounds.x += SIZE;
 
-            UI.MakeItemSlot(UI.MakeButton(MenuHelper.ButtonParameters), furnaceInventory.Get(4));
+            UI.MakeItemSlot(UI.MakeButton(buttonParams), furnaceInventory.Get(4));
 
             UI.StartParent(new Vector2(18 * 2, 0));
             //bounds.x += SIZE;
@@ -161,11 +164,7 @@ namespace ViMG.UIs
 
 			if (craftRecipeButton.clickLeft)
 			{
-				if (itemSlotFuel.item.num > 0)
-				{
-					if (currentRecipe != null)
-						CraftItem(currentRecipe);
-				}
+				MenuHelper.InventoryAction(owner, player, 1);
 			}
 			else if (craftRecipeButton.hovered)
 			{
@@ -201,60 +200,6 @@ namespace ViMG.UIs
 			}
 
 			UI.EndParent();
-		}
-
-		private Recipe FindRecipe(Inventory inventory)
-		{
-			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace);
-
-			Recipe foundRecipe = null;
-
-			for (int i = 0; i < recipes.Count; i++)
-			{
-				Recipe recipe = recipes[i];
-
-				if (recipe.Matches(inventory))
-				{
-					if (foundRecipe == null || recipe.Weight > foundRecipe.Weight)
-						foundRecipe = recipe;
-				}
-			}
-
-			return foundRecipe;
-		}
-
-		private void CraftItem(Recipe recipe)
-		{
-			if (recipe.Matches(furnaceInventory))
-			{
-				for (int i = 0; i < recipe.Layout.Length; i++)
-				{
-					if (recipe.Layout[i].valid)
-					{
-						int numLeft = recipe.Layout[i].num;
-
-						furnaceInventory.FindExact(recipe.Layout[i], 2, out int index);
-
-						int overflow = furnaceInventory.Get(i).num - numLeft;
-						furnaceInventory.Remove(index, numLeft);
-						furnaceInventoryUpdated = true;
-
-						furnace.OnCraft();
-
-						if (overflow < 0)
-							numLeft -= Math.Abs(overflow);
-						else numLeft -= numLeft;
-					}
-				}
-
-				for (int i = 0; i < recipe.Outputs.Length; i++)
-				{
-					playerInventory.Add(recipe.Outputs[i]);
-				}
-			}
-
-			// remove fuel
-			furnaceInventory.Remove(2, 1);
 		}
 
 		public override void Draw(SpriteBatch batch)
