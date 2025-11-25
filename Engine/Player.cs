@@ -1333,25 +1333,6 @@ namespace ViMG
 
 					DEBUGTimeSkipHeldTime = 0;
 				}
-
-				if (Main.inputManager.JustPressed(Keys.V))
-				{
-					//var visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
-					//visStats.rollFollowsVelocity = true;
-
-					//world.ProjectileManager.Add(new ProjectileManager.Projectile(this, Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f,
-					//	-Main.camera.Forward * Cube.CUBE_SCALE * 0.25f, 10,
-					//	visStats, new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, Cube.CUBE_SCALE * 1f, Cube.CUBE_SCALE * 0.125f, Cube.CUBE_SCALE)),
-					//	new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.5f), new Vector3(Cube.CUBE_SCALE)));
-
-					//Slime slime = new Slime(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f);
-					//world.EntityManager.Add(slime);
-
-					//for (int i = 0; i < 8; i++)
-					//world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, slime));
-					//world.EntityManager.Add(new ManaStar(new Vector2(Main.random.NextFloat(-70, 70), Main.random.NextFloat(-180, 180))));
-					//world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
-				}
 			}
         }
 

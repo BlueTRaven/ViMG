@@ -48,9 +48,15 @@ namespace Engine.Networking.Messages
                 GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkToSync.chunkPosition, idsCache);
             }
 
-            Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
+            var chunk = GS.GetWorld().ChunkManager.CubeView.Palettize(chunkToSync.chunkPosition, queryIds);
+
+            //Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
             netMessage.writer.Put(chunkToSync.chunkPosition);
-            netMessage.writer.PutSpan(bytes);
+            netMessage.writer.Put((int)chunk.type);
+            netMessage.writer.PutArray(chunk.palette);
+            if (chunk.type != CubeView.PalettizeType.AllOneId)
+                netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
+            //netMessage.writer.PutSpan(bytes);
 
             netMessage.Send();
         }
@@ -61,7 +67,19 @@ namespace Engine.Networking.Messages
 
             var chunkPosition = reader.Get<ChunkPosition>();
 
-            var ids = reader.GetArray<ushort>(sizeof(byte));
+            CubeView.PalettizeType paletteType = (CubeView.PalettizeType)reader.GetInt();
+            var palette = reader.GetUShortArray();
+            var data = paletteType == CubeView.PalettizeType.AllOneId ? null : reader.GetArray<byte>(sizeof(byte));
+
+            var chunk = new CubeView.PalettizedChunk
+            {
+                data = data,
+                palette = palette,
+                position = chunkPosition,
+                type = paletteType,
+            };
+            var ids = GS.GetWorld().ChunkManager.CubeView.Depaletteize(chunk);
+            //var ids = reader.GetArray<ushort>(sizeof(byte));
 
             CubePosition basePosition = chunkPosition.InCubeSpace();
 
