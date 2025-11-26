@@ -75,6 +75,7 @@ namespace Engine.Networking.Messages
             if (player.Run.Pressed())  inputTypes |= InputTypes.Run;
 
             netMessage.writer.Put(Main.Time);
+            netMessage.writer.Put(Main.Frame);
             netMessage.writer.Put(player.highlightIndex);
             netMessage.writer.Put(player.Rotation.X);
             netMessage.writer.Put(player.Rotation.Y);
@@ -90,6 +91,9 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader);
 
             double time = reader.GetDouble();
+            int frame = reader.GetInt();
+            //Console.WriteLine("Receive with time: {0:.02} (our time: {1:.02} delta {2:.02})", time, Main.Time + NetworkManager.TIME_TRAVEL_DELAY, time - (Main.Time + NetworkManager.TIME_TRAVEL_DELAY));
+            //Console.WriteLine("Frame: {0} (our frame: {1} delta {2})", frame, Main.Frame, frame - Main.Frame);
             int heldItem = reader.GetInt();
             Vector3 rotation = Vector3.Zero;
             rotation.X = reader.GetFloat();
@@ -118,7 +122,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedInput qinput in queued)
             {
-                if (Main.Time > qinput.time)
+                if (Main.Time >= qinput.time)
                 {
                     var player = players[qinput.playerIndex];
                     if (player == null) continue;

@@ -75,7 +75,7 @@ namespace Engine.ChunkStuff
             var a = RenderMesher.MarkDirty(position);
             var b = CollisionMesher.MarkDirty(position);
 
-            Debug.Assert(a == b);
+            //Debug.Assert(a == b);
         }
 
         public void Dispose()

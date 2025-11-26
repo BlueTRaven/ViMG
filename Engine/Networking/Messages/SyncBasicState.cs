@@ -179,7 +179,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedSyncEntity queuedSync in queued)
             {
-                if (Main.Time > queuedSync.time)
+                if (Main.Time >= queuedSync.time)
                 {
                     Entity? ent = entityManager.GetById(queuedSync.entityId);
                     // NOTE: SuperSimple and BasicState state is completely ignored if the entity does not exist.

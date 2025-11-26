@@ -98,7 +98,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedInventoryUpdate action in queued)
             {
-                if (Main.Time > action.time)
+                if (Main.Time >= action.time)
                 {
                     // Invalidate any audits that may be attempting to update this position
                     //for (int i = 0; i < MAX_AUDITS; i++)
@@ -297,7 +297,7 @@ namespace Engine.Networking.Messages
                         }
                         else
                         {
-                            if (Main.Time - activeAudits[i][j].time > TIMEOUT)
+                            if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
                             {
                                 RollbackAction(activeAudits[i][j]);
                                 activeAudits[i][j].active = false;

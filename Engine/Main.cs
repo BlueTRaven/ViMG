@@ -101,7 +101,7 @@ namespace ViMG
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
-		public const bool DO_DETAIL = true;
+		public const bool DO_DETAIL = false;
 		public const bool TRANSPARENT_ORES = false;
 		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
 		public static bool ENABLE_ENT_SPAWNING = false;
@@ -491,16 +491,12 @@ namespace ViMG
 
 						if (gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer)
 						{
-
-							//                       public long PacketsSent => Interlocked.Read(ref _packetsSent);
-							//public long PacketsReceived => Interlocked.Read(ref _packetsReceived);
-							//public long BytesSent => Interlocked.Read(ref _bytesSent);
-							//public long BytesReceived => Interlocked.Read(ref _bytesReceived);
-							var stats = theIsland.netManager.netManager.Statistics;
-							ImGui.Text(string.Format("Packets Sent: {0} pps {1:0.02}", stats.PacketsSent, (double)stats.PacketsSent / (Time - theIsland.netManager.StartTime)));
-                            ImGui.Text(string.Format("Packets Received: {0} pps {1:0.02}", stats.PacketsReceived, (double)stats.PacketsReceived / (Time - theIsland.netManager.StartTime)));
-                            ImGui.Text(string.Format("Bytes Sent: {0} bps {1:0.02}", stats.BytesSent, (double)stats.BytesSent / (Time - theIsland.netManager.StartTime)));
-                            ImGui.Text(string.Format("Bytes Received: {0} bps {1:0.02}", stats.BytesReceived, (double)stats.BytesReceived / (Time - theIsland.netManager.StartTime)));
+							theIsland.netManager.IMGUIDebug();
+							//var stats = theIsland.netManager.netManager.Statistics;
+							//ImGui.Text(string.Format("Packets Sent: {0} pps {1:0.02}", stats.PacketsSent, (double)stats.PacketsSent / (Time - theIsland.netManager.StartTime)));
+       //                     ImGui.Text(string.Format("Packets Received: {0} pps {1:0.02}", stats.PacketsReceived, (double)stats.PacketsReceived / (Time - theIsland.netManager.StartTime)));
+       //                     ImGui.Text(string.Format("Bytes Sent: {0} bps {1:0.02}", stats.BytesSent, (double)stats.BytesSent / (Time - theIsland.netManager.StartTime)));
+       //                     ImGui.Text(string.Format("Bytes Received: {0} bps {1:0.02}", stats.BytesReceived, (double)stats.BytesReceived / (Time - theIsland.netManager.StartTime)));
 
                             for (int i = 0; i < World.MAX_PLAYERS; i++)
 							{

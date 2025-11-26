@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using Engine.Networking.Messages;
+using ImGuiNET;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -17,7 +18,7 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener
     {
-        public const double TIME_TRAVEL_DELAY = Main.FIXED_STEP * 3;
+        public const double TIME_TRAVEL_DELAY = 0;//0.25;// Main.FIXED_STEP * 3;
 
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
@@ -57,8 +58,18 @@ namespace Engine.Networking
 
         public double StartTime;
 
+        public Statistics[] statistics = new Statistics[Main.FIXED_FPS];
+        private ulong maxSent;
+        private ulong maxRecieved;
+        private double lastStatisticCheck;
+
         private double dcTime = 0;
 
+        public struct Statistics
+        {
+            public ulong BytesSent;
+            public ulong BytesReceived;
+        }
         public struct NetPlayer : INetSerializable
         {
             public int playerId = -1;
@@ -85,6 +96,7 @@ namespace Engine.Networking
         public NetworkManager(bool isServer)
         {
             netManager = new NetManager(this);
+            
             netManager.EnableStatistics = true;
             netManager.ChannelsCount = 4;
             this.isServer = isServer;
@@ -133,6 +145,24 @@ namespace Engine.Networking
         {
             netManager.TriggerUpdate();
             netManager.PollEvents();
+
+            if (Main.Time - lastStatisticCheck > 1)
+            {
+                for (int i = statistics.Length - 1; i >= 1; i--)
+                {
+                    statistics[i] = statistics[i - 1];
+                }
+                statistics[0] = new Statistics
+                {
+                    BytesReceived = (ulong)netManager.Statistics.BytesReceived,
+                    BytesSent = (ulong)netManager.Statistics.BytesSent,
+                };
+
+                maxSent = ulong.Max(statistics[0].BytesSent, maxSent);
+                maxRecieved = ulong.Max(statistics[0].BytesReceived, maxRecieved);
+
+                lastStatisticCheck = Main.Time;
+            }
 
             if (!isServer)
             {
@@ -288,6 +318,19 @@ namespace Engine.Networking
             }
 
             return null;
+        }
+
+        public void IMGUIDebug()
+        {
+            float[] sent = new float[statistics.Length - 1];
+            float[] received = new float[statistics.Length - 1];
+            for (int i = 0; i < statistics.Length - 1; i++)
+            {
+                sent[i] = statistics[i].BytesSent - statistics[i + 1].BytesSent;
+                received[i] = statistics[i].BytesReceived - statistics[i + 1].BytesReceived;
+            }
+            ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, 0, null, 0, (float)(maxSent), new(0, 80));
+            ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, 0, null, 0, (float)(maxRecieved), new(0, 80));
         }
     }
 }
