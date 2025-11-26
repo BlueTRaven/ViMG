@@ -249,13 +249,12 @@ namespace Engine.Networking
                 world.EntityManager.Add(p);
                 world.player[index] = p;
                 world.ChunkLoadManager.LoadAroundTarget(world);
-                // Inform peer of its id
+                //Inform peer of its id
                 Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
                 // Inform peer of existant entities and ids, including its own Player
                 Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, world.player.Where(x => x != null).ToArray());
                 // Inform others of new entity and id
                 Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
-                //Main.Registry.MessageRegistry.SendMessageToPeer(SyncAllWorldState.Instance, peer, netPlayers[index]);
                 var sync = new SyncChunk.ChunkToSync
                 {
                     chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),

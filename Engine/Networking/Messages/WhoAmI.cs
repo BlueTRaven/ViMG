@@ -38,11 +38,14 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             int whoAmI = reader.GetInt();
-            GS.netManager.whoAmI = whoAmI;
             Main.Time = reader.GetDouble();
             Main.Frame = reader.GetInt();
 
-            Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
+            if (whoAmI != -1)
+            {
+                GS.netManager.whoAmI = whoAmI;
+                Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
+            }
         }
     }
 }
