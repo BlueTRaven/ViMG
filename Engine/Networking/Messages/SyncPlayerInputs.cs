@@ -105,51 +105,78 @@ namespace Engine.Networking.Messages
             var player = GS.GetWorld().player[whoami];
             if (player != null)
             {
-                queued.Add(new QueuedInput
+                var qaction = new QueuedInput
                 {
                     inputs = inp,
                     playerIndex = whoami,
                     time = time,
                     heldItem = heldItem,
                     rotation = rotation,
-                });
+                };
+                
+                //if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+                    DoAction(qaction, GS.GetWorld().player);
+                //else queued.Add(qaction);
             }
         }
 
+        //private static double t = 0;
         public void Apply(Player?[] players)
         {
+            Apply2(players);
+            Apply2(players);
+        }
+
+        private void Apply2(Player[] players)
+        {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
+
+            double lastProcessed = Main.Time;
+
+            //if (Main.Time - t > 1)
+            //{
+            //    t = Main.Time;
+
+            //    Console.WriteLine("{0}", int.Max(queued1.Count, queued2.Count));
+            //}
 
             foreach (QueuedInput qinput in queued)
             {
                 if (Main.Time >= qinput.time)
                 {
-                    var player = players[qinput.playerIndex];
-                    if (player == null) continue;
-                    var inp = qinput.inputs;
+                    lastProcessed = double.Max(qinput.time, lastProcessed);
 
-                    player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
-                    player.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
-                    player.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
-                    player.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
-                    player.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
-                    player.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-                    player.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
-                    player.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
-                    player.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
-
-                    player.highlightIndex = qinput.heldItem;
-                    player.Rotation = qinput.rotation;
-                    //player.LookAtPos = qinput.lookAtPos;
+                    DoAction(qinput, players);
                 }
                 else
                 {
-                    otherBuffer.Add(qinput);
+                    if (qinput.time > lastProcessed)
+                        otherBuffer.Add(qinput);
                 }
             }
 
             queued.Clear();
             queued = otherBuffer;
+        }
+
+        private void DoAction(QueuedInput qinput, Player[] players)
+        {
+            var player = players[qinput.playerIndex];
+            if (player == null) return;
+            var inp = qinput.inputs;
+
+            player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
+            player.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
+            player.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
+            player.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
+            player.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
+            player.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+            player.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
+            player.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
+            player.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
+
+            player.highlightIndex = qinput.heldItem;
+            player.Rotation = qinput.rotation;
         }
     }
 }

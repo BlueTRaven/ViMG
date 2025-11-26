@@ -439,7 +439,7 @@ namespace ViMG.Entities
                     localPlayer.MoveLeft.Changed() || localPlayer.MoveRight.Changed() ||
                     localPlayer.MoveForward.Changed() || localPlayer.MoveBack.Changed() ||
                     localPlayer.Jump.Changed() || localPlayer.Run.Changed() ||
-                    localPlayer.MoveDown.Changed() || Main.Time - localPlayer.TimeSinceInputSynced > 2.0f / 60.0f)
+                    localPlayer.MoveDown.Changed() || Main.camera.IsDirty || Main.Time - localPlayer.TimeSinceInputSynced > 0.25)
 				{
 					Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
 					//forceLocalSync = true;
