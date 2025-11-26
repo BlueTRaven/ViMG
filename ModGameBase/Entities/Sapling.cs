@@ -26,12 +26,16 @@ namespace ViMG.Entities
 
 		public Sapling()
         {
-
+            DoesSync = false;
+            DoesMajorSync = false;
         }
 
         public Sapling(CubePosition position)
         {
-			if (position.Y == 0)
+            DoesSync = false;
+            DoesMajorSync = false;
+
+            if (position.Y == 0)
 				throw new Exception();
 
 			this.Position = position.InWorldSpace();

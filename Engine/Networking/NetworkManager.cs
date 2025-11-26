@@ -55,6 +55,10 @@ namespace Engine.Networking
         public NetPlayer[] netPlayers = new NetPlayer[World.MAX_PLAYERS];
         public int uniqueNetPlayers = 0;
 
+        public double StartTime;
+
+        private double dcTime = 0;
+
         public struct NetPlayer : INetSerializable
         {
             public int playerId = -1;
@@ -98,6 +102,7 @@ namespace Engine.Networking
 
         public void Connect()
         {
+            StartTime = Main.Time;
             if (isServer)
             {
                 netManager.Start(9050);
@@ -126,7 +131,21 @@ namespace Engine.Networking
 
         public void PollEvents()
         {
+            netManager.TriggerUpdate();
             netManager.PollEvents();
+
+            if (!isServer)
+            {
+                if (netManager.ConnectedPeersCount == 0)
+                {
+                    if (Main.Time - dcTime > 5)
+                    {
+                        Disconnect();
+                        Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                    }
+                }
+                else dcTime = Main.Time;
+            }
         }
 
         public void OnConnectionRequest(ConnectionRequest request)
@@ -152,7 +171,7 @@ namespace Engine.Networking
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
         {
-            Main.Registry.MessageRegistry.Dispatch(reader, peer);
+            Main.Registry.MessageRegistry.Dispatch(netManager, reader, peer, channelNumber, deliveryMethod);
             //Console.WriteLine("Received {0} from {1}", result, peer);
 
             reader.Recycle();

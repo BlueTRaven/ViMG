@@ -182,7 +182,13 @@ namespace ViMG.Entities
 
 			entitiesById.Add(entity.Id, entity);
 
-			if (entity is ICubeTracker tracker)
+            entity.Initialize(world);
+            if (!Main.IsHeadless)
+            {
+                entity.LoadContent(world);
+            }
+
+            if (entity is ICubeTracker tracker)
 			{
 				CubePosition position = tracker.TrackedPosition;
 
@@ -218,12 +224,6 @@ namespace ViMG.Entities
 					}
 				}
 			}
-
-            entity.Initialize(world);
-            if (!Main.IsHeadless)
-            {
-                entity.LoadContent(world);
-            }
 
             OnEntityAdded?.Invoke(entity);
 

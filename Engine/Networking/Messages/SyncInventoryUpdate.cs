@@ -44,6 +44,7 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             var action = addData as QueuedInventoryUpdate? ?? throw new Exception();
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             netMessage.writer.Put(action.entityId);
             netMessage.writer.Put((byte)action.inventoryId);
@@ -166,6 +167,8 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             var action = addData as SyncInventoryUpdate.QueuedInventoryUpdate ? ?? throw new Exception();
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+
             AuditedInventoryUpdate auditedAction = new AuditedInventoryUpdate
             {
                 entityId = action.entityId,
@@ -365,6 +368,7 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             var action = addData as AcceptedInventoryUpdate? ?? throw new Exception();
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             //Console.WriteLine("Accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", action.index, action.accepted, action.newInstance.item?.Id ?? 0);
 

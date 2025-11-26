@@ -66,17 +66,18 @@ namespace Engine.Networking.Messages
             //Console.WriteLine("Send message {0} to all excluding {1}", message.GetType().Name, excludePeer?.ToString());
         }
 
-        public void Dispatch(NetPacketReader reader, NetPeer source)
+        public void Dispatch(NetManager netManager, NetPacketReader reader, NetPeer source, byte channel, DeliveryMethod deliveryMethod)
         {
+            int position = reader.Position;
             int messageType = reader.GetInt();
 
             if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server && Get(messageType).Passthrough)
             {
-                reader.SetPosition(4);
+                reader.SetPosition(position);
                 var allBytes = reader.GetRemainingBytes();
-                reader.SetPosition(4);
+                reader.SetPosition(position);
                 reader.GetInt();
-                Main.gameStateManager.TheIsland.netManager.netManager.SendToAll(allBytes, DeliveryMethod.ReliableOrdered, source);
+                netManager.SendToAll(allBytes, channel, deliveryMethod, source);
             }
             Get(messageType).ReceiveMessage(reader);
         }

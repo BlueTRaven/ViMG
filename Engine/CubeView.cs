@@ -259,7 +259,6 @@ namespace ViMG
                 ushort id = ids[i];
                 if (usedIds[id] < 0)
                 {
-                    Console.WriteLine(id);
                     usedIds[id] = uniqueIdsLen;
                     uniqueIds[uniqueIdsLen] = id;
                     uniqueIdsLen += 1;
@@ -330,13 +329,13 @@ namespace ViMG
                 chunk.data = bytes.ToArray();
             }
 
-            Console.WriteLine("Chunk {0} Was: {1}", chunk.position, chunk.type.ToString());
-            Console.WriteLine("Size: {0} in palette, {1} bytes", chunk.palette.Length, chunk.data.Length);
-            Console.WriteLine("Palette: ");
-            foreach (ushort id in chunk.palette)
-            {
-                Console.WriteLine(Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air));
-            }
+            //Console.WriteLine("Chunk {0} Was: {1}", chunk.position, chunk.type.ToString());
+            //Console.WriteLine("Size: {0} in palette, {1} bytes", chunk.palette.Length, chunk.data.Length);
+            //Console.WriteLine("Palette: ");
+            //foreach (ushort id in chunk.palette)
+            //{
+            //    Console.WriteLine(Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air));
+            //}
 
             return chunk;
         }

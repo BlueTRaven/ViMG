@@ -29,6 +29,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             netMessage.writer.Put(World.MAX_PLAYERS);
             foreach (NetworkManager.NetPlayer player in GS.netManager.netPlayers)
             {
@@ -54,7 +55,7 @@ namespace Engine.Networking.Messages
             }
             else netMessage.writer.Put((int)0);
 
-                netMessage.Send();
+            netMessage.Send();
         }
 
         public override void ReceiveMessage(NetPacketReader reader)

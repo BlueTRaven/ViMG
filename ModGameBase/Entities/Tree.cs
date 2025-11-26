@@ -36,11 +36,14 @@ namespace ViMG.Entities
 
 		public Tree()
 		{
+			DoesSync = false;
 		}
 
 		public Tree(Vector3 position, int size, CubePosition basePosition)
 		{
-			AlwaysRender = true;
+            DoesSync = false;
+
+            AlwaysRender = true;
 
 			this.Position = position;
 			this.baseSize = size;

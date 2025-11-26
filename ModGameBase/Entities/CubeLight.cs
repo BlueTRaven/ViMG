@@ -22,10 +22,15 @@ namespace ViMG.Entities
 
         public CubeLight()
         {
+            DoesSync = false;
+            DoesMajorSync = false;
         }
 
         public CubeLight(CubePosition position, Vector4 lightColor, Vector2 lightExtents)
         {
+            DoesSync = false;
+            DoesMajorSync = false;
+
             this.trackedPosition = position;
             Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2);
 

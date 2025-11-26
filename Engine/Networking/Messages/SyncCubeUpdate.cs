@@ -43,6 +43,7 @@ namespace Engine.Networking.Messages
 
             ChunkManager.CubeUpdated cubeUpdated = addData as ChunkManager.CubeUpdated? ?? throw new Exception();
             Debug.Assert(cubeUpdated.updated == cubeUpdated.notified);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             netMessage.writer.Put(cubeUpdated.timeUpdated);
             netMessage.writer.Put(cubeUpdated.player?.playerIndex ?? -1);
@@ -142,6 +143,7 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             var action = addData as AuditedCubeUpdate? ?? throw new Exception();
 
@@ -311,6 +313,7 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             var action = addData as AcceptedCubeUpdate? ?? throw new Exception();
 

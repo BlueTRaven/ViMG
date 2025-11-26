@@ -30,11 +30,14 @@ namespace ViMG.Entities
 
         public Heart()
         {
-
+            DoesSync = false;
+            DoesMajorSync = false;
         }
 
         public Heart(Vector3 position) 
         {
+            DoesSync = false;
+            DoesMajorSync = false;
             this.Position = position;
         }
 
@@ -64,9 +67,13 @@ namespace ViMG.Entities
 				{
 					if ((player.Position - Position).Length() < Cube.CUBE_SCALE * 32)
 					{
-						world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
-						world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
-						player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
+						// TODO there are better ways to do this behavior. Entities should generally not have to be aware of networking
+						if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+						{
+							world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
+							world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
+							player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
+						}
 					}
 				}
 			}
@@ -79,8 +86,12 @@ namespace ViMG.Entities
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 
-			world.PassiveSpawnerManager.SpawnCapMultiplier = 1f;
-			world.PassiveSpawnerManager.SpawnChanceMultipler = 1f;
+			// TODO there are better ways to do this behavior. Entities should generally not have to be aware of networking
+			if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+			{
+				world.PassiveSpawnerManager.SpawnCapMultiplier = 1f;
+				world.PassiveSpawnerManager.SpawnChanceMultipler = 1f;
+			}
         }
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)

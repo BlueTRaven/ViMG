@@ -27,12 +27,16 @@ namespace ViMG.Entities
 
 		public AncientAltar()
         {
-
+            DoesSync = false;
+            DoesMajorSync = false;
         }
 
 		public AncientAltar(CubePosition position, float radius)
 		{
-			TrackedPosition = position;
+            DoesSync = false;
+            DoesMajorSync = false;
+
+            TrackedPosition = position;
 			this.radius = radius;
 			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2f);
 		}

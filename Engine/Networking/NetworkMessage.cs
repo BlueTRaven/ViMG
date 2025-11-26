@@ -17,7 +17,7 @@ namespace Engine.Networking
 
         public NetDataWriter writer;
 
-        public DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered;
+        public DeliveryMethod deliveryMethod = DeliveryMethod.ReliableUnordered;
         public byte channel = 0;
 
         public NetworkMessage(int messageType, NetManager netManager, NetPeer? peer)
@@ -32,7 +32,25 @@ namespace Engine.Networking
         {
             if (peer != null)
             {
-                peer.Send(writer, channel, deliveryMethod);
+                //if (deliveryMethod == DeliveryMethod.Unreliable)
+                //{
+                //    var data = writer.Data[..writer.Length];
+                //    var subwriter = new NetDataWriter(false, data.Length + sizeof(ulong));
+                //    int chksum = 0;
+                //    for (int i = 0; i < data.Length; i++)
+                //    {
+                //        chksum += data[i];
+                //    }
+
+                //    subwriter.Put(chksum);
+                //    subwriter.PutSpan(data.AsSpan());
+                //    peer.Send(subwriter, DeliveryMethod.Unreliable);
+                //}
+                //else
+                {
+
+                    peer.Send(writer, channel, deliveryMethod);
+                }
             }
             else
             {

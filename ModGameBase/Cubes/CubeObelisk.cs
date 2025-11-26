@@ -223,12 +223,12 @@ namespace ViMG.Cubes
         private void OffsetFromFace(MeshHelper.CubeFace face, out CubePosition aboveOut,
             out CubePosition leftOut, out CubePosition rightOut, out CubePosition belowOut)
         {
-            CubePosition leftCS = new CubePosition(1, 0, 0);
-            CubePosition rightCS = new CubePosition(-1, 0, 0);
-            CubePosition aboveCS = new CubePosition(0, 1, 0);
-            CubePosition belowCS = new CubePosition(0, -1, 0);
-            CubePosition frontCS = new CubePosition(0, 0, -1);
-            CubePosition backCS = new CubePosition(0, 0, 1);
+            CubePosition leftCS = new CubePosition(1, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+            CubePosition rightCS = new CubePosition(-1, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+            CubePosition aboveCS = new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace);
+            CubePosition belowCS = new CubePosition(0, -1, 0, CubePosition.CoordinateSpace.ChunkSpace);
+            CubePosition frontCS = new CubePosition(0, 0, -1, CubePosition.CoordinateSpace.ChunkSpace);
+            CubePosition backCS = new CubePosition(0, 0, 1, CubePosition.CoordinateSpace.ChunkSpace);
             switch (face)
             {
                 case MeshHelper.CubeFace.LEFT:

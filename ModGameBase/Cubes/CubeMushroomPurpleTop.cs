@@ -33,7 +33,7 @@ namespace ViMG.Cubes
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is a mushroom block
-                if (data.GetCube(parameters.position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
+                if (data.GetCube(parameters.position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
                 {
                     //use the same top texture instead of the ordinary side texture.
                     return new RectangleF(48, 96, 16, 16);

@@ -65,7 +65,7 @@ namespace ViMG.Entities
 
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
-			if (!tracker.HasValue() || tracker.Get() != this)
+			if (tracker.HasValue())
 				world.EntityManager.Remove(this);
 
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);

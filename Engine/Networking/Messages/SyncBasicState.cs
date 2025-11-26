@@ -82,8 +82,12 @@ namespace Engine.Networking.Messages
             {
                 netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             }
+            else
+            {
+                netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            }
 
-            double time = Main.Time;
+                double time = Main.Time;
 
             // TODO this may be necessary
             // If we receive a FullSync and EntityUnloaded message together, the former might be processed AFTER the latter,
@@ -162,6 +166,8 @@ namespace Engine.Networking.Messages
                     break;
                 case SyncType.EntityUnloaded:
                     break;
+                default:
+                    throw new Exception(string.Format("Unknown SyncType {0}", type));
             }
 
             queued.Add(local);
