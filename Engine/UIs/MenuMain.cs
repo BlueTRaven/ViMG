@@ -18,6 +18,7 @@ namespace ViMG.UIs
             Main,
             Worlds,
             WorldCreate,
+            Multiplayer,
             Settings
         }
 
@@ -30,6 +31,9 @@ namespace ViMG.UIs
         private TextHelper.FontInfo fi;
 
         private string worldName;
+        private bool startAsServer;
+        private int serverPort = 9050;
+        private string serverIp = "localhost";
 
         public MenuMain(GameStateManager gsManager) : base(gsManager)
         {
@@ -71,49 +75,63 @@ namespace ViMG.UIs
 
             if (state == MenuState.Main)
             {
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 0, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
-                    new UI.LabelConstructionParameters("Load World", fi, 128, Vector2.Zero),
+                float ypos = 0;
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"), 
+                    new UI.LabelConstructionParameters("Single Player", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     state = MenuState.Worlds;
                     directories = GetWorldSaveDirectories();
                     clicked = true;
                 }
+                ypos++;
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 1, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer);
                 }
+                ypos++;
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * 1, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * (ypos - 1), 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.Continue(GameStateManager.NetworkingMode.Server);
                 }
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * 2, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.Continue(GameStateManager.NetworkingMode.Client);
                 }
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 2, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Multiplayer", fi, 128, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+                {
+                    state = MenuState.Multiplayer;
+                    clicked = true;
+                }
+                ypos++;
+
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager));
                 }
+                ypos++;
 
-                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * 3, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Exit", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     Main.Exit = true;
                 }
+                ypos++;
             }
             else if (state == MenuState.Worlds)
             {
@@ -134,6 +152,8 @@ namespace ViMG.UIs
                             new UI.LabelConstructionParameters("Load " + directories[i], fi, 128, Vector2.Zero),
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                         {
+                            gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
+                            gsManager.TheIsland.netManager.Port = serverPort;
                             gsManager.SetGameState(gsManager.TheIsland);
                             gsManager.TheIsland.BeginLoadWorld(directories[i]);
                         }
@@ -170,13 +190,64 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Create World", fi, 196, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
+                    gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
+                    gsManager.TheIsland.netManager.Port = serverPort;
+
                     if (worldName == "")
                         worldName = "new" + directories.Length;
                     gsManager.SetGameState(gsManager.TheIsland);
                     gsManager.TheIsland.BeginLoadWorld(worldName);
                 }
             }
+            else if (state == MenuState.Multiplayer)
+            {
+                if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(-32, 256, 32, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                       new UI.LabelConstructionParameters("<", fi, 32, Vector2.Zero),
+                       new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32))).clickLeft)
+                {
+                    state = MenuState.Main;
+                    clicked = true;
+                }
 
+                float ypos = 0;
+
+                UI.MakeLabel(new UI.LabelConstructionParameters("IP:", fi, 1000, new Vector2(-108, 48 * ypos)));
+                UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref serverIp, UI.TextInputFlags.AlphaNumericalSpecial, fi);
+                ypos++;
+
+                UI.MakeLabel(new UI.LabelConstructionParameters("Port:", fi, 1000, new Vector2(-108, 48 * ypos)));
+                string portStr = serverPort.ToString();
+                UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref portStr, UI.TextInputFlags.Numerical, fi);
+                int.TryParse(portStr, out serverPort);
+                ypos++;
+
+                if (!clicked && UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Start Server", fi, 196, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+                {
+                    startAsServer = true;
+                    gsManager.TheIsland.netManager.Ip = serverIp;
+                    gsManager.TheIsland.netManager.Port = serverPort;
+                    state = MenuState.Worlds;
+                    directories = GetWorldSaveDirectories();
+                    clicked = true;
+                }
+                ypos++;
+
+                if (!clicked && UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.LabelConstructionParameters("Connect", fi, 196, Vector2.Zero),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+                {
+                    gsManager.netMode = GameStateManager.NetworkingMode.Client;
+                    gsManager.TheIsland.netManager.Ip = serverIp;
+                    gsManager.TheIsland.netManager.Port = serverPort;
+                    gsManager.SetGameState(gsManager.TheIsland);
+                    gsManager.TheIsland.LoadNone();
+                }
+                ypos++;
+            }
             UI.EndParent();
         }
 

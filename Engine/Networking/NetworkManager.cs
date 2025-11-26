@@ -48,7 +48,7 @@ namespace Engine.Networking
             Both = Client | Server
         };
 
-        public readonly bool isServer;
+        public bool isServer;
         public NetManager netManager;
 
         // Local player id
@@ -57,6 +57,9 @@ namespace Engine.Networking
         public int uniqueNetPlayers = 0;
 
         public double StartTime;
+
+        public int Port = 9050;
+        public string Ip = "localhost";
 
         public Statistics[] statistics = new Statistics[Main.FIXED_FPS];
         private ulong maxSent;
@@ -93,13 +96,12 @@ namespace Engine.Networking
             }
         }
 
-        public NetworkManager(bool isServer)
+        public NetworkManager()
         {
             netManager = new NetManager(this);
             
             netManager.EnableStatistics = true;
             netManager.ChannelsCount = 4;
-            this.isServer = isServer;
 
             Array.Fill(netPlayers, new NetPlayer());
 
@@ -117,7 +119,7 @@ namespace Engine.Networking
             StartTime = Main.Time;
             if (isServer)
             {
-                netManager.Start(9050);
+                netManager.Start(Port);
                 netPlayers[0] = new NetPlayer
                 {
                     playerId = 0,
@@ -129,7 +131,7 @@ namespace Engine.Networking
             else
             {
                 netManager.Start();
-                netManager.Connect("localhost", 9050, "");
+                netManager.Connect(Ip, Port, "");
                 Console.WriteLine("Connected to server");
             }
         }

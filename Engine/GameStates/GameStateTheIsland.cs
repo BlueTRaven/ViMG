@@ -56,6 +56,7 @@ namespace ViMG.GameStates
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
+            netManager = new NetworkManager();
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -152,10 +153,10 @@ namespace ViMG.GameStates
             switch (manager.netMode)
             {
                 case GameStateManager.NetworkingMode.Server:
-                    netManager = new NetworkManager(true);
+                    netManager.isServer = true;
                     break;
                 case GameStateManager.NetworkingMode.Client:
-                    netManager = new NetworkManager(false);
+                    netManager.isServer = false;
                     break;
                 case GameStateManager.NetworkingMode.Singleplayer:
                 default:
