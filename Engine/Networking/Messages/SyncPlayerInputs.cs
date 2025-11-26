@@ -86,9 +86,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             double time = reader.GetDouble();
             int frame = reader.GetInt();
@@ -102,7 +102,7 @@ namespace Engine.Networking.Messages
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
 
-            var player = GS.GetWorld().player[whoami];
+            var player = GS.GetWorld()?.player[whoami];
             if (player != null)
             {
                 var qaction = new QueuedInput
@@ -114,24 +114,16 @@ namespace Engine.Networking.Messages
                     rotation = rotation,
                 };
                 
-                //if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+                if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
                     DoAction(qaction, GS.GetWorld().player);
-                //else queued.Add(qaction);
+                else queued.Add(qaction);
             }
         }
 
         //private static double t = 0;
         public void Apply(Player?[] players)
         {
-            Apply2(players);
-            Apply2(players);
-        }
-
-        private void Apply2(Player[] players)
-        {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
-
-            double lastProcessed = Main.Time;
 
             //if (Main.Time - t > 1)
             //{
@@ -140,18 +132,17 @@ namespace Engine.Networking.Messages
             //    Console.WriteLine("{0}", int.Max(queued1.Count, queued2.Count));
             //}
 
+            queued.OrderBy(x => x.time);
+
             foreach (QueuedInput qinput in queued)
             {
                 if (Main.Time >= qinput.time)
                 {
-                    lastProcessed = double.Max(qinput.time, lastProcessed);
-
                     DoAction(qinput, players);
                 }
                 else
                 {
-                    if (qinput.time > lastProcessed)
-                        otherBuffer.Add(qinput);
+                    otherBuffer.Add(qinput);
                 }
             }
 

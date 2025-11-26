@@ -50,9 +50,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             var playerId = reader.GetByte();
             var entityId = reader.GetULong();

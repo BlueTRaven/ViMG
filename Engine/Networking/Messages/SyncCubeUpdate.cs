@@ -54,9 +54,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             double time = reader.GetDouble();
             int playerId = reader.GetInt();
@@ -183,9 +183,9 @@ namespace Engine.Networking.Messages
             }
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             var time = reader.GetDouble();
             var index = reader.GetByte();
@@ -324,9 +324,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             var accepted = reader.GetBool();
             var index = reader.GetByte();

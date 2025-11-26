@@ -26,7 +26,7 @@ namespace Engine.Networking.Messages
 
         }
 
-        public virtual void ReceiveMessage(NetPacketReader reader)
+        public virtual void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
             
         }

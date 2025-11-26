@@ -135,9 +135,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             double time = reader.GetDouble();
 
@@ -177,30 +177,19 @@ namespace Engine.Networking.Messages
 
         public void Apply(EntityManager entityManager, EntityManagerIO entIO)
         {
-            Apply2(entityManager, entIO);
-            Apply2(entityManager, entIO);
-        }
-
-        private void Apply2(EntityManager entityManager, EntityManagerIO entIO)
-        {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
 
-            double lastProcessed = 0;
+            queued.OrderBy(x => x.time);
 
             foreach (QueuedSyncEntity queuedSync in queued)
             {
                 if (Main.Time >= queuedSync.time)
                 {
-                    lastProcessed = double.Max(queuedSync.time, lastProcessed);
-
                     DoAction(queuedSync, entityManager, entIO);
                 }
                 else
                 {
                     // Ignore syncs that are "in the past" further than the latest one we processed
-                    if (queuedSync.time < lastProcessed && (queuedSync.type == SyncType.BasicState || queuedSync.type == SyncType.SuperSimple))
-                        continue;
-
                     otherBuffer.Add(queuedSync);
                 }
             }

@@ -61,9 +61,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public unsafe override void ReceiveMessage(NetPacketReader reader)
+        public unsafe override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             var chunkPosition = reader.Get<ChunkPosition>();
 

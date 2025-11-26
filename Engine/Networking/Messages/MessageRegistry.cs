@@ -79,7 +79,7 @@ namespace Engine.Networking.Messages
                 reader.GetInt();
                 netManager.SendToAll(allBytes, channel, deliveryMethod, source);
             }
-            Get(messageType).ReceiveMessage(reader);
+            Get(messageType).ReceiveMessage(reader, source);
         }
     }
 }

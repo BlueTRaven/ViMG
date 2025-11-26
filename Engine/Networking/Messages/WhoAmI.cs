@@ -1,7 +1,9 @@
-﻿using LiteNetLib;
+﻿using BepuPhysics.Constraints;
+using LiteNetLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -31,9 +33,9 @@ namespace Engine.Networking.Messages
             netMessage.Send();
         }
 
-        public override void ReceiveMessage(NetPacketReader reader)
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
-            base.ReceiveMessage(reader);
+            base.ReceiveMessage(reader, peer);
 
             int whoAmI = reader.GetInt();
             GS.netManager.whoAmI = whoAmI;

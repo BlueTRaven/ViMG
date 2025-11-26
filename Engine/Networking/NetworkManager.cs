@@ -18,7 +18,7 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener
     {
-        public const double TIME_TRAVEL_DELAY = 0;//0.25;// Main.FIXED_STEP * 3;
+        public const double TIME_TRAVEL_DELAY = 0.75;// Main.FIXED_STEP * 3;
 
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
@@ -66,6 +66,7 @@ namespace Engine.Networking
         private ulong maxRecieved;
         private double lastStatisticCheck;
 
+        private double timeUpdateTime = 0;
         private double dcTime = 0;
 
         public struct Statistics
@@ -177,6 +178,12 @@ namespace Engine.Networking
                     }
                 }
                 else dcTime = Main.Time;
+
+                if (Main.Time - timeUpdateTime > 0.125)
+                {
+                    Main.Registry.MessageRegistry.SendMessageToAll(WhoAmI.Instance, netManager, null);
+                    timeUpdateTime = Main.Time;
+                }
             }
         }
 
