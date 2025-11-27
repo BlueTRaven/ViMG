@@ -18,6 +18,7 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class Skeleton2 : Entity, IHasStats, ISyncBasicState
     {
+        // TODO re-implement bone whistle behavior
         public AIWalkerMelee ai;
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;

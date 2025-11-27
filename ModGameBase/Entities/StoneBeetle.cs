@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,17 +13,14 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class StoneBeetle : Entity, IHasStats
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class StoneBeetle : Entity, IHasStats, ISyncBasicState
     {
-        private static VerySimpleMesh mesh;
-        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("stone_beetle");
-
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
 
         private int maxHealth = 20;
-
-        private float alive;
 
         public AIWalkerShooter ai;
 
@@ -68,51 +66,9 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            alive += (float)deltaTime;
-
             AIWalkerShooter.Funcs<StoneBeetle> funcs = new AIWalkerShooter.Funcs<StoneBeetle> { ai = ai, entity = this };
             funcs.Update(deltaTime);
         }
-
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
-
-        //    if (mesh.IBO == null)
-        //    {
-        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-        //        //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-        //    }
-
-        //    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(ai.Facing, directionalSourceRect);
-
-        //    if (ai.GetState() == AIWalkerShooter<StoneBeetle>.State.Normal)
-        //    {
-        //        if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
-        //        {
-        //            float animP = (alive % 0.75f) / 0.75f;
-
-        //            int frame = (int)(animP * 2f);
-
-        //            sourceRect.x += 16 * frame;
-        //        }
-        //    }
-
-        //    if (ai.IsInRangeOfTarget)
-        //    {
-        //        sourceRect = new RectangleF(0, 48, 16, 16);
-        //    }
-
-        //    Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
-
-        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-        //        Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-        //        Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-        //        Matrix.CreateTranslation(Position), sourceRect, tintColor));
-
-        //    if (ai.Health < maxHealth)
-        //        DrawHelper3D.DrawHealthbar(device, ai.Health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-        //}
 
         public Stats GetStats()
         {
@@ -127,6 +83,44 @@ namespace ViMG.Entities
         {
             ai.Health = stats.HP;
             ai.MaxHealth = stats.MaximumHP;
+        }
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            Get(out var state);
+            state.OnSave(saveBytes);
+
+            ai?.OnSave(saveBytes);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+            int index = 0;
+            var bs = new BasicState();
+            bs.OnLoad(loadBytes, ref index);
+            Set(ref bs);
+
+            ai?.OnLoad(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            BasicState aiState = new BasicState();
+            ai?.Get(out aiState);
+            aiState.position = Position;
+            aiState.rotation = Quaternion.Identity;
+            state = aiState;
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+
+            ai?.Set(in state);
         }
     }
 }

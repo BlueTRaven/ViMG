@@ -559,11 +559,11 @@ namespace ViMG.Entities.Renderers
 
                 RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
 
-                AIFlierMelee.Funcs<SnakeFlying> funcs = new AIFlierMelee.Funcs<SnakeFlying> { ai = snake.aiFlying, entity = snake };
+                AIFlierMelee.Funcs<SnakeFlying> funcs = new AIFlierMelee.Funcs<SnakeFlying> { ai = snake.ai, entity = snake };
                 if (funcs.GetState() == AIFlierMelee.State.Attack)
                 {
                     const int ATT_NUM_FRAMES = 4;
-                    int frame = (int)((1 - (snake.aiFlying.AttackTimer / snake.aiFlying.AttackLockTime)) * ATT_NUM_FRAMES);
+                    int frame = (int)((1 - (snake.ai.AttackTimer / snake.ai.AttackLockTime)) * ATT_NUM_FRAMES);
                     sourceRectSnake = new RectangleF(32 * frame, 34, 32, 32);
                 }
 

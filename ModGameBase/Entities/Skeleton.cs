@@ -53,6 +53,7 @@ namespace ViMG.Entities
 
 		public Skeleton() { }
 
+		[Obsolete()]
 		public Skeleton(Vector3 position)
 		{
 			this.Position = position;

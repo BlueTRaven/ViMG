@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Constraints;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace ViMG.Entities
 {
     public class AIFlierMelee
     {
+		private const int VERSION = 0;
+
 		public enum State
 		{
 			Normal,			//walking/idling/moving towards player/etc
@@ -337,5 +340,40 @@ namespace ViMG.Entities
 				return ai.state;
 			}
 		}
-	}
+
+        public void OnSave(List<byte> saveBytes)
+        {
+            SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                health = Health,
+                velocity = Velocity,
+                position = Vector3.Zero,
+                rotation = Quaternion.Identity,
+                state = (int)this.state,
+                timers = { [2] = attackTimer, [3] = InvulnTimer },
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Health = state.health;
+            Velocity = state.velocity;
+            this.state = (State)state.state;
+            attackTimer = state.timers[2];
+            InvulnTimer = state.timers[3];
+        }
+    }
 }

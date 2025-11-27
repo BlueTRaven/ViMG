@@ -8,13 +8,16 @@ using ViMG.Cubes;
 using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
+using ViMG.Buffs;
+using Engine.Networking;
 
 namespace ViMG.Entities
 {
-    public class Imp : Entity, IHitboxOwner
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class Imp : Entity, IHasStats, ISyncBasicState, IHitboxOwner
     {
-		private static VerySimpleMesh mesh;
-
+        // TODO refactor to use AIWalkerShooter
 		private bool onGround;
 		private bool shouldJump;
 
@@ -30,6 +33,7 @@ namespace ViMG.Entities
 		private float invulnTimer;
 		private float alive;
 		private float fireTimer;
+		private float fireTime;
 		private const float FIRE_TIME = 2.25f;
 
 		private float idleTimer;
@@ -151,7 +155,7 @@ namespace ViMG.Entities
 								8, visStats, stats), 
 								new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
 
-							fireTimer = FIRE_TIME;
+							fireTimer = fireTime;
                         }
 
 						Velocity.X *= 0.85f;
@@ -222,6 +226,8 @@ namespace ViMG.Entities
 			shouldJump = false;
 			onGround = false;
 			UpdateCollision();
+
+            fireTime = FIRE_TIME;
 
             if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
                 world.EntityManager.Remove(this);
@@ -364,26 +370,57 @@ namespace ViMG.Entities
 			}
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
+        public Stats GetStats()
+        {
+            return new Stats()
+            {
+                HP = health,
+                MaximumHP = maxHealth,
+                AttackSpeed = FIRE_TIME,
+            };
+        }
 
-		//	/*if (mesh.VBO == null)
-		//		mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-		//		//MakeMesh(device);
+        public void SetStats(Stats stats)
+        {
+            health = stats.HP;
+            maxHealth = stats.MaximumHP;
+			fireTime = stats.AttackSpeed;
+        }
 
-		//	RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
 
-		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
+            Get(out var state);
+            state.OnSave(saveBytes);
+        }
 
-		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("imp"),
-		//		DrawHelper.BlackPixel, Main.assetsManager.GetAsset<Texture2D>("imp_emissive"), mesh.VBO, mesh.IBO,
-		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));*/
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
 
-		//	if (health < maxHealth)
-		//		DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
-		//}
-	}
+            int index = 0;
+            var bs = new BasicState();
+            bs.OnLoad(loadBytes, ref index);
+            Set(ref bs);
+        }
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				rotation = Quaternion.Identity,
+				timers = { [0] = fireTimer, [1] = fireTime, [2] = invulnTimer},
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+			fireTimer = state.timers[0];
+			fireTime = state.timers[1];
+			invulnTimer = state.timers[2];
+        }
+    }
 }

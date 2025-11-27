@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,6 +15,8 @@ namespace ViMG.Entities
 	//Walks towards, then shoots at, the player.
     public class AIWalkerShooter
     {
+		private const int VERSION = 0;
+
         public enum State
         {
             Normal,
@@ -431,5 +434,50 @@ namespace ViMG.Entities
 				return ai.state;
 			}
 		}
-	}
+
+        public void OnSave(List<byte> saveBytes)
+        {
+            SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+
+            SaveHelper.SaveVector2(saveBytes, idleDirection);
+            SaveHelper.SaveVector2(saveBytes, idleHome);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            idleDirection = SaveHelper.LoadVector2(loadBytes, ref index);
+            idleHome = SaveHelper.LoadVector2(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                health = Health,
+                velocity = Velocity,
+                position = Vector3.Zero,
+                rotation = Quaternion.Identity,
+                state = (int)this.state,
+                timers = { [0] = idleTimer, [1] = idleMoveTimer, [2] = attackTimer, [3] = InvulnTimer },
+                counters = { [0] = idleMovements },
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Health = state.health;
+            Velocity = state.velocity;
+            this.state = (State)state.state;
+            idleTimer = state.timers[0];
+            idleMoveTimer = state.timers[1];
+            attackTimer = state.timers[2];
+            InvulnTimer = state.timers[3];
+            idleMovements = state.counters[0];
+        }
+    }
 }
