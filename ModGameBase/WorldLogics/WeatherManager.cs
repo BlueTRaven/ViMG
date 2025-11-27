@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using System.Reflection.Metadata;
+using LiteNetLib.Utils;
 
 namespace ViMG.WorldLogics
 {
@@ -756,6 +757,37 @@ namespace ViMG.WorldLogics
                     Mesh = skyboxCloudsMesh,
                 });
             }
+        }
+
+        public void Serialize(NetDataWriter writer)
+        {
+            writer.Put((int)this.currentWeather.WType);
+            writer.Put((int)this.nextTransitionType);
+            writer.Put(this.nextTransitionTime);
+            writer.Put(this.transitionTimer);
+            writer.Put(currentTransition.Time);
+            writer.Put((int)this.currentTransition.A.WType);
+            writer.Put((int)this.currentTransition.B.WType);
+            writer.Put(lightningTimer);
+            writer.Put(nextLightningTimer);
+            writer.Put(lightningAngle);
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+            currentWeather = MakeWeatherState((WeatherType)reader.GetInt());
+            nextTransitionType = (WeatherType)reader.GetInt();
+            nextTransitionTime = reader.GetFloat();
+            transitionTimer = reader.GetFloat();
+            currentTransition = new Transition
+            {
+                Time = reader.GetFloat(),
+                A = MakeWeatherState((WeatherType)reader.GetInt()),
+                B = MakeWeatherState((WeatherType)reader.GetInt()),
+            };
+            lightningTimer = reader.GetFloat();
+            nextLightningTimer = reader.GetFloat();
+            lightningAngle = reader.GetFloat();
         }
     }
 }

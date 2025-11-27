@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +47,7 @@ namespace ViMG.Items
             player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
             player.Magic -= 2;
-            player.SpawnHitboxLater(index, damage, DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
+            player.SpawnHitboxLater(index, damage, DamageType.Magic, -(player as IRotatable).ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
             
             return val;
         }

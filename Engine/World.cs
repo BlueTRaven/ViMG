@@ -78,7 +78,7 @@ namespace ViMG
 		private WorldInfoIO worldInfoIO;
 		public ChunkManagerIO ChunkIO;
 		public EntityManagerIO EntIO;
-		private WorldLogic logic;
+		public WorldLogic Logic;
 
 		public HousingManager HousingManager;
 
@@ -122,7 +122,7 @@ namespace ViMG
 			EntityManager = prototype.EntityManager;
 			WorldInfo = prototype.WorldInfo;
 			Skybox = prototype.Skybox;
-			logic = prototype.Logic;
+			Logic = prototype.Logic;
 			PhysicsInfo = prototype.PhysicsInfo;
 
 			HousingManager = prototype.HousingManager;
@@ -300,7 +300,7 @@ namespace ViMG
 			if (GetLocalPlayer() != null)
 				Main.camera.Position = GetLocalPlayer().Position;
 
-			logic.FinishLoading(this, device);
+			Logic.FinishLoading(this, device);
 		}
 
 		public void UnfixedUpdate()
@@ -342,7 +342,13 @@ namespace ViMG
 			SyncInventoryUpdate.Instance.Apply(EntityManager);
 			SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
 
-			logic.Update(this, deltaTime);
+			if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && Main.Time - timeSyncTime > 1)
+			{
+				Main.Registry.MessageRegistry.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+				timeSyncTime = Main.Time;
+			}
+
+			Logic.Update(this, deltaTime);
 
 			//TODO: remove allocation somehow
 			//Perhaps an expanding array
@@ -462,7 +468,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (logic.AllowsLoadingNextLayer(this) && nextWorld == null)
+            if (Logic.AllowsLoadingNextLayer(this) && nextWorld == null)
 			{
 				if (player[localPlayerIndex].Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
 					nextLayer = Layer + 1;
@@ -629,6 +635,7 @@ namespace ViMG
 
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
+        private double timeSyncTime;
 
         public void Draw(GraphicsDevice device)
 		{
@@ -800,7 +807,7 @@ namespace ViMG
 			ProjectileManager.Draw(device);
 			EntityManager.Draw(device, null);
 
-			logic.Draw(this, device);
+			Logic.Draw(this, device);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
@@ -820,7 +827,7 @@ namespace ViMG
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            logic.OnCubeUpdated(updating, updatedId);
+            Logic.OnCubeUpdated(updating, updatedId);
 
 			HousingManager.OnCubeUpdate(this, updating, updatedId);
 			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
@@ -1195,7 +1202,7 @@ namespace ViMG
 			isDisposed = true;
 			ChunkLoadManager.Dispose();
 			LightManager.Dispose();
-			logic.Dispose();
+			Logic.Dispose();
 
 			PhysicsInfo.Simulation.Dispose();
 			PhysicsInfo.Properties.Dispose();

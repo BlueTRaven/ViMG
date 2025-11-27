@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Engine.Networking.Messages;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace Engine.Mods
         public BuffRegistry? BuffRegistry;
         public RendererRegistry? RendererRegistry;
         public WorldLogicRegistry? WorldLogicRegistry;
+        public MessageRegistry? MessageRegistry;
 
         public ModRegistryService(GraphicsDevice? device)
         {

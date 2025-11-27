@@ -162,6 +162,17 @@ namespace ViMG
             }
 
             foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.MessageRegistry?.RegisterAll();
+                    service.MessageRegistry?.PostRegistration();
+                    MessageRegistry.AddFromOther(service.MessageRegistry);
+                }
+            }
+
+            foreach (Mod mod in ModRegistry.GetIterable())
 			{ 
 				mod.OnRegister();
 			}

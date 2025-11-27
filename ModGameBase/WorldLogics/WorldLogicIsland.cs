@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -42,9 +43,11 @@ namespace ViMG.WorldLogics
         
 		private int lavaLight;
 
-		private WeatherManager? weatherManager = null;
+		public WeatherManager? WeatherManager = null;
 
-		private float weatherChangeTimer;
+		private double timeSyncWeather;
+
+		public float WeatherChangeTimer;
 		private static Vector2 passiveWeatherTime = new Vector2(60 * 4f, 60 * 12f);
 		private static Vector2 activeWeatherTime = new Vector2(60 * 2f, 60 * 12f);
 		private const float ACTIVE_WEATHER_CHANCE = 0.25f;
@@ -58,7 +61,7 @@ namespace ViMG.WorldLogics
         {
             base.FinishLoading(world, device);
 
-            weatherManager = new WeatherManager(device);
+            WeatherManager = new WeatherManager(device);
 
             float[] splits = [1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f];
 
@@ -120,7 +123,13 @@ namespace ViMG.WorldLogics
 			base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-			foreach (Player player in world.player)
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && Main.Time - timeSyncWeather > 1)
+            {
+                Main.Registry.MessageRegistry.SendMessageToAll(SyncWeather.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+                timeSyncWeather = Main.Time;
+            }
+
+            foreach (Player player in world.player)
 			{
 				if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && player != null && player.Position.Y / Cube.CUBE_SCALE < 140)
 				{
@@ -150,9 +159,9 @@ namespace ViMG.WorldLogics
 				}
 			}
 
-			if (weatherChangeTimer <= 0 || Main.inputManager.JustPressed(Keys.L))
+			if (WeatherChangeTimer <= 0 || Main.inputManager.JustPressed(Keys.L))
 			{
-				if (!weatherManager.IsTransitioning())
+				if (!WeatherManager.IsTransitioning())
 				{
 					bool isActive = Main.random.NextFloat() < ACTIVE_WEATHER_CHANCE;
 
@@ -161,20 +170,20 @@ namespace ViMG.WorldLogics
 					if (!isActive)
 					{
 						types = WeatherManager.PassiveWeatherTypes;
-						weatherChangeTimer = Main.random.NextFloat(passiveWeatherTime.X, passiveWeatherTime.Y);
+						WeatherChangeTimer = Main.random.NextFloat(passiveWeatherTime.X, passiveWeatherTime.Y);
 					}
 					else
 					{
 						types = WeatherManager.ActiveWeatherTypes;
-						weatherChangeTimer = Main.random.NextFloat(activeWeatherTime.X, activeWeatherTime.Y);
+						WeatherChangeTimer = Main.random.NextFloat(activeWeatherTime.X, activeWeatherTime.Y);
 					}
 
 					WeatherManager.WeatherType nextWeather = types[Main.random.Next(0, types.Length)];
 
-					weatherManager.DoTransition(nextWeather, 15f);
+					WeatherManager.DoTransition(nextWeather, 15f);
 				}
 			}
-			else weatherChangeTimer -= (float)deltaTime;
+			else WeatherChangeTimer -= (float)deltaTime;
 
 			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
 			if (localPlayer != null && CubePosition.FromWorldSpace(localPlayer.Position).Y > 140)
@@ -197,7 +206,7 @@ namespace ViMG.WorldLogics
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
 
-				weatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
+				WeatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
 
 				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
 				{
@@ -250,7 +259,7 @@ namespace ViMG.WorldLogics
         {
             base.Draw(world, device);
 
-			weatherManager.Draw(device, world);
+			WeatherManager.Draw(device, world);
             /*if (Main.inputManager.JustPressed(Keys.V))
             {
                 directionalLight.Dispose();

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -40,7 +41,7 @@ namespace ViMG.Items
             float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
+            player.SpawnHitboxLater(index, damage, DamageType.Melee, -(player as IRotatable).Forward, knockback, meleeStats.range);
 
             actionStats.animationType = UseAnimationType.SwingHorizontal;
 
