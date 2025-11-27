@@ -104,7 +104,7 @@ namespace ViMG
 		public const bool DO_DETAIL = false;
 		public const bool TRANSPARENT_ORES = false;
 		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
-		public static bool ENABLE_ENT_SPAWNING = false;
+		public static bool ENABLE_ENT_SPAWNING = true;
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
 		public const bool DO_RENDER_MESHING = true;

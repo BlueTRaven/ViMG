@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.GameStates;
 using ViMG.IMGUIImpl;
 
 namespace Engine.Networking
@@ -48,7 +49,8 @@ namespace Engine.Networking
             Both = Client | Server
         };
 
-        public bool isServer;
+        public bool IsServer => Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server;
+        public bool IsClient => Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client;
         public NetManager netManager;
 
         // Local player id
@@ -106,7 +108,7 @@ namespace Engine.Networking
 
             Array.Fill(netPlayers, new NetPlayer());
 
-            if (isServer)
+            if (IsServer)
             {
                 // SimulateLatency seems to be pretty buggy. It'll sometimes just hold onto packets for a long time for no apparent reason.
                 //netManager.SimulateLatency = true;
@@ -115,10 +117,10 @@ namespace Engine.Networking
             }
         }
 
-        public void Connect()
+        public void Connect(GameStateManager.NetworkingMode netMode)
         {
             StartTime = Main.Time;
-            if (isServer)
+            if (IsServer)
             {
                 netManager.Start(Port);
                 netPlayers[0] = new NetPlayer
@@ -129,7 +131,7 @@ namespace Engine.Networking
                 uniqueNetPlayers += 1;
                 Console.WriteLine("Started server on port 9050");
             }
-            else
+            else if (IsClient)
             {
                 netManager.Start();
                 netManager.Connect(Ip, Port, "");
@@ -167,7 +169,16 @@ namespace Engine.Networking
                 lastStatisticCheck = Main.Time;
             }
 
-            if (!isServer)
+            if (IsServer)
+            {
+                if (Main.Time - timeUpdateTime > 0.125)
+                {
+                    Main.Registry.MessageRegistry.SendMessageToAll(WhoAmI.Instance, netManager, null);
+                    timeUpdateTime = Main.Time;
+                }
+            }
+
+            if (IsClient)
             {
                 if (netManager.ConnectedPeersCount == 0)
                 {
@@ -178,12 +189,6 @@ namespace Engine.Networking
                     }
                 }
                 else dcTime = Main.Time;
-
-                if (Main.Time - timeUpdateTime > 0.125)
-                {
-                    Main.Registry.MessageRegistry.SendMessageToAll(WhoAmI.Instance, netManager, null);
-                    timeUpdateTime = Main.Time;
-                }
             }
         }
 
@@ -223,54 +228,57 @@ namespace Engine.Networking
 
         public void OnPeerConnected(NetPeer peer)
         {
-            if (isServer)
+            lock (this)
             {
-                var world = Main.gameStateManager.TheIsland.GetWorld();
-                int index = -1;
-                for (int i = 0; i < World.MAX_PLAYERS; i++)
+                if (IsServer)
                 {
-                    if (netPlayers[i].playerId == -1)
+                    var world = Main.gameStateManager.TheIsland.GetWorld();
+                    int index = -1;
+                    for (int i = 0; i < World.MAX_PLAYERS; i++)
                     {
-                        index = i;
+                        if (netPlayers[i].playerId == -1)
+                        {
+                            index = i;
+                        }
                     }
+
+                    netPlayers[index] = new NetPlayer
+                    {
+                        playerId = index,
+                        peerId = peer.Id,
+                    };
+                    uniqueNetPlayers += 1;
+
+                    Player p = new Player();
+                    p.playerIndex = index;
+                    // TODO
+                    p.FirstCreated(world.WorldInfo);
+                    world.EntityManager.Add(p);
+                    world.player[index] = p;
+                    world.ChunkLoadManager.LoadAroundTarget(world);
+                    //Inform peer of its id
+                    Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
+                    // Inform peer of existant entities and ids, including its own Player
+                    Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, world.player.Where(x => x != null).ToArray());
+                    // Inform others of new entity and id
+                    Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
+                    var sync = new SyncChunk.ChunkToSync
+                    {
+                        chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),
+                    };
+                    Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                    Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
                 }
-
-                netPlayers[index] = new NetPlayer
+                else
                 {
-                    playerId = index,
-                    peerId = peer.Id,
-                };
-                uniqueNetPlayers += 1;
-
-                Player p = new Player();
-                p.playerIndex = index;
-                // TODO
-                p.FirstCreated(world.WorldInfo);
-                world.EntityManager.Add(p);
-                world.player[index] = p;
-                world.ChunkLoadManager.LoadAroundTarget(world);
-                //Inform peer of its id
-                Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
-                // Inform peer of existant entities and ids, including its own Player
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, world.player.Where(x => x != null).ToArray());
-                // Inform others of new entity and id
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
-                var sync = new SyncChunk.ChunkToSync
-                {
-                    chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),
-                };
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
-            }
-            else
-            {
-                Console.WriteLine("Connected to server at {0}.", peer);
+                    Console.WriteLine("Connected to server at {0}.", peer);
+                }
             }
         }
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            if (isServer)
+            if (IsServer)
             {
                 var world = Main.gameStateManager.TheIsland.GetWorld();
                 int index = -1; 
@@ -284,7 +292,7 @@ namespace Engine.Networking
 
                 Debug.Assert(world.localPlayerIndex != playerIndex);
                 Debug.Assert(world.player[playerIndex] != null);
-                Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {1}", peer, playerIndex, disconnectInfo.ToString());
+                Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 world.EntityManager.Remove(world.player[playerIndex]);
                 world.player[playerIndex] = null;
                 netPlayers[index] = new NetPlayer();

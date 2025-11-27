@@ -160,8 +160,13 @@ namespace ViMG.Entities
 		{
 			// Shouldn't add entities if not server or singleplayer?
 			// What about player entities...?
-			//Debug.Assert(Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client);
-			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client) return;
+			//Debug.Assert(Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client, "Created entity on client", "Tried to create entity {0} on client", entity.ToString());
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+			{
+				Console.WriteLine("Tried to create entity {0} on client", entity.ToString());
+
+                return;
+			}
 
             entity.SetId(GetUniqueId());
 

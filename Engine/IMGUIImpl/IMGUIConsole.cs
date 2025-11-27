@@ -321,6 +321,11 @@ namespace ViMG.IMGUIImpl
                 File.Copy("current_run.txt", "previous_run.txt", true);
         }
 
+        public static FastList<string> GetHistory()
+        {
+            return lines;
+        }
+
         public static unsafe void Console()
         {
             if (textWriter == null)

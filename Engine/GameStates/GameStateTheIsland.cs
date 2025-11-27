@@ -150,20 +150,8 @@ namespace ViMG.GameStates
 
             netManager?.Disconnect();
 
-            switch (manager.netMode)
-            {
-                case GameStateManager.NetworkingMode.Server:
-                    netManager.isServer = true;
-                    break;
-                case GameStateManager.NetworkingMode.Client:
-                    netManager.isServer = false;
-                    break;
-                case GameStateManager.NetworkingMode.Singleplayer:
-                default:
-                    break;
-            }
-
-            netManager?.Connect();
+            if (manager.netMode != GameStateManager.NetworkingMode.Singleplayer)
+                netManager?.Connect(manager.netMode);
         }
 
         public override void OnClose(GameState changingTo)

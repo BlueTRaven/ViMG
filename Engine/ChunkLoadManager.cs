@@ -625,7 +625,9 @@ namespace ViMG
 
                 if (allUnloaded)
                 {
-                    entIO.Serialize(pos);
+                    // Don't bother serializing on client - we never deserialize things
+                    if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
+                        entIO.Serialize(pos);
 
                     entityManager.Unload(pos);
                     chunkMesher?.Unload(pos);

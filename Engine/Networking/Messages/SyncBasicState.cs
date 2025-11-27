@@ -45,6 +45,7 @@ namespace Engine.Networking.Messages
 
         private struct QueuedSyncEntity
         {
+            public DateTime actualReceiveTime;
             public SyncType type;
             public BasicState basicState;
             public EntityManagerIO.EntityData fullState;
@@ -171,8 +172,9 @@ namespace Engine.Networking.Messages
                     throw new Exception(string.Format("Unknown SyncType {0}", type));
             }
 
-            //DoAction(local, GS.GetWorld().EntityManager, GS.GetWorld().EntIO);
-            queued.Add(local);
+            local.actualReceiveTime = DateTime.Now;
+            DoAction(local, GS.GetWorld().EntityManager, GS.GetWorld().EntIO);
+            //queued.Add(local);
         }
 
         public void Apply(EntityManager entityManager, EntityManagerIO entIO)
@@ -183,13 +185,13 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedSyncEntity queuedSync in queued)
             {
+                Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
                 if (Main.Time >= queuedSync.time)
                 {
                     DoAction(queuedSync, entityManager, entIO);
                 }
                 else
                 {
-                    // Ignore syncs that are "in the past" further than the latest one we processed
                     otherBuffer.Add(queuedSync);
                 }
             }

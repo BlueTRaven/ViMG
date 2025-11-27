@@ -166,7 +166,7 @@ namespace ViMG
 		private MouseState previousMS;
 		private Vector2 previousMousePosition;
 
-		public State state;
+		public State state = State.Normal;
 
 		//private bool onGround;
 		private bool inRope;
@@ -290,7 +290,7 @@ namespace ViMG
 
 		public bool IsInControl => inputLockupTimer <= 0 && !hasMenuOpen;
 		// Used for multiplayer sync
-		private bool hasMenuOpen;
+		public bool hasMenuOpen;
 
 		public double TimeSinceInputSynced;
 
@@ -514,9 +514,13 @@ namespace ViMG
 			if (IsLocalPlayer)
 			{
 				if (Main.inputManager.JustPressed(Keys.G))
-					Main.Debug = !Main.Debug;
+				{
+					if (state == State.Noclip)
+						state = State.Normal;
+					else state = State.Noclip;
+				}
 
-				if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) 
+				if ((Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer) 
 				{
 					hasMenuOpen = true;
 				}
@@ -532,15 +536,11 @@ namespace ViMG
 				if (Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId != playerIndex)
 				{
 					world.EntityManager.Remove(this);
+					return;
 				}
 			}
 
-			if (Main.Debug && IsLocalPlayer)
-				state = State.Noclip;
-			else if (state == State.Noclip)
-				state = State.Normal;
-
-			if (!Main.Debug && (!world.ChunkManager.IsInWorldBounds(Position) ||
+			if (state != State.Noclip && (!world.ChunkManager.IsInWorldBounds(Position) ||
 				!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
 			{
 				//world.ChunkLoadManager.PrintLoadState(ChunkPosition.WorldSpaceChunk(Position));
@@ -2219,24 +2219,29 @@ namespace ViMG
 
         public void Set(ref readonly BasicState state)
         {
-			if ((this.Position - state.position).Length() > Cube.CUBE_SCALE)
+			if (!IsLocalPlayer)
 			{
-				this.Position = state.position;
-				world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (state.position - BODY_OFFSET).ToNumerics();
+				SetPositionWithOffset(state.position);
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
+				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
+				this.Rotation = state.rotation.ToVector4().ToVector3();
+				this.Health = state.health;
+				this.state = (State)state.state;
+				this.useTimer = state.timers[0];
+				this.preUseTimer = state.timers[1];
+				this.invulnTimer = state.timers[2];
+				this.inputLockupTimer = state.timers[3];
+				this.hasMenuOpen = state.counters[0] == 1;
 			}
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
-			world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
-			//this.Rotation = state.rotation.ToVector4().ToVector3();
-			this.Health = state.health;
-			this.state = (State)state.state;
-			//this.useTimer = state.timers[0];
-			//this.preUseTimer = state.timers[1];
-			this.invulnTimer = state.timers[2];
-			this.inputLockupTimer = state.timers[3];
-			this.hasMenuOpen = state.counters[0] == 1;
         }
 
-		public uint GetInputBitSet()
+		public void SetPositionWithOffset(Vector3 position)
+		{
+            this.Position = position;
+            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (position - BODY_OFFSET).ToNumerics();
+        }
+
+        public uint GetInputBitSet()
 		{
 			SyncPlayerInputs.InputTypes pressed = SyncPlayerInputs.InputTypes.None;
 			SyncPlayerInputs.InputTypes prevPressed = SyncPlayerInputs.InputTypes.None;

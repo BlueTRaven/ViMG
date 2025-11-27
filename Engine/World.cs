@@ -1019,8 +1019,6 @@ namespace ViMG
 
 		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
 		{
-			Console.WriteLine("DoMineCube");
-
             Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
             ChunkManager.CubeView.SetCube(position, 0, player);

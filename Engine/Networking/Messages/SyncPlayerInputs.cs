@@ -40,6 +40,8 @@ namespace Engine.Networking.Messages
             public InputTypes inputs;
             public int heldItem;
             public Vector3 rotation;
+            public Vector3 position;
+            public bool hasMenuOpen;
         }
 
         private List<QueuedInput> queued1 = new List<QueuedInput>();
@@ -80,8 +82,12 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(player.Rotation.X);
             netMessage.writer.Put(player.Rotation.Y);
             netMessage.writer.Put(player.Rotation.Z);
+            netMessage.writer.Put(player.Position.X);
+            netMessage.writer.Put(player.Position.Y);
+            netMessage.writer.Put(player.Position.Z);
             netMessage.writer.Put((ushort)inputTypes);
             netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
+            netMessage.writer.Put(player.hasMenuOpen);
 
             netMessage.Send();
         }
@@ -99,8 +105,13 @@ namespace Engine.Networking.Messages
             rotation.X = reader.GetFloat();
             rotation.Y = reader.GetFloat();
             rotation.Z = reader.GetFloat();
+            Vector3 position = Vector3.Zero;
+            position.X = reader.GetFloat();
+            position.Y = reader.GetFloat();
+            position.Z = reader.GetFloat();
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
+            bool hasMenuOpen = reader.GetBool();
 
             var player = GS.GetWorld()?.player[whoami];
             if (player != null)
@@ -112,6 +123,7 @@ namespace Engine.Networking.Messages
                     time = time,
                     heldItem = heldItem,
                     rotation = rotation,
+                    position = position,
                 };
                 
                 if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
@@ -132,7 +144,7 @@ namespace Engine.Networking.Messages
             //    Console.WriteLine("{0}", int.Max(queued1.Count, queued2.Count));
             //}
 
-            queued.OrderBy(x => x.time);
+            //queued.OrderBy(x => x.time);
 
             foreach (QueuedInput qinput in queued)
             {
@@ -168,6 +180,8 @@ namespace Engine.Networking.Messages
 
             player.highlightIndex = qinput.heldItem;
             player.Rotation = qinput.rotation;
+            player.SetPositionWithOffset(qinput.position);
+            player.hasMenuOpen = qinput.hasMenuOpen;
         }
     }
 }

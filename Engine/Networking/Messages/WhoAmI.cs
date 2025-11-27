@@ -37,6 +37,7 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
+            double oldTime = Main.Time;
             int whoAmI = reader.GetInt();
             Main.Time = reader.GetDouble();
             Main.Frame = reader.GetInt();
@@ -45,6 +46,9 @@ namespace Engine.Networking.Messages
             {
                 GS.netManager.whoAmI = whoAmI;
                 Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
+            } else
+            {
+                //Console.WriteLine("Fix time: {0:0.02}", Main.Time - oldTime);
             }
         }
     }
