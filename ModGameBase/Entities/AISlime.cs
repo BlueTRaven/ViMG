@@ -12,7 +12,7 @@ using Engine.Networking;
 
 namespace ViMG.Entities
 {
-	public class AISlime
+	public class AISlime : ISyncBasicState
 	{
 		public const int VERSION = 0;
 
@@ -31,7 +31,7 @@ namespace ViMG.Entities
 
 		private Vector3 jumpDir;
 		private int numJumps;
-		public float jumpTimer;
+		private float jumpTimer;
 		private float jumpTime;
 
 		public float JumpTimer => jumpTimer;
@@ -266,6 +266,8 @@ namespace ViMG.Entities
 			SaveHelper.SaveInt32(saveBytes, VERSION);
             SaveHelper.SaveInt32(saveBytes, MaxHealth);
             SaveHelper.SaveFloat32(saveBytes, JumpTimer);
+            SaveHelper.SaveFloat32(saveBytes, JumpTime);
+            SaveHelper.SaveVector3(saveBytes, jumpDir);
         }
 
         public void OnLoad(byte[] loadBytes, ref int index)
@@ -274,6 +276,28 @@ namespace ViMG.Entities
 
             MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
             jumpTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
+            jumpTime = SaveHelper.LoadFloat32(loadBytes, ref index);
+            jumpDir = SaveHelper.LoadVector3(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				velocity = Velocity,
+				health = Health,
+				state = 0,
+				timers = { [0] = JumpTimer },
+				counters = { [0] = numJumps },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Velocity = state.velocity;
+            Health = state.health;
+            jumpTimer = state.timers[0];
+			numJumps = state.counters[0];
         }
     }
 }

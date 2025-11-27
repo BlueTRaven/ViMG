@@ -154,26 +154,18 @@ namespace ViMG.Entities
 
         public void Get(out BasicState state)
         {
-            state = new BasicState
-            {
-                position = Position,
-                rotation = Quaternion.Identity,
-                velocity = ai?.Velocity ?? Vector3.Zero,
-                health = ai?.Health ?? 0,
-                state = 0,
-                timers = { [0] = ai?.JumpTimer ?? 0 },
-            };
+            BasicState aiState = new BasicState();
+            ai?.Get(out aiState);
+            aiState.position = Position;
+            aiState.rotation = Quaternion.Identity;
+            state = aiState;
         }
 
         public void Set(ref readonly BasicState state)
         {
             Position = state.position;
-            if (ai != null)
-            {
-                ai.Velocity = state.velocity;
-                ai.Health = state.health;
-                ai.jumpTimer = state.timers[0];
-            }
+
+            ai?.Set(in state);
         }
     }
 }

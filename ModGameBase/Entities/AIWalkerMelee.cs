@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
+using Engine.Networking;
 
 namespace ViMG.Entities
 {
-    public class AIWalkerMelee
+    public class AIWalkerMelee : ISyncBasicState
     {
-		public enum State
+        public const int VERSION = 0;
+
+        public enum State
 		{
 			Paused,
 			Normal,
@@ -223,11 +226,11 @@ namespace ViMG.Entities
 						{
                             ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
 
-                            ai.idleTimer = Main.random.NextFloat(4f, 12f);
-                            ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-                            ai.idleMovements = Main.random.Next(2, 6);
+                            ai.idleTimer = entity.random.NextFloat(4f, 12f);
+                            ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
+                            ai.idleMovements = entity.random.Next(2, 6);
 
-                            ai.idleDirection = Main.random.NextAngle();
+                            ai.idleDirection = entity.random.NextAngle();
 						}
 						else
 						{
@@ -239,8 +242,8 @@ namespace ViMG.Entities
 							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
 							{
                                 ai.idleMovements--;
-                                ai.idleDirection = Main.random.NextAngle();
-                                ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+                                ai.idleDirection = entity.random.NextAngle();
+                                ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
 							}
 						}
 
@@ -420,5 +423,50 @@ namespace ViMG.Entities
 				return (new Vector2(otherPosition.X, otherPosition.Z) - new Vector2(position.X, position.Z)).Length();
 			}
 		}
-	}
+
+		public void OnSave(List<byte> saveBytes)
+		{
+			SaveHelper.SaveInt32(saveBytes, VERSION);
+			SaveHelper.SaveInt32(saveBytes, MaxHealth);
+
+			SaveHelper.SaveVector2(saveBytes, idleDirection);
+            SaveHelper.SaveVector2(saveBytes, idleHome);
+        }
+
+		public void OnLoad(byte[] loadBytes, ref int index)
+		{
+			int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			idleDirection = SaveHelper.LoadVector2(loadBytes, ref index);
+            idleHome = SaveHelper.LoadVector2(loadBytes, ref index);
+        }
+
+		public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				health = Health,
+				velocity = Velocity,
+				position = Vector3.Zero,
+				rotation = Quaternion.Identity,
+				state = (int)this.state,
+				timers = { [0] = idleTimer, [1] = idleMoveTimer, [2] = attackTimer, [3] = InvulnTimer },
+				counters = { [0] = idleMovements },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			Health = state.health;
+			Velocity = state.velocity;
+			this.state = (State)state.state;
+			idleTimer = state.timers[0];
+            idleMoveTimer = state.timers[1];
+            attackTimer = state.timers[2];
+            InvulnTimer = state.timers[3];
+			idleMovements = state.counters[0];
+        }
+    }
 }

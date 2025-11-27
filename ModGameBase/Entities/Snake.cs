@@ -1,18 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Engine.Networking;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ViMG.Cubes;
-using BrUtility;
-using Microsoft.Xna.Framework.Graphics;
 using ViMG.Buffs;
+using ViMG.Cubes;
 using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Snake : Entity, IHasStats
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class Snake : Entity, IHasStats, ISyncBasicState
     {
 		private static VerySimpleMesh mesh2x1;
 		private static VerySimpleMesh mesh1x1;
@@ -175,6 +178,44 @@ namespace ViMG.Entities
         {
 			ai.Health = stats.HP;
 			ai.MaxHealth = stats.MaximumHP;
+        }
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            Get(out var state);
+            state.OnSave(saveBytes);
+
+            ai?.OnSave(saveBytes);
+        }
+
+        public override void OnLoad(byte[] loadBytes, in int version)
+        {
+            base.OnLoad(loadBytes, version);
+
+            int index = 0;
+            var bs = new BasicState();
+            bs.OnLoad(loadBytes, ref index);
+            Set(ref bs);
+
+            ai?.OnLoad(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            BasicState aiState = new BasicState();
+            ai?.Get(out aiState);
+            aiState.position = Position;
+            aiState.rotation = Quaternion.Identity;
+            state = aiState;
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+
+            ai?.Set(in state);
         }
     }
 }

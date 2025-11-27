@@ -106,11 +106,11 @@ namespace ViMG.Entities
 						{
                             ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
 
-                            ai.idleTimer = Main.random.NextFloat(5f, 12f);
-                            ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-                            ai.idleMovements = Main.random.Next(2, 6);
+                            ai.idleTimer = entity.random.NextFloat(5f, 12f);
+                            ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
+                            ai.idleMovements = entity.random.Next(2, 6);
 
-                            ai.idleDirection = Main.random.NextAngle();
+                            ai.idleDirection = entity.random.NextAngle();
 						}
 						else
 						{
@@ -122,8 +122,8 @@ namespace ViMG.Entities
 							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
 							{
                                 ai.idleMovements--;
-                                ai.idleDirection = Main.random.NextAngle();
-                                ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+                                ai.idleDirection = entity.random.NextAngle();
+                                ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
 							}
 						}
 
