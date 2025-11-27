@@ -55,7 +55,9 @@ namespace ViMG.Entities
 		{
 			this.world = world;
 
-			TimeInitialized = Main.Time;
+            random = new Random((int)Id + Main.Frame);
+
+            TimeInitialized = Main.Time;
 		}
 
 		public virtual void LoadContent(World world)

@@ -11,7 +11,7 @@ namespace ViMG.Spawners
 {
     public class PSSKeleton : PassiveSpawner
     {
-        private List<Skeleton> skeletons = new List<Skeleton>();
+        private List<Skeleton2> skeletons = new List<Skeleton2>();
 
         public PSSKeleton(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 0.5f, 1f / 10f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
@@ -25,13 +25,13 @@ namespace ViMG.Spawners
         //but that assumes we're using the same "load the world all at once" style that we're doing.
         private void OnEntityAdded(Entity entity)
         {
-            if (entity is Skeleton s)
+            if (entity is Skeleton2 s)
                 skeletons.Add(s);
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            if (entity is Skeleton s)
+            if (entity is Skeleton2 s)
                 skeletons.Remove(s);
         }
 
@@ -62,7 +62,7 @@ namespace ViMG.Spawners
                 if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
                     return;
 
-                Skeleton slime = new Skeleton(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
+                Skeleton2 slime = new Skeleton2(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(slime);
             }
         }

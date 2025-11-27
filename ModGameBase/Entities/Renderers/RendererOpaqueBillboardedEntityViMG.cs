@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +64,50 @@ namespace ViMG.Entities.Renderers
 
                 if (skeleton.state != Skeleton.State.Active)
                     sourceRect = new RectangleF(16, 0, 16, 32);
+
+                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                {
+                    scale = new Vector2(1, 2),
+                    sourceRect = sourceRect,
+                };
+                return cachedStats;
+            }
+        }
+
+        private class TypeStatsSkeleton2 : RendererOpaqueBillboardedEntity.TypeStats
+        {
+            public TypeStatsSkeleton2() : base("skeleton2", typeof(Skeleton2), new RendererDeferred.DrawMaterial("skeleton"))
+            {
+            }
+
+            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
+            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                Skeleton2 skeleton = (Skeleton2)entity;
+
+                RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
+
+                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                {
+                    scale = new Vector2(1, 2),
+                    sourceRect = sourceRect,
+                };
+                return cachedStats;
+            }
+        }
+
+        private class TypeStatsSkeletonBonePile : RendererOpaqueBillboardedEntity.TypeStats
+        {
+            public TypeStatsSkeletonBonePile() : base("skeleton_bonepile", typeof(SkeletonBonePile), new RendererDeferred.DrawMaterial("skeleton"))
+            {
+            }
+
+            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
+            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            {
+                SkeletonBonePile skeleton = (SkeletonBonePile)entity;
+
+                RectangleF sourceRect = new RectangleF(16, 0, 16, 32);
 
                 cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
                 {
@@ -695,6 +740,8 @@ namespace ViMG.Entities.Renderers
         {
             renderer.registry.Register(new TypeStatsGeneric("imp", typeof(Imp), new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)));
             renderer.registry.Register(new TypeStatsSkeleton());
+            renderer.registry.Register(new TypeStatsSkeleton2());
+            renderer.registry.Register(new TypeStatsSkeletonBonePile());
             renderer.registry.Register(new TypeStatsSlime());
             renderer.registry.Register(new TypeStatsBigSlime());
             renderer.registry.Register(new TypeStatsCaveSlime());
