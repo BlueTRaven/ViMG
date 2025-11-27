@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using static ViMG.UIs.UI;
 
 namespace Engine.Networking.Messages
@@ -72,7 +73,7 @@ namespace Engine.Networking.Messages
 
             SyncEntity entity = addData as SyncEntity? ?? throw new Exception();
 
-            if (entity.entity == null) Debug.Assert(false);
+            if (entity.entity == null) IMGUIConsole.Assert(false);
 
             if (entity.type == SyncType.BasicState && entity.entity is not ISyncBasicState)
             {

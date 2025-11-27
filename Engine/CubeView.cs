@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 
 namespace ViMG
 {
@@ -59,7 +60,7 @@ namespace ViMG
 
         public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
         {
-            Debug.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);
+            IMGUIConsole.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);
 
             CubePosition basePosition = chunkPosition.InCubeSpace();
 
@@ -242,7 +243,7 @@ namespace ViMG
                 position = chunkPosition,
             };
 
-            Debug.Assert(ids.Length == Chunk.NUM_CUBES_IN_CHUNK);
+            IMGUIConsole.Assert(ids.Length == Chunk.NUM_CUBES_IN_CHUNK);
 
             //Span<ushort> ids = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
             GetIdsForChunk(chunkPosition, ids);
@@ -263,7 +264,7 @@ namespace ViMG
                     uniqueIds[uniqueIdsLen] = id;
                     uniqueIdsLen += 1;
                 }
-                Debug.Assert(usedIds[id] >= 0);
+                IMGUIConsole.Assert(usedIds[id] >= 0);
                 palettizedIds[i] = (ushort)usedIds[id];
             }
 
@@ -304,7 +305,7 @@ namespace ViMG
                 }
                 else
                 {
-                    Debug.Assert(false, "Unimplemented");
+                    IMGUIConsole.Assert(false, "Unimplemented");
                 }
 
                 int numfit = sizeof(byte) * 8 / bits;
@@ -313,8 +314,8 @@ namespace ViMG
 
                 for (int i = 0; i < ids.Length; i++)
                 {
-                    Debug.Assert(placeInByte < 8);
-                    Debug.Assert(palettizedIds[i] <= bitmask);
+                    IMGUIConsole.Assert(placeInByte < 8);
+                    IMGUIConsole.Assert(palettizedIds[i] <= bitmask);
                     currentByte |= (byte)((palettizedIds[i] & bitmask) << placeInByte);
 
                     placeInByte += bits;
@@ -373,7 +374,7 @@ namespace ViMG
                 }
                 else
                 {
-                    Debug.Assert(false, "Unimplemented");
+                    IMGUIConsole.Assert(false, "Unimplemented");
                 }
 
                 int numfit = sizeof(byte) * 8 / bits;
@@ -384,11 +385,11 @@ namespace ViMG
 
                 for (int i = 0; i < ids.Length; i++)
                 {
-                    Debug.Assert((currentByteIndex - 1) == i / numfit);
-                    Debug.Assert(placeInByte < 8);
+                    IMGUIConsole.Assert((currentByteIndex - 1) == i / numfit);
+                    IMGUIConsole.Assert(placeInByte < 8);
 
                     ushort paletteId = (ushort)((currentByte >> placeInByte) & bitmask);
-                    Debug.Assert(paletteId <= bitmask);
+                    IMGUIConsole.Assert(paletteId <= bitmask);
 
                     ids[i] = chunk.palette[paletteId];
                     placeInByte += bits;
@@ -413,7 +414,7 @@ namespace ViMG
 
             for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
             {
-                Debug.Assert(ids[i] == newIds[i]);
+                IMGUIConsole.Assert(ids[i] == newIds[i]);
             }
         }
     }

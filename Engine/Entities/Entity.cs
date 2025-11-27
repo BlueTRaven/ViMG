@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.Entities
 {
@@ -59,7 +60,7 @@ namespace ViMG.Entities
 
 		public virtual void LoadContent(World world)
 		{
-			Debug.Assert(!Main.IsHeadless);
+            IMGUIConsole.Assert(!Main.IsHeadless);
 		}
 
 		public virtual void Update(double deltaTime)

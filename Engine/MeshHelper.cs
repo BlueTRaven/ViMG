@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Security;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -151,7 +152,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            Debug.Assert((end - start) % 4 == 0);
+            IMGUIConsole.Assert((end - start) % 4 == 0);
 
 				for (int i = start; i < end; i += 4)
 				{

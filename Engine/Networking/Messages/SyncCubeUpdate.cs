@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.IMGUIImpl;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditRequest;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditResponse;
 using static ViMG.ChunkManager;
@@ -42,7 +43,7 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             ChunkManager.CubeUpdated cubeUpdated = addData as ChunkManager.CubeUpdated? ?? throw new Exception();
-            Debug.Assert(cubeUpdated.updated == cubeUpdated.notified);
+            IMGUIConsole.Assert(cubeUpdated.updated == cubeUpdated.notified);
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
 
             netMessage.writer.Put(cubeUpdated.timeUpdated);
@@ -195,7 +196,7 @@ namespace Engine.Networking.Messages
             var oldId = reader.GetUShort();
             var newId = reader.GetUShort();
 
-            Debug.Assert(!activeAudits[player][index].active);
+            IMGUIConsole.Assert(!activeAudits[player][index].active);
 
             activeAudits[player][index] = new AuditedCubeUpdate
             {
@@ -272,7 +273,7 @@ namespace Engine.Networking.Messages
         public void RollbackAction(AuditedCubeUpdate action)
         {
             //Console.WriteLine("did rollback {0}", action.index);
-            Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
+            IMGUIConsole.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
             var player = GS.GetWorld().player[action.player];
             if (player != null)
@@ -283,7 +284,7 @@ namespace Engine.Networking.Messages
         public void DoAction(AuditedCubeUpdate action)
         {
             //Console.WriteLine("did action {0}", action.index);
-            Debug.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
+            IMGUIConsole.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
             var player = GS.GetWorld().player[action.player];
             if (player != null)

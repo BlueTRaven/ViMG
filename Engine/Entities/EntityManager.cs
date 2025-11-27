@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ViMG.IMGUIImpl;
 using static ViMG.UIs.UI;
 
 namespace ViMG.Entities
@@ -700,7 +701,7 @@ namespace ViMG.Entities
 				ChunkPosition previousChunkPos = new ChunkPosition(-1, -1, -1);
 				CubeTrackers ts = emptyTrackers;
 
-				Debug.Assert(offset >= 0 && offset + count <= positions.Length);
+                IMGUIConsole.Assert(offset >= 0 && offset + count <= positions.Length);
 
 				for (int i = offset; i < offset + count; i++)
 				{

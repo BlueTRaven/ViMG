@@ -44,11 +44,12 @@
  * policies, either expressed or implied, of the copyright holders.
  */
 
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System.Diagnostics;
 using ViMG;
+using ViMG.IMGUIImpl;
 
 namespace SMAADemo
 {
@@ -158,9 +159,9 @@ namespace SMAADemo
             RenderTarget2D rt_rgba = null
             )
         {
-            Debug.Assert(_width > 0);
-            Debug.Assert(_height > 0);
-            Debug.Assert(_device != null);
+            IMGUIConsole.Assert(_width > 0);
+            IMGUIConsole.Assert(_height > 0);
+            IMGUIConsole.Assert(_device != null);
 
             effect = Main.assetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
 
@@ -174,7 +175,7 @@ namespace SMAADemo
             // If storage for the edges is not specified we will create it.
             if (rt_rg != null)
             {
-                Debug.Assert(rt_rg.DepthStencilFormat == DepthFormat.Depth24Stencil8);
+                IMGUIConsole.Assert(rt_rg.DepthStencilFormat == DepthFormat.Depth24Stencil8);
 
                 edgeTex = rt_rg;
                 releaseEdgeResources = false;
@@ -313,7 +314,7 @@ namespace SMAADemo
                     effect.CurrentTechnique = depthEdgeDetectionHandle;
                     break;
                 default:
-                    Debug.Assert(false);
+                    IMGUIConsole.Assert(false);
                     break;
             }
 

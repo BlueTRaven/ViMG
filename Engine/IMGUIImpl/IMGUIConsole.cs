@@ -715,5 +715,38 @@ namespace ViMG.IMGUIImpl
 
             lastRunLines++;
         }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}", trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}", trace.ToString()));
+            }
+        }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition, string message)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}\n{1}", message, trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}", trace.ToString()));
+            }
+        }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition, string? message, string detailedMessage, params object[] args)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}", trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}\n{1}\n{2}", message != null ? message : "", string.Format(detailedMessage, args), trace.ToString()));
+            }
+        }
     }
 }

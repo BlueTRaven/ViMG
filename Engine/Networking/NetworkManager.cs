@@ -290,8 +290,8 @@ namespace Engine.Networking
                 int playerIndex = netPlayers[index].playerId;
                 uniqueNetPlayers -= 1;
 
-                Debug.Assert(world.localPlayerIndex != playerIndex);
-                Debug.Assert(world.player[playerIndex] != null);
+                IMGUIConsole.Assert(world.localPlayerIndex != playerIndex);
+                IMGUIConsole.Assert(world.player[playerIndex] != null);
                 Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 world.EntityManager.Remove(world.player[playerIndex]);
                 world.player[playerIndex] = null;

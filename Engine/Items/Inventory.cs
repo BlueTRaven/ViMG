@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using ViMG;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Items;
 using ViMG.UIs;
 
@@ -371,7 +372,7 @@ namespace Engine.Items
 			int id = SaveHelper.LoadInt32(loadBytes, ref index);
 			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
 
-			Debug.Assert(id == this.id);
+            IMGUIConsole.Assert(id == this.id);
 
 			int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
 

@@ -18,6 +18,7 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Items;
 using ViMG.Physics;
 using ViMG.Rendering;
@@ -477,14 +478,14 @@ namespace ViMG
         {
             base.OnUnload();
 
-			// Player should only ever be unloaded/removed in two scenarios:
-			// The world is being disposed (we're exiting the game),
-			// or a client disconnected from the server.
-			// Even if the player is off in the middle of nowhere in some unloaded area of the game (as might be the case with other clients),
-			// it should stay loaded.
-			// TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
-			// not the local player.
-			Debug.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
+            // Player should only ever be unloaded/removed in two scenarios:
+            // The world is being disposed (we're exiting the game),
+            // or a client disconnected from the server.
+            // Even if the player is off in the middle of nowhere in some unloaded area of the game (as might be the case with other clients),
+            // it should stay loaded.
+            // TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
+            // not the local player.
+            IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);

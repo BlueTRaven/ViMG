@@ -567,7 +567,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			Debug.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+            IMGUIConsole.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
             Main.SessionInformation.LastLoadedSave = LoadedFolderName;
 			Main.SessionIO.Save();

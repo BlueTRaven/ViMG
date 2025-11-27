@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using static ViMG.EntityManagerIO;
 
 namespace ViMG
@@ -618,7 +619,7 @@ namespace ViMG
 						}
 						catch (Exception e)
 						{
-							Debug.Assert(false, string.Format("DeserializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString()));
+                            IMGUIConsole.Assert(false, string.Format("DeserializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString()));
 						}
 					}
 					else
@@ -675,7 +676,7 @@ namespace ViMG
 			var loadedEntData = new EntityData();
 			loadedEntData.Load(bytes.ToArray());
 
-			Debug.Assert(loadedEntData.IsValid);
+            IMGUIConsole.Assert(loadedEntData.IsValid);
 		}
 	}
 }

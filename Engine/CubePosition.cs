@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 
 namespace ViMG
 {
@@ -184,13 +185,13 @@ namespace ViMG
 
 		public static CubePosition operator +(CubePosition posA, CubePosition posB)
 		{
-			Debug.Assert(posA.Coord == posB.Coord);
+            IMGUIConsole.Assert(posA.Coord == posB.Coord);
 			return new CubePosition(posA.X + posB.X, posA.Y + posB.Y, posA.Z + posB.Z, posA.Coord);
 		}
 
 		public static CubePosition operator -(CubePosition posA, CubePosition posB)
 		{
-            Debug.Assert(posA.Coord == posB.Coord);
+            IMGUIConsole.Assert(posA.Coord == posB.Coord);
 			return new CubePosition(posA.X - posB.X, posA.Y - posB.Y, posA.Z - posB.Z, posA.Coord);
 		}
 	}

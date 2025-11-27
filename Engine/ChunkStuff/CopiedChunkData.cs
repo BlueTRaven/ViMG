@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.ChunkStuff
 {
@@ -49,7 +50,7 @@ namespace ViMG.ChunkStuff
 
         public void Take(CubePosition position)
         {
-            Debug.Assert(!valid);
+            IMGUIConsole.Assert(!valid);
             this.BasePosition = position;
 
             if (Ids == null)
@@ -66,10 +67,10 @@ namespace ViMG.ChunkStuff
         public void Return(BufferPool pool)
         {
             refcount -= 1;
-            Debug.Assert(refcount >= 0);
+            IMGUIConsole.Assert(refcount >= 0);
             if (refcount == 0)
             {
-                Debug.Assert(valid);
+                IMGUIConsole.Assert(valid);
 
                 for (int i = 0; i < EntityMeshingDatas.Length; i++)
                     if (EntityMeshingDatas[i].Allocated)
@@ -101,7 +102,7 @@ namespace ViMG.ChunkStuff
 
         public ushort GetId(CubePosition position)
         {
-            Debug.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
+            IMGUIConsole.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
 
             if (position.X < 0 || position.Y < 0 || position.Z < 0 ||
                 position.X >= Chunk.CHUNK_SIZE || position.Y >= Chunk.CHUNK_SIZE || position.Z >= Chunk.CHUNK_SIZE)

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Rendering
@@ -62,7 +63,7 @@ namespace ViMG.Rendering
             {
                 if (bakeTangents)
                 {
-                    Debug.Assert(attributes.position.HasValue() && attributes.texCoord.HasValue());
+                    IMGUIConsole.Assert(attributes.position.HasValue() && attributes.texCoord.HasValue());
 
                     for (int i = 0; i < normals.Length; i += 4)
                     {

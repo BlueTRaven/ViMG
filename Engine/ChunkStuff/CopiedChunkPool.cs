@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.ChunkStuff
 {
@@ -58,7 +59,7 @@ namespace ViMG.ChunkStuff
             CubePosition basePosition = position.InCubeSpace();
 
             CopiedChunkData copied = TakeFromPool(basePosition);
-            Debug.Assert(copied.GetValid());
+            IMGUIConsole.Assert(copied.GetValid());
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
 
@@ -107,8 +108,8 @@ namespace ViMG.ChunkStuff
             {
                 if (c != null)
                 {
-                    Debug.Assert(!c.GetValid());
-                    Debug.Assert(c.refcount == 0);
+                    IMGUIConsole.Assert(!c.GetValid());
+                    IMGUIConsole.Assert(c.refcount == 0);
                 }
             }
         }

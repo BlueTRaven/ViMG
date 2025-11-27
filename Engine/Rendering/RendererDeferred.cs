@@ -1134,12 +1134,12 @@ namespace ViMG.Rendering
 
         public void AddOpaqueDraw(GBufferDraw draw)
         {
-            Debug.Assert(draw.Mesh.VBOPosition != null, "OpaqueDraw requires a position VBO");
-            Debug.Assert(draw.Mesh.VBOColor != null, "OpaqueDraw requires a color VBO");
-            Debug.Assert(draw.Mesh.VBOTexCoord != null, "OpaqueDraw requires a texcoord VBO");
-            Debug.Assert(draw.Mesh.VBONormal != null, "OpaqueDraw requires a normal VBO");
-            Debug.Assert(draw.Mesh.VBOAO != null, "OpaqueDraw requires a AO VBO");
-            Debug.Assert(draw.Mesh.VBOAnim != null, "OpaqueDraw requires a Animation VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOPosition != null, "OpaqueDraw requires a position VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOColor != null, "OpaqueDraw requires a color VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOTexCoord != null, "OpaqueDraw requires a texcoord VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBONormal != null, "OpaqueDraw requires a normal VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOAO != null, "OpaqueDraw requires a AO VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOAnim != null, "OpaqueDraw requires a Animation VBO");
 
             DrawsPassGBuffer.Add(draw);
         }

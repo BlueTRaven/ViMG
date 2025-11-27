@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.UIs
 {
@@ -27,8 +28,8 @@ namespace ViMG.UIs
 
 		public virtual void LoadContent()
 		{
-			// It is invalid to call LoadContent while headless
-			Debug.Assert(!Main.IsHeadless);
+            // It is invalid to call LoadContent while headless
+            IMGUIConsole.Assert(!Main.IsHeadless);
 		}
 
 		public virtual void OnOpen()

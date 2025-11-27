@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
 namespace ViMG
@@ -313,7 +314,7 @@ namespace ViMG
 
                         var batchResult = task.Result;
 
-                        Debug.Assert(batchResult.num <= batchResult.copies.Length);
+                        IMGUIConsole.Assert(batchResult.num <= batchResult.copies.Length);
 
                         for (int j = 0; j < batchResult.num; j++)
                         {

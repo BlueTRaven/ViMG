@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -100,7 +101,7 @@ namespace ViMG.Entities.Renderers
 
             foreach (Entity entity in entities)
             {
-                Debug.Assert(entity.GetType() == type);
+                IMGUIConsole.Assert(entity.GetType() == type);
 
                 if (entity == null)
                 {

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.IMGUIImpl;
 
 namespace Engine.Networking.Messages
 {
@@ -43,11 +44,11 @@ namespace Engine.Networking.Messages
         {
             if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
             {
-                Debug.Assert((message.SendableFrom & NetworkManager.NetworkSide.Server) == NetworkManager.NetworkSide.Server);
+                IMGUIConsole.Assert((message.SendableFrom & NetworkManager.NetworkSide.Server) == NetworkManager.NetworkSide.Server);
             } 
             else
             {
-                Debug.Assert((message.SendableFrom & NetworkManager.NetworkSide.Client) == NetworkManager.NetworkSide.Client);
+                IMGUIConsole.Assert((message.SendableFrom & NetworkManager.NetworkSide.Client) == NetworkManager.NetworkSide.Client);
             }
 
             NetworkMessage netMessage = new NetworkMessage(message.Id, Main.gameStateManager.TheIsland.netManager.netManager, peer);

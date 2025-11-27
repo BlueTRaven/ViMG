@@ -17,6 +17,7 @@ using ViMG.ChunkStuff;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -351,7 +352,7 @@ namespace ViMG
 					activeMeshBatchTasks[i] = task.task;
 					numActiveChunkMeshBatchTasks++;
 
-					Debug.Assert(task.task.Status == TaskStatus.Created);
+                    IMGUIConsole.Assert(task.task.Status == TaskStatus.Created);
 
 					if (Main.MULTITHREAD_MESHING)
 						task.task.Start();

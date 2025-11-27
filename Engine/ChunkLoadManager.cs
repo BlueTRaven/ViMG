@@ -298,7 +298,7 @@ namespace ViMG
                 }
                 else
                 {
-                    Debug.Assert(false);
+                    IMGUIConsole.Assert(false);
                 }
 			}
 			zoneQueue.End();
@@ -310,7 +310,7 @@ namespace ViMG
                 CopiedChunkData copy = copyingChunk.copyTask.Result;
 
                 Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-                Debug.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
+                IMGUIConsole.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
                 loadedChunks[copyingChunk.player][i] = LoadingState.Loading;
 
                 // Only enqueue rendering mesh for local player
@@ -424,7 +424,7 @@ namespace ViMG
 		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
 			if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-				Debug.Assert(false);
+                IMGUIConsole.Assert(false);
 
             int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
 
@@ -724,7 +724,7 @@ namespace ViMG
         public void UnloadAllFor(int playerIndex)
         {
             //NOTE: this assumes that at least one player remains!
-            Debug.Assert(Main.gameStateManager.TheIsland.netManager.uniqueNetPlayers > 0);
+            IMGUIConsole.Assert(Main.gameStateManager.TheIsland.netManager.uniqueNetPlayers > 0);
 
             for (int j = 0; j < chunkManager.SizeInChunksXZ; j++)
             {

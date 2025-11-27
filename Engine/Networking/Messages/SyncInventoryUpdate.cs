@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Items;
 using static Engine.Networking.Messages.SyncCubeUpdateAuditResponse;
 using static ViMG.UIs.UI;
@@ -238,7 +239,7 @@ namespace Engine.Networking.Messages
             var newInstanceNum = reader.GetInt();
             var newInstanceDamage = reader.GetInt();
 
-            Debug.Assert(!activeAudits[player][index].active);
+            IMGUIConsole.Assert(!activeAudits[player][index].active);
 
             var action = new AuditedInventoryUpdate
             {
