@@ -21,7 +21,7 @@ namespace ViMG.Entities
 		private static VerySimpleMesh mesh1x1;
 		private static VerySimpleMesh mesh2x2;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("snake");
-
+		 
         public AIWalkerMelee ai;
 		private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;

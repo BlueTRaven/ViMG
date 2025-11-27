@@ -65,7 +65,7 @@ namespace ViMG.Physics
             Vector3 nrm = Vector3.Zero;
             for (int i = 0; i < manifold.Count; i++)
             {
-                nrm += manifold.GetNormal(ref manifold, i);
+                nrm += manifold.GetNormal(i);
             }
 
             nrm /= manifold.Count;

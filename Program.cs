@@ -1,5 +1,6 @@
 ﻿using SharpDX.Direct3D9;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace ViMG
         [STAThread]
         static void Main(string[] args)
         {
+            // Force evaluation of IMGUIConsole static constructor
+            //_ = new IMGUIConsole.ConsoleParamException(".", ".");
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
             try

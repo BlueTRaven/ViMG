@@ -52,6 +52,31 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        private class ConsoleTraceListener : TraceListener
+        {
+            private readonly ConsoleTextWriter writer;
+
+            public ConsoleTraceListener(ConsoleTextWriter writer)
+            {
+                this.writer = writer;
+            }
+
+            public override void Write(string? message)
+            {
+                writer.Write(message);
+            }
+
+            public override void WriteLine(string? message)
+            {
+                writer.WriteLine(message);
+            }
+
+            public override void Fail(string? message, string? detailMessage)
+            {
+                base.Fail(message, detailMessage);
+                throw new Exception("Failed");
+            }
+        }
         private class ConsoleTextWriter : TextWriter
         {
             private TextWriter originalConsoleOut;
@@ -109,6 +134,15 @@ namespace ViMG.IMGUIImpl
 
         static IMGUIConsole()
         {
+            if (textWriter == null)
+            {
+                textWriter = new ConsoleTextWriter(System.Console.Out);
+                System.Console.SetOut(textWriter);
+                Trace.Listeners.Clear();
+                Trace.AutoFlush = true;
+                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
+            }
+
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 foreach (Type type in assembly.GetTypes()) 
@@ -328,12 +362,6 @@ namespace ViMG.IMGUIImpl
 
         public static unsafe void Console()
         {
-            if (textWriter == null)
-            {
-                textWriter = new ConsoleTextWriter(System.Console.Out);
-                System.Console.SetOut(textWriter);
-            }
-
             if (Main.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
             {
                 lastRunTime = (float)Main.Time;
