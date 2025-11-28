@@ -243,7 +243,7 @@ namespace ViMG.Entities
 
             OnEntityAdded?.Invoke(entity);
 
-			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
+			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
 				var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
 				if (entSerializableAttr != null)
@@ -503,17 +503,17 @@ namespace ViMG.Entities
 				{
 					if (player != null && player.TimeInitialized != 0)
 					{
-						NetPeer peer = null;// Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
-						//if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
-						//{
-						//	var ent = new SyncBasicState.SyncEntity()
-						//	{
-						//		entity = player,
-						//		type = SyncBasicState.SyncType.FullSync,
-						//	};
-						//	Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
-						//}
-						//else
+						NetPeer peer = Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
+						if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
+						{
+							var ent = new SyncBasicState.SyncEntity()
+							{
+								entity = player,
+								type = SyncBasicState.SyncType.FullSync,
+							};
+							Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent, peer);
+						}
+						else
 						{
 							if (Main.Time - player.TimeSynced > player.SyncInterval || forceLocalSync)
 							{

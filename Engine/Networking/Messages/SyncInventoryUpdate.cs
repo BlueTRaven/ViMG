@@ -86,11 +86,11 @@ namespace Engine.Networking.Messages
                 time = time,
             };
 
-            var entity = GS.GetWorld().EntityManager.GetById(entityId);
-            if (entity != null && entity is IHasInventory hasInv)
-            {
+            //var entity = GS.GetWorld().EntityManager.GetById(entityId);
+            //if (entity != null && entity is IHasInventory hasInv)
+            //{
                 queued.Add(action);
-            }
+            //}
         }
 
         public void Apply(EntityManager entityManager)

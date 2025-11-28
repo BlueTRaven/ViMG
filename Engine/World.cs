@@ -277,6 +277,9 @@ namespace ViMG
 			{
 				player[p.playerIndex] = p;
 			}
+			localPlayerIndex = Main.gameStateManager.TheIsland.netManager?.whoAmI ?? 0;
+			// -1 means singleplayer
+			if (localPlayerIndex == -1) localPlayerIndex = 0;
 
 			// TODO: do we need this?
 			//if (player.All(x => x == null))
@@ -353,13 +356,13 @@ namespace ViMG
                     EntityManager.ForceAdd(p);
                     this.player[player.playerIndex] = p;
 
-                    var sent = new SyncBasicState.SyncEntity()
-					{
-						entity = p,
-						firstCreation = true,
-						type = SyncBasicState.SyncType.FullSync,
-					};
-					Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, sent);
+					//var sent = new SyncBasicState.SyncEntity()
+					//{
+					//	entity = p,
+					//	firstCreation = true,
+					//	type = SyncBasicState.SyncType.FullSync,
+					//};
+					//Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, sent);
 				}
 			}
 			PlayerRespawnedEvent.Clear();

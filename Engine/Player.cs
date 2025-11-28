@@ -29,7 +29,7 @@ using static Engine.Networking.Messages.SyncPlayerInputs;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(15, 0)]
+	[EntityMeta(16, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
@@ -370,6 +370,10 @@ namespace ViMG
         {
             base.Initialize(world);
 
+			Console.WriteLine("Init player with id {0}", Id);
+
+			IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
+			world.player[playerIndex] = this;
             invulnTimer = 6f;   //6 seconds of invuln after respawning
 
 			//if any coins are in the player's inventory, convert them into currency value.
@@ -395,8 +399,11 @@ namespace ViMG
 
 			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
+			Console.WriteLine("Local id: {0} our id: {1}", world.localPlayerIndex, playerIndex);
+
 			if (IsLocalPlayer)
 			{
+				Console.WriteLine("Init local");
 				menuPlayer = new MenuPlayer(Main.gameStateManager, this, heldInventory, inventory, craftInventory, accessoryInventory, gearInventory);
 				menuPlayer.Close();
 				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
@@ -468,6 +475,7 @@ namespace ViMG
 
 				//TODO death screen and stuff
 				world.PlayerRespawnedEvent.Add(this);
+				world.player[playerIndex] = null;
             }
 		}
 
@@ -2136,6 +2144,8 @@ namespace ViMG
 
 			Get(out BasicState state);
 			state.OnSave(saveBytes);
+
+			SaveHelper.SaveInt32(saveBytes, playerIndex);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2159,7 +2169,7 @@ namespace ViMG
             }
 
 			inventory.Load(loadBytes, ref index);
-
+	
 			if (version >= 6)
 			{
 				accessoryInventory.Load(loadBytes, ref index);
@@ -2192,6 +2202,9 @@ namespace ViMG
 				if (world != null && TimeInitialized != 0)
 					Set(ref basicState);
 			}
+
+			if (version >= 16)
+				playerIndex = SaveHelper.LoadInt32(loadBytes, ref index);
 		}
 
         public void Get(out BasicState state)

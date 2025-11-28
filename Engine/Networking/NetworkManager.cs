@@ -135,7 +135,12 @@ namespace Engine.Networking
             {
                 netManager.Start();
                 netManager.Connect(Ip, Port, "");
-                Console.WriteLine("Connected to server");
+                while (whoAmI == -1)
+                {
+                    netManager.TriggerUpdate();
+                    netManager.PollEvents();
+                }
+                Console.WriteLine("Connected to server. Our id: {0}", whoAmI);
             }
         }
 

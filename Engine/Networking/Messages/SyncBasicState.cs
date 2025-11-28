@@ -177,8 +177,8 @@ namespace Engine.Networking.Messages
             }
 
             local.actualReceiveTime = DateTime.Now;
-            DoAction(local, GS.GetWorld().EntityManager, GS.GetWorld().EntIO);
-            //queued.Add(local);
+            //DoAction(local, GS.GetWorld().EntityManager, GS.GetWorld().EntIO);
+            queued.Add(local);
         }
 
         public void Apply(EntityManager entityManager, EntityManagerIO entIO)
@@ -190,14 +190,14 @@ namespace Engine.Networking.Messages
             foreach (QueuedSyncEntity queuedSync in queued)
             {
                 //Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
-                if (Main.Time >= queuedSync.time)
-                {
+                //if (Main.Time >= queuedSync.time)
+                //{
                     DoAction(queuedSync, entityManager, entIO);
-                }
-                else
-                {
-                    otherBuffer.Add(queuedSync);
-                }
+                //}
+                //else
+                //{
+                //    otherBuffer.Add(queuedSync);
+                //}
             }
 
             queued.Clear();

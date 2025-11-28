@@ -25,6 +25,8 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
+            netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
+
             int whoAmI = addData as int? ?? -1;
             netMessage.writer.Put(whoAmI);
             netMessage.writer.Put(Main.Time - NetworkManager.TIME_TRAVEL_DELAY);

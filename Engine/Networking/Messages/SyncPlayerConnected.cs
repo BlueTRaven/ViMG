@@ -29,7 +29,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
-            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
             netMessage.writer.Put(World.MAX_PLAYERS);
             foreach (NetworkManager.NetPlayer player in GS.netManager.netPlayers)
             {
@@ -75,7 +75,6 @@ namespace Engine.Networking.Messages
                     GS.netManager.uniqueNetPlayers += 1;
                 }
             }
-            GS.GetWorld().localPlayerIndex = GS.netManager.whoAmI;
             
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
@@ -89,31 +88,31 @@ namespace Engine.Networking.Messages
 
             // NOTE: numPlayers != numNetPlayers. We always sync netPlayers, whereas we only send
             // the new Players.
-            int numPlayers = reader.GetInt();
-            Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", numPlayers);
-            for (int i = 0; i < numPlayers; i++)
-            {
-                int playerIndex = reader.GetInt();
-                Console.WriteLine("SyncPlayerConnected: read index {0}", playerIndex);
+            //int numPlayers = reader.GetInt();
+            //Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", numPlayers);
+            //for (int i = 0; i < numPlayers; i++)
+            //{
+            //    int playerIndex = reader.GetInt();
+            //    Console.WriteLine("SyncPlayerConnected: read index {0}", playerIndex);
 
-                byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-                EntityManagerIO.EntityData data = new();
-                data.Load(bytes);
-                if (data.IsValid)
-                {
-                    Player p = new Player();
-                    p.playerIndex = playerIndex;
-                    p.OnLoad(data.data, data.version);
+            //    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+            //    EntityManagerIO.EntityData data = new();
+            //    data.Load(bytes);
+            //    if (data.IsValid)
+            //    {
+            //        Player p = new Player();
+            //        p.playerIndex = playerIndex;
+            //        p.OnLoad(data.data, data.version);
 
-                    GS.GetWorld().EntityManager.ForceAdd(p, data.id);
-                    GS.GetWorld().player[playerIndex] = p;
+            //        GS.GetWorld().EntityManager.ForceAdd(p, data.id);
+            //        GS.GetWorld().player[playerIndex] = p;
 
-                    if (playerIndex == GS.GetWorld().localPlayerIndex)
-                    {
-                        GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
-                    }
-                }
-            }
+            //        if (playerIndex == GS.GetWorld().localPlayerIndex)
+            //        {
+            //            GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
+            //        }
+            //    }
+            //}
         }
     }
 }
