@@ -16,9 +16,9 @@ namespace ViMG
         [STAThread]
         static void Main(string[] args)
         {
-            // Force evaluation of IMGUIConsole static constructor
-            //_ = new IMGUIConsole.ConsoleParamException(".", ".");
-            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+            // NOTE: This overrides debugger exception behavior, so don't do it if a debugger is attached.
+            if (!Debugger.IsAttached)
+                AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
             try
             {

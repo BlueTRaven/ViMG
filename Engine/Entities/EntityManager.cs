@@ -157,7 +157,17 @@ namespace ViMG.Entities
             ReallyAdd(entity);
 		}
 
-		public void Add(Entity entity, bool delayAdding = false)
+		public void ForceAdd(Entity entity)
+		{
+			if (iteratingUpdate)
+				throw new Exception("Cannot add while iterating");
+
+            entity.SetId(GetUniqueId());
+
+			ReallyAdd(entity);
+        }
+
+        public void Add(Entity entity, bool delayAdding = false)
 		{
 			// Shouldn't add entities if not server or singleplayer?
 			// What about player entities...?
@@ -244,6 +254,7 @@ namespace ViMG.Entities
 						var ent = new SyncBasicState.SyncEntity()
 						{
 							entity = entity,
+							firstCreation = true,
 							type = SyncBasicState.SyncType.FullSync,
 						};
 						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
@@ -397,7 +408,7 @@ namespace ViMG.Entities
 			{
 				foreach (Entity entity in entities)
 				{
-					if (entity is not Player)
+					if (entity is not Player && entity.IsInitialized)
 					{
 						var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
 						if (entSerializableAttr != null)
@@ -438,7 +449,7 @@ namespace ViMG.Entities
 			// Clients send their player back to the server (client authoratative over its own player)
 			// and Servers will send player data to all clients but to the client whose player it represents
 			var localPlayer = world.GetLocalPlayer();
-			if (localPlayer != null)
+			if (localPlayer != null && localPlayer.TimeInitialized != 0)
 			{
 				// Local player has all its inputs synced to all connections
 				if (localPlayer.LeftClick.Changed() || localPlayer.RightClick.Changed() ||
@@ -490,7 +501,7 @@ namespace ViMG.Entities
 				// We need to send entity serialization info continually.
 				foreach (var player in world.player)
 				{
-					if (player != null)
+					if (player != null && player.TimeInitialized != 0)
 					{
 						NetPeer peer = null;// Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
 						//if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)

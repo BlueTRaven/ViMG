@@ -524,7 +524,7 @@ namespace ViMG
 
             foreach (Player? player in world.player)
 			{
-				if (player == null) continue;
+				if (player == null || player.TimeInitialized == 0) continue;
                 // We don't care about players other than the local one if we're a client
                 if (!player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client) continue;
 
@@ -584,7 +584,7 @@ namespace ViMG
                 // If in range of any player don't unload
 				foreach (Player? player in world.player)
 				{
-					if (player == null) continue;
+					if (player == null || player.TimeInitialized == 0) continue;
 					// We don't care about players other than the local one if we're a client
 					if (!player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client) continue;
 

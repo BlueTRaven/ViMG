@@ -63,7 +63,7 @@ namespace Engine.Networking.Messages
             netMessage.channel = 2;
 
             var player = GS.GetWorld().GetLocalPlayer();
-            if (player == null) return;
+            if (player == null || player.TimeInitialized == 0) return;
 
             InputTypes inputTypes = InputTypes.None;
             if (player.Jump.Pressed()) inputTypes |= InputTypes.Jump;
@@ -165,7 +165,7 @@ namespace Engine.Networking.Messages
         private void DoAction(QueuedInput qinput, Player[] players)
         {
             var player = players[qinput.playerIndex];
-            if (player == null) return;
+            if (player == null || player.TimeInitialized == 0) return;
             var inp = qinput.inputs;
 
             player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;

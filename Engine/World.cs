@@ -105,6 +105,7 @@ namespace ViMG
 		private List<CubePosition> miningRemove = new List<CubePosition>();
 		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
+		public List<Player> PlayerRespawnedEvent = new List<Player>();
 		private float randomUpdatesTimer;
 
 		private int nextLayer;
@@ -335,7 +336,35 @@ namespace ViMG
 			ProjectileManager.Update(deltaTime);
 			EntityManager.Update(deltaTime);
 
-			SyncPlayerInputs.Instance.Apply(player);
+			// TODO: hacky
+			// Players never automatically send major syncs, we always have to send those manually.
+			// When a player is connected, one is sent for every entity already present on the server.
+			// When a player respawns, it's a bit more complicated, and basically requires us to defer this until
+			// after the Player has been ReallyAdded/init.
+			// This is maybe just straight up bad. Maybe we should just allow players to automatically major sync?
+			// This would fix two issues with one stone, removing the special case path for creating players when connecting
+			// and this bullshit when a player respawns.
+			foreach (Player player in PlayerRespawnedEvent)
+			{
+                if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+				{
+                    Player p = new Player(player);
+                    p.playerIndex = player.playerIndex;
+                    EntityManager.ForceAdd(p);
+                    this.player[player.playerIndex] = p;
+
+                    var sent = new SyncBasicState.SyncEntity()
+					{
+						entity = p,
+						firstCreation = true,
+						type = SyncBasicState.SyncType.FullSync,
+					};
+					Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, sent);
+				}
+			}
+			PlayerRespawnedEvent.Clear();
+
+            SyncPlayerInputs.Instance.Apply(player);
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
 			SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);

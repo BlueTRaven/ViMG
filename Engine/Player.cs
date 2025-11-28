@@ -344,7 +344,7 @@ namespace ViMG
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
 
-			Position = deadPlayer.Position;
+			Position = deadPlayer.SpawnPosition.InWorldSpace();
 
 			heldInventory = deadPlayer.heldInventory;
 			inventory = deadPlayer.inventory;
@@ -354,7 +354,6 @@ namespace ViMG
             Currency = deadPlayer.Currency;
 
             SpawnPosition = CubePosition.FromWorldSpace(deadPlayer.world.WorldInfo.spawnPosition);
-            Position = deadPlayer.world.WorldInfo.spawnPosition;
 
             Health = MaxHealth / 4;
         }
@@ -468,10 +467,8 @@ namespace ViMG
 				}
 
 				//TODO death screen and stuff
-				Player p = new Player(this);
-				world.EntityManager.Add(p);
-				world.player[this.playerIndex] = p;
-			}
+				world.PlayerRespawnedEvent.Add(this);
+            }
 		}
 
         public override void OnUnload()
@@ -485,7 +482,7 @@ namespace ViMG
             // it should stay loaded.
             // TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
             // not the local player.
-            IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
+            //IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -503,6 +500,7 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
+			Health = 1;
             if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
@@ -2129,14 +2127,14 @@ namespace ViMG
 
 			SaveHelper.SaveInt32(saveBytes, Currency);
 
-			SaveHelper.SaveFloat32(saveBytes, world.GetTime());
+			SaveHelper.SaveFloat32(saveBytes, world?.GetTime() ?? -1);
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 
 			if (world != null)
 				SaveHelper.SaveInt32(saveBytes, (int)GetInputBitSet());
 			else SaveHelper.SaveInt32(saveBytes, 0);
 
-				Get(out BasicState state);
+			Get(out BasicState state);
 			state.OnSave(saveBytes);
 		}
 

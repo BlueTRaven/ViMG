@@ -38,6 +38,7 @@ namespace Engine.Networking.Messages
         public struct SyncEntity
         {
             public SyncType type;
+            public bool firstCreation;
             public Entity entity;
         }
 
@@ -90,7 +91,7 @@ namespace Engine.Networking.Messages
                 netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             }
 
-                double time = Main.Time;
+            double time = Main.Time;
 
             // TODO this may be necessary
             // If we receive a FullSync and EntityUnloaded message together, the former might be processed AFTER the latter,
@@ -130,6 +131,7 @@ namespace Engine.Networking.Messages
                     var entityData = new EntityManagerIO.EntityData(entity.entity);
                     List<byte> bytes = new List<byte>();
                     entityData.Save(bytes);
+                    netMessage.writer.Put(entity.firstCreation);
                     netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
                     break;
             }
@@ -159,6 +161,7 @@ namespace Engine.Networking.Messages
                     local.basicState.position.Z = reader.GetFloat();
                     break;
                 case SyncType.FullSync:
+                    bool firstSync = reader.GetBool();
                     byte[] bytes = reader.GetArray<byte>(sizeof(byte));
                     EntityManagerIO.EntityData data = new();
                     data.Load(bytes);
@@ -186,7 +189,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedSyncEntity queuedSync in queued)
             {
-                Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
+                //Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
                 if (Main.Time >= queuedSync.time)
                 {
                     DoAction(queuedSync, entityManager, entIO);
