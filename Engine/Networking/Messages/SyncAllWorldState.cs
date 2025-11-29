@@ -11,6 +11,7 @@ using ViMG;
 
 namespace Engine.Networking.Messages
 {
+    [Obsolete]
     public class SyncAllWorldState : Message
     {
         private const int SECTION_END = -1;
@@ -88,8 +89,7 @@ namespace Engine.Networking.Messages
                         data.Load(bytes);
                         if (data.IsValid)
                         {
-                            Player p = new Player();
-                            p.playerIndex = playerIndex;
+                            Player p = new Player(playerIndex, new Guid());
                             p.OnLoad(data.data, data.version);
 
                             GS.GetWorld().EntityManager.ForceAdd(p, data.id);

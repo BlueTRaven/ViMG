@@ -33,7 +33,7 @@ namespace ViMG.IMGUIImpl
         private static int selectedLayer = 0;
         private static WorldIO.LoadError? error = null;
         private static string[] folders;
-        private static EntityManagerIO.EntityDatas data;
+        private static EntityManagerIO.EntityDataChunkStore data;
 
         private static string filterStr = "";
         private static List<EntityManagerIO.EntityData> filterCache;
@@ -93,7 +93,7 @@ namespace ViMG.IMGUIImpl
                     {
                         if (ImGui.Button("Load"))
                         {
-                            data = new EntityManagerIO.EntityDatas();
+                            data = new EntityManagerIO.EntityDataChunkStore();
                             var error = data.Load(selectedFolder, selectedLayer);
 
                             if (error != WorldIO.LoadError.Success)

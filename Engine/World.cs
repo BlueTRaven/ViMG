@@ -352,7 +352,6 @@ namespace ViMG
                 if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 				{
                     Player p = new Player(player);
-                    p.playerIndex = player.playerIndex;
                     EntityManager.ForceAdd(p);
                     this.player[player.playerIndex] = p;
 

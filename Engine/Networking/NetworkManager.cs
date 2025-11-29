@@ -256,8 +256,7 @@ namespace Engine.Networking
                     };
                     uniqueNetPlayers += 1;
 
-                    Player p = new Player();
-                    p.playerIndex = index;
+                    Player p = new Player(index, Guid.NewGuid());
                     // TODO
                     p.FirstCreated(world.WorldInfo);
                     world.EntityManager.Add(p);

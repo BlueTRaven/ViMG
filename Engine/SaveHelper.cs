@@ -153,13 +153,13 @@ namespace ViMG
 			SaveFloat32(data, vec.W);
 		}
 
-		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from data2 into data1.
+		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from source into dest.
 		//This doesn't need a load variation.
-		public static void SaveBytesFlat(List<byte> data1, List<byte> data2)
+		public static void SaveBytesFlat(List<byte> dest, List<byte> source)
         {
-			for (int i = 0; i < data2.Count; i++)
+			for (int i = 0; i < source.Count; i++)
             {
-				data1.Add(data2[i]);
+				dest.Add(source[i]);
             }
         }
 

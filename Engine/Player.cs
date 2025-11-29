@@ -29,7 +29,7 @@ using static Engine.Networking.Messages.SyncPlayerInputs;
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(16, 0)]
+	[EntityMeta(17, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
@@ -285,6 +285,7 @@ namespace ViMG
 
 		private BuffManagerPlayer buffManager;
 
+		public Guid playerUuid;
 		public int playerIndex;
 		public bool IsLocalPlayer =>
             Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
@@ -305,8 +306,16 @@ namespace ViMG
         public PlayerInput LeftClick;
         public PlayerInput RightClick;
 
-        public Player()
+		public Player() : this(0, new())
 		{
+
+		}
+
+        public Player(int playerIndex, Guid uuid)
+		{
+			this.playerIndex = playerIndex;
+			this.playerUuid = uuid;
+
 			SyncInterval = 1;
 			AlwaysRender = true;
 
@@ -338,6 +347,9 @@ namespace ViMG
         //Creates a new player from a dead player.
         public Player(Player deadPlayer)
 		{
+			playerIndex = deadPlayer.playerIndex;
+			playerUuid = deadPlayer.playerUuid;
+
             SyncInterval = 1;
             AlwaysRender = true;
 
@@ -369,6 +381,8 @@ namespace ViMG
         public override void Initialize(World world)
         {
             base.Initialize(world);
+
+			Console.WriteLine("{0} UUid: {1}", playerIndex, playerUuid);
 
 			IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
 			world.player[playerIndex] = this;
@@ -2143,6 +2157,7 @@ namespace ViMG
 			state.OnSave(saveBytes);
 
 			SaveHelper.SaveInt32(saveBytes, playerIndex);
+			SaveHelper.SaveBytesFlat(saveBytes, playerUuid.ToByteArray());
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2202,6 +2217,12 @@ namespace ViMG
 
 			if (version >= 16)
 				playerIndex = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			if (version >= 17)
+			{
+				var uuidBytes = SaveHelper.LoadBytes(loadBytes, 16, ref index);
+				playerUuid = new Guid(uuidBytes);
+			}
 		}
 
         public void Get(out BasicState state)

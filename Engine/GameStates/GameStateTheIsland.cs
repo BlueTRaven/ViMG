@@ -2,6 +2,7 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -52,6 +53,7 @@ namespace ViMG.GameStates
         public static int ProgressMin;
         public static int ProgressMax;
 
+        public PlayerManagerIO? playerIO;
         public NetworkManager? netManager;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
@@ -78,15 +80,22 @@ namespace ViMG.GameStates
             worldTask = new Task<World>(() =>
             {
                 ProfilingHelper.Start("Loading and Flushing World...");
+
                 World world;
                 if (!Directory.Exists("./saves/" + worldName + "/"))
                 {
                     world = CreateWorld(device, worldName);
+                    playerIO = new PlayerManagerIO(); 
+                    playerIO.Load(worldName);
                 }
                 else
                 {
                     world = LoadWorld(device, worldName);
+                    playerIO = new PlayerManagerIO();
+                    playerIO.Load(worldName);
                 }
+
+                playerIO.DeserializeLocal(world);
 
                 if (world == null) throw new Exception("Errored while loading world");
 
@@ -259,7 +268,7 @@ namespace ViMG.GameStates
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player();
+            var player = new Player(0, Guid.NewGuid());
             player.FirstCreated(worldInfo);
             prototype.EntityManager.Add(player, true);
 
@@ -275,6 +284,11 @@ namespace ViMG.GameStates
             ProfilingHelper.Start("Saving Entities...");
             entIO.SerializeAll(SIZE_IN_CHUNKS);
             entIO.Save(worldName);
+
+            var playerIO = new PlayerManagerIO();
+            playerIO.SerializeAll(world);
+            playerIO.Save(worldName);
+
             ProfilingHelper.End("Done.");
 
             ProfilingHelper.Start("Reloading...");
@@ -287,6 +301,7 @@ namespace ViMG.GameStates
             //So we just call the raw Unload functions.
             world.isCreateWorldReloading = true;
             entityManager.UnloadAll();
+            Array.Fill(world.player, null);
             world.isCreateWorldReloading = false;
             //chunkLoadManager.UnloadAll();
             
@@ -300,9 +315,6 @@ namespace ViMG.GameStates
 
         public void LoadNone()
         {
-            // TODO: This should initialize an empty world.
-            //World world = new World()
-
             using var zone = TracyImpl.Tracy.BeginZone();
 
             const int SIZE_IN_CHUNKS = 32;

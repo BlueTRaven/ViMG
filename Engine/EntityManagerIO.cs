@@ -19,7 +19,10 @@ namespace ViMG
         public const string FILE_NAME_ENTITIES = "entities";
 		public const string EXT_ENTITIES = ".vis";
 
-		public class EntityDatas
+		/// <summary>
+		/// Stores EntityData by chunk.
+		/// </summary>
+		public class EntityDataChunkStore
 		{
 			public Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
 			public int numEntities;
@@ -33,7 +36,7 @@ namespace ViMG
 			{
                 numEntities = 0;
 
-                Console.WriteLine("Loading Entities...");
+                Console.WriteLine("Loading Entity Datas...");
 
                 if (!File.Exists(GetLoadName(folderName, layer)))
                     return LoadError.FileDoesntExist;
@@ -219,9 +222,9 @@ namespace ViMG
                 SaveHelper.SaveBytesFlat(bytes, data);
             }
 
-			public void Load(byte[] entityDataBytes)
+			public int Load(byte[] entityDataBytes)
 			{
-				if (entityDataBytes.Length <= 0) return;
+				if (entityDataBytes.Length <= 0) return 0;
 				int edbI = 0;
 
                 int headerSize = SaveHelper.LoadInt32(entityDataBytes, ref edbI);
@@ -268,6 +271,8 @@ namespace ViMG
 
 					data = entBody;
                 }
+
+				return edbI;
             }
 		}
 
@@ -277,18 +282,11 @@ namespace ViMG
         private readonly int layer;
 
         //Player datas are stored separately as they should immediately be deserialized on startup.
-        private ChunkPosition playerChunkPosition;
-		private bool playerChunkPositionLoaded;
-		//private Dictionary<ChunkPosition, List<EntityLookup>> lookups = new Dictionary<ChunkPosition, List<EntityLookup>>();
+        //private ChunkPosition playerChunkPosition;
+		//private bool playerChunkPositionLoaded;
 
-		private EntityDatas datas;
 
-		//private Dictionary<ChunkPosition, List<EntityData>> entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
-  //      private int numLoadedEntities;
-
-		//private bool loaded;
-
-		//public int Version;
+		private EntityDataChunkStore datas;
 
 		public EntityManagerIO(EntityManager entityManager, int layer)
         {
@@ -297,57 +295,58 @@ namespace ViMG
         }
 
 		public void Save(string folderName)
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
+		{
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            //h: header block
-            //	v: version (int) overall version of the entity file
-            //	l: layer (int) layer that this entity file belongs to
-            //	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
-            //  c: count of entities
-            //e: entities data block
-            //	s: header + entity data block size (total)
-            //  e: entity data block
-            //    h: header block
-            //      s: size (int) includes data
-            //  	i: entity id (int) (index in saved entity array)
-            //	    t: type id (int)
-            //	    cx, cy, cz: chunk x, y, z (int each) (position in chunks)
-            //	    v: version (int)
-            //	  s: size (int)
-            //	  ck: chksum (int)
-            //	  d: data block
-            using (MemoryStream ms = new MemoryStream())
+			//h: header block
+			//	v: version (int) overall version of the entity file
+			//	l: layer (int) layer that this entity file belongs to
+			//	emi: entity manager id (ulong) last saved entity id, to prevent entity id overlaps
+			//  c: count of entities
+			//e: entities data block
+			//	s: header + entity data block size (total)
+			//  e: entity[h-c] data blocks
+			//    h: header block
+			//      s: size (int) includes data
+			//  	i: entity id (int) (index in saved entity array)
+			//	    t: type id (int)
+			//	    cx, cy, cz: chunk x, y, z (int each) (position in chunks)
+			//	    v: version (int)
+			//	  s: size (int)
+			//	  ck: chksum (int)
+			//	  d: data block
+			using (MemoryStream ms = new MemoryStream())
 			{
 				using (BinaryWriter writer = new BinaryWriter(ms, Encoding.ASCII, true))
 				{
-					writer.Write(VERSION);                      //h-v: file version
-					writer.Write(layer);					//h-l: file layer
-					writer.Write(manager.GetUniqueId());	//h-emi: entity manager last saved entity id
+					writer.Write(VERSION);                   //h-v: file version
+					writer.Write(layer);                    //h-l: file layer
+					writer.Write(manager.GetUniqueId());    //h-emi: entity manager last saved entity id
 
 					int serializableEntities = 0;
 
 					List<byte> entitiesDataBlock = new List<byte>();
 
 					foreach (List<EntityData> datas in datas.entityDatas.Values)
-                    {
+					{
 						foreach (EntityData data in datas)
-                        {
-							SaveHelper.SaveInt32(entitiesDataBlock, data.header.Length + data.data.Length);  //e-s
-							SaveHelper.SaveBytesFlat(entitiesDataBlock, data.header);	//e-h
-							SaveHelper.SaveBytesFlat(entitiesDataBlock, data.data);		//e-e
+						{
+							data.Save(entitiesDataBlock);
+							//SaveHelper.SaveInt32(entitiesDataBlock, data.header.Length + data.data.Length);  //e-s
+							//SaveHelper.SaveBytesFlat(entitiesDataBlock, data.header);	//e-h
+							//SaveHelper.SaveBytesFlat(entitiesDataBlock, data.data);		//e-e
 
 							serializableEntities++;
 						}
 					}
 
-					writer.Write(serializableEntities);	//h-c:	count of entities
+					writer.Write(serializableEntities); //h-c:	count of entities
 
-					writer.Write(entitiesDataBlock.Count);		//h-s: size of entity block
-					writer.Write(entitiesDataBlock.ToArray());	//e
+					writer.Write(entitiesDataBlock.Count);      //h-s: size of entity block
+					writer.Write(entitiesDataBlock.ToArray());  //e
 				}
 
-				using (FileStream fs = new FileStream(GetSaveName(folderName, layer), FileMode.OpenOrCreate, FileAccess.Write))
+                using (FileStream fs = new FileStream(GetSaveName(folderName, layer), FileMode.OpenOrCreate, FileAccess.Write))
 				{
 					fs.Write(ms.GetBuffer());
 				}
@@ -358,7 +357,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			if (datas == null) datas = new EntityDatas();
+			if (datas == null) datas = new EntityDataChunkStore();
 
             for (int z = 0; z < sizeInChunks; z++)
             {
@@ -394,6 +393,8 @@ namespace ViMG
 
 			foreach (Entity entity in entities)
 			{
+				if (entity is Player) continue;
+
 				ChunkPosition entityPos = ChunkPosition.WorldSpaceChunk(entity.Position);
 
 				if (entityPos == pos)
@@ -412,11 +413,11 @@ namespace ViMG
 
 			foreach (Entity entity in entitiesToSerialize)
 			{
-				if (entity is Player)
-				{
-					playerChunkPosition = ChunkPosition.WorldSpaceChunk(entity.Position);
-					playerChunkPositionLoaded = true;
-				}
+				//if (entity is Player)
+				//{
+				//	playerChunkPosition = ChunkPosition.WorldSpaceChunk(entity.Position);
+				//	playerChunkPositionLoaded = true;
+				//}
 				if (!datas.entityDatas.ContainsKey(pos))
 					datas.entityDatas.Add(pos, new List<EntityData>());
 				EntityData data = new EntityData(entity);
@@ -459,125 +460,12 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			datas = new EntityDatas();
+			datas = new EntityDataChunkStore();
 			var error = datas.Load(folderName, layer);
 			if (error == LoadError.Success)
 				manager.SetUniqueIdSeed(datas.UniqueIdSeed);
 			return error;
-			
-			//entityDatas = new Dictionary<ChunkPosition, List<EntityData>>();
-			//numLoadedEntities = 0;
-
-			//Console.WriteLine("Loading Entities...");
-
-			//if (!File.Exists(GetLoadName(folderName)))
-			//	return LoadError.FileDoesntExist;
-
-			//using (FileStream fs = new FileStream(GetLoadName(folderName), FileMode.Open, FileAccess.Read, FileShare.None, 1024))
-			//{
-			//	using (BinaryReader reader = new BinaryReader(fs, Encoding.ASCII, false))
-			//	{
-			//		Version = reader.ReadInt32();
-
-			//		if (Version <= MIN_VERSION)
-			//			return LoadError.InvalidVersion;
-
-			//		if (Version >= 6)
-			//		{
-			//			var loadedLayer = reader.ReadInt32();
-			//			if (loadedLayer != layer)
-			//			{
-			//				OtherError = string.Format("Tried to load a entity file as layer {0}, but it actually belongs to layer {1}!", layer, loadedLayer);
-			//				return LoadError.Other;
-			//			}
-			//		}
-
-			//		ulong uniqueIdSeed = reader.ReadUInt64();   //unique id
-			//		manager.SetUniqueIdSeed(uniqueIdSeed);
-
-			//		int num = reader.ReadInt32();
-
-			//		int dataBlockSize = reader.ReadInt32();
-			//		byte[] entityDataBlock = reader.ReadBytes(dataBlockSize);
-
-			//		int edbI = 0;
-			//		for (int i = 0; i < num; i++)
-			//		{
-			//			int headerSize = SaveHelper.LoadInt32(entityDataBlock, ref edbI);
-			//			byte[] bytes = SaveHelper.LoadBytes(entityDataBlock, headerSize, ref edbI);
-
-			//			int index = 0;
-			//			ulong entId = SaveHelper.LoadUInt64(bytes, ref index);
-			//			string entType = SaveHelper.LoadString(bytes, ref index);
-
-			//			int cx = SaveHelper.LoadInt32(bytes, ref index);
-			//			int cy = SaveHelper.LoadInt32(bytes, ref index);
-			//			int cz = SaveHelper.LoadInt32(bytes, ref index);
-			//			ChunkPosition position = new ChunkPosition(cx, cy, cz);
-
-			//			int entVersion = SaveHelper.LoadInt32(bytes, ref index);
-			//			int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
-			//			int entChksum = SaveHelper.LoadInt32(bytes, ref index);
-
-			//			byte[] entHeader = bytes[..index];
-			//			byte[] entBody = bytes[index..];
-
-			//			if (entBody.Length != entDataSize)
-			//			{
-			//				Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
-			//				continue;
-			//			}
-
-			//			int chksum = 0;
-			//			for (int d = 0; d < entDataSize; d++)
-			//				chksum += entBody[d];
-
-			//			if (entChksum != chksum)
-			//			{
-			//				Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
-			//			}
-			//			else
-			//			{
-			//				if (entType == typeof(Player).ToString())
-			//				{
-			//					playerChunkPosition = position;
-			//					playerChunkPositionLoaded = true;
-			//				}
-			//				if (!entityDatas.ContainsKey(position))
-			//					entityDatas.Add(position, new List<EntityData>());
-			//				entityDatas[position].Add(new EntityData()
-			//				{
-			//					id = entId,
-			//					type = entType,
-			//					position = position,
-			//					size = entDataSize,
-			//					chksum = chksum,
-			//					version = entVersion,
-
-			//					header = entHeader,
-			//					data = entBody
-			//				});
-
-			//				numLoadedEntities++;
-			//			}
-			//		}
-			//	}
-			//}
-
-			//loaded = true;
-			//return LoadError.Success;
 		}
-
-		public void DeserializePlayerChunk()
-        {
-			if (playerChunkPositionLoaded)
-				Deserialize(playerChunkPosition);
-
-			if (manager.GetAll<Player>().Count <= 0) 
-			{
-				Console.WriteLine("Failed to load a player at some point.");
-			}
-        }
 
 		public void Deserialize(ChunkPosition pos)
 		{

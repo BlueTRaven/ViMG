@@ -72,6 +72,8 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     world.SaveWorld();
+                    gsManager.TheIsland.playerIO?.SerializeAll(world);
+                    gsManager.TheIsland.playerIO?.Save(world.LoadedFolderName);
                 }
 
                 y += 32 + MARGIN;
