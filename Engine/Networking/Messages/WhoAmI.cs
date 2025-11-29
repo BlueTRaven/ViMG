@@ -7,9 +7,50 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using static Engine.Networking.NetworkManager;
 
 namespace Engine.Networking.Messages
 {
+    public class WhoAmIRequest : Message
+    {
+        public static WhoAmIRequest Instance { get; private set; }
+
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
+
+        public WhoAmIRequest()
+        {
+            Instance = this;
+        }
+
+        public override void SendMessage(NetworkMessage netMessage, object? addData)
+        {
+            base.SendMessage(netMessage, addData);
+            netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
+
+            if (GS.localPlayerName != null)
+                netMessage.writer.Put(GS.localPlayerName);
+            else netMessage.writer.Put("");
+
+            netMessage.Send();
+        }
+
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
+        {
+            base.ReceiveMessage(reader, peer);
+
+            string playerName = reader.GetString();
+
+            if (playerName == "" || GS.netManager.GetNetPlayerByName(playerName).playerId != -1)
+            {
+                Console.WriteLine("Invalid player name recieved from {0}", peer.ToString());
+                peer.Disconnect();
+                return;
+            }
+
+            Main.gameStateManager.TheIsland.netManager.NewPlayer(peer, playerName);
+        }
+    }
+
     public class WhoAmI : Message
     {
         public static WhoAmI Instance { get; private set; }

@@ -36,24 +36,24 @@ namespace Engine.Networking.Messages
                 netMessage.writer.Put(player);
             }
 
-            var players = addData as Player[];
-            if (players != null)
-            {
-                //int numPlayers = GS.GetWorld().player.Where(x => x != null).Count();
-                netMessage.writer.Put(players.Length);
-                Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", players.Length);
-                foreach (Player player in players)
-                {
-                    netMessage.writer.Put(player.playerIndex);
-                    Console.WriteLine("SyncPlayerConnected: write index {0}", player.playerIndex);
+            //var players = addData as Player[];
+            //if (players != null)
+            //{
+            //    //int numPlayers = GS.GetWorld().player.Where(x => x != null).Count();
+            //    netMessage.writer.Put(players.Length);
+            //    Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", players.Length);
+            //    foreach (Player player in players)
+            //    {
+            //        netMessage.writer.Put(player.playerIndex);
+            //        Console.WriteLine("SyncPlayerConnected: write index {0}", player.playerIndex);
 
-                    var playerEntityData = new EntityManagerIO.EntityData(player);
-                    List<byte> bytes = new List<byte>();
-                    playerEntityData.Save(bytes);
-                    netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
-                }
-            }
-            else netMessage.writer.Put((int)0);
+            //        var playerEntityData = new EntityManagerIO.EntityData(player);
+            //        List<byte> bytes = new List<byte>();
+            //        playerEntityData.Save(bytes);
+            //        netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
+            //    }
+            //}
+            //else netMessage.writer.Put((int)0);
 
             netMessage.Send();
         }
@@ -82,7 +82,7 @@ namespace Engine.Networking.Messages
                 {
                     var disconnectedPlayer = GS.GetWorld().player[old[i].playerId];
                     if (disconnectedPlayer != null)
-                        GS.GetWorld().EntityManager.Remove(disconnectedPlayer);
+                        GS.GetWorld().EntityManager.Unload(disconnectedPlayer);
                 }
             }
 

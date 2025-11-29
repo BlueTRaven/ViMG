@@ -56,6 +56,8 @@ namespace ViMG.GameStates
         public PlayerManagerIO? playerIO;
         public NetworkManager? netManager;
 
+        public string? localPlayerName;
+
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
             netManager = new NetworkManager();

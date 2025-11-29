@@ -23,6 +23,7 @@ namespace Engine.Networking.Messages
             Register(new SyncChunk());
             Register(new SyncBasicState());
             Register(new WhoAmI());
+            Register(new WhoAmIRequest());
             Register(new SyncPlayerInputs());
             Register(new SyncCubeUpdate());
             Register(new SyncCubeUpdateAuditRequest());

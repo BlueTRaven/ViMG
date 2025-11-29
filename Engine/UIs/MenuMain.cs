@@ -34,6 +34,7 @@ namespace ViMG.UIs
         private bool startAsServer;
         private int serverPort = 9050;
         private string serverIp = "localhost";
+        private string playerName = "";
 
         public MenuMain(GameStateManager gsManager) : base(gsManager)
         {
@@ -98,6 +99,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
+                    gsManager.TheIsland.localPlayerName = "Server";
                     gsManager.Continue(GameStateManager.NetworkingMode.Server);
                 }
 
@@ -105,6 +107,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
+                    gsManager.TheIsland.localPlayerName = "Client";
                     gsManager.Continue(GameStateManager.NetworkingMode.Client);
                 }
 
@@ -211,6 +214,11 @@ namespace ViMG.UIs
 
                 float ypos = 0;
 
+                UI.MakeLabel(new UI.LabelConstructionParameters("Player Name:", fi, 1000, new Vector2(-108, 48 * ypos)));
+                UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref playerName, UI.TextInputFlags.AlphaNumerical, fi);
+                ypos++;
+
                 UI.MakeLabel(new UI.LabelConstructionParameters("IP:", fi, 1000, new Vector2(-108, 48 * ypos)));
                 UI.MakeTextbox(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)), ref serverIp, UI.TextInputFlags.AlphaNumericalSpecial, fi);
@@ -228,6 +236,7 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     startAsServer = true;
+                    gsManager.TheIsland.localPlayerName = playerName;
                     gsManager.TheIsland.netManager.Ip = serverIp;
                     gsManager.TheIsland.netManager.Port = serverPort;
                     state = MenuState.Worlds;
@@ -241,6 +250,7 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.netMode = GameStateManager.NetworkingMode.Client;
+                    gsManager.TheIsland.localPlayerName = playerName;
                     gsManager.TheIsland.netManager.Ip = serverIp;
                     gsManager.TheIsland.netManager.Port = serverPort;
                     gsManager.SetGameState(gsManager.TheIsland);
