@@ -385,7 +385,16 @@ namespace ViMG.Entities
 			foreach (Entity entity in entities)
 			{
 				if (!entity.Dead)
-					entity.Update(deltaTime);
+				{
+					try
+					{
+						entity.Update(deltaTime);
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine("Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", entity, entity.Id, e.ToString());
+					}
+				}
 			}
 
 			iteratingUpdate = false;

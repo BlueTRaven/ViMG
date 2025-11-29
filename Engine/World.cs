@@ -367,6 +367,7 @@ namespace ViMG
 			}
 			PlayerRespawnedEvent.Clear();
 
+			SyncChunk.Instance.Apply(ChunkManager, ChunkLoadManager);
             SyncPlayerInputs.Instance.Apply(player);
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
@@ -658,6 +659,42 @@ namespace ViMG
 			}
 			else return null;
 		}
+
+		public Player? GetClosestPlayer(Vector3 position)
+		{
+			Player? closestPlayer = null;
+            float closestDistance = float.MaxValue;
+            foreach (Player? player in player)
+			{
+				if (player != null)
+				{
+					var dist = (player.Position - position).Length();
+
+                    if (dist < closestDistance)
+					{
+						closestDistance = dist;
+						closestPlayer = player;
+					}
+                }
+			}
+
+			return closestPlayer;
+		}
+
+		public float DistanceFromPlayer(Vector3 position)
+		{
+			float closestDistance = float.MaxValue;
+
+			foreach (Player? player in player)
+			{
+				if (player != null)
+				{
+					closestDistance = float.Min(closestDistance, (player.Position - position).Length());
+				}
+			}
+
+			return closestDistance;
+        }
 
 		//Gets a list of all chunks that should be rendered by the main camera.
 		public List<ChunkPosition> GetChunkDrawPositions()

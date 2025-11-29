@@ -25,6 +25,8 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
+        private List<CubeView.PalettizedChunk> chunksToLoad = new List<CubeView.PalettizedChunk>();
+
         public SyncChunk()
         {
             Instance = this;
@@ -78,31 +80,41 @@ namespace Engine.Networking.Messages
                 position = chunkPosition,
                 type = paletteType,
             };
-            var ids = GS.GetWorld().ChunkManager.CubeView.Depaletteize(chunk);
-            //var ids = reader.GetArray<ushort>(sizeof(byte));
+            chunksToLoad.Add(chunk);
+        }
 
-            CubePosition basePosition = chunkPosition.InCubeSpace();
-
+        public unsafe void Apply(ChunkManager chunkManager, ChunkLoadManager chunkLoadManager)
+        {
             Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-            fixed (CubePosition* queryPositionsPtr = queryPositions)
+
+            foreach (CubeView.PalettizedChunk chunkToLoad in chunksToLoad)
             {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                var ids = chunkManager.CubeView.Depaletteize(chunkToLoad);
+
+                CubePosition basePosition = chunkToLoad.position.InCubeSpace();
+
+                fixed (CubePosition* queryPositionsPtr = queryPositions)
                 {
-                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
-                        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                        for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                         {
-                            Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                            CubePosition pos = basePosition + new CubePosition(x, y, z);
-                            queryPositionsPtr[i] = pos;
+                            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                            {
+                                Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                                CubePosition pos = basePosition + new CubePosition(x, y, z);
+                                queryPositionsPtr[i] = pos;
+                            }
                         }
                     }
                 }
+
+                chunkManager.CubeView.SetCubes(queryPositions, ids);
+                chunkLoadManager.Unload(chunkToLoad.position);
+                chunkLoadManager.MarkDirty(chunkToLoad.position);
             }
 
-            GS.GetWorld().ChunkManager.CubeView.SetCubes(queryPositions, ids);
-            GS.GetWorld().ChunkLoadManager.Unload(chunkPosition);
-            GS.GetWorld().ChunkLoadManager.MarkDirty(chunkPosition);
+            chunksToLoad.Clear();
         }
     }
 }

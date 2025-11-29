@@ -370,8 +370,6 @@ namespace ViMG
         {
             base.Initialize(world);
 
-			Console.WriteLine("Init player with id {0}", Id);
-
 			IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
 			world.player[playerIndex] = this;
             invulnTimer = 6f;   //6 seconds of invuln after respawning
@@ -508,7 +506,6 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			Health = 1;
             if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
 
@@ -547,15 +544,15 @@ namespace ViMG
 				}
 			}
 
+			var bh = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
 			if (state != State.Noclip && (!world.ChunkManager.IsInWorldBounds(Position) ||
 				!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position))))
 			{
-				//world.ChunkLoadManager.PrintLoadState(ChunkPosition.WorldSpaceChunk(Position));
-				//Console.WriteLine("Unloaded: {0} {1}", Position, ChunkPosition.WorldSpaceChunk(Position));
-				world.PhysicsInfo.Simulation.Sleeper.Sleep(world.PhysicsInfo.Simulation.Bodies[physicsHandle].MemoryLocation.Index);
+				if (bh.Awake)
+					bh.Awake = false;
 			}
-			else
-				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);    //player physics shape can never fall asleep
+			else if (!bh.Awake)
+				bh.Awake = true; //player physics shape can never fall asleep
 
 			if (hurtbox == -1)
 				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f, invulnTimer <= 0);

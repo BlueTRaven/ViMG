@@ -96,8 +96,7 @@ namespace ViMG.Entities
 						wanderTimer = Main.random.NextFloat(0.65f, 2.5f);
 					}
 				}
-				// TODO MULTIPLAYER REFACTOR
-				else target = world.player[0].Position;
+				else target = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
 
 				if (contactChecker.OnGround)
 				{

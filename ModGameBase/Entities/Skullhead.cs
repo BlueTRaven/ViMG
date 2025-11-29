@@ -173,8 +173,8 @@ namespace ViMG.Entities
 
 			if (state == State.Chase)
 			{
-				targetPosition = world.player[0].Position;
-				Vector3 direction = targetPosition - Position;
+                targetPosition = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
+                Vector3 direction = targetPosition - Position;
 
 				stateTimer -= (float)deltaTime;
 
@@ -202,7 +202,7 @@ namespace ViMG.Entities
 			}
 			else if (state == State.SetupDash)
             {
-				targetPosition = world.player[0].Position;
+				targetPosition = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
 
 				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
@@ -239,9 +239,9 @@ namespace ViMG.Entities
 			}
 			else if (state == State.Dash)
             {
-				targetPosition = world.player[0].Position;
+                targetPosition = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
 
-				Vector3 direction = (targetPosition + targetOffset) - Position;
+                Vector3 direction = (targetPosition + targetOffset) - Position;
 
 				//Vector3 direction = targetPosition - Position;
 				bool inRange;
@@ -267,9 +267,9 @@ namespace ViMG.Entities
 			}
 			else if (state == State.Rotate)
             {
-				targetPosition = world.player[0].Position;
+                targetPosition = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
 
-				Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
+                Vector3 ground = world.ChunkManager.CubeView.GetFirstSolidDown(
 					CubePosition.FromWorldSpace(new Vector3(Position.X, Position.Y + Cube.CUBE_SCALE * 16, Position.Z)))
 					.GetOrDefault(new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace)).InWorldSpace() +
 					new Vector3(0, Cube.CUBE_SCALE * 4, 0);
@@ -319,8 +319,8 @@ namespace ViMG.Entities
 			}
 			else if (state == State.SlowChase)
             {
-				targetPosition = world.player[0].Position;
-				Vector3 direction = targetPosition - Position;
+                targetPosition = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;
+                Vector3 direction = targetPosition - Position;
 
 				stateTimer -= (float)deltaTime;
 
@@ -382,7 +382,7 @@ namespace ViMG.Entities
                 }
             }
 
-			if (world.player[0].Health <= 0)
+			if (world.GetClosestPlayer(Position)?.Health <= 0)
             {
 				//limit max upwards velocity so other forces can't prevent us from moving downwards.
 				if (velocity.Y > -Cube.CUBE_SCALE)
@@ -390,7 +390,7 @@ namespace ViMG.Entities
 
 				velocity.Y -= Cube.CUBE_SCALE * 32;
 
-				if ((world.player[0].Position - Position).Length() > Cube.CUBE_SCALE * 128f)
+				if (world.DistanceFromPlayer(Position) > Cube.CUBE_SCALE * 128f)
                 {
 					world.EntityManager.Remove(this);
                 }

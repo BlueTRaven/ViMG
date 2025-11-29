@@ -105,11 +105,13 @@ namespace Engine.Networking
             
             netManager.EnableStatistics = true;
             netManager.ChannelsCount = 4;
+            netManager.NatPunchEnabled = true;
 
             Array.Fill(netPlayers, new NetPlayer());
 
             if (IsServer)
             {
+                netManager.UseNativeSockets = true;
                 // SimulateLatency seems to be pretty buggy. It'll sometimes just hold onto packets for a long time for no apparent reason.
                 //netManager.SimulateLatency = true;
                 //netManager.SimulationMaxLatency = 500;

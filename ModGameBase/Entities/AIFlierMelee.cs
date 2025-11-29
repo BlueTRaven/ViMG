@@ -214,10 +214,10 @@ namespace ViMG.Entities
 				if (ai.CollidesWithWorld)
                     UpdateCollision();
 
-				// TODO MULTIPLAYER REFACTOR
-				if ((entity.world.player[0].Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Remove(entity);
-			}
+                // TODO MULTIPLAYER REFACTOR
+                if (entity.world.DistanceFromPlayer(entity.Position) > 128 * Cube.CUBE_SCALE)
+                    entity.world.EntityManager.Remove(entity);
+            }
 
 			private void UpdateCollision()
 			{
