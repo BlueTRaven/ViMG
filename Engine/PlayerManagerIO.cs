@@ -77,6 +77,8 @@ namespace Engine
                     fs.Write(ms.GetBuffer());
                 }
             }
+
+            playerDatas.Clear();
         }
 
         public LoadError Load(string folderName)
@@ -144,6 +146,8 @@ namespace Engine
             {
                 entity = data,
                 layer = world.Layer,
+                uuid = world.player[playerIndex].playerUuid,
+                isLocal = world.player[playerIndex].IsLocalPlayer,
             });
         }
 
@@ -156,6 +160,7 @@ namespace Engine
                 if (pdata.isLocal)
                 {
                     index = i;
+                    break;
                 }
             }
 

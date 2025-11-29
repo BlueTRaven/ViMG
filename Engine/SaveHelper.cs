@@ -74,7 +74,7 @@ namespace ViMG
 
 		public static void SaveBool(List<byte> data, bool b)
         {
-			data.Add((byte)(b ? 0 : 1));
+			data.Add((byte)(b ? 1 : 0));
         }
 
 		public static void SaveString(List<byte> data, string str)
