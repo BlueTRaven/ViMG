@@ -387,11 +387,11 @@ namespace Engine.Networking
             float[] received = new float[statistics.Length - 1];
             for (int i = 0; i < statistics.Length - 1; i++)
             {
-                sent[i] = statistics[i].BytesSent - statistics[i + 1].BytesSent;
-                received[i] = statistics[i].BytesReceived - statistics[i + 1].BytesReceived;
+                sent[i] = (float)(statistics[i].BytesSent - statistics[i + 1].BytesSent) / 10000.0f;
+                received[i] = (float)(statistics[i].BytesReceived - statistics[i + 1].BytesReceived) / 10000.0f;
             }
-            ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, 0, null, 0, (float)(maxSent), new(0, 80));
-            ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, 0, null, 0, (float)(maxRecieved), new(0, 80));
+            ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, 0, null, 0, (float)(maxSent) / 10000.0f, new(0, 80));
+            ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, 0, null, 0, (float)(maxRecieved) / 10000.0f, new(0, 80));
         }
     }
 }

@@ -111,7 +111,7 @@ namespace ViMG.IMGUIImpl
         private const int MAX_LINES = 500;
         private const int MAX_HISTORY = 500;
         private static FastList<string> lines = new(MAX_LINES);
-        private static FastList<string> commandHistory = new(MAX_HISTORY);
+        private static FastList<string> commandHistory = new(MAX_HISTORY); 
 
         private static string editingString = "";
         private static string executingCommand = "";

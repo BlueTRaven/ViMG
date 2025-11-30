@@ -85,10 +85,8 @@ namespace Engine.Networking.Messages
 
         public unsafe void Apply(ChunkManager chunkManager, ChunkLoadManager chunkLoadManager)
         {
-            Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-
-            foreach (CubeView.PalettizedChunk chunkToLoad in chunksToLoad)
-            {
+            Parallel.ForEach(chunksToLoad, chunkToLoad => {
+                Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
                 var ids = chunkManager.CubeView.Depaletteize(chunkToLoad);
 
                 CubePosition basePosition = chunkToLoad.position.InCubeSpace();
@@ -110,9 +108,40 @@ namespace Engine.Networking.Messages
                 }
 
                 chunkManager.CubeView.SetCubes(queryPositions, ids);
+            });
+
+            foreach (var chunkToLoad in chunksToLoad)
+            {
                 chunkLoadManager.Unload(chunkToLoad.position);
                 chunkLoadManager.MarkDirty(chunkToLoad.position);
             }
+
+            //foreach (CubeView.PalettizedChunk chunkToLoad in chunksToLoad)
+            //{
+            //    var ids = chunkManager.CubeView.Depaletteize(chunkToLoad);
+
+            //    CubePosition basePosition = chunkToLoad.position.InCubeSpace();
+
+            //    fixed (CubePosition* queryPositionsPtr = queryPositions)
+            //    {
+            //        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+            //        {
+            //            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            //            {
+            //                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            //                {
+            //                    Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+            //                    CubePosition pos = basePosition + new CubePosition(x, y, z);
+            //                    queryPositionsPtr[i] = pos;
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //    chunkManager.CubeView.SetCubes(queryPositions, ids);
+            //    chunkLoadManager.Unload(chunkToLoad.position);
+            //    chunkLoadManager.MarkDirty(chunkToLoad.position);
+            //}
 
             chunksToLoad.Clear();
         }
