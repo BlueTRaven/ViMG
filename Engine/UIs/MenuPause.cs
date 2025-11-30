@@ -74,6 +74,7 @@ namespace ViMG.UIs
                     world.SaveWorld();
                     gsManager.TheIsland.playerIO?.SerializeAll(world);
                     gsManager.TheIsland.playerIO?.Save(world.LoadedFolderName);
+                    gsManager.TheIsland.playerIO?.DecacheCurrentlySerialized(world.EntityManager);
                 }
 
                 y += 32 + MARGIN;

@@ -76,10 +76,6 @@ namespace Engine
                     fs.Write(ms.GetBuffer());
                 }
             }
-
-            // FIXME if a player is not connected when we click save, this will wipe its data. 
-            // We need to do actual deduplication (ie get players that are loaded, remove them if they are present in the serialized data)
-            playerDatas.Clear();
         }
 
         public LoadError Load(string folderName)
@@ -222,6 +218,28 @@ namespace Engine
             }
 
             return player;
+        }
+
+        public void DecacheCurrentlySerialized(EntityManager manager)
+        {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
+            List<PlayerData> datasToDecache = new List<PlayerData>();
+
+            foreach (PlayerData data in playerDatas)
+            {
+                foreach (Player p in manager.GetAll<Player>())
+                {
+                    //entity is currently active; decache it
+                    if (p.Id == data.entity.id)
+                        datasToDecache.Add(data);
+                }
+            }
+
+            foreach (PlayerData data in datasToDecache)
+            {
+                playerDatas.Remove(data);
+            }
         }
 
         public override bool HandleError(LoadError error, string folderName)
