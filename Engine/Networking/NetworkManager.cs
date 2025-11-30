@@ -143,10 +143,18 @@ namespace Engine.Networking
             {
                 netManager.Start();
                 netManager.Connect(Ip, Port, "");
+                var dcTime = DateTime.Now;
+
                 while (whoAmI == -1)
                 {
                     netManager.TriggerUpdate();
                     netManager.PollEvents();
+
+                    if ((DateTime.Now - dcTime).TotalSeconds > 5)
+                    {
+                        Disconnect();
+                        return;
+                    }
                 }
                 Console.WriteLine("Connected to server. Our id: {0}", whoAmI);
             }
@@ -154,7 +162,9 @@ namespace Engine.Networking
 
         public void Disconnect()
         {
+            whoAmI = -1;
             uniqueNetPlayers = 0;
+            Array.Fill(netPlayers, new NetPlayer());
             netManager.DisconnectAll();
             Console.WriteLine("Disconnected");
         }
@@ -245,42 +255,6 @@ namespace Engine.Networking
             {
                 if (IsServer)
                 {
-                    //var world = Main.gameStateManager.TheIsland.GetWorld();
-                    //int index = -1;
-                    //for (int i = 0; i < World.MAX_PLAYERS; i++)
-                    //{
-                    //    if (netPlayers[i].playerId == -1)
-                    //    {
-                    //        index = i;
-                    //        break;
-                    //    }
-                    //}
-
-                    //netPlayers[index] = new NetPlayer
-                    //{
-                    //    playerId = index,
-                    //    peerId = peer.Id,
-                    //};
-                    //uniqueNetPlayers += 1;
-
-                    //Player p = new Player(index, Guid.NewGuid());
-                    //// TODO
-                    //p.FirstCreated(world.WorldInfo);
-                    //world.EntityManager.Add(p);
-                    //world.player[index] = p;
-                    //world.ChunkLoadManager.LoadAroundTarget(world);
-                    ////Inform peer of its id
-                    //Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
-                    //// Inform peer of existant entities and ids, including its own Player
-                    //Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, world.player.Where(x => x != null).ToArray());
-                    //// Inform others of new entity and id
-                    //Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, new Player[] { p }, peer);
-                    //var sync = new SyncChunk.ChunkToSync
-                    //{
-                    //    chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),
-                    //};
-                    //Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                    //Console.WriteLine("Peer connected from {0}. Player id: {1}", peer, netPlayers[index].playerId);
                 }
                 else
                 {
@@ -323,7 +297,7 @@ namespace Engine.Networking
             else
             {
                 // Server has disconnected from us? We should go back to main menu.
-                Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.ToString());
+                Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.Reason.ToString());
                 Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
             }
         }
