@@ -89,7 +89,7 @@ namespace Engine.Networking.Messages
                         data.Load(bytes);
                         if (data.IsValid)
                         {
-                            Player p = new Player(playerIndex, new Guid());
+                            Player p = new Player(playerIndex, -1);
                             p.OnLoad(data.data, data.version);
 
                             GS.GetWorld().EntityManager.ForceAdd(p, data.id);

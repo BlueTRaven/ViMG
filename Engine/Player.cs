@@ -285,7 +285,7 @@ namespace ViMG
 
 		private BuffManagerPlayer buffManager;
 
-		public Guid playerUuid;
+		public int playerUuid;
 		public int playerIndex;
 		public bool IsLocalPlayer =>
             Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
@@ -311,7 +311,7 @@ namespace ViMG
 
 		}
 
-        public Player(int playerIndex, Guid uuid)
+        public Player(int playerIndex, int uuid)
 		{
 			this.playerIndex = playerIndex;
 			this.playerUuid = uuid;
@@ -2157,7 +2157,7 @@ namespace ViMG
 			state.OnSave(saveBytes);
 
 			SaveHelper.SaveInt32(saveBytes, playerIndex);
-			SaveHelper.SaveBytesFlat(saveBytes, playerUuid.ToByteArray());
+			SaveHelper.SaveInt32(saveBytes, playerUuid);
 		}
 
 		public override void OnLoad(byte[] loadBytes, in int version)
@@ -2220,8 +2220,7 @@ namespace ViMG
 
 			if (version >= 17)
 			{
-				var uuidBytes = SaveHelper.LoadBytes(loadBytes, 16, ref index);
-				playerUuid = new Guid(uuidBytes);
+				playerUuid = SaveHelper.LoadInt32(loadBytes, ref index);
 			}
 		}
 

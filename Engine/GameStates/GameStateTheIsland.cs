@@ -270,7 +270,7 @@ namespace ViMG.GameStates
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player(0, Guid.NewGuid());
+            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(Main.gameStateManager.TheIsland.localPlayerName));
             player.FirstCreated(worldInfo);
             prototype.EntityManager.Add(player, true);
 

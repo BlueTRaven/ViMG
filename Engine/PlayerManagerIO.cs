@@ -23,7 +23,7 @@ namespace Engine
         {
             public EntityData entity;
             public bool isLocal;
-            public Guid uuid;
+            public int uuid;
             public int layer;
         }
         private List<PlayerData> playerDatas = new List<PlayerData>();
@@ -59,9 +59,8 @@ namespace Engine
                     foreach (PlayerData data in playerDatas)
                     {
                         data.entity.Save(entitiesDataBlock);                    //p-p-e
-                        var uuidBytes = data.uuid.ToByteArray();
                         SaveHelper.SaveBool(entitiesDataBlock, data.isLocal);   //p-p-i
-                        SaveHelper.SaveBytesFlat(entitiesDataBlock, uuidBytes); //p-p-u
+                        SaveHelper.SaveInt32(entitiesDataBlock, data.uuid);     //p-p-u
                         SaveHelper.SaveInt32(entitiesDataBlock, data.layer);    //p-p-l
                     }
 
@@ -78,6 +77,8 @@ namespace Engine
                 }
             }
 
+            // FIXME if a player is not connected when we click save, this will wipe its data. 
+            // We need to do actual deduplication (ie get players that are loaded, remove them if they are present in the serialized data)
             playerDatas.Clear();
         }
 
@@ -107,8 +108,7 @@ namespace Engine
                         EntityData entity = new EntityData();
                         int bytesRead = entity.Load(entityDataBlock);
                         var isLocal = SaveHelper.LoadBool(entityDataBlock, ref bytesRead);
-                        var uuidBytes = SaveHelper.LoadBytes(entityDataBlock, 16, ref bytesRead);
-                        var uuid = new Guid(uuidBytes);
+                        var uuid = SaveHelper.LoadInt32(entityDataBlock, ref bytesRead);
                         int layer = SaveHelper.LoadInt32(entityDataBlock, ref bytesRead);
 
                         playerDatas.Add(new PlayerData
@@ -182,7 +182,7 @@ namespace Engine
         /// <param name="world"></param>
         /// <param name="playerUuid"></param>
         /// <returns>A deserialized player object with the given player uuid, if a player exists with that uuid; otherwise, a new player with the given uuid.</returns>
-        public Player Deserialize(World world, Guid playerUuid, int playerIndex)
+        public Player Deserialize(World world, int playerUuid, int playerIndex)
         {
             Player? player = null;
             PlayerData playerDataToRemove = new PlayerData
@@ -232,6 +232,25 @@ namespace Engine
         private string GetPath(string folderName)
         {
             return SAVE_FOLDER + folderName + "/" + FILE_NAME_PLAYERS + EXT_PLAYERS;
+        }
+
+        public static int GetHashCodeForName(string name)
+        {
+            unchecked
+            {
+                int hash1 = 5381;
+                int hash2 = hash1;
+
+                for (int i = 0; i < name.Length && name[i] != '\0'; i += 2)
+                {
+                    hash1 = ((hash1 << 5) + hash1) ^ name[i];
+                    if (i == name.Length - 1 || name[i + 1] == '\0')
+                        break;
+                    hash2 = ((hash2 << 5) + hash2) ^ name[i + 1];
+                }
+
+                return hash1 + (hash2 * 1566083941);
+            }
         }
     }
 }
