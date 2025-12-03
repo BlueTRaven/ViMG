@@ -18,6 +18,8 @@ namespace Engine
         public bool startPaused = false;
         public Point? windowPosition = null;
 
+        public bool dedicatedServer = false;
+
         public void ParseArgs(string[] args)
         {
             int currentArgI = 0;
@@ -52,6 +54,10 @@ namespace Engine
                     var posX = NextArg(args, ref currentArgI);
                     var posY = NextArg(args, ref currentArgI);
                     windowPosition = new Point(int.Parse(posX), int.Parse(posY));
+                }
+                else if (currentArg == "--dedicated")
+                {
+                    dedicatedServer = true;
                 }
                 else
                 {

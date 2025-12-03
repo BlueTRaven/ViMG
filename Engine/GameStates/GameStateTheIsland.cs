@@ -97,7 +97,8 @@ namespace ViMG.GameStates
                     playerIO.Load(worldName);
                 }
 
-                playerIO.DeserializeLocal(world);
+                if (!Main.Args.dedicatedServer)
+                    playerIO.DeserializeLocal(world);
 
                 if (world == null) throw new Exception("Errored while loading world");
 

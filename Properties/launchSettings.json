@@ -5,7 +5,7 @@
     },
     "ViMG Quickstart Server": {
       "commandName": "Project",
-      "commandLineArgs": "--mode TheIsland --netmode Server -p --windowpos 0 0"
+      "commandLineArgs": "--mode TheIsland --netmode Server -p --windowpos 0 0 --dedicated"
     },
     "ViMG Quickstart Client": {
       "commandName": "Project",

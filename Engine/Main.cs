@@ -133,7 +133,6 @@ namespace ViMG
 
         public Main(string[] args) : base()
         {
-
 			MainThread = Thread.CurrentThread;
 
 			SessionInformation = new SessionInformation();

@@ -374,7 +374,7 @@ namespace Engine.Networking
             Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
             var sync = new SyncChunk.ChunkToSync
             {
-                chunkPosition = ChunkPosition.CubeChunk(world.GetLocalPlayer().SpawnPosition),
+                chunkPosition = ChunkPosition.WorldSpaceChunk(world.WorldInfo.spawnPosition),
             };
             Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
 
