@@ -73,9 +73,6 @@ namespace ViMG.GameStates
 
         public void BeginLoadWorld(string worldName)
         {
-            // TODO MULTIPLAYER REFACTOR
-            // revisit this; how does loading the world operate when we're a client?
-            // Server/singleplayer should be identical.
             using var zone = TracyImpl.Tracy.BeginZone();
 
             IsLoading = true;
@@ -104,8 +101,11 @@ namespace ViMG.GameStates
 
                 LoadMessage = "Loading World...";
                 ProfilingHelper.Start("Building Meshes...");
-                //Now we can tell the ChunkLoadManager what should be loaded.
-                world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
+                if (!Main.Args.dedicatedServer)
+                {
+                    //Now we can tell the ChunkLoadManager what should be loaded.
+                    world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
+                }
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
@@ -342,7 +342,6 @@ namespace ViMG.GameStates
             var physicsInfo = new PhysicsInfo();
 
             var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-            // TODO MULTIPLAYER REFACTOR
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
@@ -399,7 +398,6 @@ namespace ViMG.GameStates
             var physicsInfo = new PhysicsInfo();
 
             var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-            // TODO MULTIPLAYER REFACTOR
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayers[0]);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayers[0]);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);

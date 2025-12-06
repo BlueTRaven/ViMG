@@ -57,7 +57,7 @@ namespace ViMG.UIs
             if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Resume", fi, 128, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft ||
-                Main.inputManager.JustPressed(Keys.Escape))
+                (Main.inputManager.JustPressed(Keys.Escape) && RespondToInput))
             {
                 //return to old menu.
                 gsManager.GetCurrentGameState().PopMenu();

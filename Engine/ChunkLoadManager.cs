@@ -318,7 +318,6 @@ namespace ViMG
                     chunkMesher?.RenderMesher.AddToNextBatch(world, copyingChunk.position, copy);
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
-                // TODO This needs to be _1. Need to understand why.
 				waitingToFinishMeshingChunks.Add(copyingChunk);
 
                 // Sync chunk loading to other players

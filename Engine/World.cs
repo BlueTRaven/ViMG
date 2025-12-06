@@ -323,6 +323,9 @@ namespace ViMG
 			//	Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
 			//}
 
+            if (Main.inputManager.JustPressed(Keys.Escape) && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(Main.gameStateManager, this));
+
             deltaTime *= TimeScale;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
@@ -349,7 +352,7 @@ namespace ViMG
 			// and this bullshit when a player respawns.
 			foreach (Player player in PlayerRespawnedEvent)
 			{
-                if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+                if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
 				{
                     Player p = new Player(player);
                     EntityManager.ForceAdd(p);
@@ -493,7 +496,8 @@ namespace ViMG
 			oldCameraRotation = Main.camera.Rotation;
 			oldChunkPosition = camPos;
 
-			TryLoadNextLayer();
+			// TODO
+			//TryLoadNextLayer();
 		}
 
 		private void TryLoadNextLayer()

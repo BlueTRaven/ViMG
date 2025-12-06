@@ -576,9 +576,6 @@ namespace ViMG.UIs
 			}
 			else
 			{
-				if (Main.inputManager.JustPressed(Keys.Escape))
-					gsManager.GetCurrentGameState().PushMenu(new MenuPause(gsManager, player.world));
-
 				for (int y = 0; y < 2; y++)
 				{
 					for (int x = 0; x < 3; x++)

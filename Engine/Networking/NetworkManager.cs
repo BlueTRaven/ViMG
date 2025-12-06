@@ -40,7 +40,6 @@ namespace Engine.Networking
             }
         }
 
-
         [Flags]
         public enum NetworkSide
         {
@@ -85,6 +84,7 @@ namespace Engine.Networking
             public string playerName;
 
             public int latency = 0;
+            public bool initialized = false;
 
             public NetPlayer() { }
 
@@ -366,11 +366,7 @@ namespace Engine.Networking
             Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
             Main.gameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
             world.ChunkLoadManager.LoadAroundTarget(world);
-            //Inform peer of its id
-            Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
-            // Inform peer of existant entities and ids, including its own Player
-            //Main.Registry.MessageRegistry.SendMessageToPeer(SyncPlayerConnected.Instance, peer, null);
-            // Inform others of new entity and id
+            // Inform others of new player
             Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
             var sync = new SyncChunk.ChunkToSync
             {

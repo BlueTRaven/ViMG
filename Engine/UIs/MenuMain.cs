@@ -91,6 +91,8 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
+                    if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                        gsManager.TheIsland.localPlayerName = Main.SessionInformation.LastLoadedSave;
                     gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer);
                 }
                 ypos++;
@@ -156,6 +158,9 @@ namespace ViMG.UIs
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                         {
                             gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
+                            if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                                gsManager.TheIsland.localPlayerName = directories[i];
+
                             gsManager.TheIsland.netManager.Port = serverPort;
                             gsManager.SetGameState(gsManager.TheIsland);
                             gsManager.TheIsland.BeginLoadWorld(directories[i]);
@@ -198,6 +203,9 @@ namespace ViMG.UIs
 
                     if (worldName == "")
                         worldName = "new" + directories.Length;
+                    if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                        gsManager.TheIsland.localPlayerName = worldName;
+
                     gsManager.SetGameState(gsManager.TheIsland);
                     gsManager.TheIsland.BeginLoadWorld(worldName);
                 }

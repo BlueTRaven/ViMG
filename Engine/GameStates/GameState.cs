@@ -31,7 +31,12 @@ namespace ViMG.GameStates
 
         public virtual void Update(double deltaTime)
         {
+            bool doDisable = !currentMenu?.RespondToInput ?? false;
+            if (doDisable)
+                UI.BeginDisable();
             currentMenu?.Update(deltaTime);
+            if (doDisable)
+                UI.EndDisable();
         }
 
         public virtual void DrawUI(SpriteBatch batch)

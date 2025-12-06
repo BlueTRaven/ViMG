@@ -21,6 +21,9 @@ namespace ViMG.UIs
 
 		protected readonly GameStateManager gsManager;
 
+		public bool RespondToInput => Main.Time - timeOpened > 0.125;
+		protected double timeOpened = 0;
+
 		public Menu(GameStateManager gsManager)
         {
 			this.gsManager = gsManager;
@@ -34,7 +37,7 @@ namespace ViMG.UIs
 
 		public virtual void OnOpen()
         {
-
+			timeOpened = Main.Time;
         }
 
 		public virtual void OnClose()
