@@ -29,7 +29,7 @@ namespace ViMG.Entities
 		private float alive;
 		private Color tintColor;
 
-        public SlimeBig()
+        public SlimeBig() : this(Vector3.Zero)
         {
             
         }
@@ -37,17 +37,17 @@ namespace ViMG.Entities
 		public SlimeBig(Vector3 position)
         {
 			this.Position = position;
+
+            buffManager = new BuffManager(this);
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
+
+            ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
+                new Vector3(Cube.CUBE_SCALE * 1.5f)), noticeHandler, buffManager, maxHealth);
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
-
-			buffManager = new BuffManager(this);
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
-
-			ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.75f, 0, -Cube.CUBE_SCALE * 0.75f),
-				new Vector3(Cube.CUBE_SCALE * 1.5f)), noticeHandler, buffManager, maxHealth);
 		}
 
 		public override void Update(double deltaTime)

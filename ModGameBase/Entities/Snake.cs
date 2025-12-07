@@ -25,14 +25,24 @@ namespace ViMG.Entities
 
 		private float alive;
 
-		public Snake()
+		public Snake() : this(Vector3.Zero)
         {
-
         }
 
 		public Snake(Vector3 position)
         {
 			this.Position = position;
+
+            buffManager = new BuffManager(this);
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+
+            ai = new AIWalkerMelee(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+                new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
+                new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
+                noticeHandler,
+                buffManager,
+                12);
+            ai.InvulnTimer = 0.5f;
         }
 
 		public Snake(SnakeFlying snakeFlying, BuffManager buffManager, NoticeHandler<Player> noticeHandler)
@@ -66,21 +76,6 @@ namespace ViMG.Entities
         public override void Initialize(World world)
         {
             base.Initialize(world);
-
-			if (!initializeThroughSnakeFlying)
-			{
-				buffManager = new BuffManager(this);
-				noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
-
-				ai = new AIWalkerMelee(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-					new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
-					new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
-					noticeHandler,
-					buffManager,
-					12);
-
-				ai.InvulnTimer = 0.5f;
-			}
 		}
 
 		public override void Update(double deltaTime)

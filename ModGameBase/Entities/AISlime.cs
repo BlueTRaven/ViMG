@@ -63,7 +63,7 @@ namespace ViMG.Entities
 
 			public void OnUnload()
 			{
-				if (ai.touchHitbox != -1)
+				if (ai != null && ai.touchHitbox != -1)
 					entity.world.HitboxManager.Remove(ai.touchHitbox);
 			}
 			public void Update(double deltaTime)

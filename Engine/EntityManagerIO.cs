@@ -321,7 +321,7 @@ namespace ViMG
 				{
 					writer.Write(VERSION);                   //h-v: file version
 					writer.Write(layer);                    //h-l: file layer
-					writer.Write(manager.GetUniqueId());    //h-emi: entity manager last saved entity id
+					writer.Write((ulong)0); // manager.GetUniqueId());    //h-emi: entity manager last saved entity id
 
 					int serializableEntities = 0;
 

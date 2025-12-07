@@ -28,22 +28,22 @@ namespace ViMG.Entities
 		public NoticeHandler<Player> noticeHandler;
 		public AISlime ai;
 
-		public CaveSlime() { }
+		public CaveSlime() : this(Vector3.Zero) { }
 
 		public CaveSlime(Vector3 position)
 		{
 			this.Position = position;
-		}
+
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
+            buffManager = new BuffManager(this);
+
+            ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
+                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
+        }
 
 		public override void Initialize(World world)
 		{
 			base.Initialize(world);
-
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
-			buffManager = new BuffManager(this);
-
-			ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
 		}
 
 		public override void Update(double deltaTime)

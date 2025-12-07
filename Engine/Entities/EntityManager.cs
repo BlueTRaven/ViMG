@@ -3,11 +3,13 @@ using Engine.Networking.Messages;
 using LiteNetLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Schema;
 using ViMG.IMGUIImpl;
 using static ViMG.UIs.UI;
 
@@ -15,15 +17,98 @@ namespace ViMG.Entities
 {
 	public class EntityManager
 	{
-		public event Action<Entity> OnEntityAdded;
+		[ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
+			"Changes to this variable require a restart.")]
+		public static int EntMax = 4096;
+
+		private struct EntityHolder
+		{
+			public int id;
+			public int generation;
+			public bool active;
+			public Entity? entity;
+
+			public static EntityHolder DEFAULT = new()
+			{
+				id = -1,
+				generation = -1,
+				active = false,
+				entity = null,
+			};
+
+			public void Reset()
+			{
+				generation = (generation + 1) % int.MaxValue;
+				entity = null;
+				active = false;
+			}
+		}
+
+        public class EntityIterator : IEnumerator<Entity>, IEnumerable<Entity>
+        {
+			public Entity Current => manager.ents[currentIndex].entity;
+
+            object IEnumerator.Current => Current;
+
+			private EntityManager manager;
+			private int currentIndex;
+
+			public EntityIterator(EntityManager manager)
+			{
+				this.manager = manager;
+				currentIndex = -1;
+			}
+
+            public void Dispose()
+            {
+				currentIndex = -1;
+				manager = null;
+            }
+
+            public bool MoveNext()
+            {
+				while (true) 
+				{
+					currentIndex += 1;
+
+					if (currentIndex >= EntMax) return false;
+					if (manager.ents[currentIndex].active) return true;
+				}
+            }
+
+            public void Reset()
+            {
+				currentIndex = -1;
+            }
+
+            public IEnumerator<Entity> GetEnumerator()
+            {
+				return this;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
+        public event Action<Entity> OnEntityAdded;
 		public event Action<Entity> OnEntityRemoved;
 
 		private bool iteratingUpdate;
 
-		private ulong lastEntityId;
+		//private ulong lastEntityId;
 
-		private List<Entity> entities = new List<Entity>();
-		private Dictionary<ulong, Entity> entitiesById = new Dictionary<ulong, Entity>();
+		private EntityHolder[] ents;
+		// NOTE:
+		// On the client side, things might have to be a bit different.
+		// We will basically never create an entity with a new id. The only scenario in which this will happen is if we're creating
+		// a client-side only entity.
+		// We might want to maintain a separate free list specifically for that, and this one will remain empty on the client side.
+		private List<int> freeList = new List<int>();
+
+		//private List<Entity> entities = new List<Entity>();
+		//private Dictionary<ulong, Entity> entitiesById = new Dictionary<ulong, Entity>();
 		private Dictionary<Type, List<Entity>> entitiesByType = new Dictionary<Type, List<Entity>>();
 
 		private List<Entity> toAddLater = new List<Entity>();
@@ -103,18 +188,34 @@ namespace ViMG.Entities
 
 		private World world;
 
-		public ulong GetUniqueId()
+		public int GetUniqueId()
 		{
-			return lastEntityId++;
+			if (freeList.Count == 0) return -1;
+			int last = freeList.Last();
+			freeList.RemoveAt(freeList.Count - 1);
+
+			return last;
+			//return lastEntityId++;
 		}
 
+		[Obsolete]
 		public void SetUniqueIdSeed(ulong seed)
 		{
-			lastEntityId = seed;
+			//lastEntityId = seed;
 		}
 
 		public EntityManager()
 		{
+			ents = new EntityHolder[EntMax];
+			Array.Fill(ents, EntityHolder.DEFAULT);
+
+			// TODO: we might want to only generate this on client-side
+			for (int i = 0; i < EntMax; i++)
+			{
+				freeList.Add(i);
+			}
+
+			Debug.Assert(freeList.Last() == EntMax - 1);
 		}
 
 		public void Initialize(World world)
@@ -152,6 +253,8 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
+			// TODO: might not have to do this on client side.
+			Debug.Assert(freeList.Remove((int)id));
             entity.SetId(id);
 
             ReallyAdd(entity);
@@ -162,7 +265,15 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-            entity.SetId(GetUniqueId());
+			int id = GetUniqueId();
+			if (id == -1)
+			{
+				Console.WriteLine("Entity free list empty. Could not create entity {0}", entity);
+				entity.OnUnload();
+				return;
+			}
+
+            entity.SetId((ulong)id);
 
 			ReallyAdd(entity);
         }
@@ -179,7 +290,14 @@ namespace ViMG.Entities
                 return;
 			}
 
-            entity.SetId(GetUniqueId());
+            int id = GetUniqueId();
+            if (id == -1)
+            {
+                Console.WriteLine("Entity free list empty. Could not create entity {0}", entity);
+                entity.OnUnload();
+                return;
+            }
+            entity.SetId((ulong)id);
 
             if (iteratingUpdate || delayAdding)
 				toAddLater.Add(entity);
@@ -191,12 +309,21 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			entities.Add(entity);
+			Debug.Assert(!ents[entity.Id].active);
+			ents[entity.Id] = new EntityHolder
+			{
+				active = true,
+				entity = entity,
+				generation = ents[entity.Id].generation + 1,
+				id = (int)entity.Id,
+			};
+
+			//entities.Add(entity);
 			if (!entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType.Add(entity.GetType(), new List<Entity>());
 			entitiesByType[entity.GetType()].Add(entity);
 
-			entitiesById.Add(entity.Id, entity);
+			//entitiesById.Add(entity.Id, entity);
 
             entity.Initialize(world);
             if (!Main.IsHeadless)
@@ -290,12 +417,13 @@ namespace ViMG.Entities
 			toDeleteLater.Clear();
 
             //queue all entities in chunk to be unloaded
-            foreach (Entity entity in entities)
+
+            for (int i = 0; i < EntMax; i++)
             {
-				if (entity is not Player || world.isDisposed) // Players cannot be unloaded normally
+                if (ents[i].active && (ents[i].entity is not Player || world.isDisposed)) // Players cannot be unloaded normally
 				{
-					if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
-						Unload(entity, true);
+					if (ChunkPosition.WorldSpaceChunk(ents[i].entity.Position) == pos)
+						Unload(ents[i].entity, true);
 				}
 			}
 
@@ -353,12 +481,12 @@ namespace ViMG.Entities
 			//TODO: better method of determining which entities are in this chunk for unloading
 
 			//queue all entities to be unloaded
-			foreach (Entity entity in entities)
+			for (int i = 0; i < EntMax; i++)
 			{
-				if (entity is not Player || world.isDisposed || world.isCreateWorldReloading) // Players cannot be unloaded normally
+				if (ents[i].active && (ents[i].entity is not Player || world.isDisposed || world.isCreateWorldReloading)) // Players cannot be unloaded normally
 				{
-					if (!toDeleteLater.Contains(entity))
-						Unload(entity, true);
+					if (!toDeleteLater.Contains(ents[i].entity))
+						Unload(ents[i].entity, true);
 				}
 			}
 
@@ -382,17 +510,17 @@ namespace ViMG.Entities
 
 			iteratingUpdate = true;
 
-			foreach (Entity entity in entities)
+			for (int i = 0; i < EntMax; i++)
 			{
-				if (!entity.Dead)
+				if (ents[i].active && !ents[i].entity.Dead)
 				{
 					try
 					{
-						entity.Update(deltaTime);
+						ents[i].entity.Update(deltaTime);
 					}
 					catch (Exception e)
 					{
-						Console.WriteLine("Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", entity, entity.Id, e.ToString());
+						Console.WriteLine("Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", ents[i].entity, ents[i].id, e.ToString());
 					}
 				}
 			}
@@ -415,11 +543,13 @@ namespace ViMG.Entities
 			// Update entities (excluding player)
 			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
-				foreach (Entity entity in entities)
-				{
-					if (entity is not Player && entity.IsInitialized)
+                for (int i = 0; i < EntMax; i++)
+                {
+                    if (ents[i].active && ents[i].entity is not Player && ents[i].entity.IsInitialized)
 					{
-						var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+						var entity = ents[i].entity;
+
+                        var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
 						if (entSerializableAttr != null)
 						{
 							if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
@@ -578,12 +708,15 @@ namespace ViMG.Entities
 			}
 
 			entity.OnUnload();
-			entities.Remove(entity);
+			//entities.Remove(entity);
+			ents[entity.Id].Reset();
+			freeList.Add((int)entity.Id);
+
 
 			if (entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType[entity.GetType()].Remove(entity);
 
-			entitiesById.Remove(entity.Id);
+			//entitiesById.Remove(entity.Id);
 
 			if (entity is ICubeTracker tracker)
             {
@@ -622,16 +755,18 @@ namespace ViMG.Entities
 
 		public Entity? GetById(ulong id)
 		{
-            if (entitiesById.TryGetValue(id, out Entity ent))
-                return ent;
-            else return null;
+			return ents[(int)id].entity;
+            //if (entitiesById.TryGetValue(id, out Entity ent))
+            //    return ent;
+            //else return null;
         }
 
 		public T? GetById<T>(ulong id) where T : Entity
 		{
-			if (entitiesById.TryGetValue(id, out Entity ent))
-				return (T?)ent;
-			else return null;
+            return ents[(int)id].entity as T;
+   //         if (entitiesById.TryGetValue(id, out Entity ent))
+			//	return (T?)ent;
+			//else return null;
 		}
 		public T GetFirst<T>() where T : Entity
         {
@@ -672,9 +807,9 @@ namespace ViMG.Entities
 			else return emptyList;
 		}
 
-		public IReadOnlyList<Entity> GetEntities()
+		public IEnumerable<Entity> GetEntities()
 		{
-			return entities;
+			return new EntityIterator(this);
 		}
 
 		public Optional<Entity> GetEntityTrackingPosition(CubePosition position)
@@ -777,10 +912,10 @@ namespace ViMG.Entities
 				}
 			}
 
-			foreach (Entity entity in entities)
+			for (int i = 0; i < EntMax; i++) 
 			{
-				if (entity.AlwaysRender || Main.camera.FrustumContains(entity.Position))
-					entity.Draw(device, effect);
+				if (ents[i].active && (ents[i].entity.AlwaysRender || Main.camera.FrustumContains(ents[i].entity.Position)))
+					ents[i].entity.Draw(device, effect);
 			}
 		}
     }
