@@ -1,11 +1,12 @@
 {
   "profiles": {
     "ViMG3": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "--windowpos 0 0"
     },
     "ViMG Quickstart Server": {
       "commandName": "Project",
-      "commandLineArgs": "--mode TheIsland --netmode Server -p --windowpos 0 0 --dedicated"
+      "commandLineArgs": "--mode TheIsland --netmode Server -p --windowpos 0 0"
     },
     "ViMG Quickstart Client": {
       "commandName": "Project",

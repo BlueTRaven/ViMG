@@ -20,7 +20,7 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener
     {
-        public const double TIME_TRAVEL_DELAY = 0.75;// Main.FIXED_STEP * 3;
+        public const double TIME_TRAVEL_DELAY = 0;//0.75;// Main.FIXED_STEP * 3;
 
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
@@ -328,6 +328,16 @@ namespace Engine.Networking
             }
 
             return null;
+        }
+
+        public NetPlayer GetNetPlayer(NetPeer peer)
+        {
+            for (int i = 0; i < netPlayers.Length; i++)
+            {
+                if (netPlayers[i].peerId == peer.Id) return netPlayers[i];
+            }
+
+            return new NetPlayer();
         }
 
         public NetPlayer GetNetPlayerByName(string name)

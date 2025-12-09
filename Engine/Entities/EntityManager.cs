@@ -1,6 +1,8 @@
 ﻿using BepuUtilities.Memory;
+using Engine.Networking;
 using Engine.Networking.Messages;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
@@ -20,6 +22,26 @@ namespace ViMG.Entities
 		[ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
 			"Changes to this variable require a restart.")]
 		public static int EntMax = 4096;
+		[ConsoleCommandVar("ent_sync_time", "Amount of time between entity state syncs. Default = 1 / 20")]
+		public static float EntSyncTime = 1.0f / 4.0f; // 1.0f / 20.0f;
+
+		public struct EntityReference : INetSerializable
+		{
+			public int id;
+			public int generation;
+
+            public void Deserialize(NetDataReader reader)
+            {
+				id = reader.GetInt();
+				generation = reader.GetInt();
+            }
+
+            public void Serialize(NetDataWriter writer)
+            {
+				writer.Put(id);
+				writer.Put(generation);
+            }
+        }
 
 		private struct EntityHolder
 		{
@@ -44,7 +66,7 @@ namespace ViMG.Entities
 			}
 		}
 
-        public class EntityIterator : IEnumerator<Entity>, IEnumerable<Entity>
+        public struct EntityIterator : IEnumerator<Entity>, IEnumerable<Entity>
         {
 			public Entity Current => manager.ents[currentIndex].entity;
 
@@ -97,8 +119,6 @@ namespace ViMG.Entities
 
 		private bool iteratingUpdate;
 
-		//private ulong lastEntityId;
-
 		private EntityHolder[] ents;
 		// NOTE:
 		// On the client side, things might have to be a bit different.
@@ -107,8 +127,6 @@ namespace ViMG.Entities
 		// We might want to maintain a separate free list specifically for that, and this one will remain empty on the client side.
 		private List<int> freeList = new List<int>();
 
-		//private List<Entity> entities = new List<Entity>();
-		//private Dictionary<ulong, Entity> entitiesById = new Dictionary<ulong, Entity>();
 		private Dictionary<Type, List<Entity>> entitiesByType = new Dictionary<Type, List<Entity>>();
 
 		private List<Entity> toAddLater = new List<Entity>();
@@ -188,6 +206,8 @@ namespace ViMG.Entities
 
 		private World world;
 
+		private double lastSyncTime;
+
 		public int GetUniqueId()
 		{
 			if (freeList.Count == 0) return -1;
@@ -209,13 +229,13 @@ namespace ViMG.Entities
 			ents = new EntityHolder[EntMax];
 			Array.Fill(ents, EntityHolder.DEFAULT);
 
-			// TODO: we might want to only generate this on client-side
-			for (int i = 0; i < EntMax; i++)
+			// TODO: we might want to only generate this on server-side
+			for (int i = EntMax - 1; i >= 0; i--)
 			{
 				freeList.Add(i);
 			}
 
-			Debug.Assert(freeList.Last() == EntMax - 1);
+			Debug.Assert(freeList.First() == EntMax - 1);
 		}
 
 		public void Initialize(World world)
@@ -254,7 +274,8 @@ namespace ViMG.Entities
 				throw new Exception("Cannot add while iterating");
 
 			// TODO: might not have to do this on client side.
-			Debug.Assert(freeList.Remove((int)id));
+			if (ents[id].active) ForceUnload(ents[id].entity);
+			else freeList.Remove((int)id);
             entity.SetId(id);
 
             ReallyAdd(entity);
@@ -314,16 +335,13 @@ namespace ViMG.Entities
 			{
 				active = true,
 				entity = entity,
-				generation = ents[entity.Id].generation + 1,
+				generation = (ents[entity.Id].generation + 1) % int.MaxValue,
 				id = (int)entity.Id,
 			};
 
-			//entities.Add(entity);
 			if (!entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType.Add(entity.GetType(), new List<Entity>());
 			entitiesByType[entity.GetType()].Add(entity);
-
-			//entitiesById.Add(entity.Id, entity);
 
             entity.Initialize(world);
             if (!Main.IsHeadless)
@@ -370,24 +388,27 @@ namespace ViMG.Entities
 
             OnEntityAdded?.Invoke(entity);
 
-			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
-			{
-				var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-				if (entSerializableAttr != null)
-				{
-					if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-					{
-						// Send a full sync when entity is created. Disregard TimeSynced
-						var ent = new SyncBasicState.SyncEntity()
-						{
-							entity = entity,
-							firstCreation = true,
-							type = SyncBasicState.SyncType.FullSync,
-						};
-						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-					}
-				}
-			}
+			//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+			//{
+			//	var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+			//	if (entSerializableAttr != null)
+			//	{
+			//		if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+			//		{
+			//			EntityManagerIO.EntityData data = new(entity);
+			//			Console.WriteLine("To sync create {0}", data.type);
+			//			SyncEntityState.Instance.AddToSync(-1, GetReference(entity), data);
+			//			// Send a full sync when entity is created. Disregard TimeSynced
+			//			//var ent = new SyncBasicState.SyncEntity()
+			//			//{
+			//			//	entity = entity,
+			//			//	firstCreation = true,
+			//			//	type = SyncBasicState.SyncType.FullSync,
+			//			//};
+			//			//Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+			//		}
+			//	}
+			//}
         }
 
 		public void Remove(Entity entity)
@@ -402,6 +423,11 @@ namespace ViMG.Entities
 				toDeleteLater.Add(entity);
 			else ReallyRemove(entity);
         }
+
+		public void ForceUnload(Entity entity)
+		{
+			ReallyRemove(entity);
+		}
 
 		public void Unload(ChunkPosition pos)
         {
@@ -540,48 +566,96 @@ namespace ViMG.Entities
 
 		private void UpdateNetwork()
 		{
-			// Update entities (excluding player)
 			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
-                for (int i = 0; i < EntMax; i++)
-                {
-                    if (ents[i].active && ents[i].entity is not Player && ents[i].entity.IsInitialized)
-					{
-						var entity = ents[i].entity;
+				SyncEntityState.Instance.DoSync(this, world.player);
+				//if (Main.Time - lastSyncTime > EntSyncTime)
+				//{
+				//	foreach (Player player in world.player)
+				//	{
+				//		if (player == null || !player.IsInitialized || player.IsLocalPlayer)
+				//			continue;
 
-                        var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-						if (entSerializableAttr != null)
-						{
-							if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-							{
-								if (entity.DoesMajorSync && Main.Time - entity.TimeMajorSynced > entity.MajorSyncInterval)
-								{
-									var ent = new SyncBasicState.SyncEntity()
-									{
-										entity = entity,
-										type = SyncBasicState.SyncType.FullSync,
-									};
-									Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-								}
-								else
-								{
-									if (entity.DoesSync && Main.Time - entity.TimeSynced > entity.SyncInterval)
-									{
-										var ent = new SyncBasicState.SyncEntity()
-										{
-											entity = entity,
-											type = SyncBasicState.SyncType.BasicState,
-										};
-										Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-									}
-								}
-							}
-						}
-					}
-				}
+				//		var peer = Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
+
+				//		if (peer == null)
+				//		{
+				//			Console.WriteLine("Peer null");
+				//			continue;
+				//		}
+
+				//		var iter = GetEntities();
+
+				//		foreach (var ent in iter)
+				//		{
+				//			if (ent is Player)
+				//				continue;
+
+				//			var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+				//			if (entSerializableAttr != null)
+				//			{
+				//				if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+				//				{
+				//					if (ent.DoesMajorSync && Main.Time - ent.TimeMajorSynced > ent.MajorSyncInterval)
+				//					{
+				//						var entData = new EntityManagerIO.EntityData(ent);
+				//						SyncEntityState.Instance.AddToSync(player.playerIndex, GetReference(ent), entData);
+				//					}
+				//					else if (ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+				//						SyncEntityState.Instance.AddToSync(player.playerIndex, GetReference(ent), syncsBasicState);
+				//				}
+				//			}
+				//		}
+
+				//		Main.Registry.MessageRegistry.SendMessageToPeer(SyncEntityState.Instance, peer, player.playerIndex);
+				//	}
+					
+				//	lastSyncTime = Main.Time;
+				//	SyncEntityState.Instance.PostSend();
+				//}
 			}
 
-			bool forceLocalSync = false;
+
+			// Update entities (excluding player)
+			//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+			//{
+   //             for (int i = 0; i < EntMax; i++)
+   //             {
+   //                 if (ents[i].active && ents[i].entity is not Player && ents[i].entity.IsInitialized)
+			//		{
+			//			var entity = ents[i].entity;
+
+   //                     var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+			//			if (entSerializableAttr != null)
+			//			{
+			//				if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+			//				{
+			//					if (entity.DoesMajorSync && Main.Time - entity.TimeMajorSynced > entity.MajorSyncInterval)
+			//					{
+			//						var ent = new SyncBasicState.SyncEntity()
+			//						{
+			//							entity = entity,
+			//							type = SyncBasicState.SyncType.FullSync,
+			//						};
+			//						Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+			//					}
+			//					else
+			//					{
+			//						if (entity.DoesSync && Main.Time - entity.TimeSynced > entity.SyncInterval)
+			//						{
+			//							var ent = new SyncBasicState.SyncEntity()
+			//							{
+			//								entity = entity,
+			//								type = SyncBasicState.SyncType.BasicState,
+			//							};
+			//							Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+			//						}
+			//					}
+			//				}
+			//			}
+			//		}
+			//	}
+			//}
 
 			// Handle syncing players separately from normal entities.
 			// This is mainly because of two factors:
@@ -598,41 +672,9 @@ namespace ViMG.Entities
                     localPlayer.MoveDown.Changed() || Main.camera.IsDirty || Main.Time - localPlayer.TimeSinceInputSynced > 0.25)
 				{
 					Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
-					//forceLocalSync = true;
 				}
 			}
-			// Client and server are handled separately because logic is somewhat different;
-			// players need to be sent to all clients but the one they belong to
-			//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
-			//{
-			//	// On the client, player state is authoratative (mostly?)
-			//	// So we inform the server of our changes.
-			//	if (localPlayer != null)
-			//	{
-			//		if (Main.Time - localPlayer.TimeMajorSynced > localPlayer.MajorSyncInterval)
-			//		{
-			//			var ent = new SyncBasicState.SyncEntity()
-			//			{
-			//				entity = localPlayer,
-			//				type = SyncBasicState.SyncType.FullSync,
-			//			};
-			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-			//		}
-			//		else
-			//		{
-			//			if (Main.Time - localPlayer.TimeSynced > localPlayer.SyncInterval || forceLocalSync)
-			//			{
-			//				var ent = new SyncBasicState.SyncEntity()
-			//				{
-			//					entity = localPlayer,
-			//					type = SyncBasicState.SyncType.BasicState,
-			//				};
-			//				Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-			//			}
-			//		}
-			//	}
-			//}
-			//else
+
 			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 			{
 				// Sync players to other players.
@@ -654,7 +696,7 @@ namespace ViMG.Entities
 						}
 						else
 						{
-							if (Main.Time - player.TimeSynced > player.SyncInterval || forceLocalSync)
+							if (Main.Time - player.TimeSynced > player.SyncInterval)
 							{
 								var ent = new SyncBasicState.SyncEntity()
 								{
@@ -712,7 +754,6 @@ namespace ViMG.Entities
 			ents[entity.Id].Reset();
 			freeList.Add((int)entity.Id);
 
-
 			if (entitiesByType.ContainsKey(entity.GetType()))
 				entitiesByType[entity.GetType()].Remove(entity);
 
@@ -753,6 +794,8 @@ namespace ViMG.Entities
 			OnEntityRemoved?.Invoke(entity);
 		}
 
+		public bool GetActive(int id) => ents[id].active;
+
 		public Entity? GetById(ulong id)
 		{
 			return ents[(int)id].entity;
@@ -761,6 +804,13 @@ namespace ViMG.Entities
             //else return null;
         }
 
+		public Entity? GetByRef(ref readonly EntityReference reference)
+		{
+			if (ents[reference.id].generation == reference.generation)
+				return ents[reference.id].entity;
+			else return null;
+		}
+
 		public T? GetById<T>(ulong id) where T : Entity
 		{
             return ents[(int)id].entity as T;
@@ -768,7 +818,15 @@ namespace ViMG.Entities
 			//	return (T?)ent;
 			//else return null;
 		}
-		public T GetFirst<T>() where T : Entity
+
+        public T? GetByRef<T>(ref readonly EntityReference reference) where T : Entity
+        {
+            if (ents[reference.id].generation == reference.generation)
+                return ents[reference.id].entity as T;
+            else return null;
+        }
+
+        public T GetFirst<T>() where T : Entity
         {
 			var all = GetAll<T>();
 
@@ -891,6 +949,24 @@ namespace ViMG.Entities
 				}
 			}
         }
+
+		public EntityReference GetReference(Entity entity)
+		{
+			return new EntityReference
+			{
+				generation = ents[entity.Id].generation,
+				id = ents[entity.Id].id,
+			};
+		}
+
+		public EntityReference GetReference(int id)
+		{
+			return new EntityReference
+			{
+				generation = ents[id].generation,
+				id = id,
+			};
+		}
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{

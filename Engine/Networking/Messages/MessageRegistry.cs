@@ -19,9 +19,10 @@ namespace Engine.Networking.Messages
             base.DoRegistration();
 
             Register(new SyncPlayerConnected());
-            Register(new SyncAllWorldState());
             Register(new SyncChunk());
             Register(new SyncBasicState());
+            Register(new SyncEntityState());
+            Register(new SyncEntityStateAck());
             Register(new WhoAmI());
             Register(new WhoAmIRequest());
             Register(new SyncPlayerInputs());

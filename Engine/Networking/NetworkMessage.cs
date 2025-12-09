@@ -10,6 +10,14 @@ namespace Engine.Networking
 {
     public class NetworkMessage
     {
+        public enum Channels
+        {
+            Anything,
+            Chunks,
+            Entities,
+            Inputs
+        }
+
         private readonly int messageType;
         public readonly NetManager netManager;
         public readonly NetPeer? peer;    // The peer, if we're sending to only one peer. Null otherwise.

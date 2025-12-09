@@ -60,7 +60,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
-            netMessage.channel = 2;
+            netMessage.channel = (int)NetworkMessage.Channels.Inputs;
 
             var player = GS.GetWorld().GetLocalPlayer();
             if (player == null || player.TimeInitialized == 0) return;

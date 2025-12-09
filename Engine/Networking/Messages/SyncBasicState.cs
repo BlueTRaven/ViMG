@@ -1,4 +1,6 @@
-﻿using LiteNetLib;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
+using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation;
@@ -7,13 +9,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
 using ViMG.IMGUIImpl;
+using static Engine.Networking.Messages.SyncEntityStateAck;
+using static ViMG.LightManager;
 using static ViMG.UIs.UI;
 
 namespace Engine.Networking.Messages
@@ -24,14 +30,14 @@ namespace Engine.Networking.Messages
         {
             // Sync with full serialization of entity
             // Entity is created if not already present
-            FullSync, 
+            FullSync,
             // Sync with ISyncBasicState implementation if available
             // (if not, does not do anything)
             // Unreliable
             BasicState,
             // Just id and position
             // Unreliable
-            SuperSimple, 
+            SuperSimple,
             EntityUnloaded, // Entity has been unloaded
         }
 
@@ -58,7 +64,6 @@ namespace Engine.Networking.Messages
         private List<QueuedSyncEntity> queued1 = new List<QueuedSyncEntity>();
         private List<QueuedSyncEntity> queued2 = new List<QueuedSyncEntity>();
         private List<QueuedSyncEntity> queued;
-
 
         public SyncBasicState()
         {
@@ -192,7 +197,7 @@ namespace Engine.Networking.Messages
                 //Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
                 //if (Main.Time >= queuedSync.time)
                 //{
-                    DoAction(queuedSync, entityManager, entIO);
+                DoAction(queuedSync, entityManager, entIO);
                 //}
                 //else
                 //{
@@ -251,6 +256,418 @@ namespace Engine.Networking.Messages
                         ent.TimeSynced = queuedSync.time;
                 }
             }
+        }
+    }
+
+    public class SyncEntityState : Message
+    {
+        public const int MAX_ENTS_PER_SYNC = 32;
+
+        public static SyncEntityState Instance { get; private set; }
+
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
+
+        public enum SyncStateType
+        {
+            // Generation has changed - entity is new or deleted.
+            GenerationChanged,
+            MajorSync,
+            MinorSync,
+        }
+
+        public struct ToSync
+        {
+            public required int playerId;
+            public required EntityManager.EntityReference reference;
+
+            public ISyncBasicState? basicSyncState;
+            public EntityManagerIO.EntityData? majorSyncState;
+        }
+
+        // TODO: this maybe should be BasicState instead?
+        // We might end up storing BasicStates for previous frames. That would allow us to send only stuff that's changed. 
+        private FastList<ToSync> toSync;
+        private int[] playerSequences;
+
+        private double lastSyncTime;
+        private EntityManager.EntityReference[][] entities;
+
+        private int latestSeq;
+
+        public SyncEntityState()
+        {
+            Instance = this;
+
+            playerSequences = new int[World.MAX_PLAYERS];
+            toSync = new FastList<ToSync>(EntityManager.EntMax);
+
+            entities = new EntityManager.EntityReference[World.MAX_PLAYERS][];
+            for (int i = 0; i < entities.Length; i++)
+            {
+                entities[i] = new EntityManager.EntityReference[EntityManager.EntMax];
+                for (int j = 0; j < EntityManager.EntMax; j++)
+                {
+                    entities[i][j] = new() { id = j, generation = -1 };
+                }
+            }
+        }
+
+        public void AddAck(SyncEntityStateAck.Ack ack, int playerId)
+        {
+            for (int i = 0; i < ack.numAckd; i++)
+            {
+                entities[playerId][ack.ackdEntities[i].id].generation = ack.ackdEntities[i].generation;
+            }
+        }
+
+        public void DoSync(EntityManager entityManager, Player[] players)
+        {
+            if (Main.Time - lastSyncTime > EntityManager.EntSyncTime)
+            {
+                foreach (Player player in players)
+                {
+                    if (player == null || !player.IsInitialized || player.IsLocalPlayer)
+                        continue;
+
+                    var peer = Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
+
+                    if (peer == null)
+                    {
+                        Console.WriteLine("Peer null");
+                        continue;
+                    }
+
+                    var iter = entityManager.GetEntities();
+
+                    foreach (var ent in iter)
+                    {
+                        var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+                        if (entSerializableAttr != null)
+                        {
+                            if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+                            {
+                                var reference = entityManager.GetReference(ent);
+
+                                if (entities[player.playerIndex][ent.Id].generation != reference.generation)
+                                {
+                                    if (!entityManager.GetActive((int)ent.Id))
+                                    {
+                                        toSync.AddAssumeCapacity(new()
+                                        {
+                                            playerId = player.playerIndex,
+                                            reference = reference,
+                                        });
+                                    }
+                                    else
+                                    {
+                                        var entData = new EntityManagerIO.EntityData(ent);
+                                        toSync.AddAssumeCapacity(new()
+                                        {
+                                            playerId = player.playerIndex,
+                                            reference = reference,
+                                            majorSyncState = entData,
+                                        });
+                                    }
+                                }
+                                else if (ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                                {
+                                    toSync.AddAssumeCapacity(new()
+                                    {
+                                        playerId = player.playerIndex,
+                                        reference = reference,
+                                        basicSyncState = syncsBasicState,
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    Main.Registry.MessageRegistry.SendMessageToPeer(Instance, peer, player.playerIndex);
+                }
+
+                lastSyncTime = Main.Time;
+                Instance.PostSend();
+            }
+        }
+
+        public void AddToSync(int playerId, EntityManager.EntityReference reference)
+        {
+            this.toSync.AddAssumeCapacity(new() { playerId = playerId, reference = reference });
+        }
+
+        public void PostSend()
+        {
+            //Console.WriteLine("clear");
+            toSync.Clear();
+        }
+
+        public override void SendMessage(NetworkMessage netMessage, object? addData)
+        {
+            base.SendMessage(netMessage, addData);
+
+            netMessage.deliveryMethod = DeliveryMethod.Unreliable;
+            netMessage.channel = (int)NetworkMessage.Channels.Entities;
+
+            int playerId = addData as int? ?? throw new Exception();
+
+            int chksumpos = netMessage.writer.Length;
+            netMessage.writer.Put((ulong)0);
+
+            netMessage.writer.Put(Main.Frame);
+
+            int numsendpos = netMessage.writer.Length;
+            netMessage.writer.Put(toSync.Length);
+
+            List<NetDataWriter> subWriters = new List<NetDataWriter>();
+
+            foreach (var ent in toSync.Slice())
+            {
+                // -1 = send to all players
+                if (ent.playerId == playerId || playerId == -1)
+                {
+                    var subWriter = new NetDataWriter();
+                    subWriters.Add(subWriter);
+                    subWriter.Put(ent.reference);
+
+                    if (ent.basicSyncState != null)
+                    {
+                        subWriter.Put((byte)SyncStateType.MinorSync);
+
+                        ent.basicSyncState.Get(out BasicState state);
+
+                        subWriter.Put(state);
+                    }
+                    else if (ent.majorSyncState != null)
+                    {
+                        //Console.WriteLine("{0} {1}", playerId, ent.majorSyncState.Value.type);
+                        subWriter.Put((byte)SyncStateType.MajorSync);
+
+                        List<byte> bytes = new List<byte>();
+                        ent.majorSyncState.Value.Save(bytes);
+
+                        subWriter.PutBytesWithLength(bytes.ToArray(), 0, (ushort)bytes.Count);
+                    }
+                    else
+                    {
+                        subWriter.Put((byte)SyncStateType.GenerationChanged);
+                    }
+
+                    Debug.Assert(subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ulong) - sizeof(int) - sizeof(int));
+                }
+            }
+
+            var atStart = netMessage.writer.Length;
+
+            var end = 0;
+
+            int numSend = 0;
+            for (int i = 0; i < subWriters.Count; i++)
+            {
+                NetDataWriter subWriter = subWriters[i];
+                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ulong) - sizeof(int) - sizeof(int) || numSend > MAX_ENTS_PER_SYNC)
+                {
+                    numSend += 1;
+                    end = netMessage.writer.Length;
+                    netMessage.writer.SetPosition(numsendpos);
+                    netMessage.writer.Put(numSend);
+                    netMessage.writer.SetPosition(end);
+                    netMessage.writer.Put(subWriter.AsReadOnlySpan());
+                }
+                else
+                {
+                    DoSend(netMessage, chksumpos);
+                    numSend = 0;
+
+                    Debug.Assert(netMessage.writer.Length == atStart);
+                }
+            }
+
+            if (numSend > 0)
+                DoSend(netMessage, chksumpos);
+        }
+
+        private void DoSend(NetworkMessage netMessage, int chksumpos)
+        {
+            ulong chksum = 0;
+            var span = netMessage.writer.AsReadOnlySpan()[(chksumpos + sizeof(ulong))..];
+            for (int i = 0; i < span.Length; i++)
+            {
+                chksum += span[i];
+            }
+
+            //Console.WriteLine("Send Chksum: {0}", chksum);
+
+            int end = netMessage.writer.Length;
+            netMessage.writer.SetPosition(chksumpos);
+            netMessage.writer.Put(chksum);
+            netMessage.writer.SetPosition(end);
+
+            netMessage.Send();
+
+            netMessage.writer.SetPosition(chksumpos + sizeof(ulong) + sizeof(int) + sizeof(int));
+        }
+
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
+        {
+            base.ReceiveMessage(reader, peer);
+
+            ulong chksum = reader.GetULong();
+            var postChksumPos = reader.Position;
+
+            ulong ourChksum = 0;
+            for (int i = 0; i < reader.RawDataSize - postChksumPos; i++)
+            {
+                ourChksum += reader.RawData[postChksumPos + i];
+            }
+
+            // chksum is incorrect, drop
+            if (chksum != ourChksum)
+            {
+                Console.WriteLine("Discarded SyncEntity state - chksum did not match ({0} - {1})", chksum, ourChksum);
+                return;
+            }
+
+            int seq = reader.GetInt();
+            if (seq < latestSeq)
+            {
+                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, latestSeq);
+                return;
+            }
+            latestSeq = seq;
+
+            int num = reader.GetInt();
+
+            int ackI = 0;
+            SyncEntityStateAck.EntityAckArr ackArr = new();
+
+            for (int i = 0; i < num; i++)
+            {
+                EntityManager.EntityReference reference = reader.Get<EntityManager.EntityReference>();
+
+                var ent = GS.GetWorld().EntityManager.GetByRef(ref reference);
+
+                SyncStateType type = (SyncStateType)reader.GetByte();
+                if (type == SyncStateType.MinorSync)
+                {
+                    var state = reader.Get<BasicState>();
+
+                    if (ent != null)
+                    {
+                        Debug.Assert(ent is ISyncBasicState);
+                        (ent as ISyncBasicState).Set(ref state);
+                    }
+                }
+                else if (type == SyncStateType.MajorSync)
+                {
+                    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
+                    EntityManagerIO.EntityData data = new();
+                    data.Load(bytes);
+
+                    if (data.IsValid)
+                    {
+                        if (ent == null)
+                            ent = GS.GetWorld().EntIO.DeserializeEntity(data);
+                        else
+                        {
+                            if (GS.GetWorld().EntityManager.GetReference(ent).generation != reference.generation)
+                            {
+                                GS.GetWorld().EntityManager.ForceUnload(ent);
+                                ent = GS.GetWorld().EntIO.DeserializeEntity(data);
+                            }
+                            else ent.OnLoad(data.data, data.version);
+                        }
+
+                        ackArr[ackI] = reference;
+                        ackI += 1;
+                    }
+                }
+                else if (type == SyncStateType.GenerationChanged)
+                {
+                    if (ent != null)
+                        GS.GetWorld().EntityManager.ForceUnload(ent);
+                    
+                    ackArr[ackI] = reference;
+                }
+            }
+
+            if (ackI > 0)
+                Main.Registry.MessageRegistry.SendMessageToPeer(SyncEntityStateAck.Instance, peer, new SyncEntityStateAck.Ack { numAckd = ackI, ackdEntities = ackArr, sequence = seq });
+        }
+    }
+
+    public class SyncEntityStateAck : Message
+    {
+        public static SyncEntityStateAck Instance { get; private set; }
+
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
+
+        [InlineArray(SyncEntityState.MAX_ENTS_PER_SYNC)]
+        public struct EntityAckArr
+        {
+            private EntityManager.EntityReference _entityId0;
+
+            public EntityManager.EntityReference this[int i]
+            {
+                get => this[i];
+                set => this[i] = value;
+            }
+        }
+
+        public struct Ack : INetSerializable
+        {
+            public int numAckd;
+            public EntityAckArr ackdEntities;
+            public int sequence;
+
+            public void Deserialize(NetDataReader reader)
+            {
+                sequence = reader.GetInt();
+                numAckd = reader.GetInt();
+
+                for (int i = 0; i < numAckd; i++)
+                {
+                    ackdEntities[i] = reader.Get<EntityManager.EntityReference>();
+                }
+            }
+
+            public void Serialize(NetDataWriter writer)
+            {
+                writer.Put(sequence);
+                writer.Put(numAckd);
+
+                for (int i = 0; i < numAckd; i++)
+                {
+                    writer.Put(ackdEntities[i]);
+                }
+            }
+        }
+
+        public SyncEntityStateAck()
+        {
+            Instance = this;
+        }
+
+        public override void SendMessage(NetworkMessage netMessage, object? addData)
+        {
+            base.SendMessage(netMessage, addData);
+
+            Ack ack = addData as Ack? ?? throw new Exception();
+
+            netMessage.writer.Put(ack);
+
+            netMessage.channel = (int)NetworkMessage.Channels.Entities;
+            netMessage.deliveryMethod = DeliveryMethod.Unreliable;
+
+            netMessage.Send();
+        }
+
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
+        {
+            base.ReceiveMessage(reader, peer);
+
+            Ack ack = reader.Get<Ack>();
+
+            SyncEntityState.Instance.AddAck(ack, Main.gameStateManager.TheIsland.netManager.GetNetPlayer(peer).playerId);
         }
     }
 }

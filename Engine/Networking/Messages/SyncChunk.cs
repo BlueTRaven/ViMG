@@ -37,7 +37,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
-            netMessage.channel = 1;
+            netMessage.channel = (int)NetworkMessage.Channels.Chunks;
 
             Span<ushort> queryIds = idsCache;
 

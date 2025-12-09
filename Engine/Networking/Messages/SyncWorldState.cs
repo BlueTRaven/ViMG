@@ -33,7 +33,7 @@ namespace Engine.Networking.Messages
 
             float time = reader.GetFloat();
 
-            GS.GetWorld().SetTime(time);
+            GS.GetWorld()?.SetTime(time);
         }
     }
 }

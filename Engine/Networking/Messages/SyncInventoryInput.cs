@@ -37,7 +37,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
-            netMessage.channel = 2;
+            netMessage.channel = (int)NetworkMessage.Channels.Inputs;
 
             var clickToSync = addData as ClickToSync? ?? throw new Exception();
 
