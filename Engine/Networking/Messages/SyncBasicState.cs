@@ -437,31 +437,43 @@ namespace Engine.Networking.Messages
                 // -1 = send to all players
                 if (ent.playerId == playerId || playerId == -1)
                 {
+                    // FIXME pre-emptive allocation, not great, we can remove this
+                    // Subwriter may not be submitted
                     var subWriter = new NetDataWriter();
-                    subWriters.Add(subWriter);
                     subWriter.Put(ent.reference);
 
                     if (ent.basicSyncState != null)
                     {
-                        subWriter.Put((byte)SyncStateType.MinorSync);
-
                         ent.basicSyncState.Get(out BasicState state);
 
-                        subWriter.Put(state);
+                        var prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, entities[ent.playerId][ent.reference.id].latestSequence);
+                        uint bits = state.GetDeltaBits(ref prevState);
+
+                        // We haven't changed at all, don't bother syncing
+                        if (bits != 0)
+                        {
+                            subWriter.Put((byte)SyncStateType.MinorSync);
+                            state.SerializeDelta(subWriter, bits);
+                            //subWriter.Put(state);
+
+                            subWriters.Add(subWriter);
+                        }
                     }
                     else if (ent.majorSyncState != null)
                     {
-                        //Console.WriteLine("{0} {1}", playerId, ent.majorSyncState.Value.type);
+                        Console.WriteLine("{0} {1}", playerId, ent.majorSyncState.Value.type);
                         subWriter.Put((byte)SyncStateType.MajorSync);
 
                         List<byte> bytes = new List<byte>();
                         ent.majorSyncState.Value.Save(bytes);
 
                         subWriter.PutBytesWithLength(bytes.ToArray(), 0, (ushort)bytes.Count);
+                        subWriters.Add(subWriter);
                     }
                     else
                     {
                         subWriter.Put((byte)SyncStateType.GenerationChanged);
+                        subWriters.Add(subWriter);
                     }
 
                     Debug.Assert(subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ulong) - sizeof(int) - sizeof(int));
@@ -561,7 +573,9 @@ namespace Engine.Networking.Messages
                 SyncStateType type = (SyncStateType)reader.GetByte();
                 if (type == SyncStateType.MinorSync)
                 {
-                    var state = reader.Get<BasicState>();
+                    BasicState state = GS.GetWorld().EntityManager.GetPrevStateAbs((int)ent.Id, seq);
+                    state.DeserializeDelta(reader);
+                    //var state = reader.Get<BasicState>();
 
                     if (ent != null)
                     {

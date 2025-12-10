@@ -735,6 +735,16 @@ namespace ViMG.Entities
             return ents[id].prevState[which];
 		}
 
+		public BasicState GetPrevStateAbs(int id, int frame)
+		{
+			var diff = Main.Frame - frame;
+
+			// If we overflowed, just return current
+			if (diff >= EntPrevSrv) diff = 0;
+
+			return GetPrevState(id, diff);
+		}
+
 		public bool GetActive(int id) => ents[id].active;
 
 		public Entity? GetById(ulong id)

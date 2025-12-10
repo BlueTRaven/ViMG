@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -119,6 +120,52 @@ namespace Engine.Networking
             writer.PutSpan(i);
         }
 
+        public uint GetDeltaBits(ref readonly BasicState prevState)
+        {
+            Fields bits = Fields.None;
+            if (position.X != prevState.position.X)
+                bits |= Fields.PosX;
+            if (position.Y != prevState.position.Y)
+                bits |= Fields.PosY;
+            if (position.Z != prevState.position.Z)
+                bits |= Fields.PosZ;
+
+            if (velocity.X != prevState.velocity.X)
+                bits |= Fields.VelX;
+            if (velocity.Y != prevState.velocity.Y)
+                bits |= Fields.VelY;
+            if (velocity.Z != prevState.velocity.Z)
+                bits |= Fields.VelZ;
+
+            if (rotation.X != prevState.rotation.X)
+                bits |= Fields.RotX;
+            if (rotation.Y != prevState.rotation.Y)
+                bits |= Fields.RotY;
+            if (rotation.Z != prevState.rotation.Z)
+                bits |= Fields.RotZ;
+            if (rotation.W != prevState.rotation.W)
+                bits |= Fields.RotW;
+
+            if (health != prevState.health)
+                bits |= Fields.Health;
+            if (state != prevState.state)
+                bits |= Fields.State;
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (timers[i] != prevState.timers[i])
+                    bits |= (Fields)((int)Fields.Timer0 + i);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (counters[i] != prevState.counters[i])
+                    bits |= (Fields)((int)Fields.Counter0 + i);
+            }
+
+            return (uint)bits;
+        }
+
         public void DeserializeDelta(NetDataReader reader)
         {
             version = reader.GetInt();
@@ -151,101 +198,70 @@ namespace Engine.Networking
                 health = reader.GetInt();
             if ((bits & Fields.State) == Fields.State)
                 state = reader.GetInt();
+
+            for (int i = 0; i < 4; i++)
+            {
+                Fields bit = (Fields)((int)Fields.Timer0 + i);
+                if ((bits & bit) == bit)
+                    timers[i] = reader.GetFloat();
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Fields bit = (Fields)((int)Fields.Counter0 + i);
+                if ((bits & bit) == bit)
+                    counters[i] = reader.GetInt();
+            }
         }
 
-        public void SerializeDelta(NetDataWriter writer, ref readonly BasicState prevState)
+        public void SerializeDelta(NetDataWriter writer, uint _bits)
         {
             writer.Put(VERSION);
-            int bitsPos = writer.Length;
-            writer.Put((uint)0);
+            writer.Put(_bits);
 
-            Fields bits = Fields.None;
-            if (position.X != prevState.position.X)
-            {
-                bits |= Fields.PosX;
+            Fields bits = (Fields)_bits;
+
+            if ((bits & Fields.PosX) == Fields.PosX)
                 writer.Put(position.X);
-            }
-            if (position.Y != prevState.position.Y)
-            {
-                bits |= Fields.PosY;
+            if ((bits & Fields.PosY) == Fields.PosY)
                 writer.Put(position.Y);
-            }
-            if (position.Z != prevState.position.Z)
-            {
-                bits |= Fields.PosZ;
+            if ((bits & Fields.PosZ) == Fields.PosZ)
                 writer.Put(position.Z);
-            }
 
-            if (velocity.X != prevState.velocity.X)
-            {
-                bits |= Fields.VelX;
+            if ((bits & Fields.VelX) == Fields.VelX)
                 writer.Put(velocity.X);
-            }
-            if (velocity.Y != prevState.velocity.Y)
-            {
-                bits |= Fields.VelY;
+            if ((bits & Fields.VelY) == Fields.VelY)
                 writer.Put(velocity.Y);
-            }
-            if (velocity.Z != prevState.velocity.Z)
-            {
-                bits |= Fields.VelZ;
+            if ((bits & Fields.VelZ) == Fields.VelZ)
                 writer.Put(velocity.Z);
-            }
 
-            if (rotation.X != prevState.rotation.X)
-            {
-                bits |= Fields.RotX;
+            if ((bits & Fields.RotX) == Fields.RotX)
                 writer.Put(rotation.X);
-            }
-            if (rotation.Y != prevState.rotation.Y)
-            {
-                bits |= Fields.RotY;
+            if ((bits & Fields.RotY) == Fields.RotY)
                 writer.Put(rotation.Y);
-            }
-            if (rotation.Z != prevState.rotation.Z)
-            {
-                bits |= Fields.RotZ;
+            if ((bits & Fields.RotZ) == Fields.RotZ)
                 writer.Put(rotation.Z);
-            }
-            if (rotation.W != prevState.rotation.W)
-            {
-                bits |= Fields.RotW;
+            if ((bits & Fields.RotW) == Fields.RotW)
                 writer.Put(rotation.W);
-            }
 
-            if (health != prevState.health)
-            {
-                bits |= Fields.Health;
+            if ((bits & Fields.Health) == Fields.Health)
                 writer.Put(health);
-            }
-            if (state != prevState.state)
-            {
-                bits |= Fields.State;
+            if ((bits & Fields.State) == Fields.State)
                 writer.Put(state);
-            }
 
             for (int i = 0; i < 4; i++)
             {
-                if (timers[i] != prevState.timers[i])
-                {
-                    bits |= (Fields)((int)Fields.Timer0 + i);
+                Fields bit = (Fields)((int)Fields.Timer0 + i);
+                if ((bits & bit) == bit)
                     writer.Put(timers[i]);
-                }
             }
 
             for (int i = 0; i < 4; i++)
             {
-                if (counters[i] != prevState.counters[i])
-                {
-                    bits |= (Fields)((int)Fields.Counter0 + i);
+                Fields bit = (Fields)((int)Fields.Counter0 + i);
+                if ((bits & bit) == bit)
                     writer.Put(counters[i]);
-                }
             }
-
-            int end = writer.Length;
-            writer.SetPosition(bitsPos);
-            writer.Put((uint)bits);
-            writer.SetPosition(end);
         }
 
         public void OnSave(List<byte> saveBytes)
