@@ -573,7 +573,9 @@ namespace Engine.Networking.Messages
                 SyncStateType type = (SyncStateType)reader.GetByte();
                 if (type == SyncStateType.MinorSync)
                 {
-                    BasicState state = GS.GetWorld().EntityManager.GetPrevStateAbs((int)ent.Id, seq);
+                    // TODO: we might want to base this on the last received state for this entity (before this ack)
+                    // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
+                    BasicState state = GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0);// GetPrevStateAbs((int)ent.Id, seq);
                     state.DeserializeDelta(reader);
                     //var state = reader.Get<BasicState>();
 
