@@ -462,8 +462,6 @@ namespace ViMG
 
 			datas = new EntityDataChunkStore();
 			var error = datas.Load(folderName, layer);
-			if (error == LoadError.Success)
-				manager.SetUniqueIdSeed(datas.UniqueIdSeed);
 			return error;
 		}
 

@@ -259,6 +259,13 @@ namespace Engine.Networking.Messages
         }
     }
 
+    // I want to store previous BasicState somehow.
+    // This will involve getting the BasicState that was last ack'd. This is more of a structuring thing than an actual problem.
+    // We only generate BasicState and then send it over, and then it's discarded.
+    // One way of doing this is making the ack send back the state that it ack'd, but that is obviously bad for security reasons.
+    // Instead we maybe keep a buffer of previous states.
+    // How many of these should we/can we keep? Definitely will relate to latency, so we need to pick a maximum acceptable latency (probably less than 200ms).
+    // When we ack a thing we check the sequence, use it to find the last state in the array, set it. 
     public class SyncEntityState : Message
     {
         public const int MAX_ENTS_PER_SYNC = 32;
@@ -284,13 +291,17 @@ namespace Engine.Networking.Messages
             public EntityManagerIO.EntityData? majorSyncState;
         }
 
-        // TODO: this maybe should be BasicState instead?
-        // We might end up storing BasicStates for previous frames. That would allow us to send only stuff that's changed. 
+        private struct SyncedEntity
+        {
+            public EntityManager.EntityReference reference;
+            // NOTE: equivalent to Main.Frame
+            public int latestSequence;
+        }
+
         private FastList<ToSync> toSync;
-        private int[] playerSequences;
 
         private double lastSyncTime;
-        private EntityManager.EntityReference[][] entities;
+        private SyncedEntity[][] entities;
 
         private int latestSeq;
 
@@ -298,25 +309,26 @@ namespace Engine.Networking.Messages
         {
             Instance = this;
 
-            playerSequences = new int[World.MAX_PLAYERS];
             toSync = new FastList<ToSync>(EntityManager.EntMax);
 
-            entities = new EntityManager.EntityReference[World.MAX_PLAYERS][];
+            entities = new SyncedEntity[World.MAX_PLAYERS][];
             for (int i = 0; i < entities.Length; i++)
             {
-                entities[i] = new EntityManager.EntityReference[EntityManager.EntMax];
+                entities[i] = new SyncedEntity[EntityManager.EntMax];
                 for (int j = 0; j < EntityManager.EntMax; j++)
                 {
-                    entities[i][j] = new() { id = j, generation = -1 };
+                    entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
                 }
             }
         }
 
-        public void AddAck(SyncEntityStateAck.Ack ack, int playerId)
+        public void AddAck(SyncEntityStateAck.Ack ack, int playerId, int sequence)
         {
             for (int i = 0; i < ack.numAckd; i++)
             {
-                entities[playerId][ack.ackdEntities[i].id].generation = ack.ackdEntities[i].generation;
+                entities[playerId][ack.ackdEntities[i].id].reference.generation = ack.ackdEntities[i].generation;
+                // Note we blindly set the sequence here; earlier we discard sequences that are not the latest, so this should work fine
+                entities[playerId][ack.ackdEntities[i].id].latestSequence = sequence;
             }
         }
 
@@ -348,7 +360,7 @@ namespace Engine.Networking.Messages
                             {
                                 var reference = entityManager.GetReference(ent);
 
-                                if (entities[player.playerIndex][ent.Id].generation != reference.generation)
+                                if (entities[player.playerIndex][ent.Id].reference.generation != reference.generation)
                                 {
                                     if (!entityManager.GetActive((int)ent.Id))
                                     {
@@ -667,7 +679,7 @@ namespace Engine.Networking.Messages
 
             Ack ack = reader.Get<Ack>();
 
-            SyncEntityState.Instance.AddAck(ack, Main.gameStateManager.TheIsland.netManager.GetNetPlayer(peer).playerId);
+            SyncEntityState.Instance.AddAck(ack, Main.gameStateManager.TheIsland.netManager.GetNetPlayer(peer).playerId, ack.sequence);
         }
     }
 }
