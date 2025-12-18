@@ -684,7 +684,13 @@ namespace ViMG
 			return closestPlayer;
 		}
 
-		public float DistanceFromPlayer(Vector3 position)
+        public float DistanceFromPlayer(Player player, Vector3 position)
+        {
+            return (player.Position - position).Length();
+        }
+
+        // Gets the distance from the closest player
+        public float DistanceFromPlayer(Vector3 position)
 		{
 			float closestDistance = float.MaxValue;
 

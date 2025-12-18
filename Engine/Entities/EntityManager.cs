@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using BrUtility;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using LiteNetLib;
@@ -10,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Xml.Schema;
@@ -103,7 +105,7 @@ namespace ViMG.Entities
 					currentIndex += 1;
 
 					if (currentIndex >= EntMax) return false;
-					if (manager.ents[currentIndex].active) return true;
+					if (manager.ents[currentIndex].active && manager.ents[currentIndex].entity.Enabled) return true;
 				}
             }
 
@@ -267,7 +269,7 @@ namespace ViMG.Entities
             UnloadAll();
 		}
 
-		public void ForceAdd(Entity entity, ulong id)
+		public void ForceAdd(Entity entity, ulong id, int forceGeneration = -1)
 		{
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
@@ -278,6 +280,9 @@ namespace ViMG.Entities
             entity.SetId(id);
 
             ReallyAdd(entity);
+
+			if (forceGeneration != -1)
+				ents[id].generation = forceGeneration;
 		}
 
 		public void ForceAdd(Entity entity)
@@ -329,7 +334,7 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			Debug.Assert(!ents[entity.Id].active);
+			Debug.Assert(!ents[entity.Id].active, "Entity with id already exists");
 			ents[entity.Id] = new EntityHolder
 			{
 				active = true,
@@ -387,56 +392,58 @@ namespace ViMG.Entities
 
             OnEntityAdded?.Invoke(entity);
 
-			//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
-			//{
-			//	var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-			//	if (entSerializableAttr != null)
-			//	{
-			//		if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-			//		{
-			//			EntityManagerIO.EntityData data = new(entity);
-			//			Console.WriteLine("To sync create {0}", data.type);
-			//			SyncEntityState.Instance.AddToSync(-1, GetReference(entity), data);
-			//			// Send a full sync when entity is created. Disregard TimeSynced
-			//			//var ent = new SyncBasicState.SyncEntity()
-			//			//{
-			//			//	entity = entity,
-			//			//	firstCreation = true,
-			//			//	type = SyncBasicState.SyncType.FullSync,
-			//			//};
-			//			//Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-			//		}
-			//	}
-			//}
+			if (entity is ISyncBasicState basicState)
+			{
+                if (ents[entity.Id].prevState == null)
+                {
+                    ents[entity.Id].prevState = new BasicState[EntPrevSrv];
+                }
+
+                basicState.Get(out var state);
+				ents[entity.Id].prevState[Main.Frame % EntPrevSrv] = state;
+			}
         }
 
-		public void Remove(Entity entity)
+		public void Kill(Entity entity)
 		{
 			toDeleteLater.Add(entity);
-			entity.OnDelete();
+			entity.OnKill();
 		}
 
 		public void Unload(Entity entity, bool delay = false)
         {
-			if (iteratingUpdate || delay)
+            if (entity.NetEntity && Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+            {
+                // Force entity to be disabled
+                entity.NetEnable = false;
+                return;
+            }
+
+            if (iteratingUpdate || delay)
 				toDeleteLater.Add(entity);
-			else ReallyRemove(entity);
+			else ReallyUnload(entity);
         }
 
 		public void ForceUnload(Entity entity)
 		{
-			ReallyRemove(entity);
+			ReallyUnload(entity);
 		}
 
-		public void Unload(ChunkPosition pos)
+		// Unloads all entities in a chunk.
+		// TODO: O(n)
+		public void UnloadInChunk(ChunkPosition pos)
         {
-            //TODO: better method of determining which entities are in this chunk for unloading
+            Debug.Assert(!iteratingUpdate, "Cannot unload a chunk while iterating");
+
+			//TODO: better method of determining which entities are in this chunk for unloading
+
+			AddLaterEntities();
 
 			//Initial flush to remove entities that are already queued to be deleted.
 			//This is so that we don't have to check for entities that are already queued when trying to unload.
             foreach (Entity entity in toDeleteLater)
             {
-                ReallyRemove(entity);
+                ReallyUnload(entity);
             }
 
 			toDeleteLater.Clear();
@@ -445,7 +452,8 @@ namespace ViMG.Entities
 
             for (int i = 0; i < EntMax; i++)
             {
-                if (ents[i].active && (ents[i].entity is not Player || world.isDisposed)) // Players cannot be unloaded normally
+                //&& (ents[i].entity is not Player || world.isDisposed)// Players cannot be unloaded normally
+                if (ents[i].active) 
 				{
 					if (ChunkPosition.WorldSpaceChunk(ents[i].entity.Position) == pos)
 						Unload(ents[i].entity, true);
@@ -456,7 +464,7 @@ namespace ViMG.Entities
 			//(aka any entity with a position inside the chunk.)
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyRemove(entity);
+				ReallyUnload(entity);
 			}
 
 			toDeleteLater.Clear();
@@ -485,30 +493,23 @@ namespace ViMG.Entities
 				//we do these in separate flushes.
                 foreach (Entity entity in toDeleteLater)
                 {
-                    ReallyRemove(entity);
+                    ReallyUnload(entity);
                 }
 				
 				toDeleteLater.Clear();
             }
-
-			//...and flush toAddLater, since we don't want to unload the chunk, then spawn it.
-			for (int i = toAddLater.Count - 1; i >= 0; i--)
-            {
-				Entity entity = toAddLater[i];
-
-				if (ChunkPosition.WorldSpaceChunk(entity.Position) == pos)
-					toAddLater.RemoveAt(i);
-            }
 		}
 
+		// Unloads all entities (including entities queued for unloading).
+		// NOTE: throws an exception if used during iteration.
 		public void UnloadAll()
 		{
-			//TODO: better method of determining which entities are in this chunk for unloading
+            Debug.Assert(!iteratingUpdate, "Cannot remove entities while iterating");
 
-			//queue all entities to be unloaded
-			for (int i = 0; i < EntMax; i++)
+            //queue all entities to be unloaded
+            for (int i = 0; i < EntMax; i++)
 			{
-				if (ents[i].active && (ents[i].entity is not Player || world.isDisposed || world.isCreateWorldReloading)) // Players cannot be unloaded normally
+				if (ents[i].active)
 				{
 					if (!toDeleteLater.Contains(ents[i].entity))
 						Unload(ents[i].entity, true);
@@ -518,7 +519,7 @@ namespace ViMG.Entities
 			//Now remove them, and whatever else was in the queue...
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyRemove(entity);
+				ReallyUnload(entity);
 			}
 
 			toDeleteLater.Clear();
@@ -527,7 +528,94 @@ namespace ViMG.Entities
 			toAddLater.Clear();
 		}
 
-		public void Update(double deltaTime)
+        public void AddLaterEntities()
+        {
+            foreach (Entity entity in toAddLater)
+            {
+                ReallyAdd(entity);
+            }
+
+            toAddLater.Clear();
+        }
+
+        private void ReallyUnload(Entity entity)
+        {
+            if (entity == null)
+                return;
+
+			//if ((entity is Player && !world.isDisposed && !world.isCreateWorldReloading))
+			//	return;
+
+			Console.WriteLine("Unload {0}", entity.ToString());
+
+            Debug.Assert(!iteratingUpdate, "Cannot remove entity while iterating");
+
+            if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
+            {
+                if (entity is not Player)
+                {
+                    var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+                    if (entSerializableAttr != null)
+                    {
+                        if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+                        {
+                            var ent = new SyncBasicState.SyncEntity()
+                            {
+                                entity = entity,
+                                type = SyncBasicState.SyncType.EntityUnloaded,
+                            };
+                            Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
+                        }
+                    }
+                }
+            }
+
+            entity.OnUnload();
+            //entities.Remove(entity);
+            ents[entity.Id].Reset();
+            freeList.Add((int)entity.Id);
+
+            if (entitiesByType.ContainsKey(entity.GetType()))
+                entitiesByType[entity.GetType()].Remove(entity);
+
+            //entitiesById.Remove(entity.Id);
+
+            if (entity is ICubeTracker tracker)
+            {
+                CubePosition position = tracker.TrackedPosition;
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                if (cubeTrackers.ContainsKey(chunkPos))
+                {
+                    CubeTrackers ts = cubeTrackers[chunkPos];
+                    ts.Remove(position.InChunkSpace(chunkPos));
+
+                    if (ts.count <= 0)
+                        cubeTrackers.Remove(chunkPos);
+                }
+            }
+
+            if (entity is IMultiCubeTracker multiTracker)
+            {
+                foreach (CubePosition position in multiTracker.TrackedPositions)
+                {
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+
+                    if (cubeTrackers.ContainsKey(chunkPos))
+                    {
+                        CubeTrackers ts = cubeTrackers[chunkPos];
+                        ts.Remove(position.InChunkSpace(chunkPos));
+
+                        if (ts.count <= 0)
+                            cubeTrackers.Remove(chunkPos);
+                    }
+                }
+            }
+
+            OnEntityRemoved?.Invoke(entity);
+        }
+
+        public void Update(double deltaTime)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -541,11 +629,13 @@ namespace ViMG.Entities
 				{
 					try
 					{
-						ents[i].entity.Update(deltaTime);
+						if (ents[i].entity.Enabled && (ents[i].entity.NetEnable || !ents[i].entity.NetEntity))
+							ents[i].entity.Update(deltaTime);
 					}
 					catch (Exception e)
 					{
 						Console.WriteLine("Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", ents[i].entity, ents[i].id, e.ToString());
+						Unload(ents[i].entity);
 					}
 				}
 			}
@@ -554,25 +644,54 @@ namespace ViMG.Entities
 			{
 				if (ents[i].active && !ents[i].entity.Dead)
 				{
-					if (ents[i].entity is ISyncBasicState basicState)
+					if (ents[i].entity.CanBeDisabled && !(ents[i].entity is ICubeTracker || ents[i].entity is IMultiCubeTracker))
 					{
-						basicState.Get(out var state);
-						
-						if (ents[i].prevState == null)
-						{
-							ents[i].prevState = new BasicState[EntPrevSrv];
-						}
+						var localPlayer = world.GetLocalPlayer();
 
-						ents[i].prevState[Main.Frame % EntPrevSrv] = state;
+						if (localPlayer != null)
+						{
+							var dist = world.DistanceFromPlayer(localPlayer, ents[i].entity.Position);
+							if (dist >= ents[i].entity.DisableDistance)
+							{
+								ents[i].entity.Enabled = false;
+								if (ents[i].entity.DestroyOnDisabled)
+								{
+									Unload(ents[i].entity);
+								}
+							}
+						}
 					}
 				}
 			}
+
+			for (int i = 0; i < EntMax; i++)
+			{
+				bool clear = false;
+
+                if (ents[i].active && !ents[i].entity.Dead)
+				{
+					if (ents[i].entity is ISyncBasicState basicState)
+					{
+						basicState.Get(out var state);
+
+						ents[i].prevState[Main.Frame % EntPrevSrv] = state;
+					}
+					else clear = true;
+				}
+                else clear = true;
+
+				if (clear)
+				{
+					if (ents[i].prevState != null)
+						ents[i].prevState[Main.Frame % EntPrevSrv] = new BasicState();
+				}
+            }
 
 			iteratingUpdate = false;
 
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyRemove(entity);
+				ReallyUnload(entity);
 			}
 
 			toDeleteLater.Clear();
@@ -642,92 +761,10 @@ namespace ViMG.Entities
 			}
 		}
 
-		public void AddLaterEntities()
-        {
-			foreach (Entity entity in toAddLater)
-			{
-				ReallyAdd(entity);
-			}
-
-			toAddLater.Clear();
-		}
-
-		private void ReallyRemove(Entity entity)
-        {
-			if (entity == null)
-				return;
-
-			if (iteratingUpdate)
-				throw new Exception("Cannot remove entity while iterating");
-
-			if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
-			{
-				if (entity is not Player)
-				{
-					var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-					if (entSerializableAttr != null)
-					{
-						if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-						{
-							var ent = new SyncBasicState.SyncEntity()
-							{
-								entity = entity,
-								type = SyncBasicState.SyncType.EntityUnloaded,
-							};
-							Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-						}
-					}
-				}
-			}
-
-			entity.OnUnload();
-			//entities.Remove(entity);
-			ents[entity.Id].Reset();
-			freeList.Add((int)entity.Id);
-
-			if (entitiesByType.ContainsKey(entity.GetType()))
-				entitiesByType[entity.GetType()].Remove(entity);
-
-			//entitiesById.Remove(entity.Id);
-
-			if (entity is ICubeTracker tracker)
-            {
-				CubePosition position = tracker.TrackedPosition;
-				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-				if (cubeTrackers.ContainsKey(chunkPos))
-				{
-					CubeTrackers ts = cubeTrackers[chunkPos];
-					ts.Remove(position.InChunkSpace(chunkPos));
-
-					if (ts.count <= 0)
-						cubeTrackers.Remove(chunkPos);
-				}
-            }
-
-			if (entity is IMultiCubeTracker multiTracker)
-			{
-				foreach (CubePosition position in multiTracker.TrackedPositions)
-				{
-                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-
-                    if (cubeTrackers.ContainsKey(chunkPos))
-                    {
-                        CubeTrackers ts = cubeTrackers[chunkPos];
-                        ts.Remove(position.InChunkSpace(chunkPos));
-
-                        if (ts.count <= 0)
-                            cubeTrackers.Remove(chunkPos);
-                    }
-                }
-			}
-
-			OnEntityRemoved?.Invoke(entity);
-		}
-
 		public BasicState GetPrevState(int id, int prev)
 		{
-			Debug.Assert(prev < EntPrevSrv);
+            // negative numbers would be in the future, big nono
+            Debug.Assert(prev >= 0 && prev < EntPrevSrv);
 
 			int which = Main.Frame - prev;
 			which = ((which % EntPrevSrv) + EntPrevSrv) % EntPrevSrv;
@@ -939,5 +976,39 @@ namespace ViMG.Entities
 					ents[i].entity.Draw(device, effect);
 			}
 		}
+
+		[ConsoleCommand("killall", "killall <ent type name> [force] - kills all entities of type. If force (optional) is true, unloads instead of killing.")]
+		public static void KillAll(string[] parameters)
+		{
+			IMGUIConsole.RequireParam(parameters, 0, "ent_type_name");
+
+			string entTypeName = parameters[0];
+			Type type = Utility.GetType(entTypeName);
+
+			if (type == null)
+			{
+				IMGUIConsole.LogLine("[error] Could not find entity type with name " + entTypeName);
+				return;
+			}
+
+            var entManager = Main.gameStateManager.TheIsland.GetWorld().EntityManager;
+            var ents = entManager.GetAll(type);
+			foreach (var ent in ents)
+				entManager.Unload(ent);
+		}
+
+        [ConsoleCommand("killallbutplayer", "killallbutplayer - kills all entities but player entities")]
+        public static void KillAllExceptPlayer(string[] parameters)
+		{
+            var entManager = Main.gameStateManager.TheIsland.GetWorld().EntityManager;
+
+			foreach (var ent in entManager.GetEntities())
+			{
+				if (ent is not Player)
+				{
+					entManager.Unload(ent);
+				}
+			}
+        }
     }
 }

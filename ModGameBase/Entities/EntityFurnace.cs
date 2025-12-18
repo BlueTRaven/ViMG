@@ -62,7 +62,7 @@ namespace ViMG.Entities
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
             if (tracker.HasValue())
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 
             world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
@@ -84,7 +84,7 @@ namespace ViMG.Entities
 
         public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
 		public bool OnInteract(Player player)

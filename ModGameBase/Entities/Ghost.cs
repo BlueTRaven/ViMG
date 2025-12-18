@@ -117,7 +117,7 @@ namespace ViMG.Entities
             }
 
             if (despawnTimer <= 0)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
             else despawnTimer -= (float)deltaTime;
         }
 
@@ -200,7 +200,7 @@ namespace ViMG.Entities
             tintColor = stats.TintColor;
 
             if (stats.HP <= 0 || stats.MaximumHP <= 0)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
         }
     }
 }

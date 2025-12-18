@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.IMGUIImpl;
 using static ViMG.EntityManagerIO;
 
@@ -481,7 +482,7 @@ namespace ViMG
 			}
 		}
 
-		public Entity? DeserializeEntity(EntityData entData)
+		public Entity? DeserializeEntity(EntityData entData, int overrideGeneration = -1)
 		{
             Type entityType = Utility.GetType(entData.type);
 
@@ -500,7 +501,7 @@ namespace ViMG
 						ent.OnLoad(entData.data, entData.version);
 						try
 						{
-							manager.ForceAdd(ent, entData.id);
+							manager.ForceAdd(ent, entData.id, overrideGeneration);
 							return ent;
 						}
 						catch (Exception e)

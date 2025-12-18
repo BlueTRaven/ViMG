@@ -287,7 +287,7 @@ namespace ViMG.Entities
 
                 var ent = this.entity;
                 if (entity.world.player.All(x => x == null || (x.Position - ent.Position).Length() > 128 * Cube.CUBE_SCALE))
-                    ai.world.EntityManager.Remove(entity);
+                    ai.world.EntityManager.Kill(entity);
 			}
 
 			private void UpdateCollision()
@@ -413,7 +413,7 @@ namespace ViMG.Entities
 				if (ai.Health <= 0)
 				{
                     ai.Health = 0;
-                    ai.world.EntityManager.Remove(entity);
+                    ai.world.EntityManager.Kill(entity);
 
 					if (ai.touchHitbox != -1)
                         ai.world.HitboxManager.Remove(ai.touchHitbox);

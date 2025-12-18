@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using ViMG.Cubes;
 using ViMG.IMGUIImpl;
 
 namespace ViMG.Entities
@@ -25,8 +26,8 @@ namespace ViMG.Entities
 		public bool Dead = false;
 		public bool AlwaysRender;
 		//An entity becomes INACTIVE once it is serialized. It is unloaded and removed from the entity list.
-		public bool CanBecomeInactive = true;	//Certain entity types (bosses, etc) may wish to never become inactive.
-		public bool DestroyOnInactive = true;   //Most entity types will be destroyed upon becoming inactive by default.
+		public bool CanBeDisabled = true;	//Certain entity types (bosses, etc) may wish to never become disabled.
+		public bool DestroyOnDisabled = true;   //Most entity types will be destroyed upon becoming disabled by default.
 
 		//Force the entity to be serialized.
 		//Note that this does not guarantee an entity will be properly serialized. Entities without properly implemented OnSave/OnLoad methods may be
@@ -46,6 +47,13 @@ namespace ViMG.Entities
 		public double TimeMajorSynced;
 		public double SyncInterval {get; protected set; } = 0.25;
 		public double MajorSyncInterval { get; protected set; } = 5;
+
+		public bool Enabled = true;
+		public float DisableDistance = Cube.CUBE_SCALE * 128;
+
+		public bool NetEntity = false;
+		// Enabled/disabled by network - run when client attempts to delete an entity. Clients cannot (normally) delete entities
+		public bool NetEnable = true;
 
         public void SetId(ulong id)
 		{
@@ -74,7 +82,7 @@ namespace ViMG.Entities
 		}
 
 		//Called when an enemy is killed by normal means; I.e. the player has dealt enough damage to it.
-		public virtual void OnDelete()
+		public virtual void OnKill()
 		{
 			Dead = true;
 		}

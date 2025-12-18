@@ -43,7 +43,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			DestroyOnInactive = false;	//Don't destroy glow node upon becoming inactive. Otherwise we orphan the cube.
+			DestroyOnDisabled = false;	//Don't destroy glow node upon becoming inactive. Otherwise we orphan the cube.
         }
 
         public override void Update(double deltaTime)
@@ -144,7 +144,7 @@ namespace ViMG.Entities
 			//world.MineCube(TrackedPosition, true);
 			//TODO this had killtrackedentities false?
 			world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();
 			Main.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
@@ -164,7 +164,7 @@ namespace ViMG.Entities
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
 			//world.ChunkManager2.GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
         public override void OnSave(List<byte> saveBytes)

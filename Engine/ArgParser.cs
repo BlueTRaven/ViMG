@@ -19,6 +19,7 @@ namespace Engine
         public Point? windowPosition = null;
 
         public bool dedicatedServer = false;
+        public string? playerName;
 
         public void ParseArgs(string[] args)
         {
@@ -58,6 +59,10 @@ namespace Engine
                 else if (currentArg == "--dedicated")
                 {
                     dedicatedServer = true;
+                }
+                else if (currentArg == "--playerName")
+                {
+                    playerName = NextArg(args, ref currentArgI);
                 }
                 else
                 {

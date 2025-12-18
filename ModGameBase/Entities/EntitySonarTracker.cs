@@ -22,7 +22,7 @@ namespace ViMG.Entities
         {
             this.Position = position;
 
-            CanBecomeInactive = false;
+            CanBeDisabled = false;
             AlwaysRender = true;
         }
 
@@ -32,7 +32,7 @@ namespace ViMG.Entities
 
             if (instance != null && instance != this)
             {
-                world.EntityManager.Remove(instance);
+                world.EntityManager.Kill(instance);
                 instance = this;
             }
         }
@@ -67,7 +67,7 @@ namespace ViMG.Entities
 
             if (alive >= TOTAL_TIME)
             {
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
             }
 
             Main.Renderer.EffectEmpty.Parameters["TintColor"].SetValue((Color.CornflowerBlue * 0.75f * sonarAlpha).ToVector4());

@@ -53,7 +53,7 @@ namespace ViMG.Entities
                 world.HitboxManager.Update(hitbox, bounds.Offset(Position));
 
             if (exploding && alive >= explodingTime)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
         }
 
         public override void OnUnload()

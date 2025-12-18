@@ -628,7 +628,7 @@ namespace ViMG
                     if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
                         entIO.Serialize(pos);
 
-                    entityManager.Unload(pos);
+                    entityManager.UnloadInChunk(pos);
                     chunkMesher?.Unload(pos);
                 }
 
@@ -676,7 +676,7 @@ namespace ViMG
                     //chunkIO.SerializeChunk(chunks, pos);
                     //entIO.Serialize(chunkPosition);
 
-                    entityManager.Unload(chunkPosition);
+                    entityManager.UnloadInChunk(chunkPosition);
                     chunkMesher?.Unload(chunkPosition);
                     break;
                 }

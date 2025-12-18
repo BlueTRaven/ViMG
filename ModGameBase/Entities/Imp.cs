@@ -230,7 +230,7 @@ namespace ViMG.Entities
             fireTime = FIRE_TIME;
 
             if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 		}
 
 		public override void OnUnload()
@@ -360,7 +360,7 @@ namespace ViMG.Entities
 					if (health <= 0)
 					{
 						health = 0;
-						world.EntityManager.Remove(this);
+						world.EntityManager.Kill(this);
 					}
 
 					invulnTimer = 0.25f;

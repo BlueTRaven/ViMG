@@ -87,7 +87,7 @@ namespace ViMG.Entities
                 world.ChunkManager.CubeView.SetCube(CubePosition.FromWorldSpace(Position), 
                     Main.Registry.CubeRegistry.Get("mana_star").Id, true);
                 //if (timer <= 0)
-                    world.EntityManager.Remove(this);
+                    world.EntityManager.Kill(this);
             }
 
             AlwaysRender = world.IsNight();

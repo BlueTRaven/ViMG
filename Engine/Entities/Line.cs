@@ -54,7 +54,7 @@ namespace ViMG.Entities
 			alive += (float)deltaTime;
 
 			if (alive >= time)
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 		}
 
         public Color GetColor()

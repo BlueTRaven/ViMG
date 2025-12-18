@@ -105,7 +105,7 @@ namespace ViMG.Entities
 					if (Health <= 0)
 					{
 						Health = 0;
-						world.EntityManager.Remove(this);
+						world.EntityManager.Kill(this);
 					}
 
 					invulnTimer = 0.25f;

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ViMG.Entities
     //For cubes that don't want a fully-fledged cube entity, but want a light.
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0, 0)]
-    public class CubeLight : Entity, ICubeTracker
+    public class CubeLight : Entity, ICubeTracker, ISyncBasicState
     {
         private CubePosition trackedPosition;
         public CubePosition TrackedPosition => trackedPosition;
@@ -58,7 +59,7 @@ namespace ViMG.Entities
         public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
             world.LightManager.Remove(light);
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         public override void OnSave(List<byte> saveBytes)
@@ -81,6 +82,19 @@ namespace ViMG.Entities
 
             lightColor = SaveHelper.LoadVector4(loadBytes, ref index);
             lightExtents = SaveHelper.LoadVector2(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
         }
     }
 }

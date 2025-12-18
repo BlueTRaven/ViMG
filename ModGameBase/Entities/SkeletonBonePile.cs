@@ -41,9 +41,9 @@ namespace ModGameBase.Entities
             SearchForNearbyBoneBlocks();
         }
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
             EntityItem ent = new EntityItem(Position,
             new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,

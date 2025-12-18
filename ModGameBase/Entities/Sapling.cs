@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,7 +15,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 0)]
-    public class Sapling : Entity, ICubeTracker
+    public class Sapling : Entity, ICubeTracker, ISyncBasicState
     {
 		private static VerySimpleMesh mesh;
 
@@ -56,7 +57,7 @@ namespace ViMG.Entities
 
 			if (world.GetTime() > toGrowTime && !grown)
             {
-                world.EntityManager.Remove(this);   
+                world.EntityManager.Kill(this);   
 
 				int num = Main.random.Next(3, 12);
 
@@ -76,7 +77,7 @@ namespace ViMG.Entities
 
         public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
   //      public override void Draw(GraphicsDevice device, Effect effect)
@@ -142,6 +143,22 @@ namespace ViMG.Entities
 
             if (Position.Y == 0)
                 throw new Exception();
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                timers = { [0] = toGrowTime, [1] = startTime },
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            toGrowTime = state.timers[0];
+            startTime = state.timers[1];
         }
     }
 }

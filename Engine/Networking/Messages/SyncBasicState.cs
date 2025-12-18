@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.IMGUIImpl;
 using static Engine.Networking.Messages.SyncEntityStateAck;
 using static ViMG.LightManager;
@@ -259,13 +260,8 @@ namespace Engine.Networking.Messages
         }
     }
 
-    // I want to store previous BasicState somehow.
-    // This will involve getting the BasicState that was last ack'd. This is more of a structuring thing than an actual problem.
-    // We only generate BasicState and then send it over, and then it's discarded.
-    // One way of doing this is making the ack send back the state that it ack'd, but that is obviously bad for security reasons.
-    // Instead we maybe keep a buffer of previous states.
-    // How many of these should we/can we keep? Definitely will relate to latency, so we need to pick a maximum acceptable latency (probably less than 200ms).
-    // When we ack a thing we check the sequence, use it to find the last state in the array, set it. 
+    // Entities are sometimes staying when they shouldn't
+    // Items in particular are easy to get this to happen to
     public class SyncEntityState : Message
     {
         public const int MAX_ENTS_PER_SYNC = 32;
@@ -276,17 +272,20 @@ namespace Engine.Networking.Messages
 
         public enum SyncStateType
         {
-            // Generation has changed - entity is new or deleted.
-            GenerationChanged,
+            // Unload entity
+            Unload,
+            // Create entity
             MajorSync,
+            // Just an update
             MinorSync,
         }
 
-        public struct ToSync
+        private struct ToSync
         {
             public required int playerId;
             public required EntityManager.EntityReference reference;
 
+            public required SyncStateType type;
             public ISyncBasicState? basicSyncState;
             public EntityManagerIO.EntityData? majorSyncState;
         }
@@ -296,6 +295,7 @@ namespace Engine.Networking.Messages
             public EntityManager.EntityReference reference;
             // NOTE: equivalent to Main.Frame
             public int latestSequence;
+            public bool unloadedThisSeq;
         }
 
         private FastList<ToSync> toSync;
@@ -312,14 +312,15 @@ namespace Engine.Networking.Messages
             toSync = new FastList<ToSync>(EntityManager.EntMax);
 
             entities = new SyncedEntity[World.MAX_PLAYERS][];
+
             for (int i = 0; i < entities.Length; i++)
-            {
-                entities[i] = new SyncedEntity[EntityManager.EntMax];
-                for (int j = 0; j < EntityManager.EntMax; j++)
                 {
-                    entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
+                    entities[i] = new SyncedEntity[EntityManager.EntMax];
+                    for (int j = 0; j < EntityManager.EntMax; j++)
+                    {
+                        entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
+                    }
                 }
-            }
         }
 
         public void AddAck(SyncEntityStateAck.Ack ack, int playerId, int sequence)
@@ -349,50 +350,114 @@ namespace Engine.Networking.Messages
                         continue;
                     }
 
-                    var iter = entityManager.GetEntities();
-
-                    foreach (var ent in iter)
+                    for (int i = 0; i < EntityManager.EntMax; i++)
                     {
-                        var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-                        if (entSerializableAttr != null)
-                        {
-                            if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-                            {
-                                var reference = entityManager.GetReference(ent);
+                        var reference = entityManager.GetReference(i);
+                        var ent = entityManager.GetByRef(ref reference);
 
-                                if (entities[player.playerIndex][ent.Id].reference.generation != reference.generation)
+                        if (entities[player.playerIndex][i].reference.generation != reference.generation)
+                        {
+                            if (ent != null)
+                            {
+                                var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+                                if (entSerializableAttr != null)
                                 {
-                                    if (!entityManager.GetActive((int)ent.Id))
+                                    if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
                                     {
-                                        toSync.AddAssumeCapacity(new()
-                                        {
-                                            playerId = player.playerIndex,
-                                            reference = reference,
-                                        });
-                                    }
-                                    else
-                                    {
+
+                                        //if (Main.Frame - entities[player.playerIndex][ent.Id].latestSequence > EntityManager.EntPrevSrv)
+                                        //{
+                                        //    Console.WriteLine("Ent {0} {1} out of date, resync {2} {3}", ent.ToString(), ent.Id, entities[player.playerIndex][ent.Id].latestSequence, Main.Frame);
+                                        //}
+
+                                        Console.WriteLine("Server sent create ent {0} {1}", ent.Id, ent.ToString());
                                         var entData = new EntityManagerIO.EntityData(ent);
                                         toSync.AddAssumeCapacity(new()
                                         {
+                                            type = SyncStateType.MajorSync,
                                             playerId = player.playerIndex,
                                             reference = reference,
                                             majorSyncState = entData,
                                         });
                                     }
                                 }
-                                else if (ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                            }
+                            else
+                            {
+                                Console.WriteLine("Server sent unload ent {0}", reference.id);
+
+                                toSync.AddAssumeCapacity(new()
                                 {
-                                    toSync.AddAssumeCapacity(new()
-                                    {
-                                        playerId = player.playerIndex,
-                                        reference = reference,
-                                        basicSyncState = syncsBasicState,
-                                    });
-                                }
+                                    type = SyncStateType.Unload,
+                                    playerId = player.playerIndex,
+                                    reference = reference,
+                                });
                             }
                         }
+                        else if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                        {
+                            toSync.AddAssumeCapacity(new()
+                            {
+                                type = SyncStateType.MinorSync,
+                                playerId = player.playerIndex,
+                                reference = reference,
+                                basicSyncState = syncsBasicState,
+                            });
+                        }
                     }
+
+                    //var iter = entityManager.GetEntities();
+
+                    //foreach (var ent in iter)
+                    //{
+                    //    var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+                    //    if (entSerializableAttr != null)
+                    //    {
+                    //        if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
+                    //        {
+                    //            var reference = entityManager.GetReference(ent);
+
+                    //            if (entities[player.playerIndex][ent.Id].reference.generation != reference.generation)
+                    //                //|| Main.Frame - entities[player.playerIndex][ent.Id].latestSequence > EntityManager.EntPrevSrv)
+                    //            {
+                    //                //if (Main.Frame - entities[player.playerIndex][ent.Id].latestSequence > EntityManager.EntPrevSrv)
+                    //                //{
+                    //                //    Console.WriteLine("Ent {0} {1} out of date, resync {2} {3}", ent.ToString(), ent.Id, entities[player.playerIndex][ent.Id].latestSequence, Main.Frame);
+                    //                //}
+                    //                if (!entityManager.GetActive((int)ent.Id))
+                    //                {
+                    //                    toSync.AddAssumeCapacity(new()
+                    //                    {
+                    //                        type = SyncStateType.GenerationChanged,
+                    //                        playerId = player.playerIndex,
+                    //                        reference = reference,
+                    //                    });
+                    //                }
+                    //                else
+                    //                {
+                    //                    var entData = new EntityManagerIO.EntityData(ent);
+                    //                    toSync.AddAssumeCapacity(new()
+                    //                    {
+                    //                        type = SyncStateType.MajorSync,
+                    //                        playerId = player.playerIndex,
+                    //                        reference = reference,
+                    //                        majorSyncState = entData,
+                    //                    });
+                    //                }
+                    //            }
+                    //            else if (ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                    //            {
+                    //                toSync.AddAssumeCapacity(new()
+                    //                {
+                    //                    type = SyncStateType.MinorSync,
+                    //                    playerId = player.playerIndex,
+                    //                    reference = reference,
+                    //                    basicSyncState = syncsBasicState,
+                    //                });
+                    //            }
+                    //        }
+                    //    }
+                    //}
 
                     Main.Registry.MessageRegistry.SendMessageToPeer(Instance, peer, player.playerIndex);
                 }
@@ -400,11 +465,6 @@ namespace Engine.Networking.Messages
                 lastSyncTime = Main.Time;
                 Instance.PostSend();
             }
-        }
-
-        public void AddToSync(int playerId, EntityManager.EntityReference reference)
-        {
-            this.toSync.AddAssumeCapacity(new() { playerId = playerId, reference = reference });
         }
 
         public void PostSend()
@@ -441,6 +501,7 @@ namespace Engine.Networking.Messages
                     // Subwriter may not be submitted
                     var subWriter = new NetDataWriter();
                     subWriter.Put(ent.reference);
+                    subWriter.Put((byte)ent.type);
 
                     if (ent.basicSyncState != null)
                     {
@@ -451,19 +512,18 @@ namespace Engine.Networking.Messages
 
                         // We haven't changed at all, don't bother syncing
                         if (bits != 0)
+                        // We DO bother synching actually. 
+                        // Nothing will be sync'd, but basically this just informs the client that it expects this entity to exist.
+                        // If it does NOT have this entity, then it will not send back an ack (because it can't do anything with the entity data.)
+                        // The server will see that it has no ack, and send a major sync.
                         {
-                            subWriter.Put((byte)SyncStateType.MinorSync);
                             state.SerializeDelta(subWriter, bits);
-                            //subWriter.Put(state);
 
                             subWriters.Add(subWriter);
                         }
                     }
                     else if (ent.majorSyncState != null)
                     {
-                        Console.WriteLine("{0} {1}", playerId, ent.majorSyncState.Value.type);
-                        subWriter.Put((byte)SyncStateType.MajorSync);
-
                         List<byte> bytes = new List<byte>();
                         ent.majorSyncState.Value.Save(bytes);
 
@@ -472,7 +532,6 @@ namespace Engine.Networking.Messages
                     }
                     else
                     {
-                        subWriter.Put((byte)SyncStateType.GenerationChanged);
                         subWriters.Add(subWriter);
                     }
 
@@ -573,16 +632,35 @@ namespace Engine.Networking.Messages
                 SyncStateType type = (SyncStateType)reader.GetByte();
                 if (type == SyncStateType.MinorSync)
                 {
+                    BasicState state;
                     // TODO: we might want to base this on the last received state for this entity (before this ack)
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
-                    BasicState state = GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0);// GetPrevStateAbs((int)ent.Id, seq);
+                    if (ent != null) state = GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0);// GetPrevStateAbs((int)ent.Id, seq);
+                    else state = new BasicState();
+
                     state.DeserializeDelta(reader);
-                    //var state = reader.Get<BasicState>();
+
+                    // Check to make sure we're not trying to create or update an entity that was unloaded this framee
+                    var unloadedThisSeq = entities[0][reference.id].latestSequence == seq && entities[0][reference.id].unloadedThisSeq;
+                    if (unloadedThisSeq)
+                        continue;
 
                     if (ent != null)
                     {
                         Debug.Assert(ent is ISyncBasicState);
                         (ent as ISyncBasicState).Set(ref state);
+
+                        ent.NetEnable = true;
+
+                        entities[0][ent.Id] = new SyncedEntity
+                        {
+                            reference = reference,
+                            latestSequence = seq,
+                            unloadedThisSeq = false,
+                        };
+                        
+                        ackArr[ackI] = reference;
+                        ackI += 1;
                     }
                 }
                 else if (type == SyncStateType.MajorSync)
@@ -591,30 +669,49 @@ namespace Engine.Networking.Messages
                     EntityManagerIO.EntityData data = new();
                     data.Load(bytes);
 
-                    if (data.IsValid)
+                    // Check to make sure we're not trying to create or update an entity that was unloaded this framee
+                    var unloadedThisSeq = entities[0][reference.id].latestSequence == seq && entities[0][reference.id].unloadedThisSeq;
+                    if (unloadedThisSeq)
+                        continue;
+
+                    if (data.IsValid && (ent == null || data.type == ent.GetType().FullName))
                     {
+                        Console.WriteLine("{0} {1}", data.id, data.type);
                         if (ent == null)
-                            ent = GS.GetWorld().EntIO.DeserializeEntity(data);
+                            ent = GS.GetWorld().EntIO.DeserializeEntity(data, reference.generation);
                         else
+                            ent.OnLoad(data.data, data.version);
+
+                        ent.NetEntity = true;
+                        ent.NetEnable = true;
+
+                        entities[0][ent.Id] = new SyncedEntity
                         {
-                            if (GS.GetWorld().EntityManager.GetReference(ent).generation != reference.generation)
-                            {
-                                GS.GetWorld().EntityManager.ForceUnload(ent);
-                                ent = GS.GetWorld().EntIO.DeserializeEntity(data);
-                            }
-                            else ent.OnLoad(data.data, data.version);
-                        }
+                            reference = reference,
+                            latestSequence = seq,
+                            unloadedThisSeq = false,
+                        };
 
                         ackArr[ackI] = reference;
                         ackI += 1;
                     }
+                    else Console.WriteLine("Data invalid {0}", reference.id);
                 }
-                else if (type == SyncStateType.GenerationChanged)
+                else if (type == SyncStateType.Unload)
                 {
+                    Console.WriteLine("Server unloaded {0} {1}", reference.id, ent?.ToString());
                     if (ent != null)
                         GS.GetWorld().EntityManager.ForceUnload(ent);
-                    
+
+                    entities[0][reference.id] = new SyncedEntity
+                    {
+                        reference = reference,
+                        latestSequence = seq,
+                        unloadedThisSeq = true,
+                    };
+
                     ackArr[ackI] = reference;
+                    ackI += 1;
                 }
             }
 

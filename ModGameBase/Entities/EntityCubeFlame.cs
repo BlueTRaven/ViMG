@@ -91,7 +91,7 @@ namespace ViMG.Entities
 
             if (world.GetTime() > time)
             {
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 
                 world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
             }
@@ -104,7 +104,7 @@ namespace ViMG.Entities
 
         public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         public override void OnUnload()

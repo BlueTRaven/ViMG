@@ -130,7 +130,7 @@ namespace ViMG.Entities
             }
 
             if (parent.Dead)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
         }
 
         public void SetStats(Stats stats)

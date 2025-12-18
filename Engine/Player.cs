@@ -384,7 +384,7 @@ namespace ViMG
 
 			Console.WriteLine("{0} UUid: {1}", playerIndex, playerUuid);
 
-			IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
+			//IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
 			world.player[playerIndex] = this;
             invulnTimer = 6f;   //6 seconds of invuln after respawning
 
@@ -469,9 +469,9 @@ namespace ViMG
 			}
 		}
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
 			if (state == State.Dead)
 			{
@@ -553,7 +553,7 @@ namespace ViMG
 				// This is the case if our playerIndex is present in the netPlayer array
 				if (Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId != playerIndex)
 				{
-					world.EntityManager.Remove(this);
+					world.EntityManager.Kill(this);
 					return;
 				}
 			}
@@ -1531,7 +1531,7 @@ namespace ViMG
 						//instead of to the inventory.
 						if (item.ItemInstance.item is ItemCoin coin)
 						{
-                            world.EntityManager.Remove(ent);
+                            world.EntityManager.Kill(ent);
 
                             Currency += item.ItemInstance.num * coin.Value;
 
@@ -1542,7 +1542,7 @@ namespace ViMG
 						{
 							if (inventory.Add(item.ItemInstance, out int index))
 							{
-								world.EntityManager.Remove(ent);
+								world.EntityManager.Kill(ent);
 								item.ItemInstance.item.StartHold(this, inventory, index);
 
 								if (IsLocalPlayer)
@@ -2029,7 +2029,7 @@ namespace ViMG
 
 		public void KillWithoutAnimation()
         {
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
         }
 
 		private void Damage(int amt)

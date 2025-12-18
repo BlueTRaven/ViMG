@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0)]
-    public class EntityShrine : Entity, ICubeTracker
+    public class EntityShrine : Entity, ICubeTracker, ISyncBasicState
     {
         public struct MeshingData
         {
@@ -110,6 +111,21 @@ namespace ViMG.Entities
             md.Memory->cooldownTimer = cooldownTimer;
 
             return md.As<byte>();
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                timers = { [0] = cooldownTimer },
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            cooldownTimer = state.timers[0];
         }
     }
 }

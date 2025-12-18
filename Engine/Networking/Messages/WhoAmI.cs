@@ -42,7 +42,7 @@ namespace Engine.Networking.Messages
 
             if (playerName == "" || GS.netManager.GetNetPlayerByName(playerName).playerId != -1)
             {
-                Console.WriteLine("Invalid player name recieved from {0}", peer.ToString());
+                Console.WriteLine("Invalid player name ({0}) recieved from {1}", playerName, peer.ToString());
                 peer.Disconnect();
                 return;
             }

@@ -36,7 +36,7 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
-            if (GS.GetWorld().Logic is WorldLogicIsland logicIsland)
+            if (GS.GetWorld()?.Logic is WorldLogicIsland logicIsland)
             {
                 logicIsland.WeatherManager?.Deserialize(reader);
                 logicIsland.WeatherChangeTimer = reader.GetFloat();

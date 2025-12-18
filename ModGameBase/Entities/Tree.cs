@@ -88,7 +88,7 @@ namespace ViMG.Entities
 			{
 				if (position == trackedPositions[0])
 				{
-					world.EntityManager.Remove(this);
+					world.EntityManager.Kill(this);
 
                     for (int i = position.Y; i < position.Y + size; i++)
                     {

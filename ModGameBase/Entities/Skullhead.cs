@@ -111,9 +111,9 @@ namespace ViMG.Entities
             world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
 		}
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
 			int which = Main.random.Next(0, 5);
 
@@ -392,7 +392,7 @@ namespace ViMG.Entities
 
 				if (world.DistanceFromPlayer(Position) > Cube.CUBE_SCALE * 128f)
                 {
-					world.EntityManager.Remove(this);
+					world.EntityManager.Kill(this);
                 }
             }
 
@@ -486,7 +486,7 @@ namespace ViMG.Entities
 					if (health <= 0)
 					{
 						health = 0;
-						world.EntityManager.Remove(this);
+						world.EntityManager.Kill(this);
 
 						if (hitbox != -1)
 							world.HitboxManager.Remove(hitbox);
@@ -526,7 +526,7 @@ namespace ViMG.Entities
 			tintColor = stats.TintColor;
 
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 		}
 	}
 }

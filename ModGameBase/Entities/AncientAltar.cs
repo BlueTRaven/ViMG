@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +13,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-	public class AncientAltar : Entity, ICubeTracker
+    public class AncientAltar : Entity, ICubeTracker, ISyncBasicState
 	{
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
@@ -55,7 +56,7 @@ namespace ViMG.Entities
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 			if (light != -1)
 				world.LightManager.Remove(light);
 		}
@@ -135,5 +136,20 @@ namespace ViMG.Entities
 			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
 			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
-	}
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				timers = { [0] = radius },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			Position = state.position;
+			radius = state.timers[0];
+        }
+    }
 }

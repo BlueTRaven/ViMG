@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -65,6 +66,14 @@ namespace ViMG.UIs
             Main.DrawCursor = false;
         }
 
+        public static string GetDefaultPlayerName(GameStateManager gsManager)
+        {
+            if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                return Main.SessionInformation.LastLoadedSave;
+            else
+                return Main.Args.playerName ?? gsManager.netMode.ToString();
+        }
+
         public override void Update(double deltaTime)
         {
             UI.Start();
@@ -91,8 +100,6 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
-                        gsManager.TheIsland.localPlayerName = Main.SessionInformation.LastLoadedSave;
                     gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer);
                 }
                 ypos++;
@@ -101,7 +108,6 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.TheIsland.localPlayerName = "Server";
                     gsManager.Continue(GameStateManager.NetworkingMode.Server);
                 }
 
@@ -109,7 +115,6 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.TheIsland.localPlayerName = "Client";
                     gsManager.Continue(GameStateManager.NetworkingMode.Client);
                 }
 

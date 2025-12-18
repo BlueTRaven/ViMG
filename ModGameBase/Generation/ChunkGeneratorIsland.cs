@@ -15,6 +15,12 @@ using Engine.Items;
 
 namespace ViMG.Generation
 {
+	// TODO:
+	// Structure placement can be multithreaded.
+	// Each structure should have a bounding box. Every structure that overlaps another gets a different color.
+	// Two structures with the same color cannot be placed at the same time.
+	// In addition we can probably multithread the placement of individual structures by divying up the blocks
+	// to place (parallel for?)
     public class ChunkGeneratorIsland : ChunkGenerator
     {
 		private static ushort[] BlacklistOre = new ushort[] 

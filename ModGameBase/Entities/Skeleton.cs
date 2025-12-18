@@ -68,9 +68,9 @@ namespace ViMG.Entities
 			health = maxHealth;
 		}
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
 				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
@@ -147,7 +147,7 @@ namespace ViMG.Entities
 						}
 
 						if (state == State.Active || state == State.LyingInPileKillable)
-							world.EntityManager.Remove(this);
+							world.EntityManager.Kill(this);
 					}
 				}
 			}
@@ -260,7 +260,7 @@ namespace ViMG.Entities
 			UpdateCollision();
 
             if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 		}
 
 		//TODO performance
@@ -357,7 +357,7 @@ namespace ViMG.Entities
 						}
 
 						if (state == State.Active || state == State.LyingInPileKillable)
-							world.EntityManager.Remove(this);
+							world.EntityManager.Kill(this);
 					}
 
 					invulnTimer = 0.25f;

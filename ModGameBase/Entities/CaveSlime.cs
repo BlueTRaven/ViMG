@@ -57,12 +57,12 @@ namespace ViMG.Entities
 
             //Kill self if too far away
             if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 		}
 
-		public override void OnDelete()
+		public override void OnKill()
 		{
-			base.OnDelete();
+			base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
 				new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
@@ -126,7 +126,7 @@ namespace ViMG.Entities
 			tintColor = stats.TintColor;
 
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 		}
 
         public override void OnSave(List<byte> saveBytes)

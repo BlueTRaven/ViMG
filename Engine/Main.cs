@@ -85,6 +85,8 @@ namespace ViMG
 		public const double FIXED_STEP = 1.0 / (double)FIXED_FPS;
 		private double time;
 
+		public static double TimeP = 0;
+
 		public static RenderTarget2D DepthTarget;
 		public static RenderTarget2D WorldTarget;
 
@@ -101,10 +103,10 @@ namespace ViMG
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
-		public const bool DO_DETAIL = false;
+		public const bool DO_DETAIL = true;
 		public const bool TRANSPARENT_ORES = false;
 		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
-		public static bool ENABLE_ENT_SPAWNING = true;
+		public static bool ENABLE_ENT_SPAWNING = false;
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		public const int RANDOM_UPDATES_PER_CHUNK = 1;
 		public const bool DO_RENDER_MESHING = true;
@@ -312,6 +314,8 @@ namespace ViMG
 
 				FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
 			}
+
+			TimeP = time / FIXED_STEP;
 
 			base.Update(gt);
 

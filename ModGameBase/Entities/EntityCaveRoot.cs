@@ -73,7 +73,7 @@ namespace ViMG.Entities
 
         public void TrackingCubeUpdated(World world, ChunkManager cm, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         //public override void Draw(GraphicsDevice device, Effect effect)

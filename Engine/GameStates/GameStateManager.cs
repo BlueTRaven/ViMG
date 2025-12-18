@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,6 +93,7 @@ namespace ViMG.GameStates
             if (Main.SessionInformation.LastLoadedSave != null)
             {
                 this.netMode = netMode;
+                TheIsland.localPlayerName = MenuMain.GetDefaultPlayerName(this);
                 SetGameState(TheIsland);
                 if (netMode == NetworkingMode.Singleplayer || netMode == NetworkingMode.Server)
                 {

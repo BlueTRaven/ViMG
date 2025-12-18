@@ -65,7 +65,7 @@ namespace ViMG.Entities
             }
 
             if (timer <= 0)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
         }
 
         public override void OnUnload()

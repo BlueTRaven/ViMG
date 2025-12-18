@@ -201,7 +201,7 @@ namespace ViMG.Entities
                     cm.CubeView.SetCube(TrackedPositions.ElementAt(i), 0);
                 }
 
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using Engine.Items;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +10,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(3, 1)]
-	public class EntityChest : Entity, ICubeTracker, IHasInventory
+	public class EntityChest : Entity, ICubeTracker, IHasInventory, ISyncBasicState
 	{
 		public struct MeshingData
 		{
@@ -24,13 +25,13 @@ namespace ViMG.Entities
 
         public EntityChest()
         {
-			DoesSync = false;
+			//DoesSync = false;
 			MajorSyncInterval = 5;
         }
 
 		public EntityChest(CubePosition position, int rows, int columns, MeshHelper.CubeFace facing)
 		{
-            DoesSync = false;
+            //DoesSync = false;
             MajorSyncInterval = 5;
 
             this.TrackedPosition = position;
@@ -66,7 +67,7 @@ namespace ViMG.Entities
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
 			if (tracker.HasValue())
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
@@ -80,7 +81,7 @@ namespace ViMG.Entities
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
 		public bool OnInteract(Player player)
@@ -139,6 +140,21 @@ namespace ViMG.Entities
 		public bool InventoryAction(Player? activatingPlayer, int action)
         {
 			return false;
+        }
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				counters = { [0] = (int)meshingData.facing },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			Position = state.position;
+			meshingData.facing = (MeshHelper.CubeFace)state.counters[0];
         }
     }
 }

@@ -29,7 +29,7 @@ namespace ViMG.Entities
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
 		public bool OnInteract(Player player)

@@ -35,9 +35,9 @@ namespace ViMG.Entities
             this.Position = position;
         }
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
             world.EntityManager.Add(new SkeletonBonePile(Position));
         }

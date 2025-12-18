@@ -127,7 +127,7 @@ namespace ViMG.Entities
 			funcs.Update(deltaTime);
 
             if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 		}
 
 		public bool IsInLight() => this.inLight;
