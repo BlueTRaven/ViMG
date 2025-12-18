@@ -406,59 +406,6 @@ namespace Engine.Networking.Messages
                         }
                     }
 
-                    //var iter = entityManager.GetEntities();
-
-                    //foreach (var ent in iter)
-                    //{
-                    //    var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-                    //    if (entSerializableAttr != null)
-                    //    {
-                    //        if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-                    //        {
-                    //            var reference = entityManager.GetReference(ent);
-
-                    //            if (entities[player.playerIndex][ent.Id].reference.generation != reference.generation)
-                    //                //|| Main.Frame - entities[player.playerIndex][ent.Id].latestSequence > EntityManager.EntPrevSrv)
-                    //            {
-                    //                //if (Main.Frame - entities[player.playerIndex][ent.Id].latestSequence > EntityManager.EntPrevSrv)
-                    //                //{
-                    //                //    Console.WriteLine("Ent {0} {1} out of date, resync {2} {3}", ent.ToString(), ent.Id, entities[player.playerIndex][ent.Id].latestSequence, Main.Frame);
-                    //                //}
-                    //                if (!entityManager.GetActive((int)ent.Id))
-                    //                {
-                    //                    toSync.AddAssumeCapacity(new()
-                    //                    {
-                    //                        type = SyncStateType.GenerationChanged,
-                    //                        playerId = player.playerIndex,
-                    //                        reference = reference,
-                    //                    });
-                    //                }
-                    //                else
-                    //                {
-                    //                    var entData = new EntityManagerIO.EntityData(ent);
-                    //                    toSync.AddAssumeCapacity(new()
-                    //                    {
-                    //                        type = SyncStateType.MajorSync,
-                    //                        playerId = player.playerIndex,
-                    //                        reference = reference,
-                    //                        majorSyncState = entData,
-                    //                    });
-                    //                }
-                    //            }
-                    //            else if (ent.DoesSync && ent is ISyncBasicState syncsBasicState)
-                    //            {
-                    //                toSync.AddAssumeCapacity(new()
-                    //                {
-                    //                    type = SyncStateType.MinorSync,
-                    //                    playerId = player.playerIndex,
-                    //                    reference = reference,
-                    //                    basicSyncState = syncsBasicState,
-                    //                });
-                    //            }
-                    //        }
-                    //    }
-                    //}
-
                     Main.Registry.MessageRegistry.SendMessageToPeer(Instance, peer, player.playerIndex);
                 }
 
@@ -482,8 +429,8 @@ namespace Engine.Networking.Messages
 
             int playerId = addData as int? ?? throw new Exception();
 
-            int chksumpos = netMessage.writer.Length;
-            netMessage.writer.Put((ulong)0);
+            //int chksumpos = netMessage.writer.Length;
+            //netMessage.writer.Put((ulong)0);
 
             netMessage.writer.Put(Main.Frame);
 
@@ -558,7 +505,7 @@ namespace Engine.Networking.Messages
                 }
                 else
                 {
-                    DoSend(netMessage, chksumpos);
+                    DoSend(netMessage, atStart);
                     numSend = 0;
 
                     Debug.Assert(netMessage.writer.Length == atStart);
@@ -566,49 +513,50 @@ namespace Engine.Networking.Messages
             }
 
             if (numSend > 0)
-                DoSend(netMessage, chksumpos);
+                DoSend(netMessage, 0);
         }
 
         private void DoSend(NetworkMessage netMessage, int chksumpos)
         {
-            ulong chksum = 0;
-            var span = netMessage.writer.AsReadOnlySpan()[(chksumpos + sizeof(ulong))..];
-            for (int i = 0; i < span.Length; i++)
-            {
-                chksum += span[i];
-            }
+            //ulong chksum = 0;
+            //var span = netMessage.writer.AsReadOnlySpan()[(chksumpos + sizeof(ulong))..];
+            //for (int i = 0; i < span.Length; i++)
+            //{
+            //    chksum += span[i];
+            //}
 
             //Console.WriteLine("Send Chksum: {0}", chksum);
 
-            int end = netMessage.writer.Length;
-            netMessage.writer.SetPosition(chksumpos);
-            netMessage.writer.Put(chksum);
-            netMessage.writer.SetPosition(end);
+            //int end = netMessage.writer.Length;
+            //netMessage.writer.SetPosition(chksumpos);
+            //netMessage.writer.Put(chksum);
+            //netMessage.writer.SetPosition(end);
 
             netMessage.Send();
 
-            netMessage.writer.SetPosition(chksumpos + sizeof(ulong) + sizeof(int) + sizeof(int));
+            netMessage.writer.SetPosition(chksumpos);
+            //netMessage.writer.SetPosition(chksumpos + sizeof(ulong) + sizeof(int) + sizeof(int));
         }
 
         public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
             base.ReceiveMessage(reader, peer);
 
-            ulong chksum = reader.GetULong();
-            var postChksumPos = reader.Position;
+            //ulong chksum = reader.GetULong();
+            //var postChksumPos = reader.Position;
 
-            ulong ourChksum = 0;
-            for (int i = 0; i < reader.RawDataSize - postChksumPos; i++)
-            {
-                ourChksum += reader.RawData[postChksumPos + i];
-            }
+            //ulong ourChksum = 0;
+            //for (int i = 0; i < reader.RawDataSize - postChksumPos; i++)
+            //{
+            //    ourChksum += reader.RawData[postChksumPos + i];
+            //}
 
             // chksum is incorrect, drop
-            if (chksum != ourChksum)
-            {
-                Console.WriteLine("Discarded SyncEntity state - chksum did not match ({0} - {1})", chksum, ourChksum);
-                return;
-            }
+            //if (chksum != ourChksum)
+            //{
+            //    Console.WriteLine("Discarded SyncEntity state - chksum did not match ({0} - {1})", chksum, ourChksum);
+            //    return;
+            //}
 
             int seq = reader.GetInt();
             if (seq < latestSeq)
