@@ -275,7 +275,11 @@ namespace ViMG.Entities
 				throw new Exception("Cannot add while iterating");
 
 			// TODO: might not have to do this on client side.
-			if (ents[id].active) ForceUnload(ents[id].entity);
+			if (ents[id].active)
+			{
+				Console.WriteLine("Unload {0} to make room for {1}", ents[id].entity.ToString(), entity.ToString());
+				ForceUnload(ents[id].entity);
+			}
 			else freeList.Remove((int)id);
             entity.SetId(id);
 
@@ -443,7 +447,7 @@ namespace ViMG.Entities
 			//This is so that we don't have to check for entities that are already queued when trying to unload.
             foreach (Entity entity in toDeleteLater)
             {
-                ReallyUnload(entity);
+				Unload(entity);
             }
 
 			toDeleteLater.Clear();
@@ -464,10 +468,10 @@ namespace ViMG.Entities
 			//(aka any entity with a position inside the chunk.)
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyUnload(entity);
-			}
+                Unload(entity);
+            }
 
-			toDeleteLater.Clear();
+            toDeleteLater.Clear();
 
 			//Some entities may track a cube inside a given chunk while not being in the chunk themselves.
 			//(For instance, at the time of writing, AncientAltar's y position is + 1.25 blocks above the tracked position. If this
@@ -493,10 +497,10 @@ namespace ViMG.Entities
 				//we do these in separate flushes.
                 foreach (Entity entity in toDeleteLater)
                 {
-                    ReallyUnload(entity);
+                    Unload(entity);
                 }
-				
-				toDeleteLater.Clear();
+
+                toDeleteLater.Clear();
             }
 		}
 
@@ -519,10 +523,10 @@ namespace ViMG.Entities
 			//Now remove them, and whatever else was in the queue...
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyUnload(entity);
-			}
+                Unload(entity, false);
+            }
 
-			toDeleteLater.Clear();
+            toDeleteLater.Clear();
 
 			//also clear toAddLater so we don't end up adding some entities after
 			toAddLater.Clear();
@@ -549,26 +553,6 @@ namespace ViMG.Entities
 			Console.WriteLine("Unload {0}", entity.ToString());
 
             Debug.Assert(!iteratingUpdate, "Cannot remove entity while iterating");
-
-            if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server && entity is not Player)
-            {
-                if (entity is not Player)
-                {
-                    var entSerializableAttr = entity.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-                    if (entSerializableAttr != null)
-                    {
-                        if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-                        {
-                            var ent = new SyncBasicState.SyncEntity()
-                            {
-                                entity = entity,
-                                type = SyncBasicState.SyncType.EntityUnloaded,
-                            };
-                            Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, ent);
-                        }
-                    }
-                }
-            }
 
             entity.OnUnload();
             //entities.Remove(entity);
@@ -691,7 +675,7 @@ namespace ViMG.Entities
 
 			foreach (Entity entity in toDeleteLater)
 			{
-				ReallyUnload(entity);
+				Unload(entity);
 			}
 
 			toDeleteLater.Clear();

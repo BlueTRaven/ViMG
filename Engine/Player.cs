@@ -516,6 +516,8 @@ namespace ViMG
 
 			physicsHandle = new BodyHandle();
 			physicsShapeIndex = new TypedIndex();
+
+			world.player[playerIndex] = null;
 		}
 
         public override void Update(double deltaTime)

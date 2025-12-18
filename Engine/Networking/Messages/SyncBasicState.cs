@@ -264,7 +264,7 @@ namespace Engine.Networking.Messages
     // Items in particular are easy to get this to happen to
     public class SyncEntityState : Message
     {
-        public const int MAX_ENTS_PER_SYNC = 32;
+        public const int MAX_ENTS_PER_SYNC = 256;
 
         public static SyncEntityState Instance { get; private set; }
 
@@ -321,6 +321,14 @@ namespace Engine.Networking.Messages
                         entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
                     }
                 }
+        }
+
+        public void PlayerDisconnected(int playerIndex)
+        {
+            for (int i = 0; i < EntityManager.EntMax; i++)
+            {
+                entities[playerIndex][i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 }; 
+            }
         }
 
         public void AddAck(SyncEntityStateAck.Ack ack, int playerId, int sequence)
@@ -432,6 +440,7 @@ namespace Engine.Networking.Messages
             //int chksumpos = netMessage.writer.Length;
             //netMessage.writer.Put((ulong)0);
 
+            // Frame = sequence
             netMessage.writer.Put(Main.Frame);
 
             int numsendpos = netMessage.writer.Length;
@@ -482,81 +491,48 @@ namespace Engine.Networking.Messages
                         subWriters.Add(subWriter);
                     }
 
-                    Debug.Assert(subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ulong) - sizeof(int) - sizeof(int));
+                    Debug.Assert(subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(int) - sizeof(int));
                 }
             }
 
             var atStart = netMessage.writer.Length;
 
-            var end = 0;
-
             int numSend = 0;
             for (int i = 0; i < subWriters.Count; i++)
             {
                 NetDataWriter subWriter = subWriters[i];
-                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ulong) - sizeof(int) - sizeof(int) || numSend > MAX_ENTS_PER_SYNC)
+                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) -  sizeof(int) - sizeof(int) || numSend > MAX_ENTS_PER_SYNC)
                 {
                     numSend += 1;
-                    end = netMessage.writer.Length;
-                    netMessage.writer.SetPosition(numsendpos);
-                    netMessage.writer.Put(numSend);
-                    netMessage.writer.SetPosition(end);
+                    
                     netMessage.writer.Put(subWriter.AsReadOnlySpan());
                 }
                 else
                 {
-                    DoSend(netMessage, atStart);
-                    numSend = 0;
+                    int end = netMessage.writer.Length;
+                    netMessage.writer.SetPosition(numsendpos);
+                    netMessage.writer.Put(numSend);
+                    netMessage.writer.SetPosition(end);
+                    netMessage.Send();
 
-                    Debug.Assert(netMessage.writer.Length == atStart);
+                    netMessage.writer.SetPosition(atStart);
+                    numSend = 0;
                 }
             }
 
             if (numSend > 0)
-                DoSend(netMessage, 0);
-        }
-
-        private void DoSend(NetworkMessage netMessage, int chksumpos)
-        {
-            //ulong chksum = 0;
-            //var span = netMessage.writer.AsReadOnlySpan()[(chksumpos + sizeof(ulong))..];
-            //for (int i = 0; i < span.Length; i++)
-            //{
-            //    chksum += span[i];
-            //}
-
-            //Console.WriteLine("Send Chksum: {0}", chksum);
-
-            //int end = netMessage.writer.Length;
-            //netMessage.writer.SetPosition(chksumpos);
-            //netMessage.writer.Put(chksum);
-            //netMessage.writer.SetPosition(end);
-
-            netMessage.Send();
-
-            netMessage.writer.SetPosition(chksumpos);
-            //netMessage.writer.SetPosition(chksumpos + sizeof(ulong) + sizeof(int) + sizeof(int));
+            {
+                int end = netMessage.writer.Length;
+                netMessage.writer.SetPosition(numsendpos);
+                netMessage.writer.Put(numSend);
+                netMessage.writer.SetPosition(end);
+                netMessage.Send();
+            }
         }
 
         public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
             base.ReceiveMessage(reader, peer);
-
-            //ulong chksum = reader.GetULong();
-            //var postChksumPos = reader.Position;
-
-            //ulong ourChksum = 0;
-            //for (int i = 0; i < reader.RawDataSize - postChksumPos; i++)
-            //{
-            //    ourChksum += reader.RawData[postChksumPos + i];
-            //}
-
-            // chksum is incorrect, drop
-            //if (chksum != ourChksum)
-            //{
-            //    Console.WriteLine("Discarded SyncEntity state - chksum did not match ({0} - {1})", chksum, ourChksum);
-            //    return;
-            //}
 
             int seq = reader.GetInt();
             if (seq < latestSeq)
@@ -648,6 +624,11 @@ namespace Engine.Networking.Messages
                 else if (type == SyncStateType.Unload)
                 {
                     Console.WriteLine("Server unloaded {0} {1}", reference.id, ent?.ToString());
+                    var existEnt = GS.GetWorld().EntityManager.GetById((ulong)reference.id);
+                    if (existEnt != null)
+                        GS.GetWorld().EntityManager.ForceUnload(existEnt);
+
+                    // This probably shouldn't get run
                     if (ent != null)
                         GS.GetWorld().EntityManager.ForceUnload(ent);
 

@@ -178,6 +178,11 @@ namespace Engine.Networking
             if ((bits & Fields.PosZ) == Fields.PosZ)
                 position.Z = reader.GetFloat();
 
+            if (position == Vector3.Zero)
+            {
+                Console.WriteLine("!!!");
+            }
+
             if ((bits & Fields.VelX) == Fields.VelX)
                 velocity.X = reader.GetFloat();
             if ((bits & Fields.VelY) == Fields.VelY)
