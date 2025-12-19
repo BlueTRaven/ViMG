@@ -19,9 +19,6 @@ using ViMG;
 using ViMG.Entities;
 using ViMG.Entities.Renderers;
 using ViMG.IMGUIImpl;
-using static Engine.Networking.Messages.SyncEntityStateAck;
-using static ViMG.LightManager;
-using static ViMG.UIs.UI;
 
 namespace Engine.Networking.Messages
 {
@@ -260,8 +257,9 @@ namespace Engine.Networking.Messages
         }
     }
 
-    // Entities are sometimes staying when they shouldn't
-    // Items in particular are easy to get this to happen to
+    // Entities are sometimes being deleted when they shouldn't?
+    // As in p2 will load in and half the entities will vanish?
+
     public class SyncEntityState : Message
     {
         public const int MAX_ENTS_PER_SYNC = 256;

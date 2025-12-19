@@ -6,11 +6,15 @@ using System.Linq;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.Entities.Renderers
 {
     public abstract class EntityRenderer : IRegisterable
     {
+        [ConsoleCommandVar("r_delay_render_ent", "Time in past to start interpolation from")]
+        public static float DelayRenderEnt = 2.0f / 60.0f;
+
         private readonly string identifier;
         public string Identifier => identifier;
 

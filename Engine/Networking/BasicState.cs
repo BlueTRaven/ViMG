@@ -269,6 +269,21 @@ namespace Engine.Networking
             }
         }
 
+        public Vector3 GetInterpPosition(BasicState other)
+        {
+            return Vector3.Lerp(position, other.position, (float)Main.TimeP);
+        }
+
+        public float GetInterpTimer(BasicState other, int timer)
+        {
+            return MathHelper.Lerp(timers[timer], other.timers[timer], (float)Main.TimeP);
+        }
+
+        public int GetInterpCounter(BasicState other, int counter)
+        {
+            return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)Main.TimeP);
+        }
+
         public void OnSave(List<byte> saveBytes)
         {
             SaveHelper.SaveVector3(saveBytes, position);

@@ -745,6 +745,11 @@ namespace ViMG.Entities
 			}
 		}
 
+		public int GetPrevIndexTime(float time) 
+		{
+			return (int)(time * (float)Main.FIXED_FPS);
+		}
+
 		public BasicState GetPrevState(int id, int prev)
 		{
             // negative numbers would be in the future, big nono

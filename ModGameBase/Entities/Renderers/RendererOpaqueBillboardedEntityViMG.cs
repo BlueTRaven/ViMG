@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ModGameBase.Entities;
@@ -154,21 +155,47 @@ namespace ViMG.Entities.Renderers
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
             {
-                Slime slime = entity as Slime;
+                return null;
+                //Slime slime = entity as Slime;
 
-                int ysrc = 0;
+                //int ysrc = 0;
 
+                //const float minInterval = 0.65f;
+                //const float maxInterval = 0.85f;
+
+                //float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+
+                //if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
+                //    ysrc = 16;
+
+                //cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                //{
+                //    sourceRect = slime.noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
+                //};
+
+                //return cachedStats;
+            }
+
+            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats2(BasicState s1, BasicState s2)
+            {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
 
-                 float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+                int ysrc = 0;
 
-                if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
+                float jumpTimer = MathHelper.Lerp(s1.timers[0], s1.timers[0], (float)Main.TimeP);
+                float jumpTime = MathHelper.Lerp(s1.timers[1], s1.timers[1], (float)Main.TimeP);
+
+                float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
+
+                if ((jumpTimer % interval) / interval < 0.5f)
                     ysrc = 16;
 
+                bool noticed = s1.GetInterpCounter(s2, 1) > 0;
                 cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
                 {
-                    sourceRect = slime.noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
+                    position = s1.GetInterpPosition(s2),
+                    sourceRect = noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
                 };
 
                 return cachedStats;

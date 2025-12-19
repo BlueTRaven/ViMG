@@ -1,5 +1,7 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
@@ -16,8 +18,6 @@ using System.Xml.Linq;
 using ViMG.Cubes;
 using ViMG.Items;
 using ViMG.Rendering;
-using static ViMG.Collision3D;
-using static ViMG.Entities.EntityHelper;
 
 namespace ViMG.Entities.Renderers
 {
@@ -55,6 +55,10 @@ namespace ViMG.Entities.Renderers
 
 
             public abstract TypeStatsDrawStats[] GetDrawStats(Entity entity);
+            public virtual TypeStatsDrawStats[] GetDrawStats2(BasicState s1, BasicState s2)
+            {
+                return Array.Empty<TypeStatsDrawStats>();
+            }
         }
 
         public ObjRegistry<TypeStats> registry;
@@ -111,6 +115,11 @@ namespace ViMG.Entities.Renderers
                     continue;
                 }
                 TypeStatsDrawStats[] drawStats = stats.GetDrawStats(entity);
+                if (drawStats == null)
+                {
+                    int prev = entityManager.GetPrevIndexTime(DelayRenderEnt);
+                    drawStats = stats.GetDrawStats2(entityManager.GetPrevState((int)entity.Id, prev), entityManager.GetPrevState((int)entity.Id, prev + 1));
+                }
                 foreach (TypeStatsDrawStats drawStat in drawStats)
                 {
                     Vector2 scale = drawStat.scale ?? new Vector2(1);
