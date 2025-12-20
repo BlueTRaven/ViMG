@@ -119,8 +119,10 @@ namespace ViMG
 		}
 
 		public ushort[] GetChunk(ChunkPosition position)
-		{
-			Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
+        {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
 
 			if (loadedChunks[i].loadedState == LoadedState.Palettized)
 			{

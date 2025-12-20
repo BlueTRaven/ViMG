@@ -64,50 +64,108 @@ namespace ViMG
             }
         }
 
+        private enum GetIdsMethod
+        {
+            Sorted,
+            Unsorted,
+            Dict
+        };
+        private const GetIdsMethod getIdsMethod = GetIdsMethod.Dict;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //GetIdsSorted(positions, ids);
+            GetIdsUnsorted(positions, ids);
+            //GetIdsDict(positions, ids);
+        }
+
+        private unsafe void GetIdsSorted(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted");
 
             Span<SortedCubePos> sortedPositions = stackalloc SortedCubePos[positions.Length];
-            for (int i = 0; i < positions.Length; i++)
+            using (var zsort = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted: Sort"))
             {
-                sortedPositions[i] = new SortedCubePos
+                for (int i = 0; i < positions.Length; i++)
                 {
-                    cubePos = positions[i],
-                    originalIndex = i,
-                };
+                    sortedPositions[i] = new SortedCubePos
+                    {
+                        cubePos = positions[i],
+                        originalIndex = i,
+                    };
+                }
+
+                // Positions is sorted before hand to make things more optimal
+                // Need to keep track of original index as sometimes that's important, so that's why we copy
+                MemoryExtensions.Sort(sortedPositions, new Comparer());
             }
 
-            // Positions is sorted before hand to make things more optimal
-            // Need to keep track of original index as sometimes that's important, so that's why we copy
-            MemoryExtensions.Sort(sortedPositions, new Comparer());
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ushort[]? cachedChunkData = null;
 
+            using (var zsort = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted: Get"))
+            {
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    CubePosition pos = sortedPositions[i].cubePos;
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                    if (cachedChunkData == null || chunkPos != cachedChunkPos)
+                    {
+                        cachedChunkPos = chunkPos;
+                        cachedChunkData = io.GetChunk(chunkPos);
+                    }
+
+                    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                    ids[sortedPositions[i].originalIndex] = cachedChunkData[j];
+                }
+            }
+        }
+
+        private unsafe void GetIdsUnsorted(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsUnsorted");
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ushort[]? cachedChunkData = null;
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                CubePosition pos = positions[i];
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunkData == null || chunkPos != cachedChunkPos)
+                {
+                    cachedChunkPos = chunkPos;
+                    cachedChunkData = io.GetChunk(chunkPos);
+                }
+
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                ids[i] = cachedChunkData[j];
+            }
+        }
+
+        private unsafe void GetIdsDict(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsDict");
+
+            Dictionary<ChunkPosition, ushort[]> chunkPosToData = new Dictionary<ChunkPosition, ushort[]>();
             ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
             ushort[]? cachedChunkBytes = null;
 
             for (int i = 0; i < positions.Length; i++)
             {
-                CubePosition pos = sortedPositions[i].cubePos;
+                ushort[] data = null;
+                CubePosition pos = positions[i];
                 ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+                if (!chunkPosToData.TryGetValue(chunkPos, out data))
                 {
-                    cachedChunkPos = chunkPos;
-                    cachedChunkBytes = io.GetChunk(chunkPos);
+                    data = io.GetChunk(chunkPos);
+                    chunkPosToData.Add(chunkPos, data);
                 }
 
                 Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                ids[sortedPositions[i].originalIndex] = cachedChunkBytes[j];
+                ids[i] = data[j];
             }
-            //byte[] idBytes = io.GetBytes();
-
-            //fixed (ushort* idsPtr = ids)
-            //{
-            //    for (int i = 0; i < positions.Length; i++)
-            //    {
-            //        int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-            //        idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
-            //    }
-            //}
         }
 
         public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
@@ -432,6 +490,8 @@ namespace ViMG
 
         public static PalettizedChunk Palettize(ChunkPosition chunkPosition, Span<ushort> ids)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             var chunk = new PalettizedChunk
             {
                 type = PalettizeType.AllOneId,
@@ -538,6 +598,8 @@ namespace ViMG
 
         public static ushort[] Depaletteize(PalettizedChunk chunk)
         {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
             var ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
             if (chunk.type == PalettizeType.AllOneId)
             {

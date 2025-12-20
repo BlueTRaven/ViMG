@@ -100,6 +100,7 @@ namespace ViMG.ChunkStuff
             else return *EntityMeshingDatas[i].As<T>().Memory;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort GetId(CubePosition position)
         {
             IMGUIConsole.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
