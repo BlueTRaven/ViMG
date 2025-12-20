@@ -618,11 +618,23 @@ namespace ViMG
 			public MeshHelper.CubeFace faces;
 		}
 
+		public struct VertexTexCoord
+		{
+			public short U;
+			public short V;
+
+			public VertexTexCoord(Vector2 uv)
+			{
+				U = (short)(uv.X * (float)short.MaxValue);
+                V = (short)(uv.Y * (float)short.MaxValue);
+            }
+		}
+
 		public ref struct VertexAttributes
 		{
 			public Optional<FastList<Vector3>> position;
 			public Optional<FastList<Color>> color;
-			public Optional<FastList<Vector2>> texCoord;
+			public Optional<FastList<VertexTexCoord>> texCoord;
 			public Optional<FastList<VertexNormal>> normal;
 			public Optional<FastList<float>> ao;
 
@@ -634,7 +646,7 @@ namespace ViMG
 			{
                 FastList<Vector3> positions = new FastList<Vector3>(vertices.Length);
                 FastList<Color> colors = new FastList<Color>(vertices.Length);
-                FastList<Vector2> texCoords = new FastList<Vector2>(vertices.Length);
+                FastList<VertexTexCoord> texCoords = new FastList<VertexTexCoord>(vertices.Length);
 
 				for (int i = 0; i < vertices.Length; i++)
 				{
@@ -642,7 +654,7 @@ namespace ViMG
 
 					positions.Add(vertex.Position);
 					colors.Add(vertex.Color);
-					texCoords.Add(vertex.TextureCoordinate);
+					texCoords.Add(new (vertex.TextureCoordinate));
 				}
 
 				return new VertexAttributes
@@ -658,7 +670,7 @@ namespace ViMG
 			{
 				FastList<Vector3> positions = new FastList<Vector3>(vertices.Length);
 				FastList<Color> colors = new FastList<Color>(vertices.Length);
-				FastList<Vector2> texCoords = new FastList<Vector2>(vertices.Length);
+				FastList<VertexTexCoord> texCoords = new FastList<VertexTexCoord>(vertices.Length);
                 FastList<VertexNormal> normals = new FastList<VertexNormal>(vertices.Length);
                 FastList<float> aos = new FastList<float>(vertices.Length);
                 FastList<VertexAnimated> animations = new FastList<VertexAnimated>(vertices.Length);
@@ -669,7 +681,7 @@ namespace ViMG
 
 					positions.Add(vertex.Position);
 					colors.Add(vertex.Color);
-					texCoords.Add(vertex.TextureCoordinate);
+					texCoords.Add(new (vertex.TextureCoordinate));
 					normals.Add(new VertexNormal(vertex.Normal, vertex.Tangent, vertex.Bitangent));
 					aos.Add(vertex.AO);
 					animations.Add(new VertexAnimated(vertex.AnimFrameTime, vertex.AnimFrameSize, vertex.NumAnimFrames));
@@ -705,7 +717,7 @@ namespace ViMG
 				case Cube.RenderPass.Fluid:
 					attributes.position = new(new FastList<Vector3>());
 					attributes.color = new(new FastList<Color>());
-					attributes.texCoord = new(new FastList<Vector2>());
+					attributes.texCoord = new(new FastList<VertexTexCoord>());
 					attributes.normal = new(new FastList<VertexNormal>());
 					attributes.ao = new(new FastList<float>());
 
@@ -713,7 +725,7 @@ namespace ViMG
 					break;
 				case Cube.RenderPass.DepthOnly:
 					attributes.position = new(new FastList<Vector3>());
-					attributes.texCoord = new(new FastList<Vector2>());
+					attributes.texCoord = new(new FastList<VertexTexCoord>());
 					break;
 
 				default:
@@ -796,7 +808,7 @@ namespace ViMG
 								if (attributes.color.GetOut(out var colors))
 									colors.Add(vertices[j].Color);
 								if (attributes.texCoord.GetOut(out var texCoords))
-									texCoords.Add(vertices[j].TextureCoordinate);
+									texCoords.Add(new(vertices[j].TextureCoordinate));
 								if (attributes.normal.GetOut(out var normals))
 									normals.Add(new VertexNormal(vertices[j].Normal, vertices[j].Tangent, vertices[j].Bitangent));
 								if (attributes.ao.GetOut(out var aos))

@@ -28,7 +28,7 @@ namespace ViMG.Rendering
         {
             public static VertexDeclaration Position = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0));
             public static VertexDeclaration Color = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Color, VertexElementUsage.Color, 0));
-            public static VertexDeclaration TexCoord = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0));
+            public static VertexDeclaration TexCoord = new VertexDeclaration(new VertexElement(0, VertexElementFormat.NormalizedShort2, VertexElementUsage.TextureCoordinate, 0));
             public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(1);
             public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2));
             public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(3);

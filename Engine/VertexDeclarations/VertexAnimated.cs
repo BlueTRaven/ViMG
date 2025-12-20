@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,8 +50,7 @@ namespace ViMG.VertexDeclarations
             var elements = new VertexElement[]
             {
                 new VertexElement(Marshal.OffsetOf<VertexAnimated>("AnimFrameTime").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 0),
-                new VertexElement(Marshal.OffsetOf<VertexAnimated>("NumAnimFrames").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-                new VertexElement(Marshal.OffsetOf<VertexAnimated>("AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
+                new VertexElement(Marshal.OffsetOf<VertexAnimated>("NumAnimFrames").ToInt32(), VertexElementFormat.NormalizedShort2, VertexElementUsage.TextureCoordinate, 1),
             };
 
             VertexDeclaration = new VertexDeclaration(elements);
