@@ -82,7 +82,6 @@ namespace ViMG
 
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
-        private readonly ChunkManagerIO io;
         public readonly ChunkMesher? ChunkMesher;
 
         public CubeView CubeView;
@@ -94,7 +93,6 @@ namespace ViMG
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
-            this.io = io;
 
             ChunkMesher = chunkMesher;
 

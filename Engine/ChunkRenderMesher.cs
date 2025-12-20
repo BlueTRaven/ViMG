@@ -431,57 +431,60 @@ namespace ViMG
 
             BatchRenderMeshTaskState state = (BatchRenderMeshTaskState)obj;
 
-			Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-			Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-
-			for (int i = 0; i < state.batch.num; i++)
+			if (Main.DO_RENDER_MESHING)
 			{
-				RenderMeshInfo cmi = state.batch.meshInfos[i];
+				Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+				Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 
-				for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+				for (int i = 0; i < state.batch.num; i++)
 				{
-					for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-					{
-						for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-						{
-							CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-							Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-							//pos = pos.InCubeSpace(cmi.position);
+					RenderMeshInfo cmi = state.batch.meshInfos[i];
 
-							positions[j] = pos;
+					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+					{
+						for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+						{
+							for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+							{
+								CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+								Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+								//pos = pos.InCubeSpace(cmi.position);
+
+								positions[j] = pos;
+							}
 						}
 					}
-				}
 
-				state.batch.copies[i].GetFaces(positions, faces);
+					state.batch.copies[i].GetFaces(positions, faces);
 
-				cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
+					cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
 
-                VertexAttributes opaques = state.mesher.GenerateChunk(in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Opaque, 0);
-                VertexAttributes transparents = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent, 0);
-                VertexAttributes shadows = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly, 0);
-                VertexAttributes empties = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
+					VertexAttributes opaques = state.mesher.GenerateChunk(in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Opaque, 0);
+					VertexAttributes transparents = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent, 0);
+					VertexAttributes shadows = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly, 0);
+					VertexAttributes empties = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
 
-				cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//opaques.verts.ToVertexOpaquePass(), opaques.indices, false);    //opaque meshes bake their own tangents
-				cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//transparents.verts.ToVertexTransparentPass(), transparents.indices);
-				cmi.meshes[(int)Cube.RenderPass.DepthOnly] = VerySimpleMesh.Shadow(state.mesher.device, shadows);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//shadows.verts.ToVertexShadowPass(), shadows.indices);
-				cmi.meshes[(int)Cube.RenderPass.Fluid] = new VerySimpleMesh();
-				// (null, null);   //TODO fluids?
-				cmi.meshes[(int)Cube.RenderPass.Air] = VerySimpleMesh.SolidColor(state.mesher.device, empties);
+					cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
+					//MeshHelper.MakeSimplerMesh(state.mesher.device,
+					//opaques.verts.ToVertexOpaquePass(), opaques.indices, false);    //opaque meshes bake their own tangents
+					cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
+					//MeshHelper.MakeSimplerMesh(state.mesher.device,
+					//transparents.verts.ToVertexTransparentPass(), transparents.indices);
+					cmi.meshes[(int)Cube.RenderPass.DepthOnly] = VerySimpleMesh.Shadow(state.mesher.device, shadows);
+					//MeshHelper.MakeSimplerMesh(state.mesher.device,
+					//shadows.verts.ToVertexShadowPass(), shadows.indices);
+					cmi.meshes[(int)Cube.RenderPass.Fluid] = new VerySimpleMesh();
+					// (null, null);   //TODO fluids?
+					cmi.meshes[(int)Cube.RenderPass.Air] = VerySimpleMesh.SolidColor(state.mesher.device, empties);
 					//MeshHelper.MakeSimplerMesh(state.mesher.device,
 					//empties.verts.ToVertexEmptyPass(), empties.indices);
 
-				state.batch.meshInfos[i] = cmi;
-				state.batch.meshInfos[i].hasMeshes = true;
+					state.batch.meshInfos[i] = cmi;
+					state.batch.meshInfos[i].hasMeshes = true;
+				}
 			}
 
 			return new BatchRenderMeshTaskResult(state.batch.meshInfos, state.batch.copies, state.batch.num);
@@ -667,19 +670,9 @@ namespace ViMG
 					positions.Add(vertex.Position);
 					colors.Add(vertex.Color);
 					texCoords.Add(vertex.TextureCoordinate);
-					normals.Add(new VertexNormal()
-					{
-						Normal = vertex.Normal,
-						Tangent = vertex.Tangent,
-						Bitangent = vertex.Bitangent,
-					});
+					normals.Add(new VertexNormal(vertex.Normal, vertex.Tangent, vertex.Bitangent));
 					aos.Add(vertex.AO);
-					animations.Add(new VertexAnimated
-					{
-						AnimFrameSize = vertex.AnimFrameSize,
-						AnimFrameTime = vertex.AnimFrameTime,
-						NumAnimFrames = vertex.NumAnimFrames,
-					});
+					animations.Add(new VertexAnimated(vertex.AnimFrameTime, vertex.AnimFrameSize, vertex.NumAnimFrames));
 				}
 
 				position = new(positions);
@@ -805,21 +798,11 @@ namespace ViMG
 								if (attributes.texCoord.GetOut(out var texCoords))
 									texCoords.Add(vertices[j].TextureCoordinate);
 								if (attributes.normal.GetOut(out var normals))
-									normals.Add(new VertexNormal
-									{
-										Normal = vertices[j].Normal,
-										Tangent = vertices[j].Tangent,
-										Bitangent = vertices[j].Bitangent,
-									});
+									normals.Add(new VertexNormal(vertices[j].Normal, vertices[j].Tangent, vertices[j].Bitangent));
 								if (attributes.ao.GetOut(out var aos))
 									aos.Add(vertices[j].AO);
 								if (attributes.animation.GetOut(out var animations))
-									animations.Add(new VertexAnimated()
-									{
-										AnimFrameSize = vertices[j].AnimFrameSize,
-										AnimFrameTime = vertices[j].AnimFrameTime,
-										NumAnimFrames = vertices[j].NumAnimFrames,
-									});
+									animations.Add(new VertexAnimated(vertices[j].AnimFrameTime, vertices[j].AnimFrameSize, vertices[j].NumAnimFrames));
 							}
 						}
 

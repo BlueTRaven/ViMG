@@ -324,9 +324,9 @@ namespace ViMG
                                 batchResult.copies[j].render = false;
                             }
 
-                        //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
+                            //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
-                        ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
+                            ref CollisionMeshInfo meshInfoOld = ref GetChunkMeshInfo(batchResult.positions[j]);
 
                             if (batchResult.versions[j] != meshInfoOld.version || !meshInfoOld.hasMesh)
                             {
@@ -541,6 +541,18 @@ namespace ViMG
             //}
         }
 
+        public ulong GetAllBufferPoolAllocatedMemory()
+        {
+            ulong total = 0;
+            foreach (var mesh in meshes)
+            {
+                if (mesh.bufferPool != null)
+                    total += mesh.bufferPool.GetTotalAllocatedByteCount();
+            }
+
+            return total;
+        }
+
         public bool IsMeshed(ChunkPosition position)
         {
             return GetChunkMeshInfo(position).version == GetChunkMeshInfo(position).meshVersion;
@@ -561,8 +573,9 @@ namespace ViMG
                     meshInfo.hasSimReferences = false;
                 }
 
-                lock (meshInfo.bufferPool)
-                    meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
+                // Can't assert empty here. Other threads may be using this buffer pool (though not actively)
+                // so the new mesh will be present in the buffer pool along with the old one we're disposing of here.
+                meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
                 meshInfo.collidableMesh = default;
 
                 meshInfo.hasMesh = false;

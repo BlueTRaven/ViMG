@@ -251,6 +251,8 @@ namespace ViMG.GameStates
             var generator = CreateLayerGenerator(0);
             var logic = CreateLayerLogic(0);
 
+            chunkIO.CreateAll();
+
             WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
             ChunkGeneratorTasker.GenerateWorld(prototype, generator);
@@ -266,6 +268,7 @@ namespace ViMG.GameStates
 
             ProfilingHelper.Start("Saving Chunks...");
             chunkIO.Save(worldName);
+            chunkIO.UnloadAll();
 
             ProfilingHelper.End("Done.");
 

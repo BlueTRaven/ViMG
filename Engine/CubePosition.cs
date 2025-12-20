@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.IMGUIImpl;
@@ -49,7 +50,8 @@ namespace ViMG
 
         }
 
-		public CubePosition InChunkSpace(ChunkPosition position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public CubePosition InChunkSpace(ChunkPosition position)
         {
 			if (Coord == CoordinateSpace.ChunkSpace)
 			{
@@ -63,8 +65,9 @@ namespace ViMG
 			}
 		}
 
-		//Rounds to chunk space
-		public CubePosition InChunkSpace()
+        //Rounds to chunk space
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public CubePosition InChunkSpace()
         {
 			int csx = X & (Chunk.CHUNK_SIZE - 1);
 			int csy = Y & (Chunk.CHUNK_SIZE - 1);
@@ -72,7 +75,8 @@ namespace ViMG
 			return new CubePosition(csx, csy, csz, CoordinateSpace.ChunkSpace);
 		}
 
-		public CubePosition InCubeSpace(ChunkPosition position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public CubePosition InCubeSpace(ChunkPosition position)
 		{
 			if (Coord == CoordinateSpace.CubeSpace)
 			{
@@ -86,18 +90,21 @@ namespace ViMG
 			}
 		}
 
-		//Assumes this is in cube-space.
-		public Vector3 InWorldSpace()
+        //Assumes this is in cube-space.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 InWorldSpace()
 		{
 			return new Vector3(X * Cube.CUBE_SCALE, Y * Cube.CUBE_SCALE, Z * Cube.CUBE_SCALE);
 		}
 
-		public Vector3 InWorldSpaceCenter()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 InWorldSpaceCenter()
 		{
 			return InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f);
 		}
 
-		public Vector3 InWorldSpace(ChunkPosition chunk)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 InWorldSpace(ChunkPosition chunk)
 		{
 			CubePosition pos = this;
 			if (Coord == CoordinateSpace.ChunkSpace)
@@ -106,7 +113,8 @@ namespace ViMG
 			return new Vector3(pos.X * Cube.CUBE_SCALE, pos.Y * Cube.CUBE_SCALE, pos.Z * Cube.CUBE_SCALE);
 		}
 
-		public Vector3 InWorldSpace(out bool ok)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 InWorldSpace(out bool ok)
 		{
 			CubePosition pos = this;
 			if (Coord == CoordinateSpace.ChunkSpace)
@@ -124,13 +132,15 @@ namespace ViMG
 			return base.ToString() + " X: " + X.ToString() + " Y: " + Y.ToString() + " Z: " + Z.ToString();
 		}
 
-		public static CubePosition FromWorldSpace(Vector3 position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CubePosition FromWorldSpace(Vector3 position)
 		{
 			Vector3 pos = FromWorldSpaceV3(position);
 			return new CubePosition((int)pos.X, (int)pos.Y, (int)pos.Z);
 		}
 
-		public static Vector3 FromWorldSpaceV3(Vector3 position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 FromWorldSpaceV3(Vector3 position)
 		{
 			return new Vector3(
 				MathF.Floor(position.X / Cube.CUBE_SCALE),
@@ -138,13 +148,15 @@ namespace ViMG
 				MathF.Floor(position.Z / Cube.CUBE_SCALE));
 		}
 
-		public static Vector3 ToWorldSpaceV3(Vector3 position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 ToWorldSpaceV3(Vector3 position)
 		{
 			return position * Cube.CUBE_SCALE;
 		}
 
-		// Stay in world space, but round to cube space.
-		public static Vector3 RoundToCubeSpace(Vector3 position)
+        // Stay in world space, but round to cube space.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 RoundToCubeSpace(Vector3 position)
 		{
 			Vector3 cs = FromWorldSpaceV3(position);
 			Vector3 rounded = new Vector3((int)cs.X, (int)cs.Y, (int)cs.Z);

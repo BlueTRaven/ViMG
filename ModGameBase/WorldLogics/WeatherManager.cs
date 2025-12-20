@@ -588,7 +588,7 @@ namespace ViMG.WorldLogics
             min = int.Min(min, max);
             max = int.Max(min, max);
 
-            world.ChunkManager.CubeView.GetCubes(queryPositions.AsSpan(), touchedCubes.AsSpan(), Main.Registry.CubeRegistry.Air, min, max - min);
+            world.ChunkManager.CubeView.GetCubes(queryPositions.AsSpan()[min..max], touchedCubes.AsSpan()[min..max], Main.Registry.CubeRegistry.Air);
 
             for (int i = min; i < max; i++)
             {

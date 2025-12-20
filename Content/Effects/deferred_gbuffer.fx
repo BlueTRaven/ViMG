@@ -60,14 +60,13 @@ struct VSInputGBuffer
     float4 Position		: POSITION0;
     float4 Color		: COLOR0;
     float2 TexCoord		: TEXCOORD0;
-    float3 Normal		: NORMAL0;
-    float3 Tangent		: NORMAL1;
-    float3 Bitangent	: NORMAL2;
-    float AO			: TEXCOORD1;
+	float4 NormalQuat   : NORMAL1;
+    float AO			: TEXCOORD2;
 
-    float AnimFrameTime : TEXCOORD2;
-    float NumAnimFrames : TEXCOORD3;
-    float AnimFrameSize : TEXCOORD4;
+    float AnimFrameTime : TEXCOORD3;
+	float2 NumAnimFramesXAnimFrameSizeY : TEXCOORD4;
+    //float NumAnimFrames : TEXCOORD4;
+    //float AnimFrameSize : TEXCOORD5;
 	
     uint InstanceID		: SV_INSTANCEID;
 };
@@ -91,6 +90,35 @@ struct VSOutputGBuffer
 
 //A structured buffer containing all the instanced draw parameters.
 StructuredBuffer<InstancedDrawParams> InstancedDraws : register(t15);
+
+float3 xAxis( float4 qQuat )
+{
+    float fTy  = 2.0 * qQuat.y;
+    float fTz  = 2.0 * qQuat.z;
+    float fTwy = fTy * qQuat.w;
+    float fTwz = fTz * qQuat.w;
+    float fTxy = fTy * qQuat.x;
+    float fTxz = fTz * qQuat.x;
+    float fTyy = fTy * qQuat.y;
+    float fTzz = fTz * qQuat.z;
+ 
+    return float3( 1.0-(fTyy+fTzz), fTxy+fTwz, fTxz-fTwy );
+}
+ 
+float3 yAxis( float4 qQuat )
+{
+    float fTx  = 2.0 * qQuat.x;
+    float fTy  = 2.0 * qQuat.y;
+    float fTz  = 2.0 * qQuat.z;
+    float fTwx = fTx * qQuat.w;
+    float fTwz = fTz * qQuat.w;
+    float fTxx = fTx * qQuat.x;
+    float fTxy = fTy * qQuat.x;
+    float fTyz = fTz * qQuat.y;
+    float fTzz = fTz * qQuat.z;
+ 
+    return float3( fTxy-fTwz, 1.0-(fTxx+fTzz), fTyz+fTwx );
+}
 
 VSOutputGBuffer MainVS(in VSInputGBuffer input)
 {
@@ -135,14 +163,18 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
 	output.PositionSS = output.Position;
     output.Color = input.Color * useTintColor;
 	
-    float3 T = normalize(mul(float4(input.Tangent, 0), useWorldNormal)).xyz;
-    float3 B = normalize(mul(float4(input.Bitangent, 0), useWorldNormal)).xyz;
-    float3 N = normalize(mul(float4(input.Normal, 0), useWorldNormal)).xyz;
+	float3 N = mul(float4(xAxis(input.NormalQuat), 0), useWorldNormal).xyz;
+	float3 T = mul(float4(yAxis(input.NormalQuat), 0), useWorldNormal).xyz;
+	float binormalReflection = sign(input.NormalQuat.w);
+	float3 B = mul(float4(cross(N, T) * binormalReflection, 0), useWorldNormal).xyz;
+    //float3 T = normalize(mul(float4(input.Tangent, 0), useWorldNormal)).xyz;
+    //float3 B = normalize(mul(float4(input.Bitangent, 0), useWorldNormal)).xyz;
+    //float3 N = normalize(mul(float4(input.Normal, 0), useWorldNormal)).xyz;
 	
 	//might need to be transposed
     output.TBN = float3x3(T, B, N);
 	
-    output.Normal = mul(float4(input.Normal, 1), useWorldNormal).xyz;
+    output.Normal = mul(float4(N, 1), useWorldNormal).xyz;
 	
     output.AO = input.AO;
 	//output.Depth = output.Position.zw;
@@ -169,11 +201,11 @@ VSOutputGBuffer MainVS(in VSInputGBuffer input)
 	//NumAnimFrames: 3
     if (input.AnimFrameTime > 0)
 	{
-        float totalFrameTime = input.AnimFrameTime * input.NumAnimFrames;
+        float totalFrameTime = input.AnimFrameTime * input.NumAnimFramesXAnimFrameSizeY.x;
 
-        uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFrames;
+        uint frame = ((Time % totalFrameTime) / totalFrameTime) * input.NumAnimFramesXAnimFrameSizeY.x;
 
-        float2 wh = input.AnimFrameSize / 1024.0;
+        float2 wh = input.NumAnimFramesXAnimFrameSizeY.y / 1024.0;
 
 		output.TexCoord.x += wh.x * frame;
 	}

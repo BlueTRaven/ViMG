@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
 
@@ -44,16 +45,12 @@ namespace ViMG
 
 		public static ChunkPosition CubeChunk(CubePosition position)
 		{
-			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-				return new ChunkPosition(-1, -1, -1);
-			else
-			{
-				int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
-				int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
-				int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
+			Debug.Assert(position.Coord == CubePosition.CoordinateSpace.CubeSpace);
+			int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
+			int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
+			int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
 
-				return new ChunkPosition(x, y, z);
-			}
+			return new ChunkPosition(x, y, z);
 		}
 
 		public override string ToString()

@@ -14,8 +14,15 @@ namespace ViMG.VertexDeclarations
         public static readonly VertexDeclaration VertexDeclaration;
 
         public float AnimFrameTime;
-        public float NumAnimFrames;
-        public float AnimFrameSize;
+        public short NumAnimFrames;
+        public short AnimFrameSize;
+
+        public VertexAnimated(float animFrameTime, float numAnimFrames, float animFrameSize)
+        {
+            this.AnimFrameTime = animFrameTime;
+            this.NumAnimFrames = (short)(numAnimFrames * (float)short.MaxValue);
+            this.AnimFrameSize = (short)(animFrameSize * (float)short.MaxValue);
+        }
 
         VertexDeclaration IVertexType.VertexDeclaration
         {
@@ -30,8 +37,8 @@ namespace ViMG.VertexDeclarations
             var elements = new VertexElement[]
             {
                 new VertexElement(Marshal.OffsetOf<VertexAnimated>("AnimFrameTime").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, offset + 0),
-                new VertexElement(Marshal.OffsetOf<VertexAnimated>("NumAnimFrames").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, offset + 1),
-                new VertexElement(Marshal.OffsetOf<VertexAnimated>("AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, offset + 2),
+                new VertexElement(Marshal.OffsetOf<VertexAnimated>("NumAnimFrames").ToInt32(), VertexElementFormat.NormalizedShort2, VertexElementUsage.TextureCoordinate, offset + 1),
+                //new VertexElement(Marshal.OffsetOf<VertexAnimated>("AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, offset + 2),
             };
 
             return new VertexDeclaration(elements);

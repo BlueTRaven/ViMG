@@ -45,7 +45,7 @@ namespace ViMG.Items
                 //This doesn't have the safety checks anymore.
                 CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out int num);
 
-                player.world.ChunkManager.CubeView.SetCubes(positions, startCube.Id, 0, num);
+                player.world.ChunkManager.CubeView.SetCubes(positions[..num], startCube.Id);
 
                 actionStats = new ActionStats(0.25f);
                 return true;

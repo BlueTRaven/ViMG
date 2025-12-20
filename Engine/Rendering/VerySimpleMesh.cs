@@ -29,9 +29,9 @@ namespace ViMG.Rendering
             public static VertexDeclaration Position = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0));
             public static VertexDeclaration Color = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Color, VertexElementUsage.Color, 0));
             public static VertexDeclaration TexCoord = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0));
-            public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(0);
-            public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1));
-            public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(2);
+            public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(1);
+            public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2));
+            public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(3);
         }
 
         public static VerySimpleMesh Opaque(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, bool bakeTangents = true)
@@ -67,12 +67,12 @@ namespace ViMG.Rendering
 
                     for (int i = 0; i < normals.Length; i += 4)
                     {
-                        Vector3 tangent = positions[i + 0] - positions[i + 1]; // vert1.GetPosition() - vert2.GetPosition();
+                        //Vector3 tangent = positions[i + 0] - positions[i + 1]; // vert1.GetPosition() - vert2.GetPosition();
 
-                        Vector3 bitangent = Vector3.Cross(positions[i + 0], tangent); // vert1.GetNormal(), tangent);
+                        //Vector3 bitangent = Vector3.Cross(positions[i + 0], tangent); // vert1.GetNormal(), tangent);
                         VertexNormal vertex = normals[i];
-                        vertex.Tangent = tangent;
-                        vertex.Bitangent = bitangent;
+                        //vertex.Tangent = tangent;
+                        //vertex.Bitangent = bitangent;
                         normals.Buffer[i + 0] = vertex;
                         normals.Buffer[i + 1] = vertex;
                         normals.Buffer[i + 2] = vertex;

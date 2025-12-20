@@ -195,5 +195,19 @@ namespace ViMG
             this.y = point.Y;
             this.z = point.Z;
         }
+
+        public ValuePoint3D(CubePosition point)
+        {
+            this.x = point.X;
+            this.y = point.Y;
+            this.z = point.Z;
+        }
+
+        public ValuePoint3D(ChunkPosition point)
+        {
+            this.x = point.X;
+            this.y = point.Y;
+            this.z = point.Z;
+        }
     }
 }

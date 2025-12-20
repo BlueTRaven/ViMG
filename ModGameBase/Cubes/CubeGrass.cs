@@ -56,14 +56,14 @@ namespace ViMG.Cubes
 				CubePosition offsetPosition = position + offsets[i];
 				if (world.ChunkManager.IsInWorldBounds(offsetPosition) && world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(offsetPosition)))
 				{
-					positions[i] = offsetPosition;
+					positions[pi] = offsetPosition;
 					pi++;
 				}
 			}
 
 			manager.CubeView.GetIds(positions[..pi], ids[..pi]);
 
-			for (int i = 0; i < 13; i++)
+			for (int i = 0; i < pi; i++)
 			{
 				CubePosition offsetPosition = positions[i];
 				ushort id = ids[i];

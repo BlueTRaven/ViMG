@@ -215,13 +215,13 @@ namespace ViMG
 			return obj;
         }
 
-		public static bool LoadBool(byte[] data, ref int index)
+		public static bool LoadBool(Span<byte> data, ref int index)
         {
 			byte b = data[index++];
 			return b >= 1;
         }
 
-		public static string LoadString(byte[] data, ref int index)
+		public static string LoadString(Span<byte> data, ref int index)
 		{
 			int len = LoadInt32(data, ref index);
 
@@ -236,7 +236,7 @@ namespace ViMG
 			return new string(chars);
 		}
 
-		public static char LoadChar(byte[] data, ref int index)
+		public static char LoadChar(Span<byte> data, ref int index)
 		{
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -244,7 +244,7 @@ namespace ViMG
 			return (char)(first | second);
 		}
 
-		public static int LoadInt32(byte[] data, ref int index)
+		public static int LoadInt32(Span<byte> data, ref int index)
 		{
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -254,7 +254,7 @@ namespace ViMG
 			return first | second | third | fourth;
 		}
 
-		public static ushort LoadUInt16(byte[] data, ref int index)
+		public static ushort LoadUInt16(Span<byte> data, ref int index)
         {
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -262,7 +262,7 @@ namespace ViMG
 			return (ushort)(first | second);
 		}
 
-		public static ulong LoadUInt64(byte[] data, ref int index)
+		public static ulong LoadUInt64(Span<byte> data, ref int index)
 		{
 			unchecked
 			{
@@ -272,24 +272,24 @@ namespace ViMG
 			}
 		}
 
-		public static float LoadFloat32(byte[] data, ref int index)
+		public static float LoadFloat32(Span<byte> data, ref int index)
 		{
-			float f = BitConverter.ToSingle(data, index);
+			float f = BitConverter.ToSingle(data[index..(index + 4)]);
 			index += 4;
 
 			return f;
 		}
 
-		public static byte[] LoadBytes(byte[] data, int length, ref int index)
+		public static Span<byte> LoadBytes(Span<byte> data, int length, ref int index)
         {
 			int end = index + length;
-			byte[] rval = data[index..end];
+            Span<byte> rval = data[index..end];
 			index = end;
 
 			return rval;
         }
 
-		public static Vector2 LoadVector2(byte[] data, ref int index)
+		public static Vector2 LoadVector2(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -297,7 +297,7 @@ namespace ViMG
 			return new Vector2(x, y);
 		}
 
-		public static Vector3 LoadVector3(byte[] data, ref int index)
+		public static Vector3 LoadVector3(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -306,7 +306,7 @@ namespace ViMG
 			return new Vector3(x, y, z);
 		}
 
-		public static Vector4 LoadVector4(byte[] data, ref int index)
+		public static Vector4 LoadVector4(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -316,7 +316,7 @@ namespace ViMG
 			return new Vector4(x, y, z, w);
 		}
 
-		public static CubePosition LoadCubePosition(byte[] data, ref int index)
+		public static CubePosition LoadCubePosition(Span<byte> data, ref int index)
 		{
 			CubePosition position = new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
 
@@ -327,7 +327,7 @@ namespace ViMG
 			return position;
 		}
 
-		public static ItemInstance LoadItemInstance(byte[] data, ref int index)
+		public static ItemInstance LoadItemInstance(Span<byte> data, ref int index)
 		{
 			string identifier = LoadString(data, ref index);
 			Item item = Main.Registry.ItemRegistry.Get(identifier);

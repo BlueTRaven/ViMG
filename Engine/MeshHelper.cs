@@ -176,21 +176,21 @@ namespace ViMG
 						);*/
 
 					Vector3 bitangent = Vector3.Cross(vert1.GetNormal(), tangent);
-					/*Vector3 bitangent = new Vector3(
-						f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
-						f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
-						f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
-						);*/
+				/*Vector3 bitangent = new Vector3(
+					f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
+					f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
+					f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
+					);*/
 
-					vert1.SetTangent(tangent, bitangent);
-					vert2.SetTangent(tangent, bitangent);
-					vert3.SetTangent(tangent, bitangent);
-					vert4.SetTangent(tangent, bitangent);
+                vert1.SetTangent(tangent, bitangent);
+				vert2.SetTangent(tangent, bitangent);
+				vert3.SetTangent(tangent, bitangent);
+				vert4.SetTangent(tangent, bitangent);
 
-					vertices.Buffer[i + 0] = vert1;
-					vertices.Buffer[i + 1] = vert2;
-					vertices.Buffer[i + 2] = vert3;
-					vertices.Buffer[i + 3] = vert4;
+				vertices.Buffer[i + 0] = vert1;
+				vertices.Buffer[i + 1] = vert2;
+				vertices.Buffer[i + 2] = vert3;
+				vertices.Buffer[i + 3] = vert4;
 			}
         }
 

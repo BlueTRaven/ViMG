@@ -1,4 +1,5 @@
-﻿using SharpDX.MediaFoundation;
+﻿using LiteNetLib.Utils;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.IMGUIImpl;
+using static Engine.Networking.Messages.SyncChunk;
 
 namespace ViMG
 {
@@ -29,33 +31,83 @@ namespace ViMG
 
         public ushort GetId(CubePosition position)
         {
-            byte[] bytes = io.GetBytes();
+            ushort[] cubes = io.GetChunk(ChunkPosition.CubeChunk(position));
 
-            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+            return cubes[i];
 
-            ushort id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+            //byte[] bytes = io.GetBytes();
+
+            //int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            //ushort id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
 
             //BitConverter is apparently faster than fixed cast of bytes to ushort
-            return id;
+            //return id;
         }
 
-        public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
+        private struct SortedCubePos
+        {
+            public int originalIndex;
+            public CubePosition cubePos;
+        }
+        private struct Comparer : IComparer<SortedCubePos>
+        {
+            public int Compare(SortedCubePos a, SortedCubePos b)
+            {
+                var chunkPosA = ChunkPosition.CubeChunk(a.cubePos);
+                var chunkPosB = ChunkPosition.CubeChunk(b.cubePos);
+                if (chunkPosA == chunkPosB) return 0;
+                if (chunkPosA.X > chunkPosB.X) return -1;
+                return 1;
+            }
+        }
+
+        public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (count == -1)
-                count = positions.Length;
-
-            byte[] idBytes = io.GetBytes();
-
-            fixed (ushort* idsPtr = ids) 
+            Span<SortedCubePos> sortedPositions = stackalloc SortedCubePos[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
             {
-                for (int i = offset; i < offset + count; i++)
+                sortedPositions[i] = new SortedCubePos
                 {
-                    int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                    idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
-                }
+                    cubePos = positions[i],
+                    originalIndex = i,
+                };
             }
+
+            // Positions is sorted before hand to make things more optimal
+            // Need to keep track of original index as sometimes that's important, so that's why we copy
+            MemoryExtensions.Sort(sortedPositions, new Comparer());
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ushort[]? cachedChunkBytes = null;
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                CubePosition pos = sortedPositions[i].cubePos;
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+                {
+                    cachedChunkPos = chunkPos;
+                    cachedChunkBytes = io.GetChunk(chunkPos);
+                }
+
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                ids[sortedPositions[i].originalIndex] = cachedChunkBytes[j];
+            }
+            //byte[] idBytes = io.GetBytes();
+
+            //fixed (ushort* idsPtr = ids)
+            //{
+            //    for (int i = 0; i < positions.Length; i++)
+            //    {
+            //        int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
+            //        idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+            //    }
+            //}
         }
 
         public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
@@ -94,22 +146,17 @@ namespace ViMG
             return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
         }
 
-        public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def, int offset = 0, int count = -1)
+        public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def)
         {
-            if (count == -1)
-                count = positions.Length;
+            Span<ushort> ids = stackalloc ushort[positions.Length];
+            GetIds(positions, ids);
 
-            byte[] idBytes = io.GetBytes();
             var registry = Main.Registry.CubeRegistry.GetIterable();
 
-            for (int i = offset; i < offset + count; i++)
+            for (int i = 0; i < positions.Length; i++) 
             {
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
-
-                if (id - 1 < 0)
-                    cubes[i] = def;
-                else cubes[i] = registry[id - 1];
+                if (ids[i] - 1 < 0) cubes[i] = def;
+                else cubes[i] = registry[ids[i] - 1];
             }
         }
 
@@ -135,27 +182,52 @@ namespace ViMG
 
         public void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
-            byte[] bytes = io.GetBytes();
+            ushort[] cubes = io.GetChunk(ChunkPosition.CubeChunk(position));
 
-            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-            CubePosition positionChS = position.InChunkSpace(chunkPos);
-            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
-            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
-
-            ushort oldId = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
-            Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+            ushort oldId = cubes[i];
+            cubes[i] = id;
 
             if (markDirty)
             {
                 chunkManager.MarkCubeMeshInfoDirty(null, position, oldId, id);
-                chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
+                chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
             }
+
+            //byte[] bytes = io.GetBytes();
+
+            //ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            //CubePosition positionChS = position.InChunkSpace(chunkPos);
+            //Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+
+            //int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            //ushort oldId = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+            //Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+
+            //if (markDirty)
+            //{
+            //    chunkManager.MarkCubeMeshInfoDirty(null, position, oldId, id);
+            //    chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
+            //}
         }
 
         public void SetCube(CubePosition position, ushort id, Player player)
         {
-            byte[] bytes = io.GetBytes();
+            ushort[] cubes = io.GetChunk(ChunkPosition.CubeChunk(position));
+
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+
+            ushort oldId = cubes[i];
+            cubes[i] = id;
+
+            chunkManager.MarkCubeMeshInfoDirty(player, position, oldId, id);
+            chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
+
+            /*byte[] bytes = io.GetBytes();
 
             ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
             CubePosition positionChS = position.InChunkSpace(chunkPos);
@@ -167,38 +239,87 @@ namespace ViMG
             Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
 
             chunkManager.MarkCubeMeshInfoDirty(player, position, oldId, id);
-            chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
+            chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);*/
         }
 
-        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
+        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids)
         {
-            byte[] bytes = io.GetBytes();
+            Span<SortedCubePos> sortedPositions = stackalloc SortedCubePos[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
+            {
+                sortedPositions[i] = new SortedCubePos
+                {
+                    cubePos = positions[i],
+                    originalIndex = i,
+                };
+            }
+
+            // Positions is sorted before hand to make things more optimal
+            // Need to keep track of original index as sometimes that's important, so that's why we copy
+            MemoryExtensions.Sort(sortedPositions, new Comparer());
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ushort[]? cachedChunkBytes = null;
 
             for (int i = 0; i < positions.Length; i++)
             {
-                var position = positions[i];
-                CubePosition positionChS = position.InChunkSpace();
-                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+                CubePosition pos = sortedPositions[i].cubePos;
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+                {
+                    cachedChunkPos = chunkPos;
+                    cachedChunkBytes = io.GetChunk(chunkPos);
+                }
 
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                cachedChunkBytes[sortedPositions[i].originalIndex] = ids[i];
+            }
 
-                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], ids[i]);
-            } 
+            //byte[] bytes = io.GetBytes();
+
+            //for (int i = 0; i < positions.Length; i++)
+            //{
+            //    var position = positions[i];
+            //    CubePosition positionChS = position.InChunkSpace();
+            //    Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+
+            //    int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+
+            //    Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], ids[i]);
+            //} 
         }
 
-        public void SetCubes(Span<CubePosition> positions, ushort id, int offset = 0, int count = -1)
+        public void SetCubes(Span<CubePosition> positions, ushort id)
         {
-            byte[] bytes = io.GetBytes();
+            Span<SortedCubePos> sortedPositions = stackalloc SortedCubePos[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
+            {
+                sortedPositions[i] = new SortedCubePos
+                {
+                    cubePos = positions[i],
+                    originalIndex = i,
+                };
+            }
+
+            // Positions is sorted before hand to make things more optimal
+            // Need to keep track of original index as sometimes that's important, so that's why we copy
+            MemoryExtensions.Sort(sortedPositions, new Comparer());
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ushort[]? cachedChunkBytes = null;
 
             for (int i = 0; i < positions.Length; i++)
             {
-                var position = positions[i];
-                CubePosition positionChS = position.InChunkSpace();
-                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+                CubePosition pos = sortedPositions[i].cubePos;
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+                {
+                    cachedChunkPos = chunkPos;
+                    cachedChunkBytes = io.GetChunk(chunkPos);
+                }
 
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
-
-                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                cachedChunkBytes[sortedPositions[i].originalIndex] = id;
             }
         }
 
@@ -227,15 +348,89 @@ namespace ViMG
             _16bit,
         }
 
-        public struct PalettizedChunk
+        public static int ExpectedPaletteMax(PalettizeType t)
+        {
+            return t switch
+            {
+                PalettizeType.AllOneId => 1,
+                PalettizeType._1bit => 2,
+                PalettizeType._2bit => 4,
+                PalettizeType._4bit => 16,
+                PalettizeType._8bit => 256,
+                PalettizeType._16bit => throw new NotImplementedException(),
+            };
+        }
+
+        public static int ExpectedLen(PalettizeType t)
+        {
+            return t switch
+            {
+                PalettizeType.AllOneId => 3,
+                PalettizeType._1bit => 512,
+                PalettizeType._2bit => 1024,
+                PalettizeType._4bit => 2048,
+                PalettizeType._8bit => 4096,
+                _ => 0,
+            };
+        }
+
+        public struct PalettizedChunk : INetSerializable
         {
             public ChunkPosition position;
             public PalettizeType type;
             public ushort[] palette;
             public byte[]? data;
+
+            public void Save(Stream stream)
+            {
+                List<byte> bytes = new List<byte>();
+                SaveHelper.SaveInt32(bytes, (int)type);
+                SaveHelper.SaveInt32(bytes, palette.Length);
+                for (int i = 0; i < palette.Length; i++)
+                    SaveHelper.SaveUInt16(bytes, palette[i]);
+
+                if (type != PalettizeType.AllOneId)
+                {
+                    SaveHelper.SaveInt32(bytes, data.Length);
+                    SaveHelper.SaveBytesFlat(bytes, data);
+                }
+
+                stream.Write(bytes.ToArray());
+            }
+
+            public void Load(Span<byte> bytes)
+            {
+                int offset = 0;
+                type = (PalettizeType)SaveHelper.LoadInt32(bytes, ref offset);
+                Debug.Assert(type <= PalettizeType._8bit && type >= 0);
+                int palLen = SaveHelper.LoadInt32(bytes, ref offset);
+                Debug.Assert(palLen <= ExpectedPaletteMax(type));
+                palette = new ushort[palLen];
+                for (int i = 0; i < palLen; i++)
+                    palette[i] = SaveHelper.LoadUInt16(bytes, ref offset);
+
+                if (type != PalettizeType.AllOneId)
+                {
+                    int dataLen = SaveHelper.LoadInt32(bytes, ref offset);
+                    Debug.Assert(dataLen == ExpectedLen(type));
+                    data = SaveHelper.LoadBytes(bytes, dataLen, ref offset).ToArray();
+                }
+            }
+
+            public void Deserialize(NetDataReader reader)
+            {
+            }
+
+            public void Serialize(NetDataWriter writer)
+            {
+                writer.Put((int)type);
+                writer.PutArray(palette);
+                if (type != CubeView.PalettizeType.AllOneId)
+                    writer.PutBytesWithLength(data, 0, (ushort)data.Length);
+            }
         }
 
-        public PalettizedChunk Palettize(ChunkPosition chunkPosition, Span<ushort> ids)
+        public static PalettizedChunk Palettize(ChunkPosition chunkPosition, Span<ushort> ids)
         {
             var chunk = new PalettizedChunk
             {
@@ -246,7 +441,7 @@ namespace ViMG
             IMGUIConsole.Assert(ids.Length == Chunk.NUM_CUBES_IN_CHUNK);
 
             //Span<ushort> ids = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
-            GetIdsForChunk(chunkPosition, ids);
+            //GetIdsForChunk(chunkPosition, ids);
             Span<int> usedIds = stackalloc int[Main.Registry.CubeRegistry.Count];
             for (int i = 0; i < usedIds.Length; i++)
                 usedIds[i] = -1;
@@ -341,7 +536,7 @@ namespace ViMG
             return chunk;
         }
 
-        public ushort[] Depaletteize(PalettizedChunk chunk)
+        public static ushort[] Depaletteize(PalettizedChunk chunk)
         {
             var ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
             if (chunk.type == PalettizeType.AllOneId)

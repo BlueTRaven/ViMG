@@ -50,7 +50,7 @@ namespace Engine.Networking.Messages
                 GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkToSync.chunkPosition, idsCache);
             }
 
-            var chunk = GS.GetWorld().ChunkManager.CubeView.Palettize(chunkToSync.chunkPosition, queryIds);
+            var chunk = CubeView.Palettize(chunkToSync.chunkPosition, queryIds);
 
             //Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
             netMessage.writer.Put(chunkToSync.chunkPosition);
@@ -87,7 +87,7 @@ namespace Engine.Networking.Messages
         {
             Parallel.ForEach(chunksToLoad, chunkToLoad => {
                 Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-                var ids = chunkManager.CubeView.Depaletteize(chunkToLoad);
+                var ids = CubeView.Depaletteize(chunkToLoad);
 
                 CubePosition basePosition = chunkToLoad.position.InCubeSpace();
 

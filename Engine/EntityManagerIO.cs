@@ -74,7 +74,7 @@ namespace ViMG
                         for (int i = 0; i < num; i++)
                         {
                             int headerSize = SaveHelper.LoadInt32(entityDataBlock, ref edbI);
-                            byte[] bytes = SaveHelper.LoadBytes(entityDataBlock, headerSize, ref edbI);
+                            Span<byte> bytes = SaveHelper.LoadBytes(entityDataBlock, headerSize, ref edbI);
 
                             int index = 0;
                             ulong entId = SaveHelper.LoadUInt64(bytes, ref index);
@@ -89,8 +89,8 @@ namespace ViMG
                             int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
                             int entChksum = SaveHelper.LoadInt32(bytes, ref index);
 
-                            byte[] entHeader = bytes[..index];
-                            byte[] entBody = bytes[index..];
+                            Span<byte> entHeader = bytes[..index];
+                            Span<byte> entBody = bytes[index..];
 
                             if (entBody.Length != entDataSize)
                             {
@@ -124,8 +124,8 @@ namespace ViMG
                                     chksum = chksum,
                                     version = entVersion,
 
-                                    header = entHeader,
-                                    data = entBody
+                                    header = entHeader.ToArray(),
+                                    data = entBody.ToArray()
                                 });
 
                                 numEntities++;
@@ -229,7 +229,7 @@ namespace ViMG
 				int edbI = 0;
 
                 int headerSize = SaveHelper.LoadInt32(entityDataBytes, ref edbI);
-                byte[] bytes = SaveHelper.LoadBytes(entityDataBytes, headerSize, ref edbI);
+                Span<byte> bytes = SaveHelper.LoadBytes(entityDataBytes, headerSize, ref edbI);
 
                 int index = 0;
                 ulong entId = SaveHelper.LoadUInt64(bytes, ref index);
@@ -244,8 +244,8 @@ namespace ViMG
                 int entDataSize = SaveHelper.LoadInt32(bytes, ref index);
                 int entChksum = SaveHelper.LoadInt32(bytes, ref index);
 
-                byte[] entHeader = bytes[..index];
-                byte[] entBody = bytes[index..];
+                Span<byte> entHeader = bytes[..index];
+                Span<byte> entBody = bytes[index..];
 
                 if (entBody.Length != entDataSize)
                 {
@@ -268,9 +268,8 @@ namespace ViMG
                     size = entDataSize;
                     this.chksum = chksum;
                     version = entVersion;
-                    header = entHeader;
-
-					data = entBody;
+                    header = entHeader.ToArray();
+					data = entBody.ToArray();
                 }
 
 				return edbI;

@@ -18,8 +18,7 @@ namespace ViMG.VertexDeclarations
         public Color Color;
         public Vector2 TextureCoordinate;
         public Vector3 Normal;
-        public Vector3 Tangent;
-        public Vector3 Bitangent;
+        public Vector4 NormalQuat;
         public float AO;
 
         public float AnimFrameTime;
@@ -32,8 +31,7 @@ namespace ViMG.VertexDeclarations
             Color = vertex.Color;
             TextureCoordinate = vertex.TextureCoordinate;
             Normal = vertex.Normal;
-            Tangent = vertex.Tangent;
-            Bitangent = vertex.Bitangent;
+            NormalQuat = Vector4.Zero;
             AO = vertex.AO;
 
             AnimFrameTime = vertex.AnimFrameTime;
@@ -105,8 +103,23 @@ namespace ViMG.VertexDeclarations
 
         public void SetTangent(Vector3 tangent, Vector3 bitangent)
         {
-            this.Tangent = tangent;
-            this.Bitangent = bitangent;
+            Matrix mat = new Matrix();
+            var a = new BepuUtilities.Matrix3x3();
+            a.X = GetNormal().ToNumerics();
+            a.Y = tangent.ToNumerics();
+            a.Z = bitangent.ToNumerics();
+            mat.M11 = a.X.X;
+            mat.M21 = a.X.Y;
+            mat.M31 = a.X.Z;
+            mat.M12 = a.Y.X;
+            mat.M22 = a.Y.Y;
+            mat.M32 = a.Y.Z;
+            mat.M13 = a.Z.X;
+            mat.M23 = a.Z.Y;
+            mat.M33 = a.Z.Z;
+            var quat = Quaternion.CreateFromRotationMatrix(mat);
+
+            NormalQuat = quat.ToVector4();
         }
 
         static VertexOpaquePass()
@@ -117,12 +130,11 @@ namespace ViMG.VertexDeclarations
                 new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Color").ToInt32(), VertexElementFormat.Color, VertexElementUsage.Color, 0),
                 new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "TextureCoordinate").ToInt32(), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
                 new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Normal").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Tangent").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 1),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "Bitangent").ToInt32(), VertexElementFormat.Vector3, VertexElementUsage.Normal, 2),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AO").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameTime").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "NumAnimFrames").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
-                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "NormalQuat").ToInt32(), VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 1),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AO").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameTime").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 3),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "NumAnimFrames").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 4),
+                new VertexElement(Marshal.OffsetOf(typeof(VertexOpaquePass), "AnimFrameSize").ToInt32(), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 5),
                 
                 /*new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0),
