@@ -4,6 +4,7 @@ using BepuUtilities.Memory;
 using BrUtility;
 using Engine;
 using Engine.ChunkStuff;
+using Engine.Clients;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +28,7 @@ namespace ViMG.GameStates
         private TextHelper.FontInfo fi;
         private Task<World> worldTask;
         private World world;
+        private ClientStates client;
 
         public bool IsLoading;
         private static object lockObj = new object();
@@ -126,6 +128,8 @@ namespace ViMG.GameStates
             if (Main.MULTITHREAD_LOADING)
                 worldTask.Start();
             else worldTask.RunSynchronously();
+
+            client = new ClientStates();
         }
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
@@ -195,6 +199,8 @@ namespace ViMG.GameStates
             if (world != null && !manager.Paused)
             {
                 world.Update(deltaTime);
+                client.NewFrame();
+                world.UpdateClientWorld(client);
             }
 
             netManager?.PollEvents();

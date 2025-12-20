@@ -758,7 +758,7 @@ namespace ViMG.Entities
 			int which = Main.Frame - prev;
 			which = ((which % EntPrevSrv) + EntPrevSrv) % EntPrevSrv;
 
-            return ents[id].prevState[which];
+            return ents[id].prevState?[which] ?? new();
 		}
 
 		public BasicState GetPrevStateAbs(int id, int frame)

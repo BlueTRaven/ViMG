@@ -2,6 +2,7 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine.Clients;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -498,6 +499,22 @@ namespace ViMG
 
 			// TODO
 			//TryLoadNextLayer();
+		}
+
+		public void UpdateClientWorld(ClientStates clientWorld)
+		{
+			for (int i = 0; i < EntityManager.EntMax; i++)
+			{
+				var reference = EntityManager.GetReference(i);
+				if (EntityManager.GetActive(i))
+				{
+					clientWorld.Current().entities.Set(reference, EntityManager.GetById((ulong)i).GetType().FullName, EntityManager.GetPrevState(i, 0));
+				}
+				else
+				{
+					clientWorld.Current().entities.Remove(reference);
+				}
+			}
 		}
 
 		private void TryLoadNextLayer()
