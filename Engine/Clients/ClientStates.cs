@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 
 namespace Engine.Clients
 {
@@ -37,6 +39,19 @@ namespace Engine.Clients
             int which = head - prev;
             which = ((which % ViMG.Entities.EntityManager.EntPrevSrv) + ViMG.Entities.EntityManager.EntPrevSrv) % ViMG.Entities.EntityManager.EntPrevSrv;
             return states[which];
+        }
+
+        public void Render(GraphicsDevice device, double deltaTime)
+        {
+            var iter = Main.Registry.RendererRegistry.GetIterable();
+            foreach (var a in iter)
+            {
+                var renderedTypes = a.GetRenderedTypes();
+                foreach (Type t in renderedTypes) 
+                {
+                    a.RenderClientEnt(device, deltaTime, this, t.FullName);
+                }
+            }
         }
     }
 }

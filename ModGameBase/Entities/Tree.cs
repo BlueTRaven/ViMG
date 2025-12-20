@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Win32;
@@ -12,7 +13,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 0)]
-	public class Tree : Entity, IMultiCubeTracker
+	public class Tree : Entity, IMultiCubeTracker, ISyncBasicState
 	{
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshTrunk;
 		private static (VertexBuffer VBO, IndexBuffer IBO) meshSegmentA;
@@ -120,69 +121,6 @@ namespace ViMG.Entities
 				}
 			}
         }
-
-        /*public override void OnCubeUpdated(CubePosition updating, int updatedId)
-		{
-			base.OnCubeUpdated(updating, updatedId);
-
-			// If we deleted the base position, we know that the entire tree is going to fall.
-			if (updating == basePosition && updatedId == 0)
-			{
-				size = 0;
-				world.EntityManager.Remove(this);
-				return;
-			}
-
-			if (size == 0)
-				return;
-			
-			// If we're on the same y axis
-			if (updating.X == basePosition.X && updating.Z == basePosition.Z && updating.Y > basePosition.Y && updating.Y <= basePosition.Y + size)
-			{
-				if (updatedId == 0)
-				{
-					int sizeA = updating.Y - basePosition.Y - 1;
-
-					if (sizeA < size)
-						size = sizeA;
-				}
-			}
-		}*/
-
-		/*public override void Draw(GraphicsDevice device, Effect effect)
-		{
-			base.Draw(device, effect);
-
-			if (meshTrunk.VBO == null)
-				MakeMesh(device);
-
-			if (Main.camera.GetFrustum().Contains(new BoundingBox(bounds.Position, bounds.FarPosition)) == ContainmentType.Disjoint)
-				return;
-
-			//device.RasterizerState = Main.wireframeRS;
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
-				DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTrunk.VBO, meshTrunk.IBO,
-				Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-				Matrix.CreateTranslation(Position), new RectangleF(0, 96 - 16, 80, 16)));
-
-			for (int i = 0; i < size; i++)
-			{
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
-					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshSegmentB.VBO, meshSegmentB.IBO,
-					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (i + 1), 0)), new RectangleF(0, 48, 80, 32)));
-			}
-
-			if (size == baseSize)
-			{
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("tree"),
-					DrawHelper.BlackPixel, DrawHelper.BlackPixel, meshTreeTop.VBO, meshTreeTop.IBO,
-					Matrix.CreateRotationY(MathHelper.ToRadians(45f)) *
-					Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE * (baseSize + 1), 0)), new RectangleF(0, 0, 80, 96)));
-			}
-		}*/
-
 		private static void MakeMesh(GraphicsDevice device)
 		{
 			MakeMeshTrunk(device);
@@ -572,5 +510,18 @@ namespace ViMG.Entities
                 bounds = new Rectangle3D(trackedPositions[0].InWorldSpace(), new Vector3(Cube.CUBE_SCALE, Cube.CUBE_SCALE * (size + (Cube.CUBE_SCALE / 5)), Cube.CUBE_SCALE));
             }
 		}
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				counters = { [0] = size},
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+			size = state.counters[0];
+        }
     }
 }

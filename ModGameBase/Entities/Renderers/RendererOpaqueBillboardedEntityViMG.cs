@@ -15,7 +15,7 @@ namespace ViMG.Entities.Renderers
 {
     public class RendererOpaqueBillboardedEntityViMG
     {
-        private class TypeStatsGeneric : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsGeneric : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             private readonly RendererDeferred.DrawMaterial material;
             private readonly Vector2 scale;
@@ -50,7 +50,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSkeleton : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSkeleton : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsSkeleton() : base("skeleton", typeof(Skeleton), new RendererDeferred.DrawMaterial("skeleton"))
             {
@@ -75,7 +75,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSkeleton2 : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSkeleton2 : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsSkeleton2() : base("skeleton2", typeof(Skeleton2), new RendererDeferred.DrawMaterial("skeleton"))
             {
@@ -97,7 +97,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSkeletonBonePile : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSkeletonBonePile : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsSkeletonBonePile() : base("skeleton_bonepile", typeof(SkeletonBonePile), new RendererDeferred.DrawMaterial("skeleton"))
             {
@@ -119,7 +119,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsBigSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsBigSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsBigSlime() : base("slime_big", typeof(SlimeBig), new RendererDeferred.DrawMaterial("slime")) { }
 
@@ -148,9 +148,9 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSlime() : base("slime", typeof(Slime), new RendererDeferred.DrawMaterial("slime")) { }
+            public TypeStatsSlime() : base(typeof(Slime).FullName, typeof(Slime), new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
@@ -202,7 +202,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsCaveSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsCaveSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsCaveSlime() : base("slime_cave", typeof(CaveSlime), new RendererDeferred.DrawMaterial("slime")) { }
 
@@ -230,7 +230,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsGhost : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsGhost : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsGhost() : base("ghost", typeof(Ghost), new RendererDeferred.DrawMaterial("grave_ghost"))
             {
@@ -294,7 +294,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsCultist : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsCultist : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsCultist() : base("cultist", typeof(Cultist), new RendererDeferred.DrawMaterial("cultist"))
             {
@@ -334,7 +334,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsDucken : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsDucken : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsDucken() : base("ducken", typeof(Ducken), new RendererDeferred.DrawMaterial("ducken"))
             {
@@ -407,7 +407,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsGhoul : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsGhoul : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsGhoul() : base("ghoul", typeof(Ghoul), new RendererDeferred.DrawMaterial("ghoul"))
             {
@@ -431,7 +431,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsLeviathan : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsLeviathan : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsLeviathan() : base("leviathan", typeof(EntityLeviathan), new RendererDeferred.DrawMaterial("leviathan"))
             {
@@ -453,7 +453,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsHeart : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsHeart : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsHeart() : base("heart", typeof(Heart), new RendererDeferred.DrawMaterial("heart"))
             {
@@ -483,7 +483,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsPlayerBubble : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsPlayerBubble : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsPlayerBubble() : base("player_bubble", typeof(PlayerBubble), new RendererDeferred.DrawMaterial("bubble"))
             {
@@ -511,7 +511,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSnake : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSnake : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsSnake() : base("snake", typeof(Snake), new RendererDeferred.DrawMaterial("snake"))
             {
@@ -573,7 +573,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsSnakeFlying : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsSnakeFlying : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsSnakeFlying() : base("snake_flying", typeof(SnakeFlying), new RendererDeferred.DrawMaterial("snake"))
             {
@@ -619,7 +619,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsStoneBeetle : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsStoneBeetle : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             private EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
             {
@@ -666,7 +666,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsTestNPC : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsTestNPC : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsTestNPC(Type type) : base(type.FullName, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
             {
@@ -702,7 +702,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsLightStressTest : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsLightStressTest : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsLightStressTest() : base("light_stress_test", typeof(LightStressTest), new RendererDeferred.DrawMaterial("glow_node"))
             {
@@ -731,7 +731,7 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        private class TypeStatsWorm : RendererOpaqueBillboardedEntity.TypeStats
+        private class TypeStatsWorm : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public TypeStatsWorm() : base("worm", typeof(Worm), new RendererDeferred.DrawMaterial("worm"))
             {

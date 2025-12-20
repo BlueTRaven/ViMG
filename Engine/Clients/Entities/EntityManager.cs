@@ -29,6 +29,8 @@ namespace Engine.Clients.Entities
 
         private EntityHolder[] entities;
 
+        public int MaxEnts => entities.Length;
+
         public EntityManager()
         {
             entities = new EntityHolder[ViMG.Entities.EntityManager.EntMax];
@@ -41,6 +43,27 @@ namespace Engine.Clients.Entities
             {
                 entities[i] = prev.entities[i];
             }
+        }
+
+        public BasicState GetById(int id)
+        {
+            if (id < 0) return new BasicState();
+            return entities[id].state;
+        }
+
+        public ViMG.Entities.EntityManager.EntityReference GetReference(int id)
+        {
+            return new ViMG.Entities.EntityManager.EntityReference
+            {
+                id = entities[id].id,
+                generation = entities[id].generation,
+            };
+        }
+
+        public string? GetTypeById(int id)
+        {
+            if (id == -1) return null;
+            return entities[id].entityType;
         }
 
         public void Set(ViMG.Entities.EntityManager.EntityReference reference, string type, BasicState state) 

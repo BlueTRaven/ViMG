@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,6 @@ namespace ViMG.Entities.Renderers
 
         private readonly string identifier;
         public string Identifier => identifier;
-
-        private FastList<Type> renderableTypes = new FastList<Type>();
 
         public EntityRenderer(string identifier, GraphicsDevice device)
         {
@@ -69,9 +68,11 @@ namespace ViMG.Entities.Renderers
 
         }
 
-        public abstract Type?[] GetRenderedTypes();
+        public abstract Type[] GetRenderedTypes();
 
         public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType);
+
+        public virtual void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, string type) { }
 
         protected ref struct Iterator<T> where T : Entity
         {

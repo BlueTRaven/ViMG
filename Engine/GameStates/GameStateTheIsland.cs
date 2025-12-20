@@ -193,14 +193,24 @@ namespace ViMG.GameStates
                 {
                     world = worldTask.Result;
                     worldTask = null;
+
+                    client.NewFrame();
+                    world.UpdateClientWorld(client);
                 }
             }
 
             if (world != null && !manager.Paused)
             {
                 world.Update(deltaTime);
+            }
+
+            if (client != null)
+            {
                 client.NewFrame();
-                world.UpdateClientWorld(client);
+                if (world != null)
+                {
+                    world.UpdateClientWorld(client);
+                }
             }
 
             netManager?.PollEvents();
@@ -641,6 +651,11 @@ namespace ViMG.GameStates
             if (world != null)
             {
                 world.Draw(device);
+            }
+
+            if (client != null)
+            {
+                client.Render(device, 0);
             }
         }
 

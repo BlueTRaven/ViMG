@@ -945,16 +945,13 @@ namespace ViMG.Entities
 			{
 				if (r != null)
 				{
-					Type?[] renderedTypes = r.GetRenderedTypes();
+					Type[] renderedTypes = r.GetRenderedTypes();
 
                     for (int i = 0; i < renderedTypes.Length; i++)
 					{
-                        Type? renderedType = renderedTypes[i];
-						if (renderedType != null)
-						{
-							if (entitiesByType.TryGetValue(renderedType, out var renderedEntities))
-								r.Render(device, 0, this, i, renderedEntities);
-						}
+                        Type renderedType = renderedTypes[i];
+						if (entitiesByType.TryGetValue(renderedType, out var renderedEntities))
+							r.Render(device, 0, this, i, renderedEntities);
 					}
 				}
 			}

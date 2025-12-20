@@ -64,14 +64,13 @@ namespace ViMG.Entities.Renderers
             registry = new ObjRegistry<RenderedEntity>();
         }
 
-        private Type?[]? renderedTypesCache = null;
-        public override Type?[] GetRenderedTypes()
+        private Type[]? renderedTypesCache = null;
+        public override Type[] GetRenderedTypes()
         {
             if (renderedTypesCache == null)
             {
-                renderedTypesCache = new Type[registry.Count + 1];
-                renderedTypesCache[0] = null;
-                int i = 1;
+                renderedTypesCache = new Type[registry.Count];
+                int i = 0;
                 foreach (RenderedEntity stats in registry.GetIterable())
                 {
                     renderedTypesCache[i] = stats.EntityType;
@@ -83,7 +82,7 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            RenderedEntity stats = registry.Get(renderedTypeIndex);
+            RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
             Type type = stats.EntityType;
 
             //var entities = entityManager.GetAll(type);
