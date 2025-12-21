@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,31 +12,42 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Line : Entity
+    public class Line : Entity, ISyncBasicState
     {
-        private static VerySimpleMesh mesh;
-        public readonly Vector3 endPosition;
-        public readonly float width;
-        public readonly float tileHeight;
-        public readonly RendererDeferred.DrawMaterial material;
-        public readonly RectangleF sourceRectangle;
-        public readonly Color color;
+        public Vector3 endPosition;
+        public float width;
+        public float tileHeight;
+        public int materialSet;
+        //public readonly RendererDeferred.DrawMaterial material;
+        //public readonly RectangleF sourceRectangle;
+        public Color color;
 
 		private float alive;
 		private float time;
+
+        public static (RendererDeferred.DrawMaterial, RectangleF) GetMaterialFromSet(int materialSet)
+        {
+            switch (materialSet) 
+            {
+                case 0:
+                default:
+                    return (new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty);
+            }
+        }
 
         public Line()
         {
         }
 
-        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color, float time)
+        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, int materialSet, Color color, float time)
         {
             this.Position = position;
             this.endPosition = endPosition;
             this.width = width;
             this.tileHeight = tileHeight;
-            this.material = material;
-            this.sourceRectangle = sourceRectangle;
+            this.materialSet = materialSet;
+            //this.material = material;
+            //this.sourceRectangle = sourceRectangle;
             this.color = color;
             this.time = time;
         }
@@ -65,6 +77,30 @@ namespace ViMG.Entities
                 return color * p;
             }
             else return color;
+        }
+
+        public void Get(out BasicState state)
+        {
+
+            state = new BasicState
+            {
+                position = Position,
+                rotation = new Quaternion(endPosition.X, endPosition.Y, endPosition.Z, 1),
+                timers = { [0] = time, [1] = width, [2] = tileHeight, [3] = alive},
+                counters = { [0] = (int)color.PackedValue, [1] = materialSet }
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            endPosition = state.rotation.ToVector4().ToVector3();
+            time = state.timers[0];
+            width = state.timers[1];
+            tileHeight = state.timers[2];
+            alive = state.timers[3];
+            color = new Color((uint)state.counters[0]);
+            materialSet = state.counters[1];
         }
 
         //public override void Draw(GraphicsDevice device, Effect effect)

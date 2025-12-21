@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,7 +18,6 @@ namespace ViMG.Entities.Renderers
         public RendererGenericExplosion(GraphicsDevice device) : base("generic_explosion", device)
         {
             mesh = MeshHelper.MakeUVSphere(device, 1f);
-
         }
 
         private static Type[] types = [ typeof(GenericExplosion) ];
@@ -28,6 +28,7 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
+            return;
             //var entities = entityManager.GetAll<GenericExplosion>();
 
             //foreach (GenericExplosion explosion in entities)
@@ -39,6 +40,25 @@ namespace ViMG.Entities.Renderers
                 Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
                     new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
                     Matrix.CreateScale(radius) * Matrix.CreateTranslation(explosion.Position), null, Color.Red * 0.5f));
+            }
+        }
+
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        {
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            {
+                var reference = client.Current().entities.GetReference(i);
+                // TODO get rid of str compare
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                float radius = (1 - entPrev.GetInterpTimer(entCurr, 0) / GenericExplosion.EXPLOSION_TIME) * entPrev.GetInterpTimer(entCurr, 1);
+                float sort = (entPrev.GetInterpPosition(entCurr) - Main.camera.Position).Length();
+                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
+                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
+                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr)), null, Color.Red * 0.5f));
             }
         }
     }

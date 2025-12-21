@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,11 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class GenericExplosion : Entity, IHitboxOwner
+    public class GenericExplosion : Entity, IHitboxOwner, ISyncBasicState
     {
         //private VerySimpleMesh mesh;
 
@@ -20,7 +22,7 @@ namespace ViMG.Entities
         private readonly HitboxManager.Group group;
         private readonly int damage;
         private readonly float knockback;
-        public readonly float radius;
+        public float radius;
 
         private float hitboxTimer;
         public float timer;
@@ -92,6 +94,22 @@ namespace ViMG.Entities
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                timers = { [0] = timer, [1] = radius }
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            timer = state.timers[0];
+            radius = state.timers[1];
         }
     }
 }

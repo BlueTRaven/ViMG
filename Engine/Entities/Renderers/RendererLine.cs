@@ -1,5 +1,8 @@
 ﻿using BrUtility;
+using Engine.Clients;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +29,7 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
+            return;
             //var lines = entityManager.GetAll<Line>();
 
             //foreach (Line line in lines)
@@ -33,9 +37,39 @@ namespace ViMG.Entities.Renderers
 
             while (iter.Next(out Line line))
             {
+                (RendererDeferred.DrawMaterial material, RectangleF sourceRectangle) = Line.GetMaterialFromSet(line.materialSet);
                 if (line.tileHeight != -1)
-                    DrawHelper3D.DrawLineTiled(line.Position, line.endPosition, line.width, line.tileHeight, line.material, mesh, line.sourceRectangle, line.GetColor());
-                else DrawHelper3D.DrawLine(line.Position, line.endPosition, line.width, line.material, mesh, line.sourceRectangle, line.GetColor());
+                    DrawHelper3D.DrawLineTiled(line.Position, line.endPosition, line.width, line.tileHeight, material, mesh, sourceRectangle, line.GetColor());
+                else DrawHelper3D.DrawLine(line.Position, line.endPosition, line.width, material, mesh, sourceRectangle, line.GetColor());
+            }
+        }
+
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        {
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            {
+                var reference = client.Current().entities.GetReference(i);
+                // TODO get rid of str compare
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                var position = entPrev.GetInterpPosition(entCurr);
+                var endPosition = Vector3.Lerp(entPrev.rotation.ToVector4().ToVector3(), entCurr.rotation.ToVector4().ToVector3(), (float)Main.TimeP);
+                var time = entPrev.GetInterpTimer(entCurr, 0);
+                var width = entPrev.GetInterpTimer(entCurr, 1);
+                var tileHeight = entPrev.GetInterpTimer(entCurr, 2);
+                var alive = entPrev.GetInterpTimer(entCurr, 3);
+                var colorPrev = new Color((uint)entPrev.counters[0]);
+                var colorCurr = new Color((uint)entCurr.counters[0]);
+                var color = Color.Lerp(colorPrev, colorCurr, (float)Main.TimeP);
+                var materialSet = entCurr.counters[1];
+
+                (RendererDeferred.DrawMaterial material, RectangleF sourceRectangle) = Line.GetMaterialFromSet(materialSet);
+                if (tileHeight != -1)
+                    DrawHelper3D.DrawLineTiled(position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
+                else DrawHelper3D.DrawLine(position, endPosition, width, material, mesh, sourceRectangle, color);
             }
         }
     }

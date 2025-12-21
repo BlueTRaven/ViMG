@@ -1,5 +1,8 @@
-﻿using LiteNetLib.Utils;
+﻿using BrUtility;
+using Engine.Entities;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,9 +44,11 @@ namespace Engine.Networking
             Counter1 = 1 << 17,
             Counter2 = 1 << 18,
             Counter3 = 1 << 19,
+
+            ExtraFields = 1 << 20,
         }
 
-        private const int VERSION = 1;
+        private const int VERSION = 2;
         [System.Runtime.CompilerServices.InlineArray(4)]
         public struct Arr4F
         {
@@ -66,6 +71,17 @@ namespace Engine.Networking
                 set => this[i] = value;
             }
         }
+        //[System.Runtime.CompilerServices.InlineArray(256)]
+        //public struct Arr256B
+        //{
+        //    private int _element0;
+
+        //    public int this[int i]
+        //    {
+        //        get => this[i];
+        //        set => this[i] = value;
+        //    }
+        //}
 
         private int version;
         public Vector3 position;
@@ -75,6 +91,9 @@ namespace Engine.Networking
         public int state;
         public Arr4F timers;
         public Arr4I counters;
+
+        //public Arr256B extraBytes;
+        //public SerField[] extraFields;
 
         public void Deserialize(NetDataReader reader)
         {
@@ -96,6 +115,29 @@ namespace Engine.Networking
             for (int i = 0; i < 4; i++) timers[i] = timersA[i];
             var countersA = reader.GetArray<int>(sizeof(byte));
             for (int i = 0; i < 4; i++) counters[i] = countersA[i];
+
+            //if (version >= 2)
+            //{
+            //    int extraFieldsCount = reader.GetInt();
+            //    extraFields = new SerField[extraFieldsCount];
+
+            //    for (int i = 0; i < extraFieldsCount; i++)
+            //    {
+            //        // TODO this is VERY UNSAFE
+            //        string name = reader.GetString();
+            //        int len = reader.GetInt();
+            //        Type t = Utility.GetType(name);
+            //        var extraFieldCreated = Activator.CreateInstance(t);
+
+            //        SerField field = extraFieldCreated as SerField;
+            //        if (field is not SerField) reader.SetPosition(reader.Position + len); // skip bytes
+            //        else
+            //        {
+            //            field.Deserialize(reader);
+            //            extraFields[i] = field;
+            //        }
+            //    }
+            //}
         }
 
         public void Serialize(NetDataWriter writer)
@@ -118,6 +160,17 @@ namespace Engine.Networking
             writer.PutSpan(t);
             Span<int> i = counters;
             writer.PutSpan(i);
+
+            //writer.Put(extraFields.Length);
+            //foreach (SerField field in extraFields)
+            //{
+            //    // TODO this is VERY UNSAFE
+            //    writer.Put(field.GetType().FullName);
+            //    NetDataWriter subWriter = new NetDataWriter();
+            //    field.Serialize(subWriter);
+            //    writer.Put(subWriter.Length);
+            //    writer.Put(subWriter.AsReadOnlySpan());
+            //}
         }
 
         public uint GetDeltaBits(ref readonly BasicState prevState)
@@ -162,6 +215,16 @@ namespace Engine.Networking
                 if (counters[i] != prevState.counters[i])
                     bits |= (Fields)((int)Fields.Counter0 + i);
             }
+
+            //for (int i = 0; i < extraFields.Length; i++)
+            //{
+            //    SerField field = extraFields[i];
+            //    if (field.Changed(prevState.extraFields[i]))
+            //    {
+            //        bits |= Fields.ExtraFields;
+            //        break;
+            //    }
+            //}
 
             return (uint)bits;
         }
@@ -268,6 +331,34 @@ namespace Engine.Networking
                     writer.Put(counters[i]);
             }
         }
+
+        //public void SerializeDeltaExtraFields(NetDataWriter writer, BasicState other)
+        //{
+        //    uint extraFieldsBits = 0;
+        //    for (int i = 0; i < int.Min(32, extraFields.Length); i++)
+        //    {
+        //        if (extraFields[i].Changed(other.extraFields[i]))
+        //            extraFieldsBits |= (uint)(1 << i);
+        //    }
+
+        //    writer.Put(extraFieldsBits);
+
+        //    for (int i = 0; i < int.Min(32, extraFields.Length); i++)
+        //    {
+        //        SerField curField = extraFields[i];
+        //        SerField prevField = other.extraFields[i];
+
+        //        if (curField.Changed(prevField))
+        //        {
+        //            // TODO this is VERY UNSAFE
+        //            writer.Put(curField.GetType().FullName);
+        //            NetDataWriter subWriter = new NetDataWriter();
+        //            curField.Serialize(subWriter);
+        //            writer.Put(subWriter.Length);
+        //            writer.Put(subWriter.AsReadOnlySpan());
+        //        }
+        //    }
+        //}
 
         public Vector3 GetInterpPosition(BasicState other)
         {

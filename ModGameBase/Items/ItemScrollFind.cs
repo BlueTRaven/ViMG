@@ -46,7 +46,7 @@ namespace ViMG.Items
 			if (point.valid) 
 			{
 				player.world.EntityManager.Add(new Entities.Line(player.Position, point.position.InWorldSpace(), Cube.CUBE_SCALE / 16f, -1,
-					new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty, Color.Red, 2f * 60f));
+					0, Color.Red, 2f * 60f));
 
 				player.Magic -= 5;
 

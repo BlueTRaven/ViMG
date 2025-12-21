@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
@@ -67,6 +68,14 @@ namespace ViMG.Rendering
 
                 if (Diffuse == null)
                     throw new Exception("AAAAA");
+            }
+
+            public DrawMaterial(string diffuseName, string? normalName, string? specularName, string? emissiveName)
+            {
+                Diffuse = Main.assetsManager.GetAsset<Texture2D>(diffuseName);
+                Normal = normalName != null ? Main.assetsManager.GetAsset<Texture2D>(normalName) : DrawHelper.NormalPixel;
+                Specular = specularName != null ? Main.assetsManager.GetAsset<Texture2D>(specularName) : DrawHelper.BlackPixel;
+                Emissive = emissiveName != null ? Main.assetsManager.GetAsset<Texture2D>(emissiveName) : DrawHelper.BlackPixel;
             }
         }
 

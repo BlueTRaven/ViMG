@@ -1,289 +1,379 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using LiteNetLib.Utils;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Rendering;
 
 namespace Engine.Entities
 {
-    public abstract class ASerField
+    public abstract class SerField : INetSerializable
     {
-        public int offset;
-        public int size;
+        public abstract void Deserialize(NetDataReader reader);
 
-        public ASerField()
-        {
-        }
+        public abstract void Serialize(NetDataWriter writer);
+
+        public abstract bool Changed(SerField prev);
     }
 
-    public class SerField<T> : ASerField where T : unmanaged
+    public class SerFieldMaterial : SerField
     {
-        public unsafe SerField(ref int accumulator)
+        private RendererDeferred.DrawMaterial material;
+
+        public SerFieldMaterial(RendererDeferred.DrawMaterial material)
         {
-            offset = accumulator;
-            size = sizeof(T);
-            accumulator += size;
+            this.material = material;
         }
 
-        //public struct Instance
-        //{
-        //    private SerField<T> field;
-        //    private Buffer<byte> buffer;
-
-        //    public Instance(SerField<T> field, Buffer<byte> buffer)
-        //    {
-        //        this.field = field;
-        //        this.buffer = buffer;
-        //    }
-
-        //    public T Get()
-        //    {
-        //        return MemoryMarshal.Cast<byte, T>(buffer.Slice(field.offset, field.size))[0];
-        //    }
-
-        //    public unsafe void Set(T value)
-        //    {
-        //        Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
-        //        if (value is int i)
-        //            BitConverter.TryWriteBytes(bytes, i);
-        //        else if (value is float f)
-        //            BitConverter.TryWriteBytes(bytes, f);
-        //        else
-        //        {
-        //            buffer.CopyFrom(bytes, 0, field.offset, field.size);
-        //        }
-        //    }
-
-        //    public static implicit operator T(Instance value)
-        //    {
-        //        return value.Get();
-        //    }
-        //}
-    }
-
-    public class SerFieldInt : SerField<int>
-    {
-        public SerFieldInt(ref int accumulator) : base(ref accumulator)
+        public override bool Changed(SerField prev)
         {
+            SerFieldMaterial? prevMaterial = prev as SerFieldMaterial;
 
+            return material.Diffuse != prevMaterial?.material.Diffuse ||
+                material.Emissive != prevMaterial?.material.Emissive ||
+                material.Normal != prevMaterial?.material.Normal ||
+                material.Specular != prevMaterial?.material.Specular;
         }
 
-        public struct Instance
+        public override void Deserialize(NetDataReader reader)
         {
-            private SerFieldInt field;
-            private Buffer<byte> buffer;
+            byte bits = reader.GetByte();
 
-            public Instance(SerFieldInt field, Buffer<byte> buffer)
+            string? diffuseName = null;
+            string? emissiveName = null;
+            string? normalName = null;
+            string? specularName = null;
+
+            if ((bits & (1 << 0)) > 0)
             {
-                this.field = field;
-                this.buffer = buffer;
+                diffuseName = reader.GetString();
+            }
+            if ((bits & (1 << 1)) > 0)
+            {
+                emissiveName = reader.GetString();
+            }
+            if ((bits & (1 << 2)) > 0)
+            {
+                normalName = reader.GetString();
+            }
+            if ((bits & (1 << 3)) > 0)
+            {
+                specularName = reader.GetString();
+            }
+        }
+
+        public override void Serialize(NetDataWriter writer)
+        {
+            byte bits = 0;
+            if (material.Diffuse != null) bits |= 1 << 0;
+            if (material.Emissive != null) bits |= 1 << 1;
+            if (material.Normal != null) bits |= 1 << 2;
+            if (material.Specular != null) bits |= 1 << 3;
+
+            if (bits != 0)
+            {
+                writer.Put(bits);
             }
 
-            public int Get()
+            if (material.Diffuse != null)
             {
-                return MemoryMarshal.Cast<byte, int>(buffer.Slice(field.offset, field.size))[0];
+                writer.Put(material.Diffuse.Name);
             }
-
-            public unsafe void Set(int value)
+            if (material.Emissive != null) 
             {
-                Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
-                BitConverter.TryWriteBytes(bytes, value);
+                writer.Put(material.Emissive.Name);
             }
-
-            public static implicit operator int(Instance value)
+            if (material.Normal != null)
             {
-                return value.Get();
+                writer.Put(material.Normal.Name);
+            }
+            if (material.Specular != null)
+            {
+                writer.Put(material.Specular.Name);
             }
         }
     }
 
-    public class SerFieldFloat : SerField<float>
-    {
-        public SerFieldFloat(ref int accumulator) : base(ref accumulator)
-        {
+    //public abstract class ASerField
+    //{
+    //    public int offset;
+    //    public int size;
 
-        }
+    //    public ASerField()
+    //    {
+    //    }
+    //}
 
-        public struct Instance
-        {
-            private SerFieldFloat field;
-            private Buffer<byte> buffer;
+    //public class SerField<T> : ASerField where T : unmanaged
+    //{
+    //    public unsafe SerField(ref int accumulator)
+    //    {
+    //        offset = accumulator;
+    //        size = sizeof(T);
+    //        accumulator += size;
+    //    }
 
-            public Instance(SerFieldFloat field, Buffer<byte> buffer)
-            {
-                this.field = field;
-                this.buffer = buffer;
-            }
+    //    //public struct Instance
+    //    //{
+    //    //    private SerField<T> field;
+    //    //    private Buffer<byte> buffer;
 
-            public float Get()
-            {
-                return MemoryMarshal.Cast<byte, float>(buffer.Slice(field.offset, field.size))[0];
-            }
+    //    //    public Instance(SerField<T> field, Buffer<byte> buffer)
+    //    //    {
+    //    //        this.field = field;
+    //    //        this.buffer = buffer;
+    //    //    }
 
-            public unsafe void Set(float value)
-            {
-                Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
-                BitConverter.TryWriteBytes(bytes, value);
-            }
+    //    //    public T Get()
+    //    //    {
+    //    //        return MemoryMarshal.Cast<byte, T>(buffer.Slice(field.offset, field.size))[0];
+    //    //    }
 
-            public static implicit operator float(Instance value)
-            {
-                return value.Get();
-            }
-        }
-    }
+    //    //    public unsafe void Set(T value)
+    //    //    {
+    //    //        Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
+    //    //        if (value is int i)
+    //    //            BitConverter.TryWriteBytes(bytes, i);
+    //    //        else if (value is float f)
+    //    //            BitConverter.TryWriteBytes(bytes, f);
+    //    //        else
+    //    //        {
+    //    //            buffer.CopyFrom(bytes, 0, field.offset, field.size);
+    //    //        }
+    //    //    }
 
-    public struct SlimeDef
-    {
-        private int size = 0;
-        private ASerField[] fields;
+    //    //    public static implicit operator T(Instance value)
+    //    //    {
+    //    //        return value.Get();
+    //    //    }
+    //    //}
+    //}
 
-        public SerFieldFloat jumpTimer;
-        public SerFieldInt health;
+    //public class SerFieldInt : SerField<int>
+    //{
+    //    public SerFieldInt(ref int accumulator) : base(ref accumulator)
+    //    {
 
-        public SlimeDef()
-        {
-            FastList<ASerField> fields = new();
-            int accumulator = 0;
-            jumpTimer = new(ref accumulator);
-            health = new(ref accumulator);
-            fields.Add(jumpTimer);
-            fields.Add(health);
+    //    }
 
-            size = accumulator;
+    //    public struct Instance
+    //    {
+    //        private SerFieldInt field;
+    //        private Buffer<byte> buffer;
 
-            this.fields = fields.Buffer[0..fields.Length];
-        }
+    //        public Instance(SerFieldInt field, Buffer<byte> buffer)
+    //        {
+    //            this.field = field;
+    //            this.buffer = buffer;
+    //        }
 
-        public Buffer<byte> New(BufferPool pool)
-        {
-            pool.Take<byte>(size, out var buffer);
-            return buffer;
-        }
-    }
+    //        public int Get()
+    //        {
+    //            return MemoryMarshal.Cast<byte, int>(buffer.Slice(field.offset, field.size))[0];
+    //        }
 
-    public struct Slime1
-    {
-        private static SlimeDef def = new();
+    //        public unsafe void Set(int value)
+    //        {
+    //            Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
+    //            BitConverter.TryWriteBytes(bytes, value);
+    //        }
 
-        private Buffer<byte> buffer;
+    //        public static implicit operator int(Instance value)
+    //        {
+    //            return value.Get();
+    //        }
+    //    }
+    //}
 
-        public SerFieldFloat.Instance jumpTimer;
-        public SerFieldInt.Instance health;
+    //public class SerFieldFloat : SerField<float>
+    //{
+    //    public SerFieldFloat(ref int accumulator) : base(ref accumulator)
+    //    {
 
-        public Slime1(BufferPool pool)
-        {
-            buffer = def.New(pool);
-            jumpTimer = new(def.jumpTimer, buffer);
-            health = new(def.health, buffer);
-        }
-    }
+    //    }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Slime2
-    {
-        public float jumpTimer;
-        public int health;
-    }
+    //    public struct Instance
+    //    {
+    //        private SerFieldFloat field;
+    //        private Buffer<byte> buffer;
 
-    public static class FieldTest
-    {
-        private static unsafe void SetIntAtOffset(ref Slime2 s2, int offset, int value)
-        {
-            ref byte baseRef = ref Unsafe.As<Slime2, byte>(ref s2);
+    //        public Instance(SerFieldFloat field, Buffer<byte> buffer)
+    //        {
+    //            this.field = field;
+    //            this.buffer = buffer;
+    //        }
 
-            // Add the offset to the base reference to get a reference to the target field location
-            ref byte targetRef = ref Unsafe.Add(ref baseRef, offset);
+    //        public float Get()
+    //        {
+    //            return MemoryMarshal.Cast<byte, float>(buffer.Slice(field.offset, field.size))[0];
+    //        }
 
-            ref int dest = ref Unsafe.As<byte, int>(ref targetRef);
-            
-            dest = value;
-        }
+    //        public unsafe void Set(float value)
+    //        {
+    //            Span<byte> bytes = new Span<byte>(buffer.GetPointer(field.offset), field.size);
+    //            BitConverter.TryWriteBytes(bytes, value);
+    //        }
 
-        private static unsafe void SetFloatAtOffset(ref Slime2 s2, int offset, float value)
-        {
-            ref byte baseRef = ref Unsafe.As<Slime2, byte>(ref s2);
+    //        public static implicit operator float(Instance value)
+    //        {
+    //            return value.Get();
+    //        }
+    //    }
+    //}
 
-            // Add the offset to the base reference to get a reference to the target field location
-            ref byte targetRef = ref Unsafe.Add(ref baseRef, offset);
+    //public struct SlimeDef
+    //{
+    //    private int size = 0;
+    //    private ASerField[] fields;
 
-            ref float dest = ref Unsafe.As<byte, float>(ref targetRef);
+    //    public SerFieldFloat jumpTimer;
+    //    public SerFieldInt health;
 
-            dest = value;
-        }
+    //    public SlimeDef()
+    //    {
+    //        FastList<ASerField> fields = new();
+    //        int accumulator = 0;
+    //        jumpTimer = new(ref accumulator);
+    //        health = new(ref accumulator);
+    //        fields.Add(jumpTimer);
+    //        fields.Add(health);
 
-        public static void DoTest()
-        {
-            int num = 16_000_000;
+    //        size = accumulator;
 
-            BufferPool p = new BufferPool();
+    //        this.fields = fields.Buffer[0..fields.Length];
+    //    }
 
-            Slime1[] s1s = new Slime1[num];
-            Slime2[] s2s = new Slime2[num];
+    //    public Buffer<byte> New(BufferPool pool)
+    //    {
+    //        pool.Take<byte>(size, out var buffer);
+    //        return buffer;
+    //    }
+    //}
 
-            var watch = Stopwatch.StartNew();
-            for (int i = 0; i < num; i++)
-            {
-                s1s[i] = new Slime1(p);
-            }
-            watch.Stop();
-            Console.WriteLine("Create 1: {0}", watch.Elapsed.TotalSeconds);
+    //public struct Slime1
+    //{
+    //    private static SlimeDef def = new();
 
-            watch.Restart();
-            for (int i = 0; i < num; i++)
-            {
-                s2s[i] = new Slime2();
-            }
-            watch.Stop();
-            Console.WriteLine("Create 2: {0}", watch.Elapsed.TotalSeconds);
+    //    private Buffer<byte> buffer;
 
-            Random rnd = new Random(16);
-            //watch.Restart();
-            //for (int i = 0; i < num; i++)
-            //{
-            //    s1s[i].jumpTimer.Set(rnd.NextFloat());
-            //    s1s[i].health.Set(rnd.Next());
-            //}
-            //watch.Stop();
-            //Console.WriteLine("Set 1: {0}", watch.Elapsed.TotalSeconds);
+    //    public SerFieldFloat.Instance jumpTimer;
+    //    public SerFieldInt.Instance health;
 
-            //rnd = new Random(16);
-            watch.Restart();
-            for (int i = 0; i < num; i++)
-            {
-                float jumpTimer = rnd.NextFloat();
-                int health = rnd.Next();
-                s2s[i].jumpTimer = jumpTimer;
-                s2s[i].health = health;
+    //    public Slime1(BufferPool pool)
+    //    {
+    //        buffer = def.New(pool);
+    //        jumpTimer = new(def.jumpTimer, buffer);
+    //        health = new(def.health, buffer);
+    //    }
+    //}
 
-                Debug.Assert(s2s[i].jumpTimer == jumpTimer);
-                Debug.Assert(s2s[i].health == health);
-            }
-            watch.Stop();
-            Console.WriteLine("Set 2: {0}", watch.Elapsed.TotalSeconds);
+    //[StructLayout(LayoutKind.Sequential, Pack = 1)]
+    //public struct Slime2
+    //{
+    //    public float jumpTimer;
+    //    public int health;
+    //}
 
-            int offsetOfJumpTimer = Marshal.OffsetOf<Slime2>("jumpTimer").ToInt32();
-            int offsetOfHealth = Marshal.OffsetOf<Slime2>("health").ToInt32();
-            rnd = new Random(16);
-            watch.Restart();
-            for (int i = 0; i < num; i++)
-            {
-                float jumpTimer = rnd.NextFloat();
-                int health = rnd.Next();
-                SetFloatAtOffset(ref s2s[i], offsetOfJumpTimer, jumpTimer);
-                SetIntAtOffset(ref s2s[i], offsetOfHealth, health);
+    //public static class FieldTest
+    //{
+    //    private static unsafe void SetIntAtOffset(ref Slime2 s2, int offset, int value)
+    //    {
+    //        ref byte baseRef = ref Unsafe.As<Slime2, byte>(ref s2);
 
-                Debug.Assert(s2s[i].jumpTimer == jumpTimer);
-                Debug.Assert(s2s[i].health == health);
-            }
-            watch.Stop();
-            Console.WriteLine("Set 3: {0}", watch.Elapsed.TotalSeconds);
-        }
-    }
+    //        // Add the offset to the base reference to get a reference to the target field location
+    //        ref byte targetRef = ref Unsafe.Add(ref baseRef, offset);
+
+    //        ref int dest = ref Unsafe.As<byte, int>(ref targetRef);
+
+    //        dest = value;
+    //    }
+
+    //    private static unsafe void SetFloatAtOffset(ref Slime2 s2, int offset, float value)
+    //    {
+    //        ref byte baseRef = ref Unsafe.As<Slime2, byte>(ref s2);
+
+    //        // Add the offset to the base reference to get a reference to the target field location
+    //        ref byte targetRef = ref Unsafe.Add(ref baseRef, offset);
+
+    //        ref float dest = ref Unsafe.As<byte, float>(ref targetRef);
+
+    //        dest = value;
+    //    }
+
+    //    public static void DoTest()
+    //    {
+    //        int num = 16_000_000;
+
+    //        BufferPool p = new BufferPool();
+
+    //        Slime1[] s1s = new Slime1[num];
+    //        Slime2[] s2s = new Slime2[num];
+
+    //        var watch = Stopwatch.StartNew();
+    //        for (int i = 0; i < num; i++)
+    //        {
+    //            s1s[i] = new Slime1(p);
+    //        }
+    //        watch.Stop();
+    //        Console.WriteLine("Create 1: {0}", watch.Elapsed.TotalSeconds);
+
+    //        watch.Restart();
+    //        for (int i = 0; i < num; i++)
+    //        {
+    //            s2s[i] = new Slime2();
+    //        }
+    //        watch.Stop();
+    //        Console.WriteLine("Create 2: {0}", watch.Elapsed.TotalSeconds);
+
+    //        Random rnd = new Random(16);
+    //        //watch.Restart();
+    //        //for (int i = 0; i < num; i++)
+    //        //{
+    //        //    s1s[i].jumpTimer.Set(rnd.NextFloat());
+    //        //    s1s[i].health.Set(rnd.Next());
+    //        //}
+    //        //watch.Stop();
+    //        //Console.WriteLine("Set 1: {0}", watch.Elapsed.TotalSeconds);
+
+    //        //rnd = new Random(16);
+    //        watch.Restart();
+    //        for (int i = 0; i < num; i++)
+    //        {
+    //            float jumpTimer = rnd.NextFloat();
+    //            int health = rnd.Next();
+    //            s2s[i].jumpTimer = jumpTimer;
+    //            s2s[i].health = health;
+
+    //            Debug.Assert(s2s[i].jumpTimer == jumpTimer);
+    //            Debug.Assert(s2s[i].health == health);
+    //        }
+    //        watch.Stop();
+    //        Console.WriteLine("Set 2: {0}", watch.Elapsed.TotalSeconds);
+
+    //        int offsetOfJumpTimer = Marshal.OffsetOf<Slime2>("jumpTimer").ToInt32();
+    //        int offsetOfHealth = Marshal.OffsetOf<Slime2>("health").ToInt32();
+    //        rnd = new Random(16);
+    //        watch.Restart();
+    //        for (int i = 0; i < num; i++)
+    //        {
+    //            float jumpTimer = rnd.NextFloat();
+    //            int health = rnd.Next();
+    //            SetFloatAtOffset(ref s2s[i], offsetOfJumpTimer, jumpTimer);
+    //            SetIntAtOffset(ref s2s[i], offsetOfHealth, health);
+
+    //            Debug.Assert(s2s[i].jumpTimer == jumpTimer);
+    //            Debug.Assert(s2s[i].health == health);
+    //        }
+    //        watch.Stop();
+    //        Console.WriteLine("Set 3: {0}", watch.Elapsed.TotalSeconds);
+    //    }
+    //}
 }
