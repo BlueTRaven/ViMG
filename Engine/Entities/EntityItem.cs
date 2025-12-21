@@ -142,8 +142,7 @@ namespace ViMG.Entities
                 position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position,
                 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
                 rotation = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation,
-                health = 0,
-                state = 0,
+				counters = { [0] = ItemInstance.item.Id, [1] = ItemInstance.num, [2] = ItemInstance.damage },
             };
         }
 
@@ -152,6 +151,8 @@ namespace ViMG.Entities
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = state.position.ToNumerics();
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation = state.rotation.ToNumerics();
+
+			ItemInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(state.counters[0]), state.counters[1], state.counters[2]);
         }
     }
 }

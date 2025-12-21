@@ -19,6 +19,7 @@ using System.Diagnostics;
 using ViMG.IMGUIImpl;
 using Engine.Mods;
 using Engine;
+using Engine.Entities;
 
 namespace ViMG
 {
@@ -135,6 +136,8 @@ namespace ViMG
 
         public Main(string[] args) : base()
         {
+			//FieldTest.DoTest();
+
 			MainThread = Thread.CurrentThread;
 
 			SessionInformation = new SessionInformation();

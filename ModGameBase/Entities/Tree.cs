@@ -515,13 +515,16 @@ namespace ViMG.Entities
         {
 			state = new BasicState
 			{
-				counters = { [0] = size},
+				position = Position,
+				counters = { [0] = size, [1] = baseSize },
 			};
         }
 
         public void Set(ref readonly BasicState state)
         {
+			Position = state.position;
 			size = state.counters[0];
+			baseSize = state.counters[1];
         }
     }
 }
