@@ -62,7 +62,7 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
-			inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(rows * columns));
+			world.InventoryManager.GetOrAdd(ref inventory, new Inventory.InventoryConfig(rows * columns));
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
 			if (tracker.HasValue())

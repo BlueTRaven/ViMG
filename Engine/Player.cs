@@ -365,15 +365,15 @@ namespace ViMG
         {
             base.Initialize(world);
 
-			this.inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(INVENTORY_COLUMNS * INVENTORY_ROWS));
-			heldInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(1 * 1));
+			world.InventoryManager.GetOrAdd(ref this.inventory, new Inventory.InventoryConfig(INVENTORY_COLUMNS * INVENTORY_ROWS));
+			world.InventoryManager.GetOrAdd(ref heldInventory, new Inventory.InventoryConfig(1 * 1));
             
 			MenuHelper.IWhiteList[] whitelistsAccessory = new MenuHelper.IWhiteList[6];
             int[] maxStackSizesAccessory = new int[6];
             Array.Fill(maxStackSizesAccessory, 1);
             for (int i = 0; i < 6; i++)
                 whitelistsAccessory[i] = new MenuHelper.WhitelistAccessories(MenuPlayer.tagsAccessoriesBySlot[i]);
-			accessoryInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(6, whitelistsAccessory, maxStackSizesAccessory));
+			world.InventoryManager.GetOrAdd(ref accessoryInventory, new Inventory.InventoryConfig(6, whitelistsAccessory, maxStackSizesAccessory));
 
             MenuHelper.IWhiteList[] whitelistsGear = new MenuHelper.IWhiteList[10];
             int[] maxStackSizesGear = new int[10];
@@ -383,10 +383,9 @@ namespace ViMG
             //Start with 10 gear slots so we don't have to worry about expanding in the future.
             //For now, we only have 3:
             //Heart, boots, and feather artefact.
-            gearInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(10, whitelistsGear, maxStackSizesGear));
+            world.InventoryManager.GetOrAdd(ref gearInventory, new Inventory.InventoryConfig(10, whitelistsGear, maxStackSizesGear));
 
-            craftInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(8));
-
+            world.InventoryManager.GetOrAdd(ref craftInventory, new Inventory.InventoryConfig(8));
 
             if (isNew)
 			{
