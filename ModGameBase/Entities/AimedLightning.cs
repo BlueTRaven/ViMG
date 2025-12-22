@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,16 +13,17 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class AimedLightning : Entity, IHitboxOwner
+    public class AimedLightning : Entity, IHitboxOwner, ISyncBasicState
     {
         private static VerySimpleMesh mesh;
         private const float ADVANCE_TIME = 3f / 60f;
 
+        private Vector3 advanceDirection;
+        private float advanceLength;
+        private float maxLength;
+        private float advanceVariance;
+        private int advanceNum = 0;
         private readonly HitboxManager.HitboxParameters parameters;
-        private readonly Vector3 advanceDirection;
-        private readonly float advanceLength;
-        private readonly float maxLength;
-        private readonly float advanceVariance;
         private readonly HitboxManager.HitboxStats stats;
 
         private float advanceTimer;
@@ -30,6 +33,7 @@ namespace ViMG.Entities
         private bool hasTouched;
         private int hitbox = -1;
 
+        private int seed;
         private float timer;
 
         public AimedLightning(Vector3 position, Vector3 advanceDirection, float advanceLength, float maxLength, float advanceVariance, HitboxManager.HitboxStats stats)
@@ -45,8 +49,6 @@ namespace ViMG.Entities
             this.maxLength = maxLength;
             this.advanceVariance = advanceVariance;
             this.stats = stats;
-            positions.Add(Position);
-            basePositions.Add(Position);
 
             parameters = new HitboxManager.HitboxParameters()
             {
@@ -57,6 +59,13 @@ namespace ViMG.Entities
                 stats = stats,
                 canInteract = true
             };
+        }
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+            seed = random.Next();
         }
 
         public override void OnUnload()
@@ -76,16 +85,36 @@ namespace ViMG.Entities
 
             //TODO: make this collide with world
 
+            positions.Clear();
+            basePositions.Clear();
+            positions.Add(Position);
+            basePositions.Add(Position);
+
             float totalLength = 0;
-            if (advanceTimer <= 0 && positions.Length < 8)
+            if (advanceTimer <= 0 && advanceNum < 8)
             {
                 advanceTimer = ADVANCE_TIME;
 
-                Vector3 o = new Vector3(Main.random.NextFloat(-advanceVariance, advanceVariance), 0, 0);
-                o = Vector3.Transform(o, Matrix.CreateRotationZ(Main.random.NextFloat(0, MathF.PI * 2)));
+                advanceNum += 1;
+
+                seed = random.Next();
+
+                if (advanceNum >= 8)
+                {
+                    timer = float.Min(timer, 5f / 60f);
+                }
+            }
+
+            for (int i = 1; i < advanceNum; i++)
+            { 
+                PCG32 pcg = new PCG32((ulong)(seed + i));
+
+                Vector3 o = new Vector3(pcg.NextFloat(-advanceVariance, advanceVariance), 0, 0);
+                o = Vector3.Transform(o, Matrix.CreateRotationZ(pcg.NextFloat(0, MathF.PI * 2)));
+                // TODO this shouldn't use camera
                 o = Vector3.Transform(o, Matrix.CreateRotationX(-Main.camera.Rotation.X) * Matrix.CreateRotationY(-Main.camera.Rotation.Y));
 
-                Vector3 previousPosition = basePositions[positions.Length - 1];
+                Vector3 previousPosition = basePositions[i - 1];
 
                 float realAdvanceLength = advanceLength;
 
@@ -98,49 +127,24 @@ namespace ViMG.Entities
                 positions.Add(nextPosition + o);
                 basePositions.Add(nextPosition);
 
-                if (positions.Length >= 8 || totalLength > maxLength)
+                if (i == advanceNum - 1)
                 {
-                    hasTouched = true;
-                    timer = float.Min(timer, 5f / 60f);
-                }
-
-                if (hitbox == -1)
-                {
-                    HitboxManager.HitboxParameters parameters = this.parameters with 
+                    if (hitbox == -1)
                     {
-                        bounds = Rectangle3D.FromTwoPositions(positions[positions.Length - 2], positions[positions.Length - 1]) 
-                    };
+                        HitboxManager.HitboxParameters parameters = this.parameters with
+                        {
+                            bounds = Rectangle3D.FromTwoPositions(positions[i - 1], positions[i])
+                        };
 
-                    hitbox = world.HitboxManager.Add(parameters);
+                        hitbox = world.HitboxManager.Add(parameters);
+                    }
+                    else world.HitboxManager.Update(hitbox, Rectangle3D.FromTwoPositions(positions[i - 1], positions[i]));
                 }
-                else world.HitboxManager.Update(hitbox, Rectangle3D.FromTwoPositions(positions[positions.Length - 2], positions[positions.Length - 1]));
             }
 
             if (timer <= 0)
                 world.EntityManager.Kill(this);
         }
-
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
-
-        //    if (mesh.IBO == null)
-        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-        //        //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-
-        //    for (int i = 0; i < positions.Length; i++)
-        //    {
-        //        Vector3 prev;
-        //        if (i == 0)
-        //            prev = Position;
-        //        else prev = positions[i - 1];
-
-        //        Vector3 current = positions[i];
-
-        //        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), 
-        //            mesh, RectangleF.Empty, Lightning.LightningColor);
-        //    }
-        //}
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
@@ -156,6 +160,29 @@ namespace ViMG.Entities
                 hasTouched = true;
                 timer = float.Min(timer, 5f / 60f);
             }
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                velocity = advanceDirection,
+                timers = { [0] = timer, [1] = advanceLength, [2] = maxLength, [3] = advanceVariance },
+                counters = { [0] = advanceNum, [1] = seed },
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            advanceDirection = state.velocity;
+            timer = state.timers[0];
+            advanceLength = state.timers[1];
+            maxLength = state.timers[2];
+            advanceVariance = state.timers[3];
+            advanceNum = state.counters[0];
+            seed = state.counters[1];
         }
     }
 }

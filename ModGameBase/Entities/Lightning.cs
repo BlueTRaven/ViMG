@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,9 +13,9 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Lightning : Entity
+    public class Lightning : Entity, ISyncBasicState
     {
-        private static VerySimpleMesh mesh;
+        public const float SPLIT_DISTANCE = Cube.CUBE_SCALE * 4f;
         public static Color LightningColor = new Color(255, 253, 141);
 
         private Vector3 bottomPosition;
@@ -23,6 +25,7 @@ namespace ViMG.Entities
         private int light = -1;
 
         private float timer;
+        private int seed;
 
         public Lightning(Vector3 position)
         {
@@ -38,8 +41,6 @@ namespace ViMG.Entities
 
             bottomPosition = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(Position)).Get().InWorldSpaceCenter();
 
-            float SPLIT_DISTANCE = Cube.CUBE_SCALE * 4f;
-
             Vector3 direction = bottomPosition - Position;
             float distance = direction.Length();
             direction.Normalize();
@@ -48,15 +49,19 @@ namespace ViMG.Entities
 
             positions = new Vector3[numSplits + 1];
 
+            seed = random.Next();
+
             for (int i = 0; i < numSplits; i++)
             {
+                PCG32 pcg = new PCG32((ulong)(seed + i));
+
                 positions[i] = Position + direction * SPLIT_DISTANCE * (i + 1);
-                positions[i] += new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f), 0, Main.random.NextFloat(-Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f));
+                positions[i] += new Vector3(pcg.NextFloat(-Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f), 0, pcg.NextFloat(-Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2f));
             }
 
             positions[numSplits] = bottomPosition;
 
-            world.LightManager.Add(bottomPosition, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, LightningColor.ToVector4(), false);
+            light = world.LightManager.Add(bottomPosition, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, LightningColor.ToVector4(), false);
         }
 
         public override void OnUnload()
@@ -77,27 +82,23 @@ namespace ViMG.Entities
                 world.EntityManager.Kill(this);
         }
 
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                velocity = bottomPosition,
+                timers = { [0] = timer },
+                counters = { [0] = seed },
+            };
+        }
 
-        //    if (mesh.IBO == null)
-        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-        //        //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-
-        //    for (int i = 0; i < positions.Length; i++)
-        //    {
-        //        Vector3 prev;
-        //        if (i == 0)
-        //            prev = Position;
-        //        else prev = positions[i - 1];
-
-        //        Vector3 current = positions[i];
-
-        //        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
-        //    }
-
-        //    //DrawHelper3D.DrawLine(Position, bottomPosition, Cube.CUBE_SCALE / 4f, mesh, DrawHelper.WhitePixel, RectangleF.Empty, Color.Yellow);
-        //}
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            bottomPosition = state.velocity;
+            timer = state.timers[0];
+            seed = state.counters[0];
+        }
     }
 }

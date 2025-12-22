@@ -364,6 +364,11 @@ namespace Engine.Networking
         {
             return Vector3.Lerp(position, other.position, (float)Main.TimeP);
         }
+        
+        public Vector3 GetInterpVelocity(BasicState other)
+        {
+            return Vector3.Lerp(velocity, other.velocity, (float)Main.TimeP);
+        }
 
         public Quaternion GetInterpRotation(BasicState other)
         {

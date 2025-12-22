@@ -233,7 +233,7 @@ namespace ViMG.WorldLogics
 			{
 				//world.GetLocalPlayer()?.Kill();
 				//world.ChunkManager.CubeView.TestPalettize(ChunkPosition.WorldSpaceChunk(world.GetLocalPlayer().Position));
-				world.EntityManager.Add(new Slime(world.GetLocalPlayer().Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
+				world.EntityManager.Add(new Lightning(world.GetLocalPlayer().Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f));
 
                 //var visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
                 //visStats.rollFollowsVelocity = true;
