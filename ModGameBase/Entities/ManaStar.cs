@@ -1,6 +1,8 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
@@ -14,7 +16,7 @@ using ViMG.Rendering;
 namespace ViMG.Entities
 {
     //Spawns on world creation - always active.
-    public class ManaStar : Entity
+    public class ManaStar : Entity, ISyncBasicState
     {
         public enum State
         {
@@ -26,7 +28,7 @@ namespace ViMG.Entities
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
 
-        public Vector2 pitchYaw;
+        public Vector2 yawPitch;
 
         public Vector3 cameraPosition;
 
@@ -42,13 +44,19 @@ namespace ViMG.Entities
             sideLeft = new RectangleF(4, 0, 8, 4),
         };
 
-        public ManaStar()
+        public ManaStar() : this(Vector2.Zero)
         {
         }
 
-        public ManaStar(Vector2 pitchYaw)
+        public ManaStar(Vector2 yawPitch)
         {
-            this.pitchYaw = pitchYaw;
+            this.yawPitch = yawPitch;
+            DisableDistance = float.MaxValue;
+        }
+
+        public override void OnUnload()
+        {
+            base.OnUnload();
         }
 
         public override void Update(double deltaTime)
@@ -92,6 +100,7 @@ namespace ViMG.Entities
 
             AlwaysRender = world.IsNight();
 
+            // TODO debug
             if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
             {
                 timer = DIVINGINSKY_TIME;
@@ -99,70 +108,23 @@ namespace ViMG.Entities
             }
         }
 
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                rotation = new Quaternion(yawPitch.X, yawPitch.Y, 0, 1),
+                state = (int)this.state,
+                timers = { [0] = timer, },
+            };
+        }
 
-        //    if (mesh.IBO == null)
-        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-        //    //mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-
-        //    if (state == State.InSky || state == State.DivingInSky)
-        //    {
-        //        const float FAR_DISTANCE = 70;
-        //        const float NEAR_DISTANCE = 32;
-        //        float distance = FAR_DISTANCE;
-
-        //        if (state == State.DivingInSky)
-        //            distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / DIVINGINSKY_TIME));
-
-        //        Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
-        //            material, mesh,
-        //            Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-        //            Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
-        //            Matrix.CreateRotationX(MathHelper.ToRadians(pitchYaw.X)) *
-        //            Matrix.CreateRotationY(MathHelper.ToRadians(pitchYaw.Y)) *
-        //            Matrix.CreateTranslation(Main.camera.Position),
-        //            directionalSourceRect.front, Color.White * world.GetTimeOfNight()));
-        //    }
-        //    else if (state == State.DivingInWorld)
-        //    {
-        //        const float FAR_DISTANCE = 32;
-
-        //        float t = 1 - timer / DIVINGINWORLD_TIME;
-
-        //        Matrix lerpStartRotMat = Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-        //            Matrix.CreateRotationX(MathHelper.ToRadians(pitchYaw.X)) *
-        //            Matrix.CreateRotationY(MathHelper.ToRadians(pitchYaw.Y));
-
-        //        Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-        //            Matrix.CreateRotationY(-Main.camera.Rotation.Y);
-
-        //        Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
-        //            Matrix.CreateRotationX(MathHelper.ToRadians(pitchYaw.X)) *
-        //            Matrix.CreateRotationY(MathHelper.ToRadians(pitchYaw.Y)) *
-        //            Matrix.CreateTranslation(cameraPosition));
-        //        Vector3 lerpEndPos = Position;
-
-        //        RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
-        //        float sx = float.Abs(sourceRect.width / 4f);
-        //        Vector3 p = Vector3.Lerp(lerpStartPos, lerpEndPos, Easings.EaseInExpo(t));
-
-        //        float sortVal = (Main.camera.Position - Position).Length();
-
-        //        Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
-        //            material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p), 
-        //            directionalSourceRect.front, Color.White * world.GetTimeOfNight() * (1 - t)));
-
-        //        Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
-        //            material, mesh, 
-        //            Matrix.CreateScale(sx, 1, 1) *
-        //            lerpEndRotMat * Matrix.CreateTranslation(p),
-        //            sourceRect, Color.White * world.GetTimeOfNight() * t));
-        //    }
-        //    else if (state == State.Finished)
-        //    {
-        //    }
-        //}
+        public void Set(ref readonly BasicState state)
+        {
+            Position = state.position;
+            yawPitch = new(state.rotation.X, state.rotation.Y);
+            timer = state.timers[0];
+            this.state = (State)state.state;
+        }
     }
 }

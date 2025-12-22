@@ -23,7 +23,7 @@ namespace ViMG
 
         private struct LoadedChunk
         {
-			public required ReaderWriterLock l;
+			public required Semaphore l;
 
             public LoadedState loadedState;
 
@@ -34,7 +34,7 @@ namespace ViMG
 
 			public LoadedChunk()
 			{
-				l = new();
+				l = new(0, 1);
 				palettizedChunk = new();
 				loadedState = LoadedState.Unloaded;
 				cubes = null;
@@ -42,7 +42,7 @@ namespace ViMG
 
             public LoadedChunk(CubeView.PalettizedChunk palettizedChunk)
             {
-				l = new ReaderWriterLock();
+				l = new(0, 1);
                 this.palettizedChunk = palettizedChunk;
                 loadedState = LoadedState.Palettized;
                 cubes = null;
@@ -93,7 +93,7 @@ namespace ViMG
 			loadedChunks = new LoadedChunk[numChunks];
 			for (int i = 0; i < numChunks; i++)
 			{
-				loadedChunks[i] = new() { l = new() };
+				loadedChunks[i] = new() { l = new(0, 1) };
 			}
         }
 
@@ -109,7 +109,7 @@ namespace ViMG
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out var p);
                 loadedChunks[i] = new()
                 {
-					l = new(),
+					l = new(0, 1),
                     cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
                     loadedState = LoadedState.Loaded,
                 };
@@ -121,7 +121,7 @@ namespace ViMG
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
 			loadedChunks[i] = new()
 			{
-                l = new(),
+                l = new(0, 1),
                 cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
 				loadedState = LoadedState.Loaded,
             };
@@ -131,7 +131,7 @@ namespace ViMG
 		{
 			for (int i = 0; i < numChunks; i++)
 			{
-				loadedChunks[i] = new() { l = new() };
+				loadedChunks[i] = new() { l = new(0, 1) };
 			}
 		}
 
@@ -149,8 +149,6 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
-			if ((mode & GetMode.Write) == GetMode.Write) loadedChunks[i].l.AcquireWriterLock(0);
-			else loadedChunks[i].l.AcquireReaderLock(0);
 
             if (loadedChunks[i].loadedState == LoadedState.Palettized)
 			{
@@ -168,9 +166,6 @@ namespace ViMG
 
 		public void ReleaseChunk(ChunkPosition position, GetMode mode)
 		{
-            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
-            if ((mode & GetMode.Write) == GetMode.Write) loadedChunks[i].l.ReleaseWriterLock();
-            else loadedChunks[i].l.ReleaseReaderLock();
         }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

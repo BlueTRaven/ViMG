@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,6 +21,8 @@ namespace ViMG.Entities.Renderers
 
         public RendererDoor(GraphicsDevice device) : base("door", device)
         {
+            mountMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f, Enums.Alignment.Center);
+            doorMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2f, Enums.Alignment.Center);
         }
 
         public override Type[] GetRenderedTypes()
@@ -29,15 +32,7 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            if (doorMesh.IBO == null)
-            {
-                mountMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE * 0.1f, Cube.CUBE_SCALE * 0.1f, Enums.Alignment.Center);
-                doorMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2f, Enums.Alignment.Center);
-            }
-
-            //var doors = entityManager.GetAll<Door>();
-
-            //foreach (Door door in doors)
+            return;
 
             var iter = new Iterator<Door>(entities);
             while (iter.Next(out Door door))
@@ -57,5 +52,24 @@ namespace ViMG.Entities.Renderers
                     Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
             }
         }
+
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        {
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            {
+                var reference = client.Current().entities.GetReference(i);
+                // TODO get rid of str compare
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                var position = entPrev.GetInterpPosition(entCurr);
+                var rotation = entPrev.GetInterpRotation(entCurr);
+                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, doorMesh,
+                    Matrix.CreateFromQuaternion(rotation) *
+                    Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
+            }
+            }
     }
 }

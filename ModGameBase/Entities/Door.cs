@@ -2,6 +2,7 @@
 using BepuPhysics.Collidables;
 using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +17,7 @@ namespace ViMG.Entities
 {
     [EntityMeta(0)]
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-    public class Door : Entity, IMultiCubeTracker
+    public class Door : Entity, IMultiCubeTracker, ISyncBasicState
     {
         private static VerySimpleMesh mountMesh;
         private static VerySimpleMesh doorMesh;
@@ -230,6 +231,20 @@ namespace ViMG.Entities
             facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref offset);
 
             Position = TrackedPositions.ElementAt(0).InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position,
+                rotation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

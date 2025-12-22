@@ -11,7 +11,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Xml.Schema;
@@ -459,6 +458,7 @@ namespace ViMG.Entities
                 //&& (ents[i].entity is not Player || world.isDisposed)// Players cannot be unloaded normally
                 if (ents[i].active) 
 				{
+					if (ents[i].entity.Position == Vector3.Zero) continue;
 					if (ChunkPosition.WorldSpaceChunk(ents[i].entity.Position) == pos)
 						Unload(ents[i].entity, true);
 				}

@@ -11,6 +11,7 @@ using ViMG.Cubes;
 using BrUtility;
 using ViMG.Rendering;
 using Microsoft.Xna.Framework;
+using Engine.Clients;
 
 namespace ViMG.Entities.Renderers
 {
@@ -27,6 +28,7 @@ namespace ViMG.Entities.Renderers
 
         public RendererManaStar(GraphicsDevice device) : base("mana_star", device)
         {
+            mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
         }
 
         private static Type[] types = [typeof(ManaStar)];
@@ -37,12 +39,8 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
+            return;
 
-            //var entities = entityManager.GetAll<ManaStar>();
-
-            //foreach (ManaStar manaStar in entities)
             var iter = new Iterator<ManaStar>(entities);
             while(iter.Next(out ManaStar manaStar))
             {
@@ -59,8 +57,8 @@ namespace ViMG.Entities.Renderers
                         material, mesh,
                         Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                         Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y)) *
+                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.yawPitch.Y)) *
                     Matrix.CreateTranslation(Main.camera.Position),
                         directionalSourceRect.front, Color.White * manaStar.world.GetTimeOfNight()));
                 }
@@ -71,15 +69,15 @@ namespace ViMG.Entities.Renderers
                     float t = 1 - manaStar.timer / ManaStar.DIVINGINWORLD_TIME;
 
                     Matrix lerpStartRotMat = Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y));
+                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.yawPitch.Y));
 
                     Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                         Matrix.CreateRotationY(-Main.camera.Rotation.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y)) *
+                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.yawPitch.Y)) *
                     Matrix.CreateTranslation(manaStar.cameraPosition));
                     Vector3 lerpEndPos = manaStar.Position;
 
@@ -98,6 +96,83 @@ namespace ViMG.Entities.Renderers
                     Matrix.CreateScale(sx, 1, 1) *
                         lerpEndRotMat * Matrix.CreateTranslation(p),
                         sourceRect, Color.White * manaStar.world.GetTimeOfNight() * t));
+                }
+            }
+        }
+
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        {
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            {
+                var reference = client.Current().entities.GetReference(i);
+                // TODO get rid of str compare
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                var position = entPrev.GetInterpPosition(entCurr);
+                var timer = entPrev.GetInterpTimer(entCurr, 0);
+
+                var yawPitch = new Vector2(entCurr.rotation.X, entCurr.rotation.Y);
+
+                var state = (ManaStar.State)entCurr.state; //.GetInterpCounter(entCurr, 0);
+
+                if (state == ManaStar.State.InSky || state == ManaStar.State.DivingInSky)
+                {
+                    const float FAR_DISTANCE = 70;
+                    const float NEAR_DISTANCE = 32;
+                    float distance = FAR_DISTANCE;
+
+                    if (state == ManaStar.State.DivingInSky)
+                        distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / ManaStar.DIVINGINSKY_TIME));
+
+                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
+                        material, mesh,
+                        Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
+                        Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
+                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
+                    Matrix.CreateTranslation(Main.camera.Position),
+                        // TODO mult by time
+                        directionalSourceRect.front, Color.White /** world.GetTimeOfNight()*/));
+                }
+                else if (state == ManaStar.State.DivingInWorld)
+                {
+                    const float FAR_DISTANCE = 32;
+
+                    float t = 1 - timer / ManaStar.DIVINGINWORLD_TIME;
+
+                    Matrix lerpStartRotMat = Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
+                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y));
+
+                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                        Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+
+                    Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
+                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
+                        Matrix.CreateTranslation(Main.camera.Position));
+                    Vector3 lerpEndPos = position;
+
+                    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
+                    float sx = float.Abs(sourceRect.width / 4f);
+                    Vector3 p = Vector3.Lerp(lerpStartPos, lerpEndPos, Easings.EaseInExpo(t));
+
+                    float sortVal = (Main.camera.Position - position).Length();
+
+                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p),
+                        // TODO mult by time
+                        directionalSourceRect.front, Color.White /** manaStar.world.GetTimeOfNight() * (1 - t)*/));
+
+                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                        material, mesh,
+                    Matrix.CreateScale(sx, 1, 1) *
+                        lerpEndRotMat * Matrix.CreateTranslation(p),
+                        // TODO mult by time
+                        sourceRect, Color.White /** manaStar.world.GetTimeOfNight() * t)*/));
                 }
             }
         }
