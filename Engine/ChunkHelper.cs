@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Items;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,9 +74,9 @@ namespace ViMG
 			}
 		}
 
-		public delegate bool ShouldWriteFn(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
+		public delegate bool ShouldWriteFn(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
-		public static void PlaceStructureWithBlacklist(EntityManager entityManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
 			for (int z = 0; z < structure.size.Z; z++)
@@ -91,7 +92,7 @@ namespace ViMG
 						{
 							bool canWrite = true;
 							ushort placeId = structure.data[i];
-							if (shouldWrite != null && !shouldWrite(entityManager, chunkManager, realPos, structure, i, ref placeId))
+							if (shouldWrite != null && !shouldWrite(entityManager, inventoryManager, chunkManager, realPos, structure, i, ref placeId))
 								canWrite = false;
 
 							//Allow world cube to be overwritten by structure

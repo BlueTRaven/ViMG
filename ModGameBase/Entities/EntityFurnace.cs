@@ -14,7 +14,9 @@ namespace ViMG.Entities
 	[EntityMeta(2, 0)]
 	public class EntityFurnace : Entity, ICubeTracker, IHasInventory
 	{
-		public struct MeshingData
+        private static MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
+
+        public struct MeshingData
 		{
             public MeshHelper.CubeFace facing;
         }
@@ -25,7 +27,7 @@ namespace ViMG.Entities
 			private set; 
 		}
 
-		private Inventory inventory;
+		private InventoryManager.InventoryReference inventory;
 		public MeshingData MeshingDataInstance;
 
 		private float craftTimer;
@@ -34,9 +36,6 @@ namespace ViMG.Entities
 		public EntityFurnace()
 		{
             DoesSync = false;
-
-            MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
-            inventory = new Inventory(0, 5, whitelists);
         }
 
 		public EntityFurnace(CubePosition position, MeshHelper.CubeFace facing)
@@ -50,16 +49,15 @@ namespace ViMG.Entities
 			};
 
 			Position = position.InWorldSpace();
-
-			MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
-			inventory = new Inventory(0, 5, whitelists);
 		}
 
 		public override void Initialize(World world)
 		{
 			base.Initialize(world);
 
-			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
+            world.InventoryManager.GetOrAdd(ref inventory, new Inventory.InventoryConfig(5, whitelists, null));
+
+            Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
             if (tracker.HasValue())
                 world.EntityManager.Kill(this);
@@ -67,10 +65,18 @@ namespace ViMG.Entities
             world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+            world.InventoryManager.Unload(inventory);
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
+            var inventory = world.InventoryManager.Get(this.inventory);
             inventory.ProcessActions(this);
 
 			craftTimer -= (float)deltaTime;
@@ -90,7 +96,7 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player)
 		{
 			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, player, this, player.GetInventory(), player.GetHeldInventory(), inventory, this));
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory, this));
 
 			return true;
 		}
@@ -99,6 +105,7 @@ namespace ViMG.Entities
         {
 			bool activated = false;
 
+            var inventory = world.InventoryManager.Get(this.inventory);
             if (recipe.Matches(inventory))
             {
                 for (int i = 0; i < recipe.Layout.Length; i++)
@@ -123,7 +130,8 @@ namespace ViMG.Entities
 
                 for (int i = 0; i < recipe.Outputs.Length; i++)
                 {
-                    activatingPlayer.GetInventory().Add(recipe.Outputs[i]);
+                    var playerInventory = world.InventoryManager.Get(activatingPlayer.inventory);
+                    playerInventory.Add(recipe.Outputs[i]);
                 }
             }
 
@@ -143,6 +151,8 @@ namespace ViMG.Entities
 
         public Recipe FindRecipe()
         {
+            var inventory = world.InventoryManager.Get(this.inventory);
+
             var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace);
 
             Recipe foundRecipe = null;
@@ -167,22 +177,25 @@ namespace ViMG.Entities
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
 			SaveHelper.SaveInt32(saveBytes, (int)MeshingDataInstance.facing);
-			inventory.Save(saveBytes);
+            
+            var inventory = world.InventoryManager.Get(this.inventory);
+            inventory.Save(saveBytes);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace();
 
             //if (version == 2)
             MeshingDataInstance.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
-			
-			inventory.Load(loadBytes, ref index);
+
+            var inventory = world.InventoryManager.GetOrAdd(ref this.inventory, new Inventory.InventoryConfig(5, whitelists, null));
+            inventory.Load(loadBytes, ref index);
 		}
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
@@ -193,15 +206,12 @@ namespace ViMG.Entities
             return md.As<byte>();
         }
 
-        public Inventory GetInventory(int id)
-        {
-			return inventory;
-        }
 
         public bool InventoryAction(Player? activatingPlayer, int action)
         {
             var currentRecipe = FindRecipe();
 
+            var inventory = world.InventoryManager.Get(this.inventory);
             if (currentRecipe != null && inventory.Get(2).num > 0)
                 return CraftItem(activatingPlayer, currentRecipe);
             return false;

@@ -476,11 +476,11 @@ namespace ViMG.Entities
 				SaveHelper.SaveCubePosition(saveBytes, trackedPositions[i]);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 			baseSize =  SaveHelper.LoadInt32(loadBytes, ref index);
 			size = SaveHelper.LoadInt32(loadBytes, ref index);
 

@@ -176,12 +176,12 @@ namespace ViMG.Entities
 			SaveHelper.SaveFloat32(saveBytes, radius);
 			SaveHelper.SaveFloat32(saveBytes, fade);
         }
-
-        public override void OnLoad(byte[] loadBytes, in int version)
+        
+		public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			color = SaveHelper.LoadVector4(loadBytes, ref index);
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);

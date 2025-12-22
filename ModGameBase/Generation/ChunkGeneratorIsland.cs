@@ -417,7 +417,7 @@ namespace ViMG.Generation
 
 							int randomFace = GetRandom().Next();
 
-							world.EntityManager.Add(new EntityChest(actualGenPos, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()), true);
+							world.EntityManager.Add(new EntityChest(actualGenPos, GenerateGenericLoot(world.InventoryManager), 3, 3, GetRandom().RandomHorizontalFace()), true);
 							world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "chest", 1));
 
 							positions[lastPosition++] = actualGenPos;
@@ -444,7 +444,7 @@ namespace ViMG.Generation
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
-						ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.ChunkManager, dungeon[GetRandom().Next(0, 4)], pos,
+						ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.InventoryManager, world.ChunkManager, dungeon[GetRandom().Next(0, 4)], pos,
 											Span<ushort>.Empty, PlaceDungeon, false);
 
 						world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(pos, "dungeon", 1));
@@ -529,7 +529,7 @@ namespace ViMG.Generation
 						{
 							positions[lastPosition++] = actualGenPos;
 							if (which < 2)
-								ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.ChunkManager, shrine[which], actualGenPos,
+								ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.InventoryManager, world.ChunkManager, shrine[which], actualGenPos,
 									Span<ushort>.Empty, PlaceAltar, false);
 							else world.ChunkManager.CubeView.SetCube(actualGenPos, ChunkHelper.ChooseShrine(GetRandom()).Id, false);
 
@@ -605,7 +605,7 @@ namespace ViMG.Generation
 
 				if (solidPos.HasValue())
 				{
-				 	ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.ChunkManager, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
+				 	ChunkHelper.PlaceStructureWithBlacklist(world.EntityManager, world.InventoryManager, world.ChunkManager, house, solidPos.Get() - new CubePosition(0, 3, 0, CubePosition.CoordinateSpace.CubeSpace),
 						Span<ushort>.Empty, PlaceHouse, false);
 
 					world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(solidPos.Get(), "house", 1));
@@ -839,7 +839,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceHouse(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
+		private bool PlaceHouse(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id) 
 		{
 			if (id == 0)
 				return false;
@@ -855,7 +855,7 @@ namespace ViMG.Generation
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
 			{
 				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
-				entityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(), 3, 3, MeshHelper.CubeFace.RIGHT), true);
+				entityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(inventoryManager), 3, 3, MeshHelper.CubeFace.RIGHT), true);
 
 				return true;
 			}
@@ -863,7 +863,7 @@ namespace ViMG.Generation
 			return true;
 		}
 
-		private bool PlaceDungeon(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceDungeon(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			Util.OneDToThreeD(structureIndex, new ValuePoint3D(structure.size), out ValuePoint3D structurePosition);
 
@@ -872,7 +872,7 @@ namespace ViMG.Generation
 			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
 			{
 				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
-				entityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(), 3, 3, GetRandom().RandomHorizontalFace()), true);
+				entityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(inventoryManager), 3, 3, GetRandom().RandomHorizontalFace()), true);
 
 				return true;
 			}
@@ -886,7 +886,7 @@ namespace ViMG.Generation
 			return true;
         }
 
-		private bool PlaceAltar(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
+		private bool PlaceAltar(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id)
         {
 			if (id == 0)
 				return false;
@@ -1004,7 +1004,7 @@ namespace ViMG.Generation
 			return false;
 		}
 
-		private Inventory GenerateHouseLoot()
+		private InventoryManager.InventoryReference GenerateHouseLoot(InventoryManager inventoryManager)
         {
 			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
 
@@ -1012,17 +1012,18 @@ namespace ViMG.Generation
 			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("run_leather_boots"), 1, 1));
 			//inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_story_01"), 1, 1));	//TODO
 
-			Inventory inventory = new Inventory(0, 9);
+			var inventoryRef = inventoryManager.Add(new Inventory.InventoryConfig(9));
+			var inventory = inventoryManager.Get(inventoryRef);
 
 			for (int i = 0; i < inventoryItems.Count; i++)
 			{
 				inventory.Set(inventoryItems[i], i);
 			}
 
-			return inventory;
+			return inventoryRef;
 		}
 
-		private Inventory GenerateGenericLoot()
+		private InventoryManager.InventoryReference GenerateGenericLoot(InventoryManager inventoryManager)
         {
 			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
 
@@ -1051,14 +1052,15 @@ namespace ViMG.Generation
 				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 2), 1));
 			}
 
-			Inventory inventory = new Inventory(0, 9);
+            var inventoryRef = inventoryManager.Add(new Inventory.InventoryConfig(9));
+            var inventory = inventoryManager.Get(inventoryRef);
 
 			for (int i = 0; i < inventoryItems.Count; i++)
             {
 				inventory.Set(inventoryItems[i], i);
             }
 
-			return inventory;
+			return inventoryRef;
         }
 	}
 }

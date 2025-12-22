@@ -1,4 +1,5 @@
-﻿using BrNineSlice;
+﻿using BepuPhysics.Constraints;
+using BrNineSlice;
 using BrUtility;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -18,9 +19,9 @@ namespace ViMG.UIs
     {
         private Player player;
 		private readonly T owner;
-		private Inventory playerInventory;
-		private Inventory heldInventory;
-		private Inventory furnaceInventory;
+		private InventoryManager.InventoryReference playerInventory;
+		private InventoryManager.InventoryReference heldInventory;
+		private InventoryManager.InventoryReference furnaceInventory;
 		private bool furnaceInventoryUpdated;
 		private Recipe currentRecipe;
 
@@ -28,7 +29,7 @@ namespace ViMG.UIs
 
 		private Items.ItemInstance held;
 
-        public MenuFurnace(GameStateManager gsManager, Player player, T owner, Inventory playerInventory, Inventory heldInventory, Inventory furnaceInventory, EntityFurnace furnace) : base(gsManager)
+        public MenuFurnace(GameStateManager gsManager, Player player, T owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference furnaceInventory, EntityFurnace furnace) : base(gsManager)
 		{
 			this.player = player;
             this.owner = owner;
@@ -59,13 +60,17 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            var furnaceInventory = player.world.InventoryManager.Get(this.furnaceInventory);
+            var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
+            var heldInventory = player.world.InventoryManager.Get(this.heldInventory);
+
+            TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 			UI.Start();
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2);
+            MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2);
 
 			UI.EndParent();
 

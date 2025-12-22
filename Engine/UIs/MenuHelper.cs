@@ -37,7 +37,7 @@ namespace ViMG.UIs
 
 		public interface IWhiteList
 		{
-			public bool Matches(Item? item);
+			public bool Matches(Inventory inventory, Item? item);
 		}
 
 		public readonly struct WhiteListName : IWhiteList
@@ -49,7 +49,7 @@ namespace ViMG.UIs
 				this.names = names;
 			}
 
-			public bool Matches(Item? item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
 				return names.Contains(item?.Identifier ?? "");
 			}
@@ -64,7 +64,7 @@ namespace ViMG.UIs
 				this.name = name;
 			}
 
-			public bool Matches(Item? item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
 				return item?.Identifier == name;
 			}
@@ -72,7 +72,7 @@ namespace ViMG.UIs
 
 		public readonly struct WhiteListNone : IWhiteList
 		{
-			public bool Matches(Item? item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
 				return true;
 			}
@@ -86,7 +86,7 @@ namespace ViMG.UIs
 				this.tags = tags;
             }
 
-            public bool Matches(Item? item)
+            public bool Matches(Inventory inventory, Item? item)
             {
 				foreach (string tag in tags)
                 {
@@ -103,16 +103,14 @@ namespace ViMG.UIs
 		//B. not already contained in the inventory.
         public readonly struct WhitelistAccessories : IWhiteList
         {
-			private readonly Inventory inventory;
 			private readonly string[] tags;
 
-			public WhitelistAccessories(Inventory inventory, string[] tags)
+			public WhitelistAccessories(string[] tags)
             {
-				this.inventory = inventory;
 				this.tags = tags;
             }
 
-            public bool Matches(Item item)
+            public bool Matches(Inventory inventory, Item item)
             {
 				for (int i = 0; i < inventory.NumSlots; i++)
 				{
@@ -354,7 +352,7 @@ namespace ViMG.UIs
                     // attempt to swap stacks
                     if (ourMaxStackSize == -1 || heldInventory.Get(0).num <= ourMaxStackSize)
                     {
-                        if (!ourWhitelist?.Matches(heldInventory.Get(0).item) ?? false)
+                        if (!ourWhitelist?.Matches(inventory, heldInventory.Get(0).item) ?? false)
                             return ItemSlotClickOutput.None;
 
                         var oldHeld = heldInventory.Get(0);
@@ -378,7 +376,7 @@ namespace ViMG.UIs
 
                 if (total <= ourMaxStackSize || ourMaxStackSize == -1)
                 {
-                    if (!ourWhitelist?.Matches(heldInventory.Get(0).item) ?? false)
+                    if (!ourWhitelist?.Matches(inventory, heldInventory.Get(0).item) ?? false)
                         return ItemSlotClickOutput.None;
 
                     heldInventory.Get(0).item.EndHold(player, inventory, index);
@@ -443,7 +441,7 @@ namespace ViMG.UIs
             {
                 // Place in slot. The held item is set to an empty item instance.
 
-                if (!inventory.GetWhiteList(index)?.Matches(heldInventory.Get(0).item) ?? false)
+                if (!inventory.GetWhiteList(index)?.Matches(inventory, heldInventory.Get(0).item) ?? false)
                     return ItemSlotClickOutput.None;
 
                 inventory.Set(new ItemInstance(heldInventory.Get(0), 1), index);

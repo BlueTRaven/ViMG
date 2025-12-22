@@ -72,9 +72,9 @@ namespace ViMG.Entities
             SaveHelper.SaveVector2(saveBytes, lightExtents);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             trackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);

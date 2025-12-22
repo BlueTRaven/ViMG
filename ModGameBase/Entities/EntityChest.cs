@@ -18,7 +18,7 @@ namespace ViMG.Entities
         }
 		public CubePosition TrackedPosition { get; private set; }
 
-		private Inventory inventory;
+		private InventoryManager.InventoryReference inventory;
 		private int rows, columns;
 		private MeshingData meshingData;
 		public MeshHelper.CubeFace Facing => meshingData.facing;
@@ -42,12 +42,10 @@ namespace ViMG.Entities
 			{
 				facing = facing
 			};
-
-            inventory = new Inventory(0, rows * columns);
 		}
 
 		//A separate constructor so world gen can provide prefilled inventory.
-		public EntityChest(CubePosition position, Inventory inventory, int rows, int columns, MeshHelper.CubeFace facing)
+		public EntityChest(CubePosition position, InventoryManager.InventoryReference inventory, int rows, int columns, MeshHelper.CubeFace facing)
         {
 			this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
@@ -64,6 +62,7 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
+			inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(rows * columns));
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
 			if (tracker.HasValue())
@@ -72,11 +71,19 @@ namespace ViMG.Entities
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+			world.InventoryManager.Unload(inventory);
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
-			inventory.ProcessActions(this);
+			var inventory = world.InventoryManager.Get(this.inventory);
+            inventory.ProcessActions(this);
         }	
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
@@ -87,7 +94,7 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player)
 		{
 			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, this, player.GetInventory(), player.GetHeldInventory(), inventory, rows, columns));
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory, rows, columns));
 
 			return true;
 		}
@@ -102,14 +109,15 @@ namespace ViMG.Entities
 
 			SaveHelper.SaveInt32(saveBytes, (int)meshingData.facing);
 
-			inventory.Save(saveBytes);
+            var inventory = world.InventoryManager.Get(this.inventory);
+            inventory.Save(saveBytes);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace();
@@ -120,8 +128,8 @@ namespace ViMG.Entities
 			if (version >= 2)
                 meshingData.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 
-			inventory = new Inventory(0, rows * columns);
-			inventory.Load(loadBytes, ref index);
+            inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(rows * columns));
+			world.InventoryManager.Get(inventory).Load(loadBytes, ref index);
 		}
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
@@ -130,11 +138,6 @@ namespace ViMG.Entities
             md.Memory->facing = meshingData.facing;
 
             return md.As<byte>();
-        }
-
-        public Inventory GetInventory(int id)
-        {
-			return inventory;
         }
 
 		public bool InventoryAction(Player? activatingPlayer, int action)

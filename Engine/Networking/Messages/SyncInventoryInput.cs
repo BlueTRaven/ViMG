@@ -73,11 +73,11 @@ namespace Engine.Networking.Messages
             if (player != null)
             {
                 var entity = GS.GetWorld().EntityManager.GetById(clickToSync.entityId);
-                var inventory = player.GetInventory(clickToSync.inventoryId);
+                var inventory = GS.GetWorld().InventoryManager.Get(GS.GetWorld().InventoryManager.GetReference(clickToSync.inventoryId));
                 if (inventory != null && entity != null && entity is IHasInventory hasInv)
                 {
                     Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventoryId);
-                    MenuHelper.DoClick(player, hasInv.GetInventory(clickToSync.inventoryId), player.GetHeldInventory(), clickToSync.inventoryIndex, false);
+                    MenuHelper.DoClick(player, inventory, GS.GetWorld().InventoryManager.Get(player.heldInventory), clickToSync.inventoryIndex, false);
 
                     if (clickToSync.action > 0)
                     {

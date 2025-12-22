@@ -14,15 +14,13 @@ namespace ViMG.UIs
 	{
 		private readonly Player player;
         private readonly Entity owner;
-        private readonly Inventory playerInventory;
-		private readonly Inventory heldInventory;
-		private readonly Inventory chestInventory;
+        private readonly InventoryManager.InventoryReference playerInventory;
+		private readonly InventoryManager.InventoryReference heldInventory;
+		private readonly InventoryManager.InventoryReference chestInventory;
 		private readonly int rows;
 		private readonly int columns;
 
-		private ItemInstance held;
-
-		public MenuChest(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory chestInventory, int rows, int columns) : base(gsManager)
+		public MenuChest(GameStateManager gsManager, Player player, Entity owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference chestInventory, int rows, int columns) : base(gsManager)
 		{
 			this.player = player;
             this.owner = owner;
@@ -53,6 +51,10 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
+            var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
+            var heldInventory = player.world.InventoryManager.Get(this.heldInventory);
+            var chestInventory = player.world.InventoryManager.Get(this.chestInventory);
+
 			UI.Start();
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
@@ -74,7 +76,7 @@ namespace ViMG.UIs
 
 			UI.Draw(batch, SCALE);
 
-			MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
+			//MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
 		}
 	}
 }

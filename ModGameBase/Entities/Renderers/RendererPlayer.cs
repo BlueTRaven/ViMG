@@ -29,17 +29,17 @@ namespace ViMG.Entities.Renderers
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
         {
-            foreach (Entity ent in renderedEntities)
-            {
-                var player = ent as Player;
-                if (player.IsLocalPlayer)
-                {
-                    if (player.inventory.Get(player.highlightIndex).item != null)
-                    {
-                        player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
-                    }
-                }
-            }
+            //foreach (Entity ent in renderedEntities)
+            //{
+            //    var player = ent as Player;
+            //    if (player.IsLocalPlayer)
+            //    {
+            //        if (player.inventory.Get(player.highlightIndex).item != null)
+            //        {
+            //            player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
+            //        }
+            //    }
+            //}
         }
     }
 }

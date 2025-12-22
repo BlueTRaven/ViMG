@@ -38,46 +38,81 @@ namespace Engine.Items
 
 		private List<InventoryAction> actions = new List<InventoryAction>();
 
-		public Inventory(int id, int numSlots)
+		public record struct InventoryConfig
 		{
-			this.id = id;
-			this.numSlots = numSlots;
+			public int id;
+			public int numSlots;
+			public MenuHelper.IWhiteList? whitelist;
+			public MenuHelper.IWhiteList[]? whitelists;
+			public int maxStackSize;
+			public int[]? maxStackSizes;
+
+			public InventoryConfig(int numSlots) 
+			{
+                this.numSlots = numSlots;
+				whitelist = null;
+				whitelists = null;
+				maxStackSize = -1;
+				maxStackSizes = null;
+            } 
+
+			public InventoryConfig(int numSlots, MenuHelper.IWhiteList whitelist, int maxStackSize = -1)
+			{
+				this.numSlots = numSlots;
+				this.whitelist = whitelist;
+				this.maxStackSize = maxStackSize;
+                this.whitelists = null;
+                this.maxStackSizes = null;
+            }
+
+            public InventoryConfig(int numSlots, MenuHelper.IWhiteList[] whitelists, int[]? maxStackSizes)
+            {
+                this.numSlots = numSlots;
+                this.whitelists = whitelists;
+                this.maxStackSizes = maxStackSizes;
+				this.whitelist = null;
+				this.maxStackSize = -1;
+            }
+        }
+
+		public Inventory(InventoryConfig config)
+		{
+			this.id = config.id;
+			this.numSlots = config.numSlots;
 			items = new ItemInstance[numSlots];
-			whitelists = new MenuHelper.IWhiteList?[numSlots];
-			maxStackSizes = new int[numSlots];
-			Array.Fill(maxStackSizes, -1);
+
+			if (config.whitelist != null)
+			{
+				whitelists = new MenuHelper.IWhiteList?[numSlots];
+				Array.Fill(whitelists, config.whitelist);
+			} 
+			else if (config.whitelists != null)
+			{
+				whitelists = config.whitelists;
+			} 
+			else
+			{
+                whitelists = new MenuHelper.IWhiteList?[numSlots];
+                Array.Fill(whitelists, null);
+            }
+
+			if (config.maxStackSize != -1)
+			{
+				maxStackSizes = new int[numSlots];
+				Array.Fill(maxStackSizes, config.maxStackSize);
+			}
+			else if (config.maxStackSizes != null)
+			{
+				maxStackSizes = config.maxStackSizes;
+			}
+			else
+			{
+				maxStackSizes = new int[numSlots];
+				Array.Fill(maxStackSizes, -1);
+			}
 
 			lastEmpty = 0;
 		}
-
-		public Inventory(int id, int numSlots, MenuHelper.IWhiteList whitelist, int maxStackSize = -1)
-		{
-            this.id = id;
-            this.numSlots = numSlots;
-            items = new ItemInstance[numSlots];
-            whitelists = new MenuHelper.IWhiteList?[numSlots];
-			Array.Fill(whitelists, whitelist);
-            maxStackSizes = new int[numSlots];
-			Array.Fill(maxStackSizes, maxStackSize);
-
-            lastEmpty = 0;
-        }
-
-        public Inventory(int id, int numSlots, MenuHelper.IWhiteList?[] whitelists, int[]? maxStackSizes = null)
-        {
-            this.id = id;
-            this.numSlots = numSlots;
-            items = new ItemInstance[numSlots];
-			this.whitelists = whitelists;
-			if (maxStackSizes == null)
-			{
-				this.maxStackSizes = new int[numSlots];
-				Array.Fill(this.maxStackSizes, -1);
-			}
-			else this.maxStackSizes = maxStackSizes;
-
-			lastEmpty = 0;
-        }
 
 		public void ProcessActions<T>(T owner) where T : Entity, IHasInventory
 		{
@@ -372,7 +407,7 @@ namespace Engine.Items
 			int id = SaveHelper.LoadInt32(loadBytes, ref index);
 			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
 
-            IMGUIConsole.Assert(id == this.id);
+            //IMGUIConsole.Assert(id == this.id);
 
 			int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
 

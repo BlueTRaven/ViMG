@@ -214,7 +214,7 @@ namespace ViMG
 
 				QueuedChunk queuedChunk = queue.Dequeue();
 
-                entIO.Deserialize(queuedChunk.position);
+                entIO.Deserialize(world, queuedChunk.position);
 
                 Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position.X, queuedChunk.position.Y, queuedChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
 				loadedChunks[queuedChunk.player][i] = LoadingState.Loaded;
@@ -369,7 +369,7 @@ namespace ViMG
 
                     loadedChunks[queuedChunk.player][j] = LoadingState.Loaded;
 
-                    entIO.Deserialize(queuedChunk.position);
+                    entIO.Deserialize(world, queuedChunk.position);
                     hasChanged = true;
                 }
                 else
@@ -409,7 +409,7 @@ namespace ViMG
                 chunkMesher?.RenderMesher.ImmediatelyMesh(world, position);
                 chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position);
 
-                entIO.Deserialize(position);
+                entIO.Deserialize(world, position);
                 //CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);
                 //chunkManager.RenderMesher.AddToNextBatch(world, position, copy);
                 //chunkManager.CollisionMesher.AddToNextBatch(world, position, copy);

@@ -153,11 +153,11 @@ namespace ViMG.Entities
 			SaveHelper.SaveInt32(saveBytes, Health);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 			Position = SaveHelper.LoadVector3(loadBytes, ref index);
 
 			Health = SaveHelper.LoadInt32(loadBytes, ref index);

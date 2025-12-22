@@ -17,9 +17,9 @@ namespace ViMG.UIs
 	{
 		private readonly Player player;
 		private readonly Entity owner;
-		private readonly Inventory playerInventory;
-		private readonly Inventory heldInventory;
-		private readonly Inventory anvilInventory;
+		private readonly InventoryManager.InventoryReference playerInventory;
+		private readonly InventoryManager.InventoryReference heldInventory;
+		private readonly InventoryManager.InventoryReference anvilInventory;
         private bool inventoryUpdated;
 		private Recipe currentRecipe;
 
@@ -29,7 +29,7 @@ namespace ViMG.UIs
 
 		private static Vector2 inventoryRight = new Vector2(MARGIN + Player.INVENTORY_COLUMNS * SIZE + Player.INVENTORY_COLUMNS * PADDING + MARGIN_CRAFTING, MARGIN + SIZE);
 
-		public MenuAnvil(GameStateManager gsManager, Player player, Entity owner, Inventory playerInventory, Inventory heldInventory, Inventory anvilInventory) : base(gsManager)
+		public MenuAnvil(GameStateManager gsManager, Player player, Entity owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference anvilInventory) : base(gsManager)
 		{
 			this.player = player;
             this.owner = owner;
@@ -65,7 +65,9 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, SIZE, PADDING);
+			var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
+            var heldInventory = player.world.InventoryManager.Get(this.heldInventory);
+            MenuHelper.DoPlayerInventory(player, playerInventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, SIZE, PADDING);
 
 			UI.EndParent();
 
@@ -76,7 +78,11 @@ namespace ViMG.UIs
 
 		private void DoTools()
         {
-			UI.StartParent(inventoryRight);
+            var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
+            var heldInventory = player.world.InventoryManager.Get(this.heldInventory);
+            var anvilInventory = player.world.InventoryManager.Get(this.anvilInventory);
+
+            UI.StartParent(inventoryRight);
 
 			UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 4f, SIZE * 5 + MARGIN * 2));
 
@@ -89,8 +95,8 @@ namespace ViMG.UIs
 				itemSlots = new UI.ItemSlot[7];
 
 			bounds.x += SIZE;
-
-			itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+            
+            itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 				anvilInventory.Get(0));
 
@@ -221,7 +227,11 @@ namespace ViMG.UIs
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(anvilInventory))
+            var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
+            var anvilInventory = player.world.InventoryManager.Get(this.anvilInventory);
+
+
+            if (recipe.Matches(anvilInventory))
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{

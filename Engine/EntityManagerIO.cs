@@ -465,7 +465,7 @@ namespace ViMG
 			return error;
 		}
 
-		public void Deserialize(ChunkPosition pos)
+		public void Deserialize(World world, ChunkPosition pos)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -473,7 +473,7 @@ namespace ViMG
             {
 				foreach (EntityData entData in datas.entityDatas[pos])
                 {
-					DeserializeEntity(entData);
+					DeserializeEntity(world, entData);
 				}
 
 				//Remove so we don't end up saving duplicate entities.
@@ -481,7 +481,7 @@ namespace ViMG
 			}
 		}
 
-		public Entity? DeserializeEntity(EntityData entData, int overrideGeneration = -1)
+		public Entity? DeserializeEntity(World world, EntityData entData, int overrideGeneration = -1)
 		{
             Type entityType = Utility.GetType(entData.type);
 
@@ -497,7 +497,7 @@ namespace ViMG
 
 					if (created != null && created is Entity ent)
 					{
-						ent.OnLoad(entData.data, entData.version);
+						ent.OnLoad(world, entData.data, entData.version);
 						try
 						{
 							manager.ForceAdd(ent, entData.id, overrideGeneration);

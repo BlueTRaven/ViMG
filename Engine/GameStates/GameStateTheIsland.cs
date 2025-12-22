@@ -5,6 +5,7 @@ using BrUtility;
 using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
+using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -238,6 +239,7 @@ namespace ViMG.GameStates
 
             ChunkMesher? chunkMesher = device != null ? new(SIZE_IN_CHUNKS, physicsInfo, device) : null;
             var entityManager = new EntityManager();
+            var inventoryManager = new InventoryManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
@@ -269,7 +271,7 @@ namespace ViMG.GameStates
 
             chunkIO.CreateAll();
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
             ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
@@ -290,8 +292,7 @@ namespace ViMG.GameStates
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(Main.gameStateManager.TheIsland.localPlayerName));
-            player.FirstCreated(worldInfo);
+            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(Main.gameStateManager.TheIsland.localPlayerName), true);
             prototype.EntityManager.Add(player, true);
 
             player.Position = playerSpawnPosition;
@@ -354,6 +355,7 @@ namespace ViMG.GameStates
             ProfilingHelper.Start("Loading world...");
             LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
+            var inventoryManager = new InventoryManager();
             var worldInfoIO = new WorldInfoIO();
 
             LoadMessage = "Loading World...\n" +
@@ -368,7 +370,7 @@ namespace ViMG.GameStates
 
             var logic = CreateLayerLogic(0);
 
-            WorldPrototype prototype = new WorldPrototype(null, 0, entityManager, chunkManager, WorldInfoIO.WorldInfo.Empty, logic, new Skybox(), physicsInfo, housingManager);
+            WorldPrototype prototype = new WorldPrototype(null, 0, entityManager, inventoryManager, chunkManager, WorldInfoIO.WorldInfo.Empty, logic, new Skybox(), physicsInfo, housingManager);
 
             var ChunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
@@ -406,6 +408,7 @@ namespace ViMG.GameStates
             ProfilingHelper.Start("Loading world...");
             LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
+            var inventoryManager = new InventoryManager();
             var worldInfoIO = new WorldInfoIO();
 
             LoadMessage = "Loading World...\n" +
@@ -427,7 +430,7 @@ namespace ViMG.GameStates
 
             var logic = CreateLayerLogic(worldInfo.playerLayers[0]);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayers[0], entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
+            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayers[0], entityManager, inventoryManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
@@ -485,6 +488,7 @@ namespace ViMG.GameStates
                 worldInfo.furthestLayer = layer;
 
                 var entityManager = new EntityManager();
+                var inventoryManager = new InventoryManager();
                 
                 var physicsInfo = new PhysicsInfo();
 
@@ -500,7 +504,7 @@ namespace ViMG.GameStates
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer);
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
                 ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
@@ -542,6 +546,7 @@ namespace ViMG.GameStates
                 ProfilingHelper.Start("Loading Layer...");
 
                 var entityManager = new EntityManager();
+                var inventoryManager = new InventoryManager();
 
                 var physicsInfo = new PhysicsInfo();
 
@@ -558,7 +563,7 @@ namespace ViMG.GameStates
 
                 Skybox skybox = new Skybox();
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, housingManager);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, housingManager);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))

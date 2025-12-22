@@ -192,7 +192,7 @@ namespace Engine
                 {
                     var created = new Player(playerIndex, playerUuid);
                     created.playerUuid = playerUuid;
-                    created.OnLoad(pdata.entity.data, pdata.entity.version);
+                    created.OnLoad(world, pdata.entity.data, pdata.entity.version);
                     try
                     {
                         world.EntityManager.ForceAdd(created, pdata.entity.id);
@@ -212,8 +212,7 @@ namespace Engine
 
             if (player == null) 
             {
-                player = new Player(playerIndex, playerUuid);
-                player.FirstCreated(world.WorldInfo);
+                player = new Player(playerIndex, playerUuid, true);
                 world.EntityManager.ForceAdd(player);
             }
 

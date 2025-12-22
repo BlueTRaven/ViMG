@@ -110,7 +110,7 @@ namespace ViMG.Entities
 
 		}
 
-		public virtual void OnLoad(byte[] loadBytes, in int version)
+		public virtual void OnLoad(World world, byte[] loadBytes, in int version)
 		{
 
 		}

@@ -265,7 +265,8 @@ namespace ViMG.IMGUIImpl
 
                 if (created != null && created is Entity ent)
                 {
-                    ent.OnLoad(entData.data, entData.version);
+                    // TODO this will be borked
+                    ent.OnLoad(null, entData.data, entData.version);
 
                     return ent;
                 }

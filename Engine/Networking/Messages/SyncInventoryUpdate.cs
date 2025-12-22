@@ -111,9 +111,9 @@ namespace Engine.Networking.Messages
                     //    }
                     //}
                     var entity = entityManager.GetById(action.entityId);
+                    var inventory = entity.world.InventoryManager.Get(entity.world.InventoryManager.GetReference(action.inventoryId));
                     if (entity != null && entity is IHasInventory hasInv)
                     {
-                        var inventory = hasInv.GetInventory(action.inventoryId);
                         inventory.DoUpdateAction(action);
 
                         Console.WriteLine("Remote Inventory action: {0:02} {1} {2} {3} -> {4}", Main.Time, entity.ToString(), action.inventoryId, action.oldInstance.item, action.newInstance.item);
@@ -273,9 +273,10 @@ namespace Engine.Networking.Messages
                             {
                                 var accepted = false;
                                 var entity = entityManager.GetById(action.entityId);
+                                var inventory = entity?.world.InventoryManager.Get(entity.world.InventoryManager.GetReference(action.inventoryId));
+
                                 if (entity != null && entity is IHasInventory hasInv)
                                 {
-                                    var inventory = hasInv.GetInventory(action.inventoryId);
                                     var curInstance = inventory.Get(action.inventoryIndex);
 
                                     // TODO: in what situations do we decline a request?
@@ -312,7 +313,7 @@ namespace Engine.Networking.Messages
         public void RollbackAction(AuditedInventoryUpdate action)
         {
             var player = GS.GetWorld().player[action.auditingPlayer];
-            var inventory = player?.GetInventory(action.inventoryId);
+            var inventory = player.world.InventoryManager.Get(player.world.InventoryManager.GetReference(action.inventoryId));
             if (inventory != null)
             {
                 inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate
@@ -330,7 +331,7 @@ namespace Engine.Networking.Messages
         public void DoAction(AuditedInventoryUpdate action)
         {
             var player = GS.GetWorld().player[action.auditingPlayer];
-            var inventory = player?.GetInventory(action.inventoryId);
+            var inventory = player.world.InventoryManager.Get(player.world.InventoryManager.GetReference(action.inventoryId));
             if (inventory != null)
             {
                 inventory.DoUpdateAction(new SyncInventoryUpdate.QueuedInventoryUpdate

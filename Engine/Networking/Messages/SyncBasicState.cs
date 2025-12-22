@@ -247,8 +247,8 @@ namespace Engine.Networking.Messages
                 if (queuedSync.fullState.IsValid)
                 {
                     if (ent == null)
-                        ent = entIO.DeserializeEntity(queuedSync.fullState);
-                    else ent.OnLoad(queuedSync.fullState.data, queuedSync.fullState.version);
+                        ent = entIO.DeserializeEntity(GS.GetWorld(), queuedSync.fullState);
+                    else ent.OnLoad(GS.GetWorld(), queuedSync.fullState.data, queuedSync.fullState.version);
 
                     if (ent != null)
                         ent.TimeSynced = queuedSync.time;
@@ -602,9 +602,9 @@ namespace Engine.Networking.Messages
                     {
                         Console.WriteLine("{0} {1}", data.id, data.type);
                         if (ent == null)
-                            ent = GS.GetWorld().EntIO.DeserializeEntity(data, reference.generation);
+                            ent = GS.GetWorld().EntIO.DeserializeEntity(GS.GetWorld(), data, reference.generation);
                         else
-                            ent.OnLoad(data.data, data.version);
+                            ent.OnLoad(GS.GetWorld(), data.data, data.version);
 
                         ent.NetEntity = true;
                         ent.NetEnable = true;

@@ -49,11 +49,12 @@ namespace ViMG.UIs
 		private const float HEALTHBAR_HEIGHT = 16;
 
 		private Player player;
-		private Inventory heldInventory;
-		private Inventory inventory;
-		private Inventory craftInventory;
-		private Inventory accessoryInventory;
-		private Inventory gearInventory;
+		private InventoryManager.InventoryReference heldInventory;
+		private InventoryManager.InventoryReference inventory;
+		private InventoryManager.InventoryReference craftInventory;
+		private InventoryManager.InventoryReference accessoryInventory;
+		private InventoryManager.InventoryReference gearInventory;
+		private InventoryManager invManager;
 
 		private static string[] tagsLegs = new string[1] { "armor_legs" };
 		private static string[] tagsBody = new string[1] { "armor_body" };
@@ -104,7 +105,7 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuPlayer(GameStateManager gsManager, Player player, Inventory heldInventory, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory) : base(gsManager)
+		public MenuPlayer(GameStateManager gsManager, Player player, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference craftInventory, InventoryManager.InventoryReference accessoryInventory, InventoryManager.InventoryReference gearInventory) : base(gsManager)
 		{
 			this.player = player;
 
@@ -113,7 +114,11 @@ namespace ViMG.UIs
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
 			this.gearInventory = gearInventory;
-            playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
+
+			this.invManager = player.world.InventoryManager;
+
+			var playerInventoryReal = invManager.Get(playerInventory);
+			playerInventoryReal?.Get(HighlightIndex).item?.StartHold(player, playerInventoryReal, HighlightIndex);
 		}
 
         public override void LoadContent()
@@ -170,7 +175,13 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			UI.Start();
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
+
+            UI.Start();
 
 			if (gsManager.TheIsland.IsLoading)
 			{
@@ -725,7 +736,13 @@ namespace ViMG.UIs
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(craftInventory))
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
+
+            if (recipe.Matches(craftInventory))
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
@@ -761,7 +778,13 @@ namespace ViMG.UIs
 		{
 			base.Draw(batch);
 
-			UI.Draw(batch, SCALE);
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
+
+            UI.Draw(batch, SCALE);
 
 			if (opened)
 			{

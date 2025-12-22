@@ -216,9 +216,9 @@ namespace ViMG.Entities
             SaveHelper.SaveInt32(saveBytes, (int)facing);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int offset = 0;
 

@@ -357,41 +357,41 @@ namespace ViMG.Entities
             }
 
             if (entity is ICubeTracker tracker)
-			{
-				CubePosition position = tracker.TrackedPosition;
+            {
+                CubePosition position = tracker.TrackedPosition;
 
-				ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-				if (cubeTrackers.ContainsKey(chunkPos))
-					cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-				else
-				{
-					CubeTrackers ts = new CubeTrackers();
-					ts.chunkPosition = chunkPos;
-					ts.Add(position.InChunkSpace(chunkPos), entity);
+                if (cubeTrackers.ContainsKey(chunkPos))
+                    cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+                else
+                {
+                    CubeTrackers ts = new CubeTrackers();
+                    ts.chunkPosition = chunkPos;
+                    ts.Add(position.InChunkSpace(chunkPos), entity);
 
-					cubeTrackers.Add(chunkPos, ts);
-				}
-			}
+                    cubeTrackers.Add(chunkPos, ts);
+                }
+            }
 
-			if (entity is IMultiCubeTracker multiTracker)
-			{
-				foreach (CubePosition position in multiTracker.TrackedPositions)
-				{
-					ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            if (entity is IMultiCubeTracker multiTracker)
+            {
+                foreach (CubePosition position in multiTracker.TrackedPositions)
+                {
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
 
-					if (cubeTrackers.ContainsKey(chunkPos))
-						cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
-					else
-					{
-						CubeTrackers ts = new CubeTrackers();
-						ts.chunkPosition = chunkPos;
-						ts.Add(position.InChunkSpace(chunkPos), entity);
+                    if (cubeTrackers.ContainsKey(chunkPos))
+                        cubeTrackers[chunkPos].Add(position.InChunkSpace(chunkPos), entity);
+                    else
+                    {
+                        CubeTrackers ts = new CubeTrackers();
+                        ts.chunkPosition = chunkPos;
+                        ts.Add(position.InChunkSpace(chunkPos), entity);
 
-						cubeTrackers.Add(chunkPos, ts);
-					}
-				}
-			}
+                        cubeTrackers.Add(chunkPos, ts);
+                    }
+                }
+            }
 
             OnEntityAdded?.Invoke(entity);
 

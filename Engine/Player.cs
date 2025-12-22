@@ -253,12 +253,13 @@ namespace ViMG
 		public const int INVENTORY_ROWS = 4;
 		public const int INVENTORY_COLUMNS = 8;
 
-		public Inventory inventory;
-		public Inventory heldInventory;
-		public Inventory craftInventory;
-		public Inventory gearInventory;
-		public Inventory accessoryInventory;
-		public int Currency;	//we store currency as a flat integer value instead of as items
+        public InventoryManager.InventoryReference inventory;
+        public InventoryManager.InventoryReference heldInventory;
+        public InventoryManager.InventoryReference craftInventory;
+        public InventoryManager.InventoryReference gearInventory;
+        public InventoryManager.InventoryReference accessoryInventory;
+
+        public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
 		public MenuPlayer menuPlayer;
 		// The item currently selected in the main inventory bar. Different from the "held item", which is the item
@@ -306,42 +307,24 @@ namespace ViMG
         public PlayerInput LeftClick;
         public PlayerInput RightClick;
 
+		private bool isNew = false;
+
 		public Player() : this(0, new())
 		{
 
 		}
 
-        public Player(int playerIndex, int uuid)
+        public Player(int playerIndex, int uuid, bool isNew = false)
 		{
 			this.playerIndex = playerIndex;
 			this.playerUuid = uuid;
+			this.isNew = isNew;
 
 			SyncInterval = 1;
 			AlwaysRender = true;
 
 			//TODO serialize this maybe?
 			buffManager = new BuffManagerPlayer(this);
-            
-			inventory = new Inventory(0, INVENTORY_ROWS * INVENTORY_COLUMNS);
-			heldInventory = new Inventory(1, 1);
-			
-			MenuHelper.IWhiteList[] whitelistsAccessory = new MenuHelper.IWhiteList[6];
-			int[] maxStackSizesAccessory = new int[6];
-			Array.Fill(maxStackSizesAccessory, 1);
-            accessoryInventory = new Inventory(2, 6, whitelistsAccessory, maxStackSizesAccessory);
-			for (int i = 0; i < 6; i++)
-                whitelistsAccessory[i] = new MenuHelper.WhitelistAccessories(accessoryInventory, MenuPlayer.tagsAccessoriesBySlot[i]);
-
-            MenuHelper.IWhiteList[] whitelistsGear = new MenuHelper.IWhiteList[10];
-            int[] maxStackSizesGear = new int[10];
-			Array.Fill(maxStackSizesGear, 1);
-            for (int i = 0; i < MenuPlayer.tagsGearBySlot.Length; i++)
-                whitelistsGear[i] = new MenuHelper.WhitelistTag(MenuPlayer.tagsGearBySlot[i]);
-            //Start with 10 gear slots so we don't have to worry about expanding in the future.
-            //For now, we only have 3:
-            //Heart, boots, and feather artefact.
-            gearInventory = new Inventory(3, 10, whitelistsGear, maxStackSizesGear);
-            craftInventory = new Inventory(4, 8);
         }
 
         //Creates a new player from a dead player.
@@ -370,17 +353,46 @@ namespace ViMG
             Health = MaxHealth / 4;
         }
 
-		public void FirstCreated(WorldInfoIO.WorldInfo worldInfo)
+		public void FirstCreated(InventoryManager inventoryManager, WorldInfoIO.WorldInfo worldInfo)
 		{
 			SpawnPosition = CubePosition.FromWorldSpace(worldInfo.spawnPosition);
             Position = worldInfo.spawnPosition;
 
-            Main.Registry.ModRegistry.AddSpawnInventoryItems(inventory);
+            Main.Registry.ModRegistry.AddSpawnInventoryItems(inventoryManager.Get(inventory));
 		}
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
+
+			this.inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(INVENTORY_COLUMNS * INVENTORY_ROWS));
+			heldInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(1 * 1));
+            
+			MenuHelper.IWhiteList[] whitelistsAccessory = new MenuHelper.IWhiteList[6];
+            int[] maxStackSizesAccessory = new int[6];
+            Array.Fill(maxStackSizesAccessory, 1);
+            for (int i = 0; i < 6; i++)
+                whitelistsAccessory[i] = new MenuHelper.WhitelistAccessories(MenuPlayer.tagsAccessoriesBySlot[i]);
+			accessoryInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(6, whitelistsAccessory, maxStackSizesAccessory));
+
+            MenuHelper.IWhiteList[] whitelistsGear = new MenuHelper.IWhiteList[10];
+            int[] maxStackSizesGear = new int[10];
+            Array.Fill(maxStackSizesGear, 1);
+            for (int i = 0; i < MenuPlayer.tagsGearBySlot.Length; i++)
+                whitelistsGear[i] = new MenuHelper.WhitelistTag(MenuPlayer.tagsGearBySlot[i]);
+            //Start with 10 gear slots so we don't have to worry about expanding in the future.
+            //For now, we only have 3:
+            //Heart, boots, and feather artefact.
+            gearInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(10, whitelistsGear, maxStackSizesGear));
+
+            craftInventory = world.InventoryManager.Add(new Inventory.InventoryConfig(8));
+
+
+            if (isNew)
+			{
+				FirstCreated(world.InventoryManager, world.WorldInfo);
+				isNew = false;
+			}
 
 			Console.WriteLine("{0} UUid: {1}", playerIndex, playerUuid);
 
@@ -388,8 +400,9 @@ namespace ViMG
 			world.player[playerIndex] = this;
             invulnTimer = 6f;   //6 seconds of invuln after respawning
 
+			var inventory = world.InventoryManager.Get(this.inventory)!;
 			//if any coins are in the player's inventory, convert them into currency value.
-			for (int i = 0; i < inventory.NumSlots; i++)
+			for (int i = 0; i < INVENTORY_COLUMNS * INVENTORY_ROWS; i++)
 			{
 				if (inventory.Get(i).item is ItemCoin coin)
 				{
@@ -416,7 +429,7 @@ namespace ViMG
 			if (IsLocalPlayer)
 			{
 				Console.WriteLine("Init local");
-				menuPlayer = new MenuPlayer(Main.gameStateManager, this, heldInventory, inventory, craftInventory, accessoryInventory, gearInventory);
+				menuPlayer = new MenuPlayer(Main.gameStateManager, this, heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
 				menuPlayer.Close();
 				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
 				if (!Main.IsHeadless)
@@ -475,15 +488,17 @@ namespace ViMG
 
 			if (state == State.Dead)
 			{
-				for (int i = 0; i < craftInventory.NumSlots; i++)
-				{
-					if (craftInventory.Get(i).valid)
-					{
-						EntityItem ent = new EntityItem(Position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f,
-							Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), craftInventory.Get(i));
-						world.EntityManager.Add(ent);
-					}
-				}
+				// TODO drop items
+				// this never worked to begin with...
+				//for (int i = 0; i < craftInventory.NumSlots; i++)
+				//{
+				//	if (craftInventory.Get(i).valid)
+				//	{
+				//		EntityItem ent = new EntityItem(Position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f,
+				//			Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), craftInventory.Get(i));
+				//		world.EntityManager.Add(ent);
+				//	}
+				//}
 
 				//TODO death screen and stuff
 				world.PlayerRespawnedEvent.Add(this);
@@ -495,6 +510,11 @@ namespace ViMG
         {
             base.OnUnload();
 
+			world.InventoryManager.Unload(inventory);
+            world.InventoryManager.Unload(heldInventory);
+            world.InventoryManager.Unload(gearInventory);
+            world.InventoryManager.Unload(accessoryInventory);
+
             // Player should only ever be unloaded/removed in two scenarios:
             // The world is being disposed (we're exiting the game),
             // or a client disconnected from the server.
@@ -504,7 +524,7 @@ namespace ViMG
             // not the local player.
             //IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
-			if (hitbox != -1)
+            if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
 			if (hurtbox != -1)
 				world.HitboxManager.Remove(hurtbox);
@@ -528,8 +548,10 @@ namespace ViMG
             hasMoved = false;
 			hasRotated = false;
 
-			inventory.ProcessActions(this);
-			heldInventory.ProcessActions(this);
+			var inventory = world.InventoryManager.Get(this.inventory);
+			var heldInventory = world.InventoryManager.Get(this.heldInventory);
+			inventory?.ProcessActions(this);
+			heldInventory?.ProcessActions(this);
 
 			if (IsLocalPlayer)
 			{
@@ -922,7 +944,10 @@ namespace ViMG
 		private IJumpEffect[] jumpEffects = new IJumpEffect[4];
 		private void UpdateStats(double deltaTime)
 		{
-			Array.Clear(jumpEffects, 0, 4);
+			var accessoryInventory = world.InventoryManager.Get(this.accessoryInventory);
+            var gearInventory = world.InventoryManager.Get(this.gearInventory);
+
+            Array.Clear(jumpEffects, 0, 4);
 
 			AccumulatedStats accumulatedStats = new AccumulatedStats();
 			accumulatedStats.DashEffect = dashEffect;   //TODO remove this is temporary testing code
@@ -1358,6 +1383,8 @@ namespace ViMG
 
 		private void UpdatePerformAction()
 		{
+			var inventory = world.InventoryManager.Get(this.inventory);
+
 			if (IsInControl && useTimer <= 0)
             {
 				if (LeftClick.Pressed())
@@ -1515,7 +1542,9 @@ namespace ViMG
 			const float suckRadius = Cube.CUBE_SCALE * 3f;
 			const float pickupRadius = Cube.CUBE_SCALE * 1.85f;
 
-			var items = world.EntityManager.GetAll<EntityItem>();
+            var inventory = world.InventoryManager.Get(this.inventory);
+
+            var items = world.EntityManager.GetAll<EntityItem>();
 			if (items != null)
 			{
 				foreach (var ent in items)
@@ -1653,6 +1682,8 @@ namespace ViMG
 
 		private void UpdateThrowItem()
 		{
+            var inventory = world.InventoryManager.Get(this.inventory);
+
             if (Main.inputManager.JustPressed(Keys.Q))
             {
                 int inventorySlot = 0;
@@ -1686,7 +1717,10 @@ namespace ViMG
 
 		public void PerformAttack(DamageType damageType, ref ActionStats actionStats, ref int damage, ref float knockback)
 		{
-			float speedScale = 0;
+            var inventory = world.InventoryManager.Get(this.inventory);
+            var accessoryInventory = world.InventoryManager.Get(this.accessoryInventory);
+
+            float speedScale = 0;
 
 			this.hitboxDamageType = DamageType.Unspecified;
 
@@ -1770,7 +1804,9 @@ namespace ViMG
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-			lookAtMaterial = StaticMaterials.Cubes;
+            var inventory = world.InventoryManager.Get(this.inventory);
+
+            lookAtMaterial = StaticMaterials.Cubes;
 
             if (inventory.Get(highlightIndex).item != null)
 			{
@@ -1891,21 +1927,6 @@ namespace ViMG
 			}
 		}
 
-		public Inventory GetInventory()
-		{
-			return inventory;
-		}
-
-		public Inventory GetHeldInventory()
-		{
-			return heldInventory;
-		}
-
-		public Inventory GetAccessoryInventory()
-        {
-			return accessoryInventory;
-        }
-
 		public Matrix GetHeldMatrix(Vector2 origin, Vector3 scale)
 		{
 			float percent = useAnimTimer / currentActionStats.useAnimTime;
@@ -1970,7 +1991,10 @@ namespace ViMG
 
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
-			if (invulnTimer <= 0)
+            var inventory = world.InventoryManager.Get(this.inventory);
+            var accessoryInventory = world.InventoryManager.Get(this.accessoryInventory);
+
+            if (invulnTimer <= 0)
 			{
 				if (us.group == HitboxManager.Group.PLAYER_TAKE && 
 					((other.group & HitboxManager.Group.ENEMYHOSTILE_DEAL) == HitboxManager.Group.ENEMYHOSTILE_DEAL || 
@@ -2142,9 +2166,9 @@ namespace ViMG
 			SaveHelper.SaveInt32(saveBytes, Magic);
 			SaveHelper.SaveInt32(saveBytes, MaxMagic);
 
-			inventory.Save(saveBytes);
-			accessoryInventory.Save(saveBytes);
-			gearInventory.Save(saveBytes);
+			world.InventoryManager.Get(inventory)!.Save(saveBytes);
+            world.InventoryManager.Get(accessoryInventory)!.Save(saveBytes);
+            world.InventoryManager.Get(gearInventory)!.Save(saveBytes);
 
 			SaveHelper.SaveInt32(saveBytes, Currency);
 
@@ -2162,11 +2186,12 @@ namespace ViMG
 			SaveHelper.SaveInt32(saveBytes, playerUuid);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
+			Initialize(world);
 
-			int index = 0;
+            int index = 0;
 
 			if (version < 11)
 				Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0);
@@ -2182,15 +2207,15 @@ namespace ViMG
 				MaxMagic = SaveHelper.LoadInt32(loadBytes, ref index);
             }
 
-			inventory.Load(loadBytes, ref index);
+			world.InventoryManager.Get(inventory)!.Load(loadBytes, ref index);
 	
 			if (version >= 6)
 			{
-				accessoryInventory.Load(loadBytes, ref index);
+                world.InventoryManager.Get(accessoryInventory)!.Load(loadBytes, ref index);
 			}
 
 			if (version >= 9)
-				gearInventory.Load(loadBytes, ref index);
+                world.InventoryManager.Get(gearInventory)!.Load(loadBytes, ref index);
 
 			if (version >= 10)
 				Currency = SaveHelper.LoadInt32(loadBytes, ref index);
@@ -2324,22 +2349,6 @@ namespace ViMG
             MoveRight.previousRecordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
             RightClick.previousRecordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
             Run.previousRecordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
-        }
-
-        public Inventory GetInventory(int id)
-        {
-			var ret = id switch
-			{
-				0 => inventory,
-				1 => heldInventory,
-				2 => accessoryInventory,
-				3 => gearInventory,
-				4 => craftInventory,
-				_ => throw new InvalidOperationException(),
-			};
-			Debug.Assert(ret.id == id);
-
-			return ret;
         }
 
         public bool InventoryAction(Player? activatingPlayer, int action)

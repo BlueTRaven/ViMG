@@ -12,11 +12,10 @@ namespace ViMG.Entities
 	{
 		public CubePosition TrackedPosition { get; private set; }
 
-		private Inventory inventory;
+		private InventoryManager.InventoryReference inventory;
 
 		public EntityAnvilIron()
         {
-            inventory = new Inventory(0, 8);
         }
 
 		public EntityAnvilIron(CubePosition position)
@@ -24,8 +23,20 @@ namespace ViMG.Entities
 			this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
 
-			inventory = new Inventory(0, 8);
 		}
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+			inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(8));
+        }
+
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+			world.InventoryManager.Unload(inventory);
+        }
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
@@ -35,7 +46,9 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player)
 		{
 			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(Main.gameStateManager, player, this, player.GetInventory(), player.GetHeldInventory(), inventory));
+			{
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory));
+			}
 
 			return true;
 		}
@@ -45,22 +58,19 @@ namespace ViMG.Entities
 			base.OnSave(saveBytes);
 
 			SaveHelper.SaveCubePosition(saveBytes, TrackedPosition);
-			inventory.Save(saveBytes);
+			world.InventoryManager.Get(inventory)!.Save(saveBytes);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace();
 
-			inventory.Load(loadBytes, ref index);
-
-			if (version == 0)
-				inventory = new Inventory(0, 8);
+			world.InventoryManager.Get(inventory).Load(loadBytes, ref index);
 		}
 	}
 }

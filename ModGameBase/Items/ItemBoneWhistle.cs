@@ -31,7 +31,8 @@ namespace ViMG.Items
 
         public static bool HasBoneWhistle(Player player)
         {
-            return player.GetAccessoryInventory().Find(Main.Registry.ItemRegistry.Get("bone_whistle")).valid;
+            var accessoryInventory = player.world.InventoryManager.Get(player.accessoryInventory);
+            return accessoryInventory.Find(Main.Registry.ItemRegistry.Get("bone_whistle")).valid;
         }
     }
 }

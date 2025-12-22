@@ -113,9 +113,9 @@ namespace ViMG.Entities
             ai?.OnSave(saveBytes);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             var bs = new BasicState();

@@ -3,6 +3,7 @@ using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
 using Engine.Clients;
+using Engine.Items;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -67,6 +68,7 @@ namespace ViMG
 		public HitboxManager HitboxManager = new HitboxManager(32);
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
+		public InventoryManager InventoryManager;
 		public LightManager? LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
 		public WorldInfoIO.WorldInfo WorldInfo;
@@ -122,6 +124,7 @@ namespace ViMG
 
 			ChunkManager = prototype.ChunkManager;
 			EntityManager = prototype.EntityManager;
+			InventoryManager = prototype.InventoryManager;
 			WorldInfo = prototype.WorldInfo;
 			Skybox = prototype.Skybox;
 			Logic = prototype.Logic;
@@ -1354,7 +1357,7 @@ namespace ViMG
 							num = int.Parse(parameters[1]);
 						}
 
-						int damage = 0;
+						int damage = 1;
 						if (parameters.Length >= 3)
 						{
 							damage = int.Parse(parameters[2]);
@@ -1363,7 +1366,7 @@ namespace ViMG
 						World world = gsIsland.GetWorld();
 						Player player = world.EntityManager.GetFirst<Player>();
 
-						player.GetInventory().Add(new ItemInstance(item, num, damage));
+						world.InventoryManager.Get(player.inventory)?.Add(new ItemInstance(item, num, damage));
 					}
 					else
 					{

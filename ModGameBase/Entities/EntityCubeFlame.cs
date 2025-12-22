@@ -142,9 +142,9 @@ namespace ViMG.Entities
             SaveHelper.SaveFloat32(saveBytes, time);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);

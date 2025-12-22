@@ -197,9 +197,9 @@ namespace ViMG.Entities
             SaveHelper.SaveVector3(saveBytes, Position + new Vector3(0, Cube.CUBE_SCALE * 4, 0));
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             Position = SaveHelper.LoadVector3(loadBytes, ref index);
