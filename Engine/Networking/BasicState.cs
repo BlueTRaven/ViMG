@@ -5,8 +5,10 @@ using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -59,6 +61,21 @@ namespace Engine.Networking
                 get => this[i];
                 set => this[i] = value;
             }
+
+            public override bool Equals(object? obj)
+            {
+                if (obj is Arr4F other)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (this[i] != other[i])
+                            return false;
+                    }
+
+                    return true;
+                }
+                return false;
+            }
         }
         [System.Runtime.CompilerServices.InlineArray(4)]
         public struct Arr4I
@@ -70,18 +87,33 @@ namespace Engine.Networking
                 get => this[i];
                 set => this[i] = value;
             }
-        }
-        //[System.Runtime.CompilerServices.InlineArray(256)]
-        //public struct Arr256B
-        //{
-        //    private int _element0;
 
-        //    public int this[int i]
-        //    {
-        //        get => this[i];
-        //        set => this[i] = value;
-        //    }
-        //}
+            public override bool Equals(object? obj)
+            {
+                if (obj is Arr4I other)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (this[i] != other[i])
+                            return false;
+                    }
+
+                    return true;
+                }
+                return false;   
+            }
+        }
+        [System.Runtime.CompilerServices.InlineArray(256)]
+        public struct Arr256B
+        {
+            private byte _element0;
+
+            public byte this[int i]
+            {
+                get => this[i];
+                set => this[i] = value;
+            }
+        }
 
         private int version;
         public Vector3 position;
@@ -92,8 +124,7 @@ namespace Engine.Networking
         public Arr4F timers;
         public Arr4I counters;
 
-        //public Arr256B extraBytes;
-        //public SerField[] extraFields;
+        public Arr256B extraBytes;
 
         public void Deserialize(NetDataReader reader)
         {
@@ -116,28 +147,11 @@ namespace Engine.Networking
             var countersA = reader.GetArray<int>(sizeof(byte));
             for (int i = 0; i < 4; i++) counters[i] = countersA[i];
 
-            //if (version >= 2)
-            //{
-            //    int extraFieldsCount = reader.GetInt();
-            //    extraFields = new SerField[extraFieldsCount];
-
-            //    for (int i = 0; i < extraFieldsCount; i++)
-            //    {
-            //        // TODO this is VERY UNSAFE
-            //        string name = reader.GetString();
-            //        int len = reader.GetInt();
-            //        Type t = Utility.GetType(name);
-            //        var extraFieldCreated = Activator.CreateInstance(t);
-
-            //        SerField field = extraFieldCreated as SerField;
-            //        if (field is not SerField) reader.SetPosition(reader.Position + len); // skip bytes
-            //        else
-            //        {
-            //            field.Deserialize(reader);
-            //            extraFields[i] = field;
-            //        }
-            //    }
-            //}
+            if (version >= 2)
+            {
+                ReadOnlySpan<byte> remBytes = reader.GetRemainingBytesSpan();
+                remBytes[0..256].CopyTo(extraBytes);
+            }
         }
 
         public void Serialize(NetDataWriter writer)
@@ -161,16 +175,7 @@ namespace Engine.Networking
             Span<int> i = counters;
             writer.PutSpan(i);
 
-            //writer.Put(extraFields.Length);
-            //foreach (SerField field in extraFields)
-            //{
-            //    // TODO this is VERY UNSAFE
-            //    writer.Put(field.GetType().FullName);
-            //    NetDataWriter subWriter = new NetDataWriter();
-            //    field.Serialize(subWriter);
-            //    writer.Put(subWriter.Length);
-            //    writer.Put(subWriter.AsReadOnlySpan());
-            //}
+            writer.Put((ReadOnlySpan<byte>)extraBytes);
         }
 
         public uint GetDeltaBits(ref readonly BasicState prevState)
@@ -216,17 +221,32 @@ namespace Engine.Networking
                     bits |= (Fields)((int)Fields.Counter0 + i);
             }
 
-            //for (int i = 0; i < extraFields.Length; i++)
-            //{
-            //    SerField field = extraFields[i];
-            //    if (field.Changed(prevState.extraFields[i]))
-            //    {
-            //        bits |= Fields.ExtraFields;
-            //        break;
-            //    }
-            //}
+            for (int i = 0; i < 256; i++)
+            {
+                if (prevState.extraBytes[i] != extraBytes[i])
+                {
+                    bits |= Fields.ExtraFields;
+                    break;
+                }
+            }
 
             return (uint)bits;
+        }
+
+        public ulong GetExtraBytesBits(ref readonly BasicState prevState)
+        {
+            ulong bits = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                uint currInt = BitConverter.ToUInt32(extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
+                uint prevInt = BitConverter.ToUInt32(prevState.extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
+                if (currInt != prevInt)
+                {
+                    bits |= (1UL << i);
+                }
+            }
+
+            return bits;
         }
 
         public void DeserializeDelta(NetDataReader reader)
@@ -280,6 +300,22 @@ namespace Engine.Networking
                 if ((bits & bit) == bit)
                     counters[i] = reader.GetInt();
             }
+
+            if ((bits & Fields.ExtraFields) == Fields.ExtraFields)
+            {
+                ulong extraBytesBits = reader.GetULong();
+
+                for (int i = 0; i < 64; i++)
+                {
+                    ulong bit = 1UL << i;
+                    if ((extraBytesBits & bit) == bit)
+                    {
+                        var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+                        uint ui = reader.GetUInt();
+                        BitConverter.TryWriteBytes(extraBitBytes, ui);
+                    }
+                }
+            }
         }
 
         public void SerializeDelta(NetDataWriter writer, uint _bits)
@@ -332,33 +368,38 @@ namespace Engine.Networking
             }
         }
 
-        //public void SerializeDeltaExtraFields(NetDataWriter writer, BasicState other)
-        //{
-        //    uint extraFieldsBits = 0;
-        //    for (int i = 0; i < int.Min(32, extraFields.Length); i++)
-        //    {
-        //        if (extraFields[i].Changed(other.extraFields[i]))
-        //            extraFieldsBits |= (uint)(1 << i);
-        //    }
+        public void SerializeDeltaExtraFields(NetDataWriter writer, ulong extraBytesBits)
+        {
+            writer.Put(extraBytesBits);
 
-        //    writer.Put(extraFieldsBits);
+            for (int i = 0; i < 64; i++)
+            {
+                ulong bit = 1UL << i;
+                if ((extraBytesBits & bit) == bit) 
+                {
+                    var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+                    uint ui = BitConverter.ToUInt32(extraBitBytes);
+                    writer.Put(ui);
+                }
+            }
+        }
 
-        //    for (int i = 0; i < int.Min(32, extraFields.Length); i++)
-        //    {
-        //        SerField curField = extraFields[i];
-        //        SerField prevField = other.extraFields[i];
+        public unsafe void SetExtra<T>(ref readonly T val) where T : unmanaged
+        {
+            Debug.Assert(sizeof(T) <= 256);
+            Span<byte> bytes = extraBytes;
+            // TODO is this necessary? Can we just [val]? Does that require a copy?
+            ReadOnlySpan<T> valSpan = MemoryMarshal.CreateReadOnlySpan(in val, 1);
+            ReadOnlySpan<byte> valBytes = MemoryMarshal.Cast<T, byte>(valSpan);
+            valBytes.CopyTo(bytes);
+        }
 
-        //        if (curField.Changed(prevField))
-        //        {
-        //            // TODO this is VERY UNSAFE
-        //            writer.Put(curField.GetType().FullName);
-        //            NetDataWriter subWriter = new NetDataWriter();
-        //            curField.Serialize(subWriter);
-        //            writer.Put(subWriter.Length);
-        //            writer.Put(subWriter.AsReadOnlySpan());
-        //        }
-        //    }
-        //}
+        public unsafe T GetExtra<T>() where T : unmanaged
+        {
+            Debug.Assert(sizeof(T) <= 256);
+            Span<byte> bytes = extraBytes;
+            return MemoryMarshal.Cast<byte, T>(bytes)[0];
+        }
 
         public Vector3 GetInterpPosition(BasicState other)
         {

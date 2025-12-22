@@ -463,6 +463,7 @@ namespace Engine.Networking.Messages
 
                         var prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, entities[ent.playerId][ent.reference.id].latestSequence);
                         uint bits = state.GetDeltaBits(ref prevState);
+                        ulong extraBits = state.GetExtraBytesBits(ref prevState);
 
                         // We haven't changed at all, don't bother syncing
                         if (bits != 0)
@@ -472,6 +473,7 @@ namespace Engine.Networking.Messages
                         // The server will see that it has no ack, and send a major sync.
                         {
                             state.SerializeDelta(subWriter, bits);
+                            state.SerializeDeltaExtraFields(subWriter, extraBits);
 
                             subWriters.Add(subWriter);
                         }
