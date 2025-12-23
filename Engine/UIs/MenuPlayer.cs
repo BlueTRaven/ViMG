@@ -196,7 +196,7 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
+			ItemInstance preHighlightedHotbar = inventory?.Get(HighlightIndex) ?? new();
 
 			MenuHelper.DoPlayerInventory(player, inventory, heldInventory, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
 

@@ -1,4 +1,5 @@
-﻿using Engine.Items;
+﻿using Engine.Clients.Entities;
+using Engine.Items;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,6 +23,8 @@ namespace Engine.Clients
         }
         private InventoryHolder[] inventories;
 
+        private ClientInventoryDummy defaultInventory;
+
         public ClientInventoryManager()
         {
             inventories = new InventoryHolder[InventoryManager.InvMax];
@@ -31,6 +34,8 @@ namespace Engine.Clients
             {
                 inventories[i] = InventoryHolder.INVALID;
             }
+
+            defaultInventory = new ClientInventoryDummy();
         }
 
         public void Set(InventoryManager.InventoryReference reference, Inventory? inventory)
@@ -57,10 +62,10 @@ namespace Engine.Clients
             }
         }
 
-        public Inventory? Get(InventoryManager.InventoryReference reference)
+        public Inventory Get(InventoryManager.InventoryReference reference)
         {
-            if (inventories[reference.id - 1].generation != reference.generation) return null;
-            return inventories[reference.id - 1].inventory;
+            if (inventories[reference.id - 1].generation != reference.generation) return defaultInventory;
+            return inventories[reference.id - 1].inventory ?? defaultInventory;
         }
     }
 }

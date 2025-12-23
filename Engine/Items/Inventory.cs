@@ -363,7 +363,7 @@ namespace Engine.Items
 			Remove(index, -1);
 		}
 
-		public ref readonly ItemInstance Get(int index)
+		public virtual ref readonly ItemInstance Get(int index)
 		{
 			return ref items[index];
 		}

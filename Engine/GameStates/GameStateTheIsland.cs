@@ -203,8 +203,9 @@ namespace ViMG.GameStates
                     world = worldTask.Result;
                     worldTask = null;
 
-                    client.NewFrame();
-                    world.UpdateClientWorld(client);
+                    if (client != null)
+                        client.NewFrame();
+                    //world.UpdateClientWorld(client);
                 }
             }
 
@@ -216,10 +217,10 @@ namespace ViMG.GameStates
             if (client != null)
             {
                 client.NewFrame();
-                if (world != null)
-                {
-                    world.UpdateClientWorld(client);
-                }
+                //if (world != null)
+                //{
+                //    world.UpdateClientWorld(client);
+                //}
             }
 
             netManagerServer?.PollEvents();

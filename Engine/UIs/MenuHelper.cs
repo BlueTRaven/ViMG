@@ -158,12 +158,12 @@ namespace ViMG.UIs
 
 					UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
+                    ItemInstance oldItem = inventory.Get(i);
+
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), oldItem);
 					
 					if (itemSlots != null)
 						itemSlots[i] = itemslot;
-
-					var oldItem = inventory.Get(i);
 
 					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory);
 
