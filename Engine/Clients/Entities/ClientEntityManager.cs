@@ -8,7 +8,7 @@ using ViMG.Entities;
 
 namespace Engine.Clients.Entities
 {
-    public class EntityManager
+    public class ClientEntityManager
     {
         private struct EntityHolder
         {
@@ -31,13 +31,13 @@ namespace Engine.Clients.Entities
 
         public int MaxEnts => entities.Length;
 
-        public EntityManager()
+        public ClientEntityManager()
         {
             entities = new EntityHolder[ViMG.Entities.EntityManager.EntMax];
             Array.Fill(entities, EntityHolder.DEFAULT);
         }
 
-        public void NewFrame(EntityManager prev)
+        public void NewFrame(ClientEntityManager prev)
         {
             for (int i = 0; i < prev.entities.Length; i++)
             {

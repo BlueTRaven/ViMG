@@ -8,9 +8,6 @@ using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.MediaFoundation;
-
-//using SimplexNoise;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -517,6 +514,13 @@ namespace ViMG
 				{
 					clientWorld.Current().entities.Remove(reference);
 				}
+			}
+			for (int i = 0; i < InventoryManager.InvMax; i++)
+			{
+				var reference = InventoryManager.GetReference(i);
+                Inventory? inv = InventoryManager.Get(reference);
+
+				clientWorld.inventoryManager.Set(reference, inv);
 			}
 		}
 

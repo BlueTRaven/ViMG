@@ -9,11 +9,11 @@ namespace Engine.Clients
 {
     public class ClientWorld 
     {
-        public EntityManager entities;
+        public ClientEntityManager entities;
 
         public ClientWorld()
         {
-            entities = new EntityManager();
+            entities = new ClientEntityManager();
         }
 
         public void NewFrame(ClientWorld prev)

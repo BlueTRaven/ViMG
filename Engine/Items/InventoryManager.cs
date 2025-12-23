@@ -83,7 +83,7 @@ namespace Engine.Items
                 inventory = new Inventory(config with { id = id }),
             };
 
-            return GetReference(id);
+            return GetReference(id - 1);
         }
 
         public void Unload(InventoryReference reference)
@@ -104,7 +104,7 @@ namespace Engine.Items
 
         public InventoryReference GetReference(int id)
         {
-            return new InventoryReference(id, inventories[id - 1].generation);
+            return new InventoryReference(id + 1, inventories[id].generation);
         }
 
         public Inventory? Get(InventoryReference reference)

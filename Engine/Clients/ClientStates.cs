@@ -11,6 +11,8 @@ namespace Engine.Clients
     public class ClientStates
     {
         public ClientWorld[] states;
+        public ClientInventoryManager inventoryManager;
+
         private int head = 0;
 
         public ClientStates()
@@ -20,6 +22,8 @@ namespace Engine.Clients
             {
                 states[i] = new ClientWorld();
             }
+
+            inventoryManager = new ClientInventoryManager();
         }
 
         public void NewFrame()
