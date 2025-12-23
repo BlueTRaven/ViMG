@@ -31,29 +31,10 @@ namespace Engine.Networking.Messages
 
             netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
             netMessage.writer.Put(World.MAX_PLAYERS);
-            foreach (NetworkManager.NetPlayer player in GS.netManager.netPlayers)
+            foreach (NetworkManager.NetPlayer player in GS.netManagerServer?.netPlayers)
             {
                 netMessage.writer.Put(player);
             }
-
-            //var players = addData as Player[];
-            //if (players != null)
-            //{
-            //    //int numPlayers = GS.GetWorld().player.Where(x => x != null).Count();
-            //    netMessage.writer.Put(players.Length);
-            //    Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", players.Length);
-            //    foreach (Player player in players)
-            //    {
-            //        netMessage.writer.Put(player.playerIndex);
-            //        Console.WriteLine("SyncPlayerConnected: write index {0}", player.playerIndex);
-
-            //        var playerEntityData = new EntityManagerIO.EntityData(player);
-            //        List<byte> bytes = new List<byte>();
-            //        playerEntityData.Save(bytes);
-            //        netMessage.writer.PutArray(bytes.ToArray(), sizeof(byte));
-            //    }
-            //}
-            //else netMessage.writer.Put((int)0);
 
             netMessage.Send();
         }
@@ -62,57 +43,29 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
-            var old = GS.netManager.netPlayers.ToArray();
-            Array.Fill(GS.netManager.netPlayers, new NetworkManager.NetPlayer());
-            GS.netManager.uniqueNetPlayers = 0;
+            var old = GS.netManagerClient.netPlayers.ToArray();
+            Array.Fill(GS.netManagerClient.netPlayers, new NetworkManager.NetPlayer());
+            GS.netManagerClient.uniqueNetPlayers = 0;
             int numNetPlayers = reader.GetInt();
             for (int i = 0; i < numNetPlayers; i++)
             {
                 var netPlayer = reader.Get<NetworkManager.NetPlayer>();
                 if (netPlayer.playerId != -1)
                 {
-                    GS.netManager.netPlayers[netPlayer.playerId] = netPlayer;
-                    GS.netManager.uniqueNetPlayers += 1;
+                    GS.netManagerClient.netPlayers[netPlayer.playerId] = netPlayer;
+                    GS.netManagerClient.uniqueNetPlayers += 1;
                 }
             }
             
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
-                if (old[i].playerId != -1 && GS.netManager.netPlayers[i].playerId == -1)
+                if (old[i].playerId != -1 && GS.netManagerClient.netPlayers[i].playerId == -1)
                 {
                     var disconnectedPlayer = GS.GetWorld().player[old[i].playerId];
                     if (disconnectedPlayer != null)
                         GS.GetWorld().EntityManager.Unload(disconnectedPlayer);
                 }
             }
-
-            // NOTE: numPlayers != numNetPlayers. We always sync netPlayers, whereas we only send
-            // the new Players.
-            //int numPlayers = reader.GetInt();
-            //Console.WriteLine("SyncPlayerConnected: write numPlayers {0}", numPlayers);
-            //for (int i = 0; i < numPlayers; i++)
-            //{
-            //    int playerIndex = reader.GetInt();
-            //    Console.WriteLine("SyncPlayerConnected: read index {0}", playerIndex);
-
-            //    byte[] bytes = reader.GetArray<byte>(sizeof(byte));
-            //    EntityManagerIO.EntityData data = new();
-            //    data.Load(bytes);
-            //    if (data.IsValid)
-            //    {
-            //        Player p = new Player();
-            //        p.playerIndex = playerIndex;
-            //        p.OnLoad(data.data, data.version);
-
-            //        GS.GetWorld().EntityManager.ForceAdd(p, data.id);
-            //        GS.GetWorld().player[playerIndex] = p;
-
-            //        if (playerIndex == GS.GetWorld().localPlayerIndex)
-            //        {
-            //            GS.GetWorld().ChunkLoadManager.LoadAroundTarget(GS.GetWorld());
-            //        }
-            //    }
-            //}
         }
     }
 }

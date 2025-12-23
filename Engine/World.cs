@@ -54,6 +54,8 @@ namespace ViMG
 
 		public const int MAX_PLAYERS = 4;
 		public Player?[] player = new Player[4];
+		// TODO: get rid of localPlayerIndex
+		// Client will be handled with the dumb client, therefore the server will have no concept of a "local player"
 		public int localPlayerIndex;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
@@ -278,7 +280,7 @@ namespace ViMG
 			{
 				player[p.playerIndex] = p;
 			}
-			localPlayerIndex = Main.gameStateManager.TheIsland.netManager?.whoAmI ?? 0;
+			localPlayerIndex = Main.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? 0;
 			// -1 means singleplayer
 			if (localPlayerIndex == -1) localPlayerIndex = 0;
 
@@ -374,13 +376,13 @@ namespace ViMG
             SyncPlayerInputs.Instance.Apply(player);
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
-			SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
+			//SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
 			SyncInventoryUpdate.Instance.Apply(EntityManager);
-			SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
+			//SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
 
-			if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && Main.Time - timeSyncTime > 1)
+			if (Main.Time - timeSyncTime > 1)
 			{
-				Main.Registry.MessageRegistry.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+				Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
 				timeSyncTime = Main.Time;
 			}
 
@@ -1105,19 +1107,19 @@ namespace ViMG
 
 					// Client doesn't get to actually break blocks. Server does it for them
                     DoMineCube(position, player, Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
-                    if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-					{
-                        var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
-						{
-							position = position,
-							newId = 0,
-							oldId = cube.Id,
-							player = (byte)localPlayerIndex,
-							time = Main.Time,
-						};
+     //               if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+					//{
+     //                   var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
+					//	{
+					//		position = position,
+					//		newId = 0,
+					//		oldId = cube.Id,
+					//		player = (byte)localPlayerIndex,
+					//		time = Main.Time,
+					//	};
 
-                        Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, action);
-					}
+     //                   Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
+					//}
 
                     return true;
                 }
@@ -1159,19 +1161,19 @@ namespace ViMG
                 Cube cube = Main.Registry.CubeRegistry.Get(id);
                 cube.OnPlayerPlaced(player, player.PlaceAtPos);
 
-                if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-                {
-                    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
-                    {
-                        position = player.PlaceAtPos,
-                        newId = id,
-                        oldId = oldId,
-                        player = (byte)player.playerIndex,
-                        time = Main.Time,
-                    };
+                //if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+                //{
+                //    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
+                //    {
+                //        position = player.PlaceAtPos,
+                //        newId = id,
+                //        oldId = oldId,
+                //        player = (byte)player.playerIndex,
+                //        time = Main.Time,
+                //    };
 
-                    Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, action);
-                }
+                //    Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
+                //}
 
                 return true;
             }

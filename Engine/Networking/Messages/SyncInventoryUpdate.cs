@@ -265,45 +265,42 @@ namespace Engine.Networking.Messages
                 {
                     if (activeAudits[i][j].active)
                     {
-                        if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+                        var action = activeAudits[i][j];
+                        var peer = GS.netManagerServer?.GetPeer(action.auditingPlayer);
+                        if (peer != null)
                         {
-                            var action = activeAudits[i][j];
-                            var peer = GS.netManager.GetPeer(action.auditingPlayer);
-                            if (peer != null)
+                            var accepted = false;
+                            var entity = entityManager.GetById(action.entityId);
+                            var inventory = entity?.world.InventoryManager.Get(entity.world.InventoryManager.GetReference(action.inventoryId));
+
+                            if (entity != null && entity is IHasInventory hasInv)
                             {
-                                var accepted = false;
-                                var entity = entityManager.GetById(action.entityId);
-                                var inventory = entity?.world.InventoryManager.Get(entity.world.InventoryManager.GetReference(action.inventoryId));
+                                var curInstance = inventory.Get(action.inventoryIndex);
 
-                                if (entity != null && entity is IHasInventory hasInv)
+                                // TODO: in what situations do we decline a request?
+                                if (curInstance.item != action.oldInstance.item || curInstance.damage != action.oldInstance.damage)
                                 {
-                                    var curInstance = inventory.Get(action.inventoryIndex);
-
-                                    // TODO: in what situations do we decline a request?
-                                    if (curInstance.item != action.oldInstance.item || curInstance.damage != action.oldInstance.damage) 
-                                    {
-                                        accepted = false;
-                                    }
+                                    accepted = false;
                                 }
-
-                                Main.Registry.MessageRegistry.SendMessageToPeer(SyncInventoryUpdateAuditResponse.Instance, peer, new SyncInventoryUpdateAuditResponse.AcceptedInventoryUpdate()
-                                {
-                                    accepted = accepted,
-                                    index = (byte)j,
-                                    newInstance = action.newInstance,
-                                });
                             }
 
-                            // If peer was no longer alive, then we still need to mark this as inactive
-                            activeAudits[i][j].active = false;
-                        }
-                        else
-                        {
-                            if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
+                            GS.netManagerServer?.SendMessageToPeer(SyncInventoryUpdateAuditResponse.Instance, peer, new SyncInventoryUpdateAuditResponse.AcceptedInventoryUpdate()
                             {
-                                RollbackAction(activeAudits[i][j]);
-                                activeAudits[i][j].active = false;
-                            }
+                                accepted = accepted,
+                                index = (byte)j,
+                                newInstance = action.newInstance,
+                            });
+                        }
+
+                        // If peer was no longer alive, then we still need to mark this as inactive
+                        activeAudits[i][j].active = false;
+                    }
+                    else
+                    {
+                        if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
+                        {
+                            RollbackAction(activeAudits[i][j]);
+                            activeAudits[i][j].active = false;
                         }
                     }
                 }

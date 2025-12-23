@@ -125,7 +125,7 @@ namespace ViMG.WorldLogics
 
             if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && Main.Time - timeSyncWeather > 1)
             {
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncWeather.Instance, Main.gameStateManager.TheIsland.netManager.netManager, null);
+                Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWeather.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
                 timeSyncWeather = Main.Time;
             }
 

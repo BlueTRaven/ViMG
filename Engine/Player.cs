@@ -549,8 +549,8 @@ namespace ViMG
 
 			var inventory = world.InventoryManager.Get(this.inventory);
 			var heldInventory = world.InventoryManager.Get(this.heldInventory);
-			inventory?.ProcessActions(this);
-			heldInventory?.ProcessActions(this);
+			inventory?.ProcessActionsServer(this);
+			heldInventory?.ProcessActionsServer(this);
 
 			if (IsLocalPlayer)
 			{
@@ -574,7 +574,7 @@ namespace ViMG
 			{
 				// Check to make sure we're still alive
 				// This is the case if our playerIndex is present in the netPlayer array
-				if (Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId != playerIndex)
+				if (Main.gameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
 				{
 					world.EntityManager.Kill(this);
 					return;

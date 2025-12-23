@@ -348,7 +348,7 @@ namespace Engine.Networking.Messages
                     if (player == null || !player.IsInitialized || player.IsLocalPlayer)
                         continue;
 
-                    var peer = Main.gameStateManager.TheIsland.netManager.GetPeer(player.playerIndex);
+                    var peer = GS.netManagerServer?.GetPeer(player.playerIndex);
 
                     if (peer == null)
                     {
@@ -412,7 +412,7 @@ namespace Engine.Networking.Messages
                         }
                     }
 
-                    Main.Registry.MessageRegistry.SendMessageToPeer(Instance, peer, player.playerIndex);
+                    GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
                 }
 
                 lastSyncTime = Main.Time;
@@ -645,7 +645,7 @@ namespace Engine.Networking.Messages
             }
 
             if (ackI > 0)
-                Main.Registry.MessageRegistry.SendMessageToPeer(SyncEntityStateAck.Instance, peer, new SyncEntityStateAck.Ack { numAckd = ackI, ackdEntities = ackArr, sequence = seq });
+                GS.netManagerServer?.SendMessageToPeer(SyncEntityStateAck.Instance, peer, new SyncEntityStateAck.Ack { numAckd = ackI, ackdEntities = ackArr, sequence = seq });
         }
     }
 
@@ -721,7 +721,7 @@ namespace Engine.Networking.Messages
 
             Ack ack = reader.Get<Ack>();
 
-            SyncEntityState.Instance.AddAck(ack, Main.gameStateManager.TheIsland.netManager.GetNetPlayer(peer).playerId, ack.sequence);
+            SyncEntityState.Instance.AddAck(ack, GS.netManagerClient.GetNetPlayer(peer).playerId, ack.sequence);
         }
     }
 }

@@ -166,7 +166,7 @@ namespace ViMG.UIs
                             if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
                                 gsManager.TheIsland.localPlayerName = directories[i];
 
-                            gsManager.TheIsland.netManager.Port = serverPort;
+                            gsManager.TheIsland.netManagerServer.Port = serverPort;
                             gsManager.SetGameState(gsManager.TheIsland);
                             gsManager.TheIsland.BeginLoadWorld(directories[i]);
                         }
@@ -204,7 +204,7 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
-                    gsManager.TheIsland.netManager.Port = serverPort;
+                    gsManager.TheIsland.netManagerServer.Port = serverPort;
 
                     if (worldName == "")
                         worldName = "new" + directories.Length;
@@ -250,8 +250,8 @@ namespace ViMG.UIs
                 {
                     startAsServer = true;
                     gsManager.TheIsland.localPlayerName = playerName;
-                    gsManager.TheIsland.netManager.Ip = serverIp;
-                    gsManager.TheIsland.netManager.Port = serverPort;
+                    gsManager.TheIsland.netManagerServer.Ip = serverIp;
+                    gsManager.TheIsland.netManagerServer.Port = serverPort;
                     state = MenuState.Worlds;
                     directories = GetWorldSaveDirectories();
                     clicked = true;
@@ -264,8 +264,8 @@ namespace ViMG.UIs
                 {
                     gsManager.netMode = GameStateManager.NetworkingMode.Client;
                     gsManager.TheIsland.localPlayerName = playerName;
-                    gsManager.TheIsland.netManager.Ip = serverIp;
-                    gsManager.TheIsland.netManager.Port = serverPort;
+                    gsManager.TheIsland.netManagerClient.Ip = serverIp;
+                    gsManager.TheIsland.netManagerClient.Port = serverPort;
                     gsManager.SetGameState(gsManager.TheIsland);
                     gsManager.TheIsland.LoadNone();
                 }

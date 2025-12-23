@@ -511,11 +511,11 @@ namespace ViMG.UIs
 			return entity.InventoryAction(activatingPlayer, action);
 		}
 
-		public static void InventoryAction(EntityManager.EntityReference entity, int activatingPlayer, int action)
+		public static void InventoryActionClient(EntityManager.EntityReference entity, int activatingPlayer, int action)
 		{
 			Debug.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Server);
 
-            Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync
+            Main.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
             {
                 player = (byte)activatingPlayer,
                 entityId = (ulong)entity.id,

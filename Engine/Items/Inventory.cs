@@ -114,9 +114,8 @@ namespace Engine.Items
 			lastEmpty = 0;
 		}
 
-		public void ProcessActions<T>(T owner) where T : Entity, IHasInventory
+		public void ProcessActionsServer<T>(T owner) where T : Entity, IHasInventory
 		{
-			if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server || (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client && owner is Player player && player.IsLocalPlayer)) 
 			foreach (var action in actions)
 			{
 				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", Main.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
@@ -130,14 +129,7 @@ namespace Engine.Items
 					time = Main.Time
 				};
 
-				if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
-				{
-					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-				}
-				else if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
-				{
-					Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManager.netManager, invUpdate);
-				}
+                Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
 			}
 
 			actions.Clear();

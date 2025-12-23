@@ -495,20 +495,19 @@ namespace ViMG
 					{
 						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
 
-						if (gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer)
+						if (theIsland.netManagerServer != null)
 						{
-							theIsland.netManager.IMGUIDebug();
-							//var stats = theIsland.netManager.netManager.Statistics;
-							//ImGui.Text(string.Format("Packets Sent: {0} pps {1:0.02}", stats.PacketsSent, (double)stats.PacketsSent / (Time - theIsland.netManager.StartTime)));
-       //                     ImGui.Text(string.Format("Packets Received: {0} pps {1:0.02}", stats.PacketsReceived, (double)stats.PacketsReceived / (Time - theIsland.netManager.StartTime)));
-       //                     ImGui.Text(string.Format("Bytes Sent: {0} bps {1:0.02}", stats.BytesSent, (double)stats.BytesSent / (Time - theIsland.netManager.StartTime)));
-       //                     ImGui.Text(string.Format("Bytes Received: {0} bps {1:0.02}", stats.BytesReceived, (double)stats.BytesReceived / (Time - theIsland.netManager.StartTime)));
+							theIsland.netManagerServer.IMGUIDebug();
 
-                            for (int i = 0; i < World.MAX_PLAYERS; i++)
+							for (int i = 0; i < World.MAX_PLAYERS; i++)
 							{
-								if (theIsland.netManager.netPlayers[i].playerId != -1)
-									ImGui.Text(string.Format("Player {0}: {1}", i, theIsland.netManager.netPlayers[i].latency));
+								if (theIsland.netManagerServer.netPlayers[i].playerId != -1)
+									ImGui.Text(string.Format("Player {0}: {1}", i, theIsland.netManagerServer.netPlayers[i].latency));
 							}
+						}
+						if (theIsland.netManagerClient != null)
+						{
+							theIsland.netManagerClient.IMGUIDebug();
 						}
 					}
 				}

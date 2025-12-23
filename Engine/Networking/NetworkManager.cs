@@ -25,7 +25,8 @@ namespace Engine.Networking
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
         {
-            var players = Main.gameStateManager.TheIsland?.netManager?.netPlayers.Where(x => x.playerId != -1);
+            var networkManager = Main.gameStateManager.TheIsland?.netManagerServer != null ? Main.gameStateManager.TheIsland?.netManagerServer : Main.gameStateManager.TheIsland?.netManagerClient;
+            var players = networkManager.netPlayers.Where(x => x.playerId != -1);
             if (players != null)
             {
                 IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count()));
@@ -198,7 +199,7 @@ namespace Engine.Networking
             {
                 if (Main.Time - timeUpdateTime > 0.125)
                 {
-                    Main.Registry.MessageRegistry.SendMessageToAll(WhoAmI.Instance, netManager, null);
+                    SendMessageToAll(WhoAmI.Instance, netManager, null);
                     timeUpdateTime = Main.Time;
                 }
             }
@@ -261,7 +262,7 @@ namespace Engine.Networking
                 else
                 {
                     Console.WriteLine("Connected to server at {0}.", peer);
-                    Main.Registry.MessageRegistry.SendMessageToAll(WhoAmIRequest.Instance, netManager, null);
+                    SendMessageToAll(WhoAmIRequest.Instance, netManager, null);
                 }
             }
         }
@@ -293,7 +294,7 @@ namespace Engine.Networking
                 world.EntityManager.Unload(world.player[playerIndex]);
                 world.player[playerIndex] = null;
                 netPlayers[index] = new NetPlayer();
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
+                SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
 
                 Main.gameStateManager.TheIsland.GetWorld().ChunkLoadManager.UnloadAllFor(playerIndex);
             }
@@ -376,18 +377,45 @@ namespace Engine.Networking
             };
             uniqueNetPlayers += 1;
 
-            Main.Registry.MessageRegistry.SendMessageToPeer(WhoAmI.Instance, peer, index);
+            SendMessageToPeer(WhoAmI.Instance, peer, index);
             Main.gameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
             world.ChunkLoadManager.LoadAroundTarget(world);
             // Inform others of new player
-            Main.Registry.MessageRegistry.SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
+            SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
             var sync = new SyncChunk.ChunkToSync
             {
                 chunkPosition = ChunkPosition.WorldSpaceChunk(world.WorldInfo.spawnPosition),
             };
-            Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+            SendMessageToPeer(SyncChunk.Instance, peer, sync);
 
             Console.WriteLine("Peer connected from {0}. {1} {2} {3}", peer, netPlayers[index].playerId, netPlayers[index].playerName, netPlayers[index].playerName.GetHashCode());
+        }
+
+        public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
+        {
+            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+            {
+                IMGUIConsole.Assert((message.SendableFrom & NetworkSide.Server) == NetworkManager.NetworkSide.Server);
+            }
+            else
+            {
+                IMGUIConsole.Assert((message.SendableFrom & NetworkSide.Client) == NetworkManager.NetworkSide.Client);
+            }
+
+            NetworkMessage netMessage = new NetworkMessage(message.Id, netManager, peer);
+            netMessage.writer.Put(message.Id);
+
+            message.SendMessage(netMessage, addData);
+        }
+
+        // TODO: remove netManager, use field
+        public void SendMessageToAll(Message message, NetManager netManager, object? addData, NetPeer? excludePeer = null)
+        {
+            NetworkMessage netMessage = new NetworkMessage(message.Id, netManager, null);
+            netMessage.excludePeer = excludePeer;
+            netMessage.writer.Put(message.Id);
+
+            message.SendMessage(netMessage, addData);
         }
 
         public void IMGUIDebug()
@@ -402,5 +430,6 @@ namespace Engine.Networking
             ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, 0, null, 0, (float)(maxSent) / 10000.0f, new(0, 80));
             ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, 0, null, 0, (float)(maxRecieved) / 10000.0f, new(0, 80));
         }
+
     }
 }

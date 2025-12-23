@@ -321,18 +321,15 @@ namespace ViMG
 				waitingToFinishMeshingChunks.Add(copyingChunk);
 
                 // Sync chunk loading to other players
-                if (copyingChunk.player != world.localPlayerIndex && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server)
+                var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(copyingChunk.player);
+                if (peer != null)
                 {
-                    var peer = Main.gameStateManager.TheIsland.netManager?.GetPeer(copyingChunk.player);
-                    if (peer != null)
+                    var sync = new SyncChunk.ChunkToSync
                     {
-                        var sync = new SyncChunk.ChunkToSync
-                        {
-                            chunkPosition = copyingChunk.position,
-                            ids = copy.Ids,
-                        };
-                        Main.Registry.MessageRegistry.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                    }
+                        chunkPosition = copyingChunk.position,
+                        ids = copy.Ids,
+                    };
+                    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
                 }
             }
 
@@ -723,7 +720,7 @@ namespace ViMG
         public void UnloadAllFor(int playerIndex)
         {
             //NOTE: this assumes that at least one player remains!
-            IMGUIConsole.Assert(Main.gameStateManager.TheIsland.netManager.uniqueNetPlayers > 0);
+            IMGUIConsole.Assert(Main.gameStateManager.TheIsland.netManagerServer.uniqueNetPlayers > 0);
 
             for (int j = 0; j < chunkManager.SizeInChunksXZ; j++)
             {

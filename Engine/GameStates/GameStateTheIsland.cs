@@ -57,13 +57,15 @@ namespace ViMG.GameStates
         public static int ProgressMax;
 
         public PlayerManagerIO? playerIO;
-        public NetworkManager? netManager;
+        public NetworkManager? netManagerServer;
+        public NetworkManager? netManagerClient;
 
         public string? localPlayerName;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
-            netManager = new NetworkManager();
+            netManagerServer = new NetworkManager();
+            netManagerClient = new NetworkManager();
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -165,21 +167,27 @@ namespace ViMG.GameStates
         {
             base.OnOpen(changingFrom);
 
-            netManager?.Disconnect();
+            netManagerServer?.Disconnect();
+            netManagerClient?.Disconnect();
 
-            if (manager.netMode != GameStateManager.NetworkingMode.Singleplayer)
-                netManager?.Connect(manager.netMode);
+            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
+            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
-            netManager?.Disconnect();
+            netManagerServer?.Disconnect();
+            netManagerClient?.Disconnect();
 
             if (world != null)
             {
                 world.Dispose();
                 world = null;
+            }
+            if (client != null)
+            {
+                client = null;
             }
             SetMenu(null);
         }
@@ -214,7 +222,8 @@ namespace ViMG.GameStates
                 }
             }
 
-            netManager?.PollEvents();
+            netManagerServer?.PollEvents();
+            netManagerClient?.PollEvents();
 
             base.Update(deltaTime);
         }
@@ -702,12 +711,12 @@ namespace ViMG.GameStates
             {
                 case GameStateManager.NetworkingMode.Client:
                     sb.Append("Client session. Connected to: ");
-                    sb.Append(netManager.netManager.FirstPeer.ToString());
+                    sb.Append(netManagerClient.netManager.FirstPeer.ToString());
                     sb.Append(".");
                     break;
                 case GameStateManager.NetworkingMode.Server:
                     sb.Append("Server session. There are ");
-                    sb.Append(netManager.uniqueNetPlayers);
+                    sb.Append(netManagerServer.uniqueNetPlayers);
                     sb.Append(" connected players.");
                     break;
                 case GameStateManager.NetworkingMode.Singleplayer:

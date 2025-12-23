@@ -40,14 +40,14 @@ namespace Engine.Networking.Messages
 
             string playerName = reader.GetString();
 
-            if (playerName == "" || GS.netManager.GetNetPlayerByName(playerName).playerId != -1)
+            if (playerName == "" || GS.netManagerServer.GetNetPlayerByName(playerName).playerId != -1)
             {
                 Console.WriteLine("Invalid player name ({0}) recieved from {1}", playerName, peer.ToString());
                 peer.Disconnect();
                 return;
             }
 
-            Main.gameStateManager.TheIsland.netManager.NewPlayer(peer, playerName);
+            Main.gameStateManager.TheIsland.netManagerServer.NewPlayer(peer, playerName);
         }
     }
 
@@ -87,7 +87,7 @@ namespace Engine.Networking.Messages
 
             if (whoAmI != -1)
             {
-                GS.netManager.whoAmI = whoAmI;
+                GS.netManagerClient.whoAmI = whoAmI;
                 Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
             } else
             {

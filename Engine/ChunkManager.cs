@@ -121,7 +121,7 @@ namespace ViMG
                 {
                     world.OnCubeUpdate(updated.updated, updated.newId);
                     var entityTracking = world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null);
-                    
+
                     if (entityTracking != null)
                     {
                         if (entityTracking is ICubeTracker tracker)
@@ -130,10 +130,7 @@ namespace ViMG
                             multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
                     }
 
-                    if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
-                    {
-                        Main.Registry.MessageRegistry.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, updated);
-                    }
+                    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, updated);
                 }
                 else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
                         .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);

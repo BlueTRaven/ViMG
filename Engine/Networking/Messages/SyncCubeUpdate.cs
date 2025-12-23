@@ -218,54 +218,40 @@ namespace Engine.Networking.Messages
                 {
                     if (activeAudits[i][j].active)
                     {
-                        if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+                        var action = activeAudits[i][j];
+                        var peer = GS.netManagerServer?.GetPeer(action.player);
+                        if (peer != null)
                         {
-                            var action = activeAudits[i][j];
-                            var peer = GS.netManager.GetPeer(action.player);
-                            if (peer != null)
+                            var accepted = true;
+                            ushort newId = action.newId;
+                            var player = players[action.player];
+                            ushort curId = chunkManager.CubeView.GetId(action.position); ;
+
+                            if (curId != newId)
                             {
-                                var accepted = true;
-                                ushort newId = action.newId;
-                                var player = players[action.player];
-                                ushort curId = chunkManager.CubeView.GetId(action.position); ;
-
-                                if (curId != newId)
-                                {
-                                    accepted = false;
-                                    newId = curId;
-                                }
-                                //if (action.oldId != 0 && action.newId == 0)
-                                //{
-                                //    accepted = GS.GetWorld().TryMineCube(player, action.position, 0, 0, true);
-                                //    if (!accepted) newId = chunkManager.CubeView.GetId(action.position);
-                                //}
-                                //else
-                                //{
-                                //    chunkManager.CubeView.SetCube(action.position, action.newId, false);
-                                //    chunkManager.MarkCubeMeshInfoDirty(player, action.position, action.oldId, action.newId);
-                                //    chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(action.position));
-                                //}
-
-                                Main.Registry.MessageRegistry.SendMessageToPeer(SyncCubeUpdateAuditResponse.Instance, peer, new AcceptedCubeUpdate()
-                                {
-                                    accepted = accepted,
-                                    index = (byte)j,
-                                    newId = newId,
-                                });
+                                accepted = false;
+                                newId = curId;
                             }
 
-                            // If peer was no longer alive, then we still need to mark this as inactive
-                            activeAudits[i][j].active = false;
-                        }
-                        else
-                        {
-                            if (Main.Time - activeAudits[i][j].time >= TIMEOUT) 
+                            GS.netManagerServer?.SendMessageToPeer(SyncCubeUpdateAuditResponse.Instance, peer, new AcceptedCubeUpdate()
                             {
-                                RollbackAction(activeAudits[i][j]);
-                                activeAudits[i][j].active = false;
-                            }
+                                accepted = accepted,
+                                index = (byte)j,
+                                newId = newId,
+                            });
                         }
+
+                        // If peer was no longer alive, then we still need to mark this as inactive
+                        activeAudits[i][j].active = false;
                     }
+                    //else
+                    //{
+                    //    if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
+                    //    {
+                    //        RollbackAction(activeAudits[i][j]);
+                    //        activeAudits[i][j].active = false;
+                    //    }
+                    //}
                 }
             }
         }
