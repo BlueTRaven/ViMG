@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 
 namespace Engine.Clients.Entities
 {
@@ -27,7 +29,24 @@ namespace Engine.Clients.Entities
             };
         }
 
+        private struct PlayerHolder
+        {
+            public EntityManager.EntityReference entity;
+            public bool active;
+            public int playerIndex;
+            public int playerUuid;
+
+            public static PlayerHolder DEFAULT = new()
+            {
+                entity = new(),
+                playerIndex = -1,
+                playerUuid = -1,
+                active = false,
+            };
+        }
+
         private EntityHolder[] entities;
+        private PlayerHolder[] players;
 
         public int MaxEnts => entities.Length;
 
@@ -35,6 +54,8 @@ namespace Engine.Clients.Entities
         {
             entities = new EntityHolder[ViMG.Entities.EntityManager.EntMax];
             Array.Fill(entities, EntityHolder.DEFAULT);
+
+            players = new PlayerHolder[World.MAX_PLAYERS];
         }
 
         public void NewFrame(ClientEntityManager prev)
@@ -43,6 +64,41 @@ namespace Engine.Clients.Entities
             {
                 entities[i] = prev.entities[i];
             }
+
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                players[i] = prev.players[i];
+            }
+        }
+
+        public void AddPlayer(EntityManager.EntityReference reference, int playerUuid, int playerIndex)
+        {
+            players[playerIndex] = new PlayerHolder
+            {
+                active = true,
+                entity = reference,
+                playerUuid = playerUuid,
+                playerIndex = playerIndex,
+            };
+        }
+
+        public int GetPlayerIndex(EntityManager.EntityReference reference)
+        {
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].entity.id == reference.id && players[i].entity.generation == reference.generation)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        public BasicState GetByRef(EntityManager.EntityReference reference)
+        {
+            if (entities[reference.id].generation != reference.generation) return new();
+            else return entities[reference.id].state;
         }
 
         public BasicState GetById(int id)
@@ -86,6 +142,12 @@ namespace Engine.Clients.Entities
                 generation = reference.generation,
                 active = false,
             };
+
+            int playerIndex = GetPlayerIndex(reference);
+            if (playerIndex != -1)
+            {
+                players[playerIndex] = PlayerHolder.DEFAULT;
+            }
         }
     }
 }

@@ -17,27 +17,23 @@ namespace ViMG.UIs
 {
 	public class MenuFurnace<T> : Menu where T : Entity, IHasInventory
     {
-        private Player player;
-		private readonly T owner;
+        private EntityManager.EntityReference player;
+		private readonly EntityManager.EntityReference owner;
 		private InventoryManager.InventoryReference playerInventory;
 		private InventoryManager.InventoryReference heldInventory;
 		private InventoryManager.InventoryReference furnaceInventory;
 		private bool furnaceInventoryUpdated;
 		private Recipe currentRecipe;
 
-		private EntityFurnace furnace;
-
 		private Items.ItemInstance held;
 
-        public MenuFurnace(GameStateManager gsManager, Player player, T owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference furnaceInventory, EntityFurnace furnace) : base(gsManager)
+        public MenuFurnace(GameStateManager gsManager, EntityManager.EntityReference player, EntityManager.EntityReference owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference furnaceInventory) : base(gsManager)
 		{
 			this.player = player;
             this.owner = owner;
             this.playerInventory = playerInventory;
 			this.heldInventory = heldInventory;
 			this.furnaceInventory = furnaceInventory;
-
-			this.furnace = furnace;
         }
 
 		public override void OnOpen()
@@ -60,9 +56,10 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-            var furnaceInventory = player.world.InventoryManager.Get(this.furnaceInventory);
-            var playerInventory = player.world.InventoryManager.Get(this.playerInventory);
-            var heldInventory = player.world.InventoryManager.Get(this.heldInventory);
+			var invManager = gsManager.TheIsland.GetWorld().InventoryManager;
+            var furnaceInventory = invManager.Get(this.furnaceInventory);
+            var playerInventory = invManager.Get(this.playerInventory);
+            var heldInventory = invManager.Get(this.heldInventory);
 
             TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
@@ -99,7 +96,7 @@ namespace ViMG.UIs
 			UI.EndParent();
 			//bounds.x -= SIZE + MARGIN;
 
-			MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 0, itemSlotA, heldInventory);
+			MenuHelper.ItemSlotClickOutput output = MenuHelper.HandleItemSlot(owner, furnaceInventory, 0, itemSlotA, heldInventory);
 			if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -108,7 +105,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 1, itemSlotB, heldInventory);
+			output = MenuHelper.HandleItemSlot(owner, furnaceInventory, 1, itemSlotB, heldInventory);
             if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -117,7 +114,7 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			output = MenuHelper.HandleItemSlot(player, owner, furnaceInventory, 2, itemSlotFuel, heldInventory);
+			output = MenuHelper.HandleItemSlot(owner, furnaceInventory, 2, itemSlotFuel, heldInventory);
             if (output != MenuHelper.ItemSlotClickOutput.None)
 			{
 				if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
@@ -126,24 +123,25 @@ namespace ViMG.UIs
 				furnaceInventoryUpdated = true;
 			}
 
-			if (furnaceInventoryUpdated)
-			{
-				furnaceInventoryUpdated = false;
-				currentRecipe = furnace.FindRecipe();
+			// TODO: this should be server-side only
+			//if (furnaceInventoryUpdated)
+			//{
+			//	furnaceInventoryUpdated = false;
+			//	currentRecipe = furnace.FindRecipe();
 
-				if (currentRecipe != null)
-				{
-					for (int i = 0; i < Math.Min(2, currentRecipe.Outputs.Length); i++)
-					{
-						furnaceInventory.Set(currentRecipe.Outputs[i], 3 + i);
-					}
-				}
-				else
-				{
-					furnaceInventory.Set(new ItemInstance(), 3);
-					furnaceInventory.Set(new ItemInstance(), 4);
-				}
-			}
+			//	if (currentRecipe != null)
+			//	{
+			//		for (int i = 0; i < Math.Min(2, currentRecipe.Outputs.Length); i++)
+			//		{
+			//			furnaceInventory.Set(currentRecipe.Outputs[i], 3 + i);
+			//		}
+			//	}
+			//	else
+			//	{
+			//		furnaceInventory.Set(new ItemInstance(), 3);
+			//		furnaceInventory.Set(new ItemInstance(), 4);
+			//	}
+			//}
 
 			UI.EndParent();
 
@@ -169,7 +167,7 @@ namespace ViMG.UIs
 
 			if (craftRecipeButton.clickLeft)
 			{
-				MenuHelper.InventoryAction(owner, player, 1);
+				MenuHelper.InventoryAction(owner, gsManager.TheIsland.GetClient().Current().entities.GetPlayerIndex(player), 1);
 			}
 			else if (craftRecipeButton.hovered)
 			{

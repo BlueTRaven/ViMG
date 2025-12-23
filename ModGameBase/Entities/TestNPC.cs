@@ -156,7 +156,10 @@ namespace ViMG.Entities
             if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
             {
                 if (world.MenuDialogue.SelectedOption == 1)
-                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.player[world.localPlayerIndex], stockedItems));
+                {
+                    var player = world.player[world.localPlayerIndex];
+                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
+                }
 
                 shouldFollowUpMenu = false;
             }

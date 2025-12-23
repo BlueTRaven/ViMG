@@ -18,6 +18,7 @@ namespace Engine.Networking.Messages
         public struct ClickToSync
         {
             public byte player;
+            // TODO: entity reference here instead
             public ulong entityId;
             public int inventoryId;
             public int inventoryIndex;
@@ -82,7 +83,7 @@ namespace Engine.Networking.Messages
                     if (clickToSync.action > 0)
                     {
                         Console.WriteLine("Remove Inventory Input: Do Action {0}", clickToSync.action);
-                        hasInv.InventoryAction(player, clickToSync.action);
+                        hasInv.InventoryAction(player.playerIndex, clickToSync.action);
                     }
                 }
             }

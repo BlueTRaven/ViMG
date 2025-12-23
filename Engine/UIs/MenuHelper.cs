@@ -9,9 +9,11 @@ using Microsoft.Xna.Framework.Input;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.GameStates;
 using ViMG.Items;
 using static ViMG.UIs.MenuHelper;
@@ -138,7 +140,7 @@ namespace ViMG.UIs
         public static NineSlice MainPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
         public static NineSlice SecondaryPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
-        public static void DoPlayerInventory(Player player, Inventory inventory, Inventory heldInventory, 
+        public static void DoPlayerInventory(EntityManager.EntityReference player, Inventory inventory, Inventory heldInventory, 
 			int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
 		{
 			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
@@ -163,7 +165,7 @@ namespace ViMG.UIs
 
 					var oldItem = inventory.Get(i);
 
-					var output = HandleItemSlot(player, player, inventory, i, itemslot, heldInventory);
+					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory);
 
 					if (output == ItemSlotClickOutput.NeedsSwapInventory)
 					{
@@ -184,7 +186,7 @@ namespace ViMG.UIs
 			UI.EndParent();
 		}
 
-		public static void DoEntityInventory(Player player, Entity owner, Inventory inventory, Inventory heldInventory,
+		public static void DoEntityInventory(EntityManager.EntityReference owner, Inventory inventory, Inventory heldInventory,
             int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
         {
             UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
@@ -209,7 +211,7 @@ namespace ViMG.UIs
 
                     var oldItem = inventory.Get(i);
 
-                    var output = HandleItemSlot(player, owner, inventory, i, itemslot, heldInventory);
+                    var output = HandleItemSlot(owner, inventory, i, itemslot, heldInventory);
 
                     if (output == ItemSlotClickOutput.NeedsSwapInventory)
                     {
@@ -262,7 +264,7 @@ namespace ViMG.UIs
 			return ItemSlotClickOutput.None;
         }
 
-		public static ItemSlotClickOutput HandleItemSlot(Player player, Entity invOwner, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
+		public static ItemSlotClickOutput HandleItemSlot(EntityManager.EntityReference invOwner, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
@@ -273,22 +275,24 @@ namespace ViMG.UIs
 
 			if (itemSlot.button.clickLeft)
 			{
-				output = DoClick(player, inventory, heldInventory, index, Main.inputManager.IsHeld(Keys.LeftShift));
+				//output = DoClick(player, inventory, heldInventory, index, Main.inputManager.IsHeld(Keys.LeftShift));
 			}
 			else if (itemSlot.button.clickRight)
 			{
-				output = DoRightClick(player, inventory, heldInventory, index);
+				//output = DoRightClick(player, inventory, heldInventory, index);
 			}
 
 			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer && output != ItemSlotClickOutput.None)
 			{
-				Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync { 
-					player = (byte)player.playerIndex,
-					entityId = invOwner.Id,
-					inventoryId = inventory.id,
-					inventoryIndex = index,
-					output = output,
-				});
+				// TODO
+				// playerIndex will always be the local player index (this is only called folr handling menus, after all!
+				//Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync { 
+				//	player = (byte)playerIndex,
+				//	entityId = invOwner.id,
+				//	inventoryId = inventory.id,
+				//	inventoryIndex = index,
+				//	output = output,
+				//});
 				//inventory.AddClick(player, index, output);
 			}
 
@@ -502,22 +506,24 @@ namespace ViMG.UIs
 		/// Wrapper function for inventory actions; does network synchronization
 		/// </summary>
 		/// <returns></returns>
-		public static bool InventoryAction<T>(T entity, Player? activatingPlayer, int action) where T : Entity, IHasInventory
+		public static bool InventoryAction<T>(T entity, int activatingPlayer, int action) where T : Entity, IHasInventory
 		{
-			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer)
-			{
-                Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync
-                {
-                    player = (byte)(activatingPlayer?.playerIndex ?? 255),
-                    entityId = entity.Id,
-                    inventoryId = 0,
-                    inventoryIndex = 0,
-                    output = ItemSlotClickOutput.None,
-					action = action,
-                });
-            }
-
 			return entity.InventoryAction(activatingPlayer, action);
 		}
+
+		public static void InventoryAction(EntityManager.EntityReference entity, int activatingPlayer, int action)
+		{
+			Debug.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Server);
+
+            Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync
+            {
+                player = (byte)activatingPlayer,
+                entityId = (ulong)entity.id,
+                inventoryId = 0,
+                inventoryIndex = 0,
+                output = ItemSlotClickOutput.None,
+                action = action,
+            });
+        }
 	}
 }

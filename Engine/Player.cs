@@ -428,7 +428,7 @@ namespace ViMG
 			if (IsLocalPlayer)
 			{
 				Console.WriteLine("Init local");
-				menuPlayer = new MenuPlayer(Main.gameStateManager, this, heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
+				menuPlayer = new MenuPlayer(Main.gameStateManager, world.EntityManager.GetReference(this), heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
 				menuPlayer.Close();
 				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
 				if (!Main.IsHeadless)
@@ -2350,7 +2350,7 @@ namespace ViMG
             Run.previousRecordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
         }
 
-        public bool InventoryAction(Player? activatingPlayer, int action)
+        public bool InventoryAction(int activatingPlayer, int action)
         {
 			return false;
         }

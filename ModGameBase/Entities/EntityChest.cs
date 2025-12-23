@@ -94,7 +94,7 @@ namespace ViMG.Entities
 		public bool OnInteract(Player player)
 		{
 			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory, rows, columns));
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory, rows, columns));
 
 			return true;
 		}
@@ -140,7 +140,7 @@ namespace ViMG.Entities
             return md.As<byte>();
         }
 
-		public bool InventoryAction(Player? activatingPlayer, int action)
+		public bool InventoryAction(int activatingPlayer, int action)
         {
 			return false;
         }

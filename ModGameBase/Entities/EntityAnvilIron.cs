@@ -47,7 +47,7 @@ namespace ViMG.Entities
 		{
 			if (player.IsLocalPlayer)
 			{
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory));
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory));
 			}
 
 			return true;

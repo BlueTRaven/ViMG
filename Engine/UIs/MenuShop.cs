@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,7 +23,9 @@ namespace ViMG.UIs
             public int value;
         }
 
-        private Player player;
+        private EntityManager.EntityReference player;
+        private InventoryManager.InventoryReference playerInventory;
+        private InventoryManager.InventoryReference heldInventory;
         private ShopStockedItem[] stock;
 
         private TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
@@ -32,9 +35,11 @@ namespace ViMG.UIs
         private float holdingTimer;
         private float holdingPickupTimer;
 
-        public MenuShop(GameStateManager gsManager, Player player, ShopStockedItem[] stock) : base(gsManager)
+        public MenuShop(GameStateManager gsManager, EntityManager.EntityReference player, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, ShopStockedItem[] stock) : base(gsManager)
         {
             this.player = player;
+            this.playerInventory = playerInventory;
+            this.heldInventory = heldInventory;
             this.stock = stock;
         }
 
@@ -61,8 +66,9 @@ namespace ViMG.UIs
 
             UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-            var inventory = player.world.InventoryManager.Get(player.inventory);
-            var heldInventory = player.world.InventoryManager.Get(player.heldInventory);
+            var invManager = gsManager.TheIsland.GetClient().inventoryManager;
+            var inventory = invManager.Get(this.playerInventory);
+            var heldInventory = invManager.Get(this.heldInventory);
             MenuHelper.DoPlayerInventory(player, inventory, heldInventory, Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
 
             UI.StartParent(new Vector2(0, MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Height + MARGIN));
@@ -70,7 +76,8 @@ namespace ViMG.UIs
             UI.MakePanel(new UI.PanelConstructionParameters(new RectangleF(0, 0, MenuHelper.GetInventorySize(1, 4, 
                 18 * 2f, 2f)), Color.White, MenuHelper.MainPanelNS));
 
-            UIWidgets.MakeCoinCounter(new Vector2(16), player.Currency, SCALE, fi);
+            // TODO currency
+            UIWidgets.MakeCoinCounter(new Vector2(16), 0, SCALE, fi);
 
             UI.EndParent();
 
@@ -102,7 +109,8 @@ namespace ViMG.UIs
                 {
                     //TODO: maybe change MenuHelper.HandleItemSlot? For right now, handle things manually.
                     //Both buttons should pull one item out and put it into the held slot.
-                    if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) && player.Currency >= stocked.value)
+                    // TODO currency
+                    if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) && 0 >= stocked.value)
                     {
                         holdingItemSlot = i;
                         holdingTimer = 0;
@@ -112,7 +120,8 @@ namespace ViMG.UIs
                             heldInventory.Set(new ItemInstance(stocked.item, 1), 0);
                         else heldInventory.Set(new ItemInstance(heldInventory.Get(0), heldInventory.Get(0).num + 1), 0);
 
-                        player.Currency -= stocked.value;
+                        // TODO currency
+                        //player.Currency -= stocked.value;
                     }
                 }
                 
@@ -128,7 +137,8 @@ namespace ViMG.UIs
 
                 if (Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton))
                 {
-                    if (player.Currency >= stock[holdingItemSlot].value)
+                    // TODO currency
+                    if (0 >= stock[holdingItemSlot].value)
                     {
                         if (holdingPickupTimer <= 0)
                         {
@@ -142,7 +152,8 @@ namespace ViMG.UIs
 
                             heldInventory.Set(new ItemInstance(heldInventory.Get(0), heldInventory.Get(0).num + 1), 0);
 
-                            player.Currency -= stock[holdingItemSlot].value;
+                            // TODO currency
+                            //player.Currency -= stock[holdingItemSlot].value;
                         }
                     }
                     //we can no longer afford the item, so stop buying it.
@@ -154,18 +165,19 @@ namespace ViMG.UIs
 
             UI.EndParent();
 
-            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape))
-            {
-                gsManager.TheIsland.PopMenu();
+            // TODO drop item
+            //if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape))
+            //{
+            //    gsManager.TheIsland.PopMenu();
 
-                if (heldInventory.Get(0).valid)
-                {
-                    EntityItem ent = new EntityItem(player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 5, heldInventory.Get(0));
-                    player.world.EntityManager.Add(ent);
+            //    if (heldInventory.Get(0).valid)
+            //    {
+            //        EntityItem ent = new EntityItem(player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 5, heldInventory.Get(0));
+            //        player.world.EntityManager.Add(ent);
 
-                    heldInventory.Set(new ItemInstance(), 0);
-                }
-            }
+            //        heldInventory.Set(new ItemInstance(), 0);
+            //    }
+            //}
         }
 
         public override void Draw(SpriteBatch batch)

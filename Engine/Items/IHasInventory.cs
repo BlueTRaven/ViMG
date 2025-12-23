@@ -9,6 +9,6 @@ namespace Engine.Items
 {
     public interface IHasInventory
     {
-        bool InventoryAction(Player? activatingPlayer, int action);
+        bool InventoryAction(int activatingPlayer, int action);
     }
 }

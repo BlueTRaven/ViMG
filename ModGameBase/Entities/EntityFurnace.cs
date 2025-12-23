@@ -93,10 +93,27 @@ namespace ViMG.Entities
 			world.EntityManager.Kill(this);
 		}
 
+        //private struct SetMenuMessageContents
+        //{
+        //    public EntityManager.EntityReference openerReference;
+        //    public EntityManager.EntityReference entityReference;
+        //    public int menuId;
+        //    public InventoryManager.InventoryReference[] inventories;
+        //    // What happens if this is received but inventories or entities are not yet available?
+        //    // Design menus such that not having a valid reference is not an error case
+        //}
+
 		public bool OnInteract(Player player)
 		{
+            // TODO:
+            // send message that says set this menu
+            // message can probably contain:
+            // entity reference opening inventory (player)
+            // this entity reference
+            // n inventory references?
+            // client-side knows how to decode
 			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, player, this, player.inventory, player.heldInventory, inventory, this));
+				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory));
 
 			return true;
 		}
@@ -207,13 +224,14 @@ namespace ViMG.Entities
         }
 
 
-        public bool InventoryAction(Player? activatingPlayer, int action)
+        public bool InventoryAction(int activatingPlayer, int action)
         {
             var currentRecipe = FindRecipe();
 
             var inventory = world.InventoryManager.Get(this.inventory);
+            var player = world.player[activatingPlayer];
             if (currentRecipe != null && inventory.Get(2).num > 0)
-                return CraftItem(activatingPlayer, currentRecipe);
+                return CraftItem(player, currentRecipe);
             return false;
         }
     }

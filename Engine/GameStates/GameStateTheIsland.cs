@@ -224,6 +224,11 @@ namespace ViMG.GameStates
             return this.world;
         }
 
+        public ClientStates GetClient()
+        {
+            return client;
+        }
+
         public void SetWorld(World world)
         {
             this.world = world;
