@@ -209,9 +209,10 @@ namespace ViMG.GameStates
                 }
             }
 
-            if (world != null && !manager.Paused)
+            if (world != null)
             {
-                world.Update(deltaTime);
+                if (!manager.Paused)
+                    world.Update(deltaTime);
 
                 // Server can only poll events if world is loaded?
                 // I don't know if this really should be true or not. We might want to just instantly disconnect players while waiting? Or something?
@@ -222,9 +223,11 @@ namespace ViMG.GameStates
             if (netManagerClient.ClientHasConnected())
             {
                 netManagerClient?.PollEvents();
-                if (client != null)
+                if (client != null && !manager.Paused)
                 {
-                    Main.TimeC = Math.Clamp((Main.Time - client.LastFrameTime) / EntityManager.EntSyncTime, 0.0, 1.0);
+                    client.CurrentTime += deltaTime;
+                    var expectedTime = client.LastFrameTime + World.SyncTime;
+                    Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
                     //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
                     //{
                     //    client.NewFrame();

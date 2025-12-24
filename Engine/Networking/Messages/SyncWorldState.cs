@@ -22,6 +22,7 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
+            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             netMessage.writer.Put(GS.GetWorld().GetTime());
 
             netMessage.Send();
@@ -33,7 +34,11 @@ namespace Engine.Networking.Messages
 
             float time = reader.GetFloat();
 
-            GS.GetWorld()?.SetTime(time);
+            //GS.GetWorld()?.SetTime(time);
+
+            if (time < GS.GetClient().Current().time)
+                return;
+            GS.GetClient().NewFrame(time);
         }
     }
 }

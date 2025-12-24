@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using Engine.Items;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(2, 0)]
-	public class EntityFurnace : Entity, ICubeTracker, IHasInventory
+	public class EntityFurnace : Entity, ICubeTracker, IHasInventory, ISyncBasicState
 	{
         private static MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
 
@@ -233,6 +234,20 @@ namespace ViMG.Entities
             if (currentRecipe != null && inventory.Get(2).num > 0)
                 return CraftItem(player, currentRecipe);
             return false;
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                state = (int)MeshingDataInstance.facing,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

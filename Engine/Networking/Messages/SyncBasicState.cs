@@ -370,84 +370,81 @@ namespace Engine.Networking.Messages
 
         public void DoSync(EntityManager entityManager, Player[] players)
         {
-            if (Main.Time - lastSyncTime > EntityManager.EntSyncTime)
+            foreach (Player player in players)
             {
-                foreach (Player player in players)
+                if (player == null || !player.IsInitialized)
+                    continue;
+
+                var peer = GS.netManagerServer?.GetPeer(player.playerIndex);
+
+                if (peer == null)
                 {
-                    if (player == null || !player.IsInitialized)
-                        continue;
+                    Console.WriteLine("Peer null");
+                    continue;
+                }
 
-                    var peer = GS.netManagerServer?.GetPeer(player.playerIndex);
+                for (int i = 0; i < EntityManager.EntMax; i++)
+                {
+                    var reference = entityManager.GetReference(i);
+                    var ent = entityManager.GetByRef(ref reference);
 
-                    if (peer == null)
+                    if (entities[player.playerIndex][i].reference.generation != reference.generation)
                     {
-                        Console.WriteLine("Peer null");
-                        continue;
-                    }
-
-                    for (int i = 0; i < EntityManager.EntMax; i++)
-                    {
-                        var reference = entityManager.GetReference(i);
-                        var ent = entityManager.GetByRef(ref reference);
-
-                        if (entities[player.playerIndex][i].reference.generation != reference.generation)
+                        if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
                         {
-                            if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                            var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
+                            if (entSerializableAttr != null)
                             {
-                                var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
-                                if (entSerializableAttr != null)
+                                if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
                                 {
-                                    if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
-                                    {
-                                        Console.WriteLine("Server sent create ent {0} {1} {2}", ent.Id, ent.ToString(), reference.id);
-                                        //var entData = new EntityManagerIO.EntityData(ent);
-                                        toSync.AddAssumeCapacity(new()
-                                        {
-                                            type = SyncStateType.MajorSync,
-                                            playerId = player.playerIndex,
-                                            reference = reference,
-                                            typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
-                                            basicSyncState = syncsBasicState,
-                                        });
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // Client never had it loaded in the first place
-                                if (entities[player.playerIndex][i].reference.generation != -1)
-                                {
-                                    Console.WriteLine("Server sent unload ent {0}", reference.id);
-
+                                    Console.WriteLine("Server sent create ent {0} {1} {2}", ent.Id, ent.ToString(), reference.id);
+                                    //var entData = new EntityManagerIO.EntityData(ent);
                                     toSync.AddAssumeCapacity(new()
                                     {
-                                        type = SyncStateType.Unload,
+                                        type = SyncStateType.MajorSync,
                                         playerId = player.playerIndex,
                                         reference = reference,
+                                        typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
+                                        basicSyncState = syncsBasicState,
                                     });
                                 }
                             }
                         }
-                        else if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                        else
                         {
-                            toSync.AddAssumeCapacity(new()
+                            // Client never had it loaded in the first place
+                            if (entities[player.playerIndex][i].reference.generation != -1)
                             {
-                                type = SyncStateType.MinorSync,
-                                playerId = player.playerIndex,
-                                reference = reference,
-                                typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
-                                basicSyncState = syncsBasicState,
-                            });
+                                Console.WriteLine("Server sent unload ent {0}", reference.id);
+
+                                toSync.AddAssumeCapacity(new()
+                                {
+                                    type = SyncStateType.Unload,
+                                    playerId = player.playerIndex,
+                                    reference = reference,
+                                });
+                            }
                         }
                     }
-
-                    GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
+                    else if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
+                    {
+                        toSync.AddAssumeCapacity(new()
+                        {
+                            type = SyncStateType.MinorSync,
+                            playerId = player.playerIndex,
+                            reference = reference,
+                            typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
+                            basicSyncState = syncsBasicState,
+                        });
+                    }
                 }
 
-                lastSyncTime = Main.Time;
-                toSync.Clear();
-                serverSequence += 1;
+                GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
             }
+
+            lastSyncTime = Main.Time;
+            toSync.Clear();
+            serverSequence += 1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -564,7 +561,7 @@ namespace Engine.Networking.Messages
             if (clientSequence != seq)
             {
                 clientSequence = seq;
-                GS.GetClient().NewFrame();
+                //GS.GetClient().NewFrame();
             }
 
             int num = reader.GetInt();

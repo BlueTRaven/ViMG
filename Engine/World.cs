@@ -34,7 +34,10 @@ namespace ViMG
 {
     public class World
 	{
-		public readonly string LoadedFolderName;
+        [ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
+        public static float SyncTime = 1.0f / 20.0f;
+
+        public readonly string LoadedFolderName;
 		public readonly int Layer;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
@@ -94,6 +97,8 @@ namespace ViMG
         public bool isDisposed;
 		// TODO HACK
 		public bool isCreateWorldReloading;
+
+        private double lastSyncTime;
 
         private struct MinedCube
 		{
@@ -321,10 +326,16 @@ namespace ViMG
 			//EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			//if (Main.Frame % 240 == 0)
-			//{
-			//	Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
-			//}
+			if (Main.Time - lastSyncTime > SyncTime)
+			{
+				EntityManager.UpdateNetwork();
+                Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
+				lastSyncTime = Main.Time;
+            }
+            //if (Main.Frame % 240 == 0)
+            //{
+            //	Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
+            //}
 
             if (Main.inputManager.JustPressed(Keys.Escape) && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
                 Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(Main.gameStateManager, this));
@@ -379,12 +390,6 @@ namespace ViMG
 			//SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
 			//SyncInventoryUpdate.Instance.Apply(EntityManager);
 			//SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
-
-			if (Main.Time - timeSyncTime > 1)
-			{
-				Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
-				timeSyncTime = Main.Time;
-			}
 
 			Logic.Update(this, deltaTime);
 
@@ -739,7 +744,6 @@ namespace ViMG
 
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
-        private double timeSyncTime;
 
         public void Draw(GraphicsDevice device)
 		{

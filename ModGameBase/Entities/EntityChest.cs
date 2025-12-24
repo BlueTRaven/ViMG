@@ -150,14 +150,14 @@ namespace ViMG.Entities
 			state = new BasicState
 			{
 				position = Position,
-				counters = { [0] = (int)meshingData.facing },
+				state = (int)meshingData.facing,
 			};
         }
 
         public void Set(ref readonly BasicState state)
         {
 			Position = state.position;
-			meshingData.facing = (MeshHelper.CubeFace)state.counters[0];
+			meshingData.facing = (MeshHelper.CubeFace)state.state;
         }
     }
 }

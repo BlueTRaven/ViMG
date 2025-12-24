@@ -16,8 +16,11 @@ namespace Engine.Clients
         public ClientInventoryManager inventoryManager;
 
         private int head = 0;
+        private int frame = 0;
 
         public double LastFrameTime;
+        public double Variance;
+        public double CurrentTime;
 
         public ClientStates()
         {
@@ -30,12 +33,21 @@ namespace Engine.Clients
             inventoryManager = new ClientInventoryManager();
         }
 
-        public void NewFrame()
+        public void NewFrame(double time)
         {
-            LastFrameTime = Main.Time;
+            frame += 1;
+
+            double expectedArrivalTime = LastFrameTime + World.SyncTime;
+
+            LastFrameTime = time;
+            CurrentTime = time;
+
+            Variance = expectedArrivalTime - time;
+            //Console.WriteLine("New frame {0} time {1:.0000}s expected {2:.0000}s variance {3:.0000}s {4}", frame, time, expectedArrivalTime, double.Abs(Variance), Variance > 0 ? "early" : "late");
+
             ClientWorld prev = Current();
             head = (head + 1) % ViMG.Entities.EntityManager.EntPrevSrv;
-            Current().NewFrame(prev);
+            Current().NewFrame(prev, time);
 
             SyncInventoryUpdate.Instance.Apply(inventoryManager);
         }

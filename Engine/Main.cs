@@ -338,6 +338,11 @@ namespace ViMG
 
 			inputManager.Update(new GameTime());
 
+			if (inputManager.JustPressed(Keys.F1))
+			{
+				Debug = !Debug;
+			}
+
 			if (inputManager.JustPressed(Keys.P))
 			{
 				paused = !paused;

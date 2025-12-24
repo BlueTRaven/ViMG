@@ -24,8 +24,6 @@ namespace ViMG.Entities
 		[ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
 			"Changes to this variable require a restart.")]
 		public static int EntMax = 4096;
-		[ConsoleCommandVar("ent_sync_time", "Amount of time between entity state syncs. Default = 1 / 20")]
-		public static float EntSyncTime = 1.0f / 20.0f;
 
 		[ConsoleCommandVar("ent_prev_copies", "Number of previous copies of an entity to keep (for interpolation. Includes current state). Default = 2.")]
 		public static int EntPrev = 2;
@@ -214,8 +212,6 @@ namespace ViMG.Entities
 		private Dictionary<ChunkPosition, CubeTrackers> cubeTrackers = new Dictionary<ChunkPosition, CubeTrackers>();
 
 		private World world;
-
-		private double lastSyncTime;
 
 		public int GetUniqueId()
 		{
@@ -679,11 +675,9 @@ namespace ViMG.Entities
 			}
 
 			toDeleteLater.Clear();
-
-            UpdateNetwork();
 		}
 
-		private void UpdateNetwork()
+		public void UpdateNetwork()
 		{
 			SyncEntityState.Instance.DoSync(this, world.player);
 

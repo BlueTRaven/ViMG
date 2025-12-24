@@ -10,15 +10,17 @@ namespace Engine.Clients
     public class ClientWorld 
     {
         public ClientEntityManager entities;
+        public double time;
 
         public ClientWorld()
         {
             entities = new ClientEntityManager();
         }
 
-        public void NewFrame(ClientWorld prev)
+        public void NewFrame(ClientWorld prev, double time)
         {
             entities.NewFrame(prev.entities);
+            this.time = time;
         }
     }
 }
