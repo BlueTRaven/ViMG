@@ -1,10 +1,12 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Engine.Networking.Messages;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 
 namespace Engine.Clients
 {
@@ -31,6 +33,8 @@ namespace Engine.Clients
             ClientWorld prev = Current();
             head = (head + 1) % ViMG.Entities.EntityManager.EntPrevSrv;
             Current().NewFrame(prev);
+
+            SyncInventoryUpdate.Instance.Apply(inventoryManager);
         }
 
         public ClientWorld Current()

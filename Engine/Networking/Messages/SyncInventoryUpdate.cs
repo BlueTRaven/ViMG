@@ -1,4 +1,6 @@
-﻿using Engine.Items;
+﻿using Engine.Clients;
+using Engine.Clients.Entities;
+using Engine.Items;
 using LiteNetLib;
 using System;
 using System.Collections.Generic;
@@ -93,7 +95,7 @@ namespace Engine.Networking.Messages
             //}
         }
 
-        public void Apply(EntityManager entityManager)
+        public void Apply(ClientInventoryManager inventoryManager)
         {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
 
@@ -110,15 +112,11 @@ namespace Engine.Networking.Messages
                     //        currAudit.active = false;
                     //    }
                     //}
-                    var entity = entityManager.GetById(action.entityId);
-                    var inventory = entity.world.InventoryManager.Get(entity.world.InventoryManager.GetReference(action.inventoryId));
-                    if (entity != null && entity is IHasInventory hasInv)
-                    {
-                        inventory.DoUpdateAction(action);
+                    var inventory = inventoryManager.Get(inventoryManager.GetReference(action.inventoryId));
+                    inventory.DoUpdateAction(action);
 
-                        Console.WriteLine("Remote Inventory action: {0:02} {1} {2} {3} -> {4}", Main.Time, entity.ToString(), action.inventoryId, action.oldInstance.item, action.newInstance.item);
-                        //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
-                    }
+                    Console.WriteLine("Remote Inventory action: {0:02} {1} {2} -> {3}", Main.Time, action.inventoryId, action.oldInstance.item, action.newInstance.item);
+                    //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
                 }
                 else
                 {

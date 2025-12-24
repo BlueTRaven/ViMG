@@ -680,8 +680,7 @@ namespace ViMG.Entities
 
 			toDeleteLater.Clear();
 
-            if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Singleplayer)
-                UpdateNetwork();
+            UpdateNetwork();
 		}
 
 		private void UpdateNetwork()
@@ -759,8 +758,8 @@ namespace ViMG.Entities
 		{
 			var diff = Main.Frame - frame;
 
-			// If we overflowed, just return current
-			if (diff >= EntPrevSrv) diff = 0;
+			// If we overflowed, just return no state
+			if (diff >= EntPrevSrv) return new();
 
 			return GetPrevState(id, diff);
 		}

@@ -67,5 +67,10 @@ namespace Engine.Clients
             if (inventories[reference.id - 1].generation != reference.generation) return defaultInventory;
             return inventories[reference.id - 1].inventory ?? defaultInventory;
         }
+
+        public InventoryManager.InventoryReference GetReference(int id)
+        {
+            return new InventoryManager.InventoryReference(id, inventories[id].generation);
+        }
     }
 }

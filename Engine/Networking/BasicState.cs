@@ -261,10 +261,10 @@ namespace Engine.Networking
             if ((bits & Fields.PosZ) == Fields.PosZ)
                 position.Z = reader.GetFloat();
 
-            if (position == Vector3.Zero)
-            {
-                Console.WriteLine("!!!");
-            }
+            //if (position == Vector3.Zero)
+            //{
+            //    Console.WriteLine("!!!");
+            //}
 
             if ((bits & Fields.VelX) == Fields.VelX)
                 velocity.X = reader.GetFloat();
@@ -301,9 +301,10 @@ namespace Engine.Networking
                     counters[i] = reader.GetInt();
             }
 
+            ulong extraBytesBits = reader.GetULong();
+
             if ((bits & Fields.ExtraFields) == Fields.ExtraFields)
             {
-                ulong extraBytesBits = reader.GetULong();
 
                 for (int i = 0; i < 64; i++)
                 {
@@ -375,7 +376,7 @@ namespace Engine.Networking
             for (int i = 0; i < 64; i++)
             {
                 ulong bit = 1UL << i;
-                if ((extraBytesBits & bit) == bit) 
+                if ((extraBytesBits & bit) == bit)
                 {
                     var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
                     uint ui = BitConverter.ToUInt32(extraBitBytes);

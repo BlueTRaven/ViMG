@@ -1,4 +1,5 @@
 ﻿using Engine.Items;
+using Engine.Networking.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,11 @@ namespace Engine.Clients.Entities
         public override ref readonly ItemInstance Get(int index)
         {
             return ref item;
+        }
+
+        public override void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
+        {
+            
         }
     }
 }

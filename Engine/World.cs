@@ -377,7 +377,7 @@ namespace ViMG
 			SyncBasicState.Instance.Apply(EntityManager, EntIO);
 			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
 			//SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
-			SyncInventoryUpdate.Instance.Apply(EntityManager);
+			//SyncInventoryUpdate.Instance.Apply(EntityManager);
 			//SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
 
 			if (Main.Time - timeSyncTime > 1)

@@ -50,8 +50,9 @@ namespace Engine.Networking
             Both = Client | Server
         };
 
-        public bool IsServer => Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server;
-        public bool IsClient => Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client;
+        private bool isServer;
+        public bool IsServer => isServer;
+        public bool IsClient => !isServer;
         public NetManager netManager;
 
         // Local player id
@@ -60,6 +61,7 @@ namespace Engine.Networking
         public int uniqueNetPlayers = 0;
 
         public double StartTime;
+        private DateTime clientDCTime;
 
         public int Port = 9050;
         public string Ip = "localhost";
@@ -70,7 +72,6 @@ namespace Engine.Networking
         private double lastStatisticCheck;
 
         private double timeUpdateTime = 0;
-        private double dcTime = 0;
 
         public struct Statistics
         {
@@ -113,51 +114,70 @@ namespace Engine.Networking
             netManager.ChannelsCount = 4;
             netManager.NatPunchEnabled = true;
 
+#if DEBUG
+            netManager.DisconnectTimeout = 120 * 1000;
+#endif
+
             Array.Fill(netPlayers, new NetPlayer());
 
-            if (IsServer)
-            {
-                netManager.UseNativeSockets = true;
-                // SimulateLatency seems to be pretty buggy. It'll sometimes just hold onto packets for a long time for no apparent reason.
-                //netManager.SimulateLatency = true;
-                //netManager.SimulationMaxLatency = 500;
-                //netManager.SimulationMinLatency = 200;
-            }
+            netManager.UseNativeSockets = true;
+            // SimulateLatency seems to be pretty buggy. It'll sometimes just hold onto packets for a long time for no apparent reason.
+            //netManager.SimulateLatency = true;
+            //netManager.SimulationMaxLatency = 500;
+            //netManager.SimulationMinLatency = 200;
         }
 
         public void Connect(GameStateManager.NetworkingMode netMode)
         {
+            isServer = netMode == GameStateManager.NetworkingMode.Server;
+
             StartTime = Main.Time;
             if (IsServer)
             {
                 netManager.Start(Port);
-                netPlayers[0] = new NetPlayer
-                {
-                    playerId = 0,
-                    peerId = -1,
-                    playerName = Main.gameStateManager.TheIsland.localPlayerName,
-                };
-                uniqueNetPlayers += 1;
+                //netPlayers[0] = new NetPlayer
+                //{
+                //    playerId = 0,
+                //    peerId = -1,
+                //    playerName = Main.gameStateManager.TheIsland.localPlayerName,
+                //};
+                //uniqueNetPlayers += 1;
                 Console.WriteLine("Started server on port 9050");
             }
             else if (IsClient)
             {
                 netManager.Start();
                 netManager.Connect(Ip, Port, "");
-                var dcTime = DateTime.Now;
+                clientDCTime = DateTime.Now;
+            }
+        }
 
-                while (whoAmI == -1)
+        public bool ClientHasConnected()
+        {
+            if (whoAmI == -1)
+            {
+                netManager.TriggerUpdate();
+                netManager.PollEvents();
+
+                if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
                 {
-                    netManager.TriggerUpdate();
-                    netManager.PollEvents();
-
-                    if ((DateTime.Now - dcTime).TotalSeconds > 5)
-                    {
-                        Disconnect();
-                        return;
-                    }
+                    Disconnect();
+                    Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                    Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
+                    return false;
                 }
-                Console.WriteLine("Connected to server. Our id: {0}", whoAmI);
+
+                if (whoAmI != -1)
+                {
+                    Console.WriteLine("Connected to server. Our id: {0}", whoAmI);
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
 
@@ -208,13 +228,13 @@ namespace Engine.Networking
             {
                 if (netManager.ConnectedPeersCount == 0)
                 {
-                    if (Main.Time - dcTime > 5)
+                    if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
                     {
                         Disconnect();
                         Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
                     }
                 }
-                else dcTime = Main.Time;
+                else clientDCTime = DateTime.Now;
             }
         }
 
@@ -286,7 +306,8 @@ namespace Engine.Networking
                 int playerIndex = netPlayers[index].playerId;
                 uniqueNetPlayers -= 1;
 
-                IMGUIConsole.Assert(world.localPlayerIndex != playerIndex);
+                // This just asserts that the local player has not disconnected - not necessary
+                //IMGUIConsole.Assert(world.localPlayerIndex != playerIndex);
                 IMGUIConsole.Assert(world.player[playerIndex] != null);
                 Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 SyncEntityState.Instance.PlayerDisconnected(index);
@@ -382,22 +403,22 @@ namespace Engine.Networking
             world.ChunkLoadManager.LoadAroundTarget(world);
             // Inform others of new player
             SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
-            var sync = new SyncChunk.ChunkToSync
-            {
-                chunkPosition = ChunkPosition.WorldSpaceChunk(world.WorldInfo.spawnPosition),
-            };
-            SendMessageToPeer(SyncChunk.Instance, peer, sync);
+            //var sync = new SyncChunk.ChunkToSync
+            //{
+            //    chunkPosition = ChunkPosition.WorldSpaceChunk(world.WorldInfo.spawnPosition),
+            //};
+            //SendMessageToPeer(SyncChunk.Instance, peer, sync);
 
             Console.WriteLine("Peer connected from {0}. {1} {2} {3}", peer, netPlayers[index].playerId, netPlayers[index].playerName, netPlayers[index].playerName.GetHashCode());
         }
 
         public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
         {
-            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+            if (IsServer)
             {
                 IMGUIConsole.Assert((message.SendableFrom & NetworkSide.Server) == NetworkManager.NetworkSide.Server);
             }
-            else
+            else if (IsClient)
             {
                 IMGUIConsole.Assert((message.SendableFrom & NetworkSide.Client) == NetworkManager.NetworkSide.Client);
             }

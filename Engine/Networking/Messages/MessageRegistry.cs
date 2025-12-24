@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.IMGUIImpl;
+using ViMG.TracyImpl;
 
 namespace Engine.Networking.Messages
 {
@@ -44,6 +45,8 @@ namespace Engine.Networking.Messages
 
         public void Dispatch(NetManager netManager, NetPacketReader reader, NetPeer source, byte channel, DeliveryMethod deliveryMethod)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             int position = reader.Position;
             int messageType = reader.GetInt();
 
@@ -55,7 +58,11 @@ namespace Engine.Networking.Messages
                 reader.GetInt();
                 netManager.SendToAll(allBytes, channel, deliveryMethod, source);
             }
-            Get(messageType).ReceiveMessage(reader, source);
+
+            using (var zoneGetMessage = ViMG.TracyImpl.Tracy.BeginZone(name: "ReceiveMessage"))
+            {
+                Get(messageType).ReceiveMessage(reader, source);
+            }
         }
     }
 }

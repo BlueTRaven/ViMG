@@ -135,7 +135,7 @@ namespace Engine.Items
 			actions.Clear();
 		}
 
-		public void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
+		public virtual void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
 		{
 			items[action.inventoryIndex] = action.newInstance;
 		}

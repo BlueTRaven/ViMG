@@ -95,7 +95,7 @@ namespace Engine.Clients.Entities
             return -1;
         }
 
-        public BasicState GetByRef(EntityManager.EntityReference reference)
+        public BasicState GetByRef(ref readonly EntityManager.EntityReference reference)
         {
             if (entities[reference.id].generation != reference.generation) return new();
             else return entities[reference.id].state;
