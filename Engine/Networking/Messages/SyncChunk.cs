@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Constraints;
+using BrUtility;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 
 namespace Engine.Networking.Messages
 {
@@ -26,7 +28,7 @@ namespace Engine.Networking.Messages
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
         private List<CubeView.PalettizedChunk> chunksToLoad = new List<CubeView.PalettizedChunk>();
-
+        
         public SyncChunk()
         {
             Instance = this;
@@ -58,6 +60,55 @@ namespace Engine.Networking.Messages
             if (chunk.type != CubeView.PalettizeType.AllOneId)
                 netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
 
+            FastList<ICubeTracker> trackers = new();
+            FastList<IMultiCubeTracker> mtrackers = new();
+            GS.GetWorld().EntityManager.GetAllTrackersForChunk(chunkToSync.chunkPosition, trackers, mtrackers);
+            FastList<CubePosition> trackedPositions = new FastList<CubePosition>();
+            int trackerStateI = 0;
+
+            List<NetDataWriter> subwriters = new List<NetDataWriter>();
+
+            foreach (var cubeTracker in trackers.Slice())
+            {
+                Debug.Assert(cubeTracker is Entity);
+                if (cubeTracker is Entity ent)
+                {
+                    NetDataWriter subwriter = new NetDataWriter();
+                    subwriters.Add(subwriter);
+
+                    subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
+                    subwriter.Put((ushort)1);
+                    subwriter.Put(cubeTracker.TrackedPosition);
+
+                    trackerStateI += 1;
+                }
+            }
+            foreach (var cubeTracker in mtrackers.Slice())
+            {
+                Debug.Assert(cubeTracker is Entity);
+                if (cubeTracker is Entity ent)
+                {
+                    NetDataWriter subwriter = new NetDataWriter();
+                    subwriters.Add(subwriter);
+
+                    subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
+                    subwriter.Put((ushort)cubeTracker.TrackedPositions.Count());
+                    foreach (CubePosition trackedPosition in cubeTracker.TrackedPositions)
+                    {
+                        subwriter.Put(trackedPosition);
+                    }
+
+                    trackerStateI += 1;
+                }
+            }
+
+            netMessage.writer.Put(subwriters.Count);
+            for (int i = 0; i < subwriters.Count; i++)
+            {
+                NetDataWriter subwriter = subwriters[i];
+                netMessage.writer.Put(subwriter.AsReadOnlySpan());
+            }
+
             netMessage.Send();
         }
 
@@ -79,40 +130,54 @@ namespace Engine.Networking.Messages
                 type = paletteType,
             };
             chunksToLoad.Add(chunk);
+
+            int numTrackers = reader.GetInt();
+            for (int i = 0; i < numTrackers; i++)
+            {
+                var state = reader.Get<BasicState>();
+                var trackers = GS.GetClient().cubeTrackers.Get(chunkPosition);
+                int trackedPositionsNum = reader.GetUShort();
+                for (int j = 0; j < trackedPositionsNum; j++)
+                {
+                    CubePosition position = reader.Get<CubePosition>();
+                    trackers.Add(position, state);
+                }
+            }
         }
 
         public unsafe void Apply(ChunkManager chunkManager, ChunkLoadManager chunkLoadManager)
         {
-            Parallel.ForEach(chunksToLoad, chunkToLoad => {
-                Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-                var ids = CubeView.Depaletteize(chunkToLoad);
+            //foreach (var chunkToLoad in chunksToLoad) 
+            //{
+            //    Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
+            //    var ids = CubeView.Depaletteize(chunkToLoad);
 
-                CubePosition basePosition = chunkToLoad.position.InCubeSpace();
+            //    CubePosition basePosition = chunkToLoad.position.InCubeSpace();
 
-                fixed (CubePosition* queryPositionsPtr = queryPositions)
-                {
-                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-                    {
-                        for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                        {
-                            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-                            {
-                                Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                                CubePosition pos = basePosition + new CubePosition(x, y, z);
-                                queryPositionsPtr[i] = pos;
-                            }
-                        }
-                    }
-                }
+            //    fixed (CubePosition* queryPositionsPtr = queryPositions)
+            //    {
+            //        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+            //        {
+            //            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            //            {
+            //                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            //                {
+            //                    Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+            //                    CubePosition pos = basePosition + new CubePosition(x, y, z);
+            //                    queryPositionsPtr[i] = pos;
+            //                }
+            //            }
+            //        }
+            //    }
 
-                chunkManager.CubeView.SetCubes(queryPositions, ids);
-            });
+            //    chunkManager.CubeView.SetCubes(queryPositions, ids);
+            //}
 
-            foreach (var chunkToLoad in chunksToLoad)
-            {
-                chunkLoadManager.Unload(chunkToLoad.position);
-                chunkLoadManager.MarkDirty(chunkToLoad.position);
-            }
+            //foreach (var chunkToLoad in chunksToLoad)
+            //{
+            //    chunkLoadManager.Unload(chunkToLoad.position);
+            //    chunkLoadManager.MarkDirty(chunkToLoad.position);
+            //}
 
             //foreach (CubeView.PalettizedChunk chunkToLoad in chunksToLoad)
             //{

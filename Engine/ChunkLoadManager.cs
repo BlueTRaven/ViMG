@@ -319,18 +319,6 @@ namespace ViMG
                 chunkMesher?.CollisionMesher.AddToNextBatch(world, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks.Add(copyingChunk);
-
-                // Sync chunk loading to other players
-                //var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(copyingChunk.player);
-                //if (peer != null)
-                //{
-                //    var sync = new SyncChunk.ChunkToSync
-                //    {
-                //        chunkPosition = copyingChunk.position,
-                //        ids = copy.Ids,
-                //    };
-                //    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                //}
             }
 
 			copyingChunks.Clear();
@@ -367,6 +355,21 @@ namespace ViMG
                     loadedChunks[queuedChunk.player][j] = LoadingState.Loaded;
 
                     entIO.Deserialize(world, queuedChunk.position);
+
+                    CopiedChunkData copy = queuedChunk.copyTask.Result;
+
+                    // Sync chunk loading to other players
+                    var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
+                    if (peer != null)
+                    {
+                        var sync = new SyncChunk.ChunkToSync
+                        {
+                            chunkPosition = queuedChunk.position,
+                            ids = copy.Ids,
+                        };
+                        Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                    }
+
                     hasChanged = true;
                 }
                 else

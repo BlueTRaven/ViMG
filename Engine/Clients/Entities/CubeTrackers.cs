@@ -19,8 +19,11 @@ namespace Engine.Clients.Entities
 
         public ChunkCubeTrackers Get(ChunkPosition chunkPosition)
         {
-            trackers.TryGetValue(chunkPosition, out ChunkCubeTrackers? ret);
-            if (ret == null) ret = dummy;
+            if (!trackers.TryGetValue(chunkPosition, out ChunkCubeTrackers? ret))
+            {
+                ret = new();
+                trackers.Add(chunkPosition, ret);
+            } 
 
             return ret;
         }
