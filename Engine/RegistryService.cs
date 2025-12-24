@@ -1,4 +1,5 @@
-﻿using Engine.Mods;
+﻿using Engine.Entities;
+using Engine.Mods;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -23,6 +24,7 @@ namespace ViMG
 		public CubeRegistry CubeRegistry;
 		public RecipeRegistry RecipeRegistry;
 		public BuffRegistry BuffRegistry;
+        public EntityRegistry EntityRegistry;
 		public RendererRegistry RendererRegistry;
 		public WorldLogicRegistry WorldLogicRegistry;
         public MessageRegistry MessageRegistry;
@@ -34,6 +36,7 @@ namespace ViMG
 			CubeRegistry = new CubeRegistry();
 			RecipeRegistry = new RecipeRegistry();
 			BuffRegistry = new BuffRegistry();
+            EntityRegistry = new EntityRegistry();
             if (device != null)
 			    RendererRegistry = new RendererRegistry(device);
 			WorldLogicRegistry = new WorldLogicRegistry();
@@ -48,6 +51,7 @@ namespace ViMG
 			ItemRegistry.RegisterAll();
 			RecipeRegistry.RegisterAll();
 			BuffRegistry.RegisterAll();
+            EntityRegistry.RegisterAll();
 			RendererRegistry?.RegisterAll();
 			WorldLogicRegistry.RegisterAll();
             MessageRegistry.RegisterAll();
@@ -134,6 +138,26 @@ namespace ViMG
                 foreach (Buff buff in BuffRegistry.GetIterable())
                 {
                     (buff as IRegisterable).LoadContent(device);
+                }
+            }
+
+            foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.EntityRegistry?.RegisterAll();
+                    EntityRegistry.AddFromOther(service.EntityRegistry);
+                }
+            }
+
+            EntityRegistry.PostRegistration();
+
+            if (device != null)
+            {
+                foreach (EntityType item in EntityRegistry.GetIterable())
+                {
+                    (item as IRegisterable).LoadContent(device);
                 }
             }
 

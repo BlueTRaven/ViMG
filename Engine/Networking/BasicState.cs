@@ -124,7 +124,7 @@ namespace Engine.Networking
         public Arr4F timers;
         public Arr4I counters;
 
-        public Arr256B extraBytes;
+        //public Arr256B extraBytes;
 
         public void Deserialize(NetDataReader reader)
         {
@@ -150,7 +150,7 @@ namespace Engine.Networking
             if (version >= 2)
             {
                 ReadOnlySpan<byte> remBytes = reader.GetRemainingBytesSpan();
-                remBytes[0..256].CopyTo(extraBytes);
+                //remBytes[0..256].CopyTo(extraBytes);
             }
         }
 
@@ -175,7 +175,7 @@ namespace Engine.Networking
             Span<int> i = counters;
             writer.PutSpan(i);
 
-            writer.Put((ReadOnlySpan<byte>)extraBytes);
+            //writer.Put((ReadOnlySpan<byte>)extraBytes);
         }
 
         public uint GetDeltaBits(ref readonly BasicState prevState)
@@ -221,14 +221,14 @@ namespace Engine.Networking
                     bits |= (Fields)((int)Fields.Counter0 + i);
             }
 
-            for (int i = 0; i < 256; i++)
-            {
-                if (prevState.extraBytes[i] != extraBytes[i])
-                {
-                    bits |= Fields.ExtraFields;
-                    break;
-                }
-            }
+            //for (int i = 0; i < 256; i++)
+            //{
+            //    if (prevState.extraBytes[i] != extraBytes[i])
+            //    {
+            //        bits |= Fields.ExtraFields;
+            //        break;
+            //    }
+            //}
 
             return (uint)bits;
         }
@@ -236,15 +236,15 @@ namespace Engine.Networking
         public ulong GetExtraBytesBits(ref readonly BasicState prevState)
         {
             ulong bits = 0;
-            for (int i = 0; i < 64; i++)
-            {
-                uint currInt = BitConverter.ToUInt32(extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
-                uint prevInt = BitConverter.ToUInt32(prevState.extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
-                if (currInt != prevInt)
-                {
-                    bits |= (1UL << i);
-                }
-            }
+            //for (int i = 0; i < 64; i++)
+            //{
+            //    uint currInt = BitConverter.ToUInt32(extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
+            //    uint prevInt = BitConverter.ToUInt32(prevState.extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
+            //    if (currInt != prevInt)
+            //    {
+            //        bits |= (1UL << i);
+            //    }
+            //}
 
             return bits;
         }
@@ -305,17 +305,16 @@ namespace Engine.Networking
 
             if ((bits & Fields.ExtraFields) == Fields.ExtraFields)
             {
-
-                for (int i = 0; i < 64; i++)
-                {
-                    ulong bit = 1UL << i;
-                    if ((extraBytesBits & bit) == bit)
-                    {
-                        var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
-                        uint ui = reader.GetUInt();
-                        BitConverter.TryWriteBytes(extraBitBytes, ui);
-                    }
-                }
+                //for (int i = 0; i < 64; i++)
+                //{
+                //    ulong bit = 1UL << i;
+                //    if ((extraBytesBits & bit) == bit)
+                //    {
+                //        var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+                //        uint ui = reader.GetUInt();
+                //        BitConverter.TryWriteBytes(extraBitBytes, ui);
+                //    }
+                //}
             }
         }
 
@@ -373,33 +372,34 @@ namespace Engine.Networking
         {
             writer.Put(extraBytesBits);
 
-            for (int i = 0; i < 64; i++)
-            {
-                ulong bit = 1UL << i;
-                if ((extraBytesBits & bit) == bit)
-                {
-                    var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
-                    uint ui = BitConverter.ToUInt32(extraBitBytes);
-                    writer.Put(ui);
-                }
-            }
+            //for (int i = 0; i < 64; i++)
+            //{
+            //    ulong bit = 1UL << i;
+            //    if ((extraBytesBits & bit) == bit)
+            //    {
+            //        var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+            //        uint ui = BitConverter.ToUInt32(extraBitBytes);
+            //        writer.Put(ui);
+            //    }
+            //}
         }
 
         public unsafe void SetExtra<T>(ref readonly T val) where T : unmanaged
         {
-            Debug.Assert(sizeof(T) <= 256);
-            Span<byte> bytes = extraBytes;
-            // TODO is this necessary? Can we just [val]? Does that require a copy?
-            ReadOnlySpan<T> valSpan = MemoryMarshal.CreateReadOnlySpan(in val, 1);
-            ReadOnlySpan<byte> valBytes = MemoryMarshal.Cast<T, byte>(valSpan);
-            valBytes.CopyTo(bytes);
+            //Debug.Assert(sizeof(T) <= 256);
+            //Span<byte> bytes = extraBytes;
+            //// TODO is this necessary? Can we just [val]? Does that require a copy?
+            //ReadOnlySpan<T> valSpan = MemoryMarshal.CreateReadOnlySpan(in val, 1);
+            //ReadOnlySpan<byte> valBytes = MemoryMarshal.Cast<T, byte>(valSpan);
+            //valBytes.CopyTo(bytes);
         }
 
         public unsafe T GetExtra<T>() where T : unmanaged
         {
-            Debug.Assert(sizeof(T) <= 256);
-            Span<byte> bytes = extraBytes;
-            return MemoryMarshal.Cast<byte, T>(bytes)[0];
+            return default(T);
+            //Debug.Assert(sizeof(T) <= 256);
+            //Span<byte> bytes = extraBytes;
+            //return MemoryMarshal.Cast<byte, T>(bytes)[0];
         }
 
         public Vector3 GetInterpPosition(BasicState other)

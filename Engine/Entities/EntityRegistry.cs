@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 
 namespace Engine.Entities
 {
@@ -18,21 +19,29 @@ namespace Engine.Entities
         public EntityMetaAttribute? meta;
         public EntitySerializableAttribute? serializable;
 
-        public EntityType(string identifier, Type type)
+        private EntityType(Type type)
         {
-            this.identifier = identifier;
+            this.identifier = type.FullName;
 
             meta = type.GetCustomAttribute<EntityMetaAttribute>();
             serializable = type.GetCustomAttribute<EntitySerializableAttribute>();
         }
 
-        public virtual void GetEntityMeshingData(BasicState state)
+        public static EntityType New<T>() where T : Entity
         {
-
+            return new EntityType(typeof(T));
         }
     }
 
     public class EntityRegistry : ObjRegistry<EntityType>
     {
+        protected override void DoRegistration()
+        {
+            base.DoRegistration();
+
+            Register(EntityType.New<Player>());
+            Register(EntityType.New<GenericExplosion>());
+            Register(EntityType.New<Line>());
+        }
     }
 }

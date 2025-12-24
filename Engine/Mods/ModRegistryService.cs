@@ -1,4 +1,5 @@
-﻿using Engine.Networking.Messages;
+﻿using Engine.Entities;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace Engine.Mods
         public CubeRegistry? CubeRegistry;
         public RecipeRegistry? RecipeRegistry;
         public BuffRegistry? BuffRegistry;
+        public EntityRegistry? EntityRegistry;
         public RendererRegistry? RendererRegistry;
         public WorldLogicRegistry? WorldLogicRegistry;
         public MessageRegistry? MessageRegistry;

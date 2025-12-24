@@ -52,13 +52,11 @@ namespace Engine.Networking.Messages
 
             var chunk = CubeView.Palettize(chunkToSync.chunkPosition, queryIds);
 
-            //Span<byte> bytes = MemoryMarshal.AsBytes(queryIds);
             netMessage.writer.Put(chunkToSync.chunkPosition);
             netMessage.writer.Put((int)chunk.type);
             netMessage.writer.PutArray(chunk.palette);
             if (chunk.type != CubeView.PalettizeType.AllOneId)
                 netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
-            //netMessage.writer.PutSpan(bytes);
 
             netMessage.Send();
         }

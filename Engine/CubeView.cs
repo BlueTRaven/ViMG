@@ -164,24 +164,14 @@ namespace ViMG
 
             CubePosition basePosition = chunkPosition.InCubeSpace();
 
-            Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-            fixed (CubePosition* queryPositionsPtr = queryPositions)
+            for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
             {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-                {
-                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                    {
-                        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-                        {
-                            Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                            CubePosition pos = basePosition + new CubePosition(x, y, z);
-                            queryPositionsPtr[i] = pos;
-                        }
-                    }
-                }
-            }
+                Util.OneDToThreeD(i, new ValuePoint3D(Chunk.CHUNK_SIZE), out var p);
+                CubePosition pos = new CubePosition(p.x, p.y, p.z);
+                var chunkData = io.GetChunk(chunkPosition, ChunkManagerIO.GetMode.Read);
 
-            GetIds(queryPositions, queryIds);
+                queryIds[i] = chunkData[i];
+            }
         }
 
         public Optional<Cube> GetCube(CubePosition position)

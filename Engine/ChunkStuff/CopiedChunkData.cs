@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using BrUtility;
 using Engine.Networking;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,9 @@ namespace ViMG.ChunkStuff
         public ushort[] PaddingIds;
         public ushort[] Ids;
         public Buffer<byte>[] EntityMeshingDatas;
-        public BasicState[] EntityMeshingDatas2;
+        private int[] entityMeshingDatas2Mapping;
+        private FastList<BasicState> entityMeshingDatas2;
+        //public BasicState[] EntityMeshingDatas2;
 
         //Note that this represents the topleftfront of the Chunk. It does NOT include the padding.
         //I.e. padding left, front, top is -1.
@@ -62,8 +65,12 @@ namespace ViMG.ChunkStuff
             }
             if (EntityMeshingDatas == null)
                 EntityMeshingDatas = new Buffer<byte>[SIZE];
-            if (EntityMeshingDatas2 == null)
-                EntityMeshingDatas2 = new BasicState[SIZE];
+            if (entityMeshingDatas2 == null)
+            {
+                entityMeshingDatas2 = new();
+                entityMeshingDatas2Mapping = new int[SIZE];
+                Array.Fill(entityMeshingDatas2Mapping, -1);
+            }
 
             valid = true;
         }
@@ -80,6 +87,8 @@ namespace ViMG.ChunkStuff
                     if (EntityMeshingDatas[i].Allocated)
                         pool.Return(ref EntityMeshingDatas[i]);
 
+                entityMeshingDatas2.Clear();
+                Array.Fill(entityMeshingDatas2Mapping, -1);
                 render = false;
                 collision = false;
                 loadAroundTarget = false;
@@ -107,7 +116,9 @@ namespace ViMG.ChunkStuff
         public BasicState GetEntityMeshingData2(CubePosition position)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
-            return EntityMeshingDatas2[i];
+            int mdi = entityMeshingDatas2Mapping[i];
+            if (mdi == -1) return new();
+            return entityMeshingDatas2[mdi];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

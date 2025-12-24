@@ -1,4 +1,5 @@
-﻿using Engine.Networking.Messages;
+﻿using Engine.Clients.Entities;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace Engine.Clients
     {
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
+        public CubeTrackers cubeTrackers;
 
         private int head = 0;
         private int frame = 0;
@@ -31,6 +33,7 @@ namespace Engine.Clients
             }
 
             inventoryManager = new ClientInventoryManager();
+            cubeTrackers = new CubeTrackers();
         }
 
         public void NewFrame(double time)
