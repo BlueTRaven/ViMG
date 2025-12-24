@@ -99,8 +99,8 @@ namespace ViMG.GameStates
                     playerIO.Load(worldName);
                 }
 
-                if (!Main.Args.dedicatedServer)
-                    playerIO.DeserializeLocal(world);
+                //if (!Main.Args.dedicatedServer)
+                //    playerIO.DeserializeLocal(world);
 
                 if (world == null) throw new Exception("Errored while loading world");
 
@@ -224,7 +224,11 @@ namespace ViMG.GameStates
                 netManagerClient?.PollEvents();
                 if (client != null)
                 {
-                    client.NewFrame();
+                    Main.TimeC = Math.Clamp((Main.Time - client.LastFrameTime) / EntityManager.EntSyncTime, 0.0, 1.0);
+                    //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
+                    //{
+                    //    client.NewFrame();
+                    //}
                     //if (world != null)
                     //{
                     //    world.UpdateClientWorld(client);

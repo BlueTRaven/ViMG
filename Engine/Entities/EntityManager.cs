@@ -25,7 +25,7 @@ namespace ViMG.Entities
 			"Changes to this variable require a restart.")]
 		public static int EntMax = 4096;
 		[ConsoleCommandVar("ent_sync_time", "Amount of time between entity state syncs. Default = 1 / 20")]
-		public static float EntSyncTime = 1.0f / 4.0f; // 1.0f / 20.0f;
+		public static float EntSyncTime = 1.0f / 20.0f;
 
 		[ConsoleCommandVar("ent_prev_copies", "Number of previous copies of an entity to keep (for interpolation. Includes current state). Default = 2.")]
 		public static int EntPrev = 2;

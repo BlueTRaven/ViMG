@@ -304,8 +304,12 @@ namespace Engine.Networking.Messages
 
         private double lastSyncTime;
         private SyncedEntity[][] entities;
+        private SyncedEntity[] clientEntities;
 
-        private int latestSeq;
+        // if we're running locally then we only have one instance of a Messagee class!
+        // have to use different fields...
+        private int serverSequence;
+        private int clientSequence;
 
         public SyncEntityState()
         {
@@ -315,6 +319,7 @@ namespace Engine.Networking.Messages
 
             entities = new SyncedEntity[World.MAX_PLAYERS][];
 
+            clientEntities = new SyncedEntity[EntityManager.EntMax];
             for (int i = 0; i < entities.Length; i++)
             {
                 entities[i] = new SyncedEntity[EntityManager.EntMax];
@@ -323,7 +328,10 @@ namespace Engine.Networking.Messages
                     entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
                 }
             }
+            for (int i = 0; i < EntityManager.EntMax; i++)
+                clientEntities[i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 };
 
+            // TODO: this should be unnecessary once Entities use a Registry
             List<string> entityTypeNamesMapping = new List<string>();
             int ti = 0;
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -437,14 +445,9 @@ namespace Engine.Networking.Messages
                 }
 
                 lastSyncTime = Main.Time;
-                Instance.PostSend();
+                toSync.Clear();
+                serverSequence += 1;
             }
-        }
-
-        public void PostSend()
-        {
-            //Console.WriteLine("clear");
-            toSync.Clear();
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -460,7 +463,7 @@ namespace Engine.Networking.Messages
             //netMessage.writer.Put((ulong)0);
 
             // Frame = sequence
-            netMessage.writer.Put(Main.Frame);
+            netMessage.writer.Put(serverSequence);
 
             int numsendpos = netMessage.writer.Length;
             netMessage.writer.Put(toSync.Length);
@@ -480,10 +483,6 @@ namespace Engine.Networking.Messages
 
                     if (ent.basicSyncState != null)
                     {
-                        if (ent.basicSyncState.GetType().Name == "Slime")
-                        {
-                            Console.Write("");
-                        }
                         subWriter.Put((ushort)ent.typeNameMapping);
 
                         ent.basicSyncState.Get(out BasicState state);
@@ -556,12 +555,17 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             int seq = reader.GetInt();
-            if (seq < latestSeq)
+            if (seq < clientSequence)
             {
-                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, latestSeq);
+                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, clientSequence);
                 return;
             }
-            latestSeq = seq;
+
+            if (clientSequence != seq)
+            {
+                clientSequence = seq;
+                GS.GetClient().NewFrame();
+            }
 
             int num = reader.GetInt();
 
@@ -588,7 +592,7 @@ namespace Engine.Networking.Messages
                     //if (unloadedThisSeq)
                     //    continue;
 
-                    entities[0][reference.id] = new SyncedEntity
+                    clientEntities[reference.id] = new SyncedEntity
                     {
                         reference = reference,
                         latestSequence = seq,
@@ -604,7 +608,7 @@ namespace Engine.Networking.Messages
 
                     GS.GetClient().Current().entities.Remove(reference);
 
-                    entities[0][reference.id] = new SyncedEntity
+                    clientEntities[reference.id] = new SyncedEntity
                     {
                         reference = reference,
                         latestSequence = seq,

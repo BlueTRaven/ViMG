@@ -183,8 +183,8 @@ namespace ViMG.Entities.Renderers
 
                 int ysrc = 0;
 
-                float jumpTimer = MathHelper.Lerp(s1.timers[0], s1.timers[0], (float)Main.TimeP);
-                float jumpTime = MathHelper.Lerp(s1.timers[1], s1.timers[1], (float)Main.TimeP);
+                float jumpTimer = MathHelper.Lerp(s1.timers[0], s1.timers[0], (float)Main.TimeC);
+                float jumpTime = MathHelper.Lerp(s1.timers[1], s1.timers[1], (float)Main.TimeC);
 
                 float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
 

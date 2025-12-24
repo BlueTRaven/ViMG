@@ -17,6 +17,8 @@ namespace Engine.Clients
 
         private int head = 0;
 
+        public double LastFrameTime;
+
         public ClientStates()
         {
             states = new ClientWorld[ViMG.Entities.EntityManager.EntPrevSrv];
@@ -30,6 +32,7 @@ namespace Engine.Clients
 
         public void NewFrame()
         {
+            LastFrameTime = Main.Time;
             ClientWorld prev = Current();
             head = (head + 1) % ViMG.Entities.EntityManager.EntPrevSrv;
             Current().NewFrame(prev);

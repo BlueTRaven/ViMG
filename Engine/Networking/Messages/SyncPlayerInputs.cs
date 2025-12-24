@@ -179,8 +179,8 @@ namespace Engine.Networking.Messages
             player.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
 
             player.highlightIndex = qinput.heldItem;
-            player.Rotation = qinput.rotation;
-            player.SetPositionWithOffset(qinput.position);
+            //player.Rotation = qinput.rotation;
+            //player.SetPositionWithOffset(qinput.position);
             player.hasMenuOpen = qinput.hasMenuOpen;
         }
     }

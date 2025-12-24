@@ -404,27 +404,27 @@ namespace Engine.Networking
 
         public Vector3 GetInterpPosition(BasicState other)
         {
-            return Vector3.Lerp(position, other.position, (float)Main.TimeP);
+            return Vector3.Lerp(position, other.position, (float)Main.TimeC);
         }
         
         public Vector3 GetInterpVelocity(BasicState other)
         {
-            return Vector3.Lerp(velocity, other.velocity, (float)Main.TimeP);
+            return Vector3.Lerp(velocity, other.velocity, (float)Main.TimeC);
         }
 
         public Quaternion GetInterpRotation(BasicState other)
         {
-            return Quaternion.Lerp(rotation, other.rotation, (float)Main.TimeP);
+            return Quaternion.Lerp(rotation, other.rotation, (float)Main.TimeC);
         }
 
         public float GetInterpTimer(BasicState other, int timer)
         {
-            return MathHelper.Lerp(timers[timer], other.timers[timer], (float)Main.TimeP);
+            return MathHelper.Lerp(timers[timer], other.timers[timer], (float)Main.TimeC);
         }
 
         public int GetInterpCounter(BasicState other, int counter)
         {
-            return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)Main.TimeP);
+            return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)Main.TimeC);
         }
 
         public void OnSave(List<byte> saveBytes)

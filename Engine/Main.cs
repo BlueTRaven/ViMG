@@ -87,6 +87,7 @@ namespace ViMG
 		private double time;
 
 		public static double TimeP = 0;
+		public static double TimeC = 0;
 
 		public static RenderTarget2D DepthTarget;
 		public static RenderTarget2D WorldTarget;
