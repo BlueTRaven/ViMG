@@ -449,7 +449,9 @@ namespace ViMG
 
                                 var context = new CopyChunkTaskContext
                                 {
-                                    world = world,
+                                    cubeView = world.ChunkManager.CubeView,
+                                    entityManager = world.EntityManager,
+                                    sizeInCubes = world.sizeInCubes,
                                     pool = chunkMesher.bufferPool,
                                     position = pos,
                                 };
@@ -549,7 +551,9 @@ namespace ViMG
 
                                     var context = new CopyChunkTaskContext
                                     {
-                                        world = world,
+                                        cubeView = world.ChunkManager.CubeView,
+                                        entityManager = world.EntityManager,
+                                        sizeInCubes = world.sizeInCubes,
                                         pool = chunkMesher.bufferPool,
                                         position = pos,
                                     };
@@ -643,7 +647,9 @@ namespace ViMG
 
         private struct CopyChunkTaskContext
         {
-			public World world;
+			public CubeView cubeView;
+            public EntityManager entityManager;
+            public int sizeInCubes;
 			public BufferPool pool;
 			public ChunkPosition position;
         }
@@ -652,7 +658,7 @@ namespace ViMG
 		{
 			var copyContext = (CopyChunkTaskContext)context;
 
-			var copy = CopiedChunkPool.MakeCopy(copyContext.world, copyContext.pool, copyContext.position);
+			var copy = CopiedChunkPool.MakeCopy(copyContext.cubeView, copyContext.entityManager, copyContext.sizeInCubes, copyContext.pool, copyContext.position);
             copy.loadAroundTarget = true;
             return copy;
 		}

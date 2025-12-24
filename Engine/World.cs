@@ -349,7 +349,7 @@ namespace ViMG
 			ChatManager.Update(deltaTime);
 			//DialogueManager.Update(deltaTime);
 
-			ChunkManager.Update(deltaTime, this, ChunkLoadManager);
+			ChunkManager.Update(deltaTime, this);
 			//ChunkManager.ProcessChunkQueue(this, 0);
 			ChunkLoadManager.Update(deltaTime, this);
 

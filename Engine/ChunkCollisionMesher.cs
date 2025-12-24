@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
@@ -146,7 +147,7 @@ namespace ViMG
             this.bufferPool = bufferPool;
         }
 
-        public void Update(World world)
+        public void Update(CubeView cubeView, EntityManager entityManager)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -173,7 +174,7 @@ namespace ViMG
                     currentBatch.positions[currentBatch.num] = meshInfo.position;
                     currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                     currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                    currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+                    currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
                     currentBatch.copies[currentBatch.num].refcount += 1;
                     currentBatch.copies[currentBatch.num].collision = true;
                     currentBatch.num++;
@@ -188,7 +189,7 @@ namespace ViMG
                 currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
             }
 
-            StartActiveTasks(world);
+            StartActiveTasks();
         }
 
         public bool WorkFinished()
@@ -292,7 +293,7 @@ namespace ViMG
             }
         }
 
-        private void StartActiveTasks(World world)
+        private void StartActiveTasks()
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -436,7 +437,7 @@ namespace ViMG
         {
             var batch = new CollisionMeshBatch(new CopiedChunkData[1]);
             ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
-            batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+            batch.copies[0] = CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
             batch.copies[0].refcount += 1;
             batch.copies[0].collision = true;
             batch.pools[0] = meshInfo.bufferPool;

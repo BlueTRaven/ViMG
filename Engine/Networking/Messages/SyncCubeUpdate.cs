@@ -95,7 +95,7 @@ namespace Engine.Networking.Messages
                     }
                     var player = qcubeupdated.player == -1 ? null : players[qcubeupdated.player];
                     chunkManager.CubeView.SetCube(qcubeupdated.position, qcubeupdated.newId, false);
-                    chunkManager.MarkCubeMeshInfoDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
+                    chunkManager.MarkCubeDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
                     chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(qcubeupdated.position));
                 }
                 else

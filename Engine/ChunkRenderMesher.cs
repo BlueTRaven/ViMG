@@ -163,7 +163,7 @@ namespace ViMG
 			this.bufferPool = bufferPool;
 		}
 
-		public void Update(World world)
+		public void Update(CubeView cubeView, EntityManager entityManager)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -188,7 +188,7 @@ namespace ViMG
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
 					currentBatch.copies[currentBatch.num].refcount += 1;
                     currentBatch.copies[currentBatch.num].render = true;
                     currentBatch.num++;
@@ -203,7 +203,7 @@ namespace ViMG
 				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			StartActiveTasks(world);
+			StartActiveTasks();
         }
 
 		public bool WorkFinished()
@@ -292,7 +292,7 @@ namespace ViMG
 			}
 		}
 
-		private void StartActiveTasks(World world)
+		private void StartActiveTasks()
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -409,7 +409,7 @@ namespace ViMG
 			var batch = new RenderMeshBatch(new RenderMeshInfo[1], new CopiedChunkData[1]);
             ref RenderMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 			batch.meshInfos[0] = meshInfo;
-			batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+			batch.copies[0] = CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks, bufferPool, position);
 			batch.copies[0].refcount += 1;
 			batch.copies[0].render = true;
 			batch.num = 1;

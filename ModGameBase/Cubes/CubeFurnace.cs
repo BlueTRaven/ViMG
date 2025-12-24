@@ -34,8 +34,9 @@ namespace ViMG.Cubes
         {
 			if (data != null && data.GetValid())
 			{
-				var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-				if (face == meshingData.facing)
+				//var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+				var meshingData = data.GetEntityMeshingData2(parameters.position);
+				if (face == (MeshHelper.CubeFace)meshingData.state)
 					return new RectangleF(176, 32, 16, 16);
 			}
 

@@ -242,7 +242,7 @@ namespace ViMG
 
             if (markDirty)
             {
-                chunkManager.MarkCubeMeshInfoDirty(null, position, oldId, id);
+                chunkManager.MarkCubeDirty(null, position, oldId, id);
                 chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
             }
         }
@@ -259,7 +259,7 @@ namespace ViMG
 
             io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
 
-            chunkManager.MarkCubeMeshInfoDirty(player, position, oldId, id);
+            chunkManager.MarkCubeDirty(player, position, oldId, id);
             chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
         }
 

@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +20,7 @@ namespace ViMG.ChunkStuff
         public ushort[] PaddingIds;
         public ushort[] Ids;
         public Buffer<byte>[] EntityMeshingDatas;
+        public BasicState[] EntityMeshingDatas2;
 
         //Note that this represents the topleftfront of the Chunk. It does NOT include the padding.
         //I.e. padding left, front, top is -1.
@@ -60,6 +62,8 @@ namespace ViMG.ChunkStuff
             }
             if (EntityMeshingDatas == null)
                 EntityMeshingDatas = new Buffer<byte>[SIZE];
+            if (EntityMeshingDatas2 == null)
+                EntityMeshingDatas2 = new BasicState[SIZE];
 
             valid = true;
         }
@@ -98,6 +102,12 @@ namespace ViMG.ChunkStuff
             if (!EntityMeshingDatas[i].Allocated)
                 return default;
             else return *EntityMeshingDatas[i].As<T>().Memory;
+        }
+
+        public BasicState GetEntityMeshingData2(CubePosition position)
+        {
+            Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
+            return EntityMeshingDatas2[i];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -224,7 +224,6 @@ namespace ViMG.Entities
             return md.As<byte>();
         }
 
-
         public bool InventoryAction(int activatingPlayer, int action)
         {
             var currentRecipe = FindRecipe();

@@ -15,7 +15,6 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Schema;
 using ViMG.IMGUIImpl;
-using static ViMG.UIs.UI;
 
 namespace ViMG.Entities
 {
@@ -28,7 +27,7 @@ namespace ViMG.Entities
 		[ConsoleCommandVar("ent_prev_copies", "Number of previous copies of an entity to keep (for interpolation. Includes current state). Default = 2.")]
 		public static int EntPrev = 2;
 		[ConsoleCommandVar("ent_prev_copies_srv", "Number of previous copies of an entity to keep (for interpolation and networking. Includes current state.) Default = 30")]
-		public static int EntPrevSrv = 30;
+		public static int EntPrevSrv = 5;
 
 		public struct EntityReference : INetSerializable
 		{

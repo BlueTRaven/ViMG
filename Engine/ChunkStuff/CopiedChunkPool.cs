@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities;
 using ViMG.IMGUIImpl;
 
 namespace ViMG.ChunkStuff
@@ -52,7 +53,7 @@ namespace ViMG.ChunkStuff
             return copied;
         }
 
-        public static unsafe CopiedChunkData MakeCopy(World world, BufferPool bufferPool, ChunkPosition position)
+        public static unsafe CopiedChunkData MakeCopy(CubeView cubeView, EntityManager entityManager, int sizeInCubes, BufferPool bufferPool, ChunkPosition position)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -81,12 +82,12 @@ namespace ViMG.ChunkStuff
                             if (pos.Z < 0)
                                 pos.Z = 0;
 
-                            if (pos.X >= world.sizeInCubes)
-                                pos.X = world.sizeInCubes - 1;
-                            if (pos.Y >= world.sizeInCubes)
-                                pos.Y = world.sizeInCubes - 1;
-                            if (pos.Z >= world.sizeInCubes)
-                                pos.Z = world.sizeInCubes - 1;
+                            if (pos.X >= sizeInCubes)
+                                pos.X = sizeInCubes - 1;
+                            if (pos.Y >= sizeInCubes)
+                                pos.Y = sizeInCubes - 1;
+                            if (pos.Z >= sizeInCubes)
+                                pos.Z = sizeInCubes - 1;
 
                             queryPositionsPtr[i] = pos;
                         }
@@ -94,10 +95,10 @@ namespace ViMG.ChunkStuff
                 }
             }
 
-            world.ChunkManager.CubeView.GetIds(queryPositions, copied.PaddingIds);
-            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
+            cubeView.GetIds(queryPositions, copied.PaddingIds);
+            entityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
 
-            world.ChunkManager.CubeView.GetIdsForChunk(position, copied.Ids);
+            cubeView.GetIdsForChunk(position, copied.Ids);
 
             return copied;
         }
