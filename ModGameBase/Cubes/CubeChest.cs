@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -33,15 +34,13 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityChest(position, rows, columns, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (data != null && data.GetValid())
-            {
-				var meshingData = data.GetEntityMeshingData<EntityChest.MeshingData>(parameters.position);
+			// TODO GetEntityMeshingData
+			//var meshingData = data.GetEntityMeshingData<EntityChest.MeshingData>(parameters.position);
 
-				if (face == meshingData.facing)
-					return new RectangleF(128, 16, 16, 16);
-			}
+			//if (face == meshingData.facing)
+				//return new RectangleF(128, 16, 16, 16);
 
 			return base.GetSourceRect(pass, data, parameters, face);
         }

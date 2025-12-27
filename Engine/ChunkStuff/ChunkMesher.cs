@@ -89,11 +89,11 @@ namespace Engine.ChunkStuff
             CollisionMesher.UnloadAll();
         }
 
-        public void Update(CubeView cubeView, EntityManager entityManager)
+        public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
-            RenderMesher.Update(cubeView, entityManager);
-            CollisionMesher.Update(cubeView, entityManager);
+            RenderMesher.Update(cubeView, entityManager, copyManager);
+            CollisionMesher.Update(cubeView, entityManager, copyManager);
         }
     }
 }

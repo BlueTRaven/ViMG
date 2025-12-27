@@ -53,7 +53,7 @@ namespace ViMG
 		{
             public int player;
 			public ChunkPosition position;
-			public Task<CopiedChunkData> copyTask;
+			//public Task<CopiedChunkData> copyTask;
 		}
 
 		private PriorityQueue<QueuedChunk> queue = new(true, (queuedChunk) =>
@@ -187,15 +187,18 @@ namespace ViMG
 
 			foreach (var queuedChunk in queue.GetEnumerable())
 			{
-				queuedChunk.copyTask.Start();
+                chunkManager.CopyManager.StartCopyChunk(queuedChunk.position);
+				//queuedChunk.copyTask.Start();
 			}
-            
+
+            chunkManager.CopyManager.FinishCopyChunks();
 			foreach (var queuedChunk in queue.GetEnumerable()) 
-			{ 
-                queuedChunk.copyTask.Wait();
-                
-				chunkMesher?.RenderMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
-                chunkMesher?.CollisionMesher.AddToNextBatch(world, queuedChunk.position, queuedChunk.copyTask.Result);
+			{
+                //queuedChunk.copyTask.Wait();
+
+                var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
+				chunkMesher?.RenderMesher.AddToNextBatch(world, queuedChunk.position, copy);
+                chunkMesher?.CollisionMesher.AddToNextBatch(world, queuedChunk.position, copy);
             }
 
             chunkMesher?.RenderMesher.BeginFlush(world);
@@ -289,9 +292,10 @@ namespace ViMG
 				}
 				else if (loadedChunks[queuedChunk.player][i] == LoadingState.Enqueued)
 				{
-                    if (Main.MULTITHREAD_MESHING)
-                        queuedChunk.copyTask.Start();
-                    else queuedChunk.copyTask.RunSynchronously();
+                    chunkManager.CopyManager.StartCopyChunk(queuedChunk.position);
+                    //if (Main.MULTITHREAD_MESHING)
+                    //    queuedChunk.copyTask.Start();
+                    //else queuedChunk.copyTask.RunSynchronously();
                     copyingChunks.Add(queuedChunk);
 
                     currentNum++;
@@ -304,10 +308,13 @@ namespace ViMG
 			zoneQueue.End();
 
 			var zoneWait = TracyImpl.Tracy.BeginZone(name: "WaitForCopy");
+            chunkManager.CopyManager.FinishCopyChunks();
+
 			foreach (QueuedChunk copyingChunk in copyingChunks)
 			{
-				copyingChunk.copyTask.Wait();
-                CopiedChunkData copy = copyingChunk.copyTask.Result;
+                //copyingChunk.copyTask.Wait();
+                //            CopiedChunkData copy = copyingChunk.copyTask.Result;
+                CopiedChunkManager.CopiedChunkData copy = chunkManager.CopyManager.GetCopy(copyingChunk.position);
 
                 Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
                 IMGUIConsole.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
@@ -356,19 +363,22 @@ namespace ViMG
 
                     entIO.Deserialize(world, queuedChunk.position);
 
-                    CopiedChunkData copy = queuedChunk.copyTask.Result;
+                    //var copy = copiedChunkManager.GetCopy(queuedChunk.position);
+                    //CopiedChunkData copy = queuedChunk.copyTask.Result;
 
                     // Sync chunk loading to other players
-                    var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
-                    if (peer != null)
-                    {
-                        var sync = new SyncChunk.ChunkToSync
-                        {
-                            chunkPosition = queuedChunk.position,
-                            ids = copy.Ids,
-                        };
-                        Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                    }
+                    // NOTE: this is here, after deserialization, as this sends over chunk meshing data too
+                    // (which requires entities to be initialized)
+                    //var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
+                    //if (peer != null)
+                    //{
+                    //    var sync = new SyncChunk.ChunkToSync
+                    //    {
+                    //        chunkPosition = queuedChunk.position,
+                    //        ids = copy.Ids,
+                    //    };
+                    //    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                    //}
 
                     hasChanged = true;
                 }
@@ -406,8 +416,8 @@ namespace ViMG
                 //loadedChunksAttribution[world.localPlayerIndex][i] = true;
                 //queue.EnqueueWithoutSorting(position);
 
-                chunkMesher?.RenderMesher.ImmediatelyMesh(world, position);
-                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position);
+                chunkMesher?.RenderMesher.ImmediatelyMesh(world, position, chunkManager.CopyManager);
+                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position, chunkManager.CopyManager);
 
                 entIO.Deserialize(world, position);
                 //CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);
@@ -450,19 +460,19 @@ namespace ViMG
                                 loadedChunks[0][i] = LoadingState.Enqueued;
                                 //loadedChunksAttribution[world.localPlayerIndex][i] = true;
 
-                                var context = new CopyChunkTaskContext
-                                {
-                                    cubeView = world.ChunkManager.CubeView,
-                                    entityManager = world.EntityManager,
-                                    sizeInCubes = world.sizeInCubes,
-                                    pool = chunkMesher.bufferPool,
-                                    position = pos,
-                                };
-                                var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
+                                //var context = new CopyChunkTaskContext
+                                //{
+                                //    cubeView = world.ChunkManager.CubeView,
+                                //    entityManager = world.EntityManager,
+                                //    sizeInCubes = world.sizeInCubes,
+                                //    pool = chunkMesher.bufferPool,
+                                //    position = pos,
+                                //};
+                                //var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
                                 // NOTE: tasks are not immediately started.
                                 queue.EnqueueWithoutSorting(new QueuedChunk
                                 {
-                                    copyTask = task,
+                                    //copyTask = task,
                                     position = pos,
                                 });
 
@@ -552,20 +562,20 @@ namespace ViMG
                                 {
                                     loadedChunks[player.playerIndex][i] = LoadingState.Enqueued;
 
-                                    var context = new CopyChunkTaskContext
-                                    {
-                                        cubeView = world.ChunkManager.CubeView,
-                                        entityManager = world.EntityManager,
-                                        sizeInCubes = world.sizeInCubes,
-                                        pool = chunkMesher.bufferPool,
-                                        position = pos,
-                                    };
-                                    var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
+                                    //var context = new CopyChunkTaskContext
+                                    //{
+                                    //    cubeView = world.ChunkManager.CubeView,
+                                    //    entityManager = world.EntityManager,
+                                    //    sizeInCubes = world.sizeInCubes,
+                                    //    pool = chunkMesher.bufferPool,
+                                    //    position = pos,
+                                    //};
+                                    //var task = new Task<CopiedChunkData>(CopyChunkTaskFn, context);
                                     // NOTE: tasks are not immediately started.
                                     queue.EnqueueWithoutSorting(new QueuedChunk
                                     {
                                         player = player.playerIndex,
-                                        copyTask = task,
+                                        //copyTask = task,
                                         position = pos,
                                     });
 

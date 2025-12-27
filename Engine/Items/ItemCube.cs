@@ -34,6 +34,7 @@ namespace ViMG.Items
 			{
 				if (player.world.PlaceCube(player, player.PlaceAtPos, cubeId))
 				{
+					Console.WriteLine("placed at {0} - chunk pos {1}", player.PlaceAtPos, ChunkPosition.CubeChunk(player.PlaceAtPos));
                     inventory.Remove(index, 1);
 
                     actionStats.useTime = 0.25f;

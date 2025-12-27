@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -41,19 +42,17 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(shrine);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
         {
-            if (data.GetValid())
-            {
-                var meshingData = data.GetEntityMeshingData<EntityShrine.MeshingData>(parameters.position);
+            // TODO GetEntityMeshingData
+            //var meshingData = data.GetEntityMeshingData<EntityShrine.MeshingData>(parameters.position);
              
-                if (meshingData.cooldownTimer > 0)
-                {
-                    RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
-                    sourceRect.y += 16;
-                    return sourceRect;
-                }
-            }
+            //if (meshingData.cooldownTimer > 0)
+            //{
+            //    RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
+            //    sourceRect.y += 16;
+            //    return sourceRect;
+            //}
 
             return base.GetSourceRect(pass, data, parameters);
         }

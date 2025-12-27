@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -50,7 +51,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeXMeshVerts(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, Vector3 scale, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, Vector3 scale, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
 			int verticesStart = vertices.Length;
 
@@ -255,7 +256,7 @@ namespace ViMG
 			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
 		}
 
-		public static void ApplyCubeAnim(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
+		public static void ApplyCubeAnim(Cube.RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
 			Cube.CubeAnimation anim = parameters.cube.GetAnimation(pass, data, parameters, parameters.faces);
 			if (anim.Valid)

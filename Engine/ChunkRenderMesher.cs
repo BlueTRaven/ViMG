@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -38,12 +39,12 @@ namespace ViMG
 		private struct RenderMeshBatch
 		{
 			public RenderMeshInfo[] meshInfos;
-			public CopiedChunkData[] copies;
+			public CopiedChunkManager.CopiedChunkData[] copies;
 			public int num;
 
 			public readonly bool isUsed;
 
-			public RenderMeshBatch(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies)
+			public RenderMeshBatch(RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies)
 			{
 				this.meshInfos = meshInfos;
 				this.copies = copies;
@@ -70,11 +71,11 @@ namespace ViMG
 		private readonly struct BatchRenderMeshTaskResult
 		{
 			public readonly RenderMeshInfo[] meshInfos;
-			public readonly CopiedChunkData[] copies;
+			public readonly CopiedChunkManager.CopiedChunkData[] copies;
 			//number of meshes included in the batch
 			public readonly int num;
 
-			public BatchRenderMeshTaskResult(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies, int num)
+			public BatchRenderMeshTaskResult(RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies, int num)
 			{
 				this.meshInfos = meshInfos;
 				this.copies = copies;
@@ -163,17 +164,17 @@ namespace ViMG
 			this.bufferPool = bufferPool;
 		}
 
-		public void Update(CubeView cubeView, EntityManager entityManager)
+		public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
             if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -182,15 +183,18 @@ namespace ViMG
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
 				dirtyChunkKnown.Remove(position);
 
+				copyManager.StartCopyChunk(position);
+				copyManager.FinishCopyChunks();
+
 				ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
 				if (c.version != c.meshVersion || !c.hasMeshes)
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-					currentBatch.copies[currentBatch.num].refcount += 1;
-                    currentBatch.copies[currentBatch.num].render = true;
+					currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position); //CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
+					//currentBatch.copies[currentBatch.num].refcount += 1;
+                    //currentBatch.copies[currentBatch.num].render = true;
                     currentBatch.num++;
 				}
 			}
@@ -200,7 +204,7 @@ namespace ViMG
 			if (currentBatch.num > 0)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			StartActiveTasks();
@@ -216,7 +220,7 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
-			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			//while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
 			//{
@@ -261,11 +265,11 @@ namespace ViMG
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						lock (bufferPool)
-						{
-							batchResult.copies[j].Return(bufferPool);
-							batchResult.copies[j].render = false;
-                        }
+						//lock (bufferPool)
+						//{
+						//	batchResult.copies[j].Return(bufferPool);
+						//	batchResult.copies[j].render = false;
+      //                  }
 
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
@@ -312,12 +316,12 @@ namespace ViMG
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						lock (bufferPool)
-						{
+						//lock (bufferPool)
+						//{
                             //using var zoneLock = TracyImpl.Tracy.BeginZone(name: "Lock");
-                            batchResult.copies[j].Return(bufferPool);
-							batchResult.copies[j].render = false;
-						}
+                            //batchResult.copies[j].Return(bufferPool);
+							//batchResult.copies[j].render = false;
+						//}
 
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
@@ -362,20 +366,20 @@ namespace ViMG
 		}
 
 		//Adds a position in the current batch. 
-		public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
+		public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			copy.refcount += 1;
-			copy.render = true;
+			//copy.refcount += 1;
+			//copy.render = true;
 
 			if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
                 EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
@@ -389,10 +393,10 @@ namespace ViMG
 			} 
 			else
 			{
-				lock (bufferPool)
-				{
-					copy.Return(bufferPool);
-				}
+				//lock (bufferPool)
+				//{
+				//	copy.Return(bufferPool);
+				//}
 				return false;
 			}
 		}
@@ -404,14 +408,18 @@ namespace ViMG
 			meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
 		}
 
-		public void ImmediatelyMesh(World world, ChunkPosition position)
+		public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager)
 		{
-			var batch = new RenderMeshBatch(new RenderMeshInfo[1], new CopiedChunkData[1]);
+			copyManager.StartCopyChunk(position);
+			copyManager.FinishCopyChunks();
+
+			CopiedChunkManager.CopiedChunkData copy = copyManager.GetCopy(position);
+            var batch = new RenderMeshBatch(new RenderMeshInfo[1], new CopiedChunkManager.CopiedChunkData[1]);
             ref RenderMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 			batch.meshInfos[0] = meshInfo;
-			batch.copies[0] = CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks, bufferPool, position);
-			batch.copies[0].refcount += 1;
-			batch.copies[0].render = true;
+			batch.copies[0] = copy; // CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks, bufferPool, position);
+			//batch.copies[0].refcount += 1;
+			//batch.copies[0].render = true;
 			batch.num = 1;
 
             var batchState = new BatchRenderMeshTaskState(batch, this);
@@ -422,7 +430,7 @@ namespace ViMG
 
             meshInfo.meshes = result.meshInfos[0].meshes;
 
-			batch.copies[0].Return(bufferPool);
+			//batch.copies[0].Return(bufferPool);
         }
 
 		private static unsafe BatchRenderMeshTaskResult MeshBatchFn(object obj)
@@ -697,7 +705,7 @@ namespace ViMG
 			}
 		}
 
-		public VertexAttributes GenerateChunk(in CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass, int dummy)
+		public VertexAttributes GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass, int dummy)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -758,7 +766,7 @@ namespace ViMG
 
                             if (cube.ShouldMeshPass(pass))
                             {
-								CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
+								CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                                 CubeMeshingParameters parameters = new CubeMeshingParameters()
                                 {
                                     cube = cube,
@@ -785,7 +793,7 @@ namespace ViMG
                             if (id != 0 || renderingFaces == MeshHelper.CubeFace.NONE)
                                 continue;
 
-                            CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
+                            CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                             CubeMeshingParameters parameters = new CubeMeshingParameters()
                             {
                                 cube = Main.Registry.CubeRegistry.Air,
@@ -831,7 +839,7 @@ namespace ViMG
 			return attributes;
         }
 
-		public (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
+		public (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -861,7 +869,7 @@ namespace ViMG
 
 							if (cube.ShouldMeshPass(pass))
 							{
-                                CubePosition positionCS = data.BasePosition + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
+                                CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
 
                                 CubeMeshingParameters parameters = new CubeMeshingParameters()
 								{
@@ -896,8 +904,8 @@ namespace ViMG
 							{
 								cube = Main.Registry.CubeRegistry.Air,
 								id = id,
-								positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-								positionCS = data.BasePosition + cubePosition,
+								positionWS = (data.ChunkPosition.InCubeSpace() + cubePosition).InWorldSpace(),
+								positionCS = data.ChunkPosition.InCubeSpace() + cubePosition,
 								position = cubePosition,
 								faces = renderingFaces
 							};
@@ -911,7 +919,7 @@ namespace ViMG
 			return (vertices, indices);
 		}
 
-		private static unsafe void BakeAO(CopiedChunkData data, CubePosition cubePosition, int start, int end, FastList<VertexCube> vertices)
+		private static unsafe void BakeAO(CopiedChunkManager.CopiedChunkData data, CubePosition cubePosition, int start, int end, FastList<VertexCube> vertices)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 

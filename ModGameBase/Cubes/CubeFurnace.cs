@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -30,27 +31,23 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (data != null && data.GetValid())
-			{
 				//var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-				var meshingData = data.GetEntityMeshingData2(parameters.position);
-				if (face == (MeshHelper.CubeFace)meshingData.state)
-					return new RectangleF(176, 32, 16, 16);
-			}
+			// TODO GetEntityMeshingData
+			//var meshingData = data.GetEntityMeshingData2(parameters.position);
+			//if (face == (MeshHelper.CubeFace)meshingData.state)
+			//	return new RectangleF(176, 32, 16, 16);
 
 			return base.GetSourceRect(pass, data, parameters, face);
         }
 
-        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-			if (data != null && data.GetValid())
-			{
-				var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-				if (face == meshingData.facing)
-					return new CubeAnimation(0.125f, 3, 16);
-			}
+			// TODO GetEntityMeshingData
+			//var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+			//if (face == meshingData.facing)
+			//	return new CubeAnimation(0.125f, 3, 16);
 
 			return base.GetAnimation(pass, data, parameters, face);
         }

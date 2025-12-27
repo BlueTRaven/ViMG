@@ -1,0 +1,353 @@
+﻿using SharpDX;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using ViMG;
+using ViMG.ChunkStuff;
+using ViMG.Cubes;
+using ViMG.IMGUIImpl;
+
+namespace Engine.ChunkStuff
+{
+    public class CopiedChunkManager
+    {
+        //private static ChunkPosition[] chunkAdjacents =
+        //[
+        //    new ChunkPosition(-1, -1, -1),
+        //    new ChunkPosition(-1, 0, -1),
+        //    new ChunkPosition(-1, 1, -1),
+        //    new ChunkPosition(0, -1, -1),
+        //    new ChunkPosition(0, 0, -1),
+        //    new ChunkPosition(0, 1, -1),
+        //    new ChunkPosition(1, -1, -1),
+        //    new ChunkPosition(1, 0, -1),
+        //    new ChunkPosition(1, 1, -1),
+
+        //    new ChunkPosition(-1, -1, 0),
+        //    new ChunkPosition(-1, 0, 0),
+        //    new ChunkPosition(-1, 1, 0),
+        //    new ChunkPosition(0, -1, 0),
+        //    new ChunkPosition(0, 0, 0),
+        //    new ChunkPosition(0, 1, 0),
+        //    new ChunkPosition(1, -1, 0),
+        //    new ChunkPosition(1, 0, 0),
+        //    new ChunkPosition(1, 1, 0),
+
+        //    new ChunkPosition(-1, -1, 1),
+        //    new ChunkPosition(-1, 0, 1),
+        //    new ChunkPosition(-1, 1, 1),
+        //    new ChunkPosition(0, -1, 1),
+        //    new ChunkPosition(0, 0, 1),
+        //    new ChunkPosition(0, 1, 1),
+        //    new ChunkPosition(1, -1, 1),
+        //    new ChunkPosition(1, 0, 1),
+        //    new ChunkPosition(1, 1, 1),
+        //];
+
+        [InlineArray(3 * 3 * 3)]
+        public struct CopyChunkArr
+        {
+            private ushort[]? _elem0;
+
+            public ushort[]? this[int i]
+            {
+                get => this[i];
+                set => this[i] = value;
+            }
+
+            // Requires relative chunk coordinates - (0, 0, 0) = center, (-1, -1, -1) = top front left
+            public void Set(ChunkPosition position, ushort[] data)
+            {
+                Util.ThreeDToOneD(new ValuePoint3D(position + new ChunkPosition(1, 1, 1)), new ValuePoint3D(3), out int i);
+                this[i] = data;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ushort[] Get(ChunkPosition position)
+            {
+                Util.ThreeDToOneD(new ValuePoint3D(position + new ChunkPosition(1, 1, 1)), new ValuePoint3D(3), out int i);
+                return this[i];
+            }
+        }
+
+        // a copied chunk for actual use
+        public class CopiedChunkData
+        {
+            private CopyChunkArr arr;
+
+            public readonly ChunkPosition ChunkPosition;
+
+            public CopiedChunkData(CopyChunkArr arr, ChunkPosition chunkPosition)
+            {
+                this.arr = arr;
+                this.ChunkPosition = chunkPosition;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ushort GetId(CubePosition position)
+            {
+                IMGUIConsole.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
+
+                //accessing a different chunk
+                if (position.X < 0 || position.Y < 0 || position.Z < 0 ||
+                position.X >= Chunk.CHUNK_SIZE || position.Y >= Chunk.CHUNK_SIZE || position.Z >= Chunk.CHUNK_SIZE)
+                {
+                    int chx = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
+                    int chy = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
+                    int chz = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
+
+                    int cx = (position.X + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    int cy = (position.Y + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    int cz = (position.Z + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    Util.ThreeDToOneD(new ValuePoint3D(cx, cy, cz), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                    var chunkData = arr.Get(new ChunkPosition(chx, chy, chz));
+                    var val = chunkData[i];
+                    return val;
+                }
+                else
+                {
+                    Util.ThreeDToOneD(new ValuePoint3D(position), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                    return arr.Get(new ChunkPosition(0, 0, 0))[i];
+                }
+            }
+
+            public void GetIds(Span<CubePosition> positions, Span<ushort> ids)
+            {
+                Debug.Assert(positions.Length == ids.Length);
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    ids[i] = GetId(positions[i]);
+                }
+            }
+
+            public Optional<Cube> GetCube(CubePosition position)
+            {
+                //Add one since padding is -1
+                var id = GetId(position);
+                return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
+            }
+
+            public MeshHelper.CubeFace GetFace(CubePosition position)
+            {
+                //using var zone = TracyImpl.Tracy.BeginZone();
+
+                Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+                //TODO re-enable air
+                if (cube.Transparency == Cube.TransparencyValue.Invisible || cube.Transparency == Cube.TransparencyValue.Air)
+                    return MeshHelper.CubeFace.NONE;
+
+                MeshHelper.CubeFace faces = MeshHelper.CubeFace.NONE;
+                if (HasClearSide(position.X + 1, position.Y, position.Z, cube))
+                    faces |= MeshHelper.CubeFace.LEFT;
+                if (HasClearSide(position.X - 1, position.Y, position.Z, cube))
+                    faces |= MeshHelper.CubeFace.RIGHT;
+
+                if (HasClearSide(position.X, position.Y - 1, position.Z, cube))
+                    faces |= MeshHelper.CubeFace.DOWN;
+                if (HasClearSide(position.X, position.Y + 1, position.Z, cube))
+                    faces |= MeshHelper.CubeFace.UP;
+
+                if (HasClearSide(position.X, position.Y, position.Z - 1, cube))
+                    faces |= MeshHelper.CubeFace.FRONT;
+                if (HasClearSide(position.X, position.Y, position.Z + 1, cube))
+                    faces |= MeshHelper.CubeFace.BACK;
+
+                return faces;
+            }
+
+            //TODO: separate out visual stuff, not sure how yet
+            private bool HasClearSide(int x, int y, int z, Cube currentCube)
+            {
+                Cube adjacentCube = GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+                if (currentCube.Transparency != Cube.TransparencyValue.Air)
+                {
+                    switch (adjacentCube.Transparency)
+                    {
+                        case (Cube.TransparencyValue.Transparent):
+                        case (Cube.TransparencyValue.Invisible):
+                        case (Cube.TransparencyValue.Air):
+                            return true;
+                        case (Cube.TransparencyValue.TransparentOccludesSiblings):
+                            return currentCube != adjacentCube;
+                        default:
+                            return false;
+                    }
+
+                }
+                else if (currentCube.Transparency == Cube.TransparencyValue.Air)
+                    return currentCube != adjacentCube;
+
+                return false;
+            }
+
+            public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces)
+            {
+                using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
+                Debug.Assert(positions.Length == faces.Length);
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    faces[i] = GetFace(positions[i]);
+                }
+            }
+        }
+
+        private class CopiedChunk
+        {
+            public ChunkPosition chunkPosition;
+            public int generation;
+            public int currentGeneration;
+            public ushort[]? data;
+        }
+
+        private struct CopyTaskParams
+        {
+            public CubeView view;
+            public ChunkPosition chunkPosition;
+            public ushort[] data;
+        }
+
+        private struct CopyTaskResult
+        {
+            public ChunkPosition position;
+            public ushort[] data;
+        }
+
+        public CubeView cubeView;
+        private readonly int sizeInChunks;
+        private Dictionary<ChunkPosition, CopiedChunk> copiedChunks = new Dictionary<ChunkPosition, CopiedChunk>();
+        private List<Task<CopyTaskResult>> tasks = new List<Task<CopyTaskResult>>();
+
+        public CopiedChunkManager(CubeView cubeView, int sizeInChunks)
+        {
+            this.cubeView = cubeView;
+            this.sizeInChunks = sizeInChunks;
+        }
+
+        public void StartCopyChunk(ChunkPosition chunkPosition)
+        {
+            for (int i = 0; i < 3 * 3 * 3;  i++)
+            {
+                Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                var realPos = chunkPosition + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                
+                if (IsInWorldBounds(chunkPosition))
+                {
+                    ActuallyStartCopyChunk(realPos);
+                }
+            }
+        }
+
+        private bool IsInWorldBounds(ChunkPosition position)
+        {
+            return position.X >= 0 && position.X < sizeInChunks &&
+                    position.Y >= 0 && position.Y < sizeInChunks &&
+                    position.Z >= 0 && position.Z < sizeInChunks;
+        }
+
+        private void ActuallyStartCopyChunk(ChunkPosition chunkPosition)
+        {
+            if (!copiedChunks.TryGetValue(chunkPosition, out var chunk))
+            {
+                // TODO this is kinda wasteful. We're generating a new class just to immediately re-create it
+                chunk = new()
+                {
+                    currentGeneration = -1,
+                    generation = 0,
+                    data = null,
+                    chunkPosition = chunkPosition,
+                };
+                copiedChunks.Add(chunkPosition, chunk);
+            }
+
+            if (chunk.currentGeneration != chunk.generation)
+            {
+                copiedChunks[chunkPosition] = new CopiedChunk()
+                {
+                    chunkPosition = chunkPosition,
+                    currentGeneration = chunk.generation,
+                    generation = chunk.generation,
+                    data = null,
+                };
+
+                var state = new CopyTaskParams
+                {
+                    view = cubeView,
+                    chunkPosition = chunk.chunkPosition,
+                    data = new ushort[Chunk.NUM_CUBES_IN_CHUNK]
+                };
+                var task = new Task<CopyTaskResult>(CopyChunk, state);
+                tasks.Add(task);
+
+                //if (Main.MULTITHREAD_MESHING)
+                //    task.Start();
+                //else task.RunSynchronously();
+            }
+        }
+
+        public void FinishCopyChunks()
+        {
+            foreach (var task in tasks)
+            {
+                if (Main.MULTITHREAD_MESHING)
+                    task.Start();
+                else task.RunSynchronously();
+            }
+
+            foreach (var task in tasks)
+            {
+                task.Wait();
+
+                copiedChunks[task.Result.position].data = task.Result.data;
+            }
+
+            tasks.Clear();
+        }
+
+        public CopiedChunkData GetCopy(ChunkPosition position)
+        {
+            CopyChunkArr arr = new();
+            for (int i = 0; i < 3 * 3 * 3; i++)
+            {
+                Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                var realPos = position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                //var realPos = position + chunkAdjacents[i];
+                if (IsInWorldBounds(realPos))
+                {
+                    Debug.Assert(copiedChunks[realPos].currentGeneration == copiedChunks[realPos].generation, "Generation mismatch. Make sure to call StartCopyChunk and FinishCopyChunks.");
+                    arr[i] = copiedChunks[realPos].data!;
+                }
+                else arr[i] = null;
+            }
+
+            return new CopiedChunkData(arr, position);
+        }
+
+        private CopyTaskResult CopyChunk(object? state)
+        {
+            CopyTaskParams parms = (CopyTaskParams)state;
+
+            parms.view.GetIdsForChunk(parms.chunkPosition, parms.data);
+
+            return new CopyTaskResult
+            {
+                data = parms.data,
+                position = parms.chunkPosition,
+            };
+        }
+
+        public void MarkDirty(ChunkPosition chunkPosition)
+        {
+            if (copiedChunks.TryGetValue(chunkPosition, out var chunk))
+            {
+                chunk.generation += 1;
+            }
+        }
+    }
+}

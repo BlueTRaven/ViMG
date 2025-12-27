@@ -1,12 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Engine.ChunkStuff;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BrUtility;
-using ViMG.Items;
 using ViMG.ChunkStuff;
+using ViMG.Items;
 
 namespace ViMG.Cubes
 {
@@ -24,11 +25,8 @@ namespace ViMG.Cubes
             DropSelf(itemsToDrop);
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (data == null || !data.GetValid())
-                return base.GetSourceRect(pass, data, parameters, face);
-
             //we're meshing one of the sides.
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {

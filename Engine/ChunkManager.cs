@@ -55,8 +55,10 @@ namespace ViMG
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
         public readonly ChunkMesher? ChunkMesher;
+        public readonly CopiedChunkManager CopyManager;
 
         public CubeView CubeView;
+
 
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
@@ -69,13 +71,14 @@ namespace ViMG
             ChunkMesher = chunkMesher;
 
             CubeView = new CubeView(this, io);
+            this.CopyManager = new CopiedChunkManager(CubeView, sizeInChunksXZ);
         }
 
         public void Update(double deltaTime, World world)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            ChunkMesher?.Update(CubeView, world.EntityManager);
+            ChunkMesher?.Update(CubeView, world.EntityManager, CopyManager);
 
             const int MAX_UPDATE_PER_FRAME = 200;
             int updatedThisFrame = 0;
@@ -173,6 +176,7 @@ namespace ViMG
                 {
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
+                    CopyManager.MarkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
                     updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, adjacentPosition, oldId, updatedId));
                 }
@@ -189,6 +193,7 @@ namespace ViMG
                 {
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
+                    CopyManager.MarkDirty(ChunkPosition.CubeChunk(adjacentPosition));
                 }
             }
         }

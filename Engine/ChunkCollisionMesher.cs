@@ -4,6 +4,7 @@ using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation.DirectX;
 using System;
@@ -33,12 +34,12 @@ namespace ViMG
             public BufferPool[] pools;
             public byte[] versions;
 
-            public CopiedChunkData[] copies;
+            public CopiedChunkManager.CopiedChunkData[] copies;
             public int num;
 
             public readonly bool isUsed;
 
-            public CollisionMeshBatch(CopiedChunkData[] copies)
+            public CollisionMeshBatch(CopiedChunkManager.CopiedChunkData[] copies)
             {
                 positions = new ChunkPosition[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK];
                 pools = new BufferPool[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK];
@@ -72,11 +73,11 @@ namespace ViMG
             public readonly BufferPool[] pools;
             public readonly byte[] versions;
 
-            public readonly CopiedChunkData[] copies;
+            public readonly CopiedChunkManager.CopiedChunkData[] copies;
             //number of meshes included in the batch
             public readonly int num;
 
-            public BatchCollisionMeshTaskResult(ChunkPosition[] positions, Mesh[] meshes, BufferPool[] pools, byte[] versions, CopiedChunkData[] copies, int num)
+            public BatchCollisionMeshTaskResult(ChunkPosition[] positions, Mesh[] meshes, BufferPool[] pools, byte[] versions, CopiedChunkManager.CopiedChunkData[] copies, int num)
             {
                 this.positions = positions;
                 this.meshes = meshes;
@@ -147,17 +148,17 @@ namespace ViMG
             this.bufferPool = bufferPool;
         }
 
-        public void Update(CubeView cubeView, EntityManager entityManager)
+        public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
             if (!currentBatch.isUsed)
-                currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
             if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
             {
                 EnqueueBatch(ref currentBatch);
-                currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
             }
 
             //Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -165,6 +166,9 @@ namespace ViMG
             {
                 ChunkPosition position = dirtyChunkPositions.Dequeue();
                 dirtyChunkKnown.Remove(position);
+
+                copyManager.StartCopyChunk(position);
+                copyManager.FinishCopyChunks();
 
                 ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 
@@ -174,9 +178,9 @@ namespace ViMG
                     currentBatch.positions[currentBatch.num] = meshInfo.position;
                     currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                     currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                    currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-                    currentBatch.copies[currentBatch.num].refcount += 1;
-                    currentBatch.copies[currentBatch.num].collision = true;
+                    currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position);// CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
+                    //currentBatch.copies[currentBatch.num].refcount += 1;
+                    //currentBatch.copies[currentBatch.num].collision = true;
                     currentBatch.num++;
                 }
             }
@@ -186,7 +190,7 @@ namespace ViMG
             if (currentBatch.num > 0)
             {
                 EnqueueBatch(ref currentBatch);
-                currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
             }
 
             StartActiveTasks();
@@ -202,7 +206,7 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
-            currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+            currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
             //while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
             //{
@@ -246,11 +250,11 @@ namespace ViMG
 
                     for (int j = 0; j < batchResult.num; j++)
                     {
-                        lock (bufferPool)
-                        {
-                            batchResult.copies[j].Return(bufferPool);
-                            batchResult.copies[j].collision = false;
-                        }
+                        //lock (bufferPool)
+                        //{
+                            //batchResult.copies[j].Return(bufferPool);
+                            //batchResult.copies[j].collision = false;
+                        //}
 
                         //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
@@ -319,11 +323,11 @@ namespace ViMG
 
                         for (int j = 0; j < batchResult.num; j++)
                         {
-                            lock (bufferPool)
-                            {
-                                batchResult.copies[j].Return(bufferPool);
-                                batchResult.copies[j].render = false;
-                            }
+                            //lock (bufferPool)
+                            //{
+                            //    batchResult.copies[j].Return(bufferPool);
+                            //    batchResult.copies[j].render = false;
+                            //}
 
                             //CollisionMeshInfo meshInfoResult = batchResult.meshInfos[j];
 
@@ -387,20 +391,20 @@ namespace ViMG
         }
 
         //Adds a position in the current batch. 
-        public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
+        public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            copy.refcount += 1;
-            copy.collision = true;
+            //copy.refcount += 1;
+            //copy.collision = true;
 
             if (!currentBatch.isUsed)
-                currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
             if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
             {
                 EnqueueBatch(ref currentBatch);
-                currentBatch = new CollisionMeshBatch(new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                currentBatch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
             }
 
             ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
@@ -417,10 +421,10 @@ namespace ViMG
             }
             else
             {
-                lock (bufferPool)
-                {
-                    copy.Return(bufferPool);
-                }
+                //lock (bufferPool)
+                //{
+                //    copy.Return(bufferPool);
+                //}
 
                 return false;
             }
@@ -433,13 +437,17 @@ namespace ViMG
             meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
         }
 
-        public void ImmediatelyMesh(World world, ChunkPosition position)
+        public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager)
         {
-            var batch = new CollisionMeshBatch(new CopiedChunkData[1]);
+            copyManager.StartCopyChunk(position);
+            copyManager.FinishCopyChunks();
+
+            var copy = copyManager.GetCopy(position);
+            var batch = new CollisionMeshBatch(new CopiedChunkManager.CopiedChunkData[1]);
             ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
-            batch.copies[0] = CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-            batch.copies[0].refcount += 1;
-            batch.copies[0].collision = true;
+            batch.copies[0] = copy;// CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
+            //batch.copies[0].refcount += 1;
+            //batch.copies[0].collision = true;
             batch.pools[0] = meshInfo.bufferPool;
             batch.num = 1;
 
@@ -468,7 +476,7 @@ namespace ViMG
                 meshInfo.hasMesh = true;
             }
 
-            batch.copies[0].Return(bufferPool);
+            //batch.copies[0].Return(bufferPool);
         }
 
         private static BatchCollisionMeshTaskResult MeshBatchFn(object obj)
