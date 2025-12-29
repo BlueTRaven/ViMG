@@ -265,7 +265,7 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
-            ChunkMesher? chunkMesher = device != null ? new(SIZE_IN_CHUNKS, physicsInfo, device) : null;
+            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
             var entityManager = new EntityManager();
             var inventoryManager = new InventoryManager();
             var entIO = new EntityManagerIO(entityManager, 0);
@@ -390,7 +390,7 @@ namespace ViMG.GameStates
                 "Reading from disk...";
             var physicsInfo = new PhysicsInfo();
 
-            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);// new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
@@ -447,7 +447,7 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
-            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayers[0]);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayers[0]);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
@@ -520,7 +520,7 @@ namespace ViMG.GameStates
                 
                 var physicsInfo = new PhysicsInfo();
 
-                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+                var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
@@ -578,7 +578,7 @@ namespace ViMG.GameStates
 
                 var physicsInfo = new PhysicsInfo();
 
-                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
+                var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);

@@ -53,27 +53,52 @@ namespace Engine.ChunkStuff
             }
         }
 
-        public readonly ChunkRenderMesher RenderMesher;
-        public readonly ChunkCollisionMesher CollisionMesher;
+        public readonly ChunkRenderMesher? RenderMesher;
+        public readonly ChunkCollisionMesher? CollisionMesher;
         public BufferPool bufferPool;
 
+        // Creates a ChunkMesher with both a RenderMesher and a CollisionMesher.
         public ChunkMesher(int sizeInChunksXZ, PhysicsInfo physicsInfo, GraphicsDevice device)
         {
             this.bufferPool = new BufferPool();
             RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ, bufferPool);
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, RenderMesher, sizeInChunksXZ, bufferPool);
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunksXZ, bufferPool);
+        }
+
+        private ChunkMesher(int sizeInChunks, GraphicsDevice device)
+        {
+            bufferPool = new BufferPool();
+            RenderMesher = new ChunkRenderMesher(device, sizeInChunks, bufferPool);
+        }
+
+        private ChunkMesher(int sizeInChunks, PhysicsInfo physicsInfo)
+        {
+            bufferPool = new BufferPool();
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunks, bufferPool);
+        }
+
+        // Creates a ChunkMesher with a RenderMesher.
+        public static ChunkMesher RenderOnly(int sizeInChunks, GraphicsDevice device)
+        {
+            return new ChunkMesher(sizeInChunks, device);
+        }
+
+        // Creates a ChunkMesher with a CollisionMesher.
+        public static ChunkMesher CollisionOnly(int sizeInChunks, PhysicsInfo physicsInfo)
+        {
+            return new ChunkMesher(sizeInChunks, physicsInfo);
         }
 
         public void Unload(ChunkPosition pos)
         {
-            RenderMesher.Unload(pos);
-            CollisionMesher.Unload(pos);
+            RenderMesher?.Unload(pos);
+            CollisionMesher?.Unload(pos);
         }
 
         public void MarkChunkDirty(ChunkPosition position)
         {
-            var a = RenderMesher.MarkDirty(position);
-            var b = CollisionMesher.MarkDirty(position);
+            var a = RenderMesher?.MarkDirty(position);
+            var b = CollisionMesher?.MarkDirty(position);
 
             //Debug.Assert(a == b);
         }
@@ -82,18 +107,18 @@ namespace Engine.ChunkStuff
         {
             //There may still be things in the queue, including active threads, so wait on those
             //TODO: maybe this isn't necessary? Mesh Resources aren't created anywhere but the main thread
-            RenderMesher.FinishFlush();
-            CollisionMesher.FinishFlush();
+            RenderMesher?.FinishFlush();
+            CollisionMesher?.FinishFlush();
 
-            RenderMesher.UnloadAll();
-            CollisionMesher.UnloadAll();
+            RenderMesher?.UnloadAll();
+            CollisionMesher?.UnloadAll();
         }
 
         public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
-            RenderMesher.Update(cubeView, entityManager, copyManager);
-            CollisionMesher.Update(cubeView, entityManager, copyManager);
+            RenderMesher?.Update(cubeView, copyManager);
+            CollisionMesher?.Update(cubeView, entityManager, copyManager);
         }
     }
 }

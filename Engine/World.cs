@@ -779,7 +779,7 @@ namespace ViMG
 				if (GetLocalPlayer()?.GetBuffManager().HasBuff("emissive_ores") ?? false)
 					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
-                VerySimpleMesh mesh = ChunkManager.ChunkMesher.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Opaque);
+                VerySimpleMesh mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Opaque) ?? new();
 				if (mesh.IBO != null)
 				{
 					Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
@@ -790,7 +790,7 @@ namespace ViMG
                 //        transform, null));
                 //}
 
-                mesh = ChunkManager.ChunkMesher.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Transparent);
+                mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
                 if (mesh.IBO != null)
                 {
                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
@@ -815,7 +815,7 @@ namespace ViMG
 
 				if (Main.Renderer.EffectEmptyEnabled)
 				{
-					mesh = ChunkManager.ChunkMesher.RenderMesher.GetMesh(pos, Cubes.Cube.RenderPass.Air);
+					mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
                     if (mesh.IBO != null)
                     {
                         Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();

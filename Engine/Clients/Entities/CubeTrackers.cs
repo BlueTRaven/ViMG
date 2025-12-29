@@ -12,7 +12,6 @@ namespace Engine.Clients.Entities
     {
         public Dictionary<ChunkPosition, ChunkCubeTrackers> trackers = new();
 
-        private ChunkCubeTrackersDummy dummy = new ChunkCubeTrackersDummy();
         public CubeTrackers()
         {
         }

@@ -60,14 +60,8 @@ namespace Engine.ChunkStuff
             }
 
             // Requires relative chunk coordinates - (0, 0, 0) = center, (-1, -1, -1) = top front left
-            public void Set(ChunkPosition position, ushort[] data)
-            {
-                Util.ThreeDToOneD(new ValuePoint3D(position + new ChunkPosition(1, 1, 1)), new ValuePoint3D(3), out int i);
-                this[i] = data;
-            }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ushort[] Get(ChunkPosition position)
+            public ushort[]? Get(ChunkPosition position)
             {
                 Util.ThreeDToOneD(new ValuePoint3D(position + new ChunkPosition(1, 1, 1)), new ValuePoint3D(3), out int i);
                 return this[i];
@@ -75,7 +69,7 @@ namespace Engine.ChunkStuff
         }
 
         // a copied chunk for actual use
-        public class CopiedChunkData
+        public struct CopiedChunkData
         {
             private CopyChunkArr arr;
 
@@ -105,13 +99,15 @@ namespace Engine.ChunkStuff
                     int cz = (position.Z + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
                     Util.ThreeDToOneD(new ValuePoint3D(cx, cy, cz), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
                     var chunkData = arr.Get(new ChunkPosition(chx, chy, chz));
+                    if (chunkData == null) return 0;
+                    
                     var val = chunkData[i];
                     return val;
                 }
                 else
                 {
                     Util.ThreeDToOneD(new ValuePoint3D(position), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                    return arr.Get(new ChunkPosition(0, 0, 0))[i];
+                    return arr.Get(new ChunkPosition(0, 0, 0))?[i] ?? 0;
                 }
             }
 
@@ -219,15 +215,25 @@ namespace Engine.ChunkStuff
             public ushort[] data;
         }
 
+        [ConsoleCommandVar("chunk_max_cached", "maximum number of cached chunks. Higher numbers = faster chunk meshing, increased memory consumption.\n" +
+            "Setting this number too low may not work and it will automatically be reset to a higher number.")]
+        public static int MaxCachedChunks = 100;
+
         public CubeView cubeView;
         private readonly int sizeInChunks;
-        private Dictionary<ChunkPosition, CopiedChunk> copiedChunks = new Dictionary<ChunkPosition, CopiedChunk>();
-        private List<Task<CopyTaskResult>> tasks = new List<Task<CopyTaskResult>>();
+        private readonly Dictionary<ChunkPosition, CopiedChunk> copiedChunks = [];
+        private readonly List<Task<CopyTaskResult>> tasks = [];
+
+        private ChunkPosition?[] oldChunkPositions;
+        private int oldChunkPositionsHead = 0;
 
         public CopiedChunkManager(CubeView cubeView, int sizeInChunks)
         {
             this.cubeView = cubeView;
             this.sizeInChunks = sizeInChunks;
+
+            oldChunkPositions = new ChunkPosition?[MaxCachedChunks];
+            Array.Fill(oldChunkPositions, null);
         }
 
         public void StartCopyChunk(ChunkPosition chunkPosition)
@@ -253,33 +259,26 @@ namespace Engine.ChunkStuff
 
         private void ActuallyStartCopyChunk(ChunkPosition chunkPosition)
         {
+            bool forceCopy = false;
             if (!copiedChunks.TryGetValue(chunkPosition, out var chunk))
             {
-                // TODO this is kinda wasteful. We're generating a new class just to immediately re-create it
-                chunk = new()
-                {
-                    currentGeneration = -1,
-                    generation = 0,
-                    data = null,
-                    chunkPosition = chunkPosition,
-                };
-                copiedChunks.Add(chunkPosition, chunk);
+                forceCopy = true;
             }
 
-            if (chunk.currentGeneration != chunk.generation)
+            if (forceCopy || chunk.currentGeneration != chunk.generation)
             {
                 copiedChunks[chunkPosition] = new CopiedChunk()
                 {
                     chunkPosition = chunkPosition,
-                    currentGeneration = chunk.generation,
-                    generation = chunk.generation,
+                    currentGeneration = chunk?.generation ?? 0,
+                    generation = chunk?.generation ?? 0,
                     data = null,
                 };
 
                 var state = new CopyTaskParams
                 {
                     view = cubeView,
-                    chunkPosition = chunk.chunkPosition,
+                    chunkPosition = chunkPosition,
                     data = new ushort[Chunk.NUM_CUBES_IN_CHUNK]
                 };
                 var task = new Task<CopyTaskResult>(CopyChunk, state);
@@ -293,8 +292,20 @@ namespace Engine.ChunkStuff
 
         public void FinishCopyChunks()
         {
-            foreach (var task in tasks)
+            if (MaxCachedChunks < tasks.Count)
             {
+                Console.WriteLine("Didn't have enough room to copy all chunks - some would be evicted before we could make use of them! {0} / {1}\n" +
+                    "MaxCachedChunks has been set to {1}.", MaxCachedChunks, tasks.Count);
+                MaxCachedChunks = tasks.Count;
+            }
+
+            if (oldChunkPositions.Length != MaxCachedChunks)
+            {
+                Array.Resize(ref oldChunkPositions, MaxCachedChunks);
+            }
+
+            foreach (var task in tasks)
+            { 
                 if (Main.MULTITHREAD_MESHING)
                     task.Start();
                 else task.RunSynchronously();
@@ -303,6 +314,21 @@ namespace Engine.ChunkStuff
             foreach (var task in tasks)
             {
                 task.Wait();
+
+                if (oldChunkPositions[oldChunkPositionsHead] != null)
+                {
+                    var oldPosition = copiedChunks[oldChunkPositions[oldChunkPositionsHead].Value];
+                    oldPosition = new CopiedChunk()
+                    {
+                        chunkPosition = oldPosition.chunkPosition,
+                        currentGeneration = oldPosition.generation,
+                        generation = oldPosition.generation + 1,
+                        data = null,
+                    };
+                }
+                oldChunkPositions[oldChunkPositionsHead] = task.Result.position;
+                oldChunkPositionsHead += 1;
+                oldChunkPositionsHead %= MaxCachedChunks;
 
                 copiedChunks[task.Result.position].data = task.Result.data;
             }

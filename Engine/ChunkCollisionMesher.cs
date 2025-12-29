@@ -56,12 +56,10 @@ namespace ViMG
         private readonly struct BatchCollisionMeshTaskState
         {
             public readonly CollisionMeshBatch batch;
-            public readonly ChunkRenderMesher mesher;
 
-            public BatchCollisionMeshTaskState(CollisionMeshBatch batch, ChunkRenderMesher mesher)
+            public BatchCollisionMeshTaskState(CollisionMeshBatch batch)
             {
                 this.batch = batch;
-                this.mesher = mesher;
             }
         }
 
@@ -129,20 +127,18 @@ namespace ViMG
 
         private CollisionMeshInfo[] meshes;
 
-        private readonly ChunkRenderMesher mesher;
         private readonly int sizeInChunks;
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
         private BufferPool bufferPool;
 
-        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, ChunkRenderMesher mesher, int sizeInChunks, BufferPool bufferPool)
+        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, int sizeInChunks, BufferPool bufferPool)
         {
             //bufferPool = new BufferPool();
 
             this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
-            this.mesher = mesher;
             this.sizeInChunks = sizeInChunks;
 
             this.bufferPool = bufferPool;
@@ -432,7 +428,7 @@ namespace ViMG
 
         private void EnqueueBatch(ref CollisionMeshBatch batch)
         {
-            Task<BatchCollisionMeshTaskResult> task = new Task<BatchCollisionMeshTaskResult>(MeshBatchFn, new BatchCollisionMeshTaskState(batch, mesher));
+            Task<BatchCollisionMeshTaskResult> task = new Task<BatchCollisionMeshTaskResult>(MeshBatchFn, new BatchCollisionMeshTaskState(batch));
 
             meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
         }
@@ -451,7 +447,7 @@ namespace ViMG
             batch.pools[0] = meshInfo.bufferPool;
             batch.num = 1;
 
-            var batchState = new BatchCollisionMeshTaskState(batch, mesher);
+            var batchState = new BatchCollisionMeshTaskState(batch);
 
             BatchCollisionMeshTaskResult result = MeshBatchFn(batchState);
 
@@ -511,7 +507,7 @@ namespace ViMG
 
                     state.batch.copies[i].GetFaces(positions, faces);
 
-                    (FastList<VertexCube> verts, List<int> indices) opaques = state.mesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
+                    (FastList<VertexCube> verts, List<int> indices) opaques = ChunkRenderMesher.GenerateChunk(state.batch.copies[i], faces, state.batch.positions[i], Cube.RenderPass.Opaque);
 
                     if (opaques.verts.Length > 0)
                         meshes[i] = GenerateMesh(state.batch.pools[i], opaques.verts, opaques.indices);

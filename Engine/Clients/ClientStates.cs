@@ -16,6 +16,7 @@ namespace Engine.Clients
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
         public CubeTrackers cubeTrackers;
+        public ClientChunkManager chunkManager;
 
         private int head = 0;
         private int frame = 0;

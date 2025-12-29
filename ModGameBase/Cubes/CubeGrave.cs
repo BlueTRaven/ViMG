@@ -22,20 +22,20 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            if (data != null && (face & MeshHelper.CubeFace.SIDES) > 0 && data.GetId(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)) == Id)
+            if ((face & MeshHelper.CubeFace.SIDES) > 0 && data.GetId(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)) == Id)
                 return new RectangleF(224, 80, 16, 16);
             else return base.GetSourceRect(pass, data, parameters, face);
         }
 
-        private static CubePosition[] adjacents = new CubePosition[6]
-        {
+        private static CubePosition[] adjacents =
+        [
             new CubePosition(-1, 0, 0),
             new CubePosition(1, 0, 0),
             new CubePosition(0, -1, 0),
             new CubePosition(0, 1, 0),
             new CubePosition(0, 0, -1),
             new CubePosition(0, 0, 1)
-        };
+        ];
 
         public override void OnMined(Player player, CubePosition position)
         {

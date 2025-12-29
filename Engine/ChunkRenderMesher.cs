@@ -16,7 +16,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
-using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.IMGUIImpl;
 using ViMG.Rendering;
@@ -164,7 +163,7 @@ namespace ViMG
 			this.bufferPool = bufferPool;
 		}
 
-		public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
+		public void Update(CubeView cubeView, CopiedChunkManager copyManager)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -215,7 +214,7 @@ namespace ViMG
             return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
         }
 
-		public void BeginFlush(World world)
+		public void BeginFlush()
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -366,7 +365,7 @@ namespace ViMG
 		}
 
 		//Adds a position in the current batch. 
-		public bool AddToNextBatch(World world, ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
+		public bool AddToNextBatch(ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -408,7 +407,7 @@ namespace ViMG
 			meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
 		}
 
-		public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager)
+		public void ImmediatelyMesh(ChunkPosition position, CopiedChunkManager copyManager)
 		{
 			copyManager.StartCopyChunk(position);
 			copyManager.FinishCopyChunks();
@@ -839,7 +838,7 @@ namespace ViMG
 			return attributes;
         }
 
-		public (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
+		public static (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);

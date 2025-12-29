@@ -68,7 +68,7 @@ namespace ViMG.IMGUIImpl
         [ConsoleCommandVar("show_ent_io", "Show Ent IO Debug")]
         public static bool ShowEntIODebug = false;
 
-        [IMGUIAutoSlider<int>(1, 10, 1)]
+        [IMGUIAutoSlider<int>(1, 100, 1)]
         [ConsoleCommandVar("CopiesPerFrame", "The number of chunk copies that can be produced in one frame.")]
         public static int CopiesPerFrame = 10;
 
