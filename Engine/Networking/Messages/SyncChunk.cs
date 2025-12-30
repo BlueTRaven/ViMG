@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Common;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -27,7 +28,7 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
-        private List<CubeView.PalettizedChunk> chunksToLoad = new List<CubeView.PalettizedChunk>();
+        private List<PalettizedChunk> chunksToLoad = new List<PalettizedChunk>();
         
         public SyncChunk()
         {
@@ -52,12 +53,12 @@ namespace Engine.Networking.Messages
                 GS.GetWorld().ChunkManager.CubeView.GetIdsForChunk(chunkToSync.chunkPosition, idsCache);
             }
 
-            var chunk = CubeView.Palettize(chunkToSync.chunkPosition, queryIds);
+            var chunk = PalettizedChunk.Palettize(chunkToSync.chunkPosition, queryIds);
 
             netMessage.writer.Put(chunkToSync.chunkPosition);
             netMessage.writer.Put((int)chunk.type);
             netMessage.writer.PutArray(chunk.palette);
-            if (chunk.type != CubeView.PalettizeType.AllOneId)
+            if (chunk.type != PalettizeType.AllOneId)
                 netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
 
             FastList<ICubeTracker> trackers = new();
@@ -118,11 +119,11 @@ namespace Engine.Networking.Messages
 
             var chunkPosition = reader.Get<ChunkPosition>();
 
-            CubeView.PalettizeType paletteType = (CubeView.PalettizeType)reader.GetInt();
+            PalettizeType paletteType = (PalettizeType)reader.GetInt();
             var palette = reader.GetUShortArray();
-            var data = paletteType == CubeView.PalettizeType.AllOneId ? null : reader.GetArray<byte>(sizeof(byte));
+            var data = paletteType == PalettizeType.AllOneId ? null : reader.GetArray<byte>(sizeof(byte));
 
-            var chunk = new CubeView.PalettizedChunk
+            var chunk = new PalettizedChunk
             {
                 data = data,
                 palette = palette,
@@ -130,7 +131,7 @@ namespace Engine.Networking.Messages
                 type = paletteType,
             };
             chunksToLoad.Add(chunk);
-            GS.GetClient().ChunkManager.ChunkIO.LoadFrom(ref chunk);
+            GS.GetClient().ChunkManager.ChunkIO.SetChunk(ref chunk);
             GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunk.position);
             // Mark all chunks in a 3x3x3 radius around as dirty
             // We can't ignore meshing a chunk if we don't have one of its adjacent chunks

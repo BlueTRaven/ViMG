@@ -436,39 +436,42 @@ namespace ViMG
 				miningUpdate.Clear();
 			}
 
-            using (var zoneRandomUpdates = TracyImpl.Tracy.BeginZone())
+			if (Main.ENABLE_RANDOM_UPDATES)
 			{
-				Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
-				Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
-
-				//perform random updates
-				//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
-				if (randomUpdatesTimer <= 0)
+				using (var zoneRandomUpdates = TracyImpl.Tracy.BeginZone())
 				{
-					randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
-					foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
+					Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
+					Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
+
+					//perform random updates
+					//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
+					if (randomUpdatesTimer <= 0)
 					{
-						for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+						randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
+						foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
 						{
-							int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
-							Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
-							CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
+							for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+							{
+								int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+								Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
+								CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
 
-							rups[i] = randomUpdatePos;
-						}
+								rups[i] = randomUpdatePos;
+							}
 
-						ChunkManager.CubeView.GetIds(rups, rupis);
+							ChunkManager.CubeView.GetIds(rups, rupis);
 
-						for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
-						{
-							Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
+							for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+							{
+								Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
 
-							if (cube != Main.Registry.CubeRegistry.Air)
-								cube.OnRandomUpdate(this, ChunkManager, rups[i]);
+								if (cube != Main.Registry.CubeRegistry.Air)
+									cube.OnRandomUpdate(this, ChunkManager, rups[i]);
+							}
 						}
 					}
+					else randomUpdatesTimer -= (float)deltaTime;
 				}
-				else randomUpdatesTimer -= (float)deltaTime;
 			}
 
 			PassiveSpawnerManager?.Update(deltaTime, this);

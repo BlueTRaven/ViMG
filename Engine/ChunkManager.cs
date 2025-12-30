@@ -71,7 +71,7 @@ namespace ViMG
             ChunkMesher = chunkMesher;
 
             CubeView = new CubeView(this, io);
-            this.CopyManager = new CopiedChunkManager(CubeView, sizeInChunksXZ);
+            this.CopyManager = new CopiedChunkManager(CubeView, io, sizeInChunksXZ);
         }
 
         public void Update(double deltaTime, World world)

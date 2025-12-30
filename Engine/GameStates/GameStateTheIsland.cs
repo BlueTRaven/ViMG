@@ -107,11 +107,11 @@ namespace ViMG.GameStates
 
                 LoadMessage = "Loading World...";
                 ProfilingHelper.Start("Building Meshes...");
-                if (!Main.Args.dedicatedServer)
-                {
+                //if (!Main.Args.dedicatedServer)
+                //{
                     //Now we can tell the ChunkLoadManager what should be loaded.
-                    world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
-                }
+                    //world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
+                //}
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.

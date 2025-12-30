@@ -18,6 +18,7 @@ using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.IMGUIImpl;
+using static Engine.Networking.Messages.SyncChunk;
 
 namespace ViMG
 {
@@ -321,7 +322,7 @@ namespace ViMG
                 CopiedChunkManager.CopiedChunkData copy = chunkManager.CopyManager.GetCopy(copyingChunk.position);
                 copyingChunk.copyData = copy;
 
-                Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
+                Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
                 IMGUIConsole.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
                 loadedChunks[copyingChunk.player][i] = LoadingState.Loading;
 
@@ -362,7 +363,7 @@ namespace ViMG
 
                 if (isDone)
                 {
-                    Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position.X, queuedChunk.position.Y, queuedChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
+                    Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
 
                     loadedChunks[queuedChunk.player][j] = LoadingState.Loaded;
 
@@ -550,12 +551,9 @@ namespace ViMG
                             Vector2 distH = new Vector2(pos.X, pos.Z) - new Vector2(target.X, target.Z);
 
                             Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
-                            //loadedChunksAttribution[player.playerIndex][i] = false;
 
                             if (distH.Length() < Options.RenderDistance && chunkManager.IsInWorldBounds(pos))
                             {
-                                //loadedChunksAttribution[player.playerIndex][i] = true;
-
                                 if (loadedChunks[player.playerIndex][i] == LoadingState.Unloaded)
                                 {
                                     loadedChunks[player.playerIndex][i] = LoadingState.Enqueued;
@@ -563,7 +561,6 @@ namespace ViMG
                                     queue.EnqueueWithoutSorting(new QueuedChunk
                                     {
                                         player = player.playerIndex,
-                                        //copyTask = task,
                                         position = pos,
                                     });
 

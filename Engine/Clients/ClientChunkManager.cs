@@ -24,7 +24,7 @@ namespace Engine.Clients
             ChunkIO = new ChunkManagerIO(SizeInChunks, "", 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
             ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
-            CopyManager = new CopiedChunkManager(CubeView, SizeInChunks);
+            CopyManager = new CopiedChunkManager(CubeView, ChunkIO, SizeInChunks);
         }
 
         public bool IsInWorldBounds(ChunkPosition position)

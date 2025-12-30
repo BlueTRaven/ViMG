@@ -1,4 +1,5 @@
 ﻿using Engine.ChunkStuff;
+using Engine.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +26,7 @@ namespace ViMG
         {
             public LoadedState loadedState;
 
-            public CubeView.PalettizedChunk palettizedChunk;
+            public PalettizedChunk palettizedChunk;
 
             // null if storedPalettized
             public ushort[]? cubes;
@@ -37,7 +38,7 @@ namespace ViMG
 				cubes = null;
 			}
 
-            public LoadedChunk(CubeView.PalettizedChunk palettizedChunk)
+            public LoadedChunk(PalettizedChunk palettizedChunk)
             {
                 this.palettizedChunk = palettizedChunk;
                 loadedState = LoadedState.Palettized;
@@ -147,9 +148,9 @@ namespace ViMG
 
             if (loadedChunks[i].loadedState == LoadedState.Palettized)
 			{
-				loadedChunks[i].cubes = CubeView.Depaletteize(loadedChunks[i].palettizedChunk);
+				loadedChunks[i].cubes = PalettizedChunk.Depaletteize(loadedChunks[i].palettizedChunk);
 				loadedChunks[i].loadedState = LoadedState.Loaded;
-				loadedChunks[i].palettizedChunk = new CubeView.PalettizedChunk();
+				loadedChunks[i].palettizedChunk = new PalettizedChunk();
 			}
 
 			Debug.Assert(loadedChunks[i].cubes != null);
@@ -157,7 +158,35 @@ namespace ViMG
 			return loadedChunks[i].cubes!;
 		}
 
-		public void LoadFrom(ref readonly CubeView.PalettizedChunk palettized)
+		public PalettizedChunk? GetPalettizedChunk(ChunkPosition position)
+		{
+			Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
+			if (loadedChunks[i].loadedState != LoadedState.Palettized) return null;
+
+			return loadedChunks[i].palettizedChunk;
+		}
+
+		public ushort GetId(CubePosition position)
+		{
+			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+            Util.ThreeDToOneD(new ValuePoint3D(chunkPos), new ValuePoint3D(sizeInChunks), out int i);
+
+			if (loadedChunks[i].loadedState == LoadedState.Unloaded) return 0;
+
+			if (loadedChunks[i].loadedState == LoadedState.Palettized)
+			{
+				return loadedChunks[i].palettizedChunk.GetId(position.InChunkSpace());
+			}
+			else 
+			{
+                Util.ThreeDToOneD(new ValuePoint3D(position.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                return loadedChunks[i].cubes[j];
+			}
+
+			return 0;
+        }
+
+		public void SetChunk(ref readonly PalettizedChunk palettized)
 		{
             Util.ThreeDToOneD(new ValuePoint3D(palettized.position.X, palettized.position.Y, palettized.position.Z), new ValuePoint3D(sizeInChunks), out int i);
 
@@ -242,7 +271,7 @@ namespace ViMG
 
 			for (int i = 0; i < loadedChunks.Length; i++)
 			{
-				CubeView.PalettizedChunk pal;
+				PalettizedChunk pal;
 				if (loadedChunks[i].loadedState == LoadedState.Unloaded)
 				{
 					LoadChunk(i);
@@ -252,7 +281,7 @@ namespace ViMG
 				else
 				{
 					Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out var p);
-					pal = CubeView.Palettize(new ChunkPosition(p.x, p.y, p.z), loadedChunks[i].cubes);
+					pal = PalettizedChunk.Palettize(new ChunkPosition(p.x, p.y, p.z), loadedChunks[i].cubes);
 				}
 
 				var prePal = stream.Position;
@@ -285,7 +314,7 @@ namespace ViMG
 			Span<byte> bytes = stackalloc byte[(int)size];
 			regionFile.Read(bytes);
 
-			CubeView.PalettizedChunk c = new CubeView.PalettizedChunk();
+			PalettizedChunk c = new();
 			c.Load(bytes);
 
 			loadedChunks[index].loadedState = LoadedState.Palettized;

@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using Engine.Common;
+using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -209,8 +210,9 @@ namespace Engine.ChunkStuff
 
         private struct CopyTaskParams
         {
-            public ICubeGetter view;
-            public ChunkPosition chunkPosition;
+            public required ICubeGetter view;
+            public required ChunkManagerIO chunkIO;
+            public required ChunkPosition chunkPosition;
             public ushort[] data;
         }
 
@@ -225,6 +227,7 @@ namespace Engine.ChunkStuff
         public static int MaxCachedChunks = 100;
 
         public ICubeGetter cubeView;
+        public ChunkManagerIO chunkIO;
         private readonly int sizeInChunks;
         private readonly Dictionary<ChunkPosition, CopiedChunk> copiedChunks = [];
         private readonly List<Task<CopyTaskResult>> tasks = [];
@@ -232,9 +235,10 @@ namespace Engine.ChunkStuff
         private ChunkPosition?[] oldChunkPositions;
         private int oldChunkPositionsHead = 0;
 
-        public CopiedChunkManager(ICubeGetter cubeView, int sizeInChunks)
+        public CopiedChunkManager(ICubeGetter cubeView, ChunkManagerIO chunkIO, int sizeInChunks)
         {
             this.cubeView = cubeView;
+            this.chunkIO = chunkIO;
             this.sizeInChunks = sizeInChunks;
 
             oldChunkPositions = new ChunkPosition?[MaxCachedChunks];
@@ -283,6 +287,7 @@ namespace Engine.ChunkStuff
                 var state = new CopyTaskParams
                 {
                     view = cubeView,
+                    chunkIO = chunkIO,
                     chunkPosition = chunkPosition,
                     data = new ushort[Chunk.NUM_CUBES_IN_CHUNK]
                 };
@@ -362,14 +367,22 @@ namespace Engine.ChunkStuff
 
         private CopyTaskResult CopyChunk(object? state)
         {
-            CopyTaskParams parms = (CopyTaskParams)state;
+            CopyTaskParams args = (CopyTaskParams)state;
 
-            parms.view.GetIdsForChunk(parms.chunkPosition, parms.data);
+            var palChunk = args.chunkIO.GetPalettizedChunk(args.chunkPosition);
+            if (palChunk != null)
+            {
+                args.data = PalettizedChunk.Depaletteize(palChunk.Value);
+            } 
+            else
+            {
+                args.view.GetIdsForChunk(args.chunkPosition, args.data);
+            }
 
             return new CopyTaskResult
             {
-                data = parms.data,
-                position = parms.chunkPosition,
+                data = args.data,
+                position = args.chunkPosition,
             };
         }
 
