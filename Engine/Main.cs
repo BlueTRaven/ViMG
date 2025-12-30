@@ -395,19 +395,20 @@ namespace ViMG
 
 			WVP.SetView(view);
 			
-			gameStateManager.Draw(GraphicsDevice);
+			gameStateManager.Draw(GraphicsDevice, batch);
 
             //if (WorldLoaded)
             //world.Draw(GraphicsDevice, CubeLitEffect);
             IMGUIEntIODebug.Show();
 
-            Renderer.Draw(batch);
+            //Renderer.Draw(batch);
 
 			GraphicsDevice.SetRenderTarget(null);
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-			batch.Draw(Renderer.GetOutput().RenderTarget as RenderTarget2D, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+			if (Renderer.GetOutput() != null)
+				batch.Draw(Renderer.GetOutput().Value.RenderTarget as RenderTarget2D, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
 			//batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
 
 			gameStateManager.DrawUI(batch);

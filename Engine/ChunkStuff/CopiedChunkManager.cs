@@ -120,6 +120,11 @@ namespace Engine.ChunkStuff
                 }
             }
 
+            public ushort[] GetAllIds()
+            {
+                return arr.Get(new ChunkPosition());
+            }
+
             public Optional<Cube> GetCube(CubePosition position)
             {
                 //Add one since padding is -1
@@ -204,7 +209,7 @@ namespace Engine.ChunkStuff
 
         private struct CopyTaskParams
         {
-            public CubeView view;
+            public ICubeGetter view;
             public ChunkPosition chunkPosition;
             public ushort[] data;
         }
@@ -219,7 +224,7 @@ namespace Engine.ChunkStuff
             "Setting this number too low may not work and it will automatically be reset to a higher number.")]
         public static int MaxCachedChunks = 100;
 
-        public CubeView cubeView;
+        public ICubeGetter cubeView;
         private readonly int sizeInChunks;
         private readonly Dictionary<ChunkPosition, CopiedChunk> copiedChunks = [];
         private readonly List<Task<CopyTaskResult>> tasks = [];
@@ -227,7 +232,7 @@ namespace Engine.ChunkStuff
         private ChunkPosition?[] oldChunkPositions;
         private int oldChunkPositionsHead = 0;
 
-        public CopiedChunkManager(CubeView cubeView, int sizeInChunks)
+        public CopiedChunkManager(ICubeGetter cubeView, int sizeInChunks)
         {
             this.cubeView = cubeView;
             this.sizeInChunks = sizeInChunks;

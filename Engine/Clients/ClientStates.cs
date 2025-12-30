@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.Rendering;
 
 namespace Engine.Clients
 {
@@ -16,7 +17,10 @@ namespace Engine.Clients
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
         public CubeTrackers cubeTrackers;
-        public ClientChunkManager chunkManager;
+        public ClientChunkManager ChunkManager;
+        private WorldRenderer worldRenderer;
+
+        public int localPlayer = 0;
 
         private int head = 0;
         private int frame = 0;
@@ -25,8 +29,10 @@ namespace Engine.Clients
         public double Variance;
         public double CurrentTime;
 
-        public ClientStates()
+        public ClientStates(GraphicsDevice device)
         {
+            ChunkManager = new ClientChunkManager(device);
+
             states = new ClientWorld[ViMG.Entities.EntityManager.EntPrevSrv];
             for (int i = 0; i < states.Length; i++)
             {
@@ -35,6 +41,8 @@ namespace Engine.Clients
 
             inventoryManager = new ClientInventoryManager();
             cubeTrackers = new CubeTrackers();
+
+            worldRenderer = new WorldRenderer();
         }
 
         public void NewFrame(double time)
@@ -70,6 +78,8 @@ namespace Engine.Clients
 
         public void Render(GraphicsDevice device, double deltaTime)
         {
+            worldRenderer.Render(this);
+
             var iter = Main.Registry.RendererRegistry.GetIterable();
             foreach (var a in iter)
             {

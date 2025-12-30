@@ -1,4 +1,5 @@
-﻿using LiteNetLib.Utils;
+﻿using Engine.ChunkStuff;
+using LiteNetLib.Utils;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -15,10 +16,7 @@ using static Engine.Networking.Messages.SyncChunk;
 
 namespace ViMG
 {
-    //A cube view intended for initialization of the world.
-    //This view does not support any multithreading.
-    //Therefore it should only be used on contexts where multithreading may not be running or where threads cannot overlap.
-    public class CubeView
+    public class CubeView : ICubeGetter
     {
         private readonly ChunkManager chunkManager;
         private readonly ChunkManagerIO io;
@@ -38,15 +36,6 @@ namespace ViMG
             var id = ids[i];
             io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
             return id;
-
-            //byte[] bytes = io.GetBytes();
-
-            //int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
-
-            //ushort id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
-
-            //BitConverter is apparently faster than fixed cast of bytes to ushort
-            //return id;
         }
 
         private struct SortedCubePos

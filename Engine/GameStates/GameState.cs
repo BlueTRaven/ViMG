@@ -44,7 +44,7 @@ namespace ViMG.GameStates
             currentMenu?.Draw(batch);
         }
 
-        public virtual void Draw(GraphicsDevice device)
+        public virtual void Draw(GraphicsDevice device, SpriteBatch batch)
         {
 
         }

@@ -19,6 +19,7 @@ using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Generation;
 using ViMG.Physics;
+using ViMG.Rendering;
 using ViMG.UIs;
 
 namespace ViMG.GameStates
@@ -132,7 +133,7 @@ namespace ViMG.GameStates
                 worldTask.Start();
             else worldTask.RunSynchronously();
 
-            client = new ClientStates();
+            client = new ClientStates(device);
         }
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
@@ -228,6 +229,8 @@ namespace ViMG.GameStates
                     client.CurrentTime += deltaTime;
                     var expectedTime = client.LastFrameTime + World.SyncTime;
                     Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
+
+                    client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager);
                     //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
                     //{
                     //    client.NewFrame();
@@ -675,11 +678,11 @@ namespace ViMG.GameStates
             return logic;
         }
 
-        public override void Draw(GraphicsDevice device)
+        public override void Draw(GraphicsDevice device, SpriteBatch batch)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            base.Draw(device);
+            base.Draw(device, batch);
 
             if (world != null)
             {
@@ -689,6 +692,7 @@ namespace ViMG.GameStates
             if (client != null)
             {
                 client.Render(device, 0);
+                Main.Renderer.Draw(batch, client.Current().camera);
             }
         }
 

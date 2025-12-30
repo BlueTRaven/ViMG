@@ -130,6 +130,16 @@ namespace Engine.Networking.Messages
                 type = paletteType,
             };
             chunksToLoad.Add(chunk);
+            GS.GetClient().ChunkManager.ChunkIO.LoadFrom(ref chunk);
+            GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunk.position);
+            // Mark all chunks in a 3x3x3 radius around as dirty
+            // We can't ignore meshing a chunk if we don't have one of its adjacent chunks
+            for (int i = 0; i < 3 * 3 * 3; i++)
+            {
+                Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                ChunkPosition dirtyChunk = chunk.position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                GS.GetClient().ChunkManager.ChunkMesher.MarkChunkDirty(dirtyChunk);
+            }
 
             int numTrackers = reader.GetInt();
             for (int i = 0; i < numTrackers; i++)

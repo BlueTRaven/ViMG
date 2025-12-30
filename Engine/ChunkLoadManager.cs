@@ -53,6 +53,7 @@ namespace ViMG
 		{
             public int player;
 			public ChunkPosition position;
+            public CopiedChunkManager.CopiedChunkData? copyData;
 			//public Task<CopiedChunkData> copyTask;
 		}
 
@@ -314,9 +315,11 @@ namespace ViMG
 			var zoneWait = TracyImpl.Tracy.BeginZone(name: "WaitForCopy");
             chunkManager.CopyManager.FinishCopyChunks();
 
-			foreach (QueuedChunk copyingChunk in copyingChunks)
+            for (int j = 0; j < copyingChunks.Count; j++)
 			{
+                QueuedChunk copyingChunk = copyingChunks[j];
                 CopiedChunkManager.CopiedChunkData copy = chunkManager.CopyManager.GetCopy(copyingChunk.position);
+                copyingChunk.copyData = copy;
 
                 Util.ThreeDToOneD(new ValuePoint3D(copyingChunk.position.X, copyingChunk.position.Y, copyingChunk.position.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int i);
                 IMGUIConsole.Assert(loadedChunks[copyingChunk.player][i] == LoadingState.Enqueued);
@@ -365,22 +368,22 @@ namespace ViMG
 
                     entIO.Deserialize(world, queuedChunk.position);
 
-                    //var copy = copiedChunkManager.GetCopy(queuedChunk.position);
+                    //var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
                     //CopiedChunkData copy = queuedChunk.copyTask.Result;
 
                     // Sync chunk loading to other players
                     // NOTE: this is here, after deserialization, as this sends over chunk meshing data too
                     // (which requires entities to be initialized)
-                    //var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
-                    //if (peer != null)
-                    //{
-                    //    var sync = new SyncChunk.ChunkToSync
-                    //    {
-                    //        chunkPosition = queuedChunk.position,
-                    //        ids = copy.Ids,
-                    //    };
-                    //    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
-                    //}
+                    var peer = Main.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
+                    if (peer != null)
+                    {
+                        var sync = new SyncChunk.ChunkToSync
+                        {
+                            chunkPosition = queuedChunk.position,
+                            ids = queuedChunk.copyData?.GetAllIds(),
+                        };
+                        Main.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                    }
 
                     hasChanged = true;
                 }

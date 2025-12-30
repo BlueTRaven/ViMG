@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -163,7 +164,7 @@ namespace ViMG
 			this.bufferPool = bufferPool;
 		}
 
-		public void Update(CubeView cubeView, CopiedChunkManager copyManager)
+		public void Update(CopiedChunkManager copyManager)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -578,6 +579,22 @@ namespace ViMG
 			return mesh;
 		}
 
+		public bool TryGetMesh(ChunkPosition position, Cube.RenderPass pass, out VerySimpleMesh mesh) 
+		{
+            ref VerySimpleMesh ourMesh = ref GetChunkMeshInfo(position).meshes[(int)pass];
+			if (ourMesh.IBO == null)
+			{
+				mesh = new();
+				return false;
+			}
+			else
+			{
+				mesh = ourMesh;
+				return true;
+			}
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ref RenderMeshInfo GetChunkMeshInfo(ChunkPosition pos)
 		{
 			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(sizeInChunks), out int i);

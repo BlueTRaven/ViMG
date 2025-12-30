@@ -23,8 +23,6 @@ namespace ViMG
 
         private struct LoadedChunk
         {
-			public required Semaphore l;
-
             public LoadedState loadedState;
 
             public CubeView.PalettizedChunk palettizedChunk;
@@ -34,7 +32,6 @@ namespace ViMG
 
 			public LoadedChunk()
 			{
-				l = new(0, 1);
 				palettizedChunk = new();
 				loadedState = LoadedState.Unloaded;
 				cubes = null;
@@ -42,7 +39,6 @@ namespace ViMG
 
             public LoadedChunk(CubeView.PalettizedChunk palettizedChunk)
             {
-				l = new(0, 1);
                 this.palettizedChunk = palettizedChunk;
                 loadedState = LoadedState.Palettized;
                 cubes = null;
@@ -93,7 +89,7 @@ namespace ViMG
 			loadedChunks = new LoadedChunk[numChunks];
 			for (int i = 0; i < numChunks; i++)
 			{
-				loadedChunks[i] = new() { l = new(0, 1) };
+				loadedChunks[i] = new();
 			}
         }
 
@@ -109,7 +105,6 @@ namespace ViMG
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out var p);
                 loadedChunks[i] = new()
                 {
-					l = new(0, 1),
                     cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
                     loadedState = LoadedState.Loaded,
                 };
@@ -121,7 +116,6 @@ namespace ViMG
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
 			loadedChunks[i] = new()
 			{
-                l = new(0, 1),
                 cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
 				loadedState = LoadedState.Loaded,
             };
@@ -131,7 +125,7 @@ namespace ViMG
 		{
 			for (int i = 0; i < numChunks; i++)
 			{
-				loadedChunks[i] = new() { l = new(0, 1) };
+				loadedChunks[i] = new();
 			}
 		}
 
@@ -149,22 +143,33 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
+			if (loadedChunks[i].loadedState == LoadedState.Unloaded) return null;
 
             if (loadedChunks[i].loadedState == LoadedState.Palettized)
 			{
-				// For some reason pallette is sometimes null here randomly
 				loadedChunks[i].cubes = CubeView.Depaletteize(loadedChunks[i].palettizedChunk);
 				loadedChunks[i].loadedState = LoadedState.Loaded;
 				loadedChunks[i].palettizedChunk = new CubeView.PalettizedChunk();
 			}
 
-            Debug.Assert(loadedChunks[i].loadedState == LoadedState.Loaded);
 			Debug.Assert(loadedChunks[i].cubes != null);
 
 			return loadedChunks[i].cubes!;
 		}
 
-		public void ReleaseChunk(ChunkPosition position, GetMode mode)
+		public void LoadFrom(ref readonly CubeView.PalettizedChunk palettized)
+		{
+            Util.ThreeDToOneD(new ValuePoint3D(palettized.position.X, palettized.position.Y, palettized.position.Z), new ValuePoint3D(sizeInChunks), out int i);
+
+			loadedChunks[i] = new LoadedChunk()
+			{
+				cubes = null,
+				palettizedChunk = palettized,
+				loadedState = LoadedState.Palettized,
+			};
+        }
+
+        public void ReleaseChunk(ChunkPosition position, GetMode mode)
 		{
         }
 

@@ -51,9 +51,9 @@ namespace ViMG.GameStates
             base.Update(deltaTime);
         }
 
-        public override void Draw(GraphicsDevice device)
+        public override void Draw(GraphicsDevice device, SpriteBatch batch)
         {
-            base.Draw(device);
+            base.Draw(device, batch);
 
             /*if (world.LoadedFolderName != null)
             {

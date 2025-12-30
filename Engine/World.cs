@@ -760,86 +760,86 @@ namespace ViMG
 
 			bool drawSkybox = true;
 
-			float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
-			Vector3 camChunkPosWS = Main.camera.Position;
-			if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
-				dist = MathHelper.Lerp(64 * Cube.CUBE_SCALE, dist, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
-			else if (camChunkPosWS.Y < -200f)
-				dist = 64 * Cube.CUBE_SCALE;
+			//float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
+			//Vector3 camChunkPosWS = Main.camera.Position;
+			//if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
+			//	dist = MathHelper.Lerp(64 * Cube.CUBE_SCALE, dist, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
+			//else if (camChunkPosWS.Y < -200f)
+			//	dist = 64 * Cube.CUBE_SCALE;
 
-			camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-			camChunkPosWS.Y -= dist;
-			camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+			//camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+			//camChunkPosWS.Y -= dist;
+			//camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
 
-			foreach (ChunkPosition pos in CulledChunkDrawPositions)
-			{
-				Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
+			//foreach (ChunkPosition pos in CulledChunkDrawPositions)
+			//{
+			//	Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
 
-				RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
-				if (GetLocalPlayer()?.GetBuffManager().HasBuff("emissive_ores") ?? false)
-					cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
+			//	RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
+			//	if (GetLocalPlayer()?.GetBuffManager().HasBuff("emissive_ores") ?? false)
+			//		cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
 
-                VerySimpleMesh mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Opaque) ?? new();
-				if (mesh.IBO != null)
-				{
-					Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
-				}
-                //if (mesh.VBO != null)
-                //{
-                //    Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
-                //        transform, null));
-                //}
+   //             VerySimpleMesh mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Opaque) ?? new();
+			//	if (mesh.IBO != null)
+			//	{
+			//		Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
+			//	}
+   //             //if (mesh.VBO != null)
+   //             //{
+   //             //    Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
+   //             //        transform, null));
+   //             //}
 
-                mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
-                if (mesh.IBO != null)
-                {
-                    Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-                    Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+   //             mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
+   //             if (mesh.IBO != null)
+   //             {
+   //                 Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+   //                 Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-                    Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-                    //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
+   //                 Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+   //                 //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
-                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
-                }
-                //if (mesh.VBO != null)
-                //{
-                //    Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-                //    Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+   //                 Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
+   //             }
+   //             //if (mesh.VBO != null)
+   //             //{
+   //             //    Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+   //             //    Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-                //    Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-                //    //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
+   //             //    Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+   //             //    //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
-                //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
-                //        cubesMaterial, mesh.VBO, mesh.IBO, transform));
-                //}
+   //             //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+   //             //        cubesMaterial, mesh.VBO, mesh.IBO, transform));
+   //             //}
 
-				if (Main.Renderer.EffectEmptyEnabled)
-				{
-					mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
-                    if (mesh.IBO != null)
-                    {
-                        Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-                        Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+			//	if (Main.Renderer.EffectEmptyEnabled)
+			//	{
+			//		mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
+   //                 if (mesh.IBO != null)
+   //                 {
+   //                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+   //                     Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-                        Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+   //                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-                        Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
-                            StaticMaterials.Cubes, mesh, transform));
-                    }
-     //               if (mesh.VBO != null)
-					//{
-					//	Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-					//	Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+   //                     Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+   //                         StaticMaterials.Cubes, mesh, transform));
+   //                 }
+   //  //               if (mesh.VBO != null)
+			//		//{
+			//		//	Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
+			//		//	Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
-					//	Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
+			//		//	Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-					//	Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
-					//		StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
-					//}
-				}
+			//		//	Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
+			//		//		StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
+			//		//}
+			//	}
 
-				NumChunksDrawn++;
-			}
+			//	NumChunksDrawn++;
+			//}
 
 			if (drawSkybox)
 			{

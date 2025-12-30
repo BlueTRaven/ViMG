@@ -576,7 +576,7 @@ namespace ViMG.Rendering
             }
         }
 
-        public void Draw(SpriteBatch batch)
+        public void Draw(SpriteBatch batch, Camera camera)
         {
             SetPipelineState();
 
@@ -596,8 +596,8 @@ namespace ViMG.Rendering
 
             if (DrawsPassGBuffer.Count > 0)
             {
-                Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
-                EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
+                Matrix viewProjection = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+                EffectGBuffer.Parameters["View"].SetValue(camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
                 EffectGBuffer.Parameters["UseInstancing"].SetValue(false);
 
@@ -682,7 +682,7 @@ namespace ViMG.Rendering
                 EffectLightAccumCSM.Parameters["Position"].SetValue(position);
                 EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
-                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(camera.Position);
                 device.SamplerStates[1] = shadowBorderClampSS;
                 device.BlendState = additiveBS;
 
@@ -703,9 +703,9 @@ namespace ViMG.Rendering
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-camera.Position);
 
-                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
@@ -763,9 +763,9 @@ namespace ViMG.Rendering
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(camera.Position);
 
-                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
@@ -818,7 +818,7 @@ namespace ViMG.Rendering
 
             device.BlendState = BlendState.AlphaBlend;
 
-            EffectSkybox.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+            EffectSkybox.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
             const int SEA_FLOOR = 128; // TODO: put this somewhere
             EffectSkybox.Parameters["SeaLevel"].SetValue(SEA_FLOOR * Cubes.Cube.CUBE_SCALE);
 
@@ -906,7 +906,7 @@ namespace ViMG.Rendering
                 EffectRadialFog.Parameters["Position"].SetValue(position);
                 EffectRadialFog.Parameters["Color"].SetValue(skybox);
                 EffectRadialFog.Parameters["FogExtents"].SetValue(FogExtents);
-                EffectRadialFog.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectRadialFog.Parameters["CameraPosition"].SetValue(camera.Position);
 
                 device.SetVertexBuffer(vboQuad);
                 device.Indices = iboQuad;
@@ -929,8 +929,8 @@ namespace ViMG.Rendering
             //TODO sorting should be done in update, not draw
             DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
-            EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
-            EffectTransparent.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+            EffectTransparent.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+            EffectTransparent.Parameters["CameraPosition"].SetValue(camera.Position);
             EffectTransparent.Parameters["FogExtents"].SetValue(FogExtents);
 
             EffectTransparent.CurrentTechnique = EffectTransparent.Techniques["T1"];
@@ -1042,7 +1042,7 @@ namespace ViMG.Rendering
 
             if (EffectEmptyEnabled)
             {
-                EffectEmpty.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+                EffectEmpty.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
                 device.DepthStencilState = DepthStencilState.None;
                 //device.RasterizerState = cullCWRS;
@@ -1134,10 +1134,14 @@ namespace ViMG.Rendering
             else return gbufferTargets[currentOutput].RenderTarget.Name;
         }
 
-        public RenderTargetBinding GetOutput()
+        public RenderTargetBinding? GetOutput()
         {
+
             if (currentOutput == -1 || currentOutput == -2)
-                return outputRT;
+            {
+                if (outputRT == null) return null;
+                else return outputRT;
+            }
             else return gbufferTargets[currentOutput];
         }
 

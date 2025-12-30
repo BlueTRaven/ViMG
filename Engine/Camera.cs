@@ -216,6 +216,8 @@ namespace ViMG
 
 		public void MarkDirty()
         {
+			projectionDirtyThisFrame = true;
+			viewDirtyThisFrame = true;
 			viewDirty = true;
 			projectionDirty = true;
 			frustumDirty = true;

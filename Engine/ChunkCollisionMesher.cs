@@ -144,7 +144,7 @@ namespace ViMG
             this.bufferPool = bufferPool;
         }
 
-        public void Update(CubeView cubeView, EntityManager entityManager, CopiedChunkManager copyManager)
+        public void Update(CopiedChunkManager copyManager)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
