@@ -231,6 +231,7 @@ namespace ViMG.GameStates
                     Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
 
                     client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager);
+                    client.UpdatePlayer();
                     //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
                     //{
                     //    client.NewFrame();

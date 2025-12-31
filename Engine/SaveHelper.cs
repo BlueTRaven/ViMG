@@ -153,6 +153,14 @@ namespace ViMG
 			SaveFloat32(data, vec.W);
 		}
 
+		public static void SaveQuaternion(List<byte> data, Quaternion quat)
+		{
+            SaveFloat32(data, quat.X);
+            SaveFloat32(data, quat.Y);
+            SaveFloat32(data, quat.Z);
+            SaveFloat32(data, quat.W);
+        }
+
 		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from source into dest.
 		//This doesn't need a load variation.
 		public static void SaveBytesFlat(List<byte> dest, List<byte> source)
@@ -315,6 +323,16 @@ namespace ViMG
 
 			return new Vector4(x, y, z, w);
 		}
+
+		public static Quaternion LoadQuat(Span<byte> data, ref int index)
+		{
+            float x = LoadFloat32(data, ref index);
+            float y = LoadFloat32(data, ref index);
+            float z = LoadFloat32(data, ref index);
+            float w = LoadFloat32(data, ref index);
+
+            return new Quaternion(x, y, z, w);
+        }
 
 		public static CubePosition LoadCubePosition(Span<byte> data, ref int index)
 		{

@@ -268,8 +268,8 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
-        private string[] typeIdToTypeName;
-        private Dictionary<string, int> typeNameToTypeId = new Dictionary<string, int>();
+        //private string[] typeIdToTypeName;
+        //private Dictionary<string, int> typeNameToTypeId = new Dictionary<string, int>();
 
         public enum SyncStateType
         {
@@ -311,6 +311,8 @@ namespace Engine.Networking.Messages
         private int serverSequence;
         private int clientSequence;
 
+        private int playerTypeId = -1;
+
         public SyncEntityState()
         {
             Instance = this;
@@ -332,21 +334,21 @@ namespace Engine.Networking.Messages
                 clientEntities[i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 };
 
             // TODO: this should be unnecessary once Entities use a Registry
-            List<string> entityTypeNamesMapping = new List<string>();
-            int ti = 0;
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (Type type in assembly.GetTypes())
-                {
-                    if (typeof(Entity).IsAssignableFrom(type))
-                    {
-                        entityTypeNamesMapping.Add(type.FullName);
-                        typeNameToTypeId.Add(type.FullName, ti);
-                        ti += 1; 
-                    }
-                }
-            }
-            this.typeIdToTypeName = entityTypeNamesMapping.ToArray();
+            //List<string> entityTypeNamesMapping = new List<string>();
+            //int ti = 0;
+            //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            //{
+            //    foreach (Type type in assembly.GetTypes())
+            //    {
+            //        if (typeof(Entity).IsAssignableFrom(type))
+            //        {
+            //            entityTypeNamesMapping.Add(type.FullName);
+            //            typeNameToTypeId.Add(type.FullName, ti);
+            //            ti += 1; 
+            //        }
+            //    }
+            //}
+            //this.typeIdToTypeName = entityTypeNamesMapping.ToArray();
         }
 
         public void PlayerDisconnected(int playerIndex)
@@ -397,14 +399,14 @@ namespace Engine.Networking.Messages
                             {
                                 if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
                                 {
-                                    Console.WriteLine("Server sent create ent {0} {1} {2}", ent.Id, ent.ToString(), reference.id);
-                                    //var entData = new EntityManagerIO.EntityData(ent);
+                                    var regId = Main.Registry.EntityRegistry.GetFromEntity(ent).Id;
+                                    Console.WriteLine("Server sent create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
                                     toSync.AddAssumeCapacity(new()
                                     {
                                         type = SyncStateType.MajorSync,
                                         playerId = player.playerIndex,
                                         reference = reference,
-                                        typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
+                                        typeNameMapping = regId,
                                         basicSyncState = syncsBasicState,
                                     });
                                 }
@@ -433,7 +435,7 @@ namespace Engine.Networking.Messages
                             type = SyncStateType.MinorSync,
                             playerId = player.playerIndex,
                             reference = reference,
-                            typeNameMapping = typeNameToTypeId[ent.GetType().FullName],
+                            typeNameMapping = Main.Registry.EntityRegistry.GetFromEntity(ent).Id, //typeNameToTypeId[ent.GetType().FullName],
                             basicSyncState = syncsBasicState,
                         });
                     }
@@ -569,6 +571,9 @@ namespace Engine.Networking.Messages
             int ackI = 0;
             SyncEntityStateAck.EntityAckArr ackArr = new();
 
+            if (playerTypeId == -1)
+                playerTypeId = Main.Registry.EntityRegistry.Get(typeof(Player).FullName).Id;
+
             for (int i = 0; i < num; i++)
             {
                 EntityManager.EntityReference reference = reader.Get<EntityManager.EntityReference>();
@@ -582,22 +587,56 @@ namespace Engine.Networking.Messages
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
                     var state = GS.GetClient().Current().entities.GetByRef(ref reference);
                     state.DeserializeDelta(reader);
-                    GS.GetClient().Current().entities.Set(reference, typeIdToTypeName[typeNameMapping], state);
-
-                    // Check to make sure we're not trying to create or update an entity that was unloaded this framee
-                    //var unloadedThisSeq = entities[0][reference.id].latestSequence == seq && entities[0][reference.id].unloadedThisSeq;
-                    //if (unloadedThisSeq)
-                    //    continue;
-
-                    clientEntities[reference.id] = new SyncedEntity
+                    var typeName = Main.Registry.EntityRegistry.Get((int)typeNameMapping)?.Identifier;
+                    if (typeName != null)
                     {
-                        reference = reference,
-                        latestSequence = seq,
-                        unloadedThisSeq = false,
-                    };
-                        
-                    ackArr[ackI] = reference;
-                    ackI += 1;
+                        if (typeNameMapping == playerTypeId)
+                        {
+                            var isLocal = state.counters[3] == GS.netManagerClient.whoAmI;
+                            if (!GS.GetClient().CurrMovement.valid)
+                                GS.GetClient().CurrMovement = new Common.PlayerMovement(reference, state.counters[3], isLocal);
+                            if (isLocal)
+                            {
+                                if (GS.GetClient().Current().entities.IsActive(ref reference))
+                                {
+                                    // Don't overwrite player rotation
+                                    ref var player = ref GS.GetClient().Current().entities.GetByRefPtr(ref reference);
+                                    state.rotation = player.rotation;
+                                    player = state;
+                                }
+                                else
+                                {
+                                    GS.GetClient().Current().entities.Set(reference, typeName, state);
+                                }
+                            }
+                            else
+                                GS.GetClient().Current().entities.Set(reference, typeName, state);
+                            GS.GetClient().Current().entities.AddPlayer(reference, state.counters[2], state.counters[3]);
+                        } 
+                        else
+                        {
+                            GS.GetClient().Current().entities.Set(reference, typeName, state);
+                        }
+                        // Check to make sure we're not trying to create or update an entity that was unloaded this framee
+                        //var unloadedThisSeq = entities[0][reference.id].latestSequence == seq && entities[0][reference.id].unloadedThisSeq;
+                        //if (unloadedThisSeq)
+                        //    continue;
+
+                        clientEntities[reference.id] = new SyncedEntity
+                        {
+                            reference = reference,
+                            latestSequence = seq,
+                            unloadedThisSeq = false,
+                        };
+
+                        ackArr[ackI] = reference;
+                        ackI += 1;
+                    } else
+                    {
+                        Console.WriteLine("Tried to create entity with type id {0}. This id does not exist!", typeNameMapping);
+                        // Remove the entity to keep it from being outdated?
+                        GS.GetClient().Current().entities.Remove(reference);
+                    }
                 }
                 else if (type == SyncStateType.Unload)
                 {
@@ -611,6 +650,9 @@ namespace Engine.Networking.Messages
                         latestSequence = seq,
                         unloadedThisSeq = true,
                     };
+
+                    // NOTE: this will remove the player only if it's actually a player
+                    GS.GetClient().Current().entities.RemovePlayer(reference);
 
                     ackArr[ackI] = reference;
                     ackI += 1;

@@ -9,7 +9,7 @@ using ViMG;
 
 namespace Engine.Entities
 {
-    public class PlayerInput
+    public struct PlayerInput
     {
         public enum Type
         {
@@ -25,7 +25,7 @@ namespace Engine.Entities
 
         public bool isLocalInput = true;
         public bool continues; // If client input, if an artificialPress is received, artificialPress will not be reset
-        public bool previousRecordedPress;
+        //public bool previousRecordedPress;
         public bool recordedPress;
 
         public PlayerInput(Input input)
@@ -78,7 +78,6 @@ namespace Engine.Entities
 
         public void Update()
         {
-            previousRecordedPress = recordedPress;
             if (isLocalInput)
             {
                 recordedPress = type switch
@@ -95,45 +94,19 @@ namespace Engine.Entities
             }
         }
 
-        public bool Changed()
+        public bool Changed(PlayerInput prev)
         {
-            return previousRecordedPress != recordedPress;
+            return recordedPress != prev.recordedPress;
         }
 
-        public bool JustPressed()
+        public bool JustPressed(PlayerInput prev)
         {
-            //if (isLocalInput)
-            //{
-            //    recordedPress = type switch
-            //    {
-            //        Type.Mouse => Main.inputManager.JustPressed(mouse),
-            //        Type.Key => Main.inputManager.JustPressed(key),
-            //        Type.Controller => Main.inputManager.JustPressed(input),
-            //        _ => throw new NotImplementedException(),
-            //    };
-
-            //    return recordedPress;
-            //}
-            //else
-                return !previousRecordedPress && recordedPress;
+            return !prev.recordedPress && recordedPress;
         }
 
         public bool Pressed()
         {
-            //if (isLocalInput)
-            //{
-            //    recordedPress = type switch
-            //    {
-            //        Type.Mouse => Main.inputManager.IsPressed(mouse),
-            //        Type.Key => Main.inputManager.IsPressed(key),
-            //        Type.Controller => Main.inputManager.IsPressed(input),
-            //        _ => throw new NotImplementedException(),
-            //    };
-
-            //    return recordedPress;
-            //}
-            //else
-                return recordedPress;
+            return recordedPress;
         }
     }
 }

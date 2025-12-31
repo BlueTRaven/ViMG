@@ -25,11 +25,12 @@ using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
 using static Engine.Networking.Messages.SyncPlayerInputs;
+using static SMAADemo.SMAA;
 
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(17, 0)]
+	[EntityMeta(18, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
@@ -147,7 +148,8 @@ namespace ViMG
         public CubePosition SpawnPosition;
 		private float loadedTimeOfDay = -1;
 
-		public Vector3 Rotation { get; set; }
+		//public Vector3 Rotation { get; set; }
+		public Quaternion Rotation { get; set; }
 		public Vector3 Facing;	//The direction the player is facing.
 
 		private static float moveSpeed = Cube.CUBE_SCALE * 0.8f;
@@ -297,7 +299,16 @@ namespace ViMG
 
 		public double TimeSinceInputSynced;
 
-		public PlayerInput MoveLeft;
+        public PlayerInput prevMoveLeft;
+        public PlayerInput prevMoveRight;
+        public PlayerInput prevMoveForward;
+        public PlayerInput prevMoveBack;
+        public PlayerInput prevJump;
+        public PlayerInput prevRun;
+        public PlayerInput prevMoveDown;
+        public PlayerInput prevLeftClick;
+        public PlayerInput prevRightClick;
+        public PlayerInput MoveLeft;
 		public PlayerInput MoveRight;
         public PlayerInput MoveForward;
         public PlayerInput MoveBack;
@@ -442,20 +453,20 @@ namespace ViMG
 				}
 			}
 
-			if (IsLocalPlayer)
-			{
-				MoveLeft = new PlayerInput(Keys.A);
-				MoveRight = new PlayerInput(Keys.D);
-				MoveForward = new PlayerInput(Keys.W);
-				MoveBack = new PlayerInput(Keys.S);
-				Jump = new PlayerInput(Keys.Space);
-				Run = new PlayerInput(Keys.LeftShift);
-				MoveDown = new PlayerInput(Keys.LeftControl);
-				LeftClick = new PlayerInput(MouseInput.LeftButton);
-				RightClick = new PlayerInput(MouseInput.RightButton);
-			}
-			else
-			{
+			//if (IsLocalPlayer)
+			//{
+			//	MoveLeft = new PlayerInput(Keys.A);
+			//	MoveRight = new PlayerInput(Keys.D);
+			//	MoveForward = new PlayerInput(Keys.W);
+			//	MoveBack = new PlayerInput(Keys.S);
+			//	Jump = new PlayerInput(Keys.Space);
+			//	Run = new PlayerInput(Keys.LeftShift);
+			//	MoveDown = new PlayerInput(Keys.LeftControl);
+			//	LeftClick = new PlayerInput(MouseInput.LeftButton);
+			//	RightClick = new PlayerInput(MouseInput.RightButton);
+			//}
+			//else
+			//{
                 MoveLeft = PlayerInput.NonLocalInput(Keys.A, true);
                 MoveRight = PlayerInput.NonLocalInput(Keys.D, true);
                 MoveForward = PlayerInput.NonLocalInput(Keys.W, true);
@@ -465,7 +476,7 @@ namespace ViMG
                 MoveDown = PlayerInput.NonLocalInput(Keys.LeftControl, true);
                 LeftClick = PlayerInput.NonLocalInput(MouseInput.LeftButton, true);
                 RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, true);
-            }
+            //}
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
@@ -917,6 +928,16 @@ namespace ViMG
 
 			alive += (float)deltaTime;
 
+            prevMoveLeft = MoveLeft;
+            prevMoveRight = MoveRight;
+            prevMoveForward = MoveForward;
+            prevMoveBack = MoveBack;
+            prevJump = Jump;
+            prevRun = Run;
+            prevMoveDown = MoveDown;
+            prevLeftClick = LeftClick;
+			prevRightClick = RightClick;
+
             MoveLeft.Update();
             MoveRight.Update();
             MoveForward.Update();
@@ -1167,7 +1188,7 @@ namespace ViMG
 				movementPressed = true;
 			}
 
-			if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed())
+			if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed(prevJump))
 			{
 				hasMoved = true;
 				if (!contactChecker.OnGround)
@@ -1303,7 +1324,7 @@ namespace ViMG
 					toAddToVelocity += Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
 					movementPressed = true;
 				}
-				if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed())
+				if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed(prevJump))
 				{
 					hasMoved = true;
 					if (!contactChecker.OnGround)
@@ -1463,7 +1484,7 @@ namespace ViMG
 
 					if (dashSubstate == 0)
 					{
-						if (Run.JustPressed())
+						if (Run.JustPressed(prevRun))
 						{
 							dashSubstate++;
 							dashDoublePressTimer = DOUBLEPRESS_DURATION;
@@ -1473,7 +1494,7 @@ namespace ViMG
 					{
 						if (dashDoublePressTimer >= 0)
 						{
-							if (Run.JustPressed())
+							if (Run.JustPressed(prevRun))
 							{
 								state = State.Dash;
 
@@ -1648,35 +1669,35 @@ namespace ViMG
 			if (menuPlayer.IsOpened || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
 				return;
 
-			currentMS = Mouse.GetState();
+			//currentMS = Mouse.GetState();
 
-			if (currentMS != previousMS)
-			{
-				float scalar = 0.25f;
+			//if (currentMS != previousMS)
+			//{
+			//	float scalar = 0.25f;
 
-				Vector3 camRotation = Rotation;
+			//	Vector3 camRotation = Rotation;
 
-				Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currentMS.X, currentMS.Y);
-				previousMS = currentMS;
-				previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
+			//	Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currentMS.X, currentMS.Y);
+			//	previousMS = currentMS;
+			//	previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
 
-				if (delta.Length() > float.Epsilon)
-				{
-					hasRotated = true;
+			//	if (delta.Length() > float.Epsilon)
+			//	{
+			//		hasRotated = true;
 
-					camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
-					camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
+			//		camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
+			//		camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
 
-					if (camRotation.X > MathHelper.ToRadians(89))
-						camRotation.X = MathHelper.ToRadians(89);
-					else if (camRotation.X < -MathHelper.ToRadians(89))
-						camRotation.X = -MathHelper.ToRadians(89);
+			//		if (camRotation.X > MathHelper.ToRadians(89))
+			//			camRotation.X = MathHelper.ToRadians(89);
+			//		else if (camRotation.X < -MathHelper.ToRadians(89))
+			//			camRotation.X = -MathHelper.ToRadians(89);
 
-					Rotation = camRotation;
+			//		Rotation = camRotation;
 
-					Main.camera.Rotation = Rotation;
-				}
-			}
+			//		Main.camera.Rotation = Rotation;
+			//	}
+			//}
 		}
 
 		private void UpdateThrowItem()
@@ -2158,7 +2179,7 @@ namespace ViMG
 
 			SaveHelper.SaveVector3(saveBytes, Position);
 			//SaveHelper.SaveCubePosition(saveBytes, CubePosition.FromWorldSpace(Position));
-			SaveHelper.SaveVector3(saveBytes, Rotation);
+			SaveHelper.SaveQuaternion(saveBytes, Rotation);
 
 			SaveHelper.SaveInt32(saveBytes, Health);
 			SaveHelper.SaveInt32(saveBytes, MaxHealth);
@@ -2195,7 +2216,16 @@ namespace ViMG
 			if (version < 11)
 				Position = SaveHelper.LoadCubePosition(loadBytes, ref index).InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0);
 			else Position = SaveHelper.LoadVector3(loadBytes, ref index);
-				Rotation = SaveHelper.LoadVector3(loadBytes, ref index);
+
+			if (version < 18)
+			{
+				var rotation = SaveHelper.LoadVector3(loadBytes, ref index);
+				Rotation = Quaternion.CreateFromYawPitchRoll(rotation.X, rotation.Y, rotation.Z);
+			}
+			else
+			{
+				Rotation = SaveHelper.LoadQuat(loadBytes, ref index);
+			}
 
 			Health = SaveHelper.LoadInt32(loadBytes, ref index);
 			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
@@ -2256,7 +2286,7 @@ namespace ViMG
 			{
 				position = Position,
 				velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
-				rotation = new Quaternion(Rotation.X, Rotation.Y, Rotation.Z, 1),
+				rotation = Quaternion.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z),
 				health = Health,
 				state = (int)this.state,
 				timers = { 
@@ -2268,6 +2298,9 @@ namespace ViMG
 				counters =
 				{
 					[0] = this.hasMenuOpen ? 1 : 0,
+					// TODO these should probably go in extra data
+					[2] = playerUuid,
+					[3] = playerIndex,
 				}
 			};
         }
@@ -2276,10 +2309,16 @@ namespace ViMG
         {
 			if (!IsLocalPlayer)
 			{
-				SetPositionWithOffset(state.position);
+                //var quat = state.rotation;
+                //var roll = float.Atan2(2 * (quat.W * quat.X + quat.Y * quat.Z), 1 - 2 * (quat.X * quat.X + quat.Y * quat.Y));
+                //var pitch = float.Asin(2 * (quat.W * quat.Y - quat.Z * quat.X));
+                //var yaw = float.Atan2(2 * (quat.W * quat.Z + quat.X * quat.Y), 1 - 2 * (quat.Y * quat.Y + quat.Z * quat.Z));
+
+                SetPositionWithOffset(state.position);
 				world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
 				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
-				this.Rotation = state.rotation.ToVector4().ToVector3();
+				//this.Rotation = new Vector3(roll, pitch, yaw);
+				this.Rotation = state.rotation;
 				this.Health = state.health;
 				this.state = (State)state.state;
 				this.useTimer = state.timers[0];
@@ -2311,15 +2350,15 @@ namespace ViMG
             if (RightClick.recordedPress) pressed |= InputTypes.RightClick;
             if (Run.recordedPress) pressed |= InputTypes.Run;
 
-            if (Jump.previousRecordedPress) prevPressed |= InputTypes.Jump;
-            if (LeftClick.previousRecordedPress) prevPressed |= InputTypes.LeftClick;
-            if (MoveBack.previousRecordedPress) prevPressed |= InputTypes.MoveBack;
-            if (MoveDown.previousRecordedPress) prevPressed |= InputTypes.MoveDown;
-            if (MoveForward.previousRecordedPress) prevPressed |= InputTypes.MoveForward;
-            if (MoveLeft.previousRecordedPress) prevPressed |= InputTypes.MoveLeft;
-            if (MoveRight.previousRecordedPress) prevPressed |= InputTypes.MoveRight;
-            if (RightClick.previousRecordedPress) prevPressed |= InputTypes.RightClick;
-            if (Run.previousRecordedPress) prevPressed |= InputTypes.Run;
+            if (prevJump.recordedPress) prevPressed |= InputTypes.Jump;
+            if (prevLeftClick.recordedPress) prevPressed |= InputTypes.LeftClick;
+            if (prevMoveBack.recordedPress) prevPressed |= InputTypes.MoveBack;
+            if (prevMoveDown.recordedPress) prevPressed |= InputTypes.MoveDown;
+            if (prevMoveForward.recordedPress) prevPressed |= InputTypes.MoveForward;
+            if (prevMoveLeft.recordedPress) prevPressed |= InputTypes.MoveLeft;
+            if (prevMoveRight.recordedPress) prevPressed |= InputTypes.MoveRight;
+            if (prevRightClick.recordedPress) prevPressed |= InputTypes.RightClick;
+            if (prevRun.recordedPress) prevPressed |= InputTypes.Run;
 
 			return ((uint)pressed << sizeof(ushort)) | (uint)prevPressed;
         }
@@ -2339,15 +2378,15 @@ namespace ViMG
             RightClick.recordedPress = (presseds & InputTypes.RightClick) == InputTypes.RightClick;
             Run.recordedPress = (presseds & InputTypes.Run) == InputTypes.Run;
 
-            Jump.previousRecordedPress = (prevPresseds & InputTypes.Jump) == InputTypes.Jump;
-            LeftClick.previousRecordedPress = (prevPresseds & InputTypes.LeftClick) == InputTypes.LeftClick;
-            MoveBack.previousRecordedPress = (prevPresseds & InputTypes.MoveBack) == InputTypes.MoveBack;
-            MoveDown.previousRecordedPress = (prevPresseds & InputTypes.MoveDown) == InputTypes.MoveDown;
-            MoveForward.previousRecordedPress = (prevPresseds & InputTypes.MoveForward) == InputTypes.MoveForward;
-            MoveLeft.previousRecordedPress = (prevPresseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-            MoveRight.previousRecordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
-            RightClick.previousRecordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
-            Run.previousRecordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
+            prevJump.recordedPress = (prevPresseds & InputTypes.Jump) == InputTypes.Jump;
+            prevLeftClick.recordedPress = (prevPresseds & InputTypes.LeftClick) == InputTypes.LeftClick;
+            prevMoveBack.recordedPress = (prevPresseds & InputTypes.MoveBack) == InputTypes.MoveBack;
+            prevMoveDown.recordedPress = (prevPresseds & InputTypes.MoveDown) == InputTypes.MoveDown;
+            prevMoveForward.recordedPress = (prevPresseds & InputTypes.MoveForward) == InputTypes.MoveForward;
+            prevMoveLeft.recordedPress = (prevPresseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+            prevMoveRight.recordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
+            prevRightClick.recordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
+            prevRun.recordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
         }
 
         public bool InventoryAction(int activatingPlayer, int action)

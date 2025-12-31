@@ -1,6 +1,7 @@
 ﻿using Engine.Items;
 using Engine.Mods;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
 using ModGameBase.Networking;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace ViMG
                 if (device != null)
                     this.RendererRegistry = new RendererRegistryViMG(device);
                 this.WorldLogicRegistry = new WorldLogicRegistryViMG();
+                EntityRegistry = new EntityRegistryViMG();
                 MessageRegistry = new MessageRegistryViMG();
             }
         }

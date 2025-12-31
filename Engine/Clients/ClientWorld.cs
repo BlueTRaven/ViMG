@@ -24,11 +24,10 @@ namespace Engine.Clients
 
         public void NewFrame(ClientWorld prev, double time)
         {
-            // TODO this should use its own stuff
-            camera.Position = Main.camera.Position;
-            camera.Rotation = Main.camera.Rotation;
-            camera.Scale = Main.camera.Scale;
-
+            camera.Position = prev.camera.Position;
+            camera.Rotation = prev.camera.Rotation;
+            camera.Scale = prev.camera.Scale;
+            
             entities.NewFrame(prev.entities);
             this.time = time;
         }

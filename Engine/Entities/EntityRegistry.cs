@@ -16,6 +16,8 @@ namespace Engine.Entities
         private readonly string identifier;
         public string Identifier => identifier;
 
+        public int Id;
+
         public EntityMetaAttribute? meta;
         public EntitySerializableAttribute? serializable;
 
@@ -42,6 +44,18 @@ namespace Engine.Entities
             Register(EntityType.New<Player>());
             Register(EntityType.New<GenericExplosion>());
             Register(EntityType.New<Line>());
+            Register(EntityType.New<EntityItem>());
+        }
+
+        public override void Register(EntityType obj)
+        {
+            obj.Id = Count + 1;
+            base.Register(obj);
+        }
+
+        public EntityType GetFromEntity(Entity ent)
+        {
+            return Get(ent.GetType().FullName);
         }
     }
 }

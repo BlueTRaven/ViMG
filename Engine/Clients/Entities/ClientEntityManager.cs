@@ -82,6 +82,12 @@ namespace Engine.Clients.Entities
             };
         }
 
+        public void RemovePlayer(EntityManager.EntityReference reference)
+        {
+            int playerIndex = GetPlayerIndex(reference);
+            players[playerIndex] = PlayerHolder.DEFAULT;
+        }
+
         public int GetPlayerIndex(EntityManager.EntityReference reference)
         {
             for (int i = 0; i < players.Length; i++)
@@ -95,10 +101,42 @@ namespace Engine.Clients.Entities
             return -1;
         }
 
+        public EntityManager.EntityReference GetPlayerRef(int playerIndex)
+        {
+            return players[playerIndex].entity;
+        }
+
+        public EntityManager.EntityReference GetLocalPlayerRef()
+        {
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].playerIndex == Main.gameStateManager.TheIsland.netManagerClient.whoAmI)
+                {
+                    return players[i].entity;
+                }
+            }
+
+            return new();
+        }
+
+        public bool IsActive(ref readonly EntityManager.EntityReference reference)
+        {
+            return entities[reference.id].generation == reference.generation;
+        }
+
         public BasicState GetByRef(ref readonly EntityManager.EntityReference reference)
         {
             if (entities[reference.id].generation != reference.generation) return new();
             else return entities[reference.id].state;
+        }
+
+        public ref BasicState GetByRefPtr(ref readonly EntityManager.EntityReference reference)
+        {
+            if (entities[reference.id].generation != reference.generation)
+            {
+                throw new Exception("Generation mismatch");
+            }
+            return ref entities[reference.id].state;
         }
 
         public BasicState GetById(int id)
