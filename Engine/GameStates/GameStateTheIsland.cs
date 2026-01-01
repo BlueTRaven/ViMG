@@ -693,7 +693,7 @@ namespace ViMG.GameStates
             if (client != null)
             {
                 client.Render(device, 0);
-                Main.Renderer.Draw(batch, client.Current().camera);
+                Main.Renderer.Draw(batch, client.Previous(1).camera, client.Current().camera);
             }
         }
 

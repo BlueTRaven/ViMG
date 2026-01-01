@@ -1,7 +1,6 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpDX.MediaFoundation;
 using SMAADemo;
 using System;
 using System.Collections.Generic;
@@ -576,8 +575,11 @@ namespace ViMG.Rendering
             }
         }
 
-        public void Draw(SpriteBatch batch, Camera camera)
+        private Camera interpCamera = null;
+        public void Draw(SpriteBatch batch, Camera prevCamera, Camera currCamera)
         {
+            if (interpCamera == null) interpCamera = new CameraPerspective(prevCamera.Position, prevCamera.Rotation, prevCamera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
+
             SetPipelineState();
 
             if (Options.CurrentSMAAQuality != previousSMAAOption)
@@ -594,10 +596,19 @@ namespace ViMG.Rendering
 
             device.SetRenderTargets(gbufferTargets);
 
+            interpCamera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)Main.TimeC);
+            var rotMatPrev = Matrix.CreateRotationZ(prevCamera.Rotation.Z) *
+                    Matrix.CreateRotationY(prevCamera.Rotation.Y) *
+                    Matrix.CreateRotationX(prevCamera.Rotation.X);
+            var rotMatCurr = Matrix.CreateRotationZ(currCamera.Rotation.Z) *
+                    Matrix.CreateRotationY(currCamera.Rotation.Y) *
+                    Matrix.CreateRotationX(currCamera.Rotation.X);
+            var interpRot = Quaternion.Lerp(Quaternion.CreateFromRotationMatrix(rotMatPrev), Quaternion.CreateFromRotationMatrix(rotMatCurr), (float)Main.TimeC);
+
             if (DrawsPassGBuffer.Count > 0)
             {
-                Matrix viewProjection = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-                EffectGBuffer.Parameters["View"].SetValue(camera.GetViewMatrix());
+                Matrix viewProjection = interpCamera.GetViewMatrixQuat(interpRot) * currCamera.GetProjectionMatrix();
+                EffectGBuffer.Parameters["View"].SetValue(currCamera.GetViewMatrixQuat(interpRot));
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
                 EffectGBuffer.Parameters["UseInstancing"].SetValue(false);
 
@@ -682,7 +693,7 @@ namespace ViMG.Rendering
                 EffectLightAccumCSM.Parameters["Position"].SetValue(position);
                 EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
-                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(camera.Position);
+                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(interpCamera.Position);
                 device.SamplerStates[1] = shadowBorderClampSS;
                 device.BlendState = additiveBS;
 
@@ -703,9 +714,9 @@ namespace ViMG.Rendering
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-interpCamera.Position);
 
-                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+                Matrix viewProj = interpCamera.GetViewMatrix() * prevCamera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
@@ -763,9 +774,9 @@ namespace ViMG.Rendering
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(interpCamera.Position);
 
-                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+                Matrix viewProj = interpCamera.GetViewMatrixQuat(interpRot) * currCamera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
@@ -818,7 +829,7 @@ namespace ViMG.Rendering
 
             device.BlendState = BlendState.AlphaBlend;
 
-            EffectSkybox.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+            EffectSkybox.Parameters["ViewProjection"].SetValue(interpCamera.GetViewMatrixQuat(interpRot) * prevCamera.GetProjectionMatrix());
             const int SEA_FLOOR = 128; // TODO: put this somewhere
             EffectSkybox.Parameters["SeaLevel"].SetValue(SEA_FLOOR * Cubes.Cube.CUBE_SCALE);
 
@@ -906,7 +917,7 @@ namespace ViMG.Rendering
                 EffectRadialFog.Parameters["Position"].SetValue(position);
                 EffectRadialFog.Parameters["Color"].SetValue(skybox);
                 EffectRadialFog.Parameters["FogExtents"].SetValue(FogExtents);
-                EffectRadialFog.Parameters["CameraPosition"].SetValue(camera.Position);
+                EffectRadialFog.Parameters["CameraPosition"].SetValue(interpCamera.Position);
 
                 device.SetVertexBuffer(vboQuad);
                 device.Indices = iboQuad;
@@ -929,8 +940,8 @@ namespace ViMG.Rendering
             //TODO sorting should be done in update, not draw
             DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
-            EffectTransparent.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
-            EffectTransparent.Parameters["CameraPosition"].SetValue(camera.Position);
+            EffectTransparent.Parameters["ViewProjection"].SetValue(interpCamera.GetViewMatrixQuat(interpRot) * interpCamera.GetProjectionMatrix());
+            EffectTransparent.Parameters["CameraPosition"].SetValue(interpCamera.Position);
             EffectTransparent.Parameters["FogExtents"].SetValue(FogExtents);
 
             EffectTransparent.CurrentTechnique = EffectTransparent.Techniques["T1"];
@@ -1042,7 +1053,7 @@ namespace ViMG.Rendering
 
             if (EffectEmptyEnabled)
             {
-                EffectEmpty.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+                EffectEmpty.Parameters["ViewProjection"].SetValue(interpCamera.GetViewMatrixQuat(interpRot) * interpCamera.GetProjectionMatrix());
 
                 device.DepthStencilState = DepthStencilState.None;
                 //device.RasterizerState = cullCWRS;

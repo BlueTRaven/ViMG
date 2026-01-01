@@ -162,6 +162,15 @@ namespace ViMG
 			return GetViewMatrixInternal();
         }
 
+		public Matrix GetViewMatrixQuat(Quaternion rotation)
+		{
+            viewMatrix = Matrix.CreateTranslation(-Position) *
+                    Matrix.CreateFromQuaternion(-rotation) *
+                    Matrix.CreateScale(scale);
+
+			return viewMatrix;
+        }
+
 		protected virtual Matrix GetViewMatrixInternal()
 		{
 			if (viewDirty)
