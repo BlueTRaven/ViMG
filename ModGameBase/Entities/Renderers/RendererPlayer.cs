@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Clients;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.MediaFoundation;
 using System;
@@ -21,25 +22,22 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeQuad(device, 1, 0.98f * 2f, Enums.Alignment.Center);
         }
 
-        private static Type[] types = [typeof(Player)];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
+            if (types == null)
+                types = [Main.Registry.EntityRegistry.Get<Player>().Id];
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
+        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType)
         {
-            //foreach (Entity ent in renderedEntities)
-            //{
-            //    var player = ent as Player;
-            //    if (player.IsLocalPlayer)
-            //    {
-            //        if (player.inventory.Get(player.highlightIndex).item != null)
-            //        {
-            //            player.inventory.Get(player.highlightIndex).item.DrawInHand(device, player.inventory.Get(player.highlightIndex), player, -Main.camera.Forward);
-            //        }
-            //    }
-            //}
+            return;
+        }
+
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
+        {
+
         }
     }
 }

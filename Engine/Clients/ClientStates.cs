@@ -152,10 +152,10 @@ namespace Engine.Clients
             var iter = Main.Registry.RendererRegistry.GetIterable();
             foreach (var a in iter)
             {
-                var renderedTypes = a.GetRenderedTypes();
-                foreach (Type t in renderedTypes) 
+                int[] renderedTypes = a.GetRenderedTypes();
+                foreach (int t in renderedTypes) 
                 {
-                    a.RenderClientEnt(device, deltaTime, this, t.FullName);
+                    a.RenderClientEnt(device, deltaTime, this, t);
                 }
             }
         }

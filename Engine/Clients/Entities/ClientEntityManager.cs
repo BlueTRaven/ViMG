@@ -18,6 +18,7 @@ namespace Engine.Clients.Entities
             public int generation;
             public bool active;
             public string entityType;
+            public int entityTypeId;
             public BasicState state;
 
             public static EntityHolder DEFAULT = new()
@@ -25,6 +26,7 @@ namespace Engine.Clients.Entities
                 id = -1,
                 generation = -1,
                 active = false,
+                entityTypeId = 0,
                 state = new(),
             };
         }
@@ -154,10 +156,10 @@ namespace Engine.Clients.Entities
             };
         }
 
-        public string? GetTypeById(int id)
+        public int GetTypeById(int id)
         {
-            if (id == -1) return null;
-            return entities[id].entityType;
+            if (id == -1) return 0;
+            return entities[id].entityTypeId;
         }
 
         public void Set(ViMG.Entities.EntityManager.EntityReference reference, string type, BasicState state) 
@@ -169,6 +171,7 @@ namespace Engine.Clients.Entities
                 state = state,
                 active = true,
                 entityType = type,
+                entityTypeId = Main.Registry.EntityRegistry.Get(type).Id,
             };
         }
 

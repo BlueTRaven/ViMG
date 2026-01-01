@@ -148,20 +148,21 @@ namespace ViMG.Entities.Renderers
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
         }
 
-        private static Type[] renderedTypes = new Type[] { typeof(Tree) };
-        public override Type[] GetRenderedTypes()
+        private static int[] renderedTypes = [0];
+        public override int[] GetRenderedTypes()
         {
+            if (renderedTypes[0] == 0)
+                renderedTypes[0] = Main.Registry.EntityRegistry.Get<Tree>().Id;
             return renderedTypes;
         }
 
         // TODO: can we optimize this like how we did it the old way, such that we only rerender when the tree changes?
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             draws.Clear();
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);

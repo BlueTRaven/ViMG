@@ -21,9 +21,11 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
         }
 
-        private Type[] types = [typeof(Line)];
-        public override Type[] GetRenderedTypes()
+        private int[] types = [0];
+        public override int[] GetRenderedTypes()
         {
+            if (types[0] == 0)
+                types[0] = Main.Registry.EntityRegistry.Get<Line>().Id;
             return types;
         }
 
@@ -44,12 +46,11 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);

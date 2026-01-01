@@ -30,10 +30,12 @@ namespace ViMG.Entities.Renderers
             lineMesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
         }
 
-        private static Type[] renderedTypes = [typeof(SkullheadEye)];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
-            return renderedTypes;
+            if (types == null)
+                types = [Main.Registry.EntityRegistry.Get<SkullheadEye>().Id];
+            return types;
         }
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)

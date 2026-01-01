@@ -31,9 +31,11 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
         }
 
-        private static Type[] types = [typeof(ManaStar)];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
+            if (types == null)
+                types = [Main.Registry.EntityRegistry.Get<ManaStar>().Id];
             return types;
         }
 
@@ -100,12 +102,11 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);

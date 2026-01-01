@@ -14,7 +14,7 @@ namespace ViMG.Entities.Renderers
     {
         private class RenderedEntityAncientAltar : RendererOpaqueXMeshEntity.RenderedEntity
         {
-            public RenderedEntityAncientAltar() : base("ancient_altar", typeof(AncientAltar), new RendererDeferred.DrawMaterial("cubes_textures"))
+            public RenderedEntityAncientAltar() : base("ancient_altar", Main.Registry.EntityRegistry.Get<AncientAltar>().Id, new RendererDeferred.DrawMaterial("cubes_textures"))
             {
             }
 
@@ -33,7 +33,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedEntityCaveRoot : RendererOpaqueXMeshEntity.RenderedEntity
         {
-            public RenderedEntityCaveRoot() : base("cave_root", typeof(EntityCaveRoot), new RendererDeferred.DrawMaterial("cubes_textures"))
+            public RenderedEntityCaveRoot() : base("cave_root", Main.Registry.EntityRegistry.Get<EntityCaveRoot>().Id, new RendererDeferred.DrawMaterial("cubes_textures"))
             {
             }
 
@@ -67,7 +67,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedEntitySapling : RendererOpaqueXMeshEntity.RenderedEntity
         {
-            public RenderedEntitySapling() : base("sapling", typeof(Sapling), new RendererDeferred.DrawMaterial("cubes_textures"))
+            public RenderedEntitySapling() : base("sapling", Main.Registry.EntityRegistry.Get<Sapling>().Id, new RendererDeferred.DrawMaterial("cubes_textures"))
             {
             }
 
@@ -85,7 +85,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedEntityCaveCompass : RendererOpaqueXMeshEntity.RenderedEntity
         {
-            public RenderedEntityCaveCompass() : base("cave_compass", typeof(CubeCaveCompass), new RendererDeferred.DrawMaterial("cubes_textures"))
+            public RenderedEntityCaveCompass() : base("cave_compass", Main.Registry.EntityRegistry.Get<EntityCaveCompass>().Id, new RendererDeferred.DrawMaterial("cubes_textures"))
             {
             }
 

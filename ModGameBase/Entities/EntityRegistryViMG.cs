@@ -16,8 +16,10 @@ namespace ModGameBase.Entities
 
         protected override void DoRegistration()
         {
+            Register(EntityType.New<AimedLightning>());
             Register(EntityType.New<AncientAltar>());
             Register(EntityType.New<CaveSalamander>());
+            Register(EntityType.New<CaveSlime>());
             Register(EntityType.New<CubeLight>());
             Register(EntityType.New<CubeTimer>());
             Register(EntityType.New<Cultist>());
@@ -53,6 +55,7 @@ namespace ModGameBase.Entities
             Register(EntityType.New<SlimeBig>());
             Register(EntityType.New<Snake>());
             Register(EntityType.New<SnakeFlying>());
+            Register(EntityType.New<StoneBeetle>());
             Register(EntityType.New<TestNPC>());
             Register(EntityType.New<Tree>());
             Register(EntityType.New<Worm>());

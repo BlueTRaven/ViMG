@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Clients;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -38,6 +39,7 @@ namespace ViMG.Entities.Renderers
             public TypeStatsDrawStats() { }
         }
 
+        private int[] rendererMapping = [];
         public abstract class RenderedEntity : IRegisterable
         {
             public string Identifier { get; set; }
@@ -45,12 +47,12 @@ namespace ViMG.Entities.Renderers
             public RendererDeferred.DrawMaterial Material;
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
-            public Type EntityType;
+            public int EntityTypeId;
 
-            public RenderedEntity(string identifier, Type entityType, RendererDeferred.DrawMaterial material)
+            public RenderedEntity(string identifier, int entityTypeId, RendererDeferred.DrawMaterial material)
             {
                 this.Identifier = identifier;
-                this.EntityType = entityType;
+                this.EntityTypeId = entityTypeId;
                 this.Material = material;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
@@ -73,17 +75,26 @@ namespace ViMG.Entities.Renderers
             registry = new ObjRegistry<RenderedEntity>();
         }
 
-        private Type[]? renderedTypesCache = null;
-        public override Type?[] GetRenderedTypes()
+        private int[]? renderedTypesCache = null;
+        public override int[] GetRenderedTypes()
         {
             if (renderedTypesCache == null)
             {
-                renderedTypesCache = new Type[registry.Count];
-                int i = 0;
-                foreach (RenderedEntity stats in registry.GetIterable())
+                renderedTypesCache = new int[registry.Count];
+                var riter = registry.GetIterable();
+                int max = int.MinValue;
+                for (int i = 0; i < riter.Length; i++)
                 {
-                    renderedTypesCache[i] = stats.EntityType;
-                    i++;
+                    var stats = riter[i];
+                    max = int.Max(stats.EntityTypeId, max);
+                }
+                rendererMapping = new int[max + 1];
+
+                for (int i = 0; i < riter.Length; i++)
+                {
+                    var stats = riter[i];
+                    renderedTypesCache[i] = stats.EntityTypeId;
+                    rendererMapping[stats.EntityTypeId] = i + 1;
                 }
             }
             return renderedTypesCache;
@@ -94,7 +105,7 @@ namespace ViMG.Entities.Renderers
             return;
 
             RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
-            Type type = stats.EntityType;
+            Type type = Main.Registry.EntityRegistry.Get(stats.EntityTypeId).type;
 
             var entities = renderedEntities;//entityManager.GetAll(type);
 
@@ -188,9 +199,10 @@ namespace ViMG.Entities.Renderers
                 stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
         }
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            var renderer = registry.Get(type);
+            // Need to convert global entity type registry (type) to local renderer registry. How do we do this without expensive dict lookup? Sparse array?
+            var renderer = registry.Get(rendererMapping[type]);
             if (renderer == null) return;
             renderer.Draws.Clear();
 

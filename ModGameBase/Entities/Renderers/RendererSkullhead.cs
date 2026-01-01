@@ -24,9 +24,11 @@ namespace ViMG.Entities.Renderers
             meshVertibrae = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16, Enums.Alignment.Bottom);
         }
 
-        private static Type[] types = [typeof(Skullhead)];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
+            if (types == null)
+                types = [Main.Registry.EntityRegistry.Get<Skullhead>().Id];
             return types;
         }
 

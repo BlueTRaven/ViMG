@@ -25,9 +25,12 @@ namespace ViMG.Entities.Renderers
             doorMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 2f, Enums.Alignment.Center);
         }
 
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
-            return [typeof(Door)];
+            if (types == null)
+                types = [Main.Registry.EntityRegistry.Get<Door>().Id];
+            return types;
         }
 
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
@@ -53,12 +56,11 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);

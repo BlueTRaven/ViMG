@@ -951,26 +951,26 @@ namespace ViMG.Entities
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
-			foreach (var r in Main.Registry.RendererRegistry.GetIterable())
-			{
-				if (r != null)
-				{
-					Type[] renderedTypes = r.GetRenderedTypes();
+			//foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+			//{
+			//	if (r != null)
+			//	{
+			//		int[] renderedTypes = r.GetRenderedTypes();
 
-                    for (int i = 0; i < renderedTypes.Length; i++)
-					{
-                        Type renderedType = renderedTypes[i];
-						if (entitiesByType.TryGetValue(renderedType, out var renderedEntities))
-							r.Render(device, 0, this, i, renderedEntities);
-					}
-				}
-			}
+   //                 for (int i = 0; i < renderedTypes.Length; i++)
+			//		{
+   //                     int renderedType = renderedTypes[i];
+			//			if (entitiesByType.TryGetValue(renderedType, out var renderedEntities))
+			//				r.Render(device, 0, this, i, renderedEntities);
+			//		}
+			//	}
+			//}
 
-			for (int i = 0; i < EntMax; i++) 
-			{
-				if (ents[i].active && (ents[i].entity.AlwaysRender || Main.camera.FrustumContains(ents[i].entity.Position)))
-					ents[i].entity.Draw(device, effect);
-			}
+			//for (int i = 0; i < EntMax; i++) 
+			//{
+			//	if (ents[i].active && (ents[i].entity.AlwaysRender || Main.camera.FrustumContains(ents[i].entity.Position)))
+			//		ents[i].entity.Draw(device, effect);
+			//}
 		}
 
 		[ConsoleCommand("killall", "killall <ent type name> [force] - kills all entities of type. If force (optional) is true, unloads instead of killing.")]

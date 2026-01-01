@@ -24,12 +24,17 @@ namespace ViMG.Entities.Renderers
             mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
         }
 
-        private static Type[] types = [
-            typeof(Lightning),
-            typeof(AimedLightning),
-        ];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
+            if (types == null)
+            {
+                types =
+                [
+                    Main.Registry.EntityRegistry.Get<Lightning>().Id,
+                    Main.Registry.EntityRegistry.Get<AimedLightning>().Id,
+                ];
+            }
             return types;
         }
 
@@ -88,18 +93,18 @@ namespace ViMG.Entities.Renderers
         private static FastList<Vector3> positions = new FastList<Vector3>();
         private static FastList<Vector3> basePositions = new FastList<Vector3>();
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                if (type == typeof(Lightning).FullName)
+                // TODO cache this id
+                if (type == Main.Registry.EntityRegistry.Get<Lightning>().Id)
                 {
                     positions.Clear();
 
@@ -133,7 +138,7 @@ namespace ViMG.Entities.Renderers
                         DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
                     }
                 }
-                if (type == typeof(AimedLightning).FullName)
+                if (type == Main.Registry.EntityRegistry.Get<AimedLightning>().Id)
                 {
                     positions.Clear();
                     basePositions.Clear();

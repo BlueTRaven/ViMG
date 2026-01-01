@@ -38,22 +38,22 @@ namespace ViMG.Entities.Renderers
 
         private void OnEntityAdded(Entity entity)
         {
-            Type[] types = GetRenderedTypes();
+            int[] types = GetRenderedTypes();
 
             for (int i = 0; i < types.Length; i++)
             {
-                if (entity.GetType() == types[i])
+                if (Main.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
                     OnEntityOfOurTypeAdded(i, entity);
             }
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            Type[] types = GetRenderedTypes();
+            int[] types = GetRenderedTypes();
 
             for (int i = 0; i < types.Length; i++)
             {
-                if (entity.GetType() == types[i])
+                if (Main.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
                     OnEntityOfOurTypeRemoved(i, entity);
             }
         }
@@ -68,11 +68,15 @@ namespace ViMG.Entities.Renderers
 
         }
 
-        public abstract Type[] GetRenderedTypes();
+        /// <summary>
+        /// Get the EntityType ids that will be rendered
+        /// </summary>
+        /// <returns></returns>
+        public abstract int[] GetRenderedTypes();
 
         public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType);
 
-        public virtual void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, string type) { }
+        public virtual void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, int entityType) { }
 
         protected ref struct Iterator<T> where T : Entity
         {

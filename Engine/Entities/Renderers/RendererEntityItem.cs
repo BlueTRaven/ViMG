@@ -18,9 +18,11 @@ namespace ViMG.Entities.Renderers
         {
         }
 
-        private static Type[] types = [typeof(EntityItem)];
-        public override Type[] GetRenderedTypes()
+        private static int[] types = [0];
+        public override int[] GetRenderedTypes()
         {
+            if (types[0] == 0)
+                types[0] = Main.Registry.EntityRegistry.Get<EntityItem>().Id;
             return types;
         }
 
@@ -47,14 +49,13 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, string type)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             base.RenderClientEnt(device, deltaTime, client, type);
 
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
-                // TODO get rid of str compare
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);

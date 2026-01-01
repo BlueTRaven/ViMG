@@ -35,16 +35,16 @@ namespace ViMG.Entities.Renderers
         public abstract class RenderedEntity : IRegisterable
         {
             public string Identifier { get; set; }
-            public Type EntityType;
+            public int EntityTypeId;
 
             public RendererDeferred.DrawMaterial Material;
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
 
-            public RenderedEntity(string identifier, Type entityType, RendererDeferred.DrawMaterial material)
+            public RenderedEntity(string identifier, int entityTypeId, RendererDeferred.DrawMaterial material)
             {
                 this.Identifier = identifier;
-                this.EntityType = entityType;
+                this.EntityTypeId = entityTypeId;
                 this.Material = material;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
@@ -64,16 +64,16 @@ namespace ViMG.Entities.Renderers
             registry = new ObjRegistry<RenderedEntity>();
         }
 
-        private Type[]? renderedTypesCache = null;
-        public override Type[] GetRenderedTypes()
+        private int[]? renderedTypesCache = null;
+        public override int[] GetRenderedTypes()
         {
             if (renderedTypesCache == null)
             {
-                renderedTypesCache = new Type[registry.Count];
+                renderedTypesCache = new int[registry.Count];
                 int i = 0;
                 foreach (RenderedEntity stats in registry.GetIterable())
                 {
-                    renderedTypesCache[i] = stats.EntityType;
+                    renderedTypesCache[i] = stats.EntityTypeId;
                     i++;
                 }
             }
@@ -83,7 +83,7 @@ namespace ViMG.Entities.Renderers
         public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
         {
             RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
-            Type type = stats.EntityType;
+            Type type = Main.Registry.EntityRegistry.Get(stats.EntityTypeId).type;
 
             //var entities = entityManager.GetAll(type);
 

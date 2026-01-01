@@ -17,6 +17,7 @@ namespace Engine.Entities
         public string Identifier => identifier;
 
         public int Id;
+        public readonly Type type;
 
         public EntityMetaAttribute? meta;
         public EntitySerializableAttribute? serializable;
@@ -24,6 +25,7 @@ namespace Engine.Entities
         private EntityType(Type type)
         {
             this.identifier = type.FullName;
+            this.type = type;
 
             meta = type.GetCustomAttribute<EntityMetaAttribute>();
             serializable = type.GetCustomAttribute<EntitySerializableAttribute>();
@@ -51,6 +53,11 @@ namespace Engine.Entities
         {
             obj.Id = Count + 1;
             base.Register(obj);
+        }
+
+        public EntityType Get<T>() where T : Entity
+        {
+            return Get(typeof(T).FullName);
         }
 
         public EntityType GetFromEntity(Entity ent)

@@ -23,7 +23,7 @@ namespace ViMG.Entities.Renderers
             private readonly Color color;
             private readonly RectangleF? sourceRect;
 
-            public TypeStatsGeneric(string identifier, Type entityType, RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null, Color? color = null, RectangleF? sourceRect = null) : base(identifier, entityType, material)
+            public TypeStatsGeneric(string identifier, int entityType, RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null, Color? color = null, RectangleF? sourceRect = null) : base(identifier, entityType, material)
             {
                 this.material = material;
                 this.scale = scale ?? new Vector2(1);
@@ -52,7 +52,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSkeleton : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSkeleton() : base("skeleton", typeof(Skeleton), new RendererDeferred.DrawMaterial("skeleton"))
+            public TypeStatsSkeleton() : base("skeleton", Main.Registry.EntityRegistry.Get<Skeleton>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -77,7 +77,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSkeleton2 : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSkeleton2() : base("skeleton2", typeof(Skeleton2), new RendererDeferred.DrawMaterial("skeleton"))
+            public TypeStatsSkeleton2() : base("skeleton2", Main.Registry.EntityRegistry.Get<Skeleton2>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -99,7 +99,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSkeletonBonePile : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSkeletonBonePile() : base("skeleton_bonepile", typeof(SkeletonBonePile), new RendererDeferred.DrawMaterial("skeleton"))
+            public TypeStatsSkeletonBonePile() : base("skeleton_bonepile", Main.Registry.EntityRegistry.Get<SkeletonBonePile>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -121,7 +121,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsBigSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsBigSlime() : base("slime_big", typeof(SlimeBig), new RendererDeferred.DrawMaterial("slime")) { }
+            public TypeStatsBigSlime() : base("slime_big", Main.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
@@ -150,7 +150,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSlime() : base(typeof(Slime).FullName, typeof(Slime), new RendererDeferred.DrawMaterial("slime")) { }
+            public TypeStatsSlime() : base(typeof(Slime).FullName, Main.Registry.EntityRegistry.Get<Slime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
@@ -204,7 +204,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsCaveSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsCaveSlime() : base("slime_cave", typeof(CaveSlime), new RendererDeferred.DrawMaterial("slime")) { }
+            public TypeStatsCaveSlime() : base("slime_cave", Main.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
             public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
@@ -232,7 +232,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsGhost : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsGhost() : base("ghost", typeof(Ghost), new RendererDeferred.DrawMaterial("grave_ghost"))
+            public TypeStatsGhost() : base("ghost", Main.Registry.EntityRegistry.Get<Ghost>().Id, new RendererDeferred.DrawMaterial("grave_ghost"))
             {
             }
 
@@ -296,7 +296,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsCultist : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsCultist() : base("cultist", typeof(Cultist), new RendererDeferred.DrawMaterial("cultist"))
+            public TypeStatsCultist() : base("cultist", Main.Registry.EntityRegistry.Get<Cultist>().Id, new RendererDeferred.DrawMaterial("cultist"))
             {
             }
 
@@ -336,7 +336,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsDucken : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsDucken() : base("ducken", typeof(Ducken), new RendererDeferred.DrawMaterial("ducken"))
+            public TypeStatsDucken() : base("ducken", Main.Registry.EntityRegistry.Get<Ducken>().Id, new RendererDeferred.DrawMaterial("ducken"))
             {
             }
 
@@ -409,7 +409,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsGhoul : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsGhoul() : base("ghoul", typeof(Ghoul), new RendererDeferred.DrawMaterial("ghoul"))
+            public TypeStatsGhoul() : base("ghoul", Main.Registry.EntityRegistry.Get<Ghoul>().Id, new RendererDeferred.DrawMaterial("ghoul"))
             {
 
             }
@@ -433,7 +433,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsLeviathan : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsLeviathan() : base("leviathan", typeof(EntityLeviathan), new RendererDeferred.DrawMaterial("leviathan"))
+            public TypeStatsLeviathan() : base("leviathan", Main.Registry.EntityRegistry.Get<EntityLeviathan>().Id, new RendererDeferred.DrawMaterial("leviathan"))
             {
             }
 
@@ -455,7 +455,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsHeart : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsHeart() : base("heart", typeof(Heart), new RendererDeferred.DrawMaterial("heart"))
+            public TypeStatsHeart() : base("heart", Main.Registry.EntityRegistry.Get<Heart>().Id, new RendererDeferred.DrawMaterial("heart"))
             {
             }
 
@@ -485,7 +485,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsPlayerBubble : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsPlayerBubble() : base("player_bubble", typeof(PlayerBubble), new RendererDeferred.DrawMaterial("bubble"))
+            public TypeStatsPlayerBubble() : base("player_bubble", Main.Registry.EntityRegistry.Get<PlayerBubble>().Id, new RendererDeferred.DrawMaterial("bubble"))
             {
             }
 
@@ -513,7 +513,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSnake : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSnake() : base("snake", typeof(Snake), new RendererDeferred.DrawMaterial("snake"))
+            public TypeStatsSnake() : base("snake", Main.Registry.EntityRegistry.Get<Snake>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
@@ -575,7 +575,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsSnakeFlying : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSnakeFlying() : base("snake_flying", typeof(SnakeFlying), new RendererDeferred.DrawMaterial("snake"))
+            public TypeStatsSnakeFlying() : base("snake_flying", Main.Registry.EntityRegistry.Get<SnakeFlying>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
@@ -628,7 +628,7 @@ namespace ViMG.Entities.Renderers
                 back = new RectangleF(0, 32, 16, 16)
             };
 
-            public TypeStatsStoneBeetle() : base("stone_beetle", typeof(StoneBeetle), new RendererDeferred.DrawMaterial("stone_beetle"))
+            public TypeStatsStoneBeetle() : base("stone_beetle", Main.Registry.EntityRegistry.Get<StoneBeetle>().Id, new RendererDeferred.DrawMaterial("stone_beetle"))
             {
             }
 
@@ -668,7 +668,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsTestNPC : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsTestNPC(Type type) : base(type.FullName, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
+            public TypeStatsTestNPC(int type) : base(Main.Registry.EntityRegistry.Get(type).Identifier, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
             {
             }
 
@@ -704,7 +704,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsLightStressTest : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsLightStressTest() : base("light_stress_test", typeof(LightStressTest), new RendererDeferred.DrawMaterial("glow_node"))
+            public TypeStatsLightStressTest() : base("light_stress_test", Main.Registry.EntityRegistry.Get<LightStressTest>().Id, new RendererDeferred.DrawMaterial("glow_node"))
             {
             }
 
@@ -733,7 +733,7 @@ namespace ViMG.Entities.Renderers
 
         private class TypeStatsWorm : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsWorm() : base("worm", typeof(Worm), new RendererDeferred.DrawMaterial("worm"))
+            public TypeStatsWorm() : base("worm", Main.Registry.EntityRegistry.Get<Worm>().Id, new RendererDeferred.DrawMaterial("worm"))
             {
             }
 
@@ -765,7 +765,7 @@ namespace ViMG.Entities.Renderers
 
         public static void DoRegistration(RendererOpaqueBillboardedEntity renderer)
         {
-            renderer.registry.Register(new TypeStatsGeneric("imp", typeof(Imp), new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)));
+            renderer.registry.Register(new TypeStatsGeneric("imp", Main.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)));
             renderer.registry.Register(new TypeStatsSkeleton());
             renderer.registry.Register(new TypeStatsSkeleton2());
             renderer.registry.Register(new TypeStatsSkeletonBonePile());
@@ -774,18 +774,18 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new TypeStatsCaveSlime());
             renderer.registry.Register(new TypeStatsGhost());
             renderer.registry.Register(new TypeStatsCultist());
-            renderer.registry.Register(new TypeStatsGeneric("salamander", typeof(CaveSalamander), new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
+            renderer.registry.Register(new TypeStatsGeneric("salamander", Main.Registry.EntityRegistry.Get<CaveSalamander>().Id, new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
             renderer.registry.Register(new TypeStatsDucken());
             renderer.registry.Register(new TypeStatsGhoul());
-            renderer.registry.Register(new TypeStatsGeneric("glow_node", typeof(GlowNode), new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)));
+            renderer.registry.Register(new TypeStatsGeneric("glow_node", Main.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)));
             renderer.registry.Register(new TypeStatsLeviathan());
             renderer.registry.Register(new TypeStatsHeart());
             renderer.registry.Register(new TypeStatsPlayerBubble());
             renderer.registry.Register(new TypeStatsSnake());
             renderer.registry.Register(new TypeStatsSnakeFlying());
             renderer.registry.Register(new TypeStatsStoneBeetle());
-            renderer.registry.Register(new TypeStatsTestNPC(typeof(TestNPC)));
-            renderer.registry.Register(new TypeStatsTestNPC(typeof(Player)));
+            renderer.registry.Register(new TypeStatsTestNPC(Main.Registry.EntityRegistry.Get<TestNPC>().Id));
+            renderer.registry.Register(new TypeStatsTestNPC(Main.Registry.EntityRegistry.Get<Player>().Id));
             renderer.registry.Register(new TypeStatsLightStressTest());
             renderer.registry.Register(new TypeStatsWorm());
         }
