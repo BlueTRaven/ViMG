@@ -26,6 +26,8 @@ namespace Engine.Networking.Messages
 
         }
 
+        public virtual void SendMessage<T>(NetworkMessage netMessage, T addData) { }
+
         public virtual void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
             

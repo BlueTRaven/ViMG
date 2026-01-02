@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Networking.Messages;
+using LiteNetLib.Utils;
 using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,20 @@ namespace Engine.Items
                 this.generation = generation;
             }
             public static InventoryReference INVALID = new InventoryReference(0, -1);
+
+            public void Serialize(NetDataWriter writer)
+            {
+                writer.Put(id);
+                writer.Put(generation);
+            }
+
+            public static InventoryReference Deserialize(NetDataReader reader)
+            {
+                int id = reader.GetInt();
+                int generation = reader.GetInt();
+
+                return new InventoryReference(id, generation);
+            }
         }
 
         private struct InventoryHolder
@@ -43,6 +59,9 @@ namespace Engine.Items
         }
         private InventoryHolder[] inventories;
         private List<int> freeList;
+
+        private FastList<InventoryReference> newInventories = new();
+        private FastList<InventoryReference> remInventories = new();
 
         public InventoryManager()
         {
@@ -83,7 +102,10 @@ namespace Engine.Items
                 inventory = new Inventory(config with { id = id }),
             };
 
-            return GetReference(id - 1);
+            var reference = GetReference(id - 1);
+            newInventories.Add(reference);
+
+            return reference;
         }
 
         public void Unload(InventoryReference reference)
@@ -100,6 +122,8 @@ namespace Engine.Items
                 inventory = null,
                 generation = inventories[reference.id - 1].generation + 1,
             };
+
+            remInventories.Add(reference);
         }
 
         public InventoryReference GetReference(int id)
@@ -129,6 +153,29 @@ namespace Engine.Items
             }
         
             return inventories[reference.id - 1].inventory;
+        }
+
+        private FastList<Inventory> cachedNewInv = new();
+        private FastList<InventoryReference> cachedNewInvRef = new();
+        public void UpdateNetwork()
+        {
+            foreach (InventoryReference reference in newInventories.Slice())
+            {
+                Inventory? inv = Get(reference);
+                if (inv != null)
+                {
+                    cachedNewInv.Add(inv);
+                    cachedNewInvRef.Add(reference);
+                }
+            }
+
+            SyncInventoryAdd.Instance.DoSync(cachedNewInv, cachedNewInvRef);
+
+            SyncInventoryRemove.Instance.DoSync(remInventories);
+            newInventories.Clear();
+
+            cachedNewInv.Clear();
+            cachedNewInvRef.Clear();
         }
     }
 }

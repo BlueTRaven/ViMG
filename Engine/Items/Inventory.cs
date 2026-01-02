@@ -412,6 +412,28 @@ namespace Engine.Items
 			}
 		}
 
+		public static Inventory ClientLoad(byte[] loadBytes, ref int index)
+		{
+            int id = SaveHelper.LoadInt32(loadBytes, ref index);
+            int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			// Client doesn't care about whitelists or max stack sizes
+			InventoryConfig config = new InventoryConfig(numSlots);
+			Inventory inv = new Inventory(config);
+
+            for (int i = 0; i < numValid; i++)
+            {
+                int itemIndex = SaveHelper.LoadInt32(loadBytes, ref index);
+                ItemInstance itemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
+
+                inv.ForceSet(itemInstance, itemIndex);
+            }
+
+			return inv;
+        }
+
 		public MenuHelper.IWhiteList? GetWhiteList(int index)
 		{
 			return whitelists[index];

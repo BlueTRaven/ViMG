@@ -439,6 +439,15 @@ namespace Engine.Networking
             message.SendMessage(netMessage, addData);
         }
 
+        //public void SendMessageToAll<T>(Message message, T addData, NetPeer? excludePeer = null)
+        //{
+        //    NetworkMessage netMessage = new NetworkMessage(message.Id, netManager, null);
+        //    netMessage.excludePeer = excludePeer;
+        //    netMessage.writer.Put(message.Id);
+
+        //    message.SendMessage(netMessage, addData);
+        //}
+
         public void IMGUIDebug()
         {
             float[] sent = new float[statistics.Length - 1];

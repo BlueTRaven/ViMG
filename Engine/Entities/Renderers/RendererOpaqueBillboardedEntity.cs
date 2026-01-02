@@ -206,8 +206,10 @@ namespace ViMG.Entities.Renderers
             if (renderer == null) return;
             renderer.Draws.Clear();
 
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+            var prev = client.Previous(1);
+            var current = client.Current();
+            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-current.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-current.camera.Rotation.Y);
 
             RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
             {
@@ -215,11 +217,11 @@ namespace ViMG.Entities.Renderers
                 TintColor = Color.White.ToVector3(),
             };
 
-            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            for (int i = 0; i < current.entities.MaxEnts; i++)
             {
-                var reference = client.Current().entities.GetReference(i);
+                var reference = current.entities.GetReference(i);
                 // TODO get rid of str compare
-                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+                if (current.entities.GetTypeById(reference.id) != type) continue;
 
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);

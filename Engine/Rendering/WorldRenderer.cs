@@ -55,7 +55,7 @@ namespace ViMG.Rendering
                             //int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
                             if (client.ChunkManager.IsInWorldBounds(chunkPos) &&
-                                Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
+                                current.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
                             {
                                 culledChunkDrawPositions.Add(chunkPos);
                             }

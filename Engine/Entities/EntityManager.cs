@@ -679,56 +679,6 @@ namespace ViMG.Entities
 		public void UpdateNetwork()
 		{
 			SyncEntityState.Instance.DoSync(this, world.player);
-
-			// Handle syncing players separately from normal entities.
-			// This is mainly because of two factors:
-			// Clients send their player back to the server (client authoratative over its own player)
-			// and Servers will send player data to all clients but to the client whose player it represents
-			//var localPlayer = world.GetLocalPlayer();
-			//if (localPlayer != null && localPlayer.TimeInitialized != 0)
-			//{
-			//	// Local player has all its inputs synced to all connections
-			//	if (localPlayer.LeftClick.Changed() || localPlayer.RightClick.Changed() ||
-   //                 localPlayer.MoveLeft.Changed() || localPlayer.MoveRight.Changed() ||
-   //                 localPlayer.MoveForward.Changed() || localPlayer.MoveBack.Changed() ||
-   //                 localPlayer.Jump.Changed() || localPlayer.Run.Changed() ||
-   //                 localPlayer.MoveDown.Changed() || Main.camera.IsDirty || Main.Time - localPlayer.TimeSinceInputSynced > 0.25)
-			//	{
-   //                 Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
-			//	}
-			//}
-
-			// Sync players to other players.
-			// SyncPlayerConnected only tells us that other players are connected.
-			// We need to send entity serialization info continually.
-			//foreach (var player in world.player)
-			//{
-			//	if (player != null && player.TimeInitialized != 0)
-			//	{
-			//		NetPeer peer = Main.gameStateManager.TheIsland.netManagerServer.GetPeer(player.playerIndex);
-			//		if (Main.Time - player.TimeMajorSynced > player.MajorSyncInterval)
-			//		{
-			//			var ent = new SyncBasicState.SyncEntity()
-			//			{
-			//				entity = player,
-			//				type = SyncBasicState.SyncType.FullSync,
-			//			};
-			//			Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, ent, peer);
-			//		}
-			//		else
-			//		{
-			//			if (Main.Time - player.TimeSynced > player.SyncInterval)
-			//			{
-			//				var ent = new SyncBasicState.SyncEntity()
-			//				{
-			//					entity = player,
-			//					type = SyncBasicState.SyncType.BasicState,
-			//				};
-			//				Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, ent, peer);
-			//			}
-			//		}
-			//	}
-			//}
 		}
 
 		public int GetPrevIndexTime(float time) 

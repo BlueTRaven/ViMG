@@ -35,6 +35,8 @@ namespace Engine.Networking.Messages
             Register(new SyncInventoryUpdateAuditResponse());
             Register(new SyncInventoryInput());
             Register(new SyncWorldState());
+            Register(new SyncInventoryAdd());
+            Register(new SyncInventoryRemove());
         }
 
         public override void Register(Message obj)

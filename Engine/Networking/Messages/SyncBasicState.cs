@@ -268,9 +268,6 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
-        //private string[] typeIdToTypeName;
-        //private Dictionary<string, int> typeNameToTypeId = new Dictionary<string, int>();
-
         public enum SyncStateType
         {
             // Unload entity
@@ -332,23 +329,6 @@ namespace Engine.Networking.Messages
             }
             for (int i = 0; i < EntityManager.EntMax; i++)
                 clientEntities[i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 };
-
-            // TODO: this should be unnecessary once Entities use a Registry
-            //List<string> entityTypeNamesMapping = new List<string>();
-            //int ti = 0;
-            //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            //{
-            //    foreach (Type type in assembly.GetTypes())
-            //    {
-            //        if (typeof(Entity).IsAssignableFrom(type))
-            //        {
-            //            entityTypeNamesMapping.Add(type.FullName);
-            //            typeNameToTypeId.Add(type.FullName, ti);
-            //            ti += 1; 
-            //        }
-            //    }
-            //}
-            //this.typeIdToTypeName = entityTypeNamesMapping.ToArray();
         }
 
         public void PlayerDisconnected(int playerIndex)
