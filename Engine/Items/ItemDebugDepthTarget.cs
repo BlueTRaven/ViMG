@@ -26,7 +26,7 @@ namespace ViMG.Items
             return new RendererDeferred.DrawMaterial();
         }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, item, transform);
 

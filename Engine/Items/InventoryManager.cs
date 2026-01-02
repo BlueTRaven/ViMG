@@ -23,14 +23,21 @@ namespace Engine.Items
 
         public readonly struct InventoryReference
         {
-            public readonly int id;
-            public readonly int generation;
+            public readonly ushort id;
+            // NOTE: negative values are always invalid.
+            public readonly short generation;
 
-            public InventoryReference(int id, int generation)
+            public InventoryReference(ushort id, short generation)
             {
                 this.id = id;
                 this.generation = generation;
             }
+
+            public InventoryReference NextGeneration()
+            {
+                return new InventoryReference(id, (short)((generation + 1) % short.MaxValue));
+            }
+
             public static InventoryReference INVALID = new InventoryReference(0, -1);
 
             public void Serialize(NetDataWriter writer)
@@ -41,8 +48,8 @@ namespace Engine.Items
 
             public static InventoryReference Deserialize(NetDataReader reader)
             {
-                int id = reader.GetInt();
-                int generation = reader.GetInt();
+                ushort id = reader.GetUShort();
+                short generation = reader.GetShort();
 
                 return new InventoryReference(id, generation);
             }
@@ -50,16 +57,16 @@ namespace Engine.Items
 
         private struct InventoryHolder
         {
-            public int id;
-            public int generation;
-            public Inventory inventory;
+            public ushort id;
+            public short generation;
+            public Inventory? inventory;
 
             public bool active;
 
-            public static InventoryHolder INVALID = new InventoryHolder { active = false, id = -1, generation = -1, inventory = null };
+            public static InventoryHolder INVALID = new InventoryHolder { active = false, id = 0, generation = -1, inventory = null };
         }
         private InventoryHolder[] inventories;
-        private List<int> freeList;
+        private List<ushort> freeList;
 
         private FastList<InventoryReference> newInventories = new();
         private FastList<InventoryReference> remInventories = new();
@@ -69,41 +76,41 @@ namespace Engine.Items
             inventories = new InventoryHolder[InvMax];
             Array.Fill(inventories, new());
 
-            freeList = new List<int>();
+            freeList = new List<ushort>();
 
             for (int i = InvMax - 1; i >= 0; i--)
             {
-                freeList.Add(i);
+                freeList.Add((ushort)i);
                 inventories[i] = InventoryHolder.INVALID;
             }
 
             Debug.Assert(freeList.First() == InvMax - 1);
         }
 
-        public int GetUniqueId()
+        public ushort GetUniqueId()
         {
             if (freeList.Count == 0) return 0;
-            int last = freeList.Last();
+            ushort last = freeList.Last();
             freeList.RemoveAt(freeList.Count - 1);
 
-            return last + 1;
+            return (ushort)(last + 1);
         }
 
         public InventoryReference Add(Inventory.InventoryConfig config)
         {
-            int id = GetUniqueId();
+            ushort id = GetUniqueId();
 
             Debug.Assert(!inventories[id - 1].active);
 
+            var reference = GetReference(id - 1).NextGeneration();
             inventories[id - 1] = new InventoryHolder
             {
                 id = id,
-                generation = inventories[id - 1].generation + 1,
+                generation = reference.generation,
                 active = true,
                 inventory = new Inventory(config with { id = id }),
             };
 
-            var reference = GetReference(id - 1);
             newInventories.Add(reference);
 
             return reference;
@@ -121,7 +128,7 @@ namespace Engine.Items
             {
                 active = false,
                 inventory = null,
-                generation = inventories[reference.id - 1].generation + 1,
+                generation = reference.NextGeneration().generation,
             };
 
             remInventories.Add(reference);
@@ -129,7 +136,7 @@ namespace Engine.Items
 
         public InventoryReference GetReference(int id)
         {
-            return new InventoryReference(id + 1, inventories[id].generation);
+            return new InventoryReference((ushort)(id + 1), inventories[id].generation);
         }
 
         public Inventory? Get(InventoryReference reference)
@@ -143,11 +150,11 @@ namespace Engine.Items
             if (reference.id == 0)
             {
                 var id = GetUniqueId();
-                reference = new InventoryReference(id, inventories[id - 1].generation);
+                reference = new InventoryReference(id, inventories[id - 1].generation).NextGeneration();
                 inventories[reference.id - 1] = new InventoryHolder
                 {
                     id = reference.id,
-                    generation = inventories[reference.id - 1].generation,
+                    generation = reference.generation,
                     active = true,
                     inventory = new Inventory(config with { id = reference.id }),
                 };

@@ -24,13 +24,11 @@ using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
 using ViMG.VertexDeclarations;
-using static Engine.Networking.Messages.SyncPlayerInputs;
-using static SMAADemo.SMAA;
 
 namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
-	[EntityMeta(18, 0)]
+	[EntityMeta(19, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
         private struct HitboxToSpawnLater
@@ -128,6 +126,23 @@ namespace ViMG
 				
 				return stats;
             }
+        }
+
+		public struct PlayerExtraState
+		{
+            public InventoryManager.InventoryReference inventory;
+            public InventoryManager.InventoryReference heldInventory;
+            public InventoryManager.InventoryReference craftInventory;
+            public InventoryManager.InventoryReference gearInventory;
+            public InventoryManager.InventoryReference accessoryInventory;
+			public int highlightIndex;
+			public int useAnimType;
+			public float useAnimTime;
+			public float useAnimTimer;
+
+			public CubePosition lookAtPos;
+			public CubePosition placeAtPos;
+			public int currency;
         }
 
         public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
@@ -1828,11 +1843,11 @@ namespace ViMG
 
             lookAtMaterial = StaticMaterials.Cubes;
 
-            if (inventory.Get(highlightIndex).item != null)
-			{
-				// TODO use Rotation
-				inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
-			}
+   //         if (inventory.Get(highlightIndex).item != null)
+			//{
+			//	// TODO use Rotation
+			//	inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
+			//}
 
 			if (mesh.IBO == null)
 				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f, Enums.Alignment.Center);
@@ -1947,44 +1962,50 @@ namespace ViMG
 			}
 		}
 
-		public Matrix GetHeldMatrix(Vector2 origin, Vector3 scale)
+		public static Matrix GetHeldMatrix(BasicState player, Vector2 origin, Vector3 scale)
 		{
-			float percent = useAnimTimer / currentActionStats.useAnimTime;
+			var extraState = player.GetExtra<PlayerExtraState>();
+			float percent = extraState.useAnimTimer / extraState.useAnimTime;
 
 			if (percent <= 0)
 				percent = 0;
 
 
 			// TODO use Rotation instead of Forward/Up/LR
-			switch (useAnimType)
+			switch ((UseAnimationType)extraState.useAnimType)
 			{
 				case UseAnimationType.SwingHorizontal:
 					{
 						float ang = 180 * percent;
 						return
 							Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
-							Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+							Matrix.CreateScale(Cube.CUBE_SCALE) *
 							Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
 							Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
-							Matrix.CreateRotationX(-Rotation.X) *
-							Matrix.CreateRotationY(-Rotation.Y) *
-							Matrix.CreateTranslation(Position -
-                            (this as IRotatable).Forward * Cube.CUBE_SCALE / 4f -
-                            (this as IRotatable).Up * Cube.CUBE_SCALE / 4f);
+							Matrix.CreateFromQuaternion(player.rotation) *
+							Matrix.CreateTranslation(player.position);
+						// TODO rework
+							//Matrix.CreateRotationX(-Rotation.X) *
+							//Matrix.CreateRotationY(-Rotation.Y) *
+							//Matrix.CreateTranslation(Position -
+       //                     (this as IRotatable).Forward * Cube.CUBE_SCALE / 4f -
+       //                     (this as IRotatable).Up * Cube.CUBE_SCALE / 4f);
 					}
 				case UseAnimationType.SwingVertical:
 					{
 						float ang = 180 * (1 - percent);
 						return Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
-							Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+							Matrix.CreateScale(Cube.CUBE_SCALE) *
 							Matrix.CreateRotationY(MathHelper.ToRadians(-90)) *
 							Matrix.CreateRotationX(MathHelper.ToRadians(-ang)) *
-							Matrix.CreateRotationX(-Rotation.X) *
-							Matrix.CreateRotationY(-Rotation.Y) *
-							Matrix.CreateTranslation(Position -
-							(this as IRotatable).Forward * Cube.CUBE_SCALE / 2 +
-							(this as IRotatable).Right * Cube.CUBE_SCALE / 4 -
-                            (this as IRotatable).Up * Cube.CUBE_SCALE / 4);
+							Matrix.CreateFromQuaternion(player.rotation) *
+							Matrix.CreateTranslation(player.position);
+							//Matrix.CreateRotationX(-Rotation.X) *
+							//Matrix.CreateRotationY(-Rotation.Y) *
+							//Matrix.CreateTranslation(Position -
+							//(this as IRotatable).Forward * Cube.CUBE_SCALE / 2 +
+							//(this as IRotatable).Right * Cube.CUBE_SCALE / 4 -
+       //                     (this as IRotatable).Up * Cube.CUBE_SCALE / 4);
 					}
                 case UseAnimationType.Use:
 				default:
@@ -1992,12 +2013,14 @@ namespace ViMG
 						Matrix.CreateScale(0.5f * scale) *
 						Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
 						Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
-						Matrix.CreateRotationX(-Rotation.X) *
-						Matrix.CreateRotationY(-Rotation.Y) *
-						Matrix.CreateTranslation(Position - (this as IRotatable).Forward * Cube.CUBE_SCALE / 3f +
-						(this as IRotatable).Right * Cube.CUBE_SCALE / 4f -
-                        (this as IRotatable).Up * Cube.CUBE_SCALE / 6f);
-			}
+                        Matrix.CreateFromQuaternion(player.rotation) *
+                        Matrix.CreateTranslation(player.position);
+                    //Matrix.CreateRotationX(-Rotation.X) *
+                    //Matrix.CreateRotationY(-Rotation.Y) *
+                    //Matrix.CreateTranslation(Position - (this as IRotatable).Forward * Cube.CUBE_SCALE / 3f +
+                    //(this as IRotatable).Right * Cube.CUBE_SCALE / 4f -
+                    //                  (this as IRotatable).Up * Cube.CUBE_SCALE / 6f);
+            }
 		}
 
 		public void DrawDebug(GraphicsDevice device)
@@ -2199,8 +2222,8 @@ namespace ViMG
 				SaveHelper.SaveInt32(saveBytes, (int)GetInputBitSet());
 			else SaveHelper.SaveInt32(saveBytes, 0);
 
-			Get(out BasicState state);
-			state.OnSave(saveBytes);
+			//Get(out BasicState state);
+			//state.OnSave(saveBytes);
 
 			SaveHelper.SaveInt32(saveBytes, playerIndex);
 			SaveHelper.SaveInt32(saveBytes, playerUuid);
@@ -2263,7 +2286,7 @@ namespace ViMG
 					SetInputBitSet(bitset);
 			}
 
-			if (version >= 11)
+			if (version >= 11 && version < 19)
 			{
 				var basicState = new BasicState();
 				basicState.OnLoad(loadBytes, ref index);
@@ -2303,6 +2326,24 @@ namespace ViMG
 					[3] = playerIndex,
 				}
 			};
+
+			PlayerExtraState pstate = new PlayerExtraState
+			{
+				inventory = this.inventory,
+				accessoryInventory = this.accessoryInventory,
+				craftInventory = this.craftInventory,
+				gearInventory = this.gearInventory,
+				heldInventory = this.heldInventory,
+				highlightIndex = this.highlightIndex,
+				lookAtPos = this.LookAtPos,
+				placeAtPos = this.PlaceAtPos,
+				currency = this.Currency,
+				useAnimTime = currentActionStats.useAnimTime,
+				useAnimTimer = useAnimTimer,
+				useAnimType = (int)useAnimType,
+			};
+
+			state.SetExtra(ref pstate);
         }
 
         public void Set(ref readonly BasicState state)
@@ -2340,53 +2381,53 @@ namespace ViMG
 			SyncPlayerInputs.InputTypes pressed = SyncPlayerInputs.InputTypes.None;
 			SyncPlayerInputs.InputTypes prevPressed = SyncPlayerInputs.InputTypes.None;
 
-            if (Jump.recordedPress) pressed |= InputTypes.Jump;
-            if (LeftClick.recordedPress) pressed |= InputTypes.LeftClick;
-            if (MoveBack.recordedPress) pressed |= InputTypes.MoveBack;
-            if (MoveDown.recordedPress) pressed |= InputTypes.MoveDown;
-            if (MoveForward.recordedPress) pressed |= InputTypes.MoveForward;
-            if (MoveLeft.recordedPress) pressed |= InputTypes.MoveLeft;
-            if (MoveRight.recordedPress) pressed |= InputTypes.MoveRight;
-            if (RightClick.recordedPress) pressed |= InputTypes.RightClick;
-            if (Run.recordedPress) pressed |= InputTypes.Run;
+            if (Jump.recordedPress) pressed |= SyncPlayerInputs.InputTypes.Jump;
+            if (LeftClick.recordedPress) pressed |= SyncPlayerInputs.InputTypes.LeftClick;
+            if (MoveBack.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveBack;
+            if (MoveDown.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveDown;
+            if (MoveForward.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveForward;
+            if (MoveLeft.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveLeft;
+            if (MoveRight.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveRight;
+            if (RightClick.recordedPress) pressed |= SyncPlayerInputs.InputTypes.RightClick;
+            if (Run.recordedPress) pressed |= SyncPlayerInputs.InputTypes.Run;
 
-            if (prevJump.recordedPress) prevPressed |= InputTypes.Jump;
-            if (prevLeftClick.recordedPress) prevPressed |= InputTypes.LeftClick;
-            if (prevMoveBack.recordedPress) prevPressed |= InputTypes.MoveBack;
-            if (prevMoveDown.recordedPress) prevPressed |= InputTypes.MoveDown;
-            if (prevMoveForward.recordedPress) prevPressed |= InputTypes.MoveForward;
-            if (prevMoveLeft.recordedPress) prevPressed |= InputTypes.MoveLeft;
-            if (prevMoveRight.recordedPress) prevPressed |= InputTypes.MoveRight;
-            if (prevRightClick.recordedPress) prevPressed |= InputTypes.RightClick;
-            if (prevRun.recordedPress) prevPressed |= InputTypes.Run;
+            if (prevJump.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.Jump;
+            if (prevLeftClick.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.LeftClick;
+            if (prevMoveBack.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveBack;
+            if (prevMoveDown.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveDown;
+            if (prevMoveForward.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveForward;
+            if (prevMoveLeft.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveLeft;
+            if (prevMoveRight.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveRight;
+            if (prevRightClick.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.RightClick;
+            if (prevRun.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.Run;
 
 			return ((uint)pressed << sizeof(ushort)) | (uint)prevPressed;
         }
 
 		public void SetInputBitSet(uint bits)
 		{
-            InputTypes presseds = (InputTypes)(ushort)(bits >> sizeof(ushort));
-            InputTypes prevPresseds = (InputTypes)(ushort)bits;
+            SyncPlayerInputs.InputTypes presseds = (SyncPlayerInputs.InputTypes)(ushort)(bits >> sizeof(ushort));
+            SyncPlayerInputs.InputTypes prevPresseds = (SyncPlayerInputs.InputTypes)(ushort)bits;
 
-            Jump.recordedPress = (presseds & InputTypes.Jump) == InputTypes.Jump;
-            LeftClick.recordedPress = (presseds & InputTypes.LeftClick) == InputTypes.LeftClick;
-            MoveBack.recordedPress = (presseds & InputTypes.MoveBack) == InputTypes.MoveBack;
-            MoveDown.recordedPress = (presseds & InputTypes.MoveDown) == InputTypes.MoveDown;
-            MoveForward.recordedPress = (presseds & InputTypes.MoveForward) == InputTypes.MoveForward;
-            MoveLeft.recordedPress = (presseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-            MoveRight.recordedPress = (presseds & InputTypes.MoveRight) == InputTypes.MoveRight;
-            RightClick.recordedPress = (presseds & InputTypes.RightClick) == InputTypes.RightClick;
-            Run.recordedPress = (presseds & InputTypes.Run) == InputTypes.Run;
+            Jump.recordedPress = (presseds & SyncPlayerInputs.InputTypes.Jump) == SyncPlayerInputs.InputTypes.Jump;
+            LeftClick.recordedPress = (presseds & SyncPlayerInputs.InputTypes.LeftClick) == SyncPlayerInputs.InputTypes.LeftClick;
+            MoveBack.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveBack) == SyncPlayerInputs.InputTypes.MoveBack;
+            MoveDown.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveDown) == SyncPlayerInputs.InputTypes.MoveDown;
+            MoveForward.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveForward) == SyncPlayerInputs.InputTypes.MoveForward;
+            MoveLeft.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveLeft) == SyncPlayerInputs.InputTypes.MoveLeft;
+            MoveRight.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveRight) == SyncPlayerInputs.InputTypes.MoveRight;
+            RightClick.recordedPress = (presseds & SyncPlayerInputs.InputTypes.RightClick) == SyncPlayerInputs.InputTypes.RightClick;
+            Run.recordedPress = (presseds & SyncPlayerInputs.InputTypes.Run) == SyncPlayerInputs.InputTypes.Run;
 
-            prevJump.recordedPress = (prevPresseds & InputTypes.Jump) == InputTypes.Jump;
-            prevLeftClick.recordedPress = (prevPresseds & InputTypes.LeftClick) == InputTypes.LeftClick;
-            prevMoveBack.recordedPress = (prevPresseds & InputTypes.MoveBack) == InputTypes.MoveBack;
-            prevMoveDown.recordedPress = (prevPresseds & InputTypes.MoveDown) == InputTypes.MoveDown;
-            prevMoveForward.recordedPress = (prevPresseds & InputTypes.MoveForward) == InputTypes.MoveForward;
-            prevMoveLeft.recordedPress = (prevPresseds & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-            prevMoveRight.recordedPress = (prevPresseds & InputTypes.MoveRight) == InputTypes.MoveRight;
-            prevRightClick.recordedPress = (prevPresseds & InputTypes.RightClick) == InputTypes.RightClick;
-            prevRun.recordedPress = (prevPresseds & InputTypes.Run) == InputTypes.Run;
+            prevJump.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.Jump) == SyncPlayerInputs.InputTypes.Jump;
+            prevLeftClick.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.LeftClick) == SyncPlayerInputs.InputTypes.LeftClick;
+            prevMoveBack.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveBack) == SyncPlayerInputs.InputTypes.MoveBack;
+            prevMoveDown.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveDown) == SyncPlayerInputs.InputTypes.MoveDown;
+            prevMoveForward.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveForward) == SyncPlayerInputs.InputTypes.MoveForward;
+            prevMoveLeft.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveLeft) == SyncPlayerInputs.InputTypes.MoveLeft;
+            prevMoveRight.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveRight) == SyncPlayerInputs.InputTypes.MoveRight;
+            prevRightClick.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.RightClick) == SyncPlayerInputs.InputTypes.RightClick;
+            prevRun.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.Run) == SyncPlayerInputs.InputTypes.Run;
         }
 
         public bool InventoryAction(int activatingPlayer, int action)

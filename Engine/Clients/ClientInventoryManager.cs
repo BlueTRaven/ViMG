@@ -13,13 +13,13 @@ namespace Engine.Clients
     {
         private struct InventoryHolder
         {
-            public int id;
-            public int generation;
+            public ushort id;
+            public short generation;
             public Inventory? inventory;
 
             public bool active;
 
-            public static InventoryHolder INVALID = new InventoryHolder { active = false, id = -1, generation = -1, inventory = null };
+            public static InventoryHolder INVALID = new InventoryHolder { active = false, id = 0, generation = -1, inventory = null };
         }
         private InventoryHolder[] inventories;
 
@@ -68,7 +68,7 @@ namespace Engine.Clients
             return inventories[reference.id - 1].inventory ?? defaultInventory;
         }
 
-        public InventoryManager.InventoryReference GetReference(int id)
+        public InventoryManager.InventoryReference GetReference(ushort id)
         {
             return new InventoryManager.InventoryReference(id, inventories[id].generation);
         }

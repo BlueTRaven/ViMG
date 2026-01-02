@@ -6,9 +6,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
+using ViMG.Entities.Renderers;
 using ViMG.Items;
 
-namespace ViMG.Entities.Renderers
+namespace Engine.Entities.Renderers
 {
     public class RendererRegistry : ObjRegistry<EntityRenderer>
     {
@@ -24,7 +26,8 @@ namespace ViMG.Entities.Renderers
         protected override void DoRegistration()
         {
             base.DoRegistration();
-            
+
+            Register(new RendererPlayer(device));
             Register(new RendererOpaqueBillboardedEntity(device));
             Register(new RendererOpaqueXMeshEntity(device));
             Register(new RendererLine(device));

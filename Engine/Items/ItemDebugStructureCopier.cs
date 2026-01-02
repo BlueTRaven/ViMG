@@ -122,9 +122,9 @@ namespace ViMG.Items
             return base.LeftClick(player, inventory, index, facing, out actionStats);
         }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
         {
-            base.DrawInWorld(device, world, item, transform);
+            base.DrawInWorld(device, item, transform);
 
             if (meshWireframeCube.IBO == null)
             {

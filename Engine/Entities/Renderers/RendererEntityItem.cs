@@ -32,21 +32,21 @@ namespace ViMG.Entities.Renderers
             //var items = entityManager.GetAll<EntityItem>();
 
             //foreach (EntityItem itemEntity in items)
-            var iter = new Iterator<EntityItem>(entities);
-            while (iter.Next(out EntityItem itemEntity))
-            {
-                Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+            //var iter = new Iterator<EntityItem>(entities);
+            //while (iter.Next(out EntityItem itemEntity))
+            //{
+            //    Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-                if (itemEntity.ItemInstance.item is ItemCube)
-                    origin.Z = Cube.CUBE_SCALE / 4f;
+            //    if (itemEntity.ItemInstance.item is ItemCube)
+            //        origin.Z = Cube.CUBE_SCALE / 4f;
 
-                var reference = itemEntity.world.PhysicsInfo.Simulation.Bodies[itemEntity.physicsHandle];
-                itemEntity.ItemInstance.item.DrawInWorld(device, itemEntity.world, itemEntity.ItemInstance,
-                    Matrix.CreateTranslation(-origin) *
-                    Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
-                    Matrix.CreateTranslation(reference.Pose.Position)
-                    );
-            }
+            //    var reference = itemEntity.world.PhysicsInfo.Simulation.Bodies[itemEntity.physicsHandle];
+            //    itemEntity.ItemInstance.item.DrawInWorld(device, itemEntity.world, itemEntity.ItemInstance,
+            //        Matrix.CreateTranslation(-origin) *
+            //        Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
+            //        Matrix.CreateTranslation(reference.Pose.Position)
+            //        );
+            //}
         }
 
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
@@ -69,7 +69,7 @@ namespace ViMG.Entities.Renderers
 
                 if (itemInstance.item != null)
                 {
-                    itemInstance.item.DrawInWorld(device, null, itemInstance,
+                    itemInstance.item.DrawInWorld(device, itemInstance,
                         Matrix.CreateTranslation(-origin) *
                         Matrix.CreateFromQuaternion(entPrev.GetInterpRotation(entCurr)) *
                         Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr))

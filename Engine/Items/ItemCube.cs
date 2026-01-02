@@ -52,7 +52,7 @@ namespace ViMG.Items
             return StaticMaterials.Cubes;
         }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
 			//base.Draw(device, transform);
 
@@ -62,7 +62,7 @@ namespace ViMG.Items
 			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
 			if (mesh.IBO != null)
 				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-					mesh, scaled, cube.GetHeldSourceRect(world)));
+					mesh, scaled, cube.GetHeldSourceRect()));
 		}
 	}
 }

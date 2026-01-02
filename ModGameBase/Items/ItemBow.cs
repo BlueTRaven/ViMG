@@ -76,7 +76,7 @@ namespace ViMG.Items
 			return GetStats().GetTooltip();
 		}
 
-		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+		public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
 		{
 			if (meshItemQuadInWorld.IBO == null)
 				MakeMesh(device);

@@ -112,7 +112,7 @@ namespace Engine.Networking.Messages
                     //        currAudit.active = false;
                     //    }
                     //}
-                    var inventory = inventoryManager.Get(inventoryManager.GetReference(action.inventoryId));
+                    var inventory = inventoryManager.Get(inventoryManager.GetReference((ushort)action.inventoryId));
                     inventory.DoUpdateAction(action);
 
                     Console.WriteLine("Remote Inventory action: {0:02} {1} {2} -> {3}", Main.Time, action.inventoryId, action.oldInstance.item, action.newInstance.item);

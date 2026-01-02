@@ -1,4 +1,5 @@
 ﻿using Engine.Entities;
+using Engine.Entities.Renderers;
 using Engine.Mods;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,7 +9,6 @@ using System.Reflection;
 using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
 using ViMG.Items;
 using ViMG.Recipes;
 using ViMG.WorldLogics;
