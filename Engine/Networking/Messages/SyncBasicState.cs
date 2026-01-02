@@ -300,10 +300,10 @@ namespace Engine.Networking.Messages
         private FastList<ToSync> toSync;
 
         private double lastSyncTime;
-        private SyncedEntity[][] entities;
+        private SyncedEntity[][] serverEntities;
         private SyncedEntity[] clientEntities;
 
-        // if we're running locally then we only have one instance of a Messagee class!
+        // if we're running locally then we only have one instance of a Message class!
         // have to use different fields...
         private int serverSequence;
         private int clientSequence;
@@ -316,15 +316,14 @@ namespace Engine.Networking.Messages
 
             toSync = new FastList<ToSync>(EntityManager.EntMax);
 
-            entities = new SyncedEntity[World.MAX_PLAYERS][];
-
+            serverEntities = new SyncedEntity[World.MAX_PLAYERS][];
             clientEntities = new SyncedEntity[EntityManager.EntMax];
-            for (int i = 0; i < entities.Length; i++)
+            for (int i = 0; i < serverEntities.Length; i++)
             {
-                entities[i] = new SyncedEntity[EntityManager.EntMax];
+                serverEntities[i] = new SyncedEntity[EntityManager.EntMax];
                 for (int j = 0; j < EntityManager.EntMax; j++)
                 {
-                    entities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
+                    serverEntities[i][j] = new() { reference = new() { id = j, generation = -1 }, latestSequence = -1 };
                 }
             }
             for (int i = 0; i < EntityManager.EntMax; i++)
@@ -335,7 +334,7 @@ namespace Engine.Networking.Messages
         {
             for (int i = 0; i < EntityManager.EntMax; i++)
             {
-                entities[playerIndex][i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 }; 
+                serverEntities[playerIndex][i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 }; 
             }
         }
 
@@ -344,9 +343,9 @@ namespace Engine.Networking.Messages
             for (int i = 0; i < ack.numAckd; i++)
             {
                 //Console.WriteLine("Ack for {0} {1} {2}", playerId, ack.ackdEntities[i].id, sequence);
-                entities[playerId][ack.ackdEntities[i].id].reference.generation = ack.ackdEntities[i].generation;
+                serverEntities[playerId][ack.ackdEntities[i].id].reference.generation = ack.ackdEntities[i].generation;
                 // Note we blindly set the sequence here; earlier we discard sequences that are not the latest, so this should work fine
-                entities[playerId][ack.ackdEntities[i].id].latestSequence = sequence;
+                serverEntities[playerId][ack.ackdEntities[i].id].latestSequence = sequence;
             }
         }
 
@@ -370,7 +369,7 @@ namespace Engine.Networking.Messages
                     var reference = entityManager.GetReference(i);
                     var ent = entityManager.GetByRef(ref reference);
 
-                    if (entities[player.playerIndex][i].reference.generation != reference.generation)
+                    if (serverEntities[player.playerIndex][i].reference.generation != reference.generation)
                     {
                         if (ent != null && ent.DoesSync && ent is ISyncBasicState syncsBasicState)
                         {
@@ -395,7 +394,7 @@ namespace Engine.Networking.Messages
                         else
                         {
                             // Client never had it loaded in the first place
-                            if (entities[player.playerIndex][i].reference.generation != -1)
+                            if (serverEntities[player.playerIndex][i].reference.generation != -1)
                             {
                                 Console.WriteLine("Server sent unload ent {0}", reference.id);
 
@@ -422,10 +421,10 @@ namespace Engine.Networking.Messages
                 }
 
                 GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
+                toSync.Clear();
             }
 
             lastSyncTime = Main.Time;
-            toSync.Clear();
             serverSequence += 1;
         }
 
@@ -438,10 +437,6 @@ namespace Engine.Networking.Messages
 
             int playerId = addData as int? ?? throw new Exception();
 
-            //int chksumpos = netMessage.writer.Length;
-            //netMessage.writer.Put((ulong)0);
-
-            // Frame = sequence
             netMessage.writer.Put(serverSequence);
 
             int numsendpos = netMessage.writer.Length;
@@ -467,7 +462,7 @@ namespace Engine.Networking.Messages
                         ent.basicSyncState.Get(out BasicState state);
                         BasicState prevState;
                         if (ent.type == SyncStateType.MinorSync)
-                            prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, entities[ent.playerId][ent.reference.id].latestSequence);
+                            prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, serverEntities[ent.playerId][ent.reference.id].latestSequence);
                         else if (ent.type == SyncStateType.MajorSync)
                             prevState = new();
                         else

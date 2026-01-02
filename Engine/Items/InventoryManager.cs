@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.Entities;
 using ViMG.IMGUIImpl;
 using static ViMG.UIs.UI;
@@ -97,7 +98,7 @@ namespace Engine.Items
             inventories[id - 1] = new InventoryHolder
             {
                 id = id,
-                generation = inventories[id - 1].generation,
+                generation = inventories[id - 1].generation + 1,
                 active = true,
                 inventory = new Inventory(config with { id = id }),
             };
@@ -157,22 +158,24 @@ namespace Engine.Items
 
         private FastList<Inventory> cachedNewInv = new();
         private FastList<InventoryReference> cachedNewInvRef = new();
-        public void UpdateNetwork()
+        public void UpdateNetwork(Player[] player)
         {
-            foreach (InventoryReference reference in newInventories.Slice())
-            {
-                Inventory? inv = Get(reference);
-                if (inv != null)
-                {
-                    cachedNewInv.Add(inv);
-                    cachedNewInvRef.Add(reference);
-                }
-            }
+            //foreach (InventoryReference reference in newInventories.Slice())
+            //{
+            //    Inventory? inv = Get(reference);
+            //    if (inv != null)
+            //    {
+            //        cachedNewInv.Add(inv);
+            //        cachedNewInvRef.Add(reference);
+            //    }
+            //}
 
-            SyncInventoryAdd.Instance.DoSync(cachedNewInv, cachedNewInvRef);
+            SyncInventory.Instance.DoSync(this, player);
+            //SyncInventoryAdd.Instance.DoSync(cachedNewInv, cachedNewInvRef);
 
-            SyncInventoryRemove.Instance.DoSync(remInventories);
+            //SyncInventoryRemove.Instance.DoSync(remInventories);
             newInventories.Clear();
+            remInventories.Clear();
 
             cachedNewInv.Clear();
             cachedNewInvRef.Clear();

@@ -329,7 +329,7 @@ namespace ViMG
 			if (Main.Time - lastSyncTime > SyncTime)
 			{
 				EntityManager.UpdateNetwork();
-				InventoryManager.UpdateNetwork();
+				InventoryManager.UpdateNetwork(player);
                 Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
 				lastSyncTime = Main.Time;
             }
