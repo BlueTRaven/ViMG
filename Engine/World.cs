@@ -845,58 +845,58 @@ namespace ViMG
 			//	NumChunksDrawn++;
 			//}
 
-			if (drawSkybox)
-			{
-				float alphaDay = 1 - GetTimeOfDay();
-				float alphaNight = GetTimeOfNight();
+			//if (drawSkybox)
+			//{
+			//	float alphaDay = 1 - GetTimeOfDay();
+			//	float alphaNight = GetTimeOfNight();
 
-				if (alphaDay < 1)
-				{
-					const float mp = (DAY_CYCLE_TIME * 1.5f);
-					const float my = (DAY_CYCLE_TIME * 1.34f);
-					float p = MathF.Sin(MathF.PI * 2 * ((alive % mp) / mp));
-					float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
+			//	if (alphaDay < 1)
+			//	{
+			//		const float mp = (DAY_CYCLE_TIME * 1.5f);
+			//		const float my = (DAY_CYCLE_TIME * 1.34f);
+			//		float p = MathF.Sin(MathF.PI * 2 * ((alive % mp) / mp));
+			//		float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
 
-					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
-						new RendererDeferred.DrawMaterial(Skybox.Night),
-                        skyboxMesh.Value,
-                        Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateFromYawPitchRoll(y, p, 0) *
-						Matrix.CreateTranslation(Main.camera.Position),
-						null, Color.White));
-				}
+			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
+			//			new RendererDeferred.DrawMaterial(Skybox.Night),
+   //                     skyboxMesh.Value,
+   //                     Matrix.CreateTranslation(new Vector3(-0.5f)) *
+			//			Matrix.CreateFromYawPitchRoll(y, p, 0) *
+			//			Matrix.CreateTranslation(Main.camera.Position),
+			//			null, Color.White));
+			//	}
 
-				if (alphaDay > 0)
-				{
-					Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
+			//	if (alphaDay > 0)
+			//	{
+			//		Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
 
-					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
-						new RendererDeferred.DrawMaterial(Skybox.Day),
-                        skyboxMesh.Value,
-                        Matrix.CreateTranslation(new Vector3(-0.5f)) *
-						Matrix.CreateTranslation(Main.camera.Position),
-						null, Color.White * alphaDay));
-				}
+			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
+			//			new RendererDeferred.DrawMaterial(Skybox.Day),
+   //                     skyboxMesh.Value,
+   //                     Matrix.CreateTranslation(new Vector3(-0.5f)) *
+			//			Matrix.CreateTranslation(Main.camera.Position),
+			//			null, Color.White * alphaDay));
+			//	}
 
-				if (WeatherSkyboxAlpha > 0)
-				{
-					Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
-					{
-						SortValue = 100,
-						Material = new Rendering.RendererDeferred.DrawMaterial(Skybox.Weather),
-						TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
-						Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
-							Matrix.CreateTranslation(Main.camera.Position),
-						Mesh = skyboxMesh.Value,
-					});
-				}
+			//	if (WeatherSkyboxAlpha > 0)
+			//	{
+			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+			//		{
+			//			SortValue = 100,
+			//			Material = new Rendering.RendererDeferred.DrawMaterial(Skybox.Weather),
+			//			TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
+			//			Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
+			//				Matrix.CreateTranslation(Main.camera.Position),
+			//			Mesh = skyboxMesh.Value,
+			//		});
+			//	}
 
-				if (Main.Debug)
-					HitboxManager.DrawDebug(device);
+			//	if (Main.Debug)
+			//		HitboxManager.DrawDebug(device);
 
-				if (Main.Debug)
-					HousingManager.DrawDebug(this, device);
-			}
+			//	if (Main.Debug)
+			//		HousingManager.DrawDebug(this, device);
+			//}
 
 			foreach (var mined in miningCubes)
 			{
@@ -917,7 +917,7 @@ namespace ViMG
 			}
 
 			ProjectileManager.Draw(device);
-			EntityManager.Draw(device, null);
+			//EntityManager.Draw(device, null);
 
 			Logic.Draw(this, device);
 

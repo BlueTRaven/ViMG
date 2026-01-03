@@ -1,4 +1,5 @@
 ﻿using Engine.Clients.Entities;
+using Engine.Clients.WorldLogics;
 using Engine.Common;
 using Engine.Networking;
 using Engine.Networking.Messages;
@@ -22,7 +23,9 @@ namespace Engine.Clients
         public ClientInventoryManager inventoryManager;
         public CubeTrackers cubeTrackers;
         public ClientChunkManager ChunkManager;
+        public ClientWorldLogic WorldLogic;
         private WorldRenderer worldRenderer;
+
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
@@ -38,7 +41,6 @@ namespace Engine.Clients
 
         private MouseState currMS;
         private MouseState prevMS;
-        private Vector2 previousMousePosition;
 
         public ClientStates(GraphicsDevice device)
         {
@@ -53,7 +55,9 @@ namespace Engine.Clients
             inventoryManager = new ClientInventoryManager();
             cubeTrackers = new CubeTrackers();
 
-            worldRenderer = new WorldRenderer();
+            // TODO how to support multiple layers?
+            WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0]) as ClientWorldLogic;
+            worldRenderer = new WorldRenderer(device);
         }
 
         public void NewFrame(double time)
@@ -126,7 +130,6 @@ namespace Engine.Clients
 
                     Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currMS.X, currMS.Y);
                     prevMS = currMS;
-                    previousMousePosition = new Vector2(currMS.X, currMS.Y);
 
                     if (delta.Length() > float.Epsilon)
                     {

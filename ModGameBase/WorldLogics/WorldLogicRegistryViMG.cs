@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Engine.Clients.WorldLogics;
+using ModGameBase.Client.WorldLogics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +23,9 @@ namespace ViMG.WorldLogics
 
             logics[0] = typeof(WorldLogicIsland);
             logics[1] = typeof(WorldLogicCatacombs);
+
+            clientLogics[0] = typeof(ClientWorldLogicIsland);
+            clientLogics[1] = typeof(ClientWorldLogic);
 
             generators[0] = typeof(ChunkGeneratorIsland);
             generators[1] = typeof(ChunkGeneratorCatacombs);

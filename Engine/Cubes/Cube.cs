@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,7 +15,9 @@ using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 using static ViMG.Cubes.Cube.CubeVisualInstance;
+using static ViMG.UIs.UI;
 
 namespace ViMG.Cubes
 {
@@ -220,6 +223,8 @@ namespace ViMG.Cubes
 
 		public TransparencyValue Transparency;
 		public CollisionValue Collision = CollisionValue.Collidable;
+
+		public ClientCube Client { get; protected set; } = null;
 
 		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressToBreak, int mineLevelRequirement = 0)
 		{
@@ -584,4 +589,108 @@ namespace ViMG.Cubes
 			return Main.Registry.ItemRegistry.Get("item_" + cube.Identifier);
         }
 	}
+
+	public class ClientCube
+	{
+		private static VerySimpleMesh heldMesh = default;
+
+		private Cube cube;
+		private RectangleF sourceRect;
+		private CubeFacingLayout layout = null;
+
+		public ClientCube(Cube cube, RectangleF sourceRect)
+		{
+			this.cube = cube;
+			this.sourceRect = sourceRect;
+		}
+		public ClientCube(Cube cube, CubeFacingLayout layout) : this(cube, layout.Front)
+		{
+			this.layout = layout;
+		}
+
+        public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
+        {
+            return sourceRect;
+        }
+
+        public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            if (layout == null)
+                return GetSourceRect(pass, data, parameters);
+
+            switch (face)
+            {
+                case MeshHelper.CubeFace.NONE:
+                    return RectangleF.Empty;
+                case MeshHelper.CubeFace.LEFT:
+                    return layout.Left;
+                case MeshHelper.CubeFace.RIGHT:
+                    return layout.Right;
+                case MeshHelper.CubeFace.UP:
+                    return layout.Top;
+                case MeshHelper.CubeFace.DOWN:
+                    return layout.Bottom;
+                case MeshHelper.CubeFace.FRONT:
+                    return layout.Front;
+                case MeshHelper.CubeFace.BACK:
+                    return layout.Back;
+                case MeshHelper.CubeFace.ALL:
+                    return RectangleF.Empty;
+            }
+
+            return RectangleF.Empty;
+        }
+
+        public virtual RectangleF GetHeldSourceRect()
+        {
+            if (layout == null)
+                return sourceRect;
+            else return layout.Front;
+        }
+
+        public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            return new CubeAnimation();
+        }
+
+        public virtual VerySimpleMesh GetHeldMesh(GraphicsDevice device)
+        {
+            if (heldMesh.IBO == null)
+            {
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
+                List<int> indices = new List<int>();
+
+                ChunkRenderMesher.CubeMeshingParameters parameters = new ChunkRenderMesher.CubeMeshingParameters()
+                {
+                    cube = cube,
+                    id = cube.Id,
+                    faces = MeshHelper.CubeFace.ALL,
+                    position = new CubePosition(),
+                    positionWS = new Vector3()
+                };
+
+                cube.MakeCubeVerts(RenderPass.Opaque, default, parameters, vertices, indices);
+
+                if (vertices.Length > 0)
+                    heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+            }
+
+            return heldMesh;
+        }
+
+        public virtual RectangleF GetHeldSourceRect(ClientStates client)
+        {
+            return new RectangleF(0, 0, 1024, 1024);
+        }
+
+        public virtual void OnLeftClick(ClientStates client, int playerId, CubePosition position)
+        {
+
+        }
+
+        public virtual void OnRightClick(ClientStates client, int playerId, CubePosition position)
+        {
+
+        }
+    }
 }
