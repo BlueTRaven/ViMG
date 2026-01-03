@@ -874,8 +874,8 @@ namespace ViMG
 			if (inventory.Get(highlightIndex).valid)
 				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);
 
-			lookAtResult = world.Raycast(Position, Position - (this as IRotatable).Forward * INTERACT_DISTANCE,
-			(Vector3 pos) =>
+			lookAtResult = CubeView.Raycast(Position, Position - (this as IRotatable).Forward * INTERACT_DISTANCE,
+			(Vector3 pos, object? ctx) =>
 			{
 				Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
 				bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
@@ -885,7 +885,7 @@ namespace ViMG
 					isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
 
 				return isLooking;
-			});
+			}, null);
 
 			IsLooking = false;
 			CanPlace = false;
@@ -1896,7 +1896,7 @@ namespace ViMG
 				if (ExpandedMineState && 
 					inventory.Get(highlightIndex).valid && inventory.Get(highlightIndex).item is IHasAreaEffect pickStats)
 				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(this, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
+					CubePosition[] positions = pickStats.GetAffectedPositions(world.ChunkManager.CubeView, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[positions.Length];
 
 					world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);

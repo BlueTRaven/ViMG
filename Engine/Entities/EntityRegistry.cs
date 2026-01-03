@@ -1,4 +1,5 @@
-﻿using Engine.Networking;
+﻿using Engine.Clients;
+using Engine.Networking;
 using SharpDX.Diagnostics;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,29 @@ namespace Engine.Entities
         public static EntityType New<T>() where T : Entity
         {
             return new EntityType(typeof(T));
+        }
+
+        public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
+        {
+            var prev = client.Previous(1).entities.GetByRef(ref reference);
+            var curr = client.Current().entities.GetByRef(ref reference);
+            
+            if (!client.Previous(1).entities.IsActive(ref reference))
+                prev = curr;
+            if (!client.Current().entities.IsActive(ref reference))
+                curr = prev;
+
+            var interp = prev;
+            interp.position = prev.GetInterpPosition(curr);
+            interp.rotation = prev.GetInterpRotation(curr);
+            interp.velocity = prev.GetInterpVelocity(curr);
+            for (int i = 0; i < 4; i++)
+                interp.timers[i] = prev.GetInterpTimer(curr, i);
+
+            for (int i = 0; i < 4; i++)
+                interp.counters[i] = prev.GetInterpCounter(curr, i);
+
+            return interp;
         }
     }
 

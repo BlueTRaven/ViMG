@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -67,7 +68,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+		public CubePosition[] GetAffectedPositions(ICubeGetter player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 

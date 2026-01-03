@@ -1,5 +1,6 @@
 ﻿using Engine.ChunkStuff;
 using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.IMGUIImpl;
 using static Engine.Networking.Messages.SyncChunk;
+using static ViMG.World;
 
 namespace ViMG
 {
@@ -314,6 +316,121 @@ namespace ViMG
             return new OptionalValue<CubePosition>();
         }
 
-        
+        public static bool RaycastCallbackSolid(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+        }
+
+        public static bool RaycastCallbackSolidNoRope(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            var cube = cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            return cube.Solid && cube.Collision != Cube.CollisionValue.Rope;
+        }
+
+        // Basically an impl of Bresenham's. Works in world space.
+        public static RaycastResult Raycast(Vector3 start, Vector3 end, Func<Vector3, object?, bool> callback, object? ctx)
+        {
+            if (float.IsNaN(end.X) || float.IsNaN(end.Y) || float.IsNaN(end.Z))
+                return new RaycastResult();
+
+            RaycastResult result = new RaycastResult();
+
+            const float ONE_CUBE = Cube.CUBE_SCALE;
+
+            result.start = start;
+            result.end = end;
+
+            float x1 = start.X / ONE_CUBE;
+            float y1 = start.Y / ONE_CUBE;
+            float z1 = start.Z / ONE_CUBE;
+            float x2 = end.X / ONE_CUBE;
+            float y2 = end.Y / ONE_CUBE;
+            float z2 = end.Z / ONE_CUBE;
+
+            int i = (int)x1;
+            int j = (int)y1;
+            int k = (int)z1;
+
+            int iend = (int)x2;
+            int jend = (int)y2;
+            int kend = (int)z2;
+
+            int di = ((x1 < x2) ? 1 : ((x1 > x2) ? -1 : 0));
+            int dj = ((y1 < y2) ? 1 : ((y1 > y2) ? -1 : 0));
+            int dk = ((z1 < z2) ? 1 : ((z1 > z2) ? -1 : 0));
+
+            float deltatx = 1.0f / Math.Abs(x2 - x1);
+            float deltaty = 1.0f / Math.Abs(y2 - y1);
+            float deltatz = 1.0f / Math.Abs(z2 - z1);
+
+            float minx = (int)x1, maxx = minx + 1;
+            float tx = ((x1 > x2) ? (x1 - minx) : (maxx - x1)) * deltatx;
+            float miny = (int)y1, maxy = miny + 1;
+            float ty = ((y1 > y2) ? (y1 - miny) : (maxy - y1)) * deltaty;
+            float minz = (int)z1, maxz = minz + 1;
+            float tz = ((z1 > z2) ? (z1 - minz) : (maxz - z1)) * deltatz;
+
+            Vector3 hitPos = new Vector3(x1 * ONE_CUBE, y1 * ONE_CUBE, z1 * ONE_CUBE);
+
+            while (true)
+            {
+                if (callback(hitPos, ctx))
+                {
+                    result.hasHit = true;
+                    result.hit = hitPos;
+                    return result;
+                }
+
+                if (tx <= ty && tx <= tz)
+                {
+                    if (i == iend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    tx += deltatx;
+                    i += di;
+
+                    if (di == 1) hitPos.X += ONE_CUBE;
+                    if (di == -1) hitPos.X -= ONE_CUBE;
+
+                    result.normal = new Vector3(-di, 0, 0);
+                }
+                else if (ty <= tz)
+                {
+                    if (j == jend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    ty += deltaty;
+                    j += dj;
+
+                    if (dj == 1) hitPos.Y += ONE_CUBE;
+                    if (dj == -1) hitPos.Y -= ONE_CUBE;
+
+                    result.normal = new Vector3(0, -dj, 0);
+                }
+                else
+                {
+                    if (k == kend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    tz += deltatz;
+                    k += dk;
+
+                    if (dk == 1) hitPos.Z += ONE_CUBE;
+                    if (dk == -1) hitPos.Z -= ONE_CUBE;
+
+                    result.normal = new Vector3(0, 0, -dk);
+                }
+            }
+
+            return result;
+        }
     }
 }

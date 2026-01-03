@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
 using Engine.Clients;
 using Engine.Clients.Entities;
 using Engine.Entities;
@@ -6,6 +7,7 @@ using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D9;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,7 @@ using ViMG;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Entities.Renderers;
+using ViMG.Items;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -58,16 +61,68 @@ namespace Engine.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                var entCurr = client.Current().entities.GetById(reference.id);
-                var entPrev = client.Previous(1).entities.GetById(reference.id);
+                var entType = Main.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
+                var entity = entType?.GetInterpolated(client, reference) ?? new();
 
-                var extraState = entCurr.GetExtra<Player.PlayerExtraState>();
+                var extraState = entity.GetExtra<Player.PlayerExtraState>();
                 Inventory? inventory = client.inventoryManager.Get(extraState.inventory);
-                if (inventory != null)
-                {
-                    var invItem = inventory.Get(extraState.highlightIndex);
+                var highlightedItem = inventory?.Get(extraState.highlightIndex) ?? new();
+                highlightedItem.item?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
 
-                    invItem.item?.DrawInHand(device, inventory.Get(extraState.highlightIndex), entCurr, -BasicState.Forward(ref entCurr));
+                Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
+
+                Matrix worldMat = Matrix.CreateScale(Cube.CUBE_SCALE) *
+                    Matrix.CreateRotationX(Math.Clamp(ypr.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(ypr.X) *
+                    Matrix.CreateTranslation(entity.position);
+
+                Color color = Color.White;
+                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                    mesh, worldMat, null, color.ToVector3()));
+                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                    mesh, worldMat, null, color.ToVector3()));
+
+                var fwd = BasicState.Forward(ref entity);
+                var lookAtResult = CubeView.Raycast(entity.position, entity.position - BasicState.Forward(ref entity) * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, client.ChunkManager.CubeView);
+
+                float s = MathF.Sin(MathF.PI * 2f * ((float)Main.Time % 2f)) * 0.5f + 0.5f;
+                Color lookAtColor = Color.Lerp(Color.White, Color.Black, s);
+
+                if (lookAtResult.hasHit)
+                {
+                    //bool expandedMine = entity.state == (int)Player.State.Normal && client.CurrMovement.MoveDown.Pressed();
+                    //if (expandedMine &&
+                    //    highlightedItem.valid && highlightedItem.item is IHasAreaEffect pickStats)
+                    //{
+                    //    CubePosition[] positions = pickStats.GetAffectedPositions(client.ChunkManager.CubeView, highlightedItem, entity.position, extraState.lookAtPos.InWorldSpace(), lookAtResult.normal, out _);
+
+                    //    Span<ushort> ids = stackalloc ushort[positions.Length];
+                    //    client.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);
+
+                    //    for (int j = 0; j < positions.Length; j++)
+                    //    {
+                    //        if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[j], Main.Registry.CubeRegistry.Air).Touchable)
+                    //        {
+                    //            Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), StaticMaterials.Cubes,
+                    //                lookAtMesh,
+                    //                Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+                    //                Matrix.CreateScale(1.126f) *
+                    //                Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+                    //                Matrix.CreateTranslation(positions[j].InWorldSpace()),
+                    //                new RectangleF(0, 1008, 16, 16), color));
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    {
+                        Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
+                            lookAtMesh,
+                            Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+                            Matrix.CreateScale(1.126f) *
+                            Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+                            Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult.hit)),
+                            new RectangleF(0, 1008, 16, 16), lookAtColor));
+                    }
                 }
             }
         }

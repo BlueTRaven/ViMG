@@ -1,4 +1,5 @@
 ﻿using Engine.ChunkStuff;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +17,10 @@ namespace Engine.Clients
         private readonly ChunkManagerIO io;
         private readonly int sizeInCubes;
 
-        public ClientCubeView(ChunkManagerIO io, int sizeInCubes)
+        public ClientCubeView(ChunkManagerIO io, int sizeInChunks)
         {
             this.io = io;
-            this.sizeInCubes = sizeInCubes;
+            this.sizeInCubes = sizeInChunks * Chunk.CHUNK_SIZE;
         }
 
         public ushort GetId(CubePosition position)

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -39,7 +40,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
+					CubePosition[] affectedPositions = GetAffectedPositions(player.world.ChunkManager.CubeView, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
 
 					player.world.ChunkManager.CubeView.GetIds(affectedPositions.AsSpan(), ids);
@@ -70,7 +71,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+		public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
@@ -184,11 +185,8 @@ namespace ViMG.Items
 						minePos.Y += y;
 						minePos.Z += z;
 
-						if (player.world.ChunkManager.IsInWorldBounds(minePos))
-						{
-							cachedAffectedPositions[i] = minePos;
-							i++;
-						}
+						cachedAffectedPositions[i] = minePos;
+						i++;
 					}
 				}
 			}

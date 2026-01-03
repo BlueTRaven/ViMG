@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -48,7 +49,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
+					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player.world.ChunkManager.CubeView, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
 
                     float useTime = GetStats(inventory.Get(index)).cooldownTime;
                     useTime -= useTime * (player.GetStats().MiningScale);
@@ -92,9 +93,9 @@ namespace ViMG.Items
 			return ref Get(item).GetStats(item);
         }
 
-        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+        public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
-			return Get(item).GetAffectedPositions(player, item, standingPosition, hit, normal, out num);
+			return Get(item).GetAffectedPositions(cubeView, item, standingPosition, hit, normal, out num);
         }
     }
 }
