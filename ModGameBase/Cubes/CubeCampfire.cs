@@ -1,7 +1,9 @@
 ﻿using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,7 @@ using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
@@ -19,44 +22,12 @@ namespace ViMG.Cubes
     {
         private static VerySimpleMesh heldMesh;
 
-        public CubeCampfire() : base("campfire", new RectangleF(192, 16, 16, 16), Color.White, 1)
+        public CubeCampfire() : base("campfire", 1)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.None;
-        }
 
-        public override VerySimpleMesh GetHeldMesh(GraphicsDevice device)
-        {
-            if (heldMesh.IBO == null)
-            {
-                FastList<VertexCube> vertices = new FastList<VertexCube>();
-                List<int> indices = new List<int>();
-
-                Vector3 a = Vector3.Zero;
-                Vector3 b = new Vector3(0, CUBE_SCALE / 2f, 0);
-                Vector3 c = new Vector3(CUBE_SCALE / 2f, CUBE_SCALE / 2f, 0);
-                Vector3 d = new Vector3(CUBE_SCALE / 2f, 0, 0);
-
-                MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(b, c, d, a,
-                    new Vector3(0, 0, 1), Color.White, vertices, indices);
-                
-                heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-                //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
-            }
-
-            return heldMesh;
-        }
-
-        public override RectangleF GetHeldSourceRect(World world)
-        {
-            const float FRAME_TIME = 0.125f * 3;
-
-            float alive = world.GetTime();
-
-            float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
-
-            return new RectangleF((int)(t * 3) * 16f + 192, 16f, 16f, 16f);
+            Client = new ClientCubeCampfire(this);
         }
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
@@ -105,9 +76,55 @@ namespace ViMG.Cubes
             DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
         }
 
+    }
+
+    public class ClientCubeCampfire : ClientCube
+    {
+        private static VerySimpleMesh heldMesh;
+
+        public ClientCubeCampfire(Cube cube) : base(cube, new RectangleF(192, 16, 16, 16), Color.White)
+        {
+        }
+
         public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             return new CubeAnimation(0.125f, 3, 16);
+        }
+
+        public override VerySimpleMesh GetHeldMesh(GraphicsDevice device)
+        {
+            if (heldMesh.IBO == null)
+            {
+                FastList<VertexCube> vertices = new FastList<VertexCube>();
+                List<int> indices = new List<int>();
+
+                Vector3 a = Vector3.Zero;
+                Vector3 b = new Vector3(0, CUBE_SCALE / 2f, 0);
+                Vector3 c = new Vector3(CUBE_SCALE / 2f, CUBE_SCALE / 2f, 0);
+                Vector3 d = new Vector3(CUBE_SCALE / 2f, 0, 0);
+
+                MeshHelper.MakeQuadVertsVertexPositionColorTextureNormal(b, c, d, a,
+                    new Vector3(0, 0, 1), Color.White, vertices, indices);
+
+                heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
+                //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
+                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+            }
+
+            return heldMesh;
+        }
+
+        public override RectangleF GetHeldSourceRect(ClientStates client)
+        {
+            const float FRAME_TIME = 0.125f * 3;
+
+            var prev = client.Previous(1);
+            var curr = client.Current();
+            float alive = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+
+            float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
+
+            return new RectangleF((int)(t * 3) * 16f + 192, 16f, 16f, 16f);
         }
     }
 }

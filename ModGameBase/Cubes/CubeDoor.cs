@@ -11,11 +11,13 @@ namespace ViMG.Cubes
 {
     public class CubeDoor : Cube
     {
-        public CubeDoor() : base("door", new RectangleF(32, 32, 16, 16), Color.White, 4, 0)
+        public CubeDoor() : base("door", 4, 0)
         {
             Name = "Door";
 
             Transparency = TransparencyValue.Invisible;
+
+            Client = new(this, new RectangleF(32, 32, 16, 16), Color.White);
         }
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)

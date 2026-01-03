@@ -11,8 +11,9 @@ namespace ViMG.Cubes
 {
     public class CubeLavaCrystal : Cube
     {
-        public CubeLavaCrystal() : base("lava_crystal", new RectangleF(32, 64, 16, 16), Color.White, 14)
+        public CubeLavaCrystal() : base("lava_crystal", 14)
         {
+            Client = new(this, new RectangleF(32, 64, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

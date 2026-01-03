@@ -14,9 +14,11 @@ namespace ViMG.Cubes
 {
     public class CubeCaveCompass : Cube
     {
-        public CubeCaveCompass() : base("cave_compass_placed", new RectangleF(new Vector2(16f / 1024f, 32f / 1024f), new Vector2(16f / 1024f)), Color.White * 0.5f, 1)
+        public CubeCaveCompass() : base("cave_compass_placed", 1)
         {
             Transparency = TransparencyValue.Transparent;
+
+            Client = new(this, new RectangleF(new Vector2(16f / 1024f, 32f / 1024f), new Vector2(16f / 1024f)), Color.White * 0.5f);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -33,7 +35,7 @@ namespace ViMG.Cubes
 
         public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
-            MeshHelper.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), GetSourceRect(pass, data, parameters), CUBE_SCALE / 2f, vertexOffset);
+            MeshHelper.MakeUVSphereRaw(vertices, indices, parameters.positionWS + new Vector3(CUBE_SCALE / 2f), Client.GetSourceRect(pass, data, parameters), CUBE_SCALE / 2f, vertexOffset);
             //base.MakeVerts(pass, world, pos, min, max, visual, cube, vertices, indices);
         }
     }

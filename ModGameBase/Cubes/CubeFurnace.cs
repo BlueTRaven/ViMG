@@ -10,6 +10,7 @@ using ViMG.Entities;
 using ViMG.Items;
 using ViMG.Recipes;
 using ViMG.UIs;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
@@ -17,9 +18,11 @@ namespace ViMG.Cubes
 	{
 		private UI.ButtonConstructionParameters? buttonParameters;
 
-		public CubeFurnace() : base("furnace_t1", new CubeFacingLayout(new RectangleF(144, 32, 16, 16), new RectangleF(160, 32, 16, 16), new RectangleF(160, 32, 16, 16)), Color.White, 6)
+		public CubeFurnace() : base("furnace_t1", 6)
 		{
 			Main.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
+
+			Client = new ClientCubeFurnace(this);
         }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -30,27 +33,6 @@ namespace ViMG.Cubes
 
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
-
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-				//var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-			// TODO GetEntityMeshingData
-			//var meshingData = data.GetEntityMeshingData2(parameters.position);
-			//if (face == (MeshHelper.CubeFace)meshingData.state)
-			//	return new RectangleF(176, 32, 16, 16);
-
-			return base.GetSourceRect(pass, data, parameters, face);
-        }
-
-        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-			// TODO GetEntityMeshingData
-			//var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-			//if (face == meshingData.facing)
-			//	return new CubeAnimation(0.125f, 3, 16);
-
-			return base.GetAnimation(pass, data, parameters, face);
-        }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{
@@ -159,4 +141,32 @@ namespace ViMG.Cubes
 			return new RectangleF(64, 80, 16, 16);
 		}
 	}
+
+    public class ClientCubeFurnace : ClientCube
+    {
+        public ClientCubeFurnace(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(144, 32, 16, 16), new RectangleF(160, 32, 16, 16), new RectangleF(160, 32, 16, 16)), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+            // TODO GetEntityMeshingData
+            //var meshingData = data.GetEntityMeshingData2(parameters.position);
+            //if (face == (MeshHelper.CubeFace)meshingData.state)
+            //	return new RectangleF(176, 32, 16, 16);
+
+            return base.GetSourceRect(pass, data, parameters, face);
+        }
+
+        public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            // TODO GetEntityMeshingData
+            //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+            //if (face == meshingData.facing)
+            //	return new CubeAnimation(0.125f, 3, 16);
+
+            return base.GetAnimation(pass, data, parameters, face);
+        }
+    }
 }

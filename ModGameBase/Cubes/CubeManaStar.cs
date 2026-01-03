@@ -11,10 +11,12 @@ namespace ViMG.Cubes
 {
     public class CubeManaStar : Cube
     {
-        public CubeManaStar() : base("mana_star", new RectangleF(112, 112, 16, 16), Color.White, 16, 0)
+        public CubeManaStar() : base("mana_star", 16, 0)
         {
             Name = "Mana Star";
             Description = "Cube item version. Unobtainable.";
+
+            Client = new(this, new RectangleF(112, 112, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -7,13 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeObeliskPlaque : Cube
     {
-        public CubeObeliskPlaque() : base("obelisk_plaque", new RectangleF(64, 176, 16, 16), Color.White, 0, 4)
+        public CubeObeliskPlaque() : base("obelisk_plaque", 0, 4)
         {
+            Client = new ClientCubeObeliskPlaque(this);
         }
 
         public override bool CanRightClick(World world, CubePosition position)
@@ -27,12 +29,19 @@ namespace ViMG.Cubes
 
             Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
-            world.MenuDialogue.StartText("Here lies our sins\r\n" +
-                "Wicked were we, and so here our guilt lies\r\n" +
+            world.MenuDialogue.StartText("Here lies our grave sins\r\n" +
+                "Wicked were we, and here our guilt lies\r\n" +
                 "Buried deep below in vast vaults\r\n" +
                 "Do not delve deeper; heed our warning\r\n" +
                 "Do not speak His name\r\n" +
-                "For underneath is buried death");
+                "For underneath is buried our great death");
+        }
+    }
+
+    public class ClientCubeObeliskPlaque : ClientCube
+    {
+        public ClientCubeObeliskPlaque(Cube cube) : base(cube, new RectangleF(64, 176, 16, 16), Color.White)
+        {
         }
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)

@@ -9,9 +9,10 @@ namespace ViMG.Cubes
 {
 	public class CubeAltarBrick : Cube
 	{
-		public CubeAltarBrick() : base("altar_brick", new RectangleF(80, 0, 16, 16), Color.White, 8)
+		public CubeAltarBrick() : base("altar_brick", 8)
 		{
-		}
+            Client = new(this, new RectangleF(80, 0, 16, 16), Color.White);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

@@ -13,12 +13,14 @@ namespace ViMG.Cubes
 {
     public class CubeBonepile : Cube
     {
-        public CubeBonepile() : base("bonepile", new RectangleF(64, 48, 32, 16), Color.White, 4, 0)
+        public CubeBonepile() : base("bonepile", 4, 0)
         {
             Transparency = TransparencyValue.Transparent;
 
             Name = "Bone Pile";
             Description = "A motley pile of bones.";
+
+            Client = new(this, new RectangleF(64, 48, 32, 16), Color.White);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

@@ -14,10 +14,12 @@ namespace ViMG.Cubes
 {
     public class CubeMushroomOrangeSmall : Cube
     {
-        public CubeMushroomOrangeSmall() : base("mushroom_orange_small", new RectangleF(96, 96, 16, 16), Color.White, 1)
+        public CubeMushroomOrangeSmall() : base("mushroom_orange_small", 1)
         {
             Transparency = TransparencyValue.Transparent | TransparencyValue.InvisibleOnDepth;
             Collision = CollisionValue.None;
+
+            Client = new(this, new RectangleF(96, 96, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

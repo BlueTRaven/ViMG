@@ -9,11 +9,13 @@ namespace ViMG.Cubes
 {
 	public class CubeBrittleBone : Cube
 	{
-		public CubeBrittleBone() : base("brittle_bone_block", new CubeFacingLayout(new RectangleF(80, 32, 16, 16), new RectangleF(96, 32, 16, 16), new RectangleF(96, 32, 16, 16)),
-			Color.White, 6)
+		public CubeBrittleBone() : base("brittle_bone_block", 6)
 		{
 			Transparency = TransparencyValue.Transparent;
-		}
+
+            Client = new(this, new CubeFacingLayout(new RectangleF(80, 32, 16, 16), new RectangleF(96, 32, 16, 16), new RectangleF(96, 32, 16, 16)),
+            Color.White);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

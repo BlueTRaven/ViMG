@@ -206,13 +206,8 @@ namespace ViMG.Cubes
 
 		public ushort Id { get; private set; }
 		public string Identifier { get; private set; }
-		private readonly CubeFacingLayout layout;
-		//private readonly RectangleF[] sourceRectSides = new RectangleF[6];
-		private readonly RectangleF sourceRect;
-		private readonly Color tintColor;
 
 		public VerySimpleMesh mesh;
-		//public SimpleMesh<VertexCube, int> mesh;
 
 		public int MineProgressToBreak;
 		public int MineLevelRequirement;
@@ -224,31 +219,11 @@ namespace ViMG.Cubes
 		public TransparencyValue Transparency;
 		public CollisionValue Collision = CollisionValue.Collidable;
 
-		public ClientCube Client { get; protected set; } = null;
+		public ClientCube Client { get; protected set; }
 
-		public Cube(string identifier, RectangleF sourceRect, Color color, int mineProgressToBreak, int mineLevelRequirement = 0)
+		public Cube(string identifier, int mineProgressToBreak, int mineLevelRequirement = 0)
 		{
 			this.Identifier = identifier;
-
-			this.sourceRect = sourceRect;
-			//layout = new CubeFacingLayout(sourceRect);
-			//Array.Fill(sourceRectSides, sourceRect);
-			this.tintColor = color;
-			this.MineProgressToBreak = mineProgressToBreak;
-			this.MineLevelRequirement = mineLevelRequirement;
-		}
-
-		public Cube(string identifier, CubeFacingLayout layout, Color color, int mineProgressToBreak, int mineLevelRequirement = 0)
-		{
-			/*if (sourceRectSides.Length != 6)
-				throw new Exception("Cubes cannot have more or less than 6 sides.");*/
-
-			this.Identifier = identifier;
-
-			this.sourceRect = layout.Front;
-			this.layout = layout;
-			//this.sourceRectSides = sourceRectSides;
-			this.tintColor = color;
 			this.MineProgressToBreak = mineProgressToBreak;
 			this.MineLevelRequirement = mineLevelRequirement;
 		}
@@ -256,53 +231,7 @@ namespace ViMG.Cubes
 		public void SetId(ushort id)
 		{
 			this.Id = id;
-			//Main.Registry.CubeRegistry.noAo[Id] = Transparency == TransparencyValue.Invisible || Transparency == TransparencyValue.Transparent;
 		}
-
-		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
-		{
-			return sourceRect;
-		}
-
-		public virtual RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-		{
-			if (layout == null)
-				return GetSourceRect(pass, data, parameters);
-
-			switch (face)
-			{
-				case MeshHelper.CubeFace.NONE:
-					return RectangleF.Empty;
-				case MeshHelper.CubeFace.LEFT:
-					return layout.Left;
-				case MeshHelper.CubeFace.RIGHT:
-					return layout.Right;
-				case MeshHelper.CubeFace.UP:
-					return layout.Top;
-				case MeshHelper.CubeFace.DOWN:
-					return layout.Bottom;
-				case MeshHelper.CubeFace.FRONT:
-					return layout.Front;
-				case MeshHelper.CubeFace.BACK:
-					return layout.Back;
-				case MeshHelper.CubeFace.ALL:
-					return RectangleF.Empty;
-			}
-
-			return RectangleF.Empty;
-		}
-
-		public virtual RectangleF GetHeldSourceRect()
-		{
-			if (layout == null)
-				return sourceRect;
-			else return layout.Front;
-		}
-
-		public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-			return new CubeAnimation();
-        }
 
 		public virtual void GetDrops(List<ItemInstance> itemsToDrop)
 		{
@@ -370,38 +299,6 @@ namespace ViMG.Cubes
 
         }
 
-		public virtual VerySimpleMesh GetHeldMesh(GraphicsDevice device)
-		{
-			if (mesh.IBO == null)
-			{
-				FastList<VertexCube> vertices = new FastList<VertexCube>();
-				List<int> indices = new List<int>();
-
-				ChunkRenderMesher.CubeMeshingParameters parameters = new ChunkRenderMesher.CubeMeshingParameters()
-				{
-					cube = this,
-					id = Id,
-					faces = MeshHelper.CubeFace.ALL,
-					position = new CubePosition(),
-					positionWS = new Vector3()
-				};
-
-				MakeCubeVerts(RenderPass.Opaque, default, parameters, vertices, indices);
-
-				if (vertices.Length > 0)
-					mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-					//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-					//mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
-			}
-
-			return mesh;
-		}
-
-		public virtual RectangleF GetHeldSourceRect(World world)
-        {
-			return new RectangleF(0, 0, 1024, 1024);
-        }
-
 		public virtual bool ShouldMeshPass(RenderPass pass)
 		{
             if (Transparency == TransparencyValue.Invisible)
@@ -467,17 +364,17 @@ namespace ViMG.Cubes
             const float cubeSideWidth = 1f / textureWidth;
             const float cubeSideHeight = 1f / textureHeight;
 
-            RectangleF sourceRect = GetSourceRect(pass, data, parameters, face);
+			RectangleF sourceRect = Client.GetSourceRect(pass, data, parameters, face);
 
             Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
             Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
 
-            vertices.Add(new VertexCube(quad.a, GetTintColor(), new Vector2(uvFar.X, uvFar.Y), quad.n));
-            vertices.Add(new VertexCube(quad.b, GetTintColor(), new Vector2(uvNear.X, uvFar.Y), quad.n));
-            vertices.Add(new VertexCube(quad.c, GetTintColor(), new Vector2(uvNear.X, uvNear.Y), quad.n));
-            vertices.Add(new VertexCube(quad.d, GetTintColor(), new Vector2(uvFar.X, uvNear.Y), quad.n));
+            vertices.Add(new VertexCube(quad.a, Client?.GetTintColor() ?? Color.White, new Vector2(uvFar.X, uvFar.Y), quad.n));
+            vertices.Add(new VertexCube(quad.b, Client?.GetTintColor() ?? Color.White, new Vector2(uvNear.X, uvFar.Y), quad.n));
+            vertices.Add(new VertexCube(quad.c, Client?.GetTintColor() ?? Color.White, new Vector2(uvNear.X, uvNear.Y), quad.n));
+            vertices.Add(new VertexCube(quad.d, Client?.GetTintColor() ?? Color.White, new Vector2(uvFar.X, uvNear.Y), quad.n));
 
-            var anim = GetAnimation(pass, data, parameters, face);
+            var anim = Client.GetAnimation(pass, data, parameters, face);
 
             if (anim.Valid)
             {
@@ -574,11 +471,6 @@ namespace ViMG.Cubes
 			};
         }
 
-		public Color GetTintColor()
-		{
-			return tintColor;
-		}
-
 		public void DropSelf(List<ItemInstance> itemsToDrop, int num = 1)
 		{
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
@@ -594,16 +486,18 @@ namespace ViMG.Cubes
 	{
 		private static VerySimpleMesh heldMesh = default;
 
-		private Cube cube;
+		protected Cube cube;
 		private RectangleF sourceRect;
-		private CubeFacingLayout layout = null;
+		public readonly Color tint;
+		private CubeFacingLayout? layout = null;
 
-		public ClientCube(Cube cube, RectangleF sourceRect)
+		public ClientCube(Cube cube, RectangleF sourceRect, Color tint)
 		{
 			this.cube = cube;
 			this.sourceRect = sourceRect;
-		}
-		public ClientCube(Cube cube, CubeFacingLayout layout) : this(cube, layout.Front)
+            this.tint = tint;
+        }
+		public ClientCube(Cube cube, CubeFacingLayout layout, Color tint) : this(cube, layout.Front, tint)
 		{
 			this.layout = layout;
 		}
@@ -646,6 +540,11 @@ namespace ViMG.Cubes
             if (layout == null)
                 return sourceRect;
             else return layout.Front;
+        }
+
+        public Color GetTintColor()
+        {
+            return tint;
         }
 
         public virtual CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)

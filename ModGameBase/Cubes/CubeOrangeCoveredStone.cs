@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeOrangeCoveredStone : Cube
     {
-        public CubeOrangeCoveredStone() : base("stone_covered_orange", new CubeFacingLayout(new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 0, 16, 16)), Color.White, 3)
+        public CubeOrangeCoveredStone() : base("stone_covered_orange", 3)
         {
             Name = "Orange Mushroom Covered Stone";
+
+            Client = new ClientCubeOrangeCoveredStone(this);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
@@ -27,21 +30,6 @@ namespace ViMG.Cubes
             itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1));
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-            //we're meshing one of the sides.
-            if ((face & MeshHelper.CubeFace.SIDES) > 0)
-            {
-                //if the cube above is the same
-                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
-                {
-                    //use the stone texture for the sides
-                    return new RectangleF(16, 0, 16, 16);
-                }
-            }
-
-            return base.GetSourceRect(pass, data, parameters, face);
-        }
 
         private Cube mushroomStem;
         private Cube mushroomTop;
@@ -189,6 +177,29 @@ namespace ViMG.Cubes
                     }
                 }
             }
+        }
+    }
+
+    public class ClientCubeOrangeCoveredStone : ClientCube
+    {
+        public ClientCubeOrangeCoveredStone(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 0, 16, 16)), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            //we're meshing one of the sides.
+            if ((face & MeshHelper.CubeFace.SIDES) > 0)
+            {
+                //if the cube above is the same
+                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+                {
+                    //use the stone texture for the sides
+                    return new RectangleF(16, 0, 16, 16);
+                }
+            }
+
+            return base.GetSourceRect(pass, data, parameters, face);
         }
     }
 }

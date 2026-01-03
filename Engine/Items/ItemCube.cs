@@ -18,7 +18,7 @@ namespace ViMG.Items
 		private ushort cubeId;
 
 		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, 
-			cube.GetHeldSourceRect())
+			cube.Client.GetHeldSourceRect())
 		{
 			this.cubeId = cubeId;
 
@@ -57,12 +57,12 @@ namespace ViMG.Items
 			//base.Draw(device, transform);
 
 			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-			var mesh = cube.GetHeldMesh(device);
+			var mesh = cube.Client.GetHeldMesh(device);
 
 			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
 			if (mesh.IBO != null)
 				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-					mesh, scaled, cube.GetHeldSourceRect()));
+					mesh, scaled, cube.Client.GetHeldSourceRect()));
 		}
 	}
 }

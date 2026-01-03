@@ -11,9 +11,10 @@ namespace ViMG.Cubes
 {
     public class CubeBundledWood : Cube
     {
-        public CubeBundledWood() : base("bundled_wood", new CubeFacingLayout(new RectangleF(48, 32, 16, 16), new RectangleF(48, 16, 16, 16)), 
-            Color.White, 4)
+        public CubeBundledWood() : base("bundled_wood", 4)
         {
+            Client = new(this, new CubeFacingLayout(new RectangleF(48, 32, 16, 16), new RectangleF(48, 16, 16, 16)),
+            Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

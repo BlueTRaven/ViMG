@@ -9,10 +9,10 @@ namespace ViMG.Cubes
 {
 	public class CubeStone : Cube
 	{
-		public CubeStone() : base("stone", new RectangleF(16, 0, 16, 16), Color.White, 3)
+		public CubeStone() : base("stone", 3)
 		{
-
-		}
+            Client = new(this, new RectangleF(16, 0, 16, 16), Color.White);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

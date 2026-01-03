@@ -14,12 +14,14 @@ namespace ViMG.Cubes
 {
     public class CubeRope : Cube
     {
-        public CubeRope() : base("rope", new RectangleF(112, 64, 16, 16), Color.White, 1)
+        public CubeRope() : base("rope", 1)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.Rope;
 
             Name = "Rope";
+
+            Client = new(this, new RectangleF(112, 64, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

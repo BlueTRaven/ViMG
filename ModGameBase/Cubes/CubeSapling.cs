@@ -13,9 +13,11 @@ namespace ViMG.Cubes
 {
     public class CubeSapling : Cube
     {
-        public CubeSapling() : base("sapling", new RectangleF(112, 0, 16, 16), Color.White, 1)
+        public CubeSapling() : base("sapling", 1)
         {
             Transparency = TransparencyValue.Invisible;
+
+            Client = new(this, new RectangleF(112, 0, 16, 16), Color.White);
         }
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)

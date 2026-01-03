@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
@@ -19,108 +20,13 @@ namespace ViMG.Cubes
         private const float RES = 16;
         private const float ONE_PIXEL = Cube.CUBE_SCALE / RES;
 
-        public CubeThorn() : base("thorn", new CubeFacingLayout(new RectangleF(32, 128, 16, 16), new RectangleF(32, 144, 16, 16)), Color.White, 16, 4)
+        public CubeThorn() : base("thorn", 16, 4)
         {
             Name = "Thorn";
 
             Transparency = TransparencyValue.TransparentOccludesSiblings;
-        }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-            MeshHelper.CubeFace obscuredFaces = ~parameters.faces;
-
-            bool above = false;
-            bool left = false;
-            bool right = false;
-            bool below = false;
-            bool back = false;
-            switch (face)
-            {
-                case MeshHelper.CubeFace.LEFT:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
-                    break;
-                case MeshHelper.CubeFace.RIGHT:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
-                    break;
-                case MeshHelper.CubeFace.UP:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
-                    break;
-                case MeshHelper.CubeFace.DOWN:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
-                    break;
-                case MeshHelper.CubeFace.FRONT:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
-                    break;
-                case MeshHelper.CubeFace.BACK:
-                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
-                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
-                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
-                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
-                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
-                    break;
-                default:
-                    
-                    break;
-            }
-
-            if (above && below && !(left || right))               //two connections, both perpendicular and parallel to each other
-                return new RectangleF(32, 128, 16, 16);
-            else if (left && right && !(above || below))
-                return new RectangleF(32, 144, 16, 16);
-            else if (left && back && !(above || below || right))    //two connections, one behind
-                return new RectangleF(48, 144, 16, 16);
-            else if (below && back && !(above || left || right))
-                return new RectangleF(64, 144, 16, 16);
-            else if (right && back && !(above || left || below))
-                return new RectangleF(64, 128, 16, 16);
-            else if (above && back && !(below || left || right))
-                return new RectangleF(48, 128, 16, 16);
-            else if (below && right && !(above || left))            //two connections perpendicular (back irrelevant)
-                return new RectangleF(80, 128, 16, 16);
-            else if (below && left && !(above || right))
-                return new RectangleF(96, 128, 16, 16);
-            else if (above && right && !(below || left))
-                return new RectangleF(80, 144, 16, 16);
-            else if (above && left && !(below || right))
-                return new RectangleF(96, 144, 16, 16);
-            else if (left && above && below && !right)              //three connections perpendicular (back irrelevant)
-                return new RectangleF(112, 144, 16, 16);
-            else if (left && below && right && !above)
-                return new RectangleF(128, 144, 16, 16);
-            else if (right && above && below && !left)
-                return new RectangleF(128, 128, 16, 16);
-            else if (left && above && right && !below)
-                return new RectangleF(112, 128, 16, 16);
-            else if (above && right && below && left)               //four connections perpendicular (back irrelevant)
-                return new RectangleF(48, 160, 16, 16);
-            else if (!(above || right || below || left))
-                return new RectangleF(32, 160, 16, 16);
-            else if (above || below && !(left || right))
-                return new RectangleF(32, 128, 16, 16);
-            else if (left || right && !(above || below))
-                return new RectangleF(32, 144, 16, 16);
-            else return new RectangleF();
+            Client = new ClientCubeThorn(this);
         }
 
         public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
@@ -187,6 +93,110 @@ namespace ViMG.Cubes
                 MakeCubeFaceVerts(pass, data, parameters, new ChunkRenderMesher.CubeMeshingQuad(l_b_n, r_b_n, r_b_f, l_b_f, new Vector3(0, 1, 0)),
                     MeshHelper.CubeFace.UP, vertices, indices, vertexOffset);
             }
+        }
+    }
+
+    public class ClientCubeThorn : ClientCube
+    {
+        public ClientCubeThorn(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(32, 128, 16, 16), new RectangleF(32, 144, 16, 16)), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            MeshHelper.CubeFace obscuredFaces = ~parameters.faces;
+
+            bool above = false;
+            bool left = false;
+            bool right = false;
+            bool below = false;
+            bool back = false;
+            switch (face)
+            {
+                case MeshHelper.CubeFace.LEFT:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
+                    break;
+                case MeshHelper.CubeFace.RIGHT:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
+                    break;
+                case MeshHelper.CubeFace.UP:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
+                    break;
+                case MeshHelper.CubeFace.DOWN:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
+                    break;
+                case MeshHelper.CubeFace.FRONT:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.BACK);
+                    break;
+                case MeshHelper.CubeFace.BACK:
+                    above = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.UP);
+                    below = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.DOWN);
+                    left = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.RIGHT);
+                    right = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.LEFT);
+                    back = obscuredFaces.HasFlagFast(MeshHelper.CubeFace.FRONT);
+                    break;
+                default:
+
+                    break;
+            }
+
+            if (above && below && !(left || right))               //two connections, both perpendicular and parallel to each other
+                return new RectangleF(32, 128, 16, 16);
+            else if (left && right && !(above || below))
+                return new RectangleF(32, 144, 16, 16);
+            else if (left && back && !(above || below || right))    //two connections, one behind
+                return new RectangleF(48, 144, 16, 16);
+            else if (below && back && !(above || left || right))
+                return new RectangleF(64, 144, 16, 16);
+            else if (right && back && !(above || left || below))
+                return new RectangleF(64, 128, 16, 16);
+            else if (above && back && !(below || left || right))
+                return new RectangleF(48, 128, 16, 16);
+            else if (below && right && !(above || left))            //two connections perpendicular (back irrelevant)
+                return new RectangleF(80, 128, 16, 16);
+            else if (below && left && !(above || right))
+                return new RectangleF(96, 128, 16, 16);
+            else if (above && right && !(below || left))
+                return new RectangleF(80, 144, 16, 16);
+            else if (above && left && !(below || right))
+                return new RectangleF(96, 144, 16, 16);
+            else if (left && above && below && !right)              //three connections perpendicular (back irrelevant)
+                return new RectangleF(112, 144, 16, 16);
+            else if (left && below && right && !above)
+                return new RectangleF(128, 144, 16, 16);
+            else if (right && above && below && !left)
+                return new RectangleF(128, 128, 16, 16);
+            else if (left && above && right && !below)
+                return new RectangleF(112, 128, 16, 16);
+            else if (above && right && below && left)               //four connections perpendicular (back irrelevant)
+                return new RectangleF(48, 160, 16, 16);
+            else if (!(above || right || below || left))
+                return new RectangleF(32, 160, 16, 16);
+            else if (above || below && !(left || right))
+                return new RectangleF(32, 128, 16, 16);
+            else if (left || right && !(above || below))
+                return new RectangleF(32, 144, 16, 16);
+            else return new RectangleF();
         }
     }
 }

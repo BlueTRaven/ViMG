@@ -14,10 +14,12 @@ namespace ViMG.Cubes
 {
     public class CubeAzureFlower : Cube
     {
-        public CubeAzureFlower() : base("azure_flower", new RectangleF(64, 80, 16, 16), Color.White, 1)
+        public CubeAzureFlower() : base("azure_flower", 1)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.None;
+
+            Client = new(this, new RectangleF(64, 80, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

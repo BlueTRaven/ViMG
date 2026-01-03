@@ -11,6 +11,7 @@ using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
@@ -18,12 +19,14 @@ namespace ViMG.Cubes
     {
         private readonly string buff;
 
-        public CubeShrine(string identifier, RectangleF sourceRect, string buff, string name = "", string description = "") : base(identifier, sourceRect, Color.White, 999)
+        public CubeShrine(string identifier, RectangleF sourceRect, string buff, string name = "", string description = "") : base(identifier, 999)
         {
             this.buff = buff;
 
             this.Name = name;
             this.Description = description;
+
+            Client = new ClientCubeShrine(this, sourceRect);
         }
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)
@@ -42,11 +45,25 @@ namespace ViMG.Cubes
             player.GetWorld().EntityManager.Add(shrine);
         }
 
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            DropSelf(itemsToDrop);
+        }
+    }
+
+    public class ClientCubeShrine : ClientCube
+    {
+        public ClientCubeShrine(Cube cube, RectangleF sourceRect) : base(cube, sourceRect, Color.White)
+        {
+        }
+
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
         {
             // TODO GetEntityMeshingData
             //var meshingData = data.GetEntityMeshingData<EntityShrine.MeshingData>(parameters.position);
-             
+
             //if (meshingData.cooldownTimer > 0)
             //{
             //    RectangleF sourceRect = base.GetSourceRect(pass, data, parameters);
@@ -55,13 +72,6 @@ namespace ViMG.Cubes
             //}
 
             return base.GetSourceRect(pass, data, parameters);
-        }
-
-        public override void GetDrops(List<ItemInstance> itemsToDrop)
-        {
-            base.GetDrops(itemsToDrop);
-
-            DropSelf(itemsToDrop);
         }
     }
 }

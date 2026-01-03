@@ -8,29 +8,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeChains : Cube
     {
-        public CubeChains() : base("ceiling_chains", new RectangleF(80, 64, 16, 16), Color.White, 10)
+        public CubeChains() : base("ceiling_chains", 10)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.Rope;
 
             Name = "Rusted Steel Chains";
-        }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
-        {
-            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            Cube belowCube = data.GetCube(parameters.position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
-            if (aboveCube != this && aboveCube.Solid)
-                return new RectangleF(80, 64, 16, 16);
-            else if (!belowCube.Solid)
-                return new RectangleF(96, 64, 16, 16);
-            else return new RectangleF(64, 64, 16, 16);
+            Client = new ClientCubeChains(this);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)
@@ -42,6 +33,25 @@ namespace ViMG.Cubes
         {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
             DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
+        }
+    }
+
+    public class ClientCubeChains : ClientCube
+    {
+        public ClientCubeChains(Cube cube) : base(cube, new RectangleF(80, 64, 16, 16), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
+        {
+            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube belowCube = data.GetCube(parameters.position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
+            if (aboveCube != cube && aboveCube.Solid)
+                return new RectangleF(80, 64, 16, 16);
+            else if (!belowCube.Solid)
+                return new RectangleF(96, 64, 16, 16);
+            else return new RectangleF(64, 64, 16, 16);
         }
     }
 }

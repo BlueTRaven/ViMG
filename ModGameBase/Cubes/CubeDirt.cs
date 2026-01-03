@@ -9,9 +9,11 @@ namespace ViMG.Cubes
 {
 	public class CubeDirt : Cube
 	{
-		public CubeDirt() : base("dirt", new RectangleF(0, 0, 16, 16), Color.White, 2)
+		public CubeDirt() : base("dirt", 2)
 		{
 			Name = "Dirt";
+
+			Client = new ClientCube(this, new RectangleF(0, 0, 16, 16), Color.White);
 		}
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

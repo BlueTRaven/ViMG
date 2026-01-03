@@ -11,11 +11,13 @@ namespace ViMG.Cubes
 {
 	public class CubeGlowNode : Cube
 	{
-		public CubeGlowNode() : base("glow_node", RectangleF.Empty, Color.White, 1)
+		public CubeGlowNode() : base("glow_node", 1)
 		{
 			Transparency = TransparencyValue.Invisible;
 			Collision = CollisionValue.None;
-		}
+
+            Client = new(this, RectangleF.Empty, Color.White);
+        }
 
 		public override void PostChunkGen(WorldPrototype world, CubePosition position)
 		{

@@ -11,9 +11,11 @@ namespace ViMG.Cubes
 {
     public class CubeStoneBrick : Cube
     {
-        public CubeStoneBrick() : base("brick_stone", new RectangleF(112, 0, 16, 16), Color.White, 6)
+        public CubeStoneBrick() : base("brick_stone", 6)
         {
             Transparency = TransparencyValue.Opaque;
+
+            Client = new(this, new RectangleF(112, 0, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

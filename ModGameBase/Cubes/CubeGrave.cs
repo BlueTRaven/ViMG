@@ -9,22 +9,19 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Items;
+using static ViMG.Cubes.Cube;
+using static ViMG.UIs.UI;
 
 namespace ViMG.Cubes
 {
     public class CubeGrave : Cube
     {
-        public CubeGrave() : base("grave", new CubeFacingLayout(new RectangleF(224, 64, 16, 16), new RectangleF(240, 64, 16, 16)), Color.White, 1)
+        public CubeGrave() : base("grave", 1)
         {
             Name = "Grave";
             Description = "Not obtainable";
-        }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-            if ((face & MeshHelper.CubeFace.SIDES) > 0 && data.GetId(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)) == Id)
-                return new RectangleF(224, 80, 16, 16);
-            else return base.GetSourceRect(pass, data, parameters, face);
+            Client = new ClientCubeGrave(this);
         }
 
         private static CubePosition[] adjacents =
@@ -83,6 +80,20 @@ namespace ViMG.Cubes
                         break;
                 }
             }
+        }
+    }
+
+    public class ClientCubeGrave : ClientCube
+    {
+        public ClientCubeGrave(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(224, 64, 16, 16), new RectangleF(240, 64, 16, 16)), Color.White)
+        {
+        }
+        
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            if ((face & MeshHelper.CubeFace.SIDES) > 0 && data.GetId(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)) == cube.Id)
+                return new RectangleF(224, 80, 16, 16);
+            else return base.GetSourceRect(pass, data, parameters, face);
         }
     }
 }

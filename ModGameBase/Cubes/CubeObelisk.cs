@@ -9,14 +9,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Items;
+using static ViMG.Cubes.Cube;
+using static ViMG.UIs.UI;
 
 namespace ViMG.Cubes
 {
     public class CubeObelisk : Cube
     {
-        public CubeObelisk() : base("obelisk", new CubeFacingLayout(new RectangleF(64, 32, 16, 16), new RectangleF(64, 16, 16, 16)), Color.White, 0, 4)
+        public CubeObelisk() : base("obelisk", 0, 4)
         {
             Transparency = TransparencyValue.TransparentOccludesSiblings;
+
+            Client = new ClientCubeObelisk(this);
+        }
+
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            DropSelf(itemsToDrop);
+        }
+    }
+
+    public class ClientCubeObelisk : ClientCube
+    {
+        public ClientCubeObelisk(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(64, 32, 16, 16), new RectangleF(64, 16, 16, 16)), Color.White)
+        {
         }
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
@@ -82,10 +100,10 @@ namespace ViMG.Cubes
             }
 
             //have to manually query corners since those can't be included in meshing faces.
-            aboveLeft = data.GetId(parameters.position + abovePos + leftPos) == Id;
-            aboveRight = data.GetId(parameters.position + abovePos + rightPos) == Id;
-            belowLeft = data.GetId(parameters.position + belowPos + leftPos) == Id;
-            belowRight = data.GetId(parameters.position + belowPos + rightPos) == Id;
+            aboveLeft = data.GetId(parameters.position + abovePos + leftPos) == cube.Id;
+            aboveRight = data.GetId(parameters.position + abovePos + rightPos) == cube.Id;
+            belowLeft = data.GetId(parameters.position + belowPos + leftPos) == cube.Id;
+            belowRight = data.GetId(parameters.position + belowPos + rightPos) == cube.Id;
 
             //two connections, one behind
             if (left && back && !(above || below || right))
@@ -272,13 +290,6 @@ namespace ViMG.Cubes
                     belowOut = new CubePosition();
                     break;
             }
-        }
-
-        public override void GetDrops(List<ItemInstance> itemsToDrop)
-        {
-            base.GetDrops(itemsToDrop);
-
-            DropSelf(itemsToDrop);
         }
     }
 }

@@ -11,8 +11,9 @@ namespace ViMG.Cubes
 {
     public class CubeGeodeStone : Cube
     {
-        public CubeGeodeStone() : base("stone_geode", new RectangleF(16, 64, 16, 16), Color.White, 12)
+        public CubeGeodeStone() : base("stone_geode", 12)
         {
+            Client = new(this, new RectangleF(16, 64, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

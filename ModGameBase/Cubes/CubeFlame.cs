@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,17 +12,50 @@ using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeFlame : Cube
     {
-        private static VerySimpleMesh heldMesh;
-
-        public CubeFlame() : base("flame", new RectangleF(192, 0, 16, 16), Color.White, 1)
+        public CubeFlame() : base("flame", 1)
         {
             Transparency = TransparencyValue.Transparent | TransparencyValue.InvisibleOnDepth;
             Collision = CollisionValue.None;
+
+            Client = new ClientCubeFlame(this);
+        }
+
+        public override void OnPlayerPlaced(Player player, CubePosition position)
+        {
+            base.OnPlayerPlaced(player, position);
+
+            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + Main.random.NextFloat(3f * 60f, 15f * 60f)));
+        }
+
+        public override void OnLoaded(World world, CubePosition position)
+        {
+            base.OnLoaded(world, position);
+        }
+
+        public override bool ShouldMeshPass(RenderPass pass)
+        {
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
+        }
+    }
+
+    public class ClientCubeFlame : ClientCube
+    {
+        private static VerySimpleMesh heldMesh;
+        
+        public ClientCubeFlame(Cube cube) : base(cube, new RectangleF(192, 0, 16, 16), Color.White)
+        {
         }
 
         public override VerySimpleMesh GetHeldMesh(GraphicsDevice device)
@@ -47,43 +81,23 @@ namespace ViMG.Cubes
             return heldMesh;
         }
 
-        public override RectangleF GetHeldSourceRect(World world)
-        {
-            const float FRAME_TIME = 0.125f * 3;
-
-            float alive = world.GetTime();
-
-            float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
-
-            return new RectangleF((int)(t * 3) * 16f + 192, 0, 16f, 16f);
-        }
-
-        public override void OnPlayerPlaced(Player player, CubePosition position)
-        {
-            base.OnPlayerPlaced(player, position);
-
-            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + Main.random.NextFloat(3f * 60f, 15f * 60f)));
-        }
-
-        public override void OnLoaded(World world, CubePosition position)
-        {
-            base.OnLoaded(world, position);
-        }
-
-        public override bool ShouldMeshPass(RenderPass pass)
-        {
-            return pass == RenderPass.Opaque;
-        }
-
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
-        {
-            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
-        }
 
         public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             return new CubeAnimation(0.125f, 3, 16);
+        }
+
+        public override RectangleF GetHeldSourceRect(ClientStates client)
+        {
+            const float FRAME_TIME = 0.125f * 3;
+
+            var prev = client.Previous(1);
+            var curr = client.Current();
+            float alive = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+
+            float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
+
+            return new RectangleF((int)(t * 3) * 16f + 192, 0, 16f, 16f);
         }
     }
 }

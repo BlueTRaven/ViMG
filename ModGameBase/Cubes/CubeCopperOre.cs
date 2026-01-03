@@ -9,11 +9,13 @@ namespace ViMG.Cubes
 {
 	public class CubeCopperOre : Cube
 	{
-		public CubeCopperOre() : base("ore_copper", new RectangleF(48, 48, 16, 16), Color.White, 6)
+		public CubeCopperOre() : base("ore_copper", 6)
 		{
 			if (Main.TRANSPARENT_ORES)
 				Transparency = TransparencyValue.Transparent;
-		}
+
+			Client = new(this, new RectangleF(48, 48, 16, 16), Color.White);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

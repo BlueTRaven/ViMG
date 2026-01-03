@@ -11,8 +11,9 @@ namespace ViMG.Cubes
 {
     public class CubeWood : Cube
     {
-        public CubeWood() : base("wood", new RectangleF(32, 32, 16, 16), Color.White, 4)
+        public CubeWood() : base("wood", 4)
         {
+            Client = new(this, new RectangleF(32, 32, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
