@@ -95,13 +95,18 @@ namespace ViMG.GameStates
                 this.netMode = netMode;
                 TheIsland.localPlayerName = MenuMain.GetDefaultPlayerName(this);
                 SetGameState(TheIsland);
-                if (netMode == NetworkingMode.Singleplayer || netMode == NetworkingMode.Server)
+                TheIsland.ConnectLocal();
+                if (netMode == NetworkingMode.Singleplayer)
                 {
-                    TheIsland.BeginLoadWorld(Main.SessionInformation.LastLoadedSave);
+                    TheIsland.StartSingleplayer(Main.SessionInformation.LastLoadedSave);
                 }
-                else
+                else if (netMode == NetworkingMode.Server)
                 {
-                    TheIsland.LoadNone();
+                    TheIsland.StartServer(Main.SessionInformation.LastLoadedSave);
+                }
+                else if (netMode == NetworkingMode.Client)
+                {
+                    TheIsland.StartClient();
                 }
             }
         }

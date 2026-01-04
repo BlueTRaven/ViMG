@@ -29,8 +29,8 @@ namespace ViMG.GameStates
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
         private Task<World> worldTask;
-        private World world;
-        private ClientStates client;
+        private World? world;
+        private ClientStates? client;
 
         public bool IsLoading;
         private static object lockObj = new object();
@@ -65,8 +65,6 @@ namespace ViMG.GameStates
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
-            netManagerServer = new NetworkManager();
-            netManagerClient = new NetworkManager();
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -132,8 +130,6 @@ namespace ViMG.GameStates
             if (Main.MULTITHREAD_LOADING)
                 worldTask.Start();
             else worldTask.RunSynchronously();
-
-            client = new ClientStates(device);
         }
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
@@ -164,15 +160,47 @@ namespace ViMG.GameStates
             return layerTask;
         }
 
+        public void Connect(string ip, int port)
+        {
+            if (netManagerServer != null)
+            {
+                netManagerServer.Ip = ip;
+                netManagerServer.Port = port;
+            }
+            if (netManagerClient != null)
+            {
+                netManagerClient.Ip = ip;
+                netManagerClient.Port = port;
+            }
+
+            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
+            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
+        }
+
+        public void ConnectLocal()
+        {
+            // NetworkManager defaults are already set up to connect locally, so we don't really need to do anything
+            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
+            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
+        }
+
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
 
-            netManagerServer?.Disconnect();
-            netManagerClient?.Disconnect();
-
-            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
-            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
+            if (manager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            {
+                netManagerClient = new();
+                netManagerServer = new();
+            }
+            else if (manager.netMode == GameStateManager.NetworkingMode.Server)
+            {
+                netManagerServer = new();
+            }
+            else if (manager.netMode == GameStateManager.NetworkingMode.Client)
+            {
+                netManagerClient = new();
+            }
         }
 
         public override void OnClose(GameState changingTo)
@@ -180,6 +208,8 @@ namespace ViMG.GameStates
             base.OnClose(changingTo);
             netManagerServer?.Disconnect();
             netManagerClient?.Disconnect();
+            netManagerServer = null;
+            netManagerClient = null;
 
             if (world != null)
             {
@@ -191,6 +221,22 @@ namespace ViMG.GameStates
                 client = null;
             }
             SetMenu(null);
+        }
+
+        public void StartSingleplayer(string worldName)
+        {
+            BeginLoadWorld(worldName);
+            client = new ClientStates(device);
+        }
+
+        public void StartServer(string worldName)
+        {
+            BeginLoadWorld(worldName);
+        }
+
+        public void StartClient()
+        {
+            client = new ClientStates(device);
         }
 
         public override void Update(double deltaTime)
