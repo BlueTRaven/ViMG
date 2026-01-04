@@ -91,7 +91,7 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(localPlayer.position.Y);
             netMessage.writer.Put(localPlayer.position.Z);
             netMessage.writer.Put((ushort)inputTypes);
-            netMessage.writer.Put((byte)GS.GetWorld().localPlayerIndex);
+            netMessage.writer.Put((byte)GS.GetClient().localPlayer);
             //netMessage.writer.Put(player.hasMenuOpen);
 
             netMessage.Send();

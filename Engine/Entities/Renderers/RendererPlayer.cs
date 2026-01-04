@@ -85,10 +85,10 @@ namespace Engine.Entities.Renderers
                 var fwd = BasicState.Forward(ref entity);
                 var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, client.ChunkManager.CubeView);
 
-                var srvPlayer = Main.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
+                //var srvPlayer = Main.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
 
-                var fwd2 = (srvPlayer as IRotatable).Forward;
-                var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, Main.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
+                //var fwd2 = (srvPlayer as IRotatable).Forward;
+                //var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, Main.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
 
                 float s = MathF.Sin(MathF.PI * 2f * ((float)Main.Time % 2f)) * 0.5f + 0.5f;
                 Color lookAtColor = Color.Lerp(Color.White, Color.Black, s);
@@ -130,16 +130,16 @@ namespace Engine.Entities.Renderers
                     }
                 }
 
-                if (lookAtResult2.hasHit)
-                {
-                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
-                           lookAtMesh,
-                           Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-                           Matrix.CreateScale(1.126f) *
-                           Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-                           Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult2.hit)),
-                           new RectangleF(0, 1008, 16, 16), Color.Red));
-                }
+                //if (lookAtResult2.hasHit)
+                //{
+                //    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
+                //           lookAtMesh,
+                //           Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+                //           Matrix.CreateScale(1.126f) *
+                //           Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+                //           Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult2.hit)),
+                //           new RectangleF(0, 1008, 16, 16), Color.Red));
+                //}
             }
         }
     }

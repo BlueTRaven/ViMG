@@ -266,26 +266,29 @@ namespace ViMG.GameStates
                 netManagerServer?.PollEvents();
             }
 
-            // If world takes longer than client whoami timeout, this might fail?
-            if (netManagerClient.ClientHasConnected())
+            if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Server) 
             {
-                netManagerClient?.PollEvents();
-                if (client != null && !manager.Paused)
+                // If world takes longer than client whoami timeout, this might fail?
+                if (netManagerClient.ClientHasConnected())
                 {
-                    client.CurrentTime += deltaTime;
-                    var expectedTime = client.LastFrameTime + World.SyncTime;
-                    Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
+                    netManagerClient?.PollEvents();
+                    if (client != null && !manager.Paused)
+                    {
+                        client.CurrentTime += deltaTime;
+                        var expectedTime = client.LastFrameTime + World.SyncTime;
+                        Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
 
-                    client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager);
-                    client.UpdatePlayer(deltaTime);
-                    //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
-                    //{
-                    //    client.NewFrame();
-                    //}
-                    //if (world != null)
-                    //{
-                    //    world.UpdateClientWorld(client);
-                    //}
+                        client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager);
+                        client.UpdatePlayer(deltaTime);
+                        //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
+                        //{
+                        //    client.NewFrame();
+                        //}
+                        //if (world != null)
+                        //{
+                        //    world.UpdateClientWorld(client);
+                        //}
+                    }
                 }
             }
 
