@@ -29,6 +29,7 @@ namespace Engine.Clients
         public ClientChunkManager ChunkManager;
         public ClientWorldLogic WorldLogic;
         private WorldRenderer worldRenderer;
+        public LightManager LightManager;
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
@@ -65,6 +66,8 @@ namespace Engine.Clients
             // TODO how to support multiple layers?
             WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
             worldRenderer = new WorldRenderer(device);
+
+            LightManager = new LightManager(device);
         }
 
         public void NewFrame(double time)
@@ -214,6 +217,10 @@ namespace Engine.Clients
 
         public void Render(GraphicsDevice device, double deltaTime)
         {
+            LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
+            LightManager.DrawShadowmap(device, ChunkManager);
+            LightManager.Draw(device);
+
             WorldLogic.Render(device, this);
 
             worldRenderer.Render(this);

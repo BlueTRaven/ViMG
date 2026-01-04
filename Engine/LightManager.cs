@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Clients;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -335,7 +336,7 @@ namespace ViMG
 
 		private ChunkPosition[] drawnChunks = new ChunkPosition[9 * 9 * 9];
 
-		public void DrawShadowmap(GraphicsDevice device, World world)
+		public void DrawShadowmap(GraphicsDevice device, ClientChunkManager chunkManager)
 		{
 			if (!Main.ENABLE_SHADOWS)
 			{
@@ -376,9 +377,9 @@ namespace ViMG
 
 								drawnChunks[drawnChunksCount++] = chunkPos;
 
-								if (world.ChunkManager.IsInWorldBounds(chunkPos))
+								if (chunkManager.IsInWorldBounds(chunkPos))
 								{
-									versionSum += world.ChunkManager.ChunkMesher?.RenderMesher?.GetMeshVersionCode(chunkPos) ?? 0;
+									versionSum += chunkManager.ChunkMesher?.RenderMesher?.GetMeshVersionCode(chunkPos) ?? 0;
 								}
 							}
 						}
@@ -410,9 +411,9 @@ namespace ViMG
 							{
 								ChunkPosition chunkPos = drawnChunks[k];
 
-								if (world.ChunkManager.IsInWorldBounds(chunkPos))
+								if (chunkManager.IsInWorldBounds(chunkPos))
 								{
-									VerySimpleMesh mesh = world.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly) ?? new();
+									VerySimpleMesh mesh = chunkManager.ChunkMesher?.RenderMesher?.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly) ?? new();
                                     //Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 
@@ -427,18 +428,6 @@ namespace ViMG
                                             device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
                                         }
                                     }
-
-                                    //if (mesh.VBO != null)
-                                    //{
-                                    //	device.SetVertexBuffer(mesh.VBO);
-                                    //	device.Indices = mesh.IBO;
-
-                                    //	foreach (var pass in effectDepth.CurrentTechnique.Passes)
-                                    //	{
-                                    //		pass.Apply();
-                                    //		device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
-                                    //	}
-                                    //}
                                 }
 							}
 						}

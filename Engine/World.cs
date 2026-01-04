@@ -759,9 +759,9 @@ namespace ViMG
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-            LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
-			LightManager.DrawShadowmap(device, this);
-			LightManager.Draw(device);
+   //         LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
+			//LightManager.DrawShadowmap(device, this);
+			//LightManager.Draw(device);
 
 			bool drawSkybox = true;
 
