@@ -372,7 +372,7 @@ namespace ViMG.Entities
 					{
 						Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 							Matrix.CreateScale(projectiles[i].visStats.scale) *
-							Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, 0) *
+							Matrix.CreateFromYawPitchRoll(-Main.camera.RotationEuler.Y, -Main.camera.RotationEuler.X, 0) *
 							Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
 					}
 					else

@@ -30,7 +30,6 @@ namespace Engine.Clients
         public ClientWorldLogic WorldLogic;
         private WorldRenderer worldRenderer;
 
-
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
 
@@ -64,7 +63,7 @@ namespace Engine.Clients
             cubeTrackers = new CubeTrackers();
 
             // TODO how to support multiple layers?
-            WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0]) as ClientWorldLogic;
+            WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
             worldRenderer = new WorldRenderer(device);
         }
 
@@ -175,7 +174,7 @@ namespace Engine.Clients
                     CurrMovement.Jump.Changed(PrevMovement.Jump) ||
                     CurrMovement.Run.Changed(PrevMovement.Run) ||
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
-                    previous.camera.Rotation != current.camera.Rotation)
+                    previous.camera.RotationEuler != current.camera.RotationEuler)
                 {
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
@@ -190,23 +189,23 @@ namespace Engine.Clients
                     {
                         float scalar = 0.25f;
 
-                        Vector3 camRotation = current.camera.Rotation;
+                        Vector3 camRotation = current.camera.RotationEuler;
 
                         Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currMS.X, currMS.Y);
                         prevMS = currMS;
 
                         if (delta.Length() > float.Epsilon)
                         {
-                            camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
                             camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
+                            camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
 
                             if (camRotation.X > MathHelper.ToRadians(89))
                                 camRotation.X = MathHelper.ToRadians(89);
                             else if (camRotation.X < -MathHelper.ToRadians(89))
                                 camRotation.X = -MathHelper.ToRadians(89);
 
-                            current.camera.Rotation = camRotation;
-                            localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.Rotation.Y, -current.camera.Rotation.X, 0);
+                            current.camera.RotationEuler = camRotation;
+                            localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.RotationEuler.Y, -current.camera.RotationEuler.X, 0);
                         }
                     }
                 }
@@ -215,6 +214,8 @@ namespace Engine.Clients
 
         public void Render(GraphicsDevice device, double deltaTime)
         {
+            WorldLogic.Render(device, this);
+
             worldRenderer.Render(this);
 
             var iter = Main.Registry.RendererRegistry.GetIterable();

@@ -26,7 +26,7 @@ namespace Engine.Clients
         public void NewFrame(ClientWorld prev, double time)
         {
             camera.Position = prev.camera.Position;
-            camera.Rotation = prev.camera.Rotation;
+            camera.RotationEuler = prev.camera.RotationEuler;
             camera.Scale = prev.camera.Scale;
             highlightIndex = prev.highlightIndex;
             

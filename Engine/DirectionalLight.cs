@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Collections;
 using BrUtility;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -43,7 +44,7 @@ namespace ViMG
 
 		private FastList<ChunkPosition>[] cameraCachedChunks;
 
-		public DirectionalLight(GraphicsDevice device, Camera mainCamera, float[] splitDistances)
+		public DirectionalLight(GraphicsDevice device, float near, float far, float[] splitDistances)
         {
 			int num = splitDistances.Length + 1;
 
@@ -61,8 +62,8 @@ namespace ViMG
 			for (int i = 0; i < num; i++)
             {
 				if (i < num - 1)
-					farPlanes[i] = mainCamera.Far * splitDistances[i];
-				else farPlanes[i] = mainCamera.Far;
+					farPlanes[i] = far * splitDistances[i];
+				else farPlanes[i] = far;
             }
 
 			cameras = new CameraCSM[num];
@@ -74,10 +75,10 @@ namespace ViMG
 			for (int i = 0; i < num; i++)
             {
 				if (i == 0)
-					cameras[i] = new CameraCSM(mainCamera, mainCamera.Near, farPlanes[i], 0, splitDistances[i]);
+					cameras[i] = new CameraCSM(near, farPlanes[i], 0, splitDistances[i]);
 				else if (i < num - 1)
-					cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], farPlanes[i], splitDistances[i - 1], splitDistances[i]);
-				else cameras[i] = new CameraCSM(mainCamera, farPlanes[i - 1], mainCamera.Far, splitDistances[i - 1], 1f);
+					cameras[i] = new CameraCSM(farPlanes[i - 1], farPlanes[i], splitDistances[i - 1], splitDistances[i]);
+				else cameras[i] = new CameraCSM(farPlanes[i - 1], far, splitDistances[i - 1], 1f);
 			}
 
 			target = new RenderTarget2D(device, RT_SIZE, RT_SIZE, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
@@ -103,35 +104,33 @@ namespace ViMG
 			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
-		public void UpdateCameras(World world, Vector3 direction, Vector4 color, float clampY = -1)
+		public void UpdateCameras(ClientStates client, Camera camera, Vector3 direction, Vector4 color, float clampY = -1)
         {
 			this.lightDirection = Vector3.Normalize(direction);
 			this.lightColor = color;
 
-			ChunkPosition cameraPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
+			ChunkPosition cameraPos = ChunkPosition.WorldSpaceChunk(camera.Position);
 
 			for (int i = 0; i < cameras.Length; i++)
             {
-				cameras[i].Update(Vector3.Normalize(direction), clampY - (0.001f * i));
+				cameras[i].Update(camera, Vector3.Normalize(direction), clampY - (0.001f * i));
 
 				cameraCachedChunks[i].Clear();
 
-                for (int z = (int)Math.Max(0, cameraPos.Z - world.DrawDistanceHoriz); 
-					z <= (int)Math.Min(world.sizeInChunks, cameraPos.Z + world.DrawDistanceHoriz); z++)
+                for (int z = (int)Math.Max(0, cameraPos.Z - WorldRenderer.DrawDistanceHoriz); 
+					z <= (int)Math.Min(client.ChunkManager.SizeInChunks, cameraPos.Z + WorldRenderer.DrawDistanceHoriz); z++)
 				{
-					for (int y = (int)Math.Max(0, cameraPos.Y - world.DrawDistanceVert); 
-						y <= (int)Math.Min(world.sizeInChunks, cameraPos.Y + world.DrawDistanceVert); y++)
+					for (int y = (int)Math.Max(0, cameraPos.Y - WorldRenderer.DrawDistanceVert); 
+						y <= (int)Math.Min(client.ChunkManager.SizeInChunks, cameraPos.Y + WorldRenderer.DrawDistanceVert); y++)
 					{
-						for (int x = (int)Math.Max(0, cameraPos.X - world.DrawDistanceHoriz); 
-							x <= (int)Math.Min(world.sizeInChunks, cameraPos.X + world.DrawDistanceHoriz); x++)
+						for (int x = (int)Math.Max(0, cameraPos.X - WorldRenderer.DrawDistanceHoriz); 
+							x <= (int)Math.Min(client.ChunkManager.SizeInChunks, cameraPos.X + WorldRenderer.DrawDistanceHoriz); x++)
 						{
 							ChunkPosition chunkPos = new ChunkPosition(x, y, z);
 
-							if (world.ChunkManager.IsInWorldBounds(chunkPos) && world.ChunkLoadManager.IsLoaded(chunkPos))
+							if (client.ChunkManager.IsInWorldBounds(chunkPos))
 							{
-								/*if (cameras[i].GetFrustum().Contains(new BoundingBox(chunkPos.InWorldSpace(),
-									chunkPos.InWorldSpace() + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))) == ContainmentType.Intersects)*/
-									cameraCachedChunks[i].Add(chunkPos);
+								cameraCachedChunks[i].Add(chunkPos);
 							}
 						}
 					}
@@ -141,15 +140,7 @@ namespace ViMG
 			version++;
         }
 
-		//Try to test for intersection by using the precomputed points in CameraCSM instead of using BoundingFrustum (which appears to be incorrect)
-		private void CorrectTestFor(CameraCSM camera)
-		{
-			Vector3[] corners = camera.GetCorners();
-
-
-		}
-
-        public void DrawShadowmap(GraphicsDevice device, World world)
+        public void DrawShadowmap(GraphicsDevice device, Camera globalCamera, ChunkRenderMesher renderMesher)
 		{
 			if (lastUpdatedVersion == version)
 				return;
@@ -161,15 +152,11 @@ namespace ViMG
 				return;
 			}
 
-			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
+			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(globalCamera, lightDirection);
 			Matrix texScaleBias = Matrix.CreateScale(0.5f, -0.5f, 1.0f)
 				   * Matrix.CreateTranslation(0.5f, 0.5f, 0.0f);
 
 			SetPipelineState(device);
-			//device.SetRenderTarget(target);
-			//device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
-
-			//DrawOneCamera(device, camera, world);
 
 			for (int i = 0; i < cameras.Length; i++)
 			{
@@ -178,19 +165,17 @@ namespace ViMG
 				device.SetRenderTarget(targetsArr, i);
 				device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.White, device.Viewport.MaxDepth, 0);
 
-				DrawOneCamera(device, camera, cameraCachedChunks[i], world);
-
-				//lightViewProjections[i] = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+				DrawOneCamera(device, camera, cameraCachedChunks[i], renderMesher);
 
 				var shadowMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 				shadowMatrix = shadowMatrix * texScaleBias;
 
 				// Store the split distance in terms of view space depth
-				var clipDist = Main.camera.Far - Main.camera.Near;
+				var clipDist = globalCamera.Far - globalCamera.Near;
 
 				//shadowCamera: lightViewProjections/CameraCSM
 				//camera: Main.camera
-				farPlanes[i] = Main.camera.Near + splitDistances[i] * clipDist;
+				farPlanes[i] = globalCamera.Near + splitDistances[i] * clipDist;
 
 				// Calculate the position of the lower corner of the cascade partition, in the UV space
 				// of the first cascade partition
@@ -207,14 +192,11 @@ namespace ViMG
 				cascadeOffsets[i] = new Vector4(-cascadeCorner, 0.0f);
 				cascadeScales[i] = new Vector4(cascadeScale, 1.0f);
 			}
-
-			//Main.WVP.SetProjection(Main.camera.GetProjectionMatrix());
-			//Main.WVP.SetView(Main.camera.GetViewMatrix());
 		}
 
-		public void Bind(Effect effect)
+		public void Bind(Effect effect, Camera camera)
 		{
-			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(Main.camera, lightDirection);
+			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(camera, lightDirection);
 
 			effect.Parameters["NumCascades"].SetValue(farPlanes.Length);
 			effect.Parameters["LightResolution"].SetValue(new Vector2(RT_SIZE));
@@ -271,7 +253,7 @@ namespace ViMG
 			return (shadowView * shadowProj) * texScaleBias;
 		}
 
-		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, FastList<ChunkPosition> cachedChunkPositions, World world)
+		private void DrawOneCamera(GraphicsDevice device, CameraCSM camera, FastList<ChunkPosition> cachedChunkPositions, ChunkRenderMesher renderMesher)
         {
 			//Main.WVP.SetProjection(camera.GetProjectionMatrix());
 			//Main.WVP.SetView(camera.GetViewMatrix());
@@ -283,7 +265,7 @@ namespace ViMG
 
 			for (int i = 0; i < cachedChunkPositions.Length; i++)
 			{
-                VerySimpleMesh mesh = world.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly) ?? new();
+                VerySimpleMesh mesh = renderMesher.GetMesh(cachedChunkPositions[i], Cube.RenderPass.DepthOnly);
                 //Matrix transform = world.ChunkManager2.GetTransform(chunkPos);
 
 				if (mesh.VBOPosition != null && mesh.VBOTexCoord != null)

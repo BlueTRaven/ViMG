@@ -74,8 +74,8 @@ namespace ViMG.Entities.Renderers
                         Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.yawPitch.X)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.yawPitch.Y));
 
-                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                        Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                        Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
                         Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.yawPitch.X)) *
@@ -148,8 +148,8 @@ namespace ViMG.Entities.Renderers
                         Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y));
 
-                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                        Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                        Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
                         Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *

@@ -11,7 +11,6 @@ namespace ViMG
 {
     public class CameraCSM : Camera
     {
-        private Camera mainCamera;
         private readonly float prevSplit;
         private readonly float split;
         private float ourNear;
@@ -20,17 +19,16 @@ namespace ViMG
         private Matrix ourView;
         private Matrix ourProj;
 
-        public CameraCSM(Camera mainCamera, float near, float far, float prevSplit, float split) 
+        public CameraCSM(float near, float far, float prevSplit, float split) 
             : base(Vector3.Zero, Vector3.Zero, Vector3.One, near, far)
         {
-            this.mainCamera = mainCamera;
             this.prevSplit = prevSplit;
             this.split = split;
         }
 
-        public void Update(Vector3 direction, float clampY = -1)
+        public void Update(Camera camera, Vector3 direction, float clampY = -1)
         {
-            CalculateFrustumCorners();
+            CalculateFrustumCorners(camera);
 
             Vector3 center = Vector3.Zero;
             foreach (Vector3 corner in corners)
@@ -123,7 +121,7 @@ namespace ViMG
 
         private Vector3[] corners = new Vector3[8];
         //we can't use the BoundingFrustum class provided by Monogame (that's an alloction!) so we cache an array and calculate it ourselves.
-        private void CalculateFrustumCorners()
+        private void CalculateFrustumCorners(Camera camera)
         {
             //dumbass shit to get mainCamera.GetProjectionMatrix to produce a new value (it's cached and only marked dirty under certain circumstances)
             //float near = mainCamera.Near;
@@ -133,7 +131,7 @@ namespace ViMG
 
             ResetViewFrustumCorners();
 
-            Matrix inv = Matrix.Invert(mainCamera.GetViewMatrix() * mainCamera.GetProjectionMatrix());
+            Matrix inv = Matrix.Invert(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
             for (int i = 0; i < 8; ++i)
                 corners[i] = Vector4.Transform(corners[i], inv).ToVector3();

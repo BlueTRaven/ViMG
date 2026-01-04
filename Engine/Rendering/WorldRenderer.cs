@@ -144,7 +144,7 @@ namespace ViMG.Rendering
             var current = client.Current();
             previous.camera.FrameBegin();
             current.camera.FrameBegin();
-            bool isDirty = previous.camera.Position != current.camera.Position || previous.camera.Rotation != current.camera.Rotation || previous.camera.Scale != current.camera.Scale;
+            bool isDirty = previous.camera.Position != current.camera.Position || previous.camera.RotationEuler != current.camera.RotationEuler || previous.camera.Scale != current.camera.Scale;
             if (isDirty) current.camera.MarkDirty();
 
             var time = double.Lerp(previous.time, current.time, Main.TimeC);

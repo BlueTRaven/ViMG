@@ -32,14 +32,14 @@ namespace ViMG.WorldLogics
         private float alive;
         private DirectionalLight? directionalLight = null;
 		//1 and last are replaced by the previous directional light color to prevent jumping colors.
-		private static Color[] duskColors = new Color[] 
-		{ 
-			Color.White, 
+		private static Color[] duskColors =
+        [
+            Color.White, 
 			Color.Salmon, 
 			Color.DarkBlue, 
 			Color.Black, 
 			Color.White 
-		};
+		];
         
 		private int lavaLight;
 
@@ -65,7 +65,7 @@ namespace ViMG.WorldLogics
 
             float[] splits = [1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f];
 
-            directionalLight = new DirectionalLight(device, Main.camera, splits);
+            directionalLight = new DirectionalLight(device, Main.NEAR, Main.FAR, splits);
 
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
@@ -210,7 +210,7 @@ namespace ViMG.WorldLogics
 
 				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
 				{
-					directionalLight.UpdateCameras(world, lightDir, lightColor);
+					//directionalLight.UpdateCameras(world, lightDir, lightColor);
 
 					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
@@ -272,8 +272,8 @@ namespace ViMG.WorldLogics
                 directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
             }*/
 
-            directionalLight.DrawShadowmap(device, world);
-			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM);
+            directionalLight.DrawShadowmap(device, Main.camera, world.ChunkManager.ChunkMesher.RenderMesher);
+			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, Main.camera);
 
 			//TODO: re-implement this easter egg
 			Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,17 +22,32 @@ namespace ViMG
 				frustumDirty = true;
 			}
 		}
-		private Vector3 rotation;
-		public Vector3 Rotation 
+		private Vector3 rotationEuler;
+		public Vector3 RotationEuler 
 		{
-			get => rotation;
+			get => rotationEuler;
 			set
 			{
-				rotation = value;
+                rotationEuler = value;
+				rotation = Quaternion.CreateFromYawPitchRoll(rotationEuler.X, rotationEuler.Y, rotationEuler.Z);
+				//rotation = Quaternion.CreateFromRotationMatrix(mat);
 				viewDirty = true;
 				frustumDirty = true;
 				viewDirtyThisFrame = true;
 			}
+		}
+		private Quaternion rotation;
+		public Quaternion Rotation
+		{
+			get => rotation;
+			set
+			{
+                rotationEuler = EngineMathHelper.QuaternionToYawPitchRoll(value.ToNumerics());
+				rotation = value;
+				viewDirty = true;
+                frustumDirty = true;
+                viewDirtyThisFrame = true;
+            }
 		}
 		private Vector3 scale;
 		public Vector3 Scale
@@ -59,9 +75,9 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-Rotation.X) *
-						Matrix.CreateRotationY(-Rotation.Y) *
-						Matrix.CreateRotationZ(-Rotation.Z);
+				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
+						Matrix.CreateRotationY(-RotationEuler.Y) *
+						Matrix.CreateRotationZ(-RotationEuler.Z);
 
 				return Vector3.Transform(new Vector3(0, 0, 1), mat);
 			}
@@ -71,7 +87,7 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationY(-Rotation.Y);
+				Matrix mat = Matrix.CreateRotationY(-RotationEuler.Y);
 
 				return Vector3.Transform(new Vector3(0, 0, 1), mat);
 			}
@@ -81,9 +97,9 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-Rotation.X) *
-							Matrix.CreateRotationY(-Rotation.Y) *
-							Matrix.CreateRotationZ(-Rotation.Z);
+				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
+							Matrix.CreateRotationY(-RotationEuler.Y) *
+							Matrix.CreateRotationZ(-RotationEuler.Z);
 
 				return Vector3.Transform(new Vector3(0, 1, 0), mat);
 			}
@@ -93,7 +109,7 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationY(-Rotation.Y);
+				Matrix mat = Matrix.CreateRotationY(-RotationEuler.Y);
 
 				return Vector3.Transform(new Vector3(0, 1, 0), mat);
 			}
@@ -103,9 +119,9 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-Rotation.X) *
-							Matrix.CreateRotationY(-Rotation.Y) *
-							Matrix.CreateRotationZ(-Rotation.Z);
+				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
+							Matrix.CreateRotationY(-RotationEuler.Y) *
+							Matrix.CreateRotationZ(-RotationEuler.Z);
 
 				return Vector3.Transform(new Vector3(1, 0, 0), mat);
 			}
@@ -143,7 +159,8 @@ namespace ViMG
 		public Camera(Vector3 startPosition, Vector3 startRotation, Vector3 startScale, float near, float far)
 		{
 			this.position = startPosition;
-			this.rotation = startRotation;
+			this.rotationEuler = startRotation;
+			this.rotation = Quaternion.CreateFromYawPitchRoll(rotationEuler.X, rotationEuler.Y, rotationEuler.Z);
 			this.scale = startScale;
 
 			this.near = near;
@@ -162,23 +179,15 @@ namespace ViMG
 			return GetViewMatrixInternal();
         }
 
-		public Matrix GetViewMatrixQuat(Quaternion rotation)
-		{
-            viewMatrix = Matrix.CreateTranslation(-Position) *
-                    Matrix.CreateFromQuaternion(-rotation) *
-                    Matrix.CreateScale(scale);
-
-			return viewMatrix;
-        }
-
 		protected virtual Matrix GetViewMatrixInternal()
 		{
 			if (viewDirty)
 			{
 				viewMatrix = Matrix.CreateTranslation(-Position) *
-					Matrix.CreateRotationZ(Rotation.Z) *
-					Matrix.CreateRotationY(Rotation.Y) *
-					Matrix.CreateRotationX(Rotation.X) *
+					//Matrix.CreateFromQuaternion(rotation) *
+					Matrix.CreateRotationZ(RotationEuler.Z) *
+					Matrix.CreateRotationY(RotationEuler.Y) *
+					Matrix.CreateRotationX(RotationEuler.X) *
 					Matrix.CreateScale(scale);
 				viewDirty = false;
 			}

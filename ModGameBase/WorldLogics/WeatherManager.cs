@@ -552,8 +552,8 @@ namespace ViMG.WorldLogics
 
             Matrix fallingMatrix = 
                 Matrix.CreateScale(0.25f) *
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+                Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
             Matrix onGroundMatrix =
                 Matrix.CreateScale(0.25f) *
                 Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *

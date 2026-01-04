@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,12 @@ namespace Engine.Clients.WorldLogics
     public class ClientWorldLogic
     {
         public Skybox skybox = new();
+
+        public ClientWorldLogic(GraphicsDevice device) { }
+
+        public virtual void Render(GraphicsDevice device, ClientStates client)
+        {
+
+        }
     }
 }

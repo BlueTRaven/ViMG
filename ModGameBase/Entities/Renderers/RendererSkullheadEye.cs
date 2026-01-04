@@ -51,8 +51,8 @@ namespace ViMG.Entities.Renderers
                 Vector3 tintColor = eye.ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
 
                 Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-Main.camera.RotationEuler.Y) *
                     Matrix.CreateTranslation(eye.Position), sourceRect, tintColor));
 
                 //if (eye.ai.Health < eye.MaxHealth)

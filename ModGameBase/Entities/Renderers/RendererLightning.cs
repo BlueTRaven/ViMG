@@ -163,7 +163,7 @@ namespace ViMG.Entities.Renderers
                         Vector3 o = new Vector3(pcg.NextFloat(-advanceVariance, advanceVariance), 0, 0);
                         o = Vector3.Transform(o, Matrix.CreateRotationZ(pcg.NextFloat(0, MathF.PI * 2)));
                         // TODO this shouldn't use camera
-                        o = Vector3.Transform(o, Matrix.CreateRotationX(-Main.camera.Rotation.X) * Matrix.CreateRotationY(-Main.camera.Rotation.Y));
+                        o = Vector3.Transform(o, Matrix.CreateRotationX(-Main.camera.RotationEuler.X) * Matrix.CreateRotationY(-Main.camera.RotationEuler.Y));
 
                         Vector3 previousPosition = basePositions[j - 1];
 

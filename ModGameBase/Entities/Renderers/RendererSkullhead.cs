@@ -55,8 +55,8 @@ namespace ViMG.Entities.Renderers
             Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshHead,
                 Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
                 Matrix.CreateScale(scale) *
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                Matrix.CreateRotationY(-Main.camera.RotationEuler.Y) *
                 Matrix.CreateTranslation(skullhead.Position), sourceRect, tintColor));
 
             for (int i = 0; i < skullhead.trainPositions.Length; i++)
@@ -67,8 +67,8 @@ namespace ViMG.Entities.Renderers
                 float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
 
                 Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae,
-                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                    Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-Main.camera.RotationEuler.Y) *
                     Matrix.CreateTranslation(skullhead.trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));
             }
         }

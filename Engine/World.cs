@@ -506,7 +506,7 @@ namespace ViMG
 				chunkDrawPositionsDirty = false;
 			}
 
-			oldCameraRotation = Main.camera.Rotation;
+			oldCameraRotation = Main.camera.RotationEuler;
 			oldChunkPosition = camPos;
 
 			// TODO
@@ -920,7 +920,7 @@ namespace ViMG
 			ProjectileManager.Draw(device);
 			//EntityManager.Draw(device, null);
 
-			Logic.Draw(this, device);
+			//Logic.Draw(this, device);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;

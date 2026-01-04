@@ -89,8 +89,8 @@ namespace ViMG.Entities.Renderers
 
             stats.Draws.Clear();
 
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
 
             RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
             {
