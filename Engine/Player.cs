@@ -185,9 +185,11 @@ namespace ViMG
 		private Vector2 previousMousePosition;
 
 		public State state = State.Normal;
+        
+		private int oldHighlight = -1;
 
-		//private bool onGround;
-		private bool inRope;
+        //private bool onGround;
+        private bool inRope;
 		private bool inWater;
 		private bool headUnderWater;
 
@@ -278,7 +280,7 @@ namespace ViMG
 
         public int Currency;	//we store currency as a flat integer value instead of as items
 		//private Menu currentUI;
-		public MenuPlayer menuPlayer;
+		//public MenuPlayer menuPlayer;
 		// The item currently selected in the main inventory bar. Different from the "held item", which is the item
 		// the player has held in hand after they click an item with the inventory open.
 		public int highlightIndex;
@@ -451,22 +453,22 @@ namespace ViMG
 
 			Console.WriteLine("Local id: {0} our id: {1}", world.localPlayerIndex, playerIndex);
 
-			if (IsLocalPlayer)
-			{
-				Console.WriteLine("Init local");
-				menuPlayer = new MenuPlayer(Main.gameStateManager, world.EntityManager.GetReference(this), heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
-				menuPlayer.Close();
-				Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
-				if (!Main.IsHeadless)
-				{
-					menuPlayer.LoadContent();
-				}
+			//if (IsLocalPlayer)
+			//{
+			//	Console.WriteLine("Init local");
+			//	menuPlayer = new MenuPlayer(Main.gameStateManager, world.EntityManager.GetReference(this), heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
+			//	menuPlayer.Close();
+			//	Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
+			//	if (!Main.IsHeadless)
+			//	{
+			//		menuPlayer.LoadContent();
+			//	}
 
-				if (Main.Args.startPaused)
-				{
-					Main.gameStateManager.TheIsland.PushMenu(new MenuPause(Main.gameStateManager, world));
-				}
-			}
+			//	if (Main.Args.startPaused)
+			//	{
+			//		Main.gameStateManager.TheIsland.PushMenu(new MenuPause(Main.gameStateManager, world));
+			//	}
+			//}
 
 			//if (IsLocalPlayer)
 			//{
@@ -587,14 +589,14 @@ namespace ViMG
 					else state = State.Noclip;
 				}
 
-				if ((Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer) 
-				{
-					hasMenuOpen = true;
-				}
-				else
-				{
-					hasMenuOpen = false;
-				}
+				//if ((Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer) 
+				//{
+				//	hasMenuOpen = true;
+				//}
+				//else
+				//{
+				//	hasMenuOpen = false;
+				//}
 			}
 			else
 			{
@@ -799,67 +801,29 @@ namespace ViMG
 					Main.DebugChunks = !Main.DebugChunks;
 				}
 
-				if (Main.inputManager.JustPressed(Keys.E))
-				{
-					if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-						Main.gameStateManager.GetCurrentGameState().PopMenu();
-					else menuPlayer.Toggle();
-				}
+				//if (Main.inputManager.JustPressed(Keys.E))
+				//{
+				//	if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+				//		Main.gameStateManager.GetCurrentGameState().PopMenu();
+				//	else menuPlayer.Toggle();
+				//}
 
 				if (useTimer <= 0)
 				{
-					int oldHighlight = menuPlayer.HighlightIndex;
-					if (Main.inputManager.JustPressed(Keys.D1))
+					if (oldHighlight != highlightIndex)
 					{
-						menuPlayer.HighlightIndex = 0;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D2))
-					{
-						menuPlayer.HighlightIndex = 1;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D3))
-					{
-						menuPlayer.HighlightIndex = 2;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D4))
-					{
-						menuPlayer.HighlightIndex = 3;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D5))
-					{
-						menuPlayer.HighlightIndex = 4;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D6))
-					{
-						menuPlayer.HighlightIndex = 5;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D7))
-					{
-						menuPlayer.HighlightIndex = 6;
-					}
-
-					if (Main.inputManager.JustPressed(Keys.D8))
-					{
-						menuPlayer.HighlightIndex = 7;
-					}
-
-					if (oldHighlight != menuPlayer.HighlightIndex)
-					{
-						if (inventory.Get(oldHighlight).valid)
+						if (oldHighlight != -1 && inventory.Get(oldHighlight).valid)
 						{
-							inventory.Get(oldHighlight).item.EndHold(this, inventory, menuPlayer.HighlightIndex);
+							inventory.Get(oldHighlight).item?.EndHold(this, inventory, highlightIndex);
 
-							if (inventory.Get(menuPlayer.HighlightIndex).valid)
-								inventory.Get(oldHighlight).item.StartHold(this, inventory, menuPlayer.HighlightIndex);
+							if (inventory.Get(highlightIndex).valid)
+								inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
 						}
-					}
-					highlightIndex = menuPlayer.HighlightIndex;
+
+                        if (inventory.Get(highlightIndex).valid)
+                            inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
+                    }
+					oldHighlight = highlightIndex;
 				}
 			}
 
@@ -868,24 +832,23 @@ namespace ViMG
 				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, world));
 			}*/
 
-			if (IsLocalPlayer)
-				highlightIndex = menuPlayer.HighlightIndex;
-			
 			if (inventory.Get(highlightIndex).valid)
 				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);
 
-			lookAtResult = CubeView.Raycast(Position, Position - (this as IRotatable).Forward * INTERACT_DISTANCE,
-			(Vector3 pos, object? ctx) =>
-			{
-				Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-				bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
+			var fwd = (this as IRotatable).Forward;
 
-				//if we're climbing a rope, ignore the rope
-				if (inRope)
-					isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
+           lookAtResult = CubeView.Raycast(Position, Position - fwd * INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, world.ChunkManager.CubeView);
+			//(Vector3 pos, object? ctx) =>
+			//{
+			//	Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			//	bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
 
-				return isLooking;
-			}, null);
+			//	//if we're climbing a rope, ignore the rope
+			//	if (inRope)
+			//		isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
+
+			//	return isLooking;
+			//}, null);
 
 			IsLooking = false;
 			CanPlace = false;
@@ -1292,7 +1255,7 @@ namespace ViMG
 
 		private float DEBUGTimeSkipHeldTime;
 
-		private void UpdateMovement(double deltaTime)
+        private void UpdateMovement(double deltaTime)
 		{
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -1432,6 +1395,13 @@ namespace ViMG
 					{
                         Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
                         cube.OnLeftClick(world, LookAtPos);
+						SyncCubeAction.Instance.QueueAction(new SyncCubeAction.CubeAction
+						{
+							cube = cube,
+							leftClicked = true,
+							playerId = playerIndex,
+							position = LookAtPos,
+						});
 
 						PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
                     }
@@ -1476,8 +1446,15 @@ namespace ViMG
 						if (cube.CanRightClick(world, LookAtPos))
 						{
 							cube.OnRightClick(world, LookAtPos);
+                            SyncCubeAction.Instance.QueueAction(new SyncCubeAction.CubeAction
+                            {
+                                cube = cube,
+                                rightClicked = true,
+                                playerId = playerIndex,
+                                position = LookAtPos,
+                            });
 
-							PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
+                            PerformAction(new ActionStats(Item.DEFAULT_USE_TIME));
 						}
 					}
                 }
@@ -1601,8 +1578,9 @@ namespace ViMG
 
                             Currency += item.ItemInstance.num * coin.Value;
 
-							if (IsLocalPlayer)
-								menuPlayer.AddPickedUpItem(item.ItemInstance);
+							// TODO: how to convey this to client?
+							//if (IsLocalPlayer)
+							//	menuPlayer.AddPickedUpItem(item.ItemInstance);
                         }
 						else
 						{
@@ -1611,8 +1589,9 @@ namespace ViMG
 								world.EntityManager.Kill(ent);
 								item.ItemInstance.item.StartHold(this, inventory, index);
 
-								if (IsLocalPlayer)
-									menuPlayer.AddPickedUpItem(item.ItemInstance);
+                                // TODO: how to convey this to client?
+         //                       if (IsLocalPlayer)
+									//menuPlayer.AddPickedUpItem(item.ItemInstance);
 							}
 						}
 					}
@@ -1651,38 +1630,38 @@ namespace ViMG
 
 		private unsafe void UpdateMouse()
 		{
-			if (hasMoved && IsLocalPlayer)
-			{
-				//Works fine, not geometry-aware
-				//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
+			//if (hasMoved && IsLocalPlayer)
+			//{
+			//	//Works fine, not geometry-aware
+			//	//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
 
-				int intersectionCount = 0;
+			//	int intersectionCount = 0;
 
-				RayHit hit = new RayHit();
-				//camera.Forward is inverted, Forward is towards camera (i.e. backward). Whoopsie
-				SweepHitHandler handler = new SweepHitHandler(&hit, physicsHandle, &intersectionCount);
+			//	RayHit hit = new RayHit();
+			//	//camera.Forward is inverted, Forward is towards camera (i.e. backward). Whoopsie
+			//	SweepHitHandler handler = new SweepHitHandler(&hit, physicsHandle, &intersectionCount);
 
-				world.PhysicsInfo.Simulation.Sweep(new Sphere(Cube.CUBE_SCALE * 0.55f), new RigidPose(Position.ToNumerics()),
-					new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), desiredThirdPersonDistance, 
-					world.PhysicsInfo.GlobalBufferPool, ref handler);
+			//	world.PhysicsInfo.Simulation.Sweep(new Sphere(Cube.CUBE_SCALE * 0.55f), new RigidPose(Position.ToNumerics()),
+			//		new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), desiredThirdPersonDistance, 
+			//		world.PhysicsInfo.GlobalBufferPool, ref handler);
 
-				float min = desiredThirdPersonDistance;
-                if (intersectionCount > 0)
-				{
-					if (handler.Hit->Hit)
-						min = float.Min(handler.Hit->T, min);
-				}
+			//	float min = desiredThirdPersonDistance;
+   //             if (intersectionCount > 0)
+			//	{
+			//		if (handler.Hit->Hit)
+			//			min = float.Min(handler.Hit->T, min);
+			//	}
 
-				currentThirdPersonDistance = min;
+			//	currentThirdPersonDistance = min;
 
-				const float maxToSide = Cube.CUBE_SCALE * 0.65f;
-				float pToSide = currentThirdPersonDistance / THIRDPERSON_MAX_DISTANCE;
+			//	const float maxToSide = Cube.CUBE_SCALE * 0.65f;
+			//	float pToSide = currentThirdPersonDistance / THIRDPERSON_MAX_DISTANCE;
 
-				Main.camera.Position = Position + Main.camera.Forward * currentThirdPersonDistance + Main.camera.Right * (maxToSide * pToSide);
-			}
+			//	Main.camera.Position = Position + Main.camera.Forward * currentThirdPersonDistance + Main.camera.Right * (maxToSide * pToSide);
+			//}
 
-			if (menuPlayer.IsOpened || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-				return;
+			//if (menuPlayer.IsOpened || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+			//	return;
 
 			//currentMS = Mouse.GetState();
 
@@ -1721,11 +1700,7 @@ namespace ViMG
 
             if (Main.inputManager.JustPressed(Keys.Q))
             {
-                int inventorySlot = 0;
-
-                if (menuPlayer.HoverIndex == -1)
-                    inventorySlot = menuPlayer.HighlightIndex;
-                else inventorySlot = menuPlayer.HoverIndex;
+                int inventorySlot = highlightIndex;
 
                 if (inventory.Get(inventorySlot).valid)
                 {

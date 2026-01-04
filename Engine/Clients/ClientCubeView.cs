@@ -25,6 +25,8 @@ namespace Engine.Clients
 
         public ushort GetId(CubePosition position)
         {
+            if (!io.IsLoaded(ChunkPosition.CubeChunk(position))) return 0;
+
             ReadOnlySpan<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
 
             var posInChunkSpace = position.InChunkSpace();

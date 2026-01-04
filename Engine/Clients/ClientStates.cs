@@ -1,6 +1,8 @@
-﻿using Engine.Clients.Entities;
+﻿using BepuPhysics.Constraints;
+using Engine.Clients.Entities;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
+using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -14,11 +16,13 @@ using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
 using ViMG.Rendering;
+using ViMG.UIs;
 
 namespace Engine.Clients
 {
     public class ClientStates
     {
+        private GraphicsDevice device;
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
         public CubeTrackers cubeTrackers;
@@ -42,8 +46,12 @@ namespace Engine.Clients
         private MouseState currMS;
         private MouseState prevMS;
 
+        private MenuPlayer menuPlayer;
+
         public ClientStates(GraphicsDevice device)
         {
+            this.device = device;
+
             ChunkManager = new ClientChunkManager(device);
 
             states = new ClientWorld[ViMG.Entities.EntityManager.EntPrevSrv];
@@ -101,8 +109,62 @@ namespace Engine.Clients
             var localPlayerRef = current.entities.GetLocalPlayerRef();
             if (current.entities.IsActive(ref localPlayerRef))
             {
+                if (Main.inputManager.JustPressed(Keys.D1))
+                {
+                    current.highlightIndex = 0;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D2))
+                {
+                    current.highlightIndex = 1;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D3))
+                {
+                    current.highlightIndex = 2;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D4))
+                {
+                    current.highlightIndex = 3;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D5))
+                {
+                    current.highlightIndex = 4;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D6))
+                {
+                    current.highlightIndex = 5;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D7))
+                {
+                    current.highlightIndex = 6;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.D8))
+                {
+                    current.highlightIndex = 7;
+                }
+
+                if (Main.inputManager.JustPressed(Keys.E) && Main.gameStateManager.TheIsland.GetCurrentMenu() == menuPlayer)
+                {
+                    menuPlayer.Toggle();
+                }
+
                 ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
                 CurrMovement.Update(ref localPlayer);
+
+                if (menuPlayer == null)
+                {
+                    var extra = localPlayer.GetExtra<Player.PlayerExtraState>();
+                    menuPlayer = new MenuPlayer(Main.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
+                    menuPlayer.LoadContent();
+                    menuPlayer.Close();
+                    Main.gameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
+                }
 
                 if (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
                     CurrMovement.RightClick.Changed(PrevMovement.RightClick) ||
@@ -120,29 +182,32 @@ namespace Engine.Clients
 
                 current.camera.Position = localPlayer.position;
 
-                currMS = Mouse.GetState();
-
-                if (currMS != prevMS)
+                if (!menuPlayer.IsOpened)
                 {
-                    float scalar = 0.25f;
+                    currMS = Mouse.GetState();
 
-                    Vector3 camRotation = current.camera.Rotation;
-
-                    Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currMS.X, currMS.Y);
-                    prevMS = currMS;
-
-                    if (delta.Length() > float.Epsilon)
+                    if (currMS != prevMS)
                     {
-                        camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
-                        camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
+                        float scalar = 0.25f;
 
-                        if (camRotation.X > MathHelper.ToRadians(89))
-                            camRotation.X = MathHelper.ToRadians(89);
-                        else if (camRotation.X < -MathHelper.ToRadians(89))
-                            camRotation.X = -MathHelper.ToRadians(89);
+                        Vector3 camRotation = current.camera.Rotation;
 
-                        current.camera.Rotation = camRotation;
-                        localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.Rotation.Y, -current.camera.Rotation.X, 0);
+                        Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currMS.X, currMS.Y);
+                        prevMS = currMS;
+
+                        if (delta.Length() > float.Epsilon)
+                        {
+                            camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
+                            camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
+
+                            if (camRotation.X > MathHelper.ToRadians(89))
+                                camRotation.X = MathHelper.ToRadians(89);
+                            else if (camRotation.X < -MathHelper.ToRadians(89))
+                                camRotation.X = -MathHelper.ToRadians(89);
+
+                            current.camera.Rotation = camRotation;
+                            localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.Rotation.Y, -current.camera.Rotation.X, 0);
+                        }
                     }
                 }
             }

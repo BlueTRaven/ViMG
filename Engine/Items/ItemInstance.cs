@@ -2,10 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Collections.Specialized.BitVector32;
 
 namespace ViMG.Items
 {
-	public readonly struct ItemInstance
+    public readonly struct ItemInstance
 	{
 		public readonly Item? item;
 		public readonly int num;
@@ -40,5 +41,21 @@ namespace ViMG.Items
 		{
 			return new ItemInstance(item, num, damage);
 		}
+
+        public void Serialize(NetDataWriter writer)
+        {
+            writer.Put(item?.Id ?? 0);
+            writer.Put(num);
+            writer.Put(damage);
+        }
+
+        public static ItemInstance Deserialize(NetDataReader reader)
+        {
+			int id = reader.GetInt();
+			int num = reader.GetInt();
+			int dam = reader.GetInt();
+
+			return new ItemInstance(Main.Registry.ItemRegistry.Get(id), num, dam);
+        }
     }
 }

@@ -39,8 +39,11 @@ namespace Engine.Networking.Messages
 
         public void DoSend()
         {
-            GS.netManagerServer.SendMessageToAll(this, GS.netManagerServer.netManager, null);
-            serverActions.Clear();
+            if (serverActions.Count > 0)
+            {
+                GS.netManagerServer.SendMessageToAll(this, GS.netManagerServer.netManager, null);
+                serverActions.Clear();
+            }
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)

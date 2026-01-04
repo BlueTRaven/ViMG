@@ -14,6 +14,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
@@ -464,9 +465,14 @@ namespace Engine.Networking.Messages
                         if (ent.type == SyncStateType.MinorSync)
                             prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, serverEntities[ent.playerId][ent.reference.id].latestSequence);
                         else if (ent.type == SyncStateType.MajorSync)
+                        {
+                            var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
+                            //Console.WriteLine("Server sent create ent {0} {1} ({2})", ent.reference.id, entType.Identifier, ent.typeNameMapping);
                             prevState = new();
+                        }
                         else
                             throw new Exception();
+
 
                         uint bits = state.GetDeltaBits(ref prevState);
                         ulong extraBits = state.GetExtraBytesBits(ref prevState);
@@ -495,7 +501,7 @@ namespace Engine.Networking.Messages
             for (int i = 0; i < subWriters.Count; i++)
             {
                 NetDataWriter subWriter = subWriters[i];
-                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) -  sizeof(int) - sizeof(int) || numSend > MAX_ENTS_PER_SYNC)
+                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) -  sizeof(int) - sizeof(int) && numSend < MAX_ENTS_PER_SYNC)
                 {
                     numSend += 1;
                     
@@ -510,7 +516,8 @@ namespace Engine.Networking.Messages
                     netMessage.Send();
 
                     netMessage.writer.SetPosition(atStart);
-                    numSend = 0;
+                    numSend = 1;
+                    netMessage.writer.Put(subWriter.AsReadOnlySpan());
                 }
             }
 
@@ -563,6 +570,7 @@ namespace Engine.Networking.Messages
                     var state = GS.GetClient().Current().entities.GetByRef(ref reference);
                     state.DeserializeDelta(reader);
                     var typeName = Main.Registry.EntityRegistry.Get((int)typeNameMapping)?.Identifier;
+                    //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)
                     {
                         if (typeNameMapping == playerTypeId)
@@ -631,6 +639,10 @@ namespace Engine.Networking.Messages
 
                     ackArr[ackI] = reference;
                     ackI += 1;
+                }
+                else
+                {
+                    throw new Exception();
                 }
             }
 

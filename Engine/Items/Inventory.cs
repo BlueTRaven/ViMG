@@ -13,6 +13,8 @@ namespace Engine.Items
 {
 	public class Inventory
 	{
+		public const int VERSION = 1;
+
 		private enum InventoryActionType
 		{
 			Add,
@@ -28,6 +30,7 @@ namespace Engine.Items
         }
 
 		public readonly int id;
+		public readonly int generation;
 		private int numSlots;
 		public int NumSlots => numSlots;
 		private ItemInstance[] items;
@@ -41,6 +44,7 @@ namespace Engine.Items
 		public record struct InventoryConfig
 		{
 			public int id;
+			public int generation;
 			public int numSlots;
 			public MenuHelper.IWhiteList? whitelist;
 			public MenuHelper.IWhiteList[]? whitelists;
@@ -78,6 +82,7 @@ namespace Engine.Items
 		public Inventory(InventoryConfig config)
 		{
 			this.id = config.id;
+			this.generation = config.generation;
 			this.numSlots = config.numSlots;
 			items = new ItemInstance[numSlots];
 
@@ -121,8 +126,8 @@ namespace Engine.Items
 				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", Main.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
 				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
 				{
-					inventoryId = id,
-					entityId = owner.Id,
+					inventory = new InventoryManager.InventoryReference((ushort)id, (short)generation),
+					entity = owner.world.EntityManager.GetReference(owner),
 					inventoryIndex = action.index,
 					oldInstance = action.oldInstance,
 					newInstance = action.newInstance,
@@ -370,7 +375,9 @@ namespace Engine.Items
 
 		public void Save(List<byte> saveBytes)
 		{
+			SaveHelper.SaveInt32(saveBytes, VERSION);
 			SaveHelper.SaveInt32(saveBytes, id);
+			SaveHelper.SaveInt32(saveBytes, generation);
 			SaveHelper.SaveInt32(saveBytes, numSlots);
 
 			int numValid = 0;
@@ -396,8 +403,11 @@ namespace Engine.Items
 
 		public void Load(byte[] loadBytes, ref int index)
 		{
-			int id = SaveHelper.LoadInt32(loadBytes, ref index);
-			int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
+            // TODO invalidate old versions
+            //int version = SaveHelper.LoadInt32(loadBytes, ref index);
+            int id = SaveHelper.LoadInt32(loadBytes, ref index);
+            //int generation = SaveHelper.LoadInt32(loadBytes, ref index);
+            int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
 
             //IMGUIConsole.Assert(id == this.id);
 
@@ -414,14 +424,16 @@ namespace Engine.Items
 
 		public static Inventory ClientLoad(byte[] loadBytes, ref int index)
 		{
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
             int id = SaveHelper.LoadInt32(loadBytes, ref index);
+            int generation = SaveHelper.LoadInt32(loadBytes, ref index);
             int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
 
             int numValid = SaveHelper.LoadInt32(loadBytes, ref index);
 
 			// Client doesn't care about whitelists or max stack sizes
 			InventoryConfig config = new InventoryConfig(numSlots);
-			Inventory inv = new Inventory(config);
+			Inventory inv = new Inventory(config with { id = id, generation = generation });
 
             for (int i = 0; i < numValid; i++)
             {

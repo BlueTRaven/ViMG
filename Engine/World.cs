@@ -330,6 +330,7 @@ namespace ViMG
 			{
 				EntityManager.UpdateNetwork();
 				InventoryManager.UpdateNetwork(player);
+				SyncCubeAction.Instance.DoSend();
                 Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
 				lastSyncTime = Main.Time;
             }

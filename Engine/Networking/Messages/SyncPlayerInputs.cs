@@ -39,7 +39,7 @@ namespace Engine.Networking.Messages
             public byte playerIndex;
             public double time;
             public InputTypes inputs;
-            public int heldItem;
+            public int highlightIndex;
             public Quaternion rotation;
             public Vector3 position;
             public bool hasMenuOpen;
@@ -82,7 +82,7 @@ namespace Engine.Networking.Messages
 
             netMessage.writer.Put(Main.Time);
             netMessage.writer.Put(Main.Frame);
-            //netMessage.writer.Put(player.highlightIndex);
+            netMessage.writer.Put(GS.GetClient().Current().highlightIndex);
             netMessage.writer.Put(localPlayer.rotation.X);
             netMessage.writer.Put(localPlayer.rotation.Y);
             netMessage.writer.Put(localPlayer.rotation.Z);
@@ -105,7 +105,7 @@ namespace Engine.Networking.Messages
             int frame = reader.GetInt();
             //Console.WriteLine("Receive with time: {0:.02} (our time: {1:.02} delta {2:.02})", time, Main.Time + NetworkManager.TIME_TRAVEL_DELAY, time - (Main.Time + NetworkManager.TIME_TRAVEL_DELAY));
             //Console.WriteLine("Frame: {0} (our frame: {1} delta {2})", frame, Main.Frame, frame - Main.Frame);
-            //int heldItem = reader.GetInt();
+            int highlightIndex = reader.GetInt();
             Quaternion rotation = Quaternion.Identity;
             rotation.X = reader.GetFloat();
             rotation.Y = reader.GetFloat();
@@ -130,7 +130,7 @@ namespace Engine.Networking.Messages
                     inputs = inp,
                     playerIndex = whoami,
                     time = time,
-                    //heldItem = heldItem,
+                    highlightIndex = highlightIndex,
                     rotation = rotation,
                     position = position,
                 };
@@ -177,12 +177,14 @@ namespace Engine.Networking.Messages
             if (player == null || player.TimeInitialized == 0) return;
             var inp = qinput.inputs;
 
+            player.highlightIndex = qinput.highlightIndex;
+            //Console.WriteLine("highlight {0}", qinput.highlightIndex);
+
             player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
             player.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
             player.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
             player.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
             player.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
-            //Console.WriteLine("Move fwd {0}", player.MoveForward.recordedPress);
             player.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
             player.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
             player.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;

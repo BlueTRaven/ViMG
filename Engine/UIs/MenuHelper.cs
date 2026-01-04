@@ -282,17 +282,19 @@ namespace ViMG.UIs
 				//output = DoRightClick(player, inventory, heldInventory, index);
 			}
 
-			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Singleplayer && output != ItemSlotClickOutput.None)
+			//if (output != ItemSlotClickOutput.None)
+			if (itemSlot.button.clickLeft || itemSlot.button.clickRight)
 			{
 				// TODO
-				// playerIndex will always be the local player index (this is only called folr handling menus, after all!
-				//Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManager.netManager, new SyncInventoryInput.ClickToSync { 
-				//	player = (byte)playerIndex,
-				//	entityId = invOwner.id,
-				//	inventoryId = inventory.id,
-				//	inventoryIndex = index,
-				//	output = output,
-				//});
+				// playerIndex will always be the local player index (this is only called for handling menus, after all!
+				Main.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
+				{
+					playerId = (byte)0,
+					entity = invOwner,
+					inventory = new InventoryManager.InventoryReference((ushort)inventory.id, (short)inventory.generation),
+					inventoryIndex = index,
+					output = output,
+				});
 				//inventory.AddClick(player, index, output);
 			}
 
@@ -511,15 +513,15 @@ namespace ViMG.UIs
 			return entity.InventoryAction(activatingPlayer, action);
 		}
 
-		public static void InventoryActionClient(EntityManager.EntityReference entity, int activatingPlayer, int action)
+		public static void InventoryActionClient(EntityManager.EntityReference entity, InventoryManager.InventoryReference inventory, int activatingPlayer, int action)
 		{
 			Debug.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Server);
 
             Main.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
             {
-                player = (byte)activatingPlayer,
-                entityId = (ulong)entity.id,
-                inventoryId = 0,
+                playerId = (byte)activatingPlayer,
+                entity = entity,
+                inventory = inventory,
                 inventoryIndex = 0,
                 output = ItemSlotClickOutput.None,
                 action = action,

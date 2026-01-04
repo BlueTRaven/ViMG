@@ -31,8 +31,8 @@ namespace Engine.Networking.Messages
             Register(new SyncCubeUpdateAuditRequest());
             Register(new SyncCubeUpdateAuditResponse());
             Register(new SyncInventoryUpdate());
-            Register(new SyncInventoryUpdateAuditRequest());
-            Register(new SyncInventoryUpdateAuditResponse());
+            //Register(new SyncInventoryUpdateAuditRequest());
+            //Register(new SyncInventoryUpdateAuditResponse());
             Register(new SyncInventoryInput());
             Register(new SyncWorldState());
             Register(new SyncInventory());

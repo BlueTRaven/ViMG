@@ -15,6 +15,7 @@ namespace Engine.Clients
         public Camera camera;
 
         public double time;
+        public int highlightIndex;
 
         public ClientWorld()
         {
@@ -27,6 +28,7 @@ namespace Engine.Clients
             camera.Position = prev.camera.Position;
             camera.Rotation = prev.camera.Rotation;
             camera.Scale = prev.camera.Scale;
+            highlightIndex = prev.highlightIndex;
             
             entities.NewFrame(prev.entities);
             this.time = time;

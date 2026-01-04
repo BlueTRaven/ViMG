@@ -108,7 +108,7 @@ namespace Engine.Items
                 id = id,
                 generation = reference.generation,
                 active = true,
-                inventory = new Inventory(config with { id = id }),
+                inventory = new Inventory(config with { id = id, generation = reference.generation, }),
             };
 
             newInventories.Add(reference);
@@ -156,7 +156,7 @@ namespace Engine.Items
                     id = reference.id,
                     generation = reference.generation,
                     active = true,
-                    inventory = new Inventory(config with { id = reference.id }),
+                    inventory = new Inventory(config with { id = reference.id, generation = reference.generation }),
                 };
             }
         

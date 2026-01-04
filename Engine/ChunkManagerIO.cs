@@ -130,7 +130,13 @@ namespace ViMG
 			}
 		}
 
-		[Flags]
+		public bool IsLoaded(ChunkPosition position)
+		{
+            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
+			return loadedChunks[i].loadedState != LoadedState.Unloaded;
+        }
+
+        [Flags]
 		public enum GetMode
 		{
 			None = 0,

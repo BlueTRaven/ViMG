@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 using ViMG.UIs;
-using static Engine.Networking.Messages.SyncInventoryInput;
 
 namespace Engine.Networking.Messages
 {
@@ -17,16 +17,17 @@ namespace Engine.Networking.Messages
 
         public struct ClickToSync
         {
-            public byte player;
+            public byte playerId;
             // TODO: entity reference here instead
-            public ulong entityId;
-            public int inventoryId;
+            public EntityManager.EntityReference entity;
+            public InventoryManager.InventoryReference inventory;
+            // Index within the inventory that we clicked
             public int inventoryIndex;
             public int action;
             public MenuHelper.ItemSlotClickOutput output;
         }
 
-        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Both;
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
 
         public SyncInventoryInput()
         {
@@ -42,9 +43,9 @@ namespace Engine.Networking.Messages
 
             var clickToSync = addData as ClickToSync? ?? throw new Exception();
 
-            netMessage.writer.Put((byte)clickToSync.player);
-            netMessage.writer.Put(clickToSync.entityId);
-            netMessage.writer.Put(clickToSync.inventoryId);
+            netMessage.writer.Put((byte)clickToSync.playerId);
+            netMessage.writer.Put(clickToSync.entity);
+            clickToSync.inventory.Serialize(netMessage.writer);
             netMessage.writer.Put(clickToSync.inventoryIndex);
             netMessage.writer.Put(clickToSync.action);
 
@@ -56,28 +57,28 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             var playerId = reader.GetByte();
-            var entityId = reader.GetULong();
-            var inventoryId = reader.GetInt();
+            var entityRef = reader.Get<EntityManager.EntityReference>();
+            var inventoryRef = InventoryManager.InventoryReference.Deserialize(reader);
             var inventoryIndex = reader.GetInt();
             var action = reader.GetInt();
 
             var clickToSync = new ClickToSync
             {
-                player = playerId,
-                entityId = entityId,
-                inventoryId = inventoryId,
+                playerId = playerId,
+                entity = entityRef,
+                inventory = inventoryRef,
                 inventoryIndex = inventoryIndex,
                 action = action,
             };
 
-            var player = GS.GetWorld().player[clickToSync.player];
+            var player = GS.GetWorld().player[clickToSync.playerId];
             if (player != null)
             {
-                var entity = GS.GetWorld().EntityManager.GetById(clickToSync.entityId);
-                var inventory = GS.GetWorld().InventoryManager.Get(GS.GetWorld().InventoryManager.GetReference(clickToSync.inventoryId));
+                var entity = GS.GetWorld().EntityManager.GetByRef(ref clickToSync.entity);
+                var inventory = GS.GetWorld().InventoryManager.Get(clickToSync.inventory);
                 if (inventory != null && entity != null && entity is IHasInventory hasInv)
                 {
-                    Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventoryId);
+                    Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventory.id);
                     MenuHelper.DoClick(player, inventory, GS.GetWorld().InventoryManager.Get(player.heldInventory), clickToSync.inventoryIndex, false);
 
                     if (clickToSync.action > 0)

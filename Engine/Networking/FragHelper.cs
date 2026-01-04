@@ -60,7 +60,8 @@ namespace Engine.Networking
 
                     netMessage.Send();
                     netMessage.writer.SetPosition(startPosition + sizeof(ushort));
-                    numSend = 0;
+                    numSend = 1;
+                    netMessage.writer.Put(writer.AsReadOnlySpan());
                 } else
                 {
                     netMessage.writer.Put(writer.AsReadOnlySpan());
