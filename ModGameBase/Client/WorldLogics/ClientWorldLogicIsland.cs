@@ -2,12 +2,14 @@
 using Engine.Clients;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -37,6 +39,7 @@ namespace ModGameBase.Client.WorldLogics
         ];
 
         private ViMG.DirectionalLight directionalLight;
+        public WeatherManager WeatherManager;
 
         public ClientWorldLogicIsland(GraphicsDevice device) : base(device)
         {
@@ -75,6 +78,38 @@ namespace ModGameBase.Client.WorldLogics
                 Weather = Main.assetsManager.GetAsset<Texture2D>("skybox_stormy"),
                 Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night"),
             };
+
+            WeatherManager = new WeatherManager(device);
+        }
+
+        public override void UpdateSimulation(double deltaTime, ClientStates client)
+        {
+            var prev = client.Previous(1);
+            var curr = client.Current();
+            Color sunlightColor = Color.White * (1 - SurfaceTimeHelper.GetTimeOfDay(curr.time));
+
+            if (SurfaceTimeHelper.GetDuskTime(curr.time) > 0)
+            {
+                duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
+                duskColors[^1] = sunlightColor;
+                sunlightColor = Utility.MultiLerp(SurfaceTimeHelper.GetDuskTime(curr.time), Color.Lerp, duskColors);
+            }
+
+            Vector4 lightColor = sunlightColor.ToVector4();
+
+            float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+
+            Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+             Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+             Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
+
+            WeatherManager.Update(deltaTime, (float)client.Current().time, lightColor);
+            var interpPlayer = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
+            WeatherManager.UpdateClient(deltaTime, interpCamera, interpPlayer.position, client.ChunkManager.CubeView);
+            WeatherManager.UpdateClientLight(deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
+
+            directionalLight.UpdateCameras(client, interpCamera, lightDir, lightColor);
         }
 
         private ViMG.Camera interpCamera = null;
@@ -91,28 +126,14 @@ namespace ModGameBase.Client.WorldLogics
 
             float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
 
+            WeatherManager.Draw(device, interpCamera, time);
+
             //if (world.LoadedFolderName == "coconut")
             //    sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
 
             float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
-            Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-                Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
-
-            Color sunlightColor = Color.White * (1 - SurfaceTimeHelper.GetTimeOfDay(time));
-
-            if (SurfaceTimeHelper.GetDuskTime(time) > 0)
-            {
-                duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
-                duskColors[^1] = sunlightColor;
-                sunlightColor = Utility.MultiLerp(SurfaceTimeHelper.GetDuskTime(time), Color.Lerp, duskColors);
-            }
-
-            Vector4 lightColor = sunlightColor.ToVector4();
-
             // TODO this should be elsewhere - we don't need to update this very often?
-            directionalLight.UpdateCameras(client, interpCamera, lightDir, lightColor);
             directionalLight.DrawShadowmap(device, interpCamera, client.ChunkManager.ChunkMesher.RenderMesher);
             directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, interpCamera);
 
@@ -123,21 +144,24 @@ namespace ModGameBase.Client.WorldLogics
                 Matrix.CreateTranslation(interpCamera.Position),
                 tintColor: Color.White));
 
-            //if (world.GetLocalPlayer() != null && !world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.GetLocalPlayer().Position.Y / Cube.CUBE_SCALE < 140)
-            //{
-            //    Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
-            //        Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.GetLocalPlayer().Position.Z);
+            var localPlayerRef = curr.entities.GetLocalPlayerRef();
+            var localPlayer = curr.entities.GetByRef(localPlayerRef);
 
-            //    RectangleF sourceRect = new RectangleF()
-            //    {
-            //        x = -world.player[world.localPlayerIndex].Position.Z * 128 + this.alive,
-            //        y = -world.player[world.localPlayerIndex].Position.X * 128 + this.alive,
-            //        width = 128 * 16,
-            //        height = 128 * 16,
-            //    };
-            //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava,
-            //        meshLavaQuad, mat, sourceRect));
-            //}
+            if (!curr.flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer.position.Y / Cube.CUBE_SCALE < 140)
+            {
+                Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
+                    Matrix.CreateTranslation(localPlayer.position.X, Cube.CUBE_SCALE * 40.5f, localPlayer.position.Z);
+
+                RectangleF sourceRect = new RectangleF()
+                {
+                    x = -localPlayer.position.Z * 128 + time,
+                    y = -localPlayer.position.X * 128 + time,
+                    width = 128 * 16,
+                    height = 128 * 16,
+                };
+                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(materialLava,
+                    meshLavaQuad, mat, sourceRect));
+            }
         }
     }
 }

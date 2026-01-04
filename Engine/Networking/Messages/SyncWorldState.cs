@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.WorldLogics;
 
 namespace Engine.Networking.Messages
 {
@@ -24,6 +25,7 @@ namespace Engine.Networking.Messages
 
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             netMessage.writer.Put(GS.GetWorld().GetTime());
+            netMessage.writer.Put((ulong)GS.GetWorld().WorldInfo.flags.Flags);
 
             netMessage.Send();
         }
@@ -33,11 +35,13 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             float time = reader.GetFloat();
+            ulong flags = reader.GetULong();
 
             //GS.GetWorld()?.SetTime(time);
 
             if (time < GS.GetClient().Current().time)
                 return;
+            GS.GetClient().Current().flags.Flags = (WorldFlags.FlagValues)flags;
             GS.GetClient().NewFrame(time);
         }
     }

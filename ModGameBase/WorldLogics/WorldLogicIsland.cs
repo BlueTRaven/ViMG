@@ -206,9 +206,9 @@ namespace ViMG.WorldLogics
 					Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
 					Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
 
-				WeatherManager.Update(deltaTime, world, directionalLight, ref lightDir, ref lightColor, out bool lightNeedsUpdateFromWeather);
+				WeatherManager?.Update(deltaTime, alive, lightColor);
 
-				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty || lightNeedsUpdateFromWeather)
+				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
 				{
 					//directionalLight.UpdateCameras(world, lightDir, lightColor);
 
@@ -259,18 +259,7 @@ namespace ViMG.WorldLogics
         {
             base.Draw(world, device);
 
-			WeatherManager.Draw(device, world);
-            /*if (Main.inputManager.JustPressed(Keys.V))
-            {
-                directionalLight.Dispose();
-
-                //float[] splits = new float[] { 1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f };
-                float[] splits = new float[] { 0.001f, 0.005f, 0.01f, 0.1f };
-
-                directionalLight = new DirectionalLight(device, Main.camera, splits);
-
-                directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
-            }*/
+			//WeatherManager.Draw(device, world);
 
             directionalLight.DrawShadowmap(device, Main.camera, world.ChunkManager.ChunkMesher.RenderMesher);
 			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, Main.camera);

@@ -6,12 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.WorldLogics;
 
 namespace Engine.Clients
 {
     public class ClientWorld 
     {
         public ClientEntityManager entities;
+        public WorldFlags flags;
         public Camera camera;
 
         public double time;
@@ -20,6 +22,7 @@ namespace Engine.Clients
         public ClientWorld()
         {
             entities = new ClientEntityManager();
+            flags = new WorldFlags();
             camera = new CameraPerspective(Vector3.Zero, Vector3.Zero, Vector3.One, 90, Main.NEAR, Main.FAR);
         }
 
@@ -29,6 +32,7 @@ namespace Engine.Clients
             camera.RotationEuler = prev.camera.RotationEuler;
             camera.Scale = prev.camera.Scale;
             highlightIndex = prev.highlightIndex;
+            flags.Flags = prev.flags.Flags;
             
             entities.NewFrame(prev.entities);
             this.time = time;

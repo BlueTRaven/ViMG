@@ -12,6 +12,8 @@ using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using System.Reflection.Metadata;
 using LiteNetLib.Utils;
+using Engine.Common;
+using Engine.ChunkStuff;
 
 namespace ViMG.WorldLogics
 {
@@ -245,10 +247,8 @@ namespace ViMG.WorldLogics
             currentWeather = MakeWeatherState(WeatherType.Cloudy, Color.White);
         }
 
-        public void Update(double deltaTime, World world, DirectionalLight directionalLight, ref Vector3 lightDirection, ref Vector4 lightColor, out bool lightNeedsUpdate)
+        public void Update(double deltaTime, float worldTime, Vector4 lightColor)
         {
-            lightNeedsUpdate = false;
-
             timeUntilNextEmit -= (float)deltaTime;
 
             if (transitionTimer > 0)
@@ -262,26 +262,11 @@ namespace ViMG.WorldLogics
                 if (currentTransition.B.WType == WeatherType.Clear)
                     currentTransition.B = MakeDefaultWeatherState(new Color(lightColor));
 
-                float p = 1 - (transitionTimer / currentTransition.Time);
-                Main.Renderer.FogExtents = Vector2.Lerp(currentTransition.A.FogExtents, currentTransition.B.FogExtents, p);
-                world.WeatherSkyboxAlpha = MathHelper.Lerp(currentTransition.A.SkyboxAlpha, currentTransition.B.SkyboxAlpha, p);
-                world.WeatherSkyboxColor = Color.Lerp(currentTransition.A.SkyboxColor, currentTransition.B.SkyboxColor, p);
-                lightColor = Color.Lerp(currentTransition.A.DirLightColor, currentTransition.B.DirLightColor, p).ToVector4() 
-                    * (1 - world.GetTimeOfDay());
-                //TODO: I don't really like the solution of multiplying by time of day since this is less controllable.
-
                 if (transitionTimer <= 0)
                     currentWeather = currentTransition.B;
             }
             else
             {
-                Main.Renderer.FogExtents = currentWeather.FogExtents;
-                world.WeatherSkyboxAlpha = currentWeather.SkyboxAlpha;
-                world.WeatherSkyboxColor = currentWeather.SkyboxColor;
-                lightColor = currentWeather.DirLightColor.ToVector4()
-                    * (1 - world.GetTimeOfDay());
-                //TODO: I don't really like the solution of multiplying by time of day since this is less controllable.
-
                 if (nextTransitionTime > 0)
                 {
                     IDoTransition(nextTransitionType, nextTransitionTime);
@@ -317,18 +302,16 @@ namespace ViMG.WorldLogics
                 else if (IsTransitioningFrom(WeatherType.Raining))
                     modifying = ref currentTransition.A;
 
-                if (world.IsDay())
+                if (SurfaceTimeHelper.IsDay(worldTime))
                 {
-                    modifying.DirLightColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingDLightColors);
-                    modifying.SkyboxColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, rainingSkyboxColors);
+                    modifying.DirLightColor = Utility.MultiLerp(1 - SurfaceTimeHelper.GetTimeOfDay(worldTime), Color.Lerp, rainingDLightColors);
+                    modifying.SkyboxColor = Utility.MultiLerp(1 - SurfaceTimeHelper.GetTimeOfDay(worldTime), Color.Lerp, rainingSkyboxColors);
                 }
                 else
                 {
                     modifying.DirLightColor = rainingDLightColors[0];
                     modifying.SkyboxColor = rainingSkyboxColors[0];
                 }
-
-                EmitWeatherParticles(world, emissionSettingsHeavy);
             }
 
             if (currentWeather.WType == WeatherType.Storming || IsTransitioningTo(WeatherType.Storming) || IsTransitioningFrom(WeatherType.Storming))
@@ -340,26 +323,55 @@ namespace ViMG.WorldLogics
                 else if (IsTransitioningFrom(WeatherType.Storming))
                     modifying = ref currentTransition.A;
 
-                if (lightningTimer <= 0)
+                if (SurfaceTimeHelper.IsDay(worldTime))
                 {
-                    if (world.IsDay())
-                    {
-                        modifying.DirLightColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, stormingDLightColors);
-                        modifying.SkyboxColor = Utility.MultiLerp(1 - world.GetTimeOfDay(), Color.Lerp, stormingSkyboxColors);
-                    }
-                    else
-                    {
-                        modifying.DirLightColor = stormingDLightColors[0];
-                        modifying.SkyboxColor = stormingSkyboxColors[0];
-                    }
+                    modifying.DirLightColor = Utility.MultiLerp(1 - SurfaceTimeHelper.GetTimeOfDay(worldTime), Color.Lerp, stormingDLightColors);
+                    modifying.SkyboxColor = Utility.MultiLerp(1 - SurfaceTimeHelper.GetTimeOfDay(worldTime), Color.Lerp, stormingSkyboxColors);
                 }
                 else
+                {
+                    modifying.DirLightColor = stormingDLightColors[0];
+                    modifying.SkyboxColor = stormingSkyboxColors[0];
+                }
+            }
+        }
+
+        public bool UpdateClientLight(double deltaTime, float worldTime, Skybox skybox, ref Vector3 lightDir, ref Vector4 lightColor)
+        {
+            if (transitionTimer > 0)
+            {
+                float p = 1 - (transitionTimer / currentTransition.Time);
+                Main.Renderer.FogExtents = Vector2.Lerp(currentTransition.A.FogExtents, currentTransition.B.FogExtents, p);
+                if (skybox != null)
+                {
+                    skybox.WeatherAlpha = MathHelper.Lerp(currentTransition.A.SkyboxAlpha, currentTransition.B.SkyboxAlpha, p);
+                    skybox.WeatherColor = Color.Lerp(currentTransition.A.SkyboxColor, currentTransition.B.SkyboxColor, p);
+                    lightColor = Color.Lerp(currentTransition.A.DirLightColor, currentTransition.B.DirLightColor, p).ToVector4()
+                        * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime));
+                }
+                //TODO: I don't really like the solution of multiplying by time of day since this is less controllable.
+            }
+            else
+            {
+                Main.Renderer.FogExtents = currentWeather.FogExtents;
+                skybox.WeatherAlpha = currentWeather.SkyboxAlpha;
+                skybox.WeatherColor = currentWeather.SkyboxColor;
+                lightColor = currentWeather.DirLightColor.ToVector4()
+                    * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime));
+                //TODO: I don't really like the solution of multiplying by time of day since this is less controllable.
+            }
+
+            if (currentWeather.WType == WeatherType.Storming || IsTransitioningTo(WeatherType.Storming) || IsTransitioningFrom(WeatherType.Storming))
+            {
+                ref WeatherStats modifying = ref currentWeather;
+
+                if (lightningTimer > 0)
                 {
                     lightningTimer -= (float)deltaTime;
                     modifying.DirLightColor = Utility.MultiLerp(1 - lightningTimer / LIGHTNING_TIME, Color.Lerp, lightningColors);
                     modifying.SkyboxColor = Utility.MultiLerp(1 - lightningTimer / LIGHTNING_TIME, Color.Lerp, lightningColors);
 
-                    lightDirection = Vector3.Normalize(Vector3.Transform(new Vector3(0, 0, 1),
+                    lightDir = Vector3.Normalize(Vector3.Transform(new Vector3(0, 0, 1),
                         Matrix.CreateRotationX(MathHelper.ToRadians(-45f)) *
                         Matrix.CreateRotationY(lightningAngle)));
                 }
@@ -367,18 +379,38 @@ namespace ViMG.WorldLogics
                 if (nextLightningTimer <= 0)
                 {
                     nextLightningTimer = Main.random.NextFloat(nextLightningRange.X, nextLightningRange.Y);
-                    lightningTimer = LIGHTNING_TIME;
 
-                    lightningAngle = Main.random.NextFloat(0, float.Pi * 2f);
+                    DoLightning(Main.random.NextFloat(0, float.Pi * 2f));
 
-                    lightNeedsUpdate = true;
+                    return true;
                 }
                 else nextLightningTimer -= (float)deltaTime;
-
-                EmitWeatherParticles(world, emissionSettingsVeryHeavy);
             }
 
-            UpdateWeatherParticles(world, deltaTime);
+            return false;
+        }
+
+        public void DoLightning(float angle)
+        {
+            lightningTimer = LIGHTNING_TIME;
+            lightningAngle = angle;
+        }
+
+        public void UpdateClient(double deltaTime, Camera camera, Vector3 position, ICubeGetter cubeView)
+        {
+            timeUntilNextEmit -= (float)deltaTime;
+
+            if (currentWeather.WType == WeatherType.Raining || IsTransitioningTo(WeatherType.Raining) || IsTransitioningFrom(WeatherType.Raining))
+            {
+                EmitWeatherParticles(position, emissionSettingsHeavy);
+            }
+
+            if (currentWeather.WType == WeatherType.Storming || IsTransitioningTo(WeatherType.Storming) || IsTransitioningFrom(WeatherType.Storming))
+            {
+                EmitWeatherParticles(position, emissionSettingsVeryHeavy);
+            }
+
+            UpdateWeatherParticles(cubeView, camera, deltaTime);
         }
 
         public WeatherType GetCurrentWeather()
@@ -512,7 +544,7 @@ namespace ViMG.WorldLogics
             return currentTransition.A.WType == currentTransition.B.WType;
         }
 
-        private void EmitWeatherParticles(World world, ParticleEmissionSettings settings)
+        private void EmitWeatherParticles(Vector3 position, ParticleEmissionSettings settings)
         {
             if (timeUntilNextEmit <= 0)
             {
@@ -533,8 +565,8 @@ namespace ViMG.WorldLogics
 
                         Vector2 ang = Main.random.NextAngle();
                         particles[i].inUse = true;
-                        particles[i].position = world.player[world.localPlayerIndex].Position + new Vector3(ang.X * r, 0, ang.Y * r);
-                        particles[i].position.Y = Cube.CUBE_SCALE * world.sizeInCubes;  //place at the top of the world for now
+                        particles[i].position = position + new Vector3(ang.X * r, 0, ang.Y * r);
+                        particles[i].position.Y = position.Y - Cube.CUBE_SCALE * 16;  //place at the top of the world for now
 
                         num--;
 
@@ -545,15 +577,15 @@ namespace ViMG.WorldLogics
             }
         }
 
-        private void UpdateWeatherParticles(World world, double deltaTime)
+        private void UpdateWeatherParticles(ICubeGetter cubeView, Camera camera, double deltaTime)
         {
             min = MAX_RAIN_PARTICLES;
             max = 0;
 
             Matrix fallingMatrix = 
                 Matrix.CreateScale(0.25f) *
-                Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
+                Matrix.CreateRotationX(Math.Clamp(-camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                Matrix.CreateRotationY(-camera.RotationEuler.Y);
             Matrix onGroundMatrix =
                 Matrix.CreateScale(0.25f) *
                 Matrix.CreateTranslation(0, Cube.CUBE_SCALE / 2f, 0) *
@@ -588,7 +620,7 @@ namespace ViMG.WorldLogics
             min = int.Min(min, max);
             max = int.Max(min, max);
 
-            world.ChunkManager.CubeView.GetCubes(queryPositions.AsSpan()[min..max], touchedCubes.AsSpan()[min..max], Main.Registry.CubeRegistry.Air);
+            cubeView.GetCubes(queryPositions.AsSpan()[min..max], touchedCubes.AsSpan()[min..max], Main.Registry.CubeRegistry.Air);
 
             for (int i = min; i < max; i++)
             {
@@ -629,7 +661,7 @@ namespace ViMG.WorldLogics
                 drawInstanceBuffer.SetData(instancedData, min, max - min);
         }
 
-        public void Draw(GraphicsDevice device, World world)
+        public void Draw(GraphicsDevice device, Camera camera, float worldTime)
         {
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
                 materialRain, rainMesh, drawInstanceBuffer, min, max - min));
@@ -638,7 +670,7 @@ namespace ViMG.WorldLogics
             {
                 const float ONE_FULL_ROTATION_CLOUDY = 6 * 60;
 
-                float angle = (world.GetTime() % ONE_FULL_ROTATION_CLOUDY) / ONE_FULL_ROTATION_CLOUDY;
+                float angle = (worldTime % ONE_FULL_ROTATION_CLOUDY) / ONE_FULL_ROTATION_CLOUDY;
 
                 float p = 1;
 
@@ -654,11 +686,11 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = materialCloudy,
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 0.25f),
                     Mesh = skyboxCloudsMesh,
                 });
 
@@ -666,10 +698,10 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 1.25f),
                     Mesh = skyboxCloudsMesh,
                 });
             }
@@ -677,7 +709,7 @@ namespace ViMG.WorldLogics
             {
                 const float ONE_FULL_ROTATION_SPARSECLOUDY = 60 * 4f;
 
-                float angle = (world.GetTime() % ONE_FULL_ROTATION_SPARSECLOUDY) / ONE_FULL_ROTATION_SPARSECLOUDY;
+                float angle = (worldTime % ONE_FULL_ROTATION_SPARSECLOUDY) / ONE_FULL_ROTATION_SPARSECLOUDY;
 
                 float p = 1;
 
@@ -693,11 +725,11 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = materialSparselyCloudy,
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 0.25f),
                     Mesh = skyboxCloudsMesh,
                 });
 
@@ -705,11 +737,11 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = materialFog,
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.25f, 1) *
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 0.25f),
                     Mesh = skyboxCloudsMesh,
                 });
 
@@ -717,10 +749,10 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateRotationY(MathHelper.ToRadians(angle)) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 1.25f),
                     Mesh = skyboxCloudsMesh,
                 });
             }
@@ -740,10 +772,10 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = materialFog,
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
                     Matrix.CreateScale(1, 0.5f, 1) *
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 0.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 0.25f),
                     Mesh = skyboxCloudsMesh,
                 });
 
@@ -751,9 +783,9 @@ namespace ViMG.WorldLogics
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                    TintColor = Color.White.ToVector4() * 0.65f * (1 - world.GetTimeOfDay()) * p,
+                    TintColor = Color.White.ToVector4() * 0.65f * (1 - SurfaceTimeHelper.GetTimeOfDay(worldTime)) * p,
                     Transform =
-                    Matrix.CreateTranslation(Main.camera.Position - Vector3.Up * 1.25f),
+                    Matrix.CreateTranslation(camera.Position - Vector3.Up * 1.25f),
                     Mesh = skyboxCloudsMesh,
                 });
             }

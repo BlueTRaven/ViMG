@@ -1,4 +1,5 @@
 ﻿using LiteNetLib;
+using ModGameBase.Client.WorldLogics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,10 +37,11 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
-            if (GS.GetWorld()?.Logic is WorldLogicIsland logicIsland)
+            if (GS.GetClient()?.WorldLogic is ClientWorldLogicIsland logicIsland)
             {
                 logicIsland.WeatherManager?.Deserialize(reader);
-                logicIsland.WeatherChangeTimer = reader.GetFloat();
+                reader.GetFloat();
+                //logicIsland.WeatherChangeTimer = reader.GetFloat();
             }
         }
     }

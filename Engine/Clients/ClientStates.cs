@@ -101,8 +101,10 @@ namespace Engine.Clients
             return states[which];
         }
 
-        public void UpdatePlayer()
+        public void UpdatePlayer(double deltaTime)
         {
+            WorldLogic.UpdateSimulation(deltaTime, this);
+
             PrevMovement = CurrMovement;
 
             var current = Current();

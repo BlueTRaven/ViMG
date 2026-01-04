@@ -14,6 +14,11 @@ namespace Engine.Clients.WorldLogics
 
         public ClientWorldLogic(GraphicsDevice device) { }
 
+        public virtual void UpdateSimulation(double deltaTime, ClientStates client)
+        {
+
+        }
+
         public virtual void Render(GraphicsDevice device, ClientStates client)
         {
 
