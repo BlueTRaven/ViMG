@@ -206,7 +206,7 @@ namespace Engine.Clients
 
                 current.camera.Position = localPlayer.position;
 
-                if (!menuPlayer.IsOpened)
+                if (!menuPlayer.IsOpened && !Main.MouseControl)
                 {
                     currMS = Mouse.GetState();
 
