@@ -24,6 +24,8 @@ namespace ViMG.Rendering
 
         public VertexBufferBinding[] Bindings;
 
+        public static HashSet<VerySimpleMesh> refs = new HashSet<VerySimpleMesh>();
+
         static class OpaqueVertexDeclarations
         {
             public static VertexDeclaration Position = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0));
@@ -96,15 +98,18 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, typeof(int), attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
                
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
                 new VertexBufferBinding(mesh.VBONormal, 0),
                 new VertexBufferBinding(mesh.VBOAO, 0),
                 new VertexBufferBinding(mesh.VBOAnim, 0),
-            };
+            ];
+
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -142,12 +147,14 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -179,11 +186,13 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -217,11 +226,13 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -235,6 +246,9 @@ namespace ViMG.Rendering
             VBOAO?.Dispose();
             VBOAnim?.Dispose();
             IBO?.Dispose();
+
+            lock (refs)
+                refs.Remove(this);
         }
     }
 }

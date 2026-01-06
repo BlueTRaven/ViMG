@@ -31,13 +31,13 @@ namespace ViMG
 
         public ushort GetId(CubePosition position)
         {
-            var palChunk = io.GetPalettizedChunk(ChunkPosition.CubeChunk(position));
-            if (palChunk != null)
-            {
-                // If the chunk is still palettized, don't force it to be unpalettized
-                return palChunk.Value.GetId(position);
-            }
-            else
+            //var palChunk = io.GetPalettizedChunk(ChunkPosition.CubeChunk(position));
+            //if (palChunk != null)
+            //{
+            //    // If the chunk is still palettized, don't force it to be unpalettized
+            //    return palChunk.Value.GetId(position);
+            //}
+            //else
             {
                 ReadOnlySpan<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
 

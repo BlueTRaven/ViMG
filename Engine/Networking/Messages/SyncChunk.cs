@@ -29,7 +29,7 @@ namespace Engine.Networking.Messages
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
         private List<PalettizedChunk> chunksToLoad = new List<PalettizedChunk>();
-        
+
         public SyncChunk()
         {
             Instance = this;
@@ -56,10 +56,13 @@ namespace Engine.Networking.Messages
             var chunk = PalettizedChunk.Palettize(chunkToSync.chunkPosition, queryIds);
 
             netMessage.writer.Put(chunkToSync.chunkPosition);
-            netMessage.writer.Put((int)chunk.type);
-            netMessage.writer.PutArray(chunk.palette);
-            if (chunk.type != PalettizeType.AllOneId)
-                netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
+            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+            {
+                netMessage.writer.Put((int)chunk.type);
+                netMessage.writer.PutArray(chunk.palette);
+                if (chunk.type != PalettizeType.AllOneId)
+                    netMessage.writer.PutBytesWithLength(chunk.data, 0, (ushort)chunk.data.Length);
+            }
 
             FastList<ICubeTracker> trackers = new();
             FastList<IMultiCubeTracker> mtrackers = new();
@@ -118,27 +121,38 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             var chunkPosition = reader.Get<ChunkPosition>();
-
-            PalettizeType paletteType = (PalettizeType)reader.GetInt();
-            var palette = reader.GetUShortArray();
-            var data = paletteType == PalettizeType.AllOneId ? null : reader.GetArray<byte>(sizeof(byte));
-
-            var chunk = new PalettizedChunk
+            if (chunkPosition == new ChunkPosition(17, 12, 17))
             {
-                data = data,
-                palette = palette,
-                position = chunkPosition,
-                type = paletteType,
-            };
-            chunksToLoad.Add(chunk);
-            GS.GetClient().ChunkManager.ChunkIO.SetChunk(ref chunk);
-            GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunk.position);
+                Console.Write("");
+            }
+            if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+            {
+                PalettizeType paletteType = (PalettizeType)reader.GetInt();
+                var palette = reader.GetUShortArray();
+                var data = paletteType == PalettizeType.AllOneId ? null : reader.GetArray<byte>(sizeof(byte));
+                var chunk = new PalettizedChunk
+                {
+                    data = data,
+                    palette = palette,
+                    position = chunkPosition,
+                    type = paletteType,
+                };
+                chunksToLoad.Add(chunk);
+                GS.GetClient().ChunkManager.ChunkIO.SetChunk(ref chunk);
+            }
+            else
+            {
+                GS.GetClient().ChunkManager.MaybeSetToServer();
+                Debug.Assert(GS.GetClient().ChunkManager.ChunkIO.IsLoaded(chunkPosition));
+            }
+
+            GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunkPosition);
             // Mark all chunks in a 3x3x3 radius around as dirty
             // We can't ignore meshing a chunk if we don't have one of its adjacent chunks
             for (int i = 0; i < 3 * 3 * 3; i++)
             {
                 Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
-                ChunkPosition dirtyChunk = chunk.position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                ChunkPosition dirtyChunk = chunkPosition + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
                 GS.GetClient().ChunkManager.ChunkMesher.MarkChunkDirty(dirtyChunk);
             }
 

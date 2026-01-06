@@ -16,39 +16,6 @@ namespace Engine.ChunkStuff
 {
     public class CopiedChunkManager
     {
-        //private static ChunkPosition[] chunkAdjacents =
-        //[
-        //    new ChunkPosition(-1, -1, -1),
-        //    new ChunkPosition(-1, 0, -1),
-        //    new ChunkPosition(-1, 1, -1),
-        //    new ChunkPosition(0, -1, -1),
-        //    new ChunkPosition(0, 0, -1),
-        //    new ChunkPosition(0, 1, -1),
-        //    new ChunkPosition(1, -1, -1),
-        //    new ChunkPosition(1, 0, -1),
-        //    new ChunkPosition(1, 1, -1),
-
-        //    new ChunkPosition(-1, -1, 0),
-        //    new ChunkPosition(-1, 0, 0),
-        //    new ChunkPosition(-1, 1, 0),
-        //    new ChunkPosition(0, -1, 0),
-        //    new ChunkPosition(0, 0, 0),
-        //    new ChunkPosition(0, 1, 0),
-        //    new ChunkPosition(1, -1, 0),
-        //    new ChunkPosition(1, 0, 0),
-        //    new ChunkPosition(1, 1, 0),
-
-        //    new ChunkPosition(-1, -1, 1),
-        //    new ChunkPosition(-1, 0, 1),
-        //    new ChunkPosition(-1, 1, 1),
-        //    new ChunkPosition(0, -1, 1),
-        //    new ChunkPosition(0, 0, 1),
-        //    new ChunkPosition(0, 1, 1),
-        //    new ChunkPosition(1, -1, 1),
-        //    new ChunkPosition(1, 0, 1),
-        //    new ChunkPosition(1, 1, 1),
-        //];
-
         [InlineArray(3 * 3 * 3)]
         public struct CopyChunkArr
         {
@@ -139,6 +106,11 @@ namespace Engine.ChunkStuff
 
                 Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
+                if (ChunkPosition == new ChunkPosition(17, 12, 17) && cube != Main.Registry.CubeRegistry.Air)
+                {
+                    Console.Write("");
+                }
+
                 //TODO re-enable air
                 if (cube.Transparency == Cube.TransparencyValue.Invisible || cube.Transparency == Cube.TransparencyValue.Air)
                     return MeshHelper.CubeFace.NONE;
@@ -190,7 +162,7 @@ namespace Engine.ChunkStuff
 
             public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces)
             {
-                using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+                //using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
                 Debug.Assert(positions.Length == faces.Length);
                 for (int i = 0; i < positions.Length; i++)
@@ -232,8 +204,8 @@ namespace Engine.ChunkStuff
         private readonly Dictionary<ChunkPosition, CopiedChunk> copiedChunks = [];
         private readonly List<Task<CopyTaskResult>> tasks = [];
 
-        private ChunkPosition?[] oldChunkPositions;
-        private int oldChunkPositionsHead = 0;
+        //private ChunkPosition?[] oldChunkPositions;
+        //private int oldChunkPositionsHead = 0;
 
         public CopiedChunkManager(ICubeGetter cubeView, ChunkManagerIO chunkIO, int sizeInChunks)
         {
@@ -241,8 +213,8 @@ namespace Engine.ChunkStuff
             this.chunkIO = chunkIO;
             this.sizeInChunks = sizeInChunks;
 
-            oldChunkPositions = new ChunkPosition?[MaxCachedChunks];
-            Array.Fill(oldChunkPositions, null);
+            //oldChunkPositions = new ChunkPosition?[MaxCachedChunks];
+            //Array.Fill(oldChunkPositions, null);
         }
 
         public void StartCopyChunk(ChunkPosition chunkPosition)
@@ -252,7 +224,7 @@ namespace Engine.ChunkStuff
                 Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
                 var realPos = chunkPosition + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
                 
-                if (IsInWorldBounds(chunkPosition))
+                if (IsInWorldBounds(realPos))
                 {
                     ActuallyStartCopyChunk(realPos);
                 }
@@ -309,10 +281,10 @@ namespace Engine.ChunkStuff
                 MaxCachedChunks = tasks.Count;
             }
 
-            if (oldChunkPositions.Length != MaxCachedChunks)
-            {
-                Array.Resize(ref oldChunkPositions, MaxCachedChunks);
-            }
+            //if (oldChunkPositions.Length != MaxCachedChunks)
+            //{
+            //    Array.Resize(ref oldChunkPositions, MaxCachedChunks);
+            //}
 
             foreach (var task in tasks)
             { 
@@ -325,20 +297,20 @@ namespace Engine.ChunkStuff
             {
                 task.Wait();
 
-                if (oldChunkPositions[oldChunkPositionsHead] != null)
-                {
-                    var oldPosition = copiedChunks[oldChunkPositions[oldChunkPositionsHead].Value];
-                    oldPosition = new CopiedChunk()
-                    {
-                        chunkPosition = oldPosition.chunkPosition,
-                        currentGeneration = oldPosition.generation,
-                        generation = oldPosition.generation + 1,
-                        data = null,
-                    };
-                }
-                oldChunkPositions[oldChunkPositionsHead] = task.Result.position;
-                oldChunkPositionsHead += 1;
-                oldChunkPositionsHead %= MaxCachedChunks;
+                //if (oldChunkPositions[oldChunkPositionsHead] != null)
+                //{
+                //    var oldPosition = copiedChunks[oldChunkPositions[oldChunkPositionsHead].Value];
+                //    oldPosition = new CopiedChunk()
+                //    {
+                //        chunkPosition = oldPosition.chunkPosition,
+                //        currentGeneration = oldPosition.generation,
+                //        generation = oldPosition.generation + 1,
+                //        data = null,
+                //    };
+                //}
+                //oldChunkPositions[oldChunkPositionsHead] = task.Result.position;
+                //oldChunkPositionsHead += 1;
+                //oldChunkPositionsHead %= MaxCachedChunks;
 
                 copiedChunks[task.Result.position].data = task.Result.data;
             }
@@ -369,12 +341,12 @@ namespace Engine.ChunkStuff
         {
             CopyTaskParams args = (CopyTaskParams)state;
 
-            var palChunk = args.chunkIO.GetPalettizedChunk(args.chunkPosition);
-            if (palChunk != null)
-            {
-                args.data = PalettizedChunk.Depaletteize(palChunk.Value);
-            } 
-            else
+            //var palChunk = args.chunkIO.GetPalettizedChunk(args.chunkPosition);
+            //if (palChunk != null)
+            //{
+            //    args.data = PalettizedChunk.Depaletteize(palChunk.Value);
+            //} 
+            //else
             {
                 args.view.GetIdsForChunk(args.chunkPosition, args.data);
             }
@@ -384,6 +356,14 @@ namespace Engine.ChunkStuff
                 data = args.data,
                 position = args.chunkPosition,
             };
+        }
+
+        public void MarkAllDirty() 
+        {
+            foreach (var chunk in copiedChunks.Values)
+            {
+                chunk.generation += 1;
+            }
         }
 
         public void MarkDirty(ChunkPosition chunkPosition)

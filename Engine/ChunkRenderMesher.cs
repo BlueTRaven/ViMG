@@ -27,7 +27,7 @@ namespace ViMG
 	public class ChunkRenderMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 200;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
@@ -90,19 +90,12 @@ namespace ViMG
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
 
-			//There's a difference between having existing meshes and needing to be remeshed (being dirty) and not having meshes at all.
-			//Therefore this bool exists to determine if the given chunk has a mesh. If it doesn't, it isn't necessarily marked dirty,
-			//it just needs a mesh to be created in the first place.
-			public bool hasMeshes;
-
 			public RenderMeshInfo(ChunkPosition position)
 			{
 				this.position = position;
 				meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
 				meshVersion = 0;
 				version = 1;
-
-				hasMeshes = false;
 			}
 
 			public int GetMeshVersionCode()
@@ -145,7 +138,7 @@ namespace ViMG
 		private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
-		private BufferPool bufferPool;
+		//private BufferPool bufferPool;
 
 		private RenderMeshInfo[] chunkMeshInfos;
 
@@ -161,7 +154,7 @@ namespace ViMG
 				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
 
-			this.bufferPool = bufferPool;
+			//this.bufferPool = bufferPool;
 		}
 
 		public void Update(CopiedChunkManager copyManager)
@@ -188,13 +181,11 @@ namespace ViMG
 
 				ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
-				if (c.version != c.meshVersion || !c.hasMeshes)
+				if (c.version != c.meshVersion)
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position); //CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-					//currentBatch.copies[currentBatch.num].refcount += 1;
-                    //currentBatch.copies[currentBatch.num].render = true;
+					currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position);
                     currentBatch.num++;
 				}
 			}
@@ -262,15 +253,10 @@ namespace ViMG
 						throw new Exception("???");
 
 					BatchRenderMeshTaskResult batchResult = task.Result;
+					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						//lock (bufferPool)
-						//{
-						//	batchResult.copies[j].Return(bufferPool);
-						//	batchResult.copies[j].render = false;
-      //                  }
-
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
 						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -313,16 +299,10 @@ namespace ViMG
 						throw new Exception("???");
 
 					var batchResult = task.Result;
+					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						//lock (bufferPool)
-						//{
-                            //using var zoneLock = TracyImpl.Tracy.BeginZone(name: "Lock");
-                            //batchResult.copies[j].Return(bufferPool);
-							//batchResult.copies[j].render = false;
-						//}
-
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
 						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -384,7 +364,7 @@ namespace ViMG
 
 			ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
-			if (c.version != c.meshVersion || !c.hasMeshes)
+			if (c.version != c.meshVersion)
 			{
 				currentBatch.meshInfos[currentBatch.num] = c;
 				currentBatch.copies[currentBatch.num] = copy;//CopiedChunkPool.MakeCopy(world, bufferPool, position);
@@ -393,10 +373,6 @@ namespace ViMG
 			} 
 			else
 			{
-				//lock (bufferPool)
-				//{
-				//	copy.Return(bufferPool);
-				//}
 				return false;
 			}
 		}
@@ -462,7 +438,10 @@ namespace ViMG
 							}
 						}
 					}
-
+					if (cmi.position == new ChunkPosition(17, 12, 17))
+					{
+						Console.Write("");
+					}
 					state.batch.copies[i].GetFaces(positions, faces);
 
 					cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
@@ -475,23 +454,18 @@ namespace ViMG
 					VertexAttributes empties = state.mesher.GenerateChunk(
 						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
 
-					cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
-					//MeshHelper.MakeSimplerMesh(state.mesher.device,
-					//opaques.verts.ToVertexOpaquePass(), opaques.indices, false);    //opaque meshes bake their own tangents
+                    if (cmi.position == new ChunkPosition(17, 12, 17))
+                    {
+                        Console.Write("");
+                    }
+
+                    cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
 					cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
-					//MeshHelper.MakeSimplerMesh(state.mesher.device,
-					//transparents.verts.ToVertexTransparentPass(), transparents.indices);
 					cmi.meshes[(int)Cube.RenderPass.DepthOnly] = VerySimpleMesh.Shadow(state.mesher.device, shadows);
-					//MeshHelper.MakeSimplerMesh(state.mesher.device,
-					//shadows.verts.ToVertexShadowPass(), shadows.indices);
 					cmi.meshes[(int)Cube.RenderPass.Fluid] = new VerySimpleMesh();
-					// (null, null);   //TODO fluids?
 					cmi.meshes[(int)Cube.RenderPass.Air] = VerySimpleMesh.SolidColor(state.mesher.device, empties);
-					//MeshHelper.MakeSimplerMesh(state.mesher.device,
-					//empties.verts.ToVertexEmptyPass(), empties.indices);
 
 					state.batch.meshInfos[i] = cmi;
-					state.batch.meshInfos[i].hasMeshes = true;
 				}
 			}
 
@@ -504,17 +478,7 @@ namespace ViMG
 			{
 				c.meshes[i].Dispose();
 				c.meshes[i] = new VerySimpleMesh();
-				//if (c.meshes[i].VBO != null)
-				//{
-				//	c.meshes[i].VBO.Dispose();
-				//	c.meshes[i].IBO.Dispose();
-
-				//	c.meshes[i] = (null, null);
-				//}
-
 			}
-
-			c.hasMeshes = false;
 		}
 
 		public void Unload(ChunkPosition position)
@@ -531,21 +495,21 @@ namespace ViMG
 					VerySimpleMesh mesh = chunkMeshInfos[j].meshes[k];
                     chunkMeshInfos[j].meshes[k].Dispose();
 					chunkMeshInfos[j].meshes[k] = new VerySimpleMesh();
-
-					//if (mesh.VBO != null)
-					//{
-					//	mesh.VBO.Dispose();
-					//	mesh.IBO.Dispose();
-
-					//	chunkMeshInfos[j].meshes[k] = (null, null);
-					//}
 				}
-
-				chunkMeshInfos[j].hasMeshes = false;
 			}
 
-			bufferPool.AssertEmpty();
-			bufferPool.Clear();
+			//bufferPool.AssertEmpty();
+			//bufferPool.Clear();
+		}
+
+		public void MarkAllDirty()
+		{
+			for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
+			{
+				Util.OneDToThreeD(j, new ValuePoint3D(sizeInChunks), out var point);
+				MarkDirty(new ChunkPosition(point.x, point.y, point.z));
+			}
+			UnloadAll();
 		}
 
 		public bool MarkDirty(ChunkPosition position)
@@ -723,7 +687,7 @@ namespace ViMG
 
 		public VertexAttributes GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass, int dummy)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Vector3 n = new Vector3(0);
             Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -823,8 +787,8 @@ namespace ViMG
                             Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices, vertexCount);
                         }
 
-						using (var zoneCopy = TracyImpl.Tracy.BeginZone(name: "Copy")) 
-						{
+						//using (var zoneCopy = TracyImpl.Tracy.BeginZone(name: "Copy")) 
+						//{
 							for (int j = 0; j < vertices.Length; j++)
 							{
 								if (attributes.position.GetOut(out var positions))
@@ -840,7 +804,7 @@ namespace ViMG
 								if (attributes.animation.GetOut(out var animations))
 									animations.Add(new VertexAnimated(vertices[j].AnimFrameTime, vertices[j].AnimFrameSize, vertices[j].NumAnimFrames));
 							}
-						}
+						//}
 
                         vertexCount += vertices.Length;
                         iter++;
@@ -937,7 +901,7 @@ namespace ViMG
 
 		private static unsafe void BakeAO(CopiedChunkManager.CopiedChunkData data, CubePosition cubePosition, int start, int end, FastList<VertexCube> vertices)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Span<CubePosition> checkPositions = stackalloc CubePosition[4];
 			Span<ushort> checkIds = stackalloc ushort[4];

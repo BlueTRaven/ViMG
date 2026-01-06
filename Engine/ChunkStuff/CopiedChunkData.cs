@@ -217,7 +217,7 @@ namespace ViMG.ChunkStuff
 
         public void GetFaces(Span<CubePosition> positions, Span<MeshHelper.CubeFace> faces)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Debug.Assert(positions.Length == faces.Length);
             for (int i = 0; i < positions.Length; i++)

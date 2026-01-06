@@ -253,18 +253,18 @@ namespace ViMG.Rendering
                         null, Color.White * alphaDay));
                 }
 
-                //if (WeatherSkyboxAlpha > 0)
-                //{
-                //    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
-                //    {
-                //        SortValue = 100,
-                //        Material = new Rendering.RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Weather),
-                //        TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
-                //        Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
-                //            Matrix.CreateTranslation(current.camera.Position),
-                //        Mesh = skyboxMesh.Value,
-                //    });
-                //}
+                if (client.WorldLogic.skybox.WeatherAlpha > 0)
+                {
+                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+                    {
+                        SortValue = 100,
+                        Material = new Rendering.RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Weather),
+                        TintColor = client.WorldLogic.skybox.WeatherColor.ToVector4() * client.WorldLogic.skybox.WeatherAlpha,
+                        Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
+                            Matrix.CreateTranslation(current.camera.Position),
+                        Mesh = skyboxMesh,
+                    });
+                }
             }
         }
     }
