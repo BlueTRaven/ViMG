@@ -46,6 +46,7 @@ namespace Engine.Clients
         private MouseState currMS;
         private MouseState prevMS;
 
+        public Camera InterpCamera = null;
         private MenuPlayer menuPlayer;
 
         public ClientStates(GraphicsDevice device)
@@ -59,6 +60,7 @@ namespace Engine.Clients
             {
                 states[i] = new ClientWorld();
             }
+            InterpCamera = new CameraPerspective(states[0].camera.Position, states[0].camera.RotationEuler, states[0].camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
             inventoryManager = new ClientInventoryManager();
             cubeTrackers = new CubeTrackers();
@@ -237,6 +239,14 @@ namespace Engine.Clients
 
         public void Render(GraphicsDevice device, double deltaTime)
         {
+            {
+                var prevCamera = Previous(1).camera;
+                var currCamera = Current().camera;
+                InterpCamera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)Main.TimeC);
+                InterpCamera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)Main.TimeC);
+                InterpCamera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
+            }
+
             LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
             LightManager.DrawShadowmap(device, ChunkManager);
             LightManager.Draw(device);
