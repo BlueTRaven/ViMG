@@ -5,6 +5,7 @@ using Engine.Common;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,8 @@ namespace ModGameBase.Client.WorldLogics
 
         private ViMG.DirectionalLight directionalLight;
         public WeatherManager WeatherManager;
+
+        private double timeSinceLastCamUpdate = 0;
 
         public ClientWorldLogicIsland(GraphicsDevice device) : base(device)
         {
@@ -106,13 +109,25 @@ namespace ModGameBase.Client.WorldLogics
 
             WeatherManager.Update(deltaTime, (float)client.Current().time, lightColor);
             var interpPlayer = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
-            WeatherManager.UpdateClient(deltaTime, interpCamera, interpPlayer.position, client.ChunkManager.CubeView);
+            WeatherManager.UpdateClient(deltaTime, client.InterpCamera, interpPlayer.position, client.ChunkManager.CubeView);
             WeatherManager.UpdateClientLight(deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
 
-            directionalLight.UpdateCameras(client, interpCamera, lightDir, lightColor);
+            directionalLight.UpdateCameras(client, client.InterpCamera, lightDir, lightColor);
+
+            if (Main.Time - timeSinceLastCamUpdate > 1)
+            {
+                timeSinceLastCamUpdate = Main.Time;
+
+                float ambient = 1 - SurfaceTimeHelper.GetTimeOfDay(client.Current().time, dawnEndOffsetScale: 1.25f);
+                Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+                if (!Main.inputManager.IsHeld(Keys.F6))
+                    Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+                else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+                Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+                Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+            }
         }
 
-        private ViMG.Camera interpCamera = null;
         public override void Render(GraphicsDevice device, ClientStates client)
         {
             Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
@@ -120,13 +135,9 @@ namespace ModGameBase.Client.WorldLogics
             var curr = client.Current();
             var prev = client.Previous(1);
 
-            if (interpCamera == null) interpCamera = new CameraPerspective(prev.camera.Position, prev.camera.RotationEuler, prev.camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
-            interpCamera.Position = Vector3.Lerp(prev.camera.Position, curr.camera.Position, (float)Main.TimeC);
-            interpCamera.Rotation = Quaternion.Lerp(prev.camera.Rotation, curr.camera.Rotation, (float)Main.TimeC);
-
             float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
 
-            WeatherManager.Draw(device, interpCamera, time);
+            WeatherManager.Draw(device, client.InterpCamera, time);
 
             //if (world.LoadedFolderName == "coconut")
             //    sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
@@ -134,14 +145,14 @@ namespace ModGameBase.Client.WorldLogics
             float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
             // TODO this should be elsewhere - we don't need to update this very often?
-            directionalLight.DrawShadowmap(device, interpCamera, client.ChunkManager.ChunkMesher.RenderMesher);
-            directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, interpCamera);
+            directionalLight.DrawShadowmap(device, client.InterpCamera, client.ChunkManager.ChunkMesher.RenderMesher);
+            directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, client.InterpCamera);
 
             Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw(200,
                 materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
                 Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                Matrix.CreateTranslation(interpCamera.Position),
+                Matrix.CreateTranslation(client.InterpCamera.Position),
                 tintColor: Color.White));
 
             var localPlayerRef = curr.entities.GetLocalPlayerRef();

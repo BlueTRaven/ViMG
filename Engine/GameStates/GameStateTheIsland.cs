@@ -184,6 +184,12 @@ namespace ViMG.GameStates
             netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
         }
 
+        public void Disconnect()
+        {
+            netManagerServer?.Disconnect();
+            netManagerClient?.Disconnect();
+        }
+
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
@@ -206,8 +212,7 @@ namespace ViMG.GameStates
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
-            netManagerServer?.Disconnect();
-            netManagerClient?.Disconnect();
+            Disconnect();
             netManagerServer = null;
             netManagerClient = null;
 
@@ -734,10 +739,10 @@ namespace ViMG.GameStates
 
             base.Draw(device, batch);
 
-            if (world != null)
-            {
-                world.Draw(device);
-            }
+            //if (world != null)
+            //{
+            //    world.Draw(device);
+            //}
 
             if (client != null)
             {
@@ -755,10 +760,10 @@ namespace ViMG.GameStates
                 base.DrawUI(batch);
             }
 
-            if (world != null && !IsLoading)
-            {
-                world.DrawUI(batch);
-            }
+            //if (world != null && !IsLoading)
+            //{
+            //    world.DrawUI(batch);
+            //}
 
             if (IsLoading && LoadMessage != null)
             {

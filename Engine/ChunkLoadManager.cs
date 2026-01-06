@@ -705,11 +705,11 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             //TODO: there may still be meshes in the queue.
-            chunkMesher?.RenderMesher.FinishFlush();
+            chunkMesher?.RenderMesher?.FinishFlush();
             chunkMesher?.CollisionMesher.FinishFlush();
             CopiedChunkPool.Verify();
 
-            chunkMesher?.RenderMesher.UnloadAll();
+            chunkMesher?.RenderMesher?.UnloadAll();
             chunkMesher?.CollisionMesher.UnloadAll();
 			
 			entityManager.UnloadAll();
