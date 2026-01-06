@@ -307,13 +307,20 @@ namespace ViMG
 
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
-			IsMouseVisible = DrawCursor;
+			if (gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			{
+				IsMouseVisible = DrawCursor;
+			}
+			else
+			{
+				IsMouseVisible = true;
+			}
 
-			//if (WorldLoaded)
+				//if (WorldLoaded)
 				//world.UnfixedUpdate();
-			//else ui.Update(GraphicsDevice, gt.ElapsedGameTime.TotalSeconds);
+				//else ui.Update(GraphicsDevice, gt.ElapsedGameTime.TotalSeconds);
 
-			time += gt.ElapsedGameTime.TotalSeconds;
+				time += gt.ElapsedGameTime.TotalSeconds;
 			while (time >= FIXED_STEP && !Exit)
 			{
 				time -= FIXED_STEP;
@@ -363,8 +370,11 @@ namespace ViMG
 
 			Renderer.Update(deltaTime);
 
-			if (IsActive && !paused && !MouseControl)
-				Options.CenterMouse();
+			if (gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			{
+				if (IsActive && !paused && !MouseControl)
+					Options.CenterMouse();
+			}
 
 			zone.End();
 

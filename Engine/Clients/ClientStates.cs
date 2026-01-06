@@ -113,9 +113,13 @@ namespace Engine.Clients
             var localPlayerRef = current.entities.GetLocalPlayerRef();
             if (current.entities.IsActive(ref localPlayerRef))
             {
+                if (Main.inputManager.JustPressed(Keys.Escape) && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+                    Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(Main.gameStateManager));
+
                 if (Main.inputManager.JustPressed(Keys.F5))
                 {
-                    for (int i = 0; i < 32 * 32 * 32; i++)
+                    var sizeInChunks = ChunkManager.SizeInChunks;
+                    for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
                     {
                         Util.OneDToThreeD(i, new ValuePoint3D(32), out var point);
                         var chunkPos = new ChunkPosition(point.x, point.y, point.z);

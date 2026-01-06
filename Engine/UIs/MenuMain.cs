@@ -61,9 +61,6 @@ namespace ViMG.UIs
         public override void OnClose()
         {
             base.OnClose();
-
-            Main.MouseControl = false;
-            Main.DrawCursor = false;
         }
 
         public static string GetDefaultPlayerName(GameStateManager gsManager)

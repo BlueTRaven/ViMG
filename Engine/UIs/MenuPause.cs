@@ -15,13 +15,9 @@ namespace ViMG.UIs
     {
         private TextHelper.FontInfo fi;
 
-        private readonly World world;
-
-        public MenuPause(GameStateManager gsManager, World world) : base(gsManager)
+        public MenuPause(GameStateManager gsManager) : base(gsManager)
         {
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
-
-            this.world = world;
         }
 
         public override void OnOpen()
@@ -71,6 +67,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Save", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
+                    var world = Main.gameStateManager.TheIsland.GetWorld();
                     world.SaveWorld();
                     gsManager.TheIsland.playerIO?.SerializeAll(world);
                     gsManager.TheIsland.playerIO?.Save(world.LoadedFolderName);

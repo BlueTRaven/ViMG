@@ -339,9 +339,6 @@ namespace ViMG
             //	Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
             //}
 
-            if (Main.inputManager.JustPressed(Keys.Escape) && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
-                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(Main.gameStateManager, this));
-
             deltaTime *= TimeScale;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
