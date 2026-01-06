@@ -246,7 +246,8 @@ namespace ViMG.Cubes
 		public virtual bool CanRightClick(World world, CubePosition position)
 		{
 			//cube trackers and multi cube trackers can be right clicked under any situation
-			return this is ICubeTracker || this is IMultiCubeTracker;
+			//return this is ICubeTracker || this is IMultiCubeTracker; // ??? this is a Cube, not an entity...
+			return false;
 		}
 
 		public virtual void OnLeftClick(World world, CubePosition position)

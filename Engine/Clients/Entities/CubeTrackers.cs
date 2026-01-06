@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 
 namespace Engine.Clients.Entities
 {
@@ -30,20 +31,23 @@ namespace Engine.Clients.Entities
 
     public class ChunkCubeTrackers
     {
-        public BasicState[] cubeTrackers;
+        public EntityManager.EntityReference[] cubeTrackers;
 
         public ChunkPosition chunkPosition;
 
         public int count;
 
-        public virtual void Add(CubePosition chunkSpacePosition, BasicState state)
+        public virtual void Add(CubePosition chunkSpacePosition, EntityManager.EntityReference reference)
         {
             Util.ThreeDToOneD(new ValuePoint3D(chunkSpacePosition.X, chunkSpacePosition.Y, chunkSpacePosition.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
             if (cubeTrackers == null)
             {
-                cubeTrackers = new BasicState[Chunk.NUM_CUBES_IN_CHUNK];
+                cubeTrackers = new EntityManager.EntityReference[Chunk.NUM_CUBES_IN_CHUNK];
+                //cubeTrackers = new BasicState[Chunk.NUM_CUBES_IN_CHUNK];
             }
+
+            cubeTrackers[i] = reference;
 
             count++;
         }
@@ -57,7 +61,7 @@ namespace Engine.Clients.Entities
             count--;
         }
 
-        public virtual BasicState Get(CubePosition chunkSpacePosition)
+        public virtual EntityManager.EntityReference Get(CubePosition chunkSpacePosition)
         {
             Util.ThreeDToOneD(new ValuePoint3D(chunkSpacePosition.X, chunkSpacePosition.Y, chunkSpacePosition.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
@@ -67,12 +71,12 @@ namespace Engine.Clients.Entities
 
     public class ChunkCubeTrackersDummy : ChunkCubeTrackers 
     {
-        public override void Add(CubePosition chunkSpacePosition, BasicState state)
+        public override void Add(CubePosition chunkSpacePosition, EntityManager.EntityReference state)
         {
             
         }
 
-        public override BasicState Get(CubePosition chunkSpacePosition)
+        public override EntityManager.EntityReference Get(CubePosition chunkSpacePosition)
         {
             return new();
         }

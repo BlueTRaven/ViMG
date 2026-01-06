@@ -80,9 +80,11 @@ namespace Engine.Networking.Messages
                     NetDataWriter subwriter = new NetDataWriter();
                     subwriters.Add(subwriter);
 
-                    subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
+                    var reference = GS.GetWorld().EntityManager.GetReference((int)ent.Id);
+                    subwriter.Put(reference);
+                    //subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
                     subwriter.Put((ushort)1);
-                    subwriter.Put(cubeTracker.TrackedPosition);
+                    subwriter.Put(cubeTracker.TrackedPosition.InChunkSpace());
 
                     trackerStateI += 1;
                 }
@@ -95,11 +97,13 @@ namespace Engine.Networking.Messages
                     NetDataWriter subwriter = new NetDataWriter();
                     subwriters.Add(subwriter);
 
-                    subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
+                    var reference = GS.GetWorld().EntityManager.GetReference((int)ent.Id);
+                    subwriter.Put(reference);
+                    //subwriter.Put(GS.GetWorld().EntityManager.GetPrevState((int)ent.Id, 0));
                     subwriter.Put((ushort)cubeTracker.TrackedPositions.Count());
                     foreach (CubePosition trackedPosition in cubeTracker.TrackedPositions)
                     {
-                        subwriter.Put(trackedPosition);
+                        subwriter.Put(trackedPosition.InChunkSpace());
                     }
 
                     trackerStateI += 1;
@@ -159,13 +163,13 @@ namespace Engine.Networking.Messages
             int numTrackers = reader.GetInt();
             for (int i = 0; i < numTrackers; i++)
             {
-                var state = reader.Get<BasicState>();
+                var reference = reader.Get<EntityManager.EntityReference>();
                 var trackers = GS.GetClient().cubeTrackers.Get(chunkPosition);
                 int trackedPositionsNum = reader.GetUShort();
                 for (int j = 0; j < trackedPositionsNum; j++)
                 {
                     CubePosition position = reader.Get<CubePosition>();
-                    trackers.Add(position, state);
+                    trackers.Add(position, reference);
                 }
             }
         }

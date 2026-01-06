@@ -24,7 +24,7 @@ namespace ViMG
 		public int Y;
 		public int Z;
 
-		public readonly CoordinateSpace Coord;
+		public CoordinateSpace Coord;
 
 		public CubePosition(int x, int y, int z, CoordinateSpace coord = CoordinateSpace.CubeSpace)
 		{
@@ -173,6 +173,7 @@ namespace ViMG
 
         public void Serialize(NetDataWriter writer)
         {
+			writer.Put((byte)Coord);
 			writer.Put(X);
             writer.Put(Y);
             writer.Put(Z);
@@ -180,6 +181,7 @@ namespace ViMG
 
         public void Deserialize(NetDataReader reader)
         {
+			Coord = (CoordinateSpace)reader.GetByte();
 			X = reader.GetInt();
             Y = reader.GetInt();
             Z = reader.GetInt();

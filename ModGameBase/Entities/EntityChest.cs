@@ -93,10 +93,10 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-			if (player.IsLocalPlayer)
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory, rows, columns));
+			//if (player.IsLocalPlayer)
+			//	Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory, rows, columns));
 
-			return true;
+			return false;
 		}
 
 		public override void OnSave(List<byte> saveBytes)
@@ -151,6 +151,7 @@ namespace ViMG.Entities
 			{
 				position = Position,
 				state = (int)meshingData.facing,
+				counters = { [0] = rows, [1] = columns, [2] = inventory.id, [3] = inventory.generation },
 			};
         }
 
