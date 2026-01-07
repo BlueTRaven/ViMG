@@ -28,7 +28,6 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
-        private List<PalettizedChunk> chunksToLoad = new List<PalettizedChunk>();
 
         public SyncChunk()
         {
@@ -125,10 +124,6 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             var chunkPosition = reader.Get<ChunkPosition>();
-            if (chunkPosition == new ChunkPosition(17, 12, 17))
-            {
-                Console.Write("");
-            }
             if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
             {
                 PalettizeType paletteType = (PalettizeType)reader.GetInt();
@@ -141,7 +136,6 @@ namespace Engine.Networking.Messages
                     position = chunkPosition,
                     type = paletteType,
                 };
-                chunksToLoad.Add(chunk);
                 GS.GetClient().ChunkManager.ChunkIO.SetChunk(ref chunk);
             }
             else
@@ -172,70 +166,6 @@ namespace Engine.Networking.Messages
                     trackers.Add(position, reference);
                 }
             }
-        }
-
-        public unsafe void Apply(ChunkManager chunkManager, ChunkLoadManager chunkLoadManager)
-        {
-            //foreach (var chunkToLoad in chunksToLoad) 
-            //{
-            //    Span<CubePosition> queryPositions = stackalloc CubePosition[Chunk.NUM_CUBES_IN_CHUNK];
-            //    var ids = CubeView.Depaletteize(chunkToLoad);
-
-            //    CubePosition basePosition = chunkToLoad.position.InCubeSpace();
-
-            //    fixed (CubePosition* queryPositionsPtr = queryPositions)
-            //    {
-            //        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            //        {
-            //            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-            //            {
-            //                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            //                {
-            //                    Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-            //                    CubePosition pos = basePosition + new CubePosition(x, y, z);
-            //                    queryPositionsPtr[i] = pos;
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //    chunkManager.CubeView.SetCubes(queryPositions, ids);
-            //}
-
-            //foreach (var chunkToLoad in chunksToLoad)
-            //{
-            //    chunkLoadManager.Unload(chunkToLoad.position);
-            //    chunkLoadManager.MarkDirty(chunkToLoad.position);
-            //}
-
-            //foreach (CubeView.PalettizedChunk chunkToLoad in chunksToLoad)
-            //{
-            //    var ids = chunkManager.CubeView.Depaletteize(chunkToLoad);
-
-            //    CubePosition basePosition = chunkToLoad.position.InCubeSpace();
-
-            //    fixed (CubePosition* queryPositionsPtr = queryPositions)
-            //    {
-            //        for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            //        {
-            //            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-            //            {
-            //                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            //                {
-            //                    Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-            //                    CubePosition pos = basePosition + new CubePosition(x, y, z);
-            //                    queryPositionsPtr[i] = pos;
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //    chunkManager.CubeView.SetCubes(queryPositions, ids);
-            //    chunkLoadManager.Unload(chunkToLoad.position);
-            //    chunkLoadManager.MarkDirty(chunkToLoad.position);
-            //}
-
-            chunksToLoad.Clear();
         }
     }
 }

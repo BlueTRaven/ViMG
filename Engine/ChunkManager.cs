@@ -101,7 +101,7 @@ namespace ViMG
                             multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
                     }
 
-                    //Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, updated);
+                    Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncCubeUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, updated);
                 }
                 else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
                         .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);

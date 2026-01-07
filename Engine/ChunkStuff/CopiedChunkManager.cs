@@ -106,11 +106,6 @@ namespace Engine.ChunkStuff
 
                 Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-                if (ChunkPosition == new ChunkPosition(17, 12, 17) && cube != Main.Registry.CubeRegistry.Air)
-                {
-                    Console.Write("");
-                }
-
                 //TODO re-enable air
                 if (cube.Transparency == Cube.TransparencyValue.Invisible || cube.Transparency == Cube.TransparencyValue.Air)
                     return MeshHelper.CubeFace.NONE;

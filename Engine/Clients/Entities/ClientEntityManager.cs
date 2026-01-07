@@ -87,7 +87,8 @@ namespace Engine.Clients.Entities
         public void RemovePlayer(EntityManager.EntityReference reference)
         {
             int playerIndex = GetPlayerIndex(reference);
-            players[playerIndex] = PlayerHolder.DEFAULT;
+            if (playerIndex != -1)
+                players[playerIndex] = PlayerHolder.DEFAULT;
         }
 
         public int GetPlayerIndex(EntityManager.EntityReference reference)

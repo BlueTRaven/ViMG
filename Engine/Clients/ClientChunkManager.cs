@@ -30,6 +30,15 @@ namespace Engine.Clients
             CopyManager = new CopiedChunkManager(CubeView, ChunkIO, SizeInChunks);
         }
 
+        // TODO:
+        // This is kinda hacky.
+        // If we're playing in singleplayer, we want to avoid having duplicate copies of voxel data if at all possible.
+        // Client-server naturally duplicates this info. However, if we're singleplayer, we're running in one process and can
+        // inter-communicate no problem. In this case we can just use the server's ChunkIO instead of the Client's separate,
+        // duplicated version.
+        // This is hacky because it's lazily evaluated. I think we could probably change this to not be lazily evaluated, but
+        // that would mean client can only be fully initialized on full connection established (As that's when the server's
+        // ChunkIO is definitely available).
         public void MaybeSetToServer()
         {
             if (Main.gameStateManager.TheIsland.GetWorld() != null && ChunkIO != Main.gameStateManager.TheIsland.GetWorld().ChunkIO)

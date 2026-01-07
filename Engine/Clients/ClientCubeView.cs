@@ -70,6 +70,17 @@ namespace Engine.Clients
                 io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Read);
         }
 
+        public void SetId(CubePosition position, ushort id)
+        {
+            Span<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
+
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+
+            ushort oldId = ids[i];
+            ids[i] = id;
+        }
+
         public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
         {
             IMGUIConsole.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);

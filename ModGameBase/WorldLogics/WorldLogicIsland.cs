@@ -24,13 +24,8 @@ namespace ViMG.WorldLogics
 		private const float SUN_LIGHT_DISTANCE = -Cube.CUBE_SCALE * 10;
 		private const float SUN_LIGHT_ANGLE = 5f; //rotate 5 degrees
 		private const float LAVA_HEIGHT = Cube.CUBE_SCALE * 40.5f;
-		private static VerySimpleMesh meshSun;
-		private static VerySimpleMesh meshLavaQuad;
-        private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("sun"));
-        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("lava"), emissive: Main.assetsManager.GetAsset<Texture2D>("lava"));
 
         private float alive;
-        private DirectionalLight? directionalLight = null;
 		//1 and last are replaced by the previous directional light color to prevent jumping colors.
 		private static Color[] duskColors =
         [
@@ -62,47 +57,6 @@ namespace ViMG.WorldLogics
             base.FinishLoading(world, device);
 
             WeatherManager = new WeatherManager(device);
-
-            float[] splits = [1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f];
-
-            directionalLight = new DirectionalLight(device, Main.NEAR, Main.FAR, splits);
-
-            directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
-
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = [0, 1, 3, 1, 2, 3];
-
-            Color sunColor = Color.White;
-            float sunVertDist = Cube.CUBE_SCALE * 12;
-
-            if (Main.SessionInformation.LastLoadedSave == "coconut")
-            {
-                sunVertDist = Cube.CUBE_SCALE * 128;
-                sunColor = Color.White;
-            }
-
-            vertices.Add(new VertexCube(new Vector3(-sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 0), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(new Vector3(-sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 0), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(new Vector3(sunVertDist, sunVertDist, 0), sunColor, new Vector2(1, 1), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(new Vector3(sunVertDist, -sunVertDist, 0), sunColor, new Vector2(0, 1), new Vector3(0, 0, -1)));
-
-            meshSun = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
-            //meshSun = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-
-            vertices = new FastList<VertexCube>();
-            indices = [3, 1, 0, 3, 2, 1];
-
-            vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(new Vector3(-Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, Cube.CUBE_SCALE), Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(new Vector3(Cube.CUBE_SCALE, 0, -Cube.CUBE_SCALE), Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
-
-            meshLavaQuad = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-            //meshLavaQuad = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-
-            world.Skybox.Day = Main.assetsManager.GetAsset<Texture2D>("skybox_day");
-            world.Skybox.Weather = Main.assetsManager.GetAsset<Texture2D>("skybox_stormy");
-            world.Skybox.Night = Main.assetsManager.GetAsset<Texture2D>("skybox_night");
         }
 
         public override void Initialize(World world)
@@ -255,52 +209,52 @@ namespace ViMG.WorldLogics
 			return world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD);
         }
 
-        public override void Draw(World world, GraphicsDevice device)
-        {
-            base.Draw(world, device);
+  //      public override void Draw(World world, GraphicsDevice device)
+  //      {
+  //          base.Draw(world, device);
 
-			//WeatherManager.Draw(device, world);
+		//	//WeatherManager.Draw(device, world);
 
-            directionalLight.DrawShadowmap(device, Main.camera, world.ChunkManager.ChunkMesher.RenderMesher);
-			directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, Main.camera);
+  //          directionalLight.DrawShadowmap(device, Main.camera, world.ChunkManager.ChunkMesher.RenderMesher);
+		//	directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, Main.camera);
 
-			//TODO: re-implement this easter egg
-			Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
+		//	//TODO: re-implement this easter egg
+		//	Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
 
-			if (world.LoadedFolderName == "coconut")
-				sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
+		//	if (world.LoadedFolderName == "coconut")
+		//		sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
 
-			float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+		//	float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
-			Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(200,
-				materialSun, meshSun,
-                Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-				Matrix.CreateTranslation(Main.camera.Position),
-				tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
+		//	Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(200,
+		//		materialSun, meshSun,
+  //              Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
+		//		Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+		//		Matrix.CreateTranslation(Main.camera.Position),
+		//		tintColor: Color.White * (1 - world.WeatherSkyboxAlpha)));
 
-            if (world.GetLocalPlayer() != null && !world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.GetLocalPlayer().Position.Y / Cube.CUBE_SCALE < 140)
-			{
-				Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
-					Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.GetLocalPlayer().Position.Z);
+  //          if (world.GetLocalPlayer() != null && !world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && world.GetLocalPlayer().Position.Y / Cube.CUBE_SCALE < 140)
+		//	{
+		//		Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
+		//			Matrix.CreateTranslation(world.player[world.localPlayerIndex].Position.X, Cube.CUBE_SCALE * 40.5f, world.GetLocalPlayer().Position.Z);
 
-				RectangleF sourceRect = new RectangleF()
-				{
-					x = -world.player[world.localPlayerIndex].Position.Z * 128 + this.alive,
-					y = -world.player[world.localPlayerIndex].Position.X * 128 + this.alive,
-					width = 128 * 16,
-					height = 128 * 16,
-				};
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava,
-					meshLavaQuad, mat, sourceRect));
-			}
-		}
+		//		RectangleF sourceRect = new RectangleF()
+		//		{
+		//			x = -world.player[world.localPlayerIndex].Position.Z * 128 + this.alive,
+		//			y = -world.player[world.localPlayerIndex].Position.X * 128 + this.alive,
+		//			width = 128 * 16,
+		//			height = 128 * 16,
+		//		};
+		//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(materialLava,
+		//			meshLavaQuad, mat, sourceRect));
+		//	}
+		//}
 
-        public override void Dispose()
-        {
-            base.Dispose();
+   //     public override void Dispose()
+   //     {
+   //         base.Dispose();
 
-			directionalLight.Dispose();
-        }
+			//directionalLight.Dispose();
+   //     }
     }
 }

@@ -382,10 +382,10 @@ namespace ViMG
 			}
 			PlayerRespawnedEvent.Clear();
 
-			SyncChunk.Instance.Apply(ChunkManager, ChunkLoadManager);
+			//SyncChunk.Instance.Apply(ChunkManager, ChunkLoadManager);
             SyncPlayerInputs.Instance.Apply(player);
-			SyncBasicState.Instance.Apply(EntityManager, EntIO);
-			SyncCubeUpdate.Instance.Apply(ChunkManager, player);
+			//SyncBasicState.Instance.Apply(EntityManager, EntIO);
+			//SyncCubeUpdate.Instance.Apply(ChunkManager, player);
 			//SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
 			//SyncInventoryUpdate.Instance.Apply(EntityManager);
 			//SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);

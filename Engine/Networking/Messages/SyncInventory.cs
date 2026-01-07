@@ -143,11 +143,6 @@ namespace Engine.Networking.Messages
                 Inventory? inv = invToSync.inventory;
                 var reference = invToSync.reference;
 
-                if (inv?.id == 0)
-                {
-                    Console.Write("");
-                }
-
                 reference.Serialize(subwriter);
 
                 if (invToSync.type == ToSyncType.Update)

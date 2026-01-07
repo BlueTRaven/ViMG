@@ -1,4 +1,5 @@
-﻿using LiteNetLib;
+﻿using Engine.Clients;
+using LiteNetLib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,15 +28,9 @@ namespace Engine.Networking.Messages
             public ushort oldId, newId;
             public double time;
         }
-        private List<QueuedCubeUpdated> queued1 = new();
-        private List<QueuedCubeUpdated> queued2 = new();
-        private List<QueuedCubeUpdated> queued;
-
         public SyncCubeUpdate()
         {
             Instance = this;
-
-            queued = queued1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -66,7 +61,7 @@ namespace Engine.Networking.Messages
             ushort oldId = reader.GetUShort();
             ushort newId = reader.GetUShort();
 
-            queued.Add(new QueuedCubeUpdated
+            DoCubeUpdate(GS.GetClient().ChunkManager, new QueuedCubeUpdated
             {
                 oldId = oldId,
                 newId = newId,
@@ -76,36 +71,18 @@ namespace Engine.Networking.Messages
             });
         }
 
-        public void Apply(ChunkManager chunkManager, Player?[] players)
+        private void DoCubeUpdate(ClientChunkManager chunkManager, QueuedCubeUpdated update)
         {
-            var otherBuffer = queued == queued1 ? queued2 : queued1;
-
-            foreach (QueuedCubeUpdated qcubeupdated in queued)
+            chunkManager.CubeView.SetId(update.position, update.newId);
+            chunkManager.CopyManager.MarkDirty(ChunkPosition.CubeChunk(update.position));
+            for (int i = 0; i < 3 * 3 * 3; i++)
             {
-                if (Main.Time >= qcubeupdated.time)
-                {
-                    // Invalidate any audits that may be attempting to update this position
-                    for (int i = 0; i < MAX_AUDITS; i++)
-                    {
-                        ref var currAudit = ref SyncCubeUpdateAuditRequest.Instance.activeAudits[GS.GetWorld().localPlayerIndex][i];
-                        if (currAudit.active && currAudit.position == qcubeupdated.position && qcubeupdated.time > currAudit.time)
-                        {
-                            currAudit.active = false;
-                        }
-                    }
-                    var player = qcubeupdated.player == -1 ? null : players[qcubeupdated.player];
-                    chunkManager.CubeView.SetCube(qcubeupdated.position, qcubeupdated.newId, false);
-                    chunkManager.MarkCubeDirty(player, qcubeupdated.position, qcubeupdated.oldId, qcubeupdated.newId);
-                    chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(qcubeupdated.position));
-                }
-                else
-                {
-                    otherBuffer.Add(qcubeupdated);
-                }
+                Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                ChunkPosition cpos = ChunkPosition.CubeChunk(update.position);
+                cpos += new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                if (chunkManager.IsInWorldBounds(cpos))
+                    chunkManager.ChunkMesher.RenderMesher?.MarkDirty(cpos);
             }
-
-            queued.Clear();
-            queued = otherBuffer;
         }
     }
 

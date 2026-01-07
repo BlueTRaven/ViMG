@@ -808,10 +808,6 @@ namespace ViMG.Entities
 
 		public void GetAllTrackersForChunk(ChunkPosition position, FastList<ICubeTracker> cubeTrackers, FastList<IMultiCubeTracker> multiCubeTrackers)
 		{
-			if (position == new ChunkPosition(17, 12, 16))
-			{
-				Console.Write("");
-			}
 			if (this.cubeTrackers.TryGetValue(position, out CubeTrackers? cubeTracker))
 			{
 				foreach (var t in cubeTracker.cubeTrackers.AsSpan())

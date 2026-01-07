@@ -438,10 +438,6 @@ namespace ViMG
 							}
 						}
 					}
-					if (cmi.position == new ChunkPosition(17, 12, 17))
-					{
-						Console.Write("");
-					}
 					state.batch.copies[i].GetFaces(positions, faces);
 
 					cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
@@ -453,11 +449,6 @@ namespace ViMG
 						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly, 0);
 					VertexAttributes empties = state.mesher.GenerateChunk(
 						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
-
-                    if (cmi.position == new ChunkPosition(17, 12, 17))
-                    {
-                        Console.Write("");
-                    }
 
                     cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
 					cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
