@@ -1947,20 +1947,30 @@ namespace ViMG
 			if (percent <= 0)
 				percent = 0;
 
-
 			// TODO use Rotation instead of Forward/Up/LR
 			switch ((UseAnimationType)extraState.useAnimType)
 			{
 				case UseAnimationType.SwingHorizontal:
 					{
 						float ang = 180 * percent;
-						return
+                        //Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+                        //    Matrix.CreateScale(hitboxSize / Cube.CUBE_SCALE) *
+                        //    Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
+                        //    Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
+                        //    Matrix.CreateRotationX(-Main.camera.Rotation.X) *
+                        //    Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+                        //    Matrix.CreateTranslation(Position -
+                        //    Main.camera.Forward * Cube.CUBE_SCALE / 4f -
+                        //    Main.camera.Up * Cube.CUBE_SCALE / 4f);
+                        return
 							Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
-							Matrix.CreateScale(Cube.CUBE_SCALE) *
+							Matrix.CreateScale(0.5f * scale) *
 							Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
 							Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
 							Matrix.CreateFromQuaternion(player.rotation) *
-							Matrix.CreateTranslation(player.position);
+							Matrix.CreateTranslation(player.position) *
+							Matrix.CreateTranslation(-BasicState.Forward(ref player) * Cube.CUBE_SCALE / 4f) *
+							Matrix.CreateTranslation(-BasicState.Up(ref player) * Cube.CUBE_SCALE / 4f);
 						// TODO rework
 							//Matrix.CreateRotationX(-Rotation.X) *
 							//Matrix.CreateRotationY(-Rotation.Y) *
@@ -1990,14 +2000,12 @@ namespace ViMG
 						Matrix.CreateScale(0.5f * scale) *
 						Matrix.CreateRotationZ(MathHelper.ToRadians(35f) * percent) *
 						Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
-                        Matrix.CreateFromQuaternion(player.rotation) *
-                        Matrix.CreateTranslation(player.position);
-                    //Matrix.CreateRotationX(-Rotation.X) *
-                    //Matrix.CreateRotationY(-Rotation.Y) *
-                    //Matrix.CreateTranslation(Position - (this as IRotatable).Forward * Cube.CUBE_SCALE / 3f +
-                    //(this as IRotatable).Right * Cube.CUBE_SCALE / 4f -
-                    //                  (this as IRotatable).Up * Cube.CUBE_SCALE / 6f);
-            }
+						Matrix.CreateFromQuaternion(player.rotation) *
+						Matrix.CreateTranslation(player.position) *
+						Matrix.CreateTranslation(-BasicState.Forward(ref player) * Cube.CUBE_SCALE / 3f) *
+						Matrix.CreateTranslation(BasicState.Right(ref player) * Cube.CUBE_SCALE / 4f) *
+						Matrix.CreateTranslation(-BasicState.Up(ref player) * Cube.CUBE_SCALE / 6f);
+			}
 		}
 
 		public void DrawDebug(GraphicsDevice device)

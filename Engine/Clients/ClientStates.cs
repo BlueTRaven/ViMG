@@ -221,16 +221,18 @@ namespace Engine.Clients
 
                         if (delta.Length() > float.Epsilon)
                         {
-                            camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
-                            camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
+                            camRotation.Y += MathHelper.ToRadians(delta.Y) * scalar;
+                            camRotation.X += MathHelper.ToRadians(delta.X) * scalar;
 
-                            if (camRotation.X > MathHelper.ToRadians(89))
-                                camRotation.X = MathHelper.ToRadians(89);
-                            else if (camRotation.X < -MathHelper.ToRadians(89))
-                                camRotation.X = -MathHelper.ToRadians(89);
+                            if (camRotation.Y > MathHelper.ToRadians(89))
+                                camRotation.Y = MathHelper.ToRadians(89);
+                            else if (camRotation.Y < -MathHelper.ToRadians(89))
+                                camRotation.Y = -MathHelper.ToRadians(89);
 
                             current.camera.RotationEuler = camRotation;
-                            localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.RotationEuler.Y, -current.camera.RotationEuler.X, 0);
+                            
+                            localPlayer.rotation = current.camera.Rotation;
+                            //localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.RotationEuler.Y, -current.camera.RotationEuler.X, 0);
                         }
                     }
                 }

@@ -55,23 +55,6 @@ namespace Engine.Entities
             }
         }
 
-        public Vector3 UpYawOnly
-        {
-            get
-            {
-                var newQuat = Rotation;
-                newQuat.X = 0;
-                newQuat.Z = 0;
-                var mag = float.Sqrt(newQuat.W * newQuat.W + newQuat.Y * newQuat.Y);
-                newQuat.W /= mag;
-                newQuat.Y /= mag;
-                Matrix mat = Matrix.CreateFromQuaternion(newQuat);
-                //Matrix mat = Matrix.CreateRotationY(-Rotation.Y);
-
-                return Vector3.Transform(new Vector3(0, 1, 0), mat);
-            }
-        }
-
         public Vector3 Right
         {
             get

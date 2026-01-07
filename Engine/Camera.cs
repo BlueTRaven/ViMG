@@ -62,6 +62,10 @@ namespace ViMG
 			}
 		}
 
+		public float Yaw => RotationEuler.X;
+		public float Pitch => RotationEuler.Y;
+		// we don't include roll because we never use that
+
 		private bool viewDirtyThisFrame;
 		protected bool viewDirty;
 		protected Matrix viewMatrix;
@@ -75,56 +79,47 @@ namespace ViMG
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
-						Matrix.CreateRotationY(-RotationEuler.Y) *
-						Matrix.CreateRotationZ(-RotationEuler.Z);
+                Matrix mat = Matrix.CreateFromQuaternion(Rotation);
 
-				return Vector3.Transform(new Vector3(0, 0, 1), mat);
-			}
+                return Vector3.Transform(new Vector3(0, 0, 1), mat);
+            }
 		}
 
 		public Vector3 ForwardYawOnly
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationY(-RotationEuler.Y);
+                var newQuat = Rotation;
+                newQuat.X = 0;
+                newQuat.Z = 0;
+                var mag = float.Sqrt(newQuat.W * newQuat.W + newQuat.Y * newQuat.Y);
+                newQuat.W /= mag;
+                newQuat.Y /= mag;
+                Matrix mat = Matrix.CreateFromQuaternion(newQuat);
+                //Matrix mat = Matrix.CreateRotationY(-Rotation.Y);
 
-				return Vector3.Transform(new Vector3(0, 0, 1), mat);
-			}
+                return Vector3.Transform(new Vector3(0, 0, 1), mat);
+            }
 		}
 
 		public Vector3 Up
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
-							Matrix.CreateRotationY(-RotationEuler.Y) *
-							Matrix.CreateRotationZ(-RotationEuler.Z);
+                Matrix mat = Matrix.CreateFromQuaternion(Rotation);
 
-				return Vector3.Transform(new Vector3(0, 1, 0), mat);
-			}
-		}
-
-		public Vector3 UpYawOnly
-		{
-			get
-			{
-				Matrix mat = Matrix.CreateRotationY(-RotationEuler.Y);
-
-				return Vector3.Transform(new Vector3(0, 1, 0), mat);
-			}
+                return Vector3.Transform(new Vector3(0, 1, 0), mat);
+            }
 		}
 
 		public Vector3 Right
 		{
 			get
 			{
-				Matrix mat = Matrix.CreateRotationX(-RotationEuler.X) *
-							Matrix.CreateRotationY(-RotationEuler.Y) *
-							Matrix.CreateRotationZ(-RotationEuler.Z);
+                Matrix mat = Matrix.CreateFromQuaternion(Rotation);
 
-				return Vector3.Transform(new Vector3(1, 0, 0), mat);
-			}
+                return Vector3.Transform(new Vector3(1, 0, 0), mat);
+            }
 		}
 
 		private float near;
@@ -186,8 +181,8 @@ namespace ViMG
 				viewMatrix = Matrix.CreateTranslation(-Position) *
 					//Matrix.CreateFromQuaternion(rotation) *
 					Matrix.CreateRotationZ(RotationEuler.Z) *
-					Matrix.CreateRotationY(RotationEuler.Y) *
-					Matrix.CreateRotationX(RotationEuler.X) *
+					Matrix.CreateRotationY(-RotationEuler.X) *
+					Matrix.CreateRotationX(-RotationEuler.Y) *
 					Matrix.CreateScale(scale);
 				viewDirty = false;
 			}

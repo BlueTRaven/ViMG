@@ -14,7 +14,7 @@ namespace Engine.Entities
 {
     public class EntityType : IRegisterable
     {
-        private readonly string identifier;
+        protected readonly string identifier;
         public string Identifier => identifier;
 
         public int Id;
@@ -23,7 +23,7 @@ namespace Engine.Entities
         public EntityMetaAttribute? meta;
         public EntitySerializableAttribute? serializable;
 
-        private EntityType(Type type)
+        protected EntityType(Type type)
         {
             this.identifier = type.FullName;
             this.type = type;
@@ -67,7 +67,7 @@ namespace Engine.Entities
         {
             base.DoRegistration();
 
-            Register(EntityType.New<Player>());
+            Register(new Common.Entities.Player());
             Register(EntityType.New<GenericExplosion>());
             Register(EntityType.New<Line>());
             Register(EntityType.New<EntityItem>());

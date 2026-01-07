@@ -72,6 +72,7 @@ namespace Engine.Entities.Renderers
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 
                 Matrix worldMat = Matrix.CreateScale(Cube.CUBE_SCALE) *
+                    //Matrix.CreateFromQuaternion(entity.rotation) *
                     Matrix.CreateRotationX(Math.Clamp(ypr.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(ypr.X) *
                     Matrix.CreateTranslation(entity.position);
@@ -125,24 +126,24 @@ namespace Engine.Entities.Renderers
                     }
                 }
 
-                if (Main.gameStateManager.TheIsland.GetWorld() != null)
-                {
-                    var srvPlayer = Main.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
+                //if (Main.gameStateManager.TheIsland.GetWorld() != null)
+                //{
+                //    var srvPlayer = Main.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
 
-                    var fwd2 = (srvPlayer as IRotatable).Forward;
-                    var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, Main.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
+                //    var fwd2 = (srvPlayer as IRotatable).Forward;
+                //    var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, Main.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
 
-                    if (lookAtResult2.hasHit)
-                    {
-                        Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
-                               lookAtMesh,
-                               Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-                               Matrix.CreateScale(1.126f) *
-                               Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-                               Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult2.hit)),
-                               new RectangleF(0, 1008, 16, 16), Color.Red));
-                    }
-                }
+                //    if (lookAtResult2.hasHit)
+                //    {
+                //        Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
+                //               lookAtMesh,
+                //               Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+                //               Matrix.CreateScale(1.126f) *
+                //               Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+                //               Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult2.hit)),
+                //               new RectangleF(0, 1008, 16, 16), Color.Red));
+                //    }
+                //}
             }
         }
     }
