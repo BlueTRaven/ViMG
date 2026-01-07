@@ -130,7 +130,6 @@ namespace ViMG.Entities
             BasicState aiState = new BasicState();
             ai?.Get(out aiState);
             aiState.position = Position;
-            aiState.rotation = Quaternion.Identity;
             state = aiState;
         }
 

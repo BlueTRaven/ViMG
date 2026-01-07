@@ -28,23 +28,6 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
-        {
-            return;
-            //var entities = entityManager.GetAll<GenericExplosion>();
-
-            //foreach (GenericExplosion explosion in entities)
-            var iter = new Iterator<GenericExplosion>(entities);
-            while (iter.Next(out GenericExplosion explosion))
-            {
-                float radius = (1 - explosion.timer / GenericExplosion.EXPLOSION_TIME) * explosion.radius;
-                float sort = (explosion.Position - Main.camera.Position).Length();
-                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
-                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
-                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(explosion.Position), null, Color.Red * 0.5f));
-            }
-        }
-
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)

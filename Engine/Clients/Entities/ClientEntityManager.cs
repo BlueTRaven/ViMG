@@ -60,11 +60,12 @@ namespace Engine.Clients.Entities
             players = new PlayerHolder[World.MAX_PLAYERS];
         }
 
-        public void NewFrame(ClientEntityManager prev)
+        public void NewFrame(ClientEntityManager prev, double deltaTime)
         {
             for (int i = 0; i < prev.entities.Length; i++)
             {
                 entities[i] = prev.entities[i];
+                entities[i].state.aliveTime += (float)deltaTime;
             }
 
             for (int i = 0; i < World.MAX_PLAYERS; i++)
@@ -174,6 +175,7 @@ namespace Engine.Clients.Entities
                 entityType = type,
                 entityTypeId = Main.Registry.EntityRegistry.Get(type).Id,
             };
+            entities[reference.id].state.aliveTime = 0;
         }
 
         public void Remove(ViMG.Entities.EntityManager.EntityReference reference)

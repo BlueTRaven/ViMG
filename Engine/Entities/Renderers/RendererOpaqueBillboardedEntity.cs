@@ -26,7 +26,7 @@ namespace ViMG.Entities.Renderers
 {
     public class RendererOpaqueBillboardedEntity : EntityRenderer
     {
-        public record struct TypeStatsDrawStats
+        public record struct RenderedEntityDrawStats
         {
             public bool shouldDraw = true;
 
@@ -36,7 +36,7 @@ namespace ViMG.Entities.Renderers
 
             public Color? color = Color.White;
 
-            public TypeStatsDrawStats() { }
+            public RenderedEntityDrawStats() { }
         }
 
         private int[] rendererMapping = [];
@@ -57,10 +57,9 @@ namespace ViMG.Entities.Renderers
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
-            public abstract TypeStatsDrawStats[] GetDrawStats(Entity entity);
-            public virtual TypeStatsDrawStats[] GetDrawStats2(BasicState s1, BasicState s2)
+            public virtual RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
             {
-                return Array.Empty<TypeStatsDrawStats>();
+                return Array.Empty<RenderedEntityDrawStats>();
             }
         }
 
@@ -100,105 +99,6 @@ namespace ViMG.Entities.Renderers
             return renderedTypesCache;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
-        {
-            return;
-
-            RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
-            Type type = Main.Registry.EntityRegistry.Get(stats.EntityTypeId).type;
-
-            var entities = renderedEntities;//entityManager.GetAll(type);
-
-            stats.Draws.Clear();
-
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
-
-            RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
-            {
-                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 16, 16, 16)),
-                TintColor = Color.White.ToVector3(),
-            };
-
-            foreach (Entity entity in entities)
-            {
-                IMGUIConsole.Assert(entity.GetType() == type);
-
-                if (entity == null)
-                {
-                    Console.WriteLine("Entity was null");
-                    continue;
-                }
-                TypeStatsDrawStats[] drawStats = stats.GetDrawStats(entity);
-                if (drawStats == null) continue;
-                //{
-                //    int prev = entityManager.GetPrevIndexTime(DelayRenderEnt);
-                //    drawStats = stats.GetDrawStats2(entityManager.GetPrevState((int)entity.Id, prev), entityManager.GetPrevState((int)entity.Id, prev + 1));
-                //}
-                foreach (TypeStatsDrawStats drawStat in drawStats)
-                {
-                    Vector2 scale = drawStat.scale ?? new Vector2(1);
-                    Color color = drawStat.color ?? Color.White;
-                    Vector3 position = drawStat.position ?? entity.Position;
-
-                    RendererDeferred.DrawSourceRectParameters sourceRect;
-                    if (drawStat.sourceRect.HasValue)
-                    {
-                        sourceRect = new RendererDeferred.DrawSourceRectParameters(drawStat.sourceRect.Value);
-                    }
-                    else sourceRect = new RendererDeferred.DrawSourceRectParameters();
-
-                    Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                        Matrix.CreateScale(scale.X, scale.Y, 1) *
-                        billboard *
-                        Matrix.CreateTranslation(position);
-                    Matrix.Transpose(ref mat, out mat);
-
-                    if (color.A == 255)
-                    {
-                        RendererDeferred.InstancedDraw draw = baseDraw with
-                        {
-                            World = mat,
-                            WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                            SourceRect = sourceRect,
-                            TintColor = color.ToVector3(),
-                        };
-
-                        stats.Draws.Add(draw);
-                    }
-                    else
-                    {
-                        float distance = (Main.camera.Position - position).Length();
-
-                        RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
-                        {
-                            Material = stats.Material,
-                            SourceRect = sourceRect,
-                            TintColor = color.ToVector4(),
-                            Mesh = mesh,
-                            Transform = mat,
-                            SortValue = distance,
-                        };
-
-                        Main.Renderer.AddTransparentDraw(draw);
-                    }
-                }
-            }
-
-            if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
-            {
-                if (stats.SBO != null)
-                    stats.SBO.Dispose();
-
-                stats.SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), stats.Draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
-            }
-
-            stats.SBO.SetData(stats.Draws.Buffer);
-
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
-        }
-
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             // Need to convert global entity type registry (type) to local renderer registry. How do we do this without expensive dict lookup? Sparse array?
@@ -223,16 +123,17 @@ namespace ViMG.Entities.Renderers
                 // TODO get rid of str compare
                 if (current.entities.GetTypeById(reference.id) != type) continue;
 
-                var entCurr = client.Current().entities.GetById(reference.id);
-                var entPrev = client.Previous(1).entities.GetById(reference.id);
+                var entInterp = Main.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
+                //var entCurr = client.Current().entities.GetById(reference.id);
+                //var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                var drawStats = renderer.GetDrawStats2(entPrev, entCurr);
+                var drawStats = renderer.GetDrawStats(entInterp);
 
-                foreach (TypeStatsDrawStats drawStat in drawStats)
+                foreach (RenderedEntityDrawStats drawStat in drawStats)
                 {
                     Vector2 scale = drawStat.scale ?? new Vector2(1);
                     Color color = drawStat.color ?? Color.White;
-                    Vector3 position = drawStat.position ?? entPrev.GetInterpPosition(entCurr);
+                    Vector3 position = drawStat.position ?? entInterp.position;
 
                     RendererDeferred.DrawSourceRectParameters sourceRect;
                     if (drawStat.sourceRect.HasValue)

@@ -33,8 +33,10 @@ namespace Engine.Clients
             camera.Scale = prev.camera.Scale;
             highlightIndex = prev.highlightIndex;
             flags.Flags = prev.flags.Flags;
+
+            double delta = time - prev.time;
             
-            entities.NewFrame(prev.entities);
+            entities.NewFrame(prev.entities, delta);
             this.time = time;
         }
     }

@@ -49,11 +49,6 @@ namespace Engine.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType)
-        {
-            return;
-        }
-
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < EntityManager.EntMax; i++)

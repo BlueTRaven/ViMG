@@ -29,23 +29,6 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
-        {
-            return;
-            //var lines = entityManager.GetAll<Line>();
-
-            //foreach (Line line in lines)
-            var iter = new Iterator<Line>(entities);
-
-            while (iter.Next(out Line line))
-            {
-                (RendererDeferred.DrawMaterial material, RectangleF sourceRectangle) = Line.GetMaterialFromSet(line.materialSet);
-                if (line.tileHeight != -1)
-                    DrawHelper3D.DrawLineTiled(line.Position, line.endPosition, line.width, line.tileHeight, material, mesh, sourceRectangle, line.GetColor());
-                else DrawHelper3D.DrawLine(line.Position, line.endPosition, line.width, material, mesh, sourceRectangle, line.GetColor());
-            }
-        }
-
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)

@@ -63,11 +63,10 @@ namespace ViMG.Entities
 		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 6f;
 		public float AttackTargetDistance = Cube.CUBE_SCALE * 8;
 
-		private bool isInRangeOfTarget;
-		public bool IsInRangeOfTarget => isInRangeOfTarget;
-
 		private Rectangle3D bounds;
 		private int touchHitbox = -1;
+
+		private bool isInRangeOfTarget;
 
 		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
@@ -132,8 +131,6 @@ namespace ViMG.Entities
 
 				ai.noticeHandler.Update(deltaTime);
 				ai.buffManager.Update(deltaTime);
-
-				ai.isInRangeOfTarget = false;
 
 				if (ai.InvulnTimer <= 0 && ai.onGround)
 				{
@@ -461,7 +458,7 @@ namespace ViMG.Entities
                 health = Health,
                 velocity = Velocity,
                 position = Vector3.Zero,
-                rotation = Quaternion.Identity,
+                rotation = Quaternion.CreateFromYawPitchRoll(Facing.Y, Facing.X, Facing.Z),
                 state = (int)this.state,
                 timers = { [0] = idleTimer, [1] = idleMoveTimer, [2] = attackTimer, [3] = InvulnTimer },
                 counters = { [0] = idleMovements },

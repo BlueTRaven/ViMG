@@ -100,54 +100,6 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
-        {
-            return;
-            //IReadOnlyList<Entity> ents = entityManager.GetAll<Tree>();
-
-            var iter = new Iterator<Tree>(entities);
-
-            while (iter.Next(out Tree tree))
-            {
-                if (tree.NeedsRerender)
-                {
-                    //if the tree needs to be updated, just rerender the entire list
-                    //Kinda gross...
-                    needsRebuild = true;
-                    tree.NeedsRerender = false;
-                }
-            }
-            //for (int i = 0; i < ents.Count; i++)
-            //{
-            //    //Tree tree = ents.ElementAt(i) as Tree;
-            //}
-
-            if (needsRebuild)
-            {
-                draws.Clear();
-                //draws = new FastList<RendererDeferred.InstancedDraw>();
-                BuildList(entityManager.GetAll<Tree>());
-
-                needsRebuild = false;
-            }
-
-            if (needsReupload)
-            {
-                if (SBO == null || SBO.ElementCount < draws.Length)
-                {
-                    if (SBO != null)
-                        SBO.Dispose();
-
-                    SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
-                }
-                SBO.SetData(draws.Buffer);
-
-                needsReupload = false;
-            }
-
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
-        }
-
         private static int[] renderedTypes = [0];
         public override int[] GetRenderedTypes()
         {

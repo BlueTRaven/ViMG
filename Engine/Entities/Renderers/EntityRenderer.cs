@@ -74,8 +74,6 @@ namespace ViMG.Entities.Renderers
         /// <returns></returns>
         public abstract int[] GetRenderedTypes();
 
-        public abstract void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedType);
-
         public virtual void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, int entityType) { }
 
         protected ref struct Iterator<T> where T : Entity

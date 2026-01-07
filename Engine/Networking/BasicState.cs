@@ -127,6 +127,7 @@ namespace Engine.Networking
         public int state;
         public Arr4F timers;
         public Arr4I counters;
+        public float aliveTime;
 
         public ArrExtraStateBytes extraBytes;
 

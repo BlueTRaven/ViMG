@@ -33,29 +33,6 @@ namespace ViMG.Entities.Renderers
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
-        {
-            return;
-
-            var iter = new Iterator<Door>(entities);
-            while (iter.Next(out Door door))
-            {
-                var position = door.world.PhysicsInfo.Simulation.Bodies[door.mountHandle].Pose.Position;
-                var orientation = door.world.PhysicsInfo.Simulation.Bodies[door.mountHandle].Pose.Orientation;
-
-                Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mountMesh,
-                    Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
-                    Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
-
-                position = door.world.PhysicsInfo.Simulation.Bodies[door.doorHandle].Pose.Position;
-                orientation = door.world.PhysicsInfo.Simulation.Bodies[door.doorHandle].Pose.Orientation;
-
-                Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, doorMesh,
-                    Matrix.CreateFromQuaternion(new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W)) *
-                    Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
-            }
-        }
-
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
             for (int i = 0; i < client.Current().entities.MaxEnts; i++)
