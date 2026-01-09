@@ -64,6 +64,7 @@ namespace Engine.Clients
 
         public Inventory Get(InventoryManager.InventoryReference reference)
         {
+            if (reference.id == 0) return defaultInventory;
             if (inventories[reference.id - 1].generation != reference.generation) return defaultInventory;
             return inventories[reference.id - 1].inventory ?? defaultInventory;
         }

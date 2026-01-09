@@ -141,6 +141,7 @@ namespace Engine.Items
 
         public Inventory? Get(InventoryReference reference)
         {
+            if (reference.id == 0) return null;
             if (inventories[reference.id - 1].generation != reference.generation) return null;
             return inventories[reference.id - 1].inventory;
         }

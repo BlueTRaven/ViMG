@@ -1,5 +1,9 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Clients;
+using Engine.Common.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -33,6 +37,11 @@ namespace ViMG.Cubes
 
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
+
+        public override bool CanRightClick(World world, CubePosition position)
+        {
+			return true;
+        }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{
@@ -167,6 +176,23 @@ namespace ViMG.Cubes
             //	return new CubeAnimation(0.125f, 3, 16);
 
             return base.GetAnimation(pass, data, parameters, face);
+        }
+
+        public override void OnRightClick(ClientStates client, int playerId, CubePosition position)
+        {
+            base.OnRightClick(client, playerId, position);
+
+            var tracker = client.cubeTrackers.Get(ChunkPosition.CubeChunk(position)).Get(position.InChunkSpace());
+			if (playerId == client.localPlayer)
+			{
+                var ent = client.Current().entities.GetByRef(ref tracker);
+                var invRef = new InventoryManager.InventoryReference((ushort)ent.counters[0], (short)ent.counters[1]);
+
+                var playerRef = client.Current().entities.GetPlayerRef(playerId);
+                var player = client.Current().entities.GetByRef(playerRef);
+                var playerExtra = player.GetExtra<Player.PlayerExtraState>();
+                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, playerRef, tracker, playerExtra.inventory, playerExtra.heldInventory, invRef));
+			}
         }
     }
 }

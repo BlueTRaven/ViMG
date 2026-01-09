@@ -56,10 +56,13 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			var invManager = gsManager.TheIsland.GetWorld().InventoryManager;
+            var invManager = gsManager.TheIsland.GetClient().inventoryManager;
             var furnaceInventory = invManager.Get(this.furnaceInventory);
             var playerInventory = invManager.Get(this.playerInventory);
             var heldInventory = invManager.Get(this.heldInventory);
+
+            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
+                Main.gameStateManager.GetCurrentGameState().PopMenu();
 
             TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 

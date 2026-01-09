@@ -56,6 +56,9 @@ namespace ViMG.UIs
             var heldInventory = invManager.Get(this.heldInventory);
             var chestInventory = invManager.Get(this.chestInventory);
 
+			if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape))
+				Main.gameStateManager.GetCurrentGameState().PopMenu();
+
 			UI.Start();
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
