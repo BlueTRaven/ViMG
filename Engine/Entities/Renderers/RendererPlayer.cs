@@ -67,7 +67,6 @@ namespace Engine.Entities.Renderers
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 
                 Matrix worldMat = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                    //Matrix.CreateFromQuaternion(entity.rotation) *
                     Matrix.CreateRotationX(Math.Clamp(ypr.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(ypr.X) *
                     Matrix.CreateTranslation(entity.position);

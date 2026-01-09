@@ -507,7 +507,10 @@ namespace ViMG
 					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
 
 					ImGui.Text(string.Format("Position: {0}", FormatPos()));
-					ImGui.Text(string.Format("Facing: {0}", FormatFacing()));
+                    var fwd = gameStateManager.TheIsland.GetClient()?.Current().camera.Forward ?? Vector3.Zero;
+					var pitchyaw = gameStateManager.TheIsland.GetClient()?.Current().camera.RotationEuler ?? Vector3.Zero;
+                    ImGui.Text(string.Format("Facing: {0:0.00} {1:0.00} {2:0.00}\n" +
+						"Yaw: {3:0.00} Pitch: {4:0.00}", fwd.X, fwd.Y, fwd.Z, pitchyaw.Y, pitchyaw.X));
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(gameStateManager.TheIsland.GetClient()?.Current().camera.Position ?? new()).ToString()));
 
 					if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
@@ -555,15 +558,6 @@ namespace ViMG
 			string x = String.Format("{0:0.00}", camera.Position.X);
 			string y = String.Format("{0:0.00}", camera.Position.Y);
 			string z = String.Format("{0:0.00}", camera.Position.Z);
-
-			return x + " " + y + " " + z;
-		}
-
-		private string FormatFacing()
-		{
-			string x = String.Format("{0:0.00}", -camera.Forward.X);
-			string y = String.Format("{0:0.00}", -camera.Forward.Y);
-			string z = String.Format("{0:0.00}", -camera.Forward.Z);
 
 			return x + " " + y + " " + z;
 		}

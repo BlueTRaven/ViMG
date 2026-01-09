@@ -752,7 +752,7 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new RenderedSnakeFlying());
             renderer.registry.Register(new RenderedStoneBeetle());
             renderer.registry.Register(new RenderedTestNPC(Main.Registry.EntityRegistry.Get<TestNPC>().Id));
-            renderer.registry.Register(new RenderedTestNPC(Main.Registry.EntityRegistry.Get<Player>().Id));
+            //renderer.registry.Register(new RenderedTestNPC(Main.Registry.EntityRegistry.Get<Player>().Id));
             renderer.registry.Register(new RenderedLightStressTest());
             renderer.registry.Register(new RenderedWorm());
         }
