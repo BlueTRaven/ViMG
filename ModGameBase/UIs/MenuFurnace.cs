@@ -25,8 +25,6 @@ namespace ViMG.UIs
 		private bool furnaceInventoryUpdated;
 		private Recipe currentRecipe;
 
-		private Items.ItemInstance held;
-
         public MenuFurnace(GameStateManager gsManager, EntityManager.EntityReference player, EntityManager.EntityReference owner, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference furnaceInventory) : base(gsManager)
 		{
 			this.player = player;
@@ -214,7 +212,10 @@ namespace ViMG.UIs
 
 			UI.Draw(batch, SCALE);
 
-			MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
+            var invManager = gsManager.TheIsland.GetClient().inventoryManager;
+            var heldInventory = invManager.Get(this.heldInventory);
+
+            MenuHelper.DrawHeldItem(batch, heldInventory.Get(0), SIZE, SCALE);
 		}
 	}
 }

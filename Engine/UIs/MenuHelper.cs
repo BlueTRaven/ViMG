@@ -522,7 +522,7 @@ namespace ViMG.UIs
                 playerId = (byte)activatingPlayer,
                 entity = entity,
                 inventory = inventory,
-                inventoryIndex = 0,
+                inventoryIndex = -1,
                 output = ItemSlotClickOutput.None,
                 action = action,
             });

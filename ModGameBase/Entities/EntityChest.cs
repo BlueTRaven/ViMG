@@ -93,9 +93,6 @@ namespace ViMG.Entities
 
 		public bool OnInteract(Player player)
 		{
-			//if (player.IsLocalPlayer)
-			//	Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory, rows, columns));
-
 			return false;
 		}
 

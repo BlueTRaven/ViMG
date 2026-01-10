@@ -404,9 +404,9 @@ namespace Engine.Items
 		public void Load(byte[] loadBytes, ref int index)
 		{
             // TODO invalidate old versions
-            //int version = SaveHelper.LoadInt32(loadBytes, ref index);
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
             int id = SaveHelper.LoadInt32(loadBytes, ref index);
-            //int generation = SaveHelper.LoadInt32(loadBytes, ref index);
+            int generation = SaveHelper.LoadInt32(loadBytes, ref index);
             int numSlots = SaveHelper.LoadInt32(loadBytes, ref index);
 
             //IMGUIConsole.Assert(id == this.id);

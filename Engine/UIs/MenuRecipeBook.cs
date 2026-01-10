@@ -62,8 +62,11 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			//TODO: size should be determined statically for each catalyst rather than asking to do a UI.
-			Size eachSize = Size.Zero;
+            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
+                Main.gameStateManager.GetCurrentGameState().PopMenu();
+
+            //TODO: size should be determined statically for each catalyst rather than asking to do a UI.
+            Size eachSize = Size.Zero;
 			if (currentRecipes != null && currentRecipes.Count > 0)
 				eachSize = filterCatalyst.GetSize();
 			

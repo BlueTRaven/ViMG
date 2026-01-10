@@ -188,7 +188,21 @@ namespace Engine.Clients
                     Main.gameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
                 }
 
-                if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened && (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
+                // Don't allow the player to control their character while a menu is open
+                if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer || (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened))
+                {
+                    CurrMovement.LeftClick.recordedPress = false;
+                    CurrMovement.RightClick.recordedPress = false;
+                    CurrMovement.MoveLeft.recordedPress = false;
+                    CurrMovement.MoveRight.recordedPress = false;
+                    CurrMovement.MoveForward.recordedPress = false;
+                    CurrMovement.MoveBack.recordedPress = false;
+                    CurrMovement.Jump.recordedPress = false;
+                    CurrMovement.Run.recordedPress = false;
+                    CurrMovement.MoveDown.recordedPress = false;
+                }
+
+                if (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
                     CurrMovement.RightClick.Changed(PrevMovement.RightClick) ||
                     CurrMovement.MoveLeft.Changed(PrevMovement.MoveLeft) ||
                     CurrMovement.MoveRight.Changed(PrevMovement.MoveRight) ||
@@ -197,7 +211,7 @@ namespace Engine.Clients
                     CurrMovement.Jump.Changed(PrevMovement.Jump) ||
                     CurrMovement.Run.Changed(PrevMovement.Run) ||
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
-                    previous.camera.RotationEuler != current.camera.RotationEuler))
+                    previous.camera.RotationEuler != current.camera.RotationEuler)
                 {
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
                 }

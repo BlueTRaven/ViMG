@@ -164,21 +164,15 @@ namespace ViMG.Cubes
             if (face == (MeshHelper.CubeFace)entity.state)
 				return new RectangleF(176, 32, 16, 16);
 
-                //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-                // TODO GetEntityMeshingData
-                //var meshingData = data.GetEntityMeshingData2(parameters.position);
-                //if (face == (MeshHelper.CubeFace)meshingData.state)
-                //	return new RectangleF(176, 32, 16, 16);
-
             return base.GetSourceRect(pass, data, parameters, face);
         }
 
         public override CubeAnimation GetAnimation(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            // TODO GetEntityMeshingData
-            //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-            //if (face == meshingData.facing)
-            //	return new CubeAnimation(0.125f, 3, 16);
+            var entity = data.GetEntity(parameters.position);
+
+			if (face == (MeshHelper.CubeFace)entity.state)
+				return new CubeAnimation(0.125f, 3, 16);
 
             return base.GetAnimation(pass, data, parameters, face);
         }
