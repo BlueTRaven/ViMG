@@ -109,7 +109,7 @@ namespace ViMG
 		public const bool DO_DETAIL = true;
 		public const bool TRANSPARENT_ORES = false;
 		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
-		public static bool ENABLE_ENT_SPAWNING = false;
+		public static bool ENABLE_ENT_SPAWNING = true;
 		public const float RANDOM_UPDATES_TIME = 8f / 60f;
 		[ConsoleCommandVar("random_cube_updates", "enable random cube updates (grass spreading, etc)")]
 		public static bool ENABLE_RANDOM_UPDATES = false;

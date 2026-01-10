@@ -39,13 +39,21 @@ namespace ModGameBase.Entities.Renderers
                 var entity = Main.Registry.EntityRegistry.Get(entityType).GetInterpolated(client, reference);
 
                 float p0 = (((float)client.CurrentTime + entity.timers[0]) % 0.65f) / 0.65f;
-                float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 0.25f;
+                float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 0.5f;
 
                 client.LightManager.AddShadowmapped(new LightManager2.LightConfig
                 {
                     position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
                     min = Cube.CUBE_SCALE * 4 + s0,
                     max = Cube.CUBE_SCALE * 8,
+                    color = Color.OrangeRed,
+                });
+
+                client.LightManager.Add(new LightManager2.LightConfig
+                {
+                    position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
+                    min = Cube.CUBE_SCALE * 3 + s0,
+                    max = Cube.CUBE_SCALE * 12,
                     color = Color.OrangeRed,
                 });
             }

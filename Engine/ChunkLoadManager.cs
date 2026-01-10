@@ -412,8 +412,8 @@ namespace ViMG
                 //loadedChunksAttribution[world.localPlayerIndex][i] = true;
                 //queue.EnqueueWithoutSorting(position);
 
-                chunkMesher?.RenderMesher.ImmediatelyMesh(position, chunkManager.CopyManager, world.EntityManager);
-                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position, chunkManager.CopyManager, world.EntityManager);
+                chunkMesher?.RenderMesher?.ImmediatelyMesh(position, chunkManager.CopyManager, world.EntityManager);
+                chunkMesher?.CollisionMesher?.ImmediatelyMesh(world, position, chunkManager.CopyManager, world.EntityManager);
 
                 entIO.Deserialize(world, position);
                 //CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);

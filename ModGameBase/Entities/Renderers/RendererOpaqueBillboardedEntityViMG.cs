@@ -126,7 +126,7 @@ namespace ViMG.Entities.Renderers
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
 
-                int ysrc = 0;
+                int ysrc = 32;
 
                 float jumpTimer = entity.timers[0];
                 float jumpTime = entity.timers[1];
@@ -134,12 +134,13 @@ namespace ViMG.Entities.Renderers
                 float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
 
                 if ((jumpTimer % interval) / interval < 0.5f)
-                    ysrc = 16;
+                    ysrc += 32;
 
                 bool noticed = entity.counters[1] > 0;
                 cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     position = entity.position,
+                    scale = new Vector2(2),
                     sourceRect = noticed ? new RectangleF(32, ysrc, 32, 32) : new RectangleF(0, ysrc, 32, 32),
                 };
 

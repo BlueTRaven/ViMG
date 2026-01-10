@@ -102,6 +102,7 @@ namespace Engine.Common
             {
                 if (lightsShadowmapped[i].time < 0)
                 {
+                    lightsShadowmapped[i] = new();
                     freeLightsS.Add(i);
                 } else lightsShadowmapped[i].time--;
                 //freeLights.Add(i);
@@ -126,6 +127,7 @@ namespace Engine.Common
             {
                 if (lightsShadowmapped[i].light.GetLightHash() == config.GetLightHash())
                 {
+                    lightsShadowmapped[i].light = new Light(config.position, config.min, config.max, config.color.ToVector4(), true, false, i);
                     lightsShadowmapped[i].time += 1;
                     return;
                 }
@@ -139,7 +141,7 @@ namespace Engine.Common
 
                 lightsShadowmapped[index] = new ShadowmappedLight 
                 {
-                    light = new Light(config.position, config.min, config.max, config.color.ToVector4(), false, false, index), 
+                    light = new Light(config.position, config.min, config.max, config.color.ToVector4(), true, false, index), 
                     time = 1,
                     dirty = true,
                 };

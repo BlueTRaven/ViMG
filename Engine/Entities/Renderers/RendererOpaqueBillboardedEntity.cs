@@ -108,8 +108,9 @@ namespace ViMG.Entities.Renderers
 
             var prev = client.Previous(1);
             var current = client.Current();
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-current.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-current.camera.RotationEuler.Y);
+            var camera = client.InterpCamera;
+            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(camera.RotationEuler.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(camera.RotationEuler.X);
 
             RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
             {
@@ -162,7 +163,7 @@ namespace ViMG.Entities.Renderers
                     }
                     else
                     {
-                        float distance = (Main.camera.Position - position).Length();
+                        float distance = (camera.Position - position).Length();
 
                         RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
                         {
