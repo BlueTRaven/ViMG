@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.Collections;
 using BrUtility;
 using Engine.Clients;
+using Engine.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,10 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.Cubes;
 using ViMG.Rendering;
 
-namespace ViMG
+namespace Engine.Rendering
 {
     public class DirectionalLight : IDisposable
     {

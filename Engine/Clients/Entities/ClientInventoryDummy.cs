@@ -22,7 +22,7 @@ namespace Engine.Clients.Entities
             return ref item;
         }
 
-        public override void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
+        public override void DoEvent(SyncInventoryUpdate.QueuedInventoryUpdate action)
         {
             
         }

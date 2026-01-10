@@ -99,7 +99,7 @@ namespace Engine.Networking.Messages
                     //    }
                     //}
                     var inventory = inventoryManager.Get(action.inventory);
-                    inventory.DoUpdateAction(action);
+                    inventory.DoEvent(action);
 
                     Console.WriteLine("Remote Inventory action: {0:02} {1} {2} -> {3}", Main.Time, action.inventory.id, action.oldInstance.item, action.newInstance.item);
                     //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);

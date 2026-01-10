@@ -9,7 +9,7 @@ using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
-using static ViMG.LightManager;
+using static Engine.Common.LightManager;
 
 namespace ViMG
 {

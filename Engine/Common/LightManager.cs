@@ -4,10 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG;
 using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 
-namespace ViMG
+namespace Engine.Common
 {
 	// TODO refactor this for client separation
 	// TODO does this even need to be present on server?

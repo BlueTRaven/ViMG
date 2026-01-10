@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Common;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 
-namespace ViMG
+namespace Engine.Rendering
 {
     public class CameraCSM : Camera
     {

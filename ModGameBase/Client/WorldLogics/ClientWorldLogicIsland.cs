@@ -39,7 +39,7 @@ namespace ModGameBase.Client.WorldLogics
             Color.White
         ];
 
-        private ViMG.DirectionalLight directionalLight;
+        private Engine.Rendering.DirectionalLight directionalLight;
         public WeatherManager WeatherManager;
 
         private double timeSinceLastCamUpdate = 0;

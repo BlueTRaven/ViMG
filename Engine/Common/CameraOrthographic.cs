@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViMG
+namespace Engine.Common
 {
     public class CameraOrthographic : Camera
     {

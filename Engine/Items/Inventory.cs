@@ -15,15 +15,15 @@ namespace Engine.Items
 	{
 		public const int VERSION = 1;
 
-		private enum InventoryActionType
+		private enum InventoryEventType
 		{
 			Add,
 			Set,
 			Remove,
 		}
-		private struct InventoryAction
+		private struct InventoryEvent
 		{
-			public required InventoryActionType type;
+			public required InventoryEventType type;
             public required int index;
             public required ItemInstance oldInstance, newInstance;
 			public MenuHelper.ItemSlotClickOutput outputType;
@@ -39,7 +39,7 @@ namespace Engine.Items
 
 		private int lastEmpty;
 
-		private List<InventoryAction> actions = new List<InventoryAction>();
+		private List<InventoryEvent> events = new List<InventoryEvent>();
 
 		public record struct InventoryConfig
 		{
@@ -119,9 +119,9 @@ namespace Engine.Items
 			lastEmpty = 0;
 		}
 
-		public void ProcessActionsServer<T>(T owner) where T : Entity, IHasInventory
+		public void ProcessEventsServer<T>(T owner) where T : Entity, IHasInventory
 		{
-			foreach (var action in actions)
+			foreach (var action in events)
 			{
 				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", Main.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
 				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
@@ -137,10 +137,10 @@ namespace Engine.Items
                 Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
 			}
 
-			actions.Clear();
+			events.Clear();
 		}
 
-		public virtual void DoUpdateAction(SyncInventoryUpdate.QueuedInventoryUpdate action)
+		public virtual void DoEvent(SyncInventoryUpdate.QueuedInventoryUpdate action)
 		{
 			items[action.inventoryIndex] = action.newInstance;
 		}
@@ -167,9 +167,9 @@ namespace Engine.Items
 					items[i] = new ItemInstance(items[i], items[i].num + item.num);
 					placedIndex = i;
 
-					actions.Add(new InventoryAction
+					events.Add(new InventoryEvent
 					{
-						type = InventoryActionType.Add,
+						type = InventoryEventType.Add,
 						index = i,
 						oldInstance = oldInstance,
 						newInstance = items[i],
@@ -202,9 +202,9 @@ namespace Engine.Items
 					items[i] = item;
 					placedIndex = i;
 
-                    actions.Add(new InventoryAction
+                    events.Add(new InventoryEvent
                     {
-                        type = InventoryActionType.Add,
+                        type = InventoryEventType.Add,
 						index = i,
                         oldInstance = new ItemInstance(),
                         newInstance = items[i],
@@ -230,9 +230,9 @@ namespace Engine.Items
 
 			if (markDirty)
 			{
-				actions.Add(new InventoryAction
+				events.Add(new InventoryEvent
 				{
-					type = InventoryActionType.Set,
+					type = InventoryEventType.Set,
 					index = index,
 					oldInstance = oldInstance,
 					newInstance = items[index],
@@ -332,9 +332,9 @@ namespace Engine.Items
 		{
 			if (num == -1)
 			{
-                actions.Add(new InventoryAction
+                events.Add(new InventoryEvent
                 {
-                    type = InventoryActionType.Remove,
+                    type = InventoryEventType.Remove,
                     index = index,
                     oldInstance = items[index],
                     newInstance = new ItemInstance(),
@@ -353,9 +353,9 @@ namespace Engine.Items
 				if (items[index].num <= 0)
 					items[index] = ItemInstance.Empty;
 
-                actions.Add(new InventoryAction
+                events.Add(new InventoryEvent
                 {
-                    type = InventoryActionType.Remove,
+                    type = InventoryEventType.Remove,
                     index = index,
                     oldInstance = oldInstance,
                     newInstance = items[index],

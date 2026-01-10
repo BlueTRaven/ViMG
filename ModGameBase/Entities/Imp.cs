@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
 using ViMG.Buffs;
 using Engine.Networking;
+using Engine.Common;
 
 namespace ViMG.Entities
 {

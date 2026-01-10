@@ -83,7 +83,7 @@ namespace ViMG.Entities
             base.Update(deltaTime);
 
 			var inventory = world.InventoryManager.Get(this.inventory);
-            inventory.ProcessActionsServer(this);
+            inventory.ProcessEventsServer(this);
         }	
 
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)

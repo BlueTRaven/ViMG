@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.Cubes;
 
-namespace ViMG
+namespace Engine.Common
 {
     public static class LightHelper
     {

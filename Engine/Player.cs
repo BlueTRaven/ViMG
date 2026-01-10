@@ -578,9 +578,9 @@ namespace ViMG
 			var inventory = world.InventoryManager.Get(this.inventory);
 			var craftInventory = world.InventoryManager.Get(this.craftInventory);
 			var heldInventory = world.InventoryManager.Get(this.heldInventory);
-			inventory?.ProcessActionsServer(this);
-			craftInventory?.ProcessActionsServer(this);
-			heldInventory?.ProcessActionsServer(this);
+			inventory?.ProcessEventsServer(this);
+			craftInventory?.ProcessEventsServer(this);
+			heldInventory?.ProcessEventsServer(this);
 
 			if (IsLocalPlayer)
 			{

@@ -75,7 +75,7 @@ namespace ViMG.Entities
             base.Update(deltaTime);
 
             var inventory = world.InventoryManager.Get(this.inventory);
-            inventory.ProcessActionsServer(this);
+            inventory.ProcessEventsServer(this);
 
 			craftTimer -= (float)deltaTime;
 
