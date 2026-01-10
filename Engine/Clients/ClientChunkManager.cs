@@ -1,4 +1,6 @@
 ﻿using Engine.ChunkStuff;
+using Engine.Clients.Entities;
+using Engine.Common.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -6,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 using ViMG.GameStates;
 
 namespace Engine.Clients
@@ -17,17 +20,20 @@ namespace Engine.Clients
         public ChunkMesher ChunkMesher;
         public CopiedChunkManager CopyManager;
         public ChunkManagerIO ChunkIO;
+        public CubeTrackers CubeTrackers;
+
 
         public int SizeInChunks = 32;
 
         public ClientChunkManager(GraphicsDevice device)
         {
             this.device = device;
-
+            
+            CubeTrackers = new CubeTrackers();
             ChunkIO = new ChunkManagerIO(SizeInChunks, "", 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
             ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
-            CopyManager = new CopiedChunkManager(CubeView, ChunkIO, SizeInChunks);
+            CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
         }
 
         // TODO:
@@ -43,9 +49,11 @@ namespace Engine.Clients
         {
             if (Main.gameStateManager.TheIsland.GetWorld() != null && ChunkIO != Main.gameStateManager.TheIsland.GetWorld().ChunkIO)
             {
+                CubeTrackers = new CubeTrackers(); // Might not be necessary
+
                 ChunkIO = Main.gameStateManager.TheIsland.GetWorld().ChunkIO;
                 CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
-                CopyManager = new CopiedChunkManager(CubeView, ChunkIO, SizeInChunks);
+                CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
                 ChunkMesher.RenderMesher.FinishFlush();
                 ChunkMesher.RenderMesher.UnloadAll();
                 ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);

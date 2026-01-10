@@ -283,7 +283,7 @@ namespace ViMG.GameStates
                         var expectedTime = client.LastFrameTime + World.SyncTime;
                         Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
 
-                        client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager);
+                        client.ChunkManager.ChunkMesher.Update(client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
                         //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
                         //{
@@ -328,7 +328,7 @@ namespace ViMG.GameStates
             var inventoryManager = new InventoryManager();
             var entIO = new EntityManagerIO(entityManager, 0);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
             WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
             {
@@ -451,7 +451,7 @@ namespace ViMG.GameStates
             var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);// new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
             var entIO = new EntityManagerIO(entityManager, 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
             var housingManager = new HousingManager();
 
             var logic = CreateLayerLogic(0);
@@ -508,7 +508,7 @@ namespace ViMG.GameStates
             var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
             var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayers[0]);
             var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayers[0]);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
@@ -581,7 +581,7 @@ namespace ViMG.GameStates
                 var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
                 Skybox skybox = new Skybox();
 
@@ -639,7 +639,7 @@ namespace ViMG.GameStates
                 var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
                 var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
                 var housingManager = new HousingManager();
                 housingManager.FinishLoading(worldInfo);

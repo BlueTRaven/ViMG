@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine.Common.Entities;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using LiteNetLib;
@@ -18,7 +19,7 @@ using ViMG.IMGUIImpl;
 
 namespace ViMG.Entities
 {
-	public class EntityManager
+	public class EntityManager : IGetEntity
 	{
 		[ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
 			"Changes to this variable require a restart.")]
@@ -139,6 +140,7 @@ namespace ViMG.Entities
 		private List<Entity> toAddLater = new List<Entity>();
 		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
+		public Engine.Common.Entities.CubeTrackers MeshCubeTrackers;
 		private class CubeTrackers
 		{
 			public ICubeTracker[] cubeTrackers;
@@ -233,6 +235,8 @@ namespace ViMG.Entities
 			}
 
 			Debug.Assert(freeList.First() == EntMax - 1);
+
+			MeshCubeTrackers = new Engine.Common.Entities.CubeTrackers();
 		}
 
 		public void Initialize(World world)
@@ -366,6 +370,8 @@ namespace ViMG.Entities
                     ts.Add(position.InChunkSpace(chunkPos), entity);
 
                     cubeTrackers.Add(chunkPos, ts);
+
+                    MeshCubeTrackers.Get(chunkPos).Add(position.InChunkSpace(), GetReference((int)entity.Id));
                 }
             }
 
@@ -384,6 +390,8 @@ namespace ViMG.Entities
                         ts.Add(position.InChunkSpace(chunkPos), entity);
 
                         cubeTrackers.Add(chunkPos, ts);
+
+						MeshCubeTrackers.Get(chunkPos).Add(position.InChunkSpace(), GetReference((int)entity.Id));
                     }
                 }
             }
@@ -571,6 +579,8 @@ namespace ViMG.Entities
 
                     if (ts.count <= 0)
                         cubeTrackers.Remove(chunkPos);
+
+                    MeshCubeTrackers.Get(chunkPos).Remove(position.InChunkSpace());
                 }
             }
 
@@ -587,6 +597,8 @@ namespace ViMG.Entities
 
                         if (ts.count <= 0)
                             cubeTrackers.Remove(chunkPos);
+
+                        MeshCubeTrackers.Get(chunkPos).Remove(position.InChunkSpace());
                     }
                 }
             }
@@ -714,7 +726,7 @@ namespace ViMG.Entities
 			return ents[(int)id].entity;
         }
 
-		public Entity? GetByRef(ref readonly EntityReference reference)
+		public Entity? GetByRefServer(ref readonly EntityReference reference)
 		{
 			if (ents[reference.id].generation == reference.generation)
 				return ents[reference.id].entity;
@@ -952,5 +964,11 @@ namespace ViMG.Entities
 				}
 			}
         }
-    }
+
+		public BasicState GetByRef(ref readonly EntityReference reference)
+		{
+			if (ents[reference.id].generation != reference.generation) return new();
+			else return GetPrevState(reference.id, 0); ;
+		}
+	}
 }

@@ -275,6 +275,9 @@ namespace Engine.Networking.Messages
             Unload,
             // Create entity
             MajorSync,
+            // Tracks a cube position (needs to mark it dirty!)
+            // Note that we don't ever expect these positions to move, so this is only done on creation
+            MajorSyncTracker,
             // Just an update
             MinorSync,
         }
@@ -285,6 +288,7 @@ namespace Engine.Networking.Messages
             public required EntityManager.EntityReference reference;
 
             public required SyncStateType type;
+            public CubePosition[]? trackedPositions;
             public ISyncBasicState? basicSyncState;
             public int typeNameMapping;
             public EntityManagerIO.EntityData? majorSyncState;
@@ -368,7 +372,7 @@ namespace Engine.Networking.Messages
                 for (int i = 0; i < EntityManager.EntMax; i++)
                 {
                     var reference = entityManager.GetReference(i);
-                    var ent = entityManager.GetByRef(ref reference);
+                    var ent = entityManager.GetByRefServer(ref reference);
 
                     if (serverEntities[player.playerIndex][i].reference.generation != reference.generation)
                     {
@@ -380,12 +384,26 @@ namespace Engine.Networking.Messages
                                 if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
                                 {
                                     var regId = Main.Registry.EntityRegistry.GetFromEntity(ent).Id;
+                                    CubePosition[]? trackedPositions = null;
+                                    if (ent is ICubeTracker tracker)
+                                    {
+                                        if (trackedPositions == null) trackedPositions = new CubePosition[1];
+                                        trackedPositions[0] = tracker.TrackedPosition;
+                                    }
+                                    else if (ent is IMultiCubeTracker mtracker)
+                                    {
+                                        if (trackedPositions == null) trackedPositions = new CubePosition[mtracker.TrackedPositions.Count()];
+                                        for (int j = 0; j < mtracker.TrackedPositions.Count(); j++)
+                                            trackedPositions[j] = mtracker.TrackedPositions.ElementAt(j);
+                                    }
+
                                     Console.WriteLine("Server sent create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
                                     toSync.AddAssumeCapacity(new()
                                     {
                                         type = SyncStateType.MajorSync,
                                         playerId = player.playerIndex,
                                         reference = reference,
+                                        trackedPositions = trackedPositions,
                                         typeNameMapping = regId,
                                         basicSyncState = syncsBasicState,
                                     });
@@ -483,6 +501,16 @@ namespace Engine.Networking.Messages
                             state.SerializeDelta(subWriter, bits);
                             state.SerializeDeltaExtraFields(subWriter, extraBits);
 
+                            if (ent.type == SyncStateType.MajorSync)
+                            {
+                                subWriter.Put(ent.trackedPositions?.Length ?? 0);
+                                if (ent.trackedPositions != null)
+                                {
+                                    for (int i = 0; i < ent.trackedPositions.Length; i++)
+                                        ent.trackedPositions[i].Serialize(subWriter);
+                                }
+                            }
+
                             subWriters.Add(subWriter);
                         }
                     }
@@ -568,7 +596,26 @@ namespace Engine.Networking.Messages
                     // TODO: we might want to base this on the last received state for this entity (before this ack)
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
                     var state = GS.GetClient().Current().entities.GetByRef(ref reference);
+                    // Also deserializes extra fields
                     state.DeserializeDelta(reader);
+
+                    if (type == SyncStateType.MajorSync)
+                    {
+                        int numTrackedPos = reader.GetInt();
+                        for (int j = 0; j < numTrackedPos; j++)
+                        {
+                            var cubePos = reader.Get<CubePosition>();
+                            var chunkPos = ChunkPosition.CubeChunk(cubePos);
+                            // NOTE:
+                            // Cube tracker refs are sent to the server as a part of SyncChunk, but the actual entities are sent here.
+                            // Since SyncChunk is not sent at any particular time, it can arrive before the entities it references are available.
+                            // In this scenario we need to mark the chunks as dirty after the entities arrive,
+                            // because trackers can be used to change how chunks are meshed (chest front face is different, for instance).
+                            GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunkPos);
+                            GS.GetClient().ChunkManager.ChunkMesher.MarkChunkDirty(chunkPos);
+                        }
+                    }
+
                     var typeName = Main.Registry.EntityRegistry.Get((int)typeNameMapping)?.Identifier;
                     //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)

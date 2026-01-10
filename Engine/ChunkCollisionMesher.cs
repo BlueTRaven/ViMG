@@ -5,6 +5,7 @@ using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
 using Engine.ChunkStuff;
+using Engine.Common.Entities;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation.DirectX;
 using System;
@@ -144,7 +145,7 @@ namespace ViMG
             this.bufferPool = bufferPool;
         }
 
-        public void Update(CopiedChunkManager copyManager)
+        public void Update(CopiedChunkManager copyManager, IGetEntity getEntity)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -163,7 +164,7 @@ namespace ViMG
                 ChunkPosition position = dirtyChunkPositions.Dequeue();
                 dirtyChunkKnown.Remove(position);
 
-                copyManager.StartCopyChunk(position);
+                copyManager.StartCopyChunk(position, getEntity);
                 copyManager.FinishCopyChunks();
 
                 ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
@@ -174,9 +175,7 @@ namespace ViMG
                     currentBatch.positions[currentBatch.num] = meshInfo.position;
                     currentBatch.pools[currentBatch.num] = meshInfo.bufferPool;
                     currentBatch.versions[currentBatch.num] = (byte)(meshInfo.version + 1);
-                    currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position);// CopiedChunkPool.MakeCopy(cubeView, entityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-                    //currentBatch.copies[currentBatch.num].refcount += 1;
-                    //currentBatch.copies[currentBatch.num].collision = true;
+                    currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position);
                     currentBatch.num++;
                 }
             }
@@ -433,9 +432,9 @@ namespace ViMG
             meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
         }
 
-        public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager)
+        public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager, IGetEntity getEntity)
         {
-            copyManager.StartCopyChunk(position);
+            copyManager.StartCopyChunk(position, getEntity);
             copyManager.FinishCopyChunks();
 
             var copy = copyManager.GetCopy(position);

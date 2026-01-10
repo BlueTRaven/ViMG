@@ -1,4 +1,5 @@
-﻿using Engine.Common;
+﻿using Engine.Common.Entities;
+using Engine.Networking;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -39,14 +40,19 @@ namespace Engine.ChunkStuff
         // a copied chunk for actual use
         public struct CopiedChunkData
         {
-            private CopyChunkArr arr;
+            private readonly CopyChunkArr arr;
 
+            private readonly BasicState[]? entities;
             public readonly ChunkPosition ChunkPosition;
 
-            public CopiedChunkData(CopyChunkArr arr, ChunkPosition chunkPosition)
+            public readonly int generation;
+
+            public CopiedChunkData(CopyChunkArr arr, BasicState[]? entities, ChunkPosition chunkPosition, int generation)
             {
                 this.arr = arr;
+                this.entities = entities;
                 this.ChunkPosition = chunkPosition;
+                this.generation = generation;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,6 +171,16 @@ namespace Engine.ChunkStuff
                     faces[i] = GetFace(positions[i]);
                 }
             }
+
+            public BasicState GetEntity(CubePosition position)
+            {
+                if (entities != null)
+                {
+                    Util.ThreeDToOneD(new ValuePoint3D(position), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                    return entities[i];
+                }
+                else return new();
+            }
         }
 
         private class CopiedChunk
@@ -173,12 +189,15 @@ namespace Engine.ChunkStuff
             public int generation;
             public int currentGeneration;
             public ushort[]? data;
+            public required BasicState[]? trackers;
         }
 
         private struct CopyTaskParams
         {
             public required ICubeGetter view;
             public required ChunkManagerIO chunkIO;
+            public required CubeTrackers cubeTrackers;
+            public required IGetEntity getEntity;
             public required ChunkPosition chunkPosition;
             public ushort[] data;
         }
@@ -187,14 +206,16 @@ namespace Engine.ChunkStuff
         {
             public ChunkPosition position;
             public ushort[] data;
+            public BasicState[]? trackers;
         }
 
         [ConsoleCommandVar("chunk_max_cached", "maximum number of cached chunks. Higher numbers = faster chunk meshing, increased memory consumption.\n" +
             "Setting this number too low may not work and it will automatically be reset to a higher number.")]
         public static int MaxCachedChunks = 100;
 
-        public ICubeGetter cubeView;
-        public ChunkManagerIO chunkIO;
+        public readonly ICubeGetter cubeView;
+        public readonly ChunkManagerIO chunkIO;
+        private readonly CubeTrackers cubeTrackers;
         private readonly int sizeInChunks;
         private readonly Dictionary<ChunkPosition, CopiedChunk> copiedChunks = [];
         private readonly List<Task<CopyTaskResult>> tasks = [];
@@ -202,17 +223,18 @@ namespace Engine.ChunkStuff
         //private ChunkPosition?[] oldChunkPositions;
         //private int oldChunkPositionsHead = 0;
 
-        public CopiedChunkManager(ICubeGetter cubeView, ChunkManagerIO chunkIO, int sizeInChunks)
+        public CopiedChunkManager(ICubeGetter cubeView, ChunkManagerIO chunkIO, CubeTrackers cubeTrackers, int sizeInChunks)
         {
             this.cubeView = cubeView;
             this.chunkIO = chunkIO;
+            this.cubeTrackers = cubeTrackers;
             this.sizeInChunks = sizeInChunks;
 
             //oldChunkPositions = new ChunkPosition?[MaxCachedChunks];
             //Array.Fill(oldChunkPositions, null);
         }
 
-        public void StartCopyChunk(ChunkPosition chunkPosition)
+        public void StartCopyChunk(ChunkPosition chunkPosition, IGetEntity getEntity)
         {
             for (int i = 0; i < 3 * 3 * 3;  i++)
             {
@@ -221,7 +243,7 @@ namespace Engine.ChunkStuff
                 
                 if (IsInWorldBounds(realPos))
                 {
-                    ActuallyStartCopyChunk(realPos);
+                    ActuallyStartCopyChunk(realPos, getEntity);
                 }
             }
         }
@@ -233,7 +255,7 @@ namespace Engine.ChunkStuff
                     position.Z >= 0 && position.Z < sizeInChunks;
         }
 
-        private void ActuallyStartCopyChunk(ChunkPosition chunkPosition)
+        private void ActuallyStartCopyChunk(ChunkPosition chunkPosition, IGetEntity getEntity)
         {
             bool forceCopy = false;
             if (!copiedChunks.TryGetValue(chunkPosition, out var chunk))
@@ -249,21 +271,20 @@ namespace Engine.ChunkStuff
                     currentGeneration = chunk?.generation ?? 0,
                     generation = chunk?.generation ?? 0,
                     data = null,
+                    trackers = null,
                 };
 
                 var state = new CopyTaskParams
                 {
                     view = cubeView,
                     chunkIO = chunkIO,
+                    getEntity = getEntity,
+                    cubeTrackers = cubeTrackers,
                     chunkPosition = chunkPosition,
                     data = new ushort[Chunk.NUM_CUBES_IN_CHUNK]
                 };
                 var task = new Task<CopyTaskResult>(CopyChunk, state);
                 tasks.Add(task);
-
-                //if (Main.MULTITHREAD_MESHING)
-                //    task.Start();
-                //else task.RunSynchronously();
             }
         }
 
@@ -308,6 +329,7 @@ namespace Engine.ChunkStuff
                 //oldChunkPositionsHead %= MaxCachedChunks;
 
                 copiedChunks[task.Result.position].data = task.Result.data;
+                copiedChunks[task.Result.position].trackers = task.Result.trackers;
             }
 
             tasks.Clear();
@@ -329,27 +351,32 @@ namespace Engine.ChunkStuff
                 else arr[i] = null;
             }
 
-            return new CopiedChunkData(arr, position);
+            return new CopiedChunkData(arr, copiedChunks[position].trackers, position, copiedChunks[position].generation);
         }
 
         private CopyTaskResult CopyChunk(object? state)
         {
-            CopyTaskParams args = (CopyTaskParams)state;
+            CopyTaskParams args = (CopyTaskParams)state!;
 
-            //var palChunk = args.chunkIO.GetPalettizedChunk(args.chunkPosition);
-            //if (palChunk != null)
-            //{
-            //    args.data = PalettizedChunk.Depaletteize(palChunk.Value);
-            //} 
-            //else
-            {
-                args.view.GetIdsForChunk(args.chunkPosition, args.data);
+            args.view.GetIdsForChunk(args.chunkPosition, args.data);
+            BasicState[]? trackers = null;
+
+            var worldTrackers = args.cubeTrackers.Get(args.chunkPosition).cubeTrackers;
+            if (worldTrackers != null) {
+                // Might need some sort of interface that allows us to take EntityReference -> return BasicState
+                // This needs to be an interface because this will be used on both client/server
+                trackers = new BasicState[Chunk.NUM_CUBES_IN_CHUNK];
+                for (int i = 0; i < trackers.Length; i++)
+                {
+                    trackers[i] = args.getEntity.GetByRef(ref worldTrackers[i]);
+                }
             }
 
             return new CopyTaskResult
             {
-                data = args.data,
                 position = args.chunkPosition,
+                data = args.data,
+                trackers = trackers,
             };
         }
 

@@ -18,7 +18,6 @@ using ViMG.ChunkStuff;
 using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.IMGUIImpl;
-using static Engine.Networking.Messages.SyncChunk;
 
 namespace ViMG
 {
@@ -189,7 +188,7 @@ namespace ViMG
 
 			foreach (var queuedChunk in queue.GetEnumerable())
 			{
-                chunkManager.CopyManager.StartCopyChunk(queuedChunk.position);
+                chunkManager.CopyManager.StartCopyChunk(queuedChunk.position, world.EntityManager);
 				//queuedChunk.copyTask.Start();
 			}
 
@@ -301,7 +300,7 @@ namespace ViMG
                     //    if (render && collision) continue;
                     //}
 
-                    chunkManager.CopyManager.StartCopyChunk(queuedChunk.position);
+                    chunkManager.CopyManager.StartCopyChunk(queuedChunk.position, world.EntityManager);
                     copyingChunks.Add(queuedChunk);
 
                     currentNum++;
@@ -369,9 +368,6 @@ namespace ViMG
 
                     entIO.Deserialize(world, queuedChunk.position);
 
-                    //var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
-                    //CopiedChunkData copy = queuedChunk.copyTask.Result;
-
                     // Sync chunk loading to other players
                     // NOTE: this is here, after deserialization, as this sends over chunk meshing data too
                     // (which requires entities to be initialized)
@@ -416,8 +412,8 @@ namespace ViMG
                 //loadedChunksAttribution[world.localPlayerIndex][i] = true;
                 //queue.EnqueueWithoutSorting(position);
 
-                chunkMesher?.RenderMesher.ImmediatelyMesh(position, chunkManager.CopyManager);
-                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position, chunkManager.CopyManager);
+                chunkMesher?.RenderMesher.ImmediatelyMesh(position, chunkManager.CopyManager, world.EntityManager);
+                chunkMesher?.CollisionMesher.ImmediatelyMesh(world, position, chunkManager.CopyManager, world.EntityManager);
 
                 entIO.Deserialize(world, position);
                 //CopiedChunkData copy = CopiedChunkPool.MakeCopy(world, bufferPool, position);

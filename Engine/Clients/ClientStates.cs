@@ -1,7 +1,7 @@
 ﻿using BepuPhysics.Constraints;
-using Engine.Clients.Entities;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
+using Engine.Common.Entities;
 using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
@@ -25,7 +25,6 @@ namespace Engine.Clients
         private GraphicsDevice device;
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
-        public CubeTrackers cubeTrackers;
         public ClientChunkManager ChunkManager;
         public ClientWorldLogic WorldLogic;
         private WorldRenderer worldRenderer;
@@ -63,7 +62,6 @@ namespace Engine.Clients
             InterpCamera = new CameraPerspective(states[0].camera.Position, states[0].camera.RotationEuler, states[0].camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
             inventoryManager = new ClientInventoryManager();
-            cubeTrackers = new CubeTrackers();
 
             // TODO how to support multiple layers?
             WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
@@ -183,7 +181,7 @@ namespace Engine.Clients
 
                 if (menuPlayer == null)
                 {
-                    var extra = localPlayer.GetExtra<Player.PlayerExtraState>();
+                    var extra = localPlayer.GetExtra<ViMG.Player.PlayerExtraState>();
                     menuPlayer = new MenuPlayer(Main.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
                     menuPlayer.LoadContent();
                     menuPlayer.Close();

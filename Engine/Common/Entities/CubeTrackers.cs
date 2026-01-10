@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
 
-namespace Engine.Clients.Entities
+namespace Engine.Common.Entities
 {
     public class CubeTrackers
     {
@@ -19,13 +19,15 @@ namespace Engine.Clients.Entities
 
         public ChunkCubeTrackers Get(ChunkPosition chunkPosition)
         {
-            if (!trackers.TryGetValue(chunkPosition, out ChunkCubeTrackers? ret))
+            lock (trackers)
             {
-                ret = new();
-                trackers.Add(chunkPosition, ret);
-            } 
-
-            return ret;
+                if (!trackers.TryGetValue(chunkPosition, out ChunkCubeTrackers? ret))
+                {
+                    ret = new();
+                    trackers.Add(chunkPosition, ret);
+                }
+                return ret;
+            }
         }
     }
 

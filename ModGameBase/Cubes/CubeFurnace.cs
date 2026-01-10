@@ -159,11 +159,16 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
-            //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
-            // TODO GetEntityMeshingData
-            //var meshingData = data.GetEntityMeshingData2(parameters.position);
-            //if (face == (MeshHelper.CubeFace)meshingData.state)
-            //	return new RectangleF(176, 32, 16, 16);
+            var entity = data.GetEntity(parameters.position);
+
+            if (face == (MeshHelper.CubeFace)entity.state)
+				return new RectangleF(176, 32, 16, 16);
+
+                //var meshingData = data.GetEntityMeshingData<EntityFurnace.MeshingData>(parameters.position);
+                // TODO GetEntityMeshingData
+                //var meshingData = data.GetEntityMeshingData2(parameters.position);
+                //if (face == (MeshHelper.CubeFace)meshingData.state)
+                //	return new RectangleF(176, 32, 16, 16);
 
             return base.GetSourceRect(pass, data, parameters, face);
         }
@@ -182,7 +187,7 @@ namespace ViMG.Cubes
         {
             base.OnRightClick(client, playerId, position);
 
-            var tracker = client.cubeTrackers.Get(ChunkPosition.CubeChunk(position)).Get(position.InChunkSpace());
+            var tracker = client.ChunkManager.CubeTrackers.Get(ChunkPosition.CubeChunk(position)).Get(position.InChunkSpace());
 			if (playerId == client.localPlayer)
 			{
                 var ent = client.Current().entities.GetByRef(ref tracker);

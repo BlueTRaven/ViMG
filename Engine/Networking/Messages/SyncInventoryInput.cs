@@ -74,7 +74,7 @@ namespace Engine.Networking.Messages
             var player = GS.GetWorld().player[clickToSync.playerId];
             if (player != null)
             {
-                var entity = GS.GetWorld().EntityManager.GetByRef(ref clickToSync.entity);
+                var entity = GS.GetWorld().EntityManager.GetByRefServer(ref clickToSync.entity);
                 var inventory = GS.GetWorld().InventoryManager.Get(clickToSync.inventory);
                 if (inventory != null && entity != null && entity is IHasInventory hasInv)
                 {

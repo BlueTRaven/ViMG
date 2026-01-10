@@ -1,4 +1,5 @@
-﻿using Engine.Networking;
+﻿using Engine.Common.Entities;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using ViMG.Entities.Renderers;
 
 namespace Engine.Clients.Entities
 {
-    public class ClientEntityManager
+    public class ClientEntityManager : IGetEntity
     {
         private struct EntityHolder
         {

@@ -2,6 +2,7 @@
 using BrUtility;
 using BrUtility.Ported;
 using Engine.ChunkStuff;
+using Engine.Common.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -157,7 +158,7 @@ namespace ViMG
 			//this.bufferPool = bufferPool;
 		}
 
-		public void Update(CopiedChunkManager copyManager)
+		public void Update(CopiedChunkManager copyManager, IGetEntity getEntity)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -176,7 +177,7 @@ namespace ViMG
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
 				dirtyChunkKnown.Remove(position);
 
-				copyManager.StartCopyChunk(position);
+				copyManager.StartCopyChunk(position, getEntity);
 				copyManager.FinishCopyChunks();
 
 				ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
@@ -384,9 +385,9 @@ namespace ViMG
 			meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
 		}
 
-		public void ImmediatelyMesh(ChunkPosition position, CopiedChunkManager copyManager)
+		public void ImmediatelyMesh(ChunkPosition position, CopiedChunkManager copyManager, IGetEntity getEntity)
 		{
-			copyManager.StartCopyChunk(position);
+			copyManager.StartCopyChunk(position, getEntity);
 			copyManager.FinishCopyChunks();
 
 			CopiedChunkManager.CopiedChunkData copy = copyManager.GetCopy(position);

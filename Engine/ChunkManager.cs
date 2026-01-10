@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
 using Engine.ChunkStuff;
+using Engine.Common.Entities;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,11 +60,10 @@ namespace ViMG
 
         public CubeView CubeView;
 
-
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
-        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, ChunkMesher? chunkMesher)
+        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, CubeTrackers cubeTrackers, ChunkMesher? chunkMesher)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
@@ -71,14 +71,14 @@ namespace ViMG
             ChunkMesher = chunkMesher;
 
             CubeView = new CubeView(this, io);
-            this.CopyManager = new CopiedChunkManager(CubeView, io, sizeInChunksXZ);
+            this.CopyManager = new CopiedChunkManager(CubeView, io, cubeTrackers, sizeInChunksXZ);
         }
 
         public void Update(double deltaTime, World world)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            ChunkMesher?.Update(CopyManager);
+            ChunkMesher?.Update(CopyManager, world.EntityManager);
 
             const int MAX_UPDATE_PER_FRAME = 200;
             int updatedThisFrame = 0;

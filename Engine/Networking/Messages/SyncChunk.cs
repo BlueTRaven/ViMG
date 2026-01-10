@@ -15,7 +15,7 @@ using ViMG.Entities;
 
 namespace Engine.Networking.Messages
 {
-    // Syncs chunk data. Doesn't include entities?
+    // Syncs chunk data.
     public class SyncChunk : Message
     {
         public static SyncChunk Instance { get; private set; }
@@ -27,7 +27,6 @@ namespace Engine.Networking.Messages
         }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
-
 
         public SyncChunk()
         {
@@ -158,7 +157,7 @@ namespace Engine.Networking.Messages
             for (int i = 0; i < numTrackers; i++)
             {
                 var reference = reader.Get<EntityManager.EntityReference>();
-                var trackers = GS.GetClient().cubeTrackers.Get(chunkPosition);
+                var trackers = GS.GetClient().ChunkManager.CubeTrackers.Get(chunkPosition);
                 int trackedPositionsNum = reader.GetUShort();
                 for (int j = 0; j < trackedPositionsNum; j++)
                 {
