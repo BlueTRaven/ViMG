@@ -87,7 +87,7 @@ namespace Engine.Rendering
 
 			//Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
 			//Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
-			(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
+			//(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
 
 			rs = new RasterizerState()
 			{
@@ -106,7 +106,7 @@ namespace Engine.Rendering
 			device.SamplerStates[5] = Main.shadowBorderClampSS;
 		}
 
-		public void UpdateCameras(ClientStates client, Camera camera, Vector3 direction, Vector4 color, float clampY = -1)
+		public void UpdateCameras(ClientStates client, Engine.Common.Camera camera, Vector3 direction, Vector4 color, float clampY = -1)
         {
 			this.lightDirection = Vector3.Normalize(direction);
 			this.lightColor = color;
@@ -142,7 +142,7 @@ namespace Engine.Rendering
 			version++;
         }
 
-        public void DrawShadowmap(GraphicsDevice device, Camera globalCamera, ChunkRenderMesher renderMesher)
+        public void DrawShadowmap(GraphicsDevice device, Engine.Common.Camera globalCamera, ChunkRenderMesher renderMesher)
 		{
 			if (lastUpdatedVersion == version)
 				return;
@@ -196,7 +196,7 @@ namespace Engine.Rendering
 			}
 		}
 
-		public void Bind(Effect effect, Camera camera)
+		public void Bind(Effect effect, Engine.Common.Camera camera)
 		{
 			Matrix globalShadowMatrix = MakeGlobalShadowMatrix(camera, lightDirection);
 
@@ -218,7 +218,7 @@ namespace Engine.Rendering
 		}
 
 		private Vector3[] corners = new Vector3[8];
-		private Matrix MakeGlobalShadowMatrix(Camera camera, Vector3 direction)
+		private Matrix MakeGlobalShadowMatrix(Engine.Common.Camera camera, Vector3 direction)
 		{
 			// Get the 8 points of the view frustum in world space
 			corners[0] = new Vector3(-1.0f, 1.0f, 0.0f);

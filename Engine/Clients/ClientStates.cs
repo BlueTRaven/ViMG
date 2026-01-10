@@ -5,6 +5,7 @@ using Engine.Common.Entities;
 using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
+using Engine.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -28,7 +29,9 @@ namespace Engine.Clients
         public ClientChunkManager ChunkManager;
         public ClientWorldLogic WorldLogic;
         private WorldRenderer worldRenderer;
-        public LightManager LightManager;
+        //public LightManager LightManager;
+        public LightManager2 LightManager;
+        private LightsRenderer lightRenderer;
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
@@ -67,7 +70,9 @@ namespace Engine.Clients
             WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
             worldRenderer = new WorldRenderer(device);
 
-            LightManager = new LightManager(device);
+            //LightManager = new LightManager(device);
+            LightManager = new LightManager2();
+            lightRenderer = new LightsRenderer(device);
         }
 
         public void NewFrame(double time)
@@ -261,9 +266,14 @@ namespace Engine.Clients
                 InterpCamera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
             }
 
-            LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
-            LightManager.DrawShadowmap(device, ChunkManager);
-            LightManager.Draw(device);
+            lightRenderer.UpdateDatas(LightManager, Main.Renderer.EffectLightAccumPointLight);
+            lightRenderer.Draw(device, LightManager);
+            lightRenderer.DrawShadowmap(device, ChunkManager, LightManager);
+            
+            LightManager.Reset();
+            //LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
+            //LightManager.DrawShadowmap(device, ChunkManager);
+            //LightManager.Draw(device);
 
             WorldLogic.Render(device, this);
 

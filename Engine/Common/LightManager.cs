@@ -16,11 +16,16 @@ namespace Engine.Common
 	// as some enemies or mechanics may want to use lights.
 	public class LightManager
 	{
-		[ConsoleCommandVar("draw_light_instance_volumes", "Draws light instance volumes - for debugging purposes. Normal lights are red, shadowmapped lights are orange.")]
+		[ConsoleCommandVar("r_draw_light_instance_volumes", "Draws light instance volumes - for debugging purposes. Normal lights are red, shadowmapped lights are orange.")]
 		public static bool DebugDrawLightInstanceVolumes = false;
 
-		public const int MAX_LIGHTS = 1024 * 8;
-		public const int MAX_LIGHTS_SHADOWMAPPED = 8;
+		public static int LightManagerGeneration = 0;
+		private static int lightsMax = 8192;
+		[ConsoleCommandVar("r_max_lights", "Maximum number of lights. Default = 8192")]
+		public static int LightsMax { get => lightsMax; set { lightsMax = value; LightManagerGeneration += 1; } }
+		private static int lightsShadowmappedMax = 8;
+		[ConsoleCommandVar("r_max_shadowmapped_lights", "Maximum number of shadowmapped lights. Default = 8")]
+		public static int LightsShadowmappedMax { get => lightsShadowmappedMax; set { lightsShadowmappedMax = value; LightManagerGeneration += 1; } }
 
 		private StructuredBuffer bufferLights;
 		private StructuredBuffer bufferShadowmappedLights;
@@ -100,35 +105,38 @@ namespace Engine.Common
 		};
 
 		private RenderTargetCube lightsCubemaps;
-		//private RenderTarget2D lightsCubemaps;
-		private Matrix[][] lightShadowmappedMatrices = new Matrix[MAX_LIGHTS_SHADOWMAPPED][];
+		private Matrix[][] lightShadowmappedMatrices = new Matrix[LightsShadowmappedMax][];
 
-		private Light[] lights = new Light[MAX_LIGHTS];
-		private Light[] lightsShadowmapped = new Light[MAX_LIGHTS_SHADOWMAPPED];
+		private Light[] lights = new Light[LightsMax];
+		private Light[] lightsShadowmapped = new Light[LightsShadowmappedMax];
 
-		private ushort[] lightVersions = new ushort[MAX_LIGHTS_SHADOWMAPPED];
-		private ushort[] oldLightVersions = new ushort[MAX_LIGHTS_SHADOWMAPPED];
-		private int[] oldShadowmapVersions = new int[MAX_LIGHTS_SHADOWMAPPED];
+		private ushort[] lightVersions = new ushort[LightsShadowmappedMax];
+		private ushort[] oldLightVersions = new ushort[LightsShadowmappedMax];
+		private int[] oldShadowmapVersions = new int[LightsShadowmappedMax];
 
-		private Data[] datas = new Data[MAX_LIGHTS];
-		private Data[] datasShadowmapped = new Data[MAX_LIGHTS_SHADOWMAPPED];
+		private Data[] datas = new Data[LightsMax];
+		private Data[] datasShadowmapped = new Data[LightsShadowmappedMax];
 
 		private int numUsedLights;
 		private int numUsedLightsShadowmapped;
+
+		public readonly int generation;
 
 		public LightManager(GraphicsDevice device)
 		{
 			//lightsCubemaps = new RenderTarget2D(device, 256, 256, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents, false, 
 				//MAX_LIGHTS_SHADOWMAPPED * 6);
-			lightsCubemaps = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents, MAX_LIGHTS_SHADOWMAPPED);
+			lightsCubemaps = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents, LightsShadowmappedMax);
 
-			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
+			for (int i = 0; i < LightsShadowmappedMax; i++)
 			{
 				lightShadowmappedMatrices[i] = new Matrix[6];
 				Array.Fill(lightShadowmappedMatrices[i], Matrix.Identity);
 
 				datasShadowmapped[i] = new Data(new Light());
 			}
+
+			generation = LightManagerGeneration;
 			/*for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
 				lightsCubemaps[i] = new RenderTargetCube(device, 256, false, SurfaceFormat.Single, DepthFormat.Depth24);*/
 		}
@@ -146,10 +154,10 @@ namespace Engine.Common
 		public int Add(Vector3 position, float start, float end, Vector4 color, bool useNDotL = true)
 		{
 			//Early-out - we have no more light slots available.
-			if (numUsedLights >= MAX_LIGHTS)
+			if (numUsedLights >= LightsMax)
 				return -1;
 
-			for (int i = 0; i < MAX_LIGHTS; i++)
+			for (int i = 0; i < LightsMax; i++)
 			{
 				if (!lights[i].active)
 				{
@@ -169,14 +177,14 @@ namespace Engine.Common
 		public void AddShadowmapped(Vector3 position, float start, float end, Vector4 color, out int shadowmappedLightIndex, out bool success)
 		{
 			//Attempt to allocate a non-shadowmapped light if we're above the max shadowmapped lights.
-			if (numUsedLightsShadowmapped >= MAX_LIGHTS_SHADOWMAPPED)
+			if (numUsedLightsShadowmapped >= LightsShadowmappedMax)
             {
 				shadowmappedLightIndex = Add(position, start, end, color);
 				success = false;
 				return;
             }
 
-			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
+			for (int i = 0; i < LightsShadowmappedMax; i++)
 			{
 				if (!lightsShadowmapped[i].active)
 				{
@@ -250,10 +258,10 @@ namespace Engine.Common
 		public void UpdateDatas(Effect effect)
 		{
 			if (bufferLights == null)
-				bufferLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS, BufferUsage.WriteOnly, ShaderAccess.Read);
+				bufferLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), LightsMax, BufferUsage.WriteOnly, ShaderAccess.Read);
 
 			if (bufferShadowmappedLights == null)
-				bufferShadowmappedLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), MAX_LIGHTS_SHADOWMAPPED, BufferUsage.WriteOnly, ShaderAccess.Read);
+				bufferShadowmappedLights = new StructuredBuffer(effect.GraphicsDevice, typeof(Data), LightsShadowmappedMax, BufferUsage.WriteOnly, ShaderAccess.Read);
 
 			//if version does not match last version, that means something was added and we need to reupload datas.
 			//for now, this happens if either normal or shadowmapped lights are updated.
@@ -261,12 +269,12 @@ namespace Engine.Common
 			{
 				lastUploadedVersion = version;
 
-				for (int i = 0; i < MAX_LIGHTS; i++)
+				for (int i = 0; i < LightsMax; i++)
 				{
 					datas[i] = new Data(lights[i]);
 				}
 
-				for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
+				for (int i = 0; i < LightsShadowmappedMax; i++)
 				{
 					if (lightsShadowmapped[i].active)
 					{
@@ -298,12 +306,12 @@ namespace Engine.Common
 
 		public void Draw(GraphicsDevice device)
         {
-			for (int i = 0; i < MAX_LIGHTS; i++)
+			for (int i = 0; i < LightsShadowmappedMax; i++)
             {
 				Light light = lights[i];
 
 				if (light.active)
-					Main.Renderer.DrawsPointLightVolumePass.Add(new Rendering.RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
+					Main.Renderer.DrawsPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
 
 				if (DebugDrawLightInstanceVolumes)
 				{
@@ -316,12 +324,12 @@ namespace Engine.Common
 				}
             }
 
-			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
+			for (int i = 0; i < LightsShadowmappedMax; i++)
             {
 				Light light = lightsShadowmapped[i];
 				
 				if (light.active)
-					Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new Rendering.RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
+					Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
 
                 if (DebugDrawLightInstanceVolumes)
                 {
@@ -353,7 +361,7 @@ namespace Engine.Common
 
 			//To begin with, draw everything every frame. This is SLOW! Eventually we'll want to only draw these lights
 			//if something changes in them (i.e. chunk is dirty)
-			for (int i = 0; i < MAX_LIGHTS_SHADOWMAPPED; i++)
+			for (int i = 0; i < LightsShadowmappedMax; i++)
 			{
 				Light light = lightsShadowmapped[i];
 
@@ -364,7 +372,7 @@ namespace Engine.Common
 					int versionSum = 0;
 					int drawnChunksCount = 0;
 					//TODO: fit drawn chunks more accurately. Right now we're drawing tons of unseen stuff
-					int drawDist = (int)MathF.Round((light.end / Cubes.Cube.CUBE_SCALE) / Chunk.CHUNK_SIZE, MidpointRounding.ToPositiveInfinity);
+					int drawDist = (int)MathF.Round((light.end / ViMG.Cubes.Cube.CUBE_SCALE) / Chunk.CHUNK_SIZE, MidpointRounding.ToPositiveInfinity);
 					for (int x = -drawDist; x <= drawDist; x++)
 					{
 						for (int y = -drawDist; y <= drawDist; y++)
@@ -414,7 +422,7 @@ namespace Engine.Common
 
 								if (chunkManager.IsInWorldBounds(chunkPos))
 								{
-									VerySimpleMesh mesh = chunkManager.ChunkMesher?.RenderMesher?.GetMesh(chunkPos, Cubes.Cube.RenderPass.DepthOnly) ?? new();
+									VerySimpleMesh mesh = chunkManager.ChunkMesher?.RenderMesher?.GetMesh(chunkPos, ViMG.Cubes.Cube.RenderPass.DepthOnly) ?? new();
                                     //Matrix transform = world.ChunkManager.GetTransform(chunkPos);
 
 

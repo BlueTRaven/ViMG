@@ -95,7 +95,6 @@ namespace ViMG.GameStates
                 this.netMode = netMode;
                 TheIsland.localPlayerName = MenuMain.GetDefaultPlayerName(this);
                 SetGameState(TheIsland);
-                TheIsland.ConnectLocal();
                 if (netMode == NetworkingMode.Singleplayer)
                 {
                     TheIsland.StartSingleplayer(Main.SessionInformation.LastLoadedSave);

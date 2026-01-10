@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViMG.IMGUIImpl
 {
-    [AttributeUsage(AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ConsoleCommandVarAttribute : Attribute
     {
         public string name;

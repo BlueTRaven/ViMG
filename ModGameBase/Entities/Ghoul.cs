@@ -90,7 +90,7 @@ namespace ViMG.Entities
 
 				if (Main.camera.GetFrustum().Intersects(sphere))
 				{
-					for (int i = 0; i < LightManager.MAX_LIGHTS; i++)
+					for (int i = 0; i < LightManager.LightsMax; i++)
 					{
 						LightManager.Light light = world.LightManager.Get(i);
 

@@ -269,7 +269,7 @@ namespace ViMG.Rendering
         private VertexBuffer vboUVSphere;
         private IndexBuffer iboUVSphere;
 
-        private uint[] lightVolumeIndices = new uint[LightManager.MAX_LIGHTS];
+        private uint[] lightVolumeIndices = new uint[LightManager.LightsMax];
         private StructuredBuffer bufferLightVolumeIndices;
 
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
@@ -576,8 +576,8 @@ namespace ViMG.Rendering
             }
         }
 
-        private Camera interpCamera = null;
-        public void Draw(SpriteBatch batch, Camera prevCamera, Camera currCamera)
+        private Engine.Common.Camera interpCamera = null;
+        public void Draw(SpriteBatch batch, Engine.Common.Camera prevCamera, Engine.Common.Camera currCamera)
         {
             if (interpCamera == null) interpCamera = new CameraPerspective(prevCamera.Position, prevCamera.RotationEuler, prevCamera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 

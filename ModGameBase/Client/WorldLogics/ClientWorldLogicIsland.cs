@@ -48,7 +48,7 @@ namespace ModGameBase.Client.WorldLogics
         {
             float[] splits = [1f / 50f, 1f / 25f, 1f / 10f, 1f / 2f];
 
-            directionalLight = new ViMG.DirectionalLight(device, Main.NEAR, Main.FAR, splits);
+            directionalLight = new Engine.Rendering.DirectionalLight(device, Main.NEAR, Main.FAR, splits);
 
             directionalLight.WorldheightMap = Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 

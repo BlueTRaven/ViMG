@@ -396,7 +396,7 @@ namespace ViMG.WorldLogics
             lightningAngle = angle;
         }
 
-        public void UpdateClient(double deltaTime, Camera camera, Vector3 position, ICubeGetter cubeView)
+        public void UpdateClient(double deltaTime, Engine.Common.Camera camera, Vector3 position, ICubeGetter cubeView)
         {
             timeUntilNextEmit -= (float)deltaTime;
 
@@ -577,7 +577,7 @@ namespace ViMG.WorldLogics
             }
         }
 
-        private void UpdateWeatherParticles(ICubeGetter cubeView, Camera camera, double deltaTime)
+        private void UpdateWeatherParticles(ICubeGetter cubeView, Engine.Common.Camera camera, double deltaTime)
         {
             min = MAX_RAIN_PARTICLES;
             max = 0;
@@ -661,7 +661,7 @@ namespace ViMG.WorldLogics
                 drawInstanceBuffer.SetData(instancedData, min, max - min);
         }
 
-        public void Draw(GraphicsDevice device, Camera camera, float worldTime)
+        public void Draw(GraphicsDevice device, Engine.Common.Camera camera, float worldTime)
         {
             Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
                 materialRain, rainMesh, drawInstanceBuffer, min, max - min));

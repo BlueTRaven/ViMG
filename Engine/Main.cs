@@ -43,8 +43,8 @@ namespace ViMG
 		//private World world;
 		public static GameStateManager gameStateManager;
 
-		public static Camera camera;
-		public static Camera debugCamera;
+		public static Engine.Common.Camera camera;
+		public static Engine.Common.Camera debugCamera;
 
 		public static InputManager inputManager;
 		public static ViMGAssetsManager assetsManager;

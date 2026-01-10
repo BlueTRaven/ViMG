@@ -203,7 +203,6 @@ namespace ViMG.UIs
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
                     gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
-                    gsManager.TheIsland.netManagerServer.Port = serverPort;
 
                     if (worldName == "")
                         worldName = "new" + directories.Length;
@@ -211,9 +210,9 @@ namespace ViMG.UIs
                         gsManager.TheIsland.localPlayerName = worldName;
 
                     gsManager.SetGameState(gsManager.TheIsland);
-                    gsManager.TheIsland.Connect(serverIp, serverPort);
+                    gsManager.TheIsland.Connect(serverIp, serverPort, true);
                     if (startAsServer)
-                        gsManager.TheIsland.StartSingleplayer(worldName);
+                        gsManager.TheIsland.StartServer(worldName);
                     else gsManager.TheIsland.StartSingleplayer(worldName);
                 }
             }

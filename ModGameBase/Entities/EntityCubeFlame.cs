@@ -1,4 +1,5 @@
 ﻿using Engine.Common;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(1)]
-    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner
+    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner, ISyncBasicState
     {
         //Store time as the point in world time after which this entity will be destroyed.
         //We do it this way so that the timer technically keeps ticking even if we unload the chunk with this cube.
@@ -162,6 +163,20 @@ namespace ViMG.Entities
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                timers = { [0] = time }
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

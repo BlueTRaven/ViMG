@@ -60,6 +60,7 @@ namespace Engine.Networking
         public NetPlayer[] netPlayers = new NetPlayer[World.MAX_PLAYERS];
         public int uniqueNetPlayers = 0;
 
+        private bool startedConnecting;
         public double StartTime;
         private DateTime clientDCTime;
 
@@ -150,10 +151,14 @@ namespace Engine.Networking
                 netManager.Connect(Ip, Port, "");
                 clientDCTime = DateTime.Now;
             }
+
+            startedConnecting = true;
         }
 
         public bool ClientHasConnected()
         {
+            if (!startedConnecting) return false;
+
             if (whoAmI == -1)
             {
                 netManager.TriggerUpdate();

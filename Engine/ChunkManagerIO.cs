@@ -147,8 +147,6 @@ namespace ViMG
 
 		public Span<ushort> GetChunk(ChunkPosition position, GetMode mode)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
-
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
 			if (loadedChunks[i].loadedState == LoadedState.Unloaded) return null;
 

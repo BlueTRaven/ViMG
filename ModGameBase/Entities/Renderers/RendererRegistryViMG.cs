@@ -1,5 +1,6 @@
 ﻿using Engine.Entities.Renderers;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities.Renderers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace ViMG.Entities.Renderers
             Register(new RendererManaStar(device));
             Register(new RendererSkullheadEye(device));
             Register(new RendererSkullhead(device));
+            Register(new RendererFurnace(device));
+            Register(new RendererFlame(device));
         }
     }
 }

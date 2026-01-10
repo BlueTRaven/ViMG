@@ -74,8 +74,6 @@ namespace ViMG.Cubes
                     new Vector3(0, 0, 1), Color.White, vertices, indices);
 
                 heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-                //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
             return heldMesh;

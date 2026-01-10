@@ -17,7 +17,7 @@ Main.SessionInformation = ses;
 Main.IsHeadless = true;
 Main.gameStateManager = new GameStateManager();
 Main.gameStateManager.Initialize();
-Main.camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), Main.FOV_DEGREES, Main.NEAR, Main.FAR);
+Main.camera = new Engine.Common.CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
 var _services = new GameServiceContainer();
 var _content = new ContentManager(_services);

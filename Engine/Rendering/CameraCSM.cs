@@ -10,7 +10,7 @@ using ViMG.Cubes;
 
 namespace Engine.Rendering
 {
-    public class CameraCSM : Camera
+    public class CameraCSM : Engine.Common.Camera
     {
         private readonly float prevSplit;
         private readonly float split;
@@ -27,7 +27,7 @@ namespace Engine.Rendering
             this.split = split;
         }
 
-        public void Update(Camera camera, Vector3 direction, float clampY = -1)
+        public void Update(Engine.Common.Camera camera, Vector3 direction, float clampY = -1)
         {
             CalculateFrustumCorners(camera);
 
@@ -122,7 +122,7 @@ namespace Engine.Rendering
 
         private Vector3[] corners = new Vector3[8];
         //we can't use the BoundingFrustum class provided by Monogame (that's an alloction!) so we cache an array and calculate it ourselves.
-        private void CalculateFrustumCorners(Camera camera)
+        private void CalculateFrustumCorners(Engine.Common.Camera camera)
         {
             //dumbass shit to get mainCamera.GetProjectionMatrix to produce a new value (it's cached and only marked dirty under certain circumstances)
             //float near = mainCamera.Near;

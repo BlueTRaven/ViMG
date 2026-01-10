@@ -752,6 +752,11 @@ namespace ViMG
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
+			if (LightManager.generation != LightManager.LightManagerGeneration)
+			{
+				LightManager = new LightManager(device);
+			}
+
             NumChunksDrawn = 0;
 			ChunkDrawTime = 0;
 

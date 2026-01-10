@@ -39,7 +39,7 @@ namespace ViMG.Items
 
 			Cube cube = Main.Registry.CubeRegistry.Get("flame");
 
-			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
+			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos))
             {
                 actionStats = new ActionStats(magicStats.attackStats);
 				int damage = magicStats.attackStats.damage;

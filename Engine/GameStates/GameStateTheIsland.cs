@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -78,6 +79,10 @@ namespace ViMG.GameStates
         public void BeginLoadWorld(string worldName)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
+
+            Debug.Assert(!IsLoading);
+
+            Console.WriteLine("BeginLoadWorld");
 
             IsLoading = true;
             worldTask = new Task<World>(() =>
@@ -160,7 +165,7 @@ namespace ViMG.GameStates
             return layerTask;
         }
 
-        public void Connect(string ip, int port)
+        public void Connect(string ip, int port, bool delay = false)
         {
             if (netManagerServer != null)
             {
@@ -172,9 +177,6 @@ namespace ViMG.GameStates
                 netManagerClient.Ip = ip;
                 netManagerClient.Port = port;
             }
-
-            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
-            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
         }
 
         public void ConnectLocal()
@@ -254,6 +256,8 @@ namespace ViMG.GameStates
                 {
                     world = worldTask.Result;
                     worldTask = null;
+
+                    ConnectLocal();
 
                     //if (client != null)
                     //    client.NewFrame();
@@ -372,7 +376,6 @@ namespace ViMG.GameStates
 
             ProfilingHelper.Start("Saving Chunks...");
             chunkIO.Save(worldName);
-            chunkIO.UnloadAll();
 
             ProfilingHelper.End("Done.");
 
@@ -401,6 +404,7 @@ namespace ViMG.GameStates
             ProfilingHelper.End("Done.");
 
             ProfilingHelper.Start("Reloading...");
+
             //The way world creation is set up is that it creates everything - the entire world - at the same time.
             //That means we'd have entirely too much stuff in memory after we're done. We're not going to be near half of that stuff.
             //Instead of letting that sit in memory, we just unload EVERYTHING
@@ -413,7 +417,7 @@ namespace ViMG.GameStates
             Array.Fill(world.player, null);
             world.isCreateWorldReloading = false;
             //chunkLoadManager.UnloadAll();
-            
+
             worldInfoIO.Save(worldName, world.WorldInfo);
             Main.SessionIO?.Save();
 

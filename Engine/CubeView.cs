@@ -224,8 +224,6 @@ namespace ViMG
             ushort oldId = ids[i];
             ids[i] = id;
 
-            io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
-
             if (markDirty)
             {
                 chunkManager.MarkCubeDirty(null, position, oldId, id);

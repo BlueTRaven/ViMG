@@ -219,6 +219,7 @@ namespace ViMG.Entities
                 position = Position,
                 state = (int)MeshingDataInstance.facing,
 
+                timers = { [0] = craftTimer},
                 counters = { [0] = inventory.id, [1] = inventory.generation },
             };
         }
