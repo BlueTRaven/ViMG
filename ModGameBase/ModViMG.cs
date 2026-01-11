@@ -3,6 +3,7 @@ using Engine.Mods;
 using Microsoft.Xna.Framework.Graphics;
 using ModGameBase.Entities;
 using ModGameBase.Networking;
+using ModGameBase.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ namespace ViMG
                     this.RendererRegistry = new RendererRegistryViMG(device);
                 this.WorldLogicRegistry = new WorldLogicRegistryViMG();
                 EntityRegistry = new EntityRegistryViMG();
+                ProjectileRegistry = new ProjectileRegistryViMG();
                 MessageRegistry = new MessageRegistryViMG();
             }
         }

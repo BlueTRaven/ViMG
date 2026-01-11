@@ -148,7 +148,7 @@ namespace Engine.Items
 
         public Inventory GetOrAdd(ref InventoryReference reference, Inventory.InventoryConfig config)
         {
-            if (reference.id == 0)
+            if (reference.id == 0 || inventories[reference.id - 1].generation != reference.generation)
             {
                 var id = GetUniqueId();
                 reference = new InventoryReference(id, inventories[id - 1].generation).NextGeneration();

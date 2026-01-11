@@ -147,13 +147,14 @@ namespace ViMG.Entities
                         {
 							ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
 								HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-							ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(
-								new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE, 
-								Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
+							int visStatsId = Main.Registry.ProjectileRegistry.Get("imp_fireball").Id;
+							//ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(
+							//	new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE, 
+							//	Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
 
 							world.ProjectileManager.Add(new ProjectileManager.Projectile(this, Position + new Vector3(0, Cube.CUBE_SCALE, 0), 
 								Vector3.Normalize(distance) * Cube.CUBE_SCALE * 16, 
-								8, visStats, stats), 
+								8, visStatsId, stats), 
 								new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
 
 							fireTimer = fireTime;

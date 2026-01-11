@@ -76,6 +76,8 @@ namespace ViMG.Entities.Renderers
 
         public virtual void RenderClientEnt(GraphicsDevice device, double deltaTime, Engine.Clients.ClientStates client, int entityType) { }
 
+        public virtual void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime, Engine.Clients.ClientStates client, int entityType) { }
+
         protected ref struct Iterator<T> where T : Entity
         {
             int current;

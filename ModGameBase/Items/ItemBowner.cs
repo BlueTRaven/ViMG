@@ -28,7 +28,6 @@ namespace ViMG.Items
                 attackStats.GetTooltip() +
                 "Shoots two arrows at an angle. Consumes two arrows at a time.";
 
-			visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, attackStats.damage, attackStats.knockback,
 				Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, 1, true, 0.5f, true);
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
@@ -47,7 +46,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.AddBatch(player, player.Position, Vector3.Normalize(facing) * Cube.CUBE_SCALE * 32,
-					Cube.CUBE_SCALE * 10, batchStats, visStats, stats, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)), index);
+					Cube.CUBE_SCALE * 10, batchStats, Main.Registry.ProjectileRegistry.Get("arrow").Id, stats, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)), index);
 				
 				inventory.Remove(ammoIndex, 2);
 				return true;

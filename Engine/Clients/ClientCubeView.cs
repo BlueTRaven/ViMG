@@ -101,7 +101,7 @@ namespace Engine.Clients
 
         public Optional<Cube> GetCube(CubePosition position)
         {
-            if (!IsInWorldBounds(position))
+            if (!IsInBounds(position))
                 return new Optional<Cube>();
 
             ushort id = GetId(position);
@@ -123,7 +123,7 @@ namespace Engine.Clients
             }
         }
 
-        private bool IsInWorldBounds(CubePosition position)
+        public bool IsInBounds(CubePosition position)
         {
             int sign = MathF.Sign(position.Y);
 

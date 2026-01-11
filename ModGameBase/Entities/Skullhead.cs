@@ -78,7 +78,7 @@ namespace ViMG.Entities
 
 		private ProjectileManager.ProjectileBatchStats batchStats;
 		private ProjectileManager.ProjectileStats stats;
-		private ProjectileManager.ProjectileVisStats visStats;
+		private int visStatsId;
 
 		public Skullhead() { }
 
@@ -105,7 +105,7 @@ namespace ViMG.Entities
 
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 48, 32, 32), Cube.CUBE_SCALE);
+            visStatsId = Main.Registry.ProjectileRegistry.Get("skullhead_skull").Id;
 
             //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
             world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
@@ -311,7 +311,7 @@ namespace ViMG.Entities
 						stateTimer = Constants.ROTATE_TIME;
 
 						world.ProjectileManager.AddBatch(this, Position, Vector3.Normalize(targetPosition - Position) * Cube.CUBE_SCALE * 12f, 4f,
-							batchStats, visStats, stats, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
+							batchStats, visStatsId, stats, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
                     }
 				}
 

@@ -140,9 +140,14 @@ namespace ViMG
 			public float useAnimTime;
 			public float useAnimTimer;
 
-			public CubePosition lookAtPos;
-			public CubePosition placeAtPos;
 			public int currency;
+
+			public float deadTime;
+			public float damageTime;
+
+			public int maxHealth;
+			public int maxMagic;
+            public int magic;
         }
 
         public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
@@ -203,8 +208,8 @@ namespace ViMG
 		private const float INVULN_TIME = 2f;
 		private float invulnTimer;
 		private float inputLockupTimer;
-		private float damageAnimTimer;
-		private const float DAMAGE_ANIM_TIME = 15f / 60f;
+		private float damageTime;
+		public const float DAMAGE_ANIM_TIME = 15f / 60f;
 
 		private int hitbox = -1;
 		
@@ -235,8 +240,8 @@ namespace ViMG
 		private float dashDoublePressTimer;
 		private const float DOUBLEPRESS_DURATION = 1f / 4f;
 
-		private float deadTimer;
-		private const float DEAD_TIME = 3f;
+		private float deadTime;
+		public const float DEAD_TIME = 3f;
 
 		private World.RaycastResult lookAtResult;
 		//Is currently looking at a cube or not
@@ -660,9 +665,7 @@ namespace ViMG
 			}
 			else if (state == State.Dead)
 			{
-				deadTimer -= (float)deltaTime;
-
-				if (deadTimer <= 0)
+				if ((float)Main.Time - deadTime > DEAD_TIME)
 					KillWithoutAnimation();
 			}
 			else if (state == State.Normal)
@@ -765,8 +768,6 @@ namespace ViMG
                 desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
             }
 
-			damageAnimTimer -= (float)deltaTime;
-
 			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
 			Vector2 center = new Vector2(worldRadius, worldRadius);
 			Vector2 distFromCenter = new Vector2(center.X - Position.X, center.Y - Position.Z);
@@ -839,18 +840,7 @@ namespace ViMG
 
 			var fwd = (this as IRotatable).Forward;
 
-           lookAtResult = CubeView.Raycast(Position, Position - fwd * INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, world.ChunkManager.CubeView);
-			//(Vector3 pos, object? ctx) =>
-			//{
-			//	Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-			//	bool isLooking = world.ChunkManager.IsInWorldBounds(pos) && cube.Touchable;
-
-			//	//if we're climbing a rope, ignore the rope
-			//	if (inRope)
-			//		isLooking = isLooking && cube.Collision != Cube.CollisionValue.Rope;
-
-			//	return isLooking;
-			//}, null);
+           lookAtResult = CubeView.Raycast(Position, Position - fwd * INTERACT_DISTANCE, CubeView.RaycastCallbackTouchable, world.ChunkManager.CubeView);
 
 			IsLooking = false;
 			CanPlace = false;
@@ -1907,35 +1897,30 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-			if (!Main.inputManager.IsHeld(Keys.F5))
+			if (deadTime > 0 && state == State.Dead)
 			{
-				//currentUI.Draw(batch);
+				float t = 1 - (deadTime / DEAD_TIME);
 
-				if (deadTimer > 0 && state == State.Dead)
-                {
-					float t = 1 - (deadTimer / DEAD_TIME);
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+			}
 
-					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
-				}
+			if (alive < 0.5f)
+			{
+				float t = 1 - (alive / 0.5f);
 
-				if (alive < 0.5f)
-				{
-					float t = 1 - (alive / 0.5f);
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+			}
 
-					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
-				}
+			if (damageTime >= 0)
+			{
+				float t = damageTime / DAMAGE_ANIM_TIME;
 
-				if (damageAnimTimer >= 0)
-				{
-					float t = damageAnimTimer / DAMAGE_ANIM_TIME;
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
+			}
 
-					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
-				}
-
-				if (headUnderWater)
-				{
-					batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
-				}
+			if (headUnderWater)
+			{
+				batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
 			}
 		}
 
@@ -2077,7 +2062,7 @@ namespace ViMG
 			if (state == State.Noclip || state == State.Dead)
 				return;
 
-			deadTimer = DEAD_TIME;
+			deadTime = world.GetTime();
 			state = State.Dead;
         }
 
@@ -2091,7 +2076,7 @@ namespace ViMG
 			if (state == State.Noclip)
 				return;
 
-			damageAnimTimer = DAMAGE_ANIM_TIME;
+			damageTime = world.GetTime();
 
 			Health -= amt;
 
@@ -2320,12 +2305,17 @@ namespace ViMG
 				gearInventory = this.gearInventory,
 				heldInventory = this.heldInventory,
 				highlightIndex = this.highlightIndex,
-				lookAtPos = this.LookAtPos,
-				placeAtPos = this.PlaceAtPos,
 				currency = this.Currency,
 				useAnimTime = currentActionStats.useAnimTime,
 				useAnimTimer = useAnimTimer,
 				useAnimType = (int)useAnimType,
+
+				damageTime = damageTime,
+				deadTime = deadTime,
+
+				magic = Magic,
+				maxHealth = GetCalculatedMaxHealth(),
+				maxMagic = GetCalculatedMaxMagic(),
 			};
 
 			state.SetExtra(ref pstate);

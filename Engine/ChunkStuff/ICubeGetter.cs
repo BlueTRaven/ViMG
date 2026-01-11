@@ -21,5 +21,7 @@ namespace Engine.ChunkStuff
         void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def);
 
         void GetIdsForChunk(ChunkPosition position, Span<ushort> ids);
+
+        bool IsInBounds(CubePosition position);
     }
 }

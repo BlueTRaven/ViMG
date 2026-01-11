@@ -33,7 +33,7 @@ namespace ViMG.Entities
 		private readonly bool projectileBatch;
 		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
-        private readonly ProjectileManager.ProjectileVisStats shotProjectileVisStats;
+        private readonly int shotProjectileVisStatsId;
         private float idleTimer;
 		private float idleMoveTimer;
 		private int idleMovements;
@@ -70,7 +70,7 @@ namespace ViMG.Entities
 
 		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
-			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+			int shotProjectileVisStatsId)
         {
             this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
@@ -80,7 +80,7 @@ namespace ViMG.Entities
 			this.MaxHealth = maxHealth;
 
             this.shotProjectileStats = shotProjectileStats;
-            this.shotProjectileVisStats = shotProjectileVisStats;
+            this.shotProjectileVisStatsId = shotProjectileVisStatsId;
 
 			projectileBatch = false;
 			this.bounds = hitboxBounds;
@@ -89,7 +89,7 @@ namespace ViMG.Entities
 		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
 			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
 			ProjectileManager.ProjectileStats shotProjectileStats,
-			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+			int shotProjectileVisStatsId)
 		{
 			this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
@@ -102,7 +102,7 @@ namespace ViMG.Entities
 			this.shotProjectileBatchStats = shotProjectileBatchStats;
 
 			this.shotProjectileStats = shotProjectileStats;
-			this.shotProjectileVisStats = shotProjectileVisStats;
+			this.shotProjectileVisStatsId = shotProjectileVisStatsId;
 
 			this.bounds = hitboxBounds;
 		}
@@ -193,13 +193,13 @@ namespace ViMG.Entities
 								{
                                     ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
 										Vector3.Normalize(dir) * ai.ShootSpeed,
-										8, ai.shotProjectileVisStats, ai.shotProjectileStats),
+										8, ai.shotProjectileVisStatsId, ai.shotProjectileStats),
 										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
 								}
 								else
 								{
                                     ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
-										ai.shotProjectileBatchStats, ai.shotProjectileVisStats, ai.shotProjectileStats,
+										ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats,
 										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
 								}
 

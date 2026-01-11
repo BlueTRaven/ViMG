@@ -40,7 +40,6 @@ namespace ViMG.Items
 
             stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
-            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 0, 16, 16), Cube.CUBE_SCALE / 3f);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -65,7 +64,7 @@ namespace ViMG.Items
 
             player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Position.X + otherHitbox.bounds.Size.X / 2f,
                 otherHitbox.bounds.Top, otherHitbox.bounds.Position.Z + otherHitbox.bounds.Size.Z / 2f), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
-                batchStats, visStats, stats,
+                batchStats, Main.Registry.ProjectileRegistry.Get("bone").Id, stats,
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
         }
     }

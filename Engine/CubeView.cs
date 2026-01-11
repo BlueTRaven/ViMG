@@ -314,6 +314,17 @@ namespace ViMG
             return new OptionalValue<CubePosition>();
         }
 
+        public bool IsInBounds(CubePosition position)
+        {
+            return chunkManager.IsInWorldBounds(position);
+        }
+
+        public static bool RaycastCallbackTouchable(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+        }
+
         public static bool RaycastCallbackSolid(Vector3 position, object? ctx)
         {
             ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();

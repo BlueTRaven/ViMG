@@ -164,7 +164,7 @@ namespace ViMG
             ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
             MenuDialogue = new MenuDialogue(Main.gameStateManager);
 
-            ProjectileManager.InitMeshes(device);
+            //ProjectileManager.InitMeshes(device);
             LightManager = new LightManager(device);
 
 			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
@@ -331,6 +331,7 @@ namespace ViMG
 			{
 				EntityManager.UpdateNetwork();
 				InventoryManager.UpdateNetwork(player);
+				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
                 Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
 				lastSyncTime = Main.Time;
@@ -748,159 +749,20 @@ namespace ViMG
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
 
+		public void DrawDebug(GraphicsDevice device)
+		{
+			if (Main.Debug)
+				HitboxManager.DrawDebug(device);
+
+			if (Main.Debug)
+				HousingManager.DrawDebug(this, device);
+		}
+
         public void Draw(GraphicsDevice device)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			if (LightManager.generation != LightManager.LightManagerGeneration)
-			{
-				LightManager = new LightManager(device);
-			}
-
-            NumChunksDrawn = 0;
-			ChunkDrawTime = 0;
-
 			Stopwatch drawTime = Stopwatch.StartNew();
-
-   //         LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
-			//LightManager.DrawShadowmap(device, this);
-			//LightManager.Draw(device);
-
-			bool drawSkybox = true;
-
-			//float dist = DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (16 * Cube.CUBE_SCALE);
-			//Vector3 camChunkPosWS = Main.camera.Position;
-			//if (camChunkPosWS.Y < Cube.CUBE_SCALE * 100)
-			//	dist = MathHelper.Lerp(64 * Cube.CUBE_SCALE, dist, camChunkPosWS.Y / (Cube.CUBE_SCALE * 100));
-			//else if (camChunkPosWS.Y < -200f)
-			//	dist = 64 * Cube.CUBE_SCALE;
-
-			//camChunkPosWS.X -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-			//camChunkPosWS.Y -= dist;
-			//camChunkPosWS.Z -= DrawDistanceHoriz * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
-
-			//foreach (ChunkPosition pos in CulledChunkDrawPositions)
-			//{
-			//	Matrix transform = Matrix.Identity; //ChunkManager.GetTransform(pos);
-
-			//	RendererDeferred.DrawMaterial cubesMaterial = StaticMaterials.Cubes;
-			//	if (GetLocalPlayer()?.GetBuffManager().HasBuff("emissive_ores") ?? false)
-			//		cubesMaterial = StaticMaterials.CubesWithEmissiveOres;
-
-   //             VerySimpleMesh mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Opaque) ?? new();
-			//	if (mesh.IBO != null)
-			//	{
-			//		Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
-			//	}
-   //             //if (mesh.VBO != null)
-   //             //{
-   //             //    Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh.VBO, mesh.IBO,
-   //             //        transform, null));
-   //             //}
-
-   //             mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
-   //             if (mesh.IBO != null)
-   //             {
-   //                 Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-   //                 Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-
-   //                 Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-   //                 //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
-
-   //                 Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
-   //             }
-   //             //if (mesh.VBO != null)
-   //             //{
-   //             //    Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-   //             //    Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-
-   //             //    Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-   //             //    //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
-
-   //             //    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
-   //             //        cubesMaterial, mesh.VBO, mesh.IBO, transform));
-   //             //}
-
-			//	if (Main.Renderer.EffectEmptyEnabled)
-			//	{
-			//		mesh = ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
-   //                 if (mesh.IBO != null)
-   //                 {
-   //                     Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-   //                     Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-
-   //                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-
-   //                     Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
-   //                         StaticMaterials.Cubes, mesh, transform));
-   //                 }
-   //  //               if (mesh.VBO != null)
-			//		//{
-			//		//	Vector3 minBounds = Main.camera.Position - pos.InWorldSpace();
-			//		//	Vector3 maxBounds = Main.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
-
-			//		//	Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
-
-			//		//	Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(), 
-			//		//		StaticMaterials.Cubes, mesh.VBO, mesh.IBO, transform));
-			//		//}
-			//	}
-
-			//	NumChunksDrawn++;
-			//}
-
-			//if (drawSkybox)
-			//{
-			//	float alphaDay = 1 - GetTimeOfDay();
-			//	float alphaNight = GetTimeOfNight();
-
-			//	if (alphaDay < 1)
-			//	{
-			//		const float mp = (DAY_CYCLE_TIME * 1.5f);
-			//		const float my = (DAY_CYCLE_TIME * 1.34f);
-			//		float p = MathF.Sin(MathF.PI * 2 * ((alive % mp) / mp));
-			//		float y = MathF.Sin(MathF.PI * 2 * ((alive % my) / my));
-
-			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
-			//			new RendererDeferred.DrawMaterial(Skybox.Night),
-   //                     skyboxMesh.Value,
-   //                     Matrix.CreateTranslation(new Vector3(-0.5f)) *
-			//			Matrix.CreateFromYawPitchRoll(y, p, 0) *
-			//			Matrix.CreateTranslation(Main.camera.Position),
-			//			null, Color.White));
-			//	}
-
-			//	if (alphaDay > 0)
-			//	{
-			//		Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
-
-			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
-			//			new RendererDeferred.DrawMaterial(Skybox.Day),
-   //                     skyboxMesh.Value,
-   //                     Matrix.CreateTranslation(new Vector3(-0.5f)) *
-			//			Matrix.CreateTranslation(Main.camera.Position),
-			//			null, Color.White * alphaDay));
-			//	}
-
-			//	if (WeatherSkyboxAlpha > 0)
-			//	{
-			//		Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
-			//		{
-			//			SortValue = 100,
-			//			Material = new Rendering.RendererDeferred.DrawMaterial(Skybox.Weather),
-			//			TintColor = WeatherSkyboxColor.ToVector4() * WeatherSkyboxAlpha,
-			//			Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
-			//				Matrix.CreateTranslation(Main.camera.Position),
-			//			Mesh = skyboxMesh.Value,
-			//		});
-			//	}
-
-			//	if (Main.Debug)
-			//		HitboxManager.DrawDebug(device);
-
-			//	if (Main.Debug)
-			//		HousingManager.DrawDebug(this, device);
-			//}
 
 			foreach (var mined in miningCubes)
 			{
@@ -920,10 +782,7 @@ namespace ViMG
 				}
 			}
 
-			ProjectileManager.Draw(device);
-			//EntityManager.Draw(device, null);
-
-			//Logic.Draw(this, device);
+			//ProjectileManager.Draw(device);
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;

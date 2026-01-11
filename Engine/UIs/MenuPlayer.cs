@@ -757,6 +757,10 @@ namespace ViMG.UIs
             var accessoryInventory = invManager.Get(this.accessoryInventory);
             var gearInventory = invManager.Get(this.gearInventory);
 
+			var playerRef = gsManager.TheIsland.GetClient().Current().entities.GetLocalPlayerRef();
+			var playerEnt = gsManager.TheIsland.GetClient().Current().entities.GetByRef(ref playerRef);
+			var player = playerEnt.GetExtra<Player.PlayerExtraState>();
+
             UI.Draw(batch, SCALE);
 
 			if (opened)
@@ -764,14 +768,13 @@ namespace ViMG.UIs
 				MenuHelper.DrawHeldItem(batch, heldInventory.Get(0), SIZE, SCALE);
 			}
 
-			// TODO
 			Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
-				WIDTH_PER_HEALTH * 20, HEALTHBAR_PADDING);
+				WIDTH_PER_HEALTH * player.maxHealth, HEALTHBAR_PADDING);
 			RectangleF hbRect = new RectangleF(hbPos,
-                new Vector2(WIDTH_PER_HEALTH * 20, 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_HEALTH * player.maxHealth, 8 * HEALTHBAR_SCALE));
 
-			float health = gsManager.TheIsland.GetClient().Current().entities.GetByRef(player).health;
-			float lostHealth = 20 - health;
+			float health = playerEnt.health;
+			float lostHealth = player.maxHealth - health;
 
             healthbarLowerNS.Draw(batch, Color.White, hbRect, HEALTHBAR_SCALE, 0);
 
@@ -782,14 +785,13 @@ namespace ViMG.UIs
 					new Vector2(WIDTH_PER_HEALTH * health, 8 * HEALTHBAR_SCALE)), HEALTHBAR_SCALE, 0);
 			}
 
-			// TODO
             Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_MAGIC * 5, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+                WIDTH_PER_MAGIC * player.maxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
             RectangleF mbRect = new RectangleF(mbPos,
-                new Vector2(WIDTH_PER_MAGIC * 5, 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_MAGIC * player.maxMagic, 8 * HEALTHBAR_SCALE));
 
-            float magic = 0;
-			float lostMagic = 5 - magic;
+            float magic = player.magic;
+			float lostMagic = player.maxMagic - magic;
 
 			magicbarLowerNS.Draw(batch, Color.White, mbRect, HEALTHBAR_SCALE, 0);
 		

@@ -2,6 +2,7 @@
 using Engine.Entities.Renderers;
 using Engine.Mods;
 using Engine.Networking.Messages;
+using Engine.Projectiles;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace ViMG
 		public RecipeRegistry RecipeRegistry;
 		public BuffRegistry BuffRegistry;
         public EntityRegistry EntityRegistry;
+        public ProjectileRegistry ProjectileRegistry;
 		public RendererRegistry RendererRegistry;
 		public WorldLogicRegistry WorldLogicRegistry;
         public MessageRegistry MessageRegistry;
@@ -37,6 +39,7 @@ namespace ViMG
 			RecipeRegistry = new RecipeRegistry();
 			BuffRegistry = new BuffRegistry();
             EntityRegistry = new EntityRegistry();
+            ProjectileRegistry = new ProjectileRegistry();
             if (device != null)
 			    RendererRegistry = new RendererRegistry(device);
 			WorldLogicRegistry = new WorldLogicRegistry();
@@ -52,6 +55,7 @@ namespace ViMG
 			RecipeRegistry.RegisterAll();
 			BuffRegistry.RegisterAll();
             EntityRegistry.RegisterAll();
+            ProjectileRegistry.RegisterAll();
 			RendererRegistry?.RegisterAll();
 			WorldLogicRegistry.RegisterAll();
             MessageRegistry.RegisterAll();
@@ -160,6 +164,18 @@ namespace ViMG
                     (item as IRegisterable).LoadContent(device);
                 }
             }
+
+            foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.ProjectileRegistry?.RegisterAll();
+                    ProjectileRegistry.AddFromOther(service.ProjectileRegistry);
+                }
+            }
+
+            ProjectileRegistry.PostRegistration();
 
             if (RendererRegistry != null)
             {

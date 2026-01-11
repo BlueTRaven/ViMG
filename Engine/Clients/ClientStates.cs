@@ -288,6 +288,21 @@ namespace Engine.Clients
                     a.RenderClientEnt(device, deltaTime, this, t);
                 }
             }
+
+            ClientProjectileManager.Render(device, this);
+        }
+
+        public void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime)
+        {
+            var iter = Main.Registry.RendererRegistry.GetIterable();
+            foreach (var a in iter)
+            {
+                int[] renderedTypes = a.GetRenderedTypes();
+                foreach (int t in renderedTypes)
+                {
+                    a.RenderUI(device, batch, deltaTime, this, t);
+                }
+            }
         }
     }
 }

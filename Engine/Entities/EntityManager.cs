@@ -272,7 +272,6 @@ namespace ViMG.Entities
 			if (iteratingUpdate)
 				throw new Exception("Cannot add while iterating");
 
-			// TODO: might not have to do this on client side.
 			if (ents[id].active)
 			{
 				Console.WriteLine("Unload {0} to make room for {1}", ents[id].entity.ToString(), entity.ToString());

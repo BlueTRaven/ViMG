@@ -7,6 +7,7 @@ using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using static Engine.Common.LightManager;
@@ -295,8 +296,13 @@ namespace ViMG
 
 		private static VerySimpleMesh debugMesh;
 
+		[ConsoleCommandVar("rsv_hitbox_draw", "Singleplayer only. Draws hitboxes. Default = false")]
+		public static bool DoDebugDraw = false;
+
 		public void DrawDebug(GraphicsDevice device)
         {
+			if (!DoDebugDraw) return;
+
 			if (debugMesh.IBO == null)
             {
                 FastList<VertexCube> vertices = new FastList<VertexCube>();

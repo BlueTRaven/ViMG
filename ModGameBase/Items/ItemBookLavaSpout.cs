@@ -15,7 +15,6 @@ namespace ViMG.Items
 {
     public class ItemBookLavaSpout : Item
     {
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 16, 16, 16), Cube.CUBE_SCALE);
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
                 Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, true, 1, true);
 
@@ -41,7 +40,7 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + Vector3.Normalize(facing) * (Cube.CUBE_SCALE / 3f),
-                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, visStats, stats, index),
+                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, Main.Registry.ProjectileRegistry.Get("lava").Id, stats, index),
                     new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 
                 return true;

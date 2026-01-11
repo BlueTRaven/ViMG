@@ -743,15 +743,15 @@ namespace ViMG.GameStates
 
             base.Draw(device, batch);
 
-            //if (world != null)
-            //{
-            //    world.Draw(device);
-            //}
-
             if (client != null)
             {
                 client.Render(device, 0);
                 Main.Renderer.Draw(batch, client.Previous(1).camera, client.Current().camera);
+            }
+
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer && world != null)
+            {
+                world.DrawDebug(device);
             }
         }
 
@@ -763,6 +763,9 @@ namespace ViMG.GameStates
             {
                 base.DrawUI(batch);
             }
+
+            if (client != null)
+                client.RenderUI(device, batch, 0);
 
             //if (world != null && !IsLoading)
             //{

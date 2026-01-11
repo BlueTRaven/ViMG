@@ -55,7 +55,7 @@ namespace ViMG.Entities
             buffManager = new BuffManager(this);
 
             ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, batchStats, stats, visStats);
+                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, batchStats, stats, Main.Registry.ProjectileRegistry.Get("shard").Id);
             ai.ShootSpeed = Cube.CUBE_SCALE * 8;
             ai.MoveTowardsTargetDistance = Cube.CUBE_SCALE * 5f;
             ai.AttackTargetDistance = Cube.CUBE_SCALE * 5f;

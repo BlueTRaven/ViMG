@@ -39,14 +39,12 @@ namespace ViMG.Entities
 
 			ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
 									HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, 1, false, 0, true); ;
-			ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE,
-				Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
 
 			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
 			buffManager = new BuffManager(this);
 
 			ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, visStats);
+				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, Main.Registry.ProjectileRegistry.Get("cultist_ball").Id);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
 

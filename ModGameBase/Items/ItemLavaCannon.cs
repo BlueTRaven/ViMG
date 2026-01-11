@@ -17,7 +17,6 @@ namespace ViMG.Items
     {
         private RangedAttackStats rangeAttackStats = new RangedAttackStats(new AttackStats(DamageType.Ranged, 2f, 14, 4), Cube.CUBE_SCALE * 20, 0);
 
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats;
 
         public ItemLavaCannon() : base("cannon_lavacrystal", new RectangleF(128, 112, 32, 16))
@@ -46,7 +45,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-					Vector3.Normalize(facing) * rangeAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, visStats, stats, index),
+					Vector3.Normalize(facing) * rangeAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, Main.Registry.ProjectileRegistry.Get("lava_cannon").Id, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				
 				inventory.Remove(ammoIndex, 4);

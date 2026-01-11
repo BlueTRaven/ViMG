@@ -49,7 +49,7 @@ namespace ViMG.Items
                 batchStats.spacingYaw = Main.random.NextFloat(-15, 15);
                 batchStats.spacingPitch = Main.random.NextFloat(-7.5f, 7.5f);
 
-                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds, index);
+                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, Main.Registry.ProjectileRegistry.Get("musketball").Id, stats, bounds, index);
 
                 inventory.Remove(ammoIndex, 2);
                 return true;

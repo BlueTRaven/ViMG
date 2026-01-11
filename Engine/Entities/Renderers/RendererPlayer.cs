@@ -78,7 +78,7 @@ namespace Engine.Entities.Renderers
                     mesh, worldMat, null, color.ToVector3()));
 
                 var fwd = BasicState.Forward(ref entity);
-                var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, client.ChunkManager.CubeView);
+                var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackTouchable, client.ChunkManager.CubeView);
 
                 float s = MathF.Sin(MathF.PI * 2f * ((float)Main.Time % 2f)) * 0.5f + 0.5f;
                 Color lookAtColor = Color.Lerp(Color.White, Color.Black, s);
@@ -139,6 +139,45 @@ namespace Engine.Entities.Renderers
                 //    }
                 //}
             }
+        }
+
+        public override void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime, ClientStates client, int entityType)
+        {
+            base.RenderUI(device, batch, deltaTime, client, entityType);
+
+            var curr = client.Current();
+            var prev = client.Previous(1);
+            float interpTime = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            var entity = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
+            var player = entity.GetExtra<Player.PlayerExtraState>();
+
+            if (entity.state == (int)Player.State.Dead)
+            {
+                //interpTime - player.deadTime < Player.DEAD_TIME
+                float t = (interpTime - player.deadTime) / Player.DEAD_TIME;
+                t = float.Clamp(t, 0, 1);
+
+                batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+            }
+
+            if (entity.aliveTime < 0.5f)
+            {
+                float t = 1 - (entity.aliveTime / 0.5f);
+
+                batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Black * t);
+            }
+
+            if (interpTime - player.damageTime < Player.DAMAGE_ANIM_TIME)
+            {
+                float t = 1 - ((interpTime - player.damageTime) / Player.DAMAGE_ANIM_TIME);
+
+                batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.DarkRed * t);
+            }
+
+            //if (headUnderWater)
+            //{
+            //    batch.DrawRectangle(new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), Color.Blue * 0.5f);
+            //}
         }
     }
 }
