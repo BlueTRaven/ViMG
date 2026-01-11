@@ -1,4 +1,5 @@
-﻿using BrNineSlice;
+﻿using BepuPhysics.Constraints;
+using BrNineSlice;
 using BrUtility;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -74,28 +75,27 @@ namespace ViMG.UIs
 			("Heart", "Your heart. It beats steadily within your chest. Some say it could be replaced... who wouldn't want a better heart?\n" +
 				"Gear equipped here increases your maximum hp."),
             ("Boots", "All a man really needs is a pair of good boots.\n" +
-				"Gear equippeed here allows you to run."),
+				"Gear equipped here allows you to run."),
             ("Magic", "Magic - who knows how it works?\n" +
 				"Gear equipped here increases your maximum magic."),
             ("Feather Artifact", "Gear equipped here allows you to jump multiple times.")
         };
 
-		public static string[][] tagsAccessoriesBySlot = new string[6][]
-		{
-			tagsLegs,
+		public static string[][] tagsAccessoriesBySlot =
+        [
+            tagsLegs,
 			tagsBody,
 			tagsHead,
 			tagsAccessories,
 			tagsAccessories,
 			tagsAccessories,
-		};
+		];
 
         public int HoverIndex;
 		public int HighlightIndex;
 		private bool opened;
 		public bool IsOpened => opened;
 
-		//private ItemInstance held;
 		private FastList<PickedUpItem> pickedupItems = new FastList<PickedUpItem>();
 
 		private bool craftInventoryUpdated;
@@ -114,10 +114,6 @@ namespace ViMG.UIs
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
 			this.gearInventory = gearInventory;
-
-			// TODO: menus are client-sided. Make this client sided!
-			//var playerInventoryReal = invManager.Get(playerInventory);
-			//playerInventoryReal?.Get(HighlightIndex).item?.StartHold(player, playerInventoryReal, HighlightIndex);
 		}
 
         public override void LoadContent()
@@ -211,15 +207,6 @@ namespace ViMG.UIs
 					HoverIndex = i;
 			}
 
-			// TODO: this should be server-side
-			//if (preHighlightedHotbar.valid && preHighlightedHotbar.item != inventory.Get(HighlightIndex).item)
-   //         {
-			//	preHighlightedHotbar.item.StartHold(player, inventory, HighlightIndex);
-
-			//	if (inventory.Get(HighlightIndex).valid)
-			//		inventory.Get(HighlightIndex).item.StartHold(player, inventory, HighlightIndex);
-   //         }
-
 			UI.EndParent();
 
 			UI.StartParent(new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - HEALTHBAR_MAX, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING));
@@ -270,6 +257,7 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(MARGIN, 18 + MARGIN));
 
+				// Craft inventory stuff
 				UI.ButtonConstructionParameters buttonParameters = MenuHelper.ButtonParameters;
 				UI.ButtonConstructionParameters actionButtonParameters = MenuHelper.ActionButtonParameters;
 				for (int y = 0; y < 2; y++)
@@ -298,7 +286,7 @@ namespace ViMG.UIs
 					}
 				}
 
-				if (craftInventoryUpdated)
+				if (true)
 				{
 					currentRecipe = FindRecipe(craftInventory);
 
@@ -385,6 +373,7 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(16, 16));
 
+				// Accessory inventory stuff
 				buttonParameters.bounds.Position = Vector2.Zero;
 				for (int i = 0; i < 3; i++)
 				{
@@ -448,8 +437,8 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(16));
 
+				// Gear inventory stuff
 				buttonParameters.bounds.Position = Vector2.Zero;
-
 				for (int i = 0; i < 4; i++)
 				{
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2, 0));
@@ -687,7 +676,7 @@ namespace ViMG.UIs
 				pickedupItems.Add(new PickedUpItem(item, pickedupItems.Length));
         }
 
-		private Recipe FindRecipe(Inventory inventory)
+		private static Recipe FindRecipe(Inventory inventory)
 		{
 			// Null is the equivalent of the "inventory" catalyst
 			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Inventory"]);
@@ -716,27 +705,58 @@ namespace ViMG.UIs
 
             if (recipe.Matches(craftInventory))
 			{
+                MenuHelper.InventoryActionClient(player, this.craftInventory, gsManager.TheIsland.GetClient().Current().entities.GetPlayerIndex(player), 1);
+
+                //for (int i = 0; i < recipe.Layout.Length; i++)
+                //{
+                //	if (recipe.Layout[i].valid)
+                //	{
+                //		int numLeft = recipe.Layout[i].num;
+
+                //		craftInventory.FindExact(recipe.Layout[i], 6, out int index);
+
+                //		int overflow = inventory.Get(i).num - numLeft;
+                //		craftInventory.Remove(index, numLeft);
+                //		craftInventoryUpdated = true;
+
+                //		if (overflow < 0)
+                //			numLeft -= Math.Abs(overflow);
+                //		else numLeft -= numLeft;
+                //	}
+                //}
+
+                //for (int i = 0; i < recipe.Outputs.Length; i++)
+                //{
+                //	inventory.Add(recipe.Outputs[i]);
+                //}
+            }
+		}
+
+		public static void InventoryAction(Inventory inventory, Inventory outputInventory)
+		{
+			var recipe = FindRecipe(inventory);
+			if (recipe != null)
+			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
 					if (recipe.Layout[i].valid)
 					{
 						int numLeft = recipe.Layout[i].num;
 
-							craftInventory.FindExact(recipe.Layout[i], 6, out int index);
+						inventory.FindExact(recipe.Layout[i], 6, out int index);
 
-							int overflow = inventory.Get(i).num - numLeft;
-							craftInventory.Remove(index, numLeft);
-							craftInventoryUpdated = true;
+						int overflow = inventory.Get(i).num - numLeft;
+						inventory.Remove(index, numLeft);
 
-							if (overflow < 0)
-								numLeft -= Math.Abs(overflow);
-							else numLeft -= numLeft;
+						if (overflow < 0)
+							numLeft -= Math.Abs(overflow);
+						else numLeft -= numLeft;
 					}
 				}
 
 				for (int i = 0; i < recipe.Outputs.Length; i++)
 				{
-					inventory.Add(recipe.Outputs[i]);
+					outputInventory.Add(recipe.Outputs[i]);
 				}
 			}
 		}

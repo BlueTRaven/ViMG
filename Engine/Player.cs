@@ -582,9 +582,13 @@ namespace ViMG
 
 			var inventory = world.InventoryManager.Get(this.inventory);
 			var craftInventory = world.InventoryManager.Get(this.craftInventory);
-			var heldInventory = world.InventoryManager.Get(this.heldInventory);
+            var gearInventory = world.InventoryManager.Get(this.gearInventory);
+            var accessoryInventory = world.InventoryManager.Get(this.accessoryInventory);
+            var heldInventory = world.InventoryManager.Get(this.heldInventory);
 			inventory?.ProcessEventsServer(this);
 			craftInventory?.ProcessEventsServer(this);
+			gearInventory?.ProcessEventsServer(this);
+			accessoryInventory?.ProcessEventsServer(this);
 			heldInventory?.ProcessEventsServer(this);
 
 			if (IsLocalPlayer)
@@ -2407,6 +2411,11 @@ namespace ViMG
 
         public bool InventoryAction(int activatingPlayer, int action)
         {
+			if (action == 1)
+			{
+				MenuPlayer.InventoryAction(world.InventoryManager.Get(craftInventory), world.InventoryManager.Get(inventory));
+				return true;
+			}
 			return false;
         }
     }

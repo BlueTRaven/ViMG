@@ -168,7 +168,7 @@ namespace ViMG.UIs
 
 			if (craftRecipeButton.clickLeft)
 			{
-				MenuHelper.InventoryActionClient(owner,new InventoryManager.InventoryReference((ushort)furnaceInventory.id, (short)furnaceInventory.generation), gsManager.TheIsland.GetClient().Current().entities.GetPlayerIndex(player), 1);
+				MenuHelper.InventoryActionClient(owner, new InventoryManager.InventoryReference((ushort)furnaceInventory.id, (short)furnaceInventory.generation), gsManager.TheIsland.GetClient().Current().entities.GetPlayerIndex(player), 1);
 			}
 			else if (craftRecipeButton.hovered)
 			{

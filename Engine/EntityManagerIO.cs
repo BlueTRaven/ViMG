@@ -470,7 +470,8 @@ namespace ViMG
 		// We can create an entity in the world that might take up the same slot as a serialized entity.
 		// If this happens, and then the serialized entity is loaded, then the serialized entity will clobber the existant one.
 		// To resolve this, we can just remove the items from the freelist; however, this now means that the id that this entity
-		// would belong to is always free, even if it's never going to be loaded. I kind of hate this solution.
+		// would belong to is always free, even if it's never going to be loaded.
+		// This means that not only can we only have MaxEnts active entities, we can only have MaxEnts TOTAL, including saved entities.
 		public void RemoveSerializedIdsFromFreeList(List<int> freeList)
 		{
 			var usedIds = datas.GetUsedIds();
