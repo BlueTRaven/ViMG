@@ -4,6 +4,7 @@ using Engine.Clients.Entities;
 using Engine.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,45 +21,44 @@ namespace Engine.Clients
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
 
-        private ProjectileHelper.Projectile[] projectiles = new ProjectileHelper.Projectile[ProjectileManager.PROJECTILES_MAX];
-        private ProjectileHelper.ProjectileStats[] stats = new ProjectileHelper.ProjectileStats[ProjectileManager.PROJECTILES_MAX];
-        private int[] visStatIds = new int[ProjectileManager.PROJECTILES_MAX];
-        private bool[] active = new bool[ProjectileManager.PROJECTILES_MAX];
-
-        private FastList<int> freeList = new FastList<int>();
-
-        public ClientProjectileManager(GraphicsDevice device)
+        private struct ProjectileHolder
         {
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
+            public ProjectileHelper.Projectile projectile;
+            public ProjectileHelper.ProjectileStats stats;
+            public int visStatsId;
 
-            for (int i = ProjectileManager.PROJECTILES_MAX - 1; i >= 0; i--)
-            {
-                freeList.Add(i);
-            }
+            public ProjectileManager.ProjectileReference reference;
+
+            public bool active;
         }
 
-        public void NewFrame(ClientProjectileManager prev, double deltaTime)
+        private double time;
+        private ProjectileHolder[] projectiles = new ProjectileHolder[ProjectileManager.PROJECTILES_MAX];
+
+        public ClientProjectileManager()
+        {
+        }
+
+        public void NewFrame(ClientProjectileManager prev, double deltaTime, double time)
         {
             for (int i = 0; i < prev.projectiles.Length; i++)
             {
                 projectiles[i] = prev.projectiles[i];
-                stats[i] = prev.stats[i];
-                visStatIds[i] = prev.visStatIds[i];
-                active[i] = prev.active[i];
             }
+
+            this.time = time;
         }
 
         public void Update(ICubeGetter cubeView, double deltaTime)
         {
             for (int i = 0; i < projectiles.Length; i++)
             {
-                if (active[i])
+                if (projectiles[i].active)
                 {
-                    if (!ProjectileHelper.UpdateProjectile(ref projectiles[i], ref stats[i], cubeView, deltaTime))
+                    if (!ProjectileHelper.UpdateProjectile(ref projectiles[i].projectile, ref projectiles[i].stats, cubeView, deltaTime))
                     {
-                        active[i] = false;
-                        freeList.Add(i);
+                        projectiles[i].reference = projectiles[i].reference.NextGeneration();
+                        projectiles[i].active = false;
                     }
                 }
             }
@@ -66,21 +66,24 @@ namespace Engine.Clients
 
         public ProjectileHelper.Projectile GetProjectile(int id)
         {
-            return projectiles[id];
+            return projectiles[id].projectile;
         }
 
         public bool GetActive(int id)
         {
-            return active[id];
+            return projectiles[id].active;
         }
 
         public ProjectileManager.ProjectileVisStats GetVisStats(int id)
         {
-            return Main.Registry.ProjectileRegistry.Get(visStatIds[id])?.VisStats() ?? new();
+            return Main.Registry.ProjectileRegistry.Get(projectiles[id].visStatsId)?.VisStats() ?? new();
         }
 
         public static void Render(GraphicsDevice device, ClientStates client)
         {
+            if (mesh.IBO == null)
+                mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
+
             for (int i = 0; i < ProjectileManager.PROJECTILES_MAX; i++)
             {
                 if (client.Current().projectiles.GetActive(i))
@@ -99,7 +102,7 @@ namespace Engine.Clients
                     {
                         Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(visStats.scale) *
-                            Matrix.CreateFromQuaternion(client.InterpCamera.Rotation) *
+                            Matrix.CreateFromQuaternion(-client.InterpCamera.Rotation) *
                             Matrix.CreateTranslation(projectile.position), visStats.sourceRect));
                     }
                     else
@@ -118,18 +121,25 @@ namespace Engine.Clients
             }
         }
 
-        public void Add(ProjectileHelper.Projectile projectile, ProjectileHelper.ProjectileStats stats, int visStatsId)
+        public void Add(ProjectileManager.ProjectileReference reference, ProjectileHelper.Projectile projectile, ProjectileHelper.ProjectileStats stats, int visStatsId)
         {
-            if (freeList.Length > 0)
+            int index = reference.id;
+            projectiles[index] = new ProjectileHolder
             {
-                int index = freeList.Length - 1;
-                freeList.RemoveAt(freeList.Length - 1);
+                projectile = projectile,
+                stats = stats,
+                visStatsId = visStatsId,
+                reference = reference,
+                active = true,
+            };
+        }
 
-                projectiles[index] = projectile;
-                this.stats[index] = stats;
-                visStatIds[index] = visStatsId;
-                active[index] = true;
-            }
+        public void Remove(ProjectileManager.ProjectileReference reference, float atTime)
+        {
+            if (projectiles[reference.id].reference.generation != reference.generation)
+                return;
+
+            projectiles[reference.id].projectile.timeLeft = (float)(atTime - time);
         }
     }
 }

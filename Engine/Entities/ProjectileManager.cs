@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Engine.Common;
 using Engine.Networking.Messages;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,7 +16,41 @@ namespace ViMG.Entities
 {
     public class ProjectileManager : IHitboxOwner
 	{
-		public struct ProjectileBatchStats
+        public readonly struct ProjectileReference
+        {
+            public readonly ushort id;
+            // NOTE: negative values are always invalid.
+            public readonly short generation;
+
+            public ProjectileReference(ushort id, short generation)
+            {
+                this.id = id;
+                this.generation = generation;
+            }
+
+            public ProjectileReference NextGeneration()
+            {
+                return new ProjectileReference(id, (short)((generation + 1) % short.MaxValue));
+            }
+
+            public static ProjectileReference INVALID = new ProjectileReference(0, -1);
+
+            public void Serialize(NetDataWriter writer)
+            {
+                writer.Put(id);
+                writer.Put(generation);
+            }
+
+            public static ProjectileReference Deserialize(NetDataReader reader)
+            {
+                ushort id = reader.GetUShort();
+                short generation = reader.GetShort();
+
+                return new ProjectileReference(id, generation);
+            }
+        }
+
+        public struct ProjectileBatchStats
         {
 			internal enum BatchingType
             {
@@ -204,11 +239,12 @@ namespace ViMG.Entities
 
 			public int currentPierce;
 
-			public int index;
+			public ProjectileReference reference;
 
-			public Projectile(int index)
+			public Projectile(ProjectileReference reference)
             {
-				this.index = index;
+				this.reference = reference;
+
 				owner = null;
 				position = Vector3.Zero;
 				velocity = Vector3.Zero;
@@ -229,7 +265,7 @@ namespace ViMG.Entities
 
 			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, int visStatsId, ProjectileStats stats, int inventorySlot = -1)
 			{
-				index = -1;
+				reference = new ProjectileReference(0, 0);
 				this.owner = owner;
 				this.position = position;
 				this.velocity = velocity;
@@ -404,7 +440,8 @@ namespace ViMG.Entities
 			if (projectiles[index].light != -1)
 				world.LightManager.Remove(projectiles[index].light);
 
-			projectiles[index] = new Projectile(index);
+			SyncProjectile.Instance.Unload(projectiles[index].reference);
+			projectiles[index] = new Projectile(projectiles[index].reference.NextGeneration());
 		}
 
 		//public void Draw(GraphicsDevice device)
@@ -479,10 +516,10 @@ namespace ViMG.Entities
 				if (!projectiles[i].active)
 				{
 					projectiles[i] = projectile;
-					projectiles[i].index = i;
+					projectiles[i].reference = (projectiles[i].reference.id - 1 != i) ? new ProjectileReference(1, 0) : projectiles[i].reference.NextGeneration();
 					projectiles[i].bounds = bounds;
 
-					SyncProjectile.Instance.AddToSync(projectile.GetCommon(), projectile.stats.GetCommon(), projectile.visStatsId);
+					SyncProjectile.Instance.Add(projectiles[i].reference, projectile.GetCommon(), projectile.stats.GetCommon(), projectile.visStatsId);
 					return i;
 				}
 			}

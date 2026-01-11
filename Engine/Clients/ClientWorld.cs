@@ -24,7 +24,7 @@ namespace Engine.Clients
         public ClientWorld()
         {
             entities = new ClientEntityManager();
-            projectiles = new ClientProjectileManager(null);
+            projectiles = new ClientProjectileManager();
             flags = new WorldFlags();
             camera = new CameraPerspective(Vector3.Zero, Vector3.Zero, Vector3.One, 90, Main.NEAR, Main.FAR);
         }
@@ -40,7 +40,7 @@ namespace Engine.Clients
             double delta = time - prev.time;
             
             entities.NewFrame(prev.entities, delta);
-            projectiles.NewFrame(prev.projectiles, delta);
+            projectiles.NewFrame(prev.projectiles, delta, time);
             this.time = time;
         }
     }

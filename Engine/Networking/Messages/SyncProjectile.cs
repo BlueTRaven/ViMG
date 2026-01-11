@@ -1,10 +1,12 @@
-﻿using LiteNetLib;
+﻿using Engine.Projectiles;
+using LiteNetLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Entities;
 
 namespace Engine.Networking.Messages
 {
@@ -18,7 +20,9 @@ namespace Engine.Networking.Messages
         {
             public Common.ProjectileHelper.Projectile projectile;
             public Common.ProjectileHelper.ProjectileStats stats;
+            public ProjectileManager.ProjectileReference reference;
             public int visStatsId;
+            public bool unload;
         }
 
         private List<ProjectileToSync> projectilesToSync = new List<ProjectileToSync>();
@@ -28,13 +32,23 @@ namespace Engine.Networking.Messages
             Instance = this;
         }
 
-        public void AddToSync(Common.ProjectileHelper.Projectile projectile, Common.ProjectileHelper.ProjectileStats stats, int visStatsId)
+        public void Add(ProjectileManager.ProjectileReference reference, Common.ProjectileHelper.Projectile projectile, Common.ProjectileHelper.ProjectileStats stats, int visStatsId)
         {
             projectilesToSync.Add(new ProjectileToSync
             {
                 projectile = projectile,
                 stats = stats,
+                reference = reference,
                 visStatsId = visStatsId,
+            });
+        }
+
+        public void Unload(ProjectileManager.ProjectileReference reference)
+        {
+            projectilesToSync.Add(new ProjectileToSync
+            {
+                reference = reference,
+                unload = true,
             });
         }
 
@@ -52,21 +66,30 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(projectilesToSync.Count);
             foreach (var projectile in projectilesToSync)
             {
-                netMessage.writer.Put(projectile.projectile.position.X);
-                netMessage.writer.Put(projectile.projectile.position.Y);
-                netMessage.writer.Put(projectile.projectile.position.Z);
-                netMessage.writer.Put(projectile.projectile.velocity.X);
-                netMessage.writer.Put(projectile.projectile.velocity.Y);
-                netMessage.writer.Put(projectile.projectile.velocity.Z);
-                netMessage.writer.Put(projectile.projectile.timeLeft);
+                projectile.reference.Serialize(netMessage.writer);
+                netMessage.writer.Put((byte)(projectile.unload ? 1 : 0));
+                if (!projectile.unload)
+                {
+                    netMessage.writer.Put(projectile.projectile.position.X);
+                    netMessage.writer.Put(projectile.projectile.position.Y);
+                    netMessage.writer.Put(projectile.projectile.position.Z);
+                    netMessage.writer.Put(projectile.projectile.velocity.X);
+                    netMessage.writer.Put(projectile.projectile.velocity.Y);
+                    netMessage.writer.Put(projectile.projectile.velocity.Z);
+                    netMessage.writer.Put(projectile.projectile.timeLeft);
 
-                netMessage.writer.Put(projectile.stats.collisionRadius);
-                netMessage.writer.Put(projectile.stats.dieOnCollision);
-                netMessage.writer.Put(projectile.stats.gravity);
-                netMessage.writer.Put(projectile.stats.gravityScale);
-                netMessage.writer.Put(projectile.stats.size);
+                    netMessage.writer.Put(projectile.stats.collisionRadius);
+                    netMessage.writer.Put(projectile.stats.dieOnCollision);
+                    netMessage.writer.Put(projectile.stats.gravity);
+                    netMessage.writer.Put(projectile.stats.gravityScale);
+                    netMessage.writer.Put(projectile.stats.size);
 
-                netMessage.writer.Put(projectile.visStatsId);
+                    netMessage.writer.Put(projectile.visStatsId);
+                }
+                else
+                {
+                    netMessage.writer.Put(GS.GetWorld().GetTime());
+                }
             }
 
             if (projectilesToSync.Count > 0)
@@ -86,23 +109,33 @@ namespace Engine.Networking.Messages
                 Common.ProjectileHelper.Projectile projectile;
                 Common.ProjectileHelper.ProjectileStats stats;
                 int visStatsId;
-                projectile.position.X = reader.GetInt();
-                projectile.position.Y = reader.GetInt();
-                projectile.position.Z = reader.GetInt();
-                projectile.velocity.X = reader.GetInt();
-                projectile.velocity.Y = reader.GetInt();
-                projectile.velocity.Z = reader.GetInt();
-                projectile.timeLeft = reader.GetInt();
+                ProjectileManager.ProjectileReference reference = ProjectileManager.ProjectileReference.Deserialize(reader);
+                bool unload = reader.GetByte() > 0;
+                if (!unload)
+                {
+                    projectile.position.X = reader.GetFloat();
+                    projectile.position.Y = reader.GetFloat();
+                    projectile.position.Z = reader.GetFloat();
+                    projectile.velocity.X = reader.GetFloat();
+                    projectile.velocity.Y = reader.GetFloat();
+                    projectile.velocity.Z = reader.GetFloat();
+                    projectile.timeLeft = reader.GetFloat();
 
-                stats.collisionRadius = reader.GetFloat();
-                stats.dieOnCollision = reader.GetBool();
-                stats.gravity = reader.GetBool();
-                stats.gravityScale = reader.GetFloat();
-                stats.size = reader.GetFloat();
+                    stats.collisionRadius = reader.GetFloat();
+                    stats.dieOnCollision = reader.GetBool();
+                    stats.gravity = reader.GetBool();
+                    stats.gravityScale = reader.GetFloat();
+                    stats.size = reader.GetFloat();
 
-                visStatsId = reader.GetInt();
+                    visStatsId = reader.GetInt();
 
-                GS.GetClient().Current().projectiles.Add(projectile, stats, visStatsId);
+                    GS.GetClient().Current().projectiles.Add(reference, projectile, stats, visStatsId);
+                }
+                else
+                {
+                    float time = reader.GetFloat();
+                    GS.GetClient().Current().projectiles.Remove(reference, time);
+                }
             }
         }
     }

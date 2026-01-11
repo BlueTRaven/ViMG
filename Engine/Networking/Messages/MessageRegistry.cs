@@ -38,6 +38,7 @@ namespace Engine.Networking.Messages
             Register(new SyncInventory());
             Register(new SyncInventoryAck());
             Register(new SyncCubeAction());
+            Register(new SyncProjectile());
         }
 
         public override void Register(Message obj)

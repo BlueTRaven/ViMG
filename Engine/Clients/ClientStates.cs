@@ -115,6 +115,8 @@ namespace Engine.Clients
             var current = Current();
             var previous = Previous(1);
 
+            current.projectiles.Update(ChunkManager.CubeView, deltaTime);
+
             var localPlayerRef = current.entities.GetLocalPlayerRef();
             if (current.entities.IsActive(ref localPlayerRef))
             {
