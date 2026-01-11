@@ -52,15 +52,15 @@ namespace ViMG.GameStates
         private static bool parsedArgs = false;
         public void Update(double deltaTime)
         {
-            if (!parsedArgs && Main.Args.startMode == "TheIsland")
-            {
-                var netMode = Enum.Parse<NetworkingMode>(Main.Args.networkingMode);
-                if ((netMode == NetworkingMode.Client && Main.Time > 1) || netMode != NetworkingMode.Client)
-                {
-                    Continue(netMode);
-                    parsedArgs = true;
-                }
-            }
+            //if (!parsedArgs && Main.Args.startMode == "TheIsland")
+            //{
+            //    var netMode = Enum.Parse<NetworkingMode>(Main.Args.networkingMode);
+            //    if ((netMode == NetworkingMode.Client && Main.Time > 1) || netMode != NetworkingMode.Client)
+            //    {
+            //        Continue(netMode);
+            //        parsedArgs = true;
+            //    }
+            //}
 
             currentGameState?.Update(deltaTime);
         }
@@ -88,7 +88,7 @@ namespace ViMG.GameStates
             currentGameState?.OnOpen(oldState);
         }
 
-        public void Continue(NetworkingMode netMode)
+        public void Continue(NetworkingMode netMode, string ip, int port)
         {
             if (Main.SessionInformation.LastLoadedSave != null)
             {
@@ -101,11 +101,11 @@ namespace ViMG.GameStates
                 }
                 else if (netMode == NetworkingMode.Server)
                 {
-                    TheIsland.StartServer(Main.SessionInformation.LastLoadedSave);
+                    TheIsland.StartServer(Main.SessionInformation.LastLoadedSave, ip, port);
                 }
                 else if (netMode == NetworkingMode.Client)
                 {
-                    TheIsland.StartClient();
+                    TheIsland.StartClient(ip, port);
                 }
             }
         }

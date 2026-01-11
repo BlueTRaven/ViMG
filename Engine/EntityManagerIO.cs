@@ -136,6 +136,21 @@ namespace ViMG
 
 				return LoadError.Success;
             }
+
+			public int[] GetUsedIds()
+			{
+				FastList<int> ids = new FastList<int>();
+
+				foreach (var cpos in entityDatas.Values)
+				{
+					foreach (var entData in cpos)
+					{
+						ids.Add((int)entData.id);
+					}
+				}
+
+				return ids.Slice().ToArray();
+			}
 		}
 
 		//The goal with entity data is to have saved data stored in memory so it can be quickly deserialized, without taking up the whole space in RAM.
@@ -280,11 +295,6 @@ namespace ViMG
 		private const int MIN_VERSION = 4;
 		private readonly EntityManager manager;
         private readonly int layer;
-
-        //Player datas are stored separately as they should immediately be deserialized on startup.
-        //private ChunkPosition playerChunkPosition;
-		//private bool playerChunkPositionLoaded;
-
 
 		private EntityDataChunkStore datas;
 
@@ -454,6 +464,22 @@ namespace ViMG
 					datas.Remove(data);
                 }
 			}
+		}
+
+		// TODO: This sucks.
+		// We can create an entity in the world that might take up the same slot as a serialized entity.
+		// If this happens, and then the serialized entity is loaded, then the serialized entity will clobber the existant one.
+		// To resolve this, we can just remove the items from the freelist; however, this now means that the id that this entity
+		// would belong to is always free, even if it's never going to be loaded. I kind of hate this solution.
+		public void RemoveSerializedIdsFromFreeList(List<int> freeList)
+		{
+			var usedIds = datas.GetUsedIds();
+			for (int i = 0; i < usedIds.Length; i++)
+			{
+				freeList.Remove(usedIds[i]);
+			}
+
+			Console.WriteLine("Removed {0} ids from freelist. There are {1} ids remaining", usedIds.Length, freeList.Count);
 		}
 
         public LoadError Load(string folderName)

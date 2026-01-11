@@ -29,7 +29,7 @@ namespace ViMG.GameStates
     {
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
-        private Task<World> worldTask;
+        private Task<World>? worldTask;
         private World? world;
         private ClientStates? client;
 
@@ -177,6 +177,9 @@ namespace ViMG.GameStates
                 netManagerClient.Ip = ip;
                 netManagerClient.Port = port;
             }
+
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+                ConnectLocal();
         }
 
         public void ConnectLocal()
@@ -236,14 +239,19 @@ namespace ViMG.GameStates
             client = new ClientStates(device);
         }
 
-        public void StartServer(string worldName)
+        public void StartServer(string worldName, string ip, int port)
         {
+            netManagerServer!.Ip = ip;
+            netManagerServer!.Port = port;
             BeginLoadWorld(worldName);
         }
 
-        public void StartClient()
+        public void StartClient(string ip, int port)
         {
+            netManagerClient!.Ip = ip;
+            netManagerClient!.Port = port;
             client = new ClientStates(device);
+            ConnectLocal();
         }
 
         public override void Update(double deltaTime)
@@ -257,11 +265,8 @@ namespace ViMG.GameStates
                     world = worldTask.Result;
                     worldTask = null;
 
+                    // This works great for singleplayer and servers. However it causes issues for clients since they (obviously) never have a world
                     ConnectLocal();
-
-                    //if (client != null)
-                    //    client.NewFrame();
-                    //world.UpdateClientWorld(client);
                 }
             }
 
@@ -289,14 +294,6 @@ namespace ViMG.GameStates
 
                         client.ChunkManager.ChunkMesher.Update(client.InterpCamera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
-                        //if (Main.Time - client.LastFrameTime > EntityManager.EntSyncTime)
-                        //{
-                        //    client.NewFrame();
-                        //}
-                        //if (world != null)
-                        //{
-                        //    world.UpdateClientWorld(client);
-                        //}
                     }
                 }
             }
@@ -527,6 +524,7 @@ namespace ViMG.GameStates
                 return null;
 
             error = entIO.Load(worldName);//saver.Load(device, this, folderName);
+            entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
             if (entIO.HandleError(error, worldName))
                 return null;
 
@@ -660,6 +658,7 @@ namespace ViMG.GameStates
                     return null;
 
                 error = entIO.Load(worldName);//saver.Load(device, this, folderName);
+                entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
                 if (entIO.HandleError(error, worldName))
                     return null;
 
@@ -791,7 +790,7 @@ namespace ViMG.GameStates
             {
                 case GameStateManager.NetworkingMode.Client:
                     sb.Append("Client session. Connected to: ");
-                    sb.Append(netManagerClient.netManager.FirstPeer.ToString());
+                    sb.Append(netManagerClient?.netManager.FirstPeer?.ToString());
                     sb.Append(".");
                     break;
                 case GameStateManager.NetworkingMode.Server:

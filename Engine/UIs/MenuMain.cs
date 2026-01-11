@@ -97,7 +97,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer);
+                    gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer, serverIp, serverPort);
                 }
                 ypos++;
 
@@ -105,14 +105,14 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Server);
+                    gsManager.Continue(GameStateManager.NetworkingMode.Server, serverIp, serverPort);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Client);
+                    gsManager.Continue(GameStateManager.NetworkingMode.Client, serverIp, serverPort);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
@@ -210,9 +210,8 @@ namespace ViMG.UIs
                         gsManager.TheIsland.localPlayerName = worldName;
 
                     gsManager.SetGameState(gsManager.TheIsland);
-                    gsManager.TheIsland.Connect(serverIp, serverPort, true);
                     if (startAsServer)
-                        gsManager.TheIsland.StartServer(worldName);
+                        gsManager.TheIsland.StartServer(worldName, serverIp, serverPort);
                     else gsManager.TheIsland.StartSingleplayer(worldName);
                 }
             }
@@ -264,8 +263,7 @@ namespace ViMG.UIs
                     gsManager.netMode = GameStateManager.NetworkingMode.Client;
                     gsManager.TheIsland.localPlayerName = playerName;
                     gsManager.SetGameState(gsManager.TheIsland);
-                    gsManager.TheIsland.Connect(serverIp, serverPort);
-                    gsManager.TheIsland.StartClient();
+                    gsManager.TheIsland.StartClient(serverIp, serverPort);
                 }
                 ypos++;
             }

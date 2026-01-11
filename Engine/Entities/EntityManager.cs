@@ -274,7 +274,8 @@ namespace ViMG.Entities
 
 			if (ents[id].active)
 			{
-				Console.WriteLine("Unload {0} to make room for {1}", ents[id].entity.ToString(), entity.ToString());
+				Debug.Assert(ents[id].entity is not Player);
+				Console.WriteLine("Unload {0}:{1} to make room for {2}", ents[id].entity.ToString(), id, entity.ToString());
 				ForceUnload(ents[id].entity);
 			}
 			else freeList.Remove((int)id);
@@ -969,5 +970,10 @@ namespace ViMG.Entities
 			if (ents[reference.id].generation != reference.generation) return new();
 			else return GetPrevState(reference.id, 0); ;
 		}
-	}
+
+        public List<int> GetFreeList()
+        {
+			return freeList;
+        }
+    }
 }
