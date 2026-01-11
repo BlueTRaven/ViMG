@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Clients;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,7 +35,7 @@ namespace ViMG.Entities.Renderers
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
 
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 RendererOpaqueBillboardedEntity.RenderedEntityDrawStats stats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
@@ -57,7 +58,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 return cachedStats;
                 //Skeleton skeleton = (Skeleton)entity;
@@ -83,7 +84,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
 
@@ -103,7 +104,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 RectangleF sourceRect = new RectangleF(16, 0, 16, 32);
 
@@ -121,7 +122,7 @@ namespace ViMG.Entities.Renderers
             public RenderedBigSlime() : base("slime_big", Main.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -154,7 +155,7 @@ namespace ViMG.Entities.Renderers
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
 
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -185,7 +186,7 @@ namespace ViMG.Entities.Renderers
             public RenderedCaveSlime() : base("slime_cave", Main.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -218,7 +219,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -284,7 +285,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
 
@@ -321,7 +322,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -397,7 +398,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -414,6 +415,45 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class RenderedGlowNode : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedGlowNode() : base("glow_node", Main.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial("glow_node"))
+            {
+                Material.Emissive = DrawHelper.WhitePixel;
+            }
+
+            public override void OnRender(ClientStates client, ref readonly BasicState entity)
+            {
+                base.OnRender(client, in entity);
+
+                var color = new Color(entity.velocity.X, entity.velocity.Y, entity.velocity.Z, entity.timers[2]);
+
+                float radius = entity.timers[0];
+                float fade = entity.timers[1];
+
+                client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+                {
+                    position = entity.position - new Vector3(0, Cube.CUBE_SCALE / 2, 0),
+                    color = color,
+                    min = radius - fade,
+                    max = radius,
+                });
+            }
+
+            private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
+            {
+                cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    color = Color.White,
+                    position = entity.position - new Vector3(0, Cube.CUBE_SCALE, 0),
+                    shouldDraw = true,
+                };
+
+                return cachedStats;
+            }
+        }
+
         private class RenderedLeviathan : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             public RenderedLeviathan() : base("leviathan", Main.Registry.EntityRegistry.Get<EntityLeviathan>().Id, new RendererDeferred.DrawMaterial("leviathan"))
@@ -421,7 +461,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -443,7 +483,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -474,7 +514,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 float t0 = (entity.aliveTime % 1.75f) / 1.75f;
                 float t1 = ((entity.aliveTime + 0.45f) % 2.05f) / 2.05f;
@@ -502,7 +542,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 Vector3 velXZ = new Vector3(entity.velocity.X, 0, entity.velocity.Z);
                 velXZ.Normalize();
@@ -562,7 +602,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[2];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
 
@@ -613,7 +653,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -652,7 +692,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 var drawPos = entity.position - new Vector3(0, Cube.CUBE_SCALE * 1.5f, 0);
 
@@ -677,7 +717,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[64];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 for (int i = 0; i < 64; i++)
                 {
@@ -706,7 +746,7 @@ namespace ViMG.Entities.Renderers
             }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[9];
-            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 // TODO
                 return cachedStats;
@@ -745,7 +785,7 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new RenderedGeneric("salamander", Main.Registry.EntityRegistry.Get<CaveSalamander>().Id, new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
             renderer.registry.Register(new RenderedDucken());
             renderer.registry.Register(new RenderedGhoul());
-            renderer.registry.Register(new RenderedGeneric("glow_node", Main.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)));
+            renderer.registry.Register(new RenderedGlowNode());
             renderer.registry.Register(new RenderedLeviathan());
             renderer.registry.Register(new RenderedHeart());
             renderer.registry.Register(new RenderedPlayerBubble());

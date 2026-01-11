@@ -98,6 +98,17 @@ namespace Engine.Clients
                         timeLeft = float.Lerp(pprev.timeLeft, pcurr.timeLeft, (float)Main.TimeC),
                     };
 
+                    if (visStats.hasLight)
+                    {
+                        client.LightManager.AddShadowmapped(new LightManager2.LightConfig
+                        {
+                            color = new Color(visStats.lightColor),
+                            min = visStats.lightExtents.X,
+                            max = visStats.lightExtents.Y,
+                            position = projectile.position,
+                        });
+                    }
+
                     if (!visStats.rollFollowsVelocity)
                     {
                         Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,

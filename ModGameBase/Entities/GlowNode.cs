@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,15 +14,13 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-	public class GlowNode : Entity, ICubeTracker
+	public class GlowNode : Entity, ICubeTracker, ISyncBasicState
 	{
 		private float radius;
 		private float fade;
 		private Vector4 color;
 
 		private int light = -1;
-
-		private static VerySimpleMesh mesh;
 
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -77,68 +76,6 @@ namespace ViMG.Entities
 				world.LightManager.Remove(light);
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
-
-		//	if (mesh.IBO == null)
-		//		MakeMesh(device);
-
-		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
-		//		mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), null));*/
-		//}
-
-		private void MakeMesh(GraphicsDevice device)
-		{
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
-
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
-
-			int offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
-
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-            //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
-		}
-
 		public bool OnInteract(Player player)
 		{
 			//world.MineCube(TrackedPosition, true);
@@ -188,7 +125,21 @@ namespace ViMG.Entities
 			fade = SaveHelper.LoadFloat32(loadBytes, ref index);
 
 			this.Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
-
 		}
-	}
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				velocity = new Vector3(color.X, color.Y, color.Z),
+				timers = { [0] = radius, [1] = fade, [2] = color.W, },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

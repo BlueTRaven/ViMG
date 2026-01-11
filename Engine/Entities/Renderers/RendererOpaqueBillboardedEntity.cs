@@ -57,7 +57,9 @@ namespace ViMG.Entities.Renderers
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
-            public virtual RenderedEntityDrawStats[] GetDrawStats(BasicState entity)
+            public virtual void OnRender(ClientStates client, ref readonly BasicState entity) { }
+
+            public virtual RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
             {
                 return Array.Empty<RenderedEntityDrawStats>();
             }
@@ -128,6 +130,7 @@ namespace ViMG.Entities.Renderers
                 //var entCurr = client.Current().entities.GetById(reference.id);
                 //var entPrev = client.Previous(1).entities.GetById(reference.id);
 
+                renderer.OnRender(client, entInterp);
                 var drawStats = renderer.GetDrawStats(entInterp);
 
                 foreach (RenderedEntityDrawStats drawStat in drawStats)
