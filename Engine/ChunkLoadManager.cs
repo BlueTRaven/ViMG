@@ -198,7 +198,7 @@ namespace ViMG
                 //queuedChunk.copyTask.Wait();
 
                 var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
-				chunkMesher?.RenderMesher?.AddToNextBatch(queuedChunk.position, copy);
+				chunkMesher?.RenderMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, queuedChunk.position, copy);
                 chunkMesher?.CollisionMesher?.AddToNextBatch(world, queuedChunk.position, copy);
             }
 
@@ -292,14 +292,6 @@ namespace ViMG
 				}
 				else if (loadedChunks[queuedChunk.player][i] == LoadingState.Enqueued)
 				{
-                    //if (chunkMesher != null)
-                    //{
-                    //    bool render = chunkMesher.RenderMesher?.IsMeshed(queuedChunk.position) ?? true;
-                    //    bool collision = chunkMesher.CollisionMesher?.IsMeshed(queuedChunk.position) ?? true;
-
-                    //    if (render && collision) continue;
-                    //}
-
                     chunkManager.CopyManager.StartCopyChunk(queuedChunk.position, world.EntityManager);
                     copyingChunks.Add(queuedChunk);
 
@@ -327,7 +319,7 @@ namespace ViMG
 
                 // Only enqueue rendering mesh for local player
                 if (copyingChunk.player == world.localPlayerIndex)
-                    chunkMesher?.RenderMesher?.AddToNextBatch(copyingChunk.position, copy);
+                    chunkMesher?.RenderMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, copyingChunk.position, copy);
                 chunkMesher?.CollisionMesher?.AddToNextBatch(world, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks.Add(copyingChunk);

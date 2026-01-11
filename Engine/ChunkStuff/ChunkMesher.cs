@@ -1,6 +1,7 @@
 ﻿using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using Engine.Common.Entities;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -115,10 +116,10 @@ namespace Engine.ChunkStuff
             CollisionMesher?.UnloadAll();
         }
 
-        public void Update(CopiedChunkManager copyManager, IGetEntity getEntity)
+        public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
-            RenderMesher?.Update(copyManager, getEntity);
+            RenderMesher?.Update(cameraPos, copyManager, getEntity);
             CollisionMesher?.Update(copyManager, getEntity);
         }
     }

@@ -77,6 +77,8 @@ namespace Engine.Clients
 
         public void NewFrame(double time)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             frame += 1;
 
             double expectedArrivalTime = LastFrameTime + World.SyncTime;
@@ -108,6 +110,8 @@ namespace Engine.Clients
 
         public void UpdatePlayer(double deltaTime)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             WorldLogic.UpdateSimulation(deltaTime, this);
 
             PrevMovement = CurrMovement;
@@ -260,6 +264,8 @@ namespace Engine.Clients
 
         public void Render(GraphicsDevice device, double deltaTime)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             {
                 var prevCamera = Previous(1).camera;
                 var currCamera = Current().camera;
@@ -296,6 +302,8 @@ namespace Engine.Clients
 
         public void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             var iter = Main.Registry.RendererRegistry.GetIterable();
             foreach (var a in iter)
             {

@@ -78,7 +78,7 @@ namespace ViMG
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            ChunkMesher?.Update(CopyManager, world.EntityManager);
+            ChunkMesher?.Update(world.GetLocalPlayer()?.Position ?? Vector3.Zero, CopyManager, world.EntityManager);
 
             const int MAX_UPDATE_PER_FRAME = 200;
             int updatedThisFrame = 0;

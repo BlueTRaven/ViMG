@@ -199,7 +199,15 @@ namespace Engine.ChunkStuff
             public required CubeTrackers cubeTrackers;
             public required IGetEntity getEntity;
             public required ChunkPosition chunkPosition;
-            public ushort[] data;
+        }
+
+        private struct CopyMultiTaskParams
+        {
+            public required ICubeGetter view;
+            public required ChunkManagerIO chunkIO;
+            public required CubeTrackers cubeTrackers;
+            public required IGetEntity getEntity;
+            public required ChunkPosition[] chunkPositions;
         }
 
         private struct CopyTaskResult
@@ -207,6 +215,11 @@ namespace Engine.ChunkStuff
             public ChunkPosition position;
             public ushort[] data;
             public BasicState[]? trackers;
+        }
+
+        private struct CopyMultiTaskResult
+        {
+            public CopyTaskResult[] results;
         }
 
         [ConsoleCommandVar("chunk_max_cached", "maximum number of cached chunks. Higher numbers = faster chunk meshing, increased memory consumption.\n" +
@@ -281,7 +294,6 @@ namespace Engine.ChunkStuff
                     getEntity = getEntity,
                     cubeTrackers = cubeTrackers,
                     chunkPosition = chunkPosition,
-                    data = new ushort[Chunk.NUM_CUBES_IN_CHUNK]
                 };
                 var task = new Task<CopyTaskResult>(CopyChunk, state);
                 tasks.Add(task);
@@ -356,9 +368,12 @@ namespace Engine.ChunkStuff
 
         private CopyTaskResult CopyChunk(object? state)
         {
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             CopyTaskParams args = (CopyTaskParams)state!;
 
-            args.view.GetIdsForChunk(args.chunkPosition, args.data);
+            ushort[] ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
+            args.view.GetIdsForChunk(args.chunkPosition, ids);
             BasicState[]? trackers = null;
 
             var worldTrackers = args.cubeTrackers.Get(args.chunkPosition).cubeTrackers;
@@ -375,10 +390,39 @@ namespace Engine.ChunkStuff
             return new CopyTaskResult
             {
                 position = args.chunkPosition,
-                data = args.data,
+                data = ids,
                 trackers = trackers,
             };
         }
+
+        //private CopyTaskResult CopyChunkMulti(object? state)
+        //{
+        //    using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
+        //    CopyTaskParams args = (CopyTaskParams)state!;
+
+        //    args.view.GetIdsForChunk(args.chunkPosition, args.data);
+        //    BasicState[]? trackers = null;
+
+        //    var worldTrackers = args.cubeTrackers.Get(args.chunkPosition).cubeTrackers;
+        //    if (worldTrackers != null)
+        //    {
+        //        // Might need some sort of interface that allows us to take EntityReference -> return BasicState
+        //        // This needs to be an interface because this will be used on both client/server
+        //        trackers = new BasicState[Chunk.NUM_CUBES_IN_CHUNK];
+        //        for (int i = 0; i < trackers.Length; i++)
+        //        {
+        //            trackers[i] = args.getEntity.GetByRef(ref worldTrackers[i]);
+        //        }
+        //    }
+
+        //    return new CopyTaskResult
+        //    {
+        //        position = args.chunkPosition,
+        //        data = args.data,
+        //        trackers = trackers,
+        //    };
+        //}
 
         public void MarkAllDirty() 
         {

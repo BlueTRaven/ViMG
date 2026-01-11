@@ -28,8 +28,8 @@ namespace ViMG
 	public class ChunkRenderMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 200;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 5;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 5;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
@@ -39,14 +39,16 @@ namespace ViMG
 		//Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
 		private struct RenderMeshBatch
 		{
+			public Vector3 cameraPosition;
 			public RenderMeshInfo[] meshInfos;
 			public CopiedChunkManager.CopiedChunkData[] copies;
 			public int num;
 
 			public readonly bool isUsed;
 
-			public RenderMeshBatch(RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies)
+			public RenderMeshBatch(Vector3 cameraPos, RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies)
 			{
+				this.cameraPosition = cameraPos;
 				this.meshInfos = meshInfos;
 				this.copies = copies;
 				this.num = 0;
@@ -133,7 +135,7 @@ namespace ViMG
 
 			avg /= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK;
 
-			return (int)(Main.camera.Position - avg).Length();
+			return (int)(x.batch.cameraPosition - avg).Length();
 		});
 		//The 'active' batch mesh tasks.
 		private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
@@ -158,17 +160,17 @@ namespace ViMG
 			//this.bufferPool = bufferPool;
 		}
 
-		public void Update(CopiedChunkManager copyManager, IGetEntity getEntity)
+		public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
             if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -196,7 +198,7 @@ namespace ViMG
 			if (currentBatch.num > 0)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			StartActiveTasks();
@@ -212,7 +214,7 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
-			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			currentBatch = new RenderMeshBatch(Vector3.Zero, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			//while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
 			//{
@@ -347,7 +349,7 @@ namespace ViMG
 		}
 
 		//Adds a position in the current batch. 
-		public bool AddToNextBatch(ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
+		public bool AddToNextBatch(Vector3 cameraPos, ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -355,12 +357,12 @@ namespace ViMG
 			//copy.render = true;
 
 			if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
                 EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
@@ -391,7 +393,7 @@ namespace ViMG
 			copyManager.FinishCopyChunks();
 
 			CopiedChunkManager.CopiedChunkData copy = copyManager.GetCopy(position);
-            var batch = new RenderMeshBatch(new RenderMeshInfo[1], new CopiedChunkManager.CopiedChunkData[1]);
+            var batch = new RenderMeshBatch(Vector3.Zero, new RenderMeshInfo[1], new CopiedChunkManager.CopiedChunkData[1]);
             ref RenderMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 			batch.meshInfos[0] = meshInfo;
 			batch.copies[0] = copy; // CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks, bufferPool, position);

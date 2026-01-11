@@ -159,14 +159,15 @@ namespace ViMG
             CubePosition basePosition = chunkPosition.InCubeSpace();
 
             var chunkData = io.GetChunk(chunkPosition, ChunkManagerIO.GetMode.Read);
+            if (chunkData == null || chunkData.Length == 0)
+            {
+                queryIds.Fill(0);
+                return;
+            }
+
             for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
             {
-                Util.OneDToThreeD(i, new ValuePoint3D(Chunk.CHUNK_SIZE), out var p);
-                CubePosition pos = new CubePosition(p.x, p.y, p.z);
-
-                if (chunkData == null)
-                    queryIds[i] = 0;
-                else queryIds[i] = chunkData[i];
+                queryIds[i] = chunkData[i];
             }
         }
 

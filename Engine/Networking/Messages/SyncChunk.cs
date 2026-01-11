@@ -28,6 +28,8 @@ namespace Engine.Networking.Messages
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
+        private List<ChunkToSync> chunksToApply;
+
         public SyncChunk()
         {
             Instance = this;
@@ -165,6 +167,10 @@ namespace Engine.Networking.Messages
                     trackers.Add(position, reference);
                 }
             }
+        }
+
+        public void Apply(ChunkManager chunkManager)
+        {
         }
     }
 }
