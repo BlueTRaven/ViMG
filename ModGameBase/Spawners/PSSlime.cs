@@ -19,6 +19,7 @@ namespace ViMG.Spawners
         {
             entityManager.OnEntityAdded += OnEntityAdded;
             entityManager.OnEntityRemoved += OnEntityRemoved;
+            SpawnCap = 8;
         }
 
         //We rely on this callback for adding entities as we also want to add entities that are loaded.

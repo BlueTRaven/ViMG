@@ -36,7 +36,7 @@ namespace Engine.Clients
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
 
-        public int localPlayer = 0;
+        public int LocalPlayer => Main.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
 
         private int head = 0;
         private int frame = 0;
@@ -224,6 +224,7 @@ namespace Engine.Clients
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
                     previous.camera.RotationEuler != current.camera.RotationEuler)
                 {
+                    Console.WriteLine("{0}", CurrMovement.MoveForward);
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
 

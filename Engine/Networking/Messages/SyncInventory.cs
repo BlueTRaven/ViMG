@@ -74,7 +74,7 @@ namespace Engine.Networking.Messages
         {
             for (int i = 0; i < ack.numAckd; i++)
             {
-                Console.WriteLine("Ack for Inv {0} {1} {2}", playerId, ack.ackedInvs[i].id, sequence);
+                //Console.WriteLine("Ack for Inv {0} {1} {2}", playerId, ack.ackedInvs[i].id, sequence);
                 serverInventories[playerId][ack.ackedInvs[i].id - 1].reference = ack.ackedInvs[i];
                 // Note we blindly set the sequence here; earlier we discard sequences that are not the latest, so this should work fine
                 serverInventories[playerId][ack.ackedInvs[i].id - 1].latestSequence = sequence;
@@ -104,7 +104,7 @@ namespace Engine.Networking.Messages
 
                     if (serverInventories[player.playerIndex][i].reference.generation != reference.generation)
                     {
-                        Console.WriteLine("Server sent create Inventory {0}", reference.id);
+                        //Console.WriteLine("Server sent create Inventory {0}", reference.id);
                         toSync.AddAssumeCapacity(new ToSync
                         {
                             inventory = inv,

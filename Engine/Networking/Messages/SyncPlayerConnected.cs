@@ -61,9 +61,8 @@ namespace Engine.Networking.Messages
             {
                 if (old[i].playerId != -1 && GS.netManagerClient.netPlayers[i].playerId == -1)
                 {
-                    var disconnectedPlayer = GS.GetWorld().player[old[i].playerId];
-                    if (disconnectedPlayer != null)
-                        GS.GetWorld().EntityManager.Unload(disconnectedPlayer);
+                    var curr = GS.GetClient().Current();
+                    curr.entities.RemovePlayer(curr.entities.GetPlayerRef(old[i].playerId));
                 }
             }
         }

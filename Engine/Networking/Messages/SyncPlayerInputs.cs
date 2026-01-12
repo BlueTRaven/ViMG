@@ -91,8 +91,7 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(localPlayer.position.Y);
             netMessage.writer.Put(localPlayer.position.Z);
             netMessage.writer.Put((ushort)inputTypes);
-            netMessage.writer.Put((byte)GS.GetClient().localPlayer);
-            //netMessage.writer.Put(player.hasMenuOpen);
+            netMessage.writer.Put((byte)GS.GetClient().LocalPlayer);
 
             netMessage.Send();
         }
@@ -117,7 +116,6 @@ namespace Engine.Networking.Messages
             position.Z = reader.GetFloat();
             InputTypes inp = (InputTypes)reader.GetUShort();
             byte whoami = reader.GetByte();
-            //bool hasMenuOpen = reader.GetBool();
 
             //var playerRef = GS.GetClient().Current().entities.GetPlayerRef(whoami);
             //var playerEnt = GS.GetClient().Current().entities.GetByRef(ref playerRef);

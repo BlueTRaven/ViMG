@@ -622,11 +622,10 @@ namespace Engine.Networking.Messages
                     {
                         if (typeNameMapping == playerTypeId)
                         {
-                            var isLocal = state.counters[3] == GS.netManagerClient.whoAmI;
-                            if (!GS.GetClient().CurrMovement.valid)
-                                GS.GetClient().CurrMovement = new Common.PlayerMovement(reference, state.counters[3], isLocal);
-                            if (isLocal)
+                            if (state.counters[3] == GS.netManagerClient.whoAmI)
                             {
+                                GS.GetClient().CurrMovement = new Common.PlayerMovement(reference, state.counters[3], true);
+
                                 if (GS.GetClient().Current().entities.IsActive(ref reference))
                                 {
                                     // Don't overwrite player rotation
