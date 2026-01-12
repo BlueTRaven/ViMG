@@ -1219,41 +1219,51 @@ namespace ViMG
 		{
 			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
 			{
-				if (IMGUIConsole.RequireParam(parameters, 0, "item_name"))
+				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
-					Item item;
-					if (int.TryParse(parameters[0], out int itemIndex))
-						item = Main.Registry.ItemRegistry.Get(itemIndex);
-					else item = Main.Registry.ItemRegistry.Get(parameters[0]);
-
-					if (item != null)
+					World world = gsIsland.GetWorld();
+					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
+					Player? player = world.player.First(x => x?.playerIndex == netPlayer.playerId);
+					if (player != null)
 					{
-						int num = 1;
-						if (parameters.Length >= 2)
+						if (IMGUIConsole.RequireParam(parameters, 1, "item_name"))
 						{
-							num = int.Parse(parameters[1]);
+							Item item;
+							if (int.TryParse(parameters[1], out int itemIndex))
+								item = Main.Registry.ItemRegistry.Get(itemIndex);
+							else item = Main.Registry.ItemRegistry.Get(parameters[1]);
+
+							if (item != null)
+							{
+								int num = 1;
+								if (parameters.Length >= 3)
+								{
+									num = int.Parse(parameters[2]);
+								}
+
+								int damage = 1;
+								if (parameters.Length >= 4)
+								{
+									damage = int.Parse(parameters[3]);
+								}
+
+								world.InventoryManager.Get(player.inventory)?.Add(new ItemInstance(item, num, damage));
+							}
+							else
+							{
+								IMGUIConsole.LogLine("[error] Tried to give item with name " + parameters[1] + ", but an item by that name did not exist.");
+							}
 						}
-
-						int damage = 1;
-						if (parameters.Length >= 3)
-						{
-							damage = int.Parse(parameters[2]);
-						}
-
-						World world = gsIsland.GetWorld();
-						Player player = world.EntityManager.GetFirst<Player>();
-
-						world.InventoryManager.Get(player.inventory)?.Add(new ItemInstance(item, num, damage));
 					}
 					else
 					{
-						IMGUIConsole.LogLine("[error] Tried to give item with name " + parameters[0] + ", but an item by that name did not exist.");
-					}
+                        IMGUIConsole.LogLine("[error] Tried to get player with name " + parameters[0] + ", but a player by that name did not exist.");
+                    }
+                }
+				else
+				{
+					IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
 				}
-			}
-			else 
-			{
-                IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
 			}
 		}
 

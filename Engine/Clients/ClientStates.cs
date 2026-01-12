@@ -224,7 +224,6 @@ namespace Engine.Clients
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
                     previous.camera.RotationEuler != current.camera.RotationEuler)
                 {
-                    Console.WriteLine("{0}", CurrMovement.MoveForward);
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
 

@@ -117,7 +117,6 @@ namespace Engine.Clients.Entities
             {
                 if (players[i].playerIndex == Main.gameStateManager.TheIsland.netManagerClient.whoAmI)
                 {
-                    Console.WriteLine("My local player ref is {0}", players[i].entity.id);
                     return players[i].entity;
                 }
             }
