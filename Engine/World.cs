@@ -49,9 +49,6 @@ namespace ViMG
 
 		public ChunkManager ChunkManager;
 
-		// TODO reimplement
-		private static VerySimpleMesh? meshMiningCube = null;
-		private static VerySimpleMesh? skyboxMesh = null;
 		public Skybox Skybox;
 		public float WeatherSkyboxAlpha;
 		public Color WeatherSkyboxColor;
@@ -72,7 +69,8 @@ namespace ViMG
 		public ProjectileManager ProjectileManager;
 		public EntityManager EntityManager;
 		public InventoryManager InventoryManager;
-		public LightManager? LightManager;
+		public LightManager2 LightManager2;
+		//public LightManager? LightManager;
 		public PassiveSpawnerManager PassiveSpawnerManager;
 		public WorldInfoIO.WorldInfo WorldInfo;
 		public ChunkLoadManager ChunkLoadManager;
@@ -119,7 +117,9 @@ namespace ViMG
 		private int nextLayer;
 		private Task<World> nextWorld;
 
-		public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
+        private float alive;
+
+        public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, int worldSize)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
@@ -157,124 +157,16 @@ namespace ViMG
 			
 			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
 				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
-		}
 
-		public void InitMeshes(GraphicsDevice device)
+            LightManager2 = new LightManager2();
+        }
+
+        public void InitMeshes(GraphicsDevice device)
         {
             ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
             MenuDialogue = new MenuDialogue(Main.gameStateManager);
 
-            //ProjectileManager.InitMeshes(device);
-            LightManager = new LightManager(device);
-
-			//meshMiningCube = MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, Vector3.One * Cube.CUBE_SCALE, MeshHelper.CubeFace.ALL, Color.White, null);
-
-			if (skyboxMesh == null)
-			{
-				FastList<VertexCube> vertices = new FastList<VertexCube>();
-				List<int> indices = new List<int>();
-
-				Vector3 l_b_f = new Vector3(0, 0, 1);
-				Vector3 r_b_f = new Vector3(1, 0, 1);
-				Vector3 r_b_n = new Vector3(1, 0, 0);
-				Vector3 l_b_n = new Vector3(0, 0, 0);
-
-				Vector3 l_t_n = new Vector3(0, 1, 0);
-				Vector3 r_t_n = new Vector3(1, 1, 0);
-				Vector3 r_t_f = new Vector3(1, 1, 1);
-				Vector3 l_t_f = new Vector3(0, 1, 1);
-
-				const float SKYBOX_SIDE_SIZE = 1024f;
-				const float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * 4f;
-				const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
-
-				//front face
-				int offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
-				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
-
-				//right face
-				offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
-				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
-
-				//back face
-				offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
-				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
-
-				//left face
-				offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
-				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
-
-				//top face
-				offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-				vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-				vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-				vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-
-
-				//bottom face
-				offset = vertices.Length;
-				indices.Add(offset + 0);
-				indices.Add(offset + 1);
-				indices.Add(offset + 3);
-				indices.Add(offset + 1);
-				indices.Add(offset + 2);
-				indices.Add(offset + 3);
-
-				vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-				vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-				vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-				vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-
-				skyboxMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-			}
+            //LightManager = new LightManager(device);
 		}
 
 		public void FinishLoading(GraphicsDevice device)
@@ -320,10 +212,10 @@ namespace ViMG
 		{
 		}
 
-		private float alive;
-
 		public void Update(double deltaTime)
 		{
+			LightManager2.Reset();
+
 			//EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -333,13 +225,9 @@ namespace ViMG
 				InventoryManager.UpdateNetwork(player);
 				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
-                Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWorldState.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
+				SyncWorldState.Instance.DoSend();
 				lastSyncTime = Main.Time;
             }
-            //if (Main.Frame % 240 == 0)
-            //{
-            //	Console.WriteLine("Frame {0} Time {1}", Main.Frame, Main.Time);
-            //}
 
             deltaTime *= TimeScale;
 
@@ -372,25 +260,11 @@ namespace ViMG
                     Player p = new Player(player);
                     EntityManager.ForceAdd(p);
                     this.player[player.playerIndex] = p;
-
-					//var sent = new SyncBasicState.SyncEntity()
-					//{
-					//	entity = p,
-					//	firstCreation = true,
-					//	type = SyncBasicState.SyncType.FullSync,
-					//};
-					//Main.Registry.MessageRegistry.SendMessageToAll(SyncBasicState.Instance, Main.gameStateManager.TheIsland.netManager.netManager, sent);
 				}
 			}
 			PlayerRespawnedEvent.Clear();
 
-			//SyncChunk.Instance.Apply(ChunkManager, ChunkLoadManager);
             SyncPlayerInputs.Instance.Apply(player);
-			//SyncBasicState.Instance.Apply(EntityManager, EntIO);
-			//SyncCubeUpdate.Instance.Apply(ChunkManager, player);
-			//SyncCubeUpdateAuditRequest.Instance.Apply(ChunkManager, player);
-			//SyncInventoryUpdate.Instance.Apply(EntityManager);
-			//SyncInventoryUpdateAuditRequest.Instance.Apply(EntityManager);
 
 			Logic.Update(this, deltaTime);
 
@@ -477,62 +351,8 @@ namespace ViMG
 
 			PassiveSpawnerManager?.Update(deltaTime, this);
 
-			ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(Main.camera.Position);
-
-			if (chunkDrawPositionsDirty || Main.camera.IsDirty)
-			{
-				CulledChunkDrawPositions.Clear();
-
-				for (int x = Math.Max(0, camPos.X - DrawDistanceHoriz); x <= Math.Min(sizeInChunks, camPos.X + DrawDistanceHoriz); x++)
-				{
-					for (int y = Math.Max(0, camPos.Y - DrawDistanceVert); y <= Math.Min(sizeInChunks, camPos.Y + DrawDistanceVert); y++)
-					{
-						for (int z = Math.Max(0, camPos.Z - DrawDistanceHoriz); z <= Math.Min(sizeInChunks, camPos.Z + DrawDistanceHoriz); z++)
-						{
-							ChunkPosition chunkPos = new ChunkPosition(x, y, z);
-
-							int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
-
-							if (ChunkManager.IsInWorldBounds(chunkPos) && length < DrawRadius &&
-								Main.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
-							{
-								CulledChunkDrawPositions.Add(chunkPos);
-							}
-						}
-					}
-				}
-
-				chunkDrawPositionsDirty = false;
-			}
-
-			oldCameraRotation = Main.camera.RotationEuler;
-			oldChunkPosition = camPos;
-
 			// TODO
 			//TryLoadNextLayer();
-		}
-
-		public void UpdateClientWorld(ClientStates clientWorld)
-		{
-			for (int i = 0; i < EntityManager.EntMax; i++)
-			{
-				var reference = EntityManager.GetReference(i);
-				if (EntityManager.GetActive(i))
-				{
-					clientWorld.Current().entities.Set(reference, EntityManager.GetById((ulong)i).GetType().FullName, EntityManager.GetPrevState(i, 0));
-				}
-				else
-				{
-					clientWorld.Current().entities.Remove(reference);
-				}
-			}
-			for (int i = 0; i < InventoryManager.InvMax; i++)
-			{
-				var reference = InventoryManager.GetReference(i);
-                Inventory? inv = InventoryManager.Get(reference);
-
-				clientWorld.inventoryManager.Set(reference, inv);
-			}
 		}
 
 		private void TryLoadNextLayer()
@@ -738,12 +558,6 @@ namespace ViMG
 			}
 
 			return closestDistance;
-        }
-
-		//Gets a list of all chunks that should be rendered by the main camera.
-		public List<ChunkPosition> GetChunkDrawPositions()
-        {
-			return CulledChunkDrawPositions;
         }
 
 		public static int NumChunksDrawn;
@@ -1176,7 +990,7 @@ namespace ViMG
         {
 			isDisposed = true;
 			ChunkLoadManager.Dispose();
-			LightManager.Dispose();
+			//LightManager.Dispose();
 			Logic.Dispose();
 
 			PhysicsInfo.Simulation.Dispose();

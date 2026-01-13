@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.WorldLogics;
 
 namespace Engine.Networking.Messages
@@ -17,6 +18,11 @@ namespace Engine.Networking.Messages
         public SyncWorldState()
         {
             Instance = this;
+        }
+
+        public void DoSend()
+        {
+            GS.netManagerServer?.SendMessageToAll(Instance, GS.netManagerServer.netManager, null);
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)

@@ -92,7 +92,12 @@ namespace ViMG.Entities
 				{
 					for (int i = 0; i < LightManager.LightsMax; i++)
 					{
-						LightManager.Light light = world.LightManager.Get(i);
+						// TODO: we want to check all lights here to see if the ghoul is inside one.
+						// Unfortunately this doesn't work too terribly well with LightManager2, since it's immediate mode, and all Lights that are
+						// present in the world may not be added yet.
+						// Some sort of double-buffering will probably be necessary.
+						var light = world.LightManager2.Get(i);
+                        //LightManager.Light light = world.LightManager.Get(i);
 
 						if (light.active)
 						{

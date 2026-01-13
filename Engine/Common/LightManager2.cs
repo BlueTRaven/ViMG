@@ -65,6 +65,7 @@ namespace Engine.Common
             public int time;
         }
 
+        private Light[] prevLights = new Light[LightManager.LightsMax];
         private Light[] lights = new Light[LightManager.LightsMax];
         private ShadowmappedLight[] lightsShadowmapped = new ShadowmappedLight[LightManager.LightsShadowmappedMax];
 
@@ -88,6 +89,10 @@ namespace Engine.Common
 
         public void Reset()
         {
+            // Swap buffers
+            var temp = lights;
+            lights = prevLights;
+            prevLights = temp;
             Array.Fill(lights, new Light());
 
             freeLights.Clear();
@@ -98,6 +103,7 @@ namespace Engine.Common
 
             freeLightsS.Clear();
 
+            // TODO double buffer shadowmapped lights too
             for (int i = lightsShadowmapped.Length - 1; i >= 0; i--)
             {
                 if (lightsShadowmapped[i].time < 0)
@@ -153,7 +159,7 @@ namespace Engine.Common
 
         public Light Get(int index)
         {
-            return lights[index];
+            return prevLights[index];
         }
 
         public Light GetShadowmapped(int index)
