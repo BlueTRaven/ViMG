@@ -12,8 +12,10 @@ namespace ViMG.Items
 {
     public class ItemSkeletonHead : Item
     {
-        public ItemSkeletonHead() : base("skeleton_head", new RectangleF(48, 64, 16, 16))
+        public ItemSkeletonHead() : base("skeleton_head")
         {
+            Client = new ClientItem(this, new RectangleF(48, 64, 16, 16));
+
             name = "Skeleton Head";
             description = "Unlike most skeletons on this strange island, this one doesn't appear to be alive.\n" +
                 "+5% attack damage\n" +

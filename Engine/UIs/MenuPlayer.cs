@@ -607,7 +607,7 @@ namespace ViMG.UIs
 						unit * 8, unit * 8);
 					rect = rect.Offset(Options.CurrentWindowResolution.ToVector2() / 2f);
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect, Color.White * p));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect, Color.White * p));
 				}
 				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE)
                 {
@@ -624,7 +624,7 @@ namespace ViMG.UIs
 						MathHelper.Lerp(Options.CurrentWindowResolution.Y / 2f, 
 							Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))), p));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect));
 				}
 				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE + PickedUpItem.DUR_HOLDSIDE)
                 {
@@ -632,7 +632,7 @@ namespace ViMG.UIs
 
 					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect));
 					UI.MakeLabel(new UI.LabelConstructionParameters(
 						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128, 
 						rect.Position + new Vector2(unit, 0), Color.White));
@@ -647,7 +647,7 @@ namespace ViMG.UIs
 
 					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect, color: Color.White * (1 - p)));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect, color: Color.White * (1 - p)));
 					UI.MakeLabel(new UI.LabelConstructionParameters(
 						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128,
 						rect.Position + new Vector2(unit, 0), Color.White * (1 - p)));

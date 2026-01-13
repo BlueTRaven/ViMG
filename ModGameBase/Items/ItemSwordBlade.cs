@@ -10,16 +10,14 @@ namespace ViMG.Items
 {
     public class ItemSwordBlade : Item
 	{
-		private readonly Color color;
 		private readonly MeleeAttackStats stats;
 		private readonly string materialName;
 
-		public ItemSwordBlade(string material, Color color, MeleeAttackStats stats) : base("sword_blade_" + material, 
-			new RectangleF(0, 128, 16, 16))
+		public ItemSwordBlade(string material, Color color, MeleeAttackStats stats) : base("sword_blade_" + material)
 		{
-			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
+            Client = new ClientItemSwordBlade(this, color);
 
-			this.color = color;
+            this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 			this.stats = stats;
 		}
 
@@ -37,21 +35,31 @@ namespace ViMG.Items
 		{
 			return materialName + " Sword Blade";
 		}
-
-		public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
-		{
-			if (meshItemQuadInWorld.IBO == null)
-				MakeMesh(device);
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-                meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
-		}
-
-		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			//base.DrawInInventory(batch, position, scale);
-
-			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
 	}
+
+    public class ClientItemSwordBlade : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemSwordBlade(Item item, Color color) : base(item, new RectangleF(0, 128, 16, 16))
+        {
+            this.color = color;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        {
+            if (meshItemQuadInWorld.IBO == null)
+                MakeMesh(device);
+
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+                meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
+        }
+
+        public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            //base.DrawInInventory(batch, position, scale);
+
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+    }
 }

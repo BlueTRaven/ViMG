@@ -13,17 +13,13 @@ namespace ViMG.Items
 {
 	public class ItemGlowNode : Item
 	{
-		public ItemGlowNode() : base("glow_node", new RectangleF(0, 0, 16, 16))
-		{
-			name = "Glow Node";
+		public ItemGlowNode() : base("glow_node")
+        {
+            Client = new ClientItem(this, new RectangleF(0, 0, 16, 16), material: new RendererDeferred.DrawMaterial("glow_node"));
+
+            name = "Glow Node";
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
-
-        public override RendererDeferred.DrawMaterial GetMaterial()
-        {
-			Material ??= new Rendering.RendererDeferred.DrawMaterial("glow_node");
-            return Material.Value;
-        }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

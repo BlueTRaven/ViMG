@@ -10,8 +10,9 @@ namespace ViMG.Items
 {
     public class ItemBullet : Item
 	{
-		public ItemBullet() : base("bullet_base", new RectangleF(0, 48, 16, 16))
+		public ItemBullet() : base("bullet_base")
 		{
-		}
+            Client = new ClientItem(this, new RectangleF(0, 48, 16, 16));
+        }
 	}
 }

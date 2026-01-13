@@ -52,7 +52,7 @@ namespace ViMG.Entities
                 position = Position,
                 min = lightExtents.X,
                 max = lightExtents.Y,
-                color = new Color(lightColor),
+                color = lightColor,
             });
         }
 

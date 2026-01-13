@@ -13,8 +13,10 @@ namespace ViMG.Items
 {
     public class ItemBoneLegs : Item
     {
-        public ItemBoneLegs() : base("legs_bone", new RectangleF(128, 80, 16, 16))
+        public ItemBoneLegs() : base("legs_bone")
         {
+            Client = new ClientItemBoneLegs(this);
+
             name = "Bone Leggings";
             description = "Leggings produced from bone.";
             Tags.Add("armor_legs");
@@ -32,6 +34,13 @@ namespace ViMG.Items
 
             stats.DefenseFlat += 5;
             stats.HPFlat += 4;
+        }
+    }
+
+    public class ClientItemBoneLegs : ClientItem
+    {
+        public ClientItemBoneLegs(Item item) : base(item, new RectangleF(128, 80, 16, 16))
+        {
         }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)

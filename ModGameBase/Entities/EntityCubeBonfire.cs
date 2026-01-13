@@ -45,7 +45,7 @@ namespace ViMG.Entities
                 position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
                 min = Cube.CUBE_SCALE * 8f + s0,
                 max = Cube.CUBE_SCALE * 16f,
-                color = Color.OrangeRed,
+                color = Color.OrangeRed.ToVector4(),
             });
         }
 

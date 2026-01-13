@@ -61,7 +61,7 @@ namespace ViMG.Entities
                     position = lightPos,
                     min = Cube.CUBE_SCALE * 2,
                     max = Cube.CUBE_SCALE * 3,
-                    color = new Color(color),
+                    color = color,
                 });
             }
         }

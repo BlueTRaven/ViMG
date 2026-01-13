@@ -17,12 +17,13 @@ namespace ViMG.Items
     {
         private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 1.1f, 12, 1);
 
-		private ProjectileManager.ProjectileVisStats visStats;
 		private ProjectileManager.ProjectileStats stats;
 		private ProjectileManager.ProjectileBatchStats batchStats;
 
-        public ItemBowner() : base("bow_bowner", new RectangleF(160, 128, 16, 16))
+        public ItemBowner() : base("bow_bowner")
         {
+			Client = new ClientItem(this, new RectangleF(160, 128, 16, 16));
+
             name = "Bowner";
             description = "A bow crafted from finely-carved bone.\n" +
                 attackStats.GetTooltip() +

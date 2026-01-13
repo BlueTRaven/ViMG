@@ -12,8 +12,10 @@ namespace ViMG.Items
 {
     public class ItemManaStar : Item
     {
-        public ItemManaStar() : base("mana_star", new RectangleF(176, 32, 16, 16))
+        public ItemManaStar() : base("mana_star")
         {
+            Client = new ClientItem(this, new RectangleF(176, 32, 16, 16));
+
             name = "Mana Star";
             description = "A hefty astroid composed of an unknown blue material.\n" +
                 "It fell from the heavens... from where did it come?\n" +

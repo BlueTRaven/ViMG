@@ -22,7 +22,7 @@ namespace ViMG.Items
 
 			if (meta != null)
 			{
-				return meta.GetMaterial() + " Sword";
+				return meta.GetName(item) + " Sword";
 			}
 			else return base.GetName(item);
 		}

@@ -54,7 +54,7 @@ namespace ViMG.Entities
 				position = Position,
                 min = radius - fade,
                 max = radius,
-                color = new Color(color),
+                color = color,
             });
 		}
 

@@ -10,8 +10,9 @@ namespace ViMG.Items
 {
     public abstract class ItemMetaItem<T> : Item where T : Item
 	{
-		public ItemMetaItem(string identifier, RectangleF sourceRect) : base(identifier, sourceRect)
+		public ItemMetaItem(string identifier, RectangleF sourceRect) : base(identifier)
 		{
+			Client = new ClientItemMetaItem<T>(this, sourceRect);
 		}
 
 		public T Get(ItemInstance item)
@@ -21,39 +22,49 @@ namespace ViMG.Items
 
 			return metaBaseItem as T;
 		}
-
-		public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
-		{
-			var meta = Get(item);
-
-			if (meta != null)
-			{
-				base.DrawInWorld(device, item, transform);
-
-				meta.DrawInWorld(device, item, transform);
-			}
-			else
-			{
-				//If no valid meta, draw an error texture.
-				if (meshItemQuadInWorld.IBO != null)
-				{
-					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
-						meshItemQuadInWorld, transform, new RectangleF(112, 112, 16, 16)));
-				}
-			}
-		}
-
-		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			var meta = Get(item);
-
-			if (meta != null)
-			{
-				base.DrawInInventory(batch, item, position, scale);
-
-				meta.DrawInInventory(batch, item, position, scale);
-			}
-			else batch.Draw(Main.assetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
 	}
+
+    public class ClientItemMetaItem<T> : ClientItem where T : Item
+    {
+        private ItemMetaItem<T> metaItem;
+
+        public ClientItemMetaItem(Item item, RectangleF sourceRect, RendererDeferred.DrawMaterial? material = null, bool flipXInHand = false, float scale = 1) : base(item, sourceRect, material, flipXInHand, scale)
+        {
+            this.metaItem = item as ItemMetaItem<T>;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        {
+            var meta = metaItem.Get(item);
+
+            if (meta != null)
+            {
+                base.DrawInWorld(device, item, transform);
+
+                meta.Client.DrawInWorld(device, item, transform);
+            }
+            else
+            {
+                //If no valid meta, draw an error texture.
+                if (meshItemQuadInWorld.IBO != null)
+                {
+                    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
+                        meshItemQuadInWorld, transform, new RectangleF(112, 112, 16, 16)));
+                }
+            }
+        }
+
+        public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            var meta = metaItem.Get(item);
+
+            if (meta != null)
+            {
+                base.DrawInInventory(batch, item, position, scale);
+
+                meta.Client.DrawInInventory(batch, item, position, scale);
+            }
+            else batch.Draw(Main.assetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+    }
 }

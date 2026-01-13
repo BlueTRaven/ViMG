@@ -15,9 +15,11 @@ namespace ViMG.Items
 	{
 		private ProjectileManager.ProjectileStats projStats;
 
-		public ItemGun() : base("gun_base", new RectangleF(32, 0, 16, 16))
-		{
-			projStats = new ProjectileManager.ProjectileStats()
+		public ItemGun() : base("gun_base")
+        {
+            Client = new ClientItem(this, new RectangleF(32, 0, 16, 16));
+
+            projStats = new ProjectileManager.ProjectileStats()
 			{
 				group = HitboxManager.Group.PLAYER_DEAL,
 				damage = 1,

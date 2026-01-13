@@ -9,9 +9,11 @@ namespace ViMG.Items
 {
     public class ItemCopperIngot : Item
 	{
-		public ItemCopperIngot() : base("ingot_copper", new RectangleF(112, 0, 16, 16))
+		public ItemCopperIngot() : base("ingot_copper")
 		{
-			name = "Copper Ingot";
+            Client = new ClientItem(this, new RectangleF(112, 0, 16, 16));
+
+            name = "Copper Ingot";
 			description = "A refined chunk of copper ore. Can be made into a variety of shapes and tools.";
 		}
 	}

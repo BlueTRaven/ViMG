@@ -14,16 +14,16 @@ namespace ViMG.Items
 {
     public class ItemBow : Item
 	{
-		private Color color;
 		private string materialName;
 
 		private readonly RangedAttackStats rangedAttackStats;
 
-		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material, new RectangleF(96, 64, 16, 16))
+		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material)
 		{
+			Client = new ClientItemBow(this, color);
+
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
 
-			this.color = color;
 			this.rangedAttackStats = stats;
 		}
 
@@ -75,22 +75,32 @@ namespace ViMG.Items
 		{
 			return GetStats().GetTooltip();
 		}
-
-		public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
-		{
-			if (meshItemQuadInWorld.IBO == null)
-				MakeMesh(device);
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
-		}
-
-		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			//base.DrawInInventory(batch, position, scale);
-
-			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-			batch.Draw(GetMaterial().Diffuse, position, new Rectangle(112, 64, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
 	}
+
+    public class ClientItemBow : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemBow(Item item, Color color) : base(item, new RectangleF(96, 64, 16, 16))
+        {
+            this.color = color;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        {
+            if (meshItemQuadInWorld.IBO == null)
+                MakeMesh(device);
+
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
+        }
+
+        public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            //base.DrawInInventory(batch, position, scale);
+
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, new Rectangle(112, 64, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+    }
 }

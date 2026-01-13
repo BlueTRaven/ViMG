@@ -14,8 +14,10 @@ namespace ViMG.Items
 {
     public class ItemTinderbox : Item
     {
-        public ItemTinderbox() : base("tinderbox", new RectangleF(32, 32, 16, 16))
+        public ItemTinderbox() : base("tinderbox")
         {
+            Client = new ClientItem(this, new RectangleF(32, 32, 16, 16));
+
             name = "Tinderbox";
             description = "A tinderbox, as well as a set of flint and steel, used to light fires. Right-click on the ground to create a fire that should last you for some time.";
         }

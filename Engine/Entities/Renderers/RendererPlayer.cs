@@ -62,7 +62,7 @@ namespace Engine.Entities.Renderers
                 var extraState = entity.GetExtra<Player.PlayerExtraState>();
                 Inventory? inventory = client.inventoryManager.Get(extraState.inventory);
                 var highlightedItem = inventory?.Get(extraState.highlightIndex) ?? new();
-                highlightedItem.item?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
+                highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
 
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 

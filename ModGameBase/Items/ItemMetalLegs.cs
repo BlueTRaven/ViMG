@@ -14,15 +14,14 @@ namespace ViMG.Items
     public class ItemMetalLegs : Item
     {
         private string material;
-        private Color color;
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material,
-            new RectangleF(128, 80, 16, 16))
+        public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material)
         {
+            Client = new ClientItemMetalLegs(this, color);
+
             this.material = char.ToUpper(material[0]) + material.Substring(1);
-            this.color = color;
             this.stats = stats;
             this.setBonus = setBonus;
             Tags.Add("armor_legs");
@@ -45,6 +44,16 @@ namespace ViMG.Items
 
             stats += this.stats;
         }
+    }
+
+    public class ClientItemMetalLegs : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemMetalLegs(Item item, Color color) : base(item, new RectangleF(128, 80, 16, 16))
+        {
+            this.color = color;
+        }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
         {
@@ -57,6 +66,8 @@ namespace ViMG.Items
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
         {
+            //base.DrawInInventory(batch, position, scale);
+
             batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }

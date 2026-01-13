@@ -19,8 +19,10 @@ namespace ViMG.Items
 
 		private ProjectileManager.ProjectileStats stats;
 
-        public ItemLavaCannon() : base("cannon_lavacrystal", new RectangleF(128, 112, 32, 16))
+        public ItemLavaCannon() : base("cannon_lavacrystal")
         {
+            Client = new ClientItem(this, new RectangleF(128, 112, 32, 16), flipXInHand: true);
+
             name = "Lava Cannon";
             description = "Fires a crystal of lava that explodes upon impact.\n" +
                 "Consumes 4 musket balls when fired." + 
@@ -28,8 +30,6 @@ namespace ViMG.Items
 
 			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
 				Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true, effects: this);
-
-			flipXInHand = true;
 		}
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

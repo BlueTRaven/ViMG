@@ -66,7 +66,7 @@ namespace ViMG.Entities
                 position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
                 min = Cube.CUBE_SCALE * 4 + s0,
                 max = Cube.CUBE_SCALE * 8,
-                color = Color.OrangeRed,
+                color = Color.OrangeRed.ToVector4(),
             });
 
             world.LightManager2.Add(new LightManager2.LightConfig
@@ -74,7 +74,7 @@ namespace ViMG.Entities
                 position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
                 min = Cube.CUBE_SCALE * 3 + s0,
                 max = Cube.CUBE_SCALE * 12,
-                color = Color.OrangeRed,
+                color = Color.OrangeRed.ToVector4(),
             });
             /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {

@@ -93,7 +93,7 @@ namespace ViMG.Entities
                 position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
                 min = Cube.CUBE_SCALE * 4f + s0,
                 max = Cube.CUBE_SCALE * 8f,
-                color = Color.OrangeRed,
+                color = Color.OrangeRed.ToVector4(),
             });
 
 			Vector3 actualMaxVel = MaxVelocity;

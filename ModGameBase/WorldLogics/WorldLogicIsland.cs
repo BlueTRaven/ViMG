@@ -106,7 +106,7 @@ namespace ViMG.WorldLogics
 							position = lavaPosition,
                             min = Cube.CUBE_SCALE * 28,
                             max = Cube.CUBE_SCALE * 32,
-                            color = Color.OrangeRed,
+                            color = Color.OrangeRed.ToVector4(),
                         });
                     }
                 }

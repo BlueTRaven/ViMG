@@ -70,7 +70,7 @@ namespace ViMG.Entities.Renderers
                     position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
                     min = Cube.CUBE_SCALE * 4f + s0,
                     max = Cube.CUBE_SCALE * 8f,
-                    color = Color.OrangeRed,
+                    color = Color.OrangeRed.ToVector4(),
                 });
             }
 
@@ -471,9 +471,9 @@ namespace ViMG.Entities.Renderers
                 client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
                 {
                     position = entity.position - new Vector3(0, Cube.CUBE_SCALE / 2, 0),
-                    color = color,
                     min = radius - fade,
                     max = radius,
+                    color = color.ToVector4(),
                 });
             }
 

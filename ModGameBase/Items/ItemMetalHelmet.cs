@@ -14,15 +14,14 @@ namespace ViMG.Items
     public class ItemMetalHelmet : Item
     {
         private string material;
-        private Color color;
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material, 
-            new RectangleF(96, 80, 16, 16))
+        public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material)
         {
+            Client = new ClientItemMetalHelmet(this, color);
+
             this.material = char.ToUpper(material[0]) + material.Substring(1);
-            this.color = color;
             this.stats = stats;
             this.setBonus = setBonus;
             Tags.Add("armor_head");
@@ -44,6 +43,16 @@ namespace ViMG.Items
                 bonus.Count++;
 
             stats += this.stats;
+        }
+    }
+
+    public class ClientItemMetalHelmet : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemMetalHelmet(Item item, Color color) : base(item, new RectangleF(96, 80, 16, 16))
+        {
+            this.color = color;
         }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)

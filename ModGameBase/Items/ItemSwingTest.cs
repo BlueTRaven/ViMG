@@ -14,8 +14,10 @@ namespace ViMG.Items
 {
     public class ItemSwingTest : Item
     {
-        public ItemSwingTest() : base("swing_test", new RectangleF(48, 0, 16, 16))
+        public ItemSwingTest() : base("swing_test")
         {
+            Client = new ClientItem(this, new RectangleF(48, 0, 16, 16));
+
             name = "Swing Test";
         }
 

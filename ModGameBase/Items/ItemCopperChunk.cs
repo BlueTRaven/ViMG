@@ -9,9 +9,11 @@ namespace ViMG.Items
 {
     public class ItemCopperChunk : Item
 	{
-		public ItemCopperChunk() : base("copper_chunk", new RectangleF(80, 16, 16, 16))
+		public ItemCopperChunk() : base("copper_chunk")
 		{
-			name = "Copper Ore Chunk";
+            Client = new ClientItem(this, new RectangleF(80, 16, 16, 16));
+
+            name = "Copper Ore Chunk";
 			description = "A weighty chunk of copper ore. It's too raw to be used for anything.";
 		}
 	}

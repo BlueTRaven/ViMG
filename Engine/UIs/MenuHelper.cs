@@ -488,7 +488,7 @@ namespace ViMG.UIs
 				Vector2 pos = Main.inputManager.GetMousePosition().ToVector2();
 				RectangleF bounds = new RectangleF(pos, size, size);
 
-				held.item.DrawInInventory(batch, held, pos, scale);
+				held.item?.Client?.DrawInInventory(batch, held, pos, scale);
 				//batch.Draw(held.item.Texture, pos, held.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.99f);
 
 				int num = held.num;

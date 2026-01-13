@@ -924,7 +924,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.item.item != null)
 			{
-				itemSlot.item.item.DrawInInventory(batch, itemSlot.item, itemSlot.button.bounds.Position, scale);
+				itemSlot.item.item.Client?.DrawInInventory(batch, itemSlot.item, itemSlot.button.bounds.Position, scale);
 				//batch.Draw(itemSlot.item.item.Texture, itemSlot.button.bounds.Position, itemSlot.item.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 
 				int num = itemSlot.item.num;

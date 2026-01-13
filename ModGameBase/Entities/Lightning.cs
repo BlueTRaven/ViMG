@@ -74,7 +74,7 @@ namespace ViMG.Entities
                 position = bottomPosition,
                 min = Cube.CUBE_SCALE * 4,
                 max = Cube.CUBE_SCALE * 8,
-                color = LightningColor,
+                color = LightningColor.ToVector4(),
             });
 
             timer -= (float)deltaTime;

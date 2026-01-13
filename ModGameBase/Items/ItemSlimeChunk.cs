@@ -11,9 +11,11 @@ namespace ViMG.Items
 {
     public class ItemSlimeChunk : Item
 	{
-		public ItemSlimeChunk() : base("slime_chunk", new RectangleF(0, 112, 16, 16))
-		{
-			name = "Slime Chunk";
+		public ItemSlimeChunk() : base("slime_chunk")
+        {
+            Client = new ClientItem(this, new RectangleF(0, 112, 16, 16));
+
+            name = "Slime Chunk";
 			description = "A gooey chunk of slime. Smells surprisingly nice.";
 		}
 	}

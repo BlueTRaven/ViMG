@@ -16,13 +16,13 @@ namespace ViMG.Items
 	{
 		private ItemPickaxeHead.PickaxeStats stats = new ItemPickaxeHead.PickaxeStats(0.55f, 1, 2, 1, 1, 0);
 
-		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", new RectangleF(32, 144, 16, 16))
+		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal")
 		{
-			name = "Lavacrystal Pickaxe";
+            Client = new ClientItem(this, new RectangleF(32, 144, 16, 16), flipXInHand: true);
+
+            name = "Lavacrystal Pickaxe";
 			description = "A pickaxe made of enchanted bones and lava crystal.\n" +
 				stats.GetTooltip();
-
-			flipXInHand = true;
 		}
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

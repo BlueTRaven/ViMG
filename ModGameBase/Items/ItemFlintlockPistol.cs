@@ -20,13 +20,13 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
 			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-		public ItemFlintlockPistol() : base("flintlock_pistol", new RectangleF(144, 128, 16, 16))
+		public ItemFlintlockPistol() : base("flintlock_pistol")
         {
+            Client = new ClientItem(this, new RectangleF(144, 128, 16, 16), flipXInHand: true);
+
             name = "Flintlock Pistol";
             description = "An old flintlock pistol. Better than a matchlock pistol!\n" +
 				attackStats.GetTooltip();
-
-            flipXInHand = true;
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

@@ -15,12 +15,13 @@ namespace ViMG.Items
 {
     public class ItemCube : Item
 	{
-		private ushort cubeId;
+		public ushort CubeId;
 
-		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, 
-			cube.Client.GetHeldSourceRect())
+		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier)
 		{
-			this.cubeId = cubeId;
+			Client = new ClientItemCube(this, cube.Client.GetHeldSourceRect());
+
+			this.CubeId = cubeId;
 
 			name = Main.Registry.CubeRegistry.Get(cubeId).Name;
 			description = Main.Registry.CubeRegistry.Get(cubeId).Description;
@@ -32,7 +33,7 @@ namespace ViMG.Items
 
 			if (player.IsLooking && player.CanPlace)
 			{
-				if (player.world.PlaceCube(player, player.PlaceAtPos, cubeId))
+				if (player.world.PlaceCube(player, player.PlaceAtPos, CubeId))
 				{
 					Console.WriteLine("placed at {0} - chunk pos {1}", player.PlaceAtPos, ChunkPosition.CubeChunk(player.PlaceAtPos));
                     inventory.Remove(index, 1);
@@ -46,6 +47,13 @@ namespace ViMG.Items
 
 			return false;
 		}
+	}
+
+    public class ClientItemCube : ClientItem
+    {
+        public ClientItemCube(Item item, RectangleF sourceRect) : base(item, sourceRect)
+        {
+        }
 
         public override RendererDeferred.DrawMaterial GetMaterial()
         {
@@ -53,16 +61,17 @@ namespace ViMG.Items
         }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
-		{
-			//base.Draw(device, transform);
+        {
+            //base.Draw(device, transform);
 
-			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-			var mesh = cube.Client.GetHeldMesh(device);
+            Cube cube = Main.Registry.CubeRegistry.Get((this.item as ItemCube).CubeId) ?? Main.Registry.CubeRegistry.Air;
 
-			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
-			if (mesh.IBO != null)
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-					mesh, scaled, cube.Client.GetHeldSourceRect()));
-		}
-	}
+            var mesh = cube.Client.GetHeldMesh(device);
+
+            Matrix scaled = Matrix.CreateScale(0.35f) * transform;
+            if (mesh.IBO != null)
+                Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+                    mesh, scaled, cube.Client.GetHeldSourceRect()));
+        }
+    }
 }

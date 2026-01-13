@@ -14,8 +14,9 @@ namespace ViMG.Items
 {
     public class ItemScrollFind : Item
     {
-        public ItemScrollFind() : base("scroll_find", new RectangleF(112, 32, 16, 16))
+        public ItemScrollFind() : base("scroll_find")
         {
+            Client = new ClientItem(this, new RectangleF(112, 32, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

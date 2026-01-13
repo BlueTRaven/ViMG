@@ -1,5 +1,7 @@
 ﻿using BrUtility;
+using Engine.Clients;
 using Engine.Items;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,8 +16,10 @@ namespace ViMG.Items
 {
     public class ItemSuspiciouslyGlowingSkull : Item
     {
-        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull", new RectangleF(64, 96, 32, 32))
+        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull")
         {
+            Client = new ClientItemSuspiciouslyGlowingSkull(this);
+
             name = "Suspiciously Glowing Skull";
             description = "A skull that emits a faint red glowing light. It's unsettling...\n" +
                 "Right click on an altar and something will happen.";
@@ -30,7 +34,7 @@ namespace ViMG.Items
                 position = player.Position,
                 min = Cube.CUBE_SCALE * 4,
                 max = Cube.CUBE_SCALE * 16,
-                color = Color.Red * 0.4f,
+                color = Color.Red.ToVector4() * 0.4f,
             });
         }
 
@@ -69,6 +73,26 @@ namespace ViMG.Items
             }
 
             return valid;
+        }
+    }
+
+    public class ClientItemSuspiciouslyGlowingSkull : ClientItem
+    {
+        public ClientItemSuspiciouslyGlowingSkull(Item item) : base(item, new RectangleF(64, 96, 32, 32))
+        {
+        }
+
+        public override void Hold(ClientStates client, BasicState player, Inventory inventory, int index)
+        {
+            base.Hold(client, player, inventory, index);
+
+            client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+            {
+                position = player.position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = Color.Red.ToVector4() * 0.4f,
+            });
         }
     }
 }

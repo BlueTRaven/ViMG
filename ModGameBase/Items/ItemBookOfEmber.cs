@@ -15,14 +15,14 @@ namespace ViMG.Items
     public class ItemBookOfEmber : Item
     {
 		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 0.25f, 1, 0f), 1);
-        public ItemBookOfEmber() : base("book_spell_ember", new RectangleF(64, 32, 16, 16))
+        public ItemBookOfEmber() : base("book_spell_ember")
         {
-			name = "Spellbook: Ember";
+            Client = new ClientItem(this, new RectangleF(64, 32, 16, 16), flipXInHand: true);
+
+            name = "Spellbook: Ember";
 			description = "A spellbook with an explanation of how to cast \"Ember\".\n" +
 				magicStats.GetTooltip() +
 				"This spell will light a small fire on any surface in front of you.";
-
-			flipXInHand = true;
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

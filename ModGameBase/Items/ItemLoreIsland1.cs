@@ -21,8 +21,10 @@ namespace ViMG.Items
             "of day or weather. Rain or shine, thunderstorm or placid sea; this layer of fog is eternal and has never once ceased its vigil.\n" +
             "All those who enter this fog are forever lost.";
 
-        public ItemLoreIsland1() : base("book_lore_island1", new RectangleF(48, 32, 16, 16))
+        public ItemLoreIsland1() : base("book_lore_island1")
         {
+            Client = new ClientItem(this, new RectangleF(48, 32, 16, 16));
+
             name = "The Island of Vi: A Mythica";
             description = "(Lore Item)\n" +
                 "By Serris of Agaldam";

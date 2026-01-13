@@ -32,8 +32,10 @@ namespace ViMG.Items
             }
         }
 
-        public ItemBoneHelmet() : base("helmet_bone", new RectangleF(96, 80, 16, 16))
+        public ItemBoneHelmet() : base("helmet_bone")
         {
+            Client = new ClientItemBoneHelmet(this);
+
             name = "Bone Helmet";
             description = "A helmet carved from bone. Ordinarily fairly inflexible, enchantments make this armor piece fairly competent.";
             Tags.Add("armor_head");
@@ -51,6 +53,13 @@ namespace ViMG.Items
 
             stats.DefenseFlat += 3;
             stats.HPFlat += 3;
+        }
+    }
+
+    public class ClientItemBoneHelmet : ClientItem
+    {
+        public ClientItemBoneHelmet(Item item) : base(item, new RectangleF(96, 80, 16, 16))
+        {
         }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)

@@ -17,7 +17,7 @@ namespace ViMG.Items
     {
         private const int MAX_PLACEABLE_BLOCKS = 80;
 
-        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", new RectangleF(64, 64, 16, 16))
+        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand")
         {
             name = "DEBUG Place block wand";
             description = "Places blocks. For use in building.";
@@ -136,6 +136,13 @@ namespace ViMG.Items
         public bool CanPredictAir()
         {
             return true;
+        }
+    }
+
+    public class ClientItemDebugPlaceBlockWand : ClientItem
+    {
+        public ClientItemDebugPlaceBlockWand(Item item) : base(item, new RectangleF(64, 64, 16, 16))
+        {
         }
     }
 }

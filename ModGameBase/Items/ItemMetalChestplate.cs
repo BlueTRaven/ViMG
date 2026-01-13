@@ -14,14 +14,14 @@ namespace ViMG.Items
     public class ItemMetalChestplate : Item
     {
         private string material;
-        private Color color;
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalChestplate(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("body_" + material, new RectangleF(112, 80, 16, 16))
+        public ItemMetalChestplate(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("body_" + material)
         {
+            Client = new ClientItemMetalChestplate(this, color);
+
             this.material = char.ToUpper(material[0]) + material.Substring(1); 
-            this.color = color;
             this.stats = stats;
             this.setBonus = setBonus;
             Tags.Add("armor_body");
@@ -44,6 +44,16 @@ namespace ViMG.Items
 
             stats += this.stats;
         }
+    }
+
+    public class ClientItemMetalChestplate : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemMetalChestplate(Item item, Color color) : base(item, new RectangleF(112, 80, 16, 16))
+        {
+            this.color = color;
+        }
 
         public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
         {
@@ -56,6 +66,8 @@ namespace ViMG.Items
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
         {
+            //base.DrawInInventory(batch, position, scale);
+
             batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }

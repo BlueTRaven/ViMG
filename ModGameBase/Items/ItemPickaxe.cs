@@ -23,7 +23,7 @@ namespace ViMG.Items
 
 			if (meta != null)
 			{
-				return meta.GetMaterial() + " Pickaxe";
+				return meta.GetName(item) + " Pickaxe";
 			}
 			else return base.GetName(item);
 		}

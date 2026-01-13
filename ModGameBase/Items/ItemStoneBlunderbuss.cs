@@ -26,14 +26,15 @@ namespace ViMG.Items
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE);
 
-		public ItemStoneBlunderbuss() : base("stone_blunderbuss", new RectangleF(80, 128, 16, 16))
+		public ItemStoneBlunderbuss() : base("stone_blunderbuss")
         {
-			name = "Stone Blunderbuss";
+            Client = new ClientItem(this, new RectangleF(80, 128, 16, 16), flipXInHand: true);
+
+            name = "Stone Blunderbuss";
 			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +
 				attackStats.GetTooltip() +
 				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread.\n" +
 				"Consumes 4 ammo per shot.";
-			flipXInHand = true;
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

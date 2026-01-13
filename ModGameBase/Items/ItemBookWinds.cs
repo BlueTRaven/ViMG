@@ -19,16 +19,16 @@ namespace ViMG.Items
         private static MagicAttackStats magicStats = 
             new MagicAttackStats(new AttackStats(DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
 
-        public ItemBookWinds() : base("book_spell_winds", new RectangleF(80, 32, 16, 16))
+        public ItemBookWinds() : base("book_spell_winds")
         {
+            Client = new ClientItem(this, new RectangleF(80, 32, 16, 16), flipXInHand: true);
+
             name = "Spellbook: Winds";
             description = "A spellbook with an explanation of how to cast \"Winds\".\n" +
                 "Press LMB to use.\n" +
                 magicStats.GetTooltip() +
                 "Creates a powerful gust of wind, knocking enemies away.\n" +
                 "Magic Cost: 2";
-
-            flipXInHand = true;
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

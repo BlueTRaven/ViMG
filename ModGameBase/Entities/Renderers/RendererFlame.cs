@@ -46,7 +46,7 @@ namespace ModGameBase.Entities.Renderers
                     position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
                     min = Cube.CUBE_SCALE * 4 + s0,
                     max = Cube.CUBE_SCALE * 8,
-                    color = Color.OrangeRed,
+                    color = Color.OrangeRed.ToVector4(),
                 });
 
                 client.LightManager.Add(new LightManager2.LightConfig
@@ -54,7 +54,7 @@ namespace ModGameBase.Entities.Renderers
                     position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
                     min = Cube.CUBE_SCALE * 3 + s0,
                     max = Cube.CUBE_SCALE * 12,
-                    color = Color.OrangeRed,
+                    color = Color.OrangeRed.ToVector4(),
                 });
             }
         }

@@ -1,4 +1,5 @@
-﻿using Engine.Items;
+﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,11 +12,12 @@ namespace ViMG.Items
 {
     public class ItemPickaxeBase : Item
 	{
-		public ItemPickaxeBase() : base("pickaxe_base", new BrUtility.RectangleF(16, 0, 16, 16))
-		{
-		}
+		public ItemPickaxeBase() : base("pickaxe_base")
+        {
+            Client = new ClientItem(this, new RectangleF(16, 0, 16, 16));
+        }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 			

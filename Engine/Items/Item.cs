@@ -1,8 +1,10 @@
 ﻿using BrUtility;
+using Engine.Clients;
 using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -121,14 +123,6 @@ namespace ViMG.Items
             }
 		}
 
-		//public readonly Texture2D Texture;
-		public RendererDeferred.DrawMaterial? Material = null;
-		public readonly RectangleF SourceRect;
-		protected float scale = 1f;
-		protected const float MESH_SIZE = Cube.CUBE_SCALE / 2f;
-		protected Vector2 origin = new Vector2(MESH_SIZE / Cube.PIXELS_PER_CUBE * 4);
-		protected bool flipXInHand;
-
 		public string Identifier { get; private set; }
 		public HashSet<string> Tags = new HashSet<string>();
 
@@ -137,20 +131,13 @@ namespace ViMG.Items
 
 		public int Id = -1;
 
-		protected static VerySimpleMesh meshItemQuadInWorld;
+        public ClientItem Client = new ClientItem(null, new RectangleF(112, 112, 16, 16));
 
-		public Item(string identifier, RectangleF sourceRect)
+		public Item(string identifier)
 		{
 			this.Identifier = identifier;
-			this.SourceRect = sourceRect;
 		}
-
-		public virtual RendererDeferred.DrawMaterial GetMaterial()
-		{
-			Material ??= StaticMaterials.Items;
-			return Material.Value;
-		}
-
+		
 		public virtual string GetName(ItemInstance item)
 		{
 			return name;
@@ -197,83 +184,118 @@ namespace ViMG.Items
 		public virtual void OnAttack(Player player, Inventory inventory, int index) { }
 
 		public virtual void OnDealDamage(Player player, Inventory inventory, int index, HitboxManager.Hitbox otherHitbox) { }
+	}
 
-		public void DrawInHand(GraphicsDevice device, ItemInstance item, BasicState player, Vector3 facing)
+	public class ClientItem
+	{
+        protected const float MESH_SIZE = Cube.CUBE_SCALE / 2f;
+        protected static VerySimpleMesh meshItemQuadInWorld;
+
+        public RendererDeferred.DrawMaterial? Material = null;
+        public readonly RectangleF SourceRect;
+        protected float scale = 1f;
+        protected Vector2 origin = new Vector2(MESH_SIZE / Cube.PIXELS_PER_CUBE * 4);
+        protected bool flipXInHand;
+
+        protected Item item;
+
+        public ClientItem(Item item, RectangleF sourceRect, RendererDeferred.DrawMaterial? material = null, bool flipXInHand = false, float scale = 1)
 		{
-			float widthScale = 1;
-			float heightScale = 1;
-			//we need to correct the aspect ratio of the quad since it's only 1x1 and textures may not be.
-			if (SourceRect.width > SourceRect.height)
-			{
-				widthScale = SourceRect.width / SourceRect.height;
-			}
-			else if (SourceRect.height > SourceRect.width)
-			{
-				heightScale = SourceRect.height / SourceRect.width;
-			}
+            this.item = item;
+            this.SourceRect = sourceRect;
+            this.Material = material;
+            this.flipXInHand = flipXInHand;
+            this.scale = scale;
+        }
 
-			Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
-			//if (!player.IsLocalPlayer) correctedScale *= new Vector3(4);
+        public virtual RendererDeferred.DrawMaterial GetMaterial()
+        {
+            Material ??= StaticMaterials.Items;
+            return Material.Value;
+        }
 
-			DrawInWorld(device, item, Player.GetHeldMatrix(player, origin, 
-				correctedScale * new Vector3(scale, scale, 1)));
-		}
+        public virtual void StartHold(ClientStates client, BasicState player, Inventory inventory, int index) { }
 
-		public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			//fit to frame
-			scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
-			
-			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
+        public virtual void EndHold(ClientStates client, BasicState player, Inventory inventory, int newIndex) { }
 
-		public virtual void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
-		{
-            if (meshItemQuadInWorld.IBO == null)
-				MakeMesh(device);
+        public virtual void Hold(ClientStates client, BasicState player, Inventory inventory, int index) { }
 
-			RectangleF sourceRect = SourceRect;
-			if (flipXInHand)
+        public void DrawInHand(GraphicsDevice device, ItemInstance item, BasicState player, Vector3 facing)
+        {
+            float widthScale = 1;
+            float heightScale = 1;
+            //we need to correct the aspect ratio of the quad since it's only 1x1 and textures may not be.
+            if (SourceRect.width > SourceRect.height)
             {
-				sourceRect.x = sourceRect.x + sourceRect.width;
-				sourceRect.width = -sourceRect.width;
+                widthScale = SourceRect.width / SourceRect.height;
+            }
+            else if (SourceRect.height > SourceRect.width)
+            {
+                heightScale = SourceRect.height / SourceRect.width;
             }
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-				meshItemQuadInWorld, 
-				transform, sourceRect));
-		}
+            Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
+            //if (!player.IsLocalPlayer) correctedScale *= new Vector3(4);
 
-		protected static void MakeMesh(GraphicsDevice device)
-		{
-			Vector3 min = Vector3.Zero;
-			Vector3 max = new Vector3(MESH_SIZE, MESH_SIZE, 0);
+            DrawInWorld(device, item, Player.GetHeldMatrix(player, origin,
+                correctedScale * new Vector3(scale, scale, 1)));
+        }
 
-			Vector3 a = new Vector3(min.X, min.Y, 0);
-			Vector3 b = new Vector3(min.X, max.Y, 0);
-			Vector3 c = new Vector3(max.X, max.Y, 0);
-			Vector3 d = new Vector3(max.X, min.Y, 0);
+        public virtual void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            //fit to frame
+            scale *= 16 / MathF.Max(SourceRect.width, SourceRect.height);
+
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+
+        public virtual void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        {
+            if (meshItemQuadInWorld.IBO == null)
+                MakeMesh(device);
+
+            RectangleF sourceRect = SourceRect;
+            if (flipXInHand)
+            {
+                sourceRect.x = sourceRect.x + sourceRect.width;
+                sourceRect.width = -sourceRect.width;
+            }
+
+            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+                meshItemQuadInWorld,
+                transform, sourceRect));
+        }
+
+        protected static void MakeMesh(GraphicsDevice device)
+        {
+            Vector3 min = Vector3.Zero;
+            Vector3 max = new Vector3(MESH_SIZE, MESH_SIZE, 0);
+
+            Vector3 a = new Vector3(min.X, min.Y, 0);
+            Vector3 b = new Vector3(min.X, max.Y, 0);
+            Vector3 c = new Vector3(max.X, max.Y, 0);
+            Vector3 d = new Vector3(max.X, min.Y, 0);
 
             FastList<VertexCube> vertices = new FastList<VertexCube>();
             List<int> indices = new List<int>();
 
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(0, 0);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(1, 1);
+            Vector2 atx = new Vector2(0, 1);
+            Vector2 btx = new Vector2(0, 0);
+            Vector2 ctx = new Vector2(1, 0);
+            Vector2 dtx = new Vector2(1, 1);
 
-			int offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
+            int offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
 
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
             offset = vertices.Length;
             indices.Add(offset + 0);
@@ -288,25 +310,7 @@ namespace ViMG.Items
             vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
             vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
 
-            /*a.Z = 0;
-			b.Z = 0;
-			c.Z = 0;
-			d.Z = 0;
-
-			offset = vertices.Count;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));*/
-
             meshItemQuadInWorld = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices)); //MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices); //new SimpleMesh<VertexCube, int>(device, vertices, indices);
-		}
-	}
+        }
+    }
 }

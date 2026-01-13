@@ -22,13 +22,14 @@ namespace ViMG.Items
 
 		private static ProjectileManager.ProjectileStats stats;
 
-		public ItemPoisonGun() : base("poison_gun", new RectangleF(112, 128, 16, 16))
+		public ItemPoisonGun() : base("poison_gun")
         {
+            Client = new ClientItem(this, new RectangleF(112, 128, 16, 16), flipXInHand: true);
+
             name = "Poison Gun";
 			//TODO normal bullets if not musketball
             description = attackStats.GetTooltip() + 
 				"Musketballs are converted into gobs of poison, which inflict the poisoned debuff on enemies.";
-			flipXInHand = true;
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

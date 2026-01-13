@@ -12,8 +12,10 @@ namespace ViMG.Items
 {
     public class ItemImpEyeball : Item
     {
-        public ItemImpEyeball() : base("imp_eyeball", new RectangleF(32, 48, 16, 16))
+        public ItemImpEyeball() : base("imp_eyeball")
         {
+            Client = new ClientItem(this, new RectangleF(32, 48, 16, 16));
+
             name = "Imp Eyeball";
             description = "An imp eyeball. It swivels to look at you no matter where you hold it. Gross.\n" +
                 "-10 defense\n" +

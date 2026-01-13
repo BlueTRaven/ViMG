@@ -12,8 +12,10 @@ namespace ViMG.Items
 {
     public class ItemLeatherGloves : Item
     {
-        public ItemLeatherGloves() : base("leather_gloves", new RectangleF(48, 48, 16, 16))
+        public ItemLeatherGloves() : base("leather_gloves")
         {
+            Client = new ClientItem(this, new RectangleF(48, 48, 16, 16));
+
             name = "Leather Gloves";
             description = "A pair of sturdy leather gloves.\n" +
                 "+3 defense\n" +

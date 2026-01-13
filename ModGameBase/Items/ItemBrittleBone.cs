@@ -9,9 +9,11 @@ namespace ViMG.Items
 {
     public class ItemBrittleBone : Item
 	{
-		public ItemBrittleBone() : base("brittle_bone", new RectangleF(16, 112, 16, 16))
+		public ItemBrittleBone() : base("brittle_bone")
 		{
-			name = "Brittle Bone";
+            Client = new ClientItem(this, new RectangleF(166, 112, 16, 16));
+
+            name = "Brittle Bone";
 			description = "An ancient and brittle bone, so ancient it might dissolve in your hands. Drops from skeletons.";
 		}
 	}

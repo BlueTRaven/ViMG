@@ -20,8 +20,10 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileVisStats visStats;
         private ProjectileManager.ProjectileStats stats;
 
-        public ItemBoneStaff() : base("magic_bone_staff", new RectangleF(208, 124, 19, 20))
+        public ItemBoneStaff() : base("magic_bone_staff")
         {
+            Client = new ClientItem(this, new RectangleF(208, 124, 19, 20));
+
             name = "Runic Bone Staff";
             description = "A staff crafted from finely-carved bone.\n" +
                 magicStats.GetTooltip();

@@ -43,7 +43,7 @@ namespace ModGameBase.Entities.Renderers
                         position = entity.position,
                         min = Cube.CUBE_SCALE * 4,
                         max = Cube.CUBE_SCALE * 8,
-                        color = Color.OrangeRed,
+                        color = Color.OrangeRed.ToVector4(),
                     });
                 }
             }

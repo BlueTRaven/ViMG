@@ -102,10 +102,10 @@ namespace Engine.Clients
                     {
                         client.LightManager.AddShadowmapped(new LightManager2.LightConfig
                         {
-                            color = new Color(visStats.lightColor),
+                            position = projectile.position,
                             min = visStats.lightExtents.X,
                             max = visStats.lightExtents.Y,
-                            position = projectile.position,
+                            color = visStats.lightColor,
                         });
                     }
 

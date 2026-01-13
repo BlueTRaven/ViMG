@@ -12,8 +12,10 @@ namespace ViMG.Items
 {
     public class ItemFeatherRelic : Item
     {
-        public ItemFeatherRelic() : base("dj_feather_relic", new RectangleF(112, 48, 16, 16))
+        public ItemFeatherRelic() : base("dj_feather_relic")
         {
+            Client = new ClientItem(this, new RectangleF(112, 48, 16, 16));
+
             name = "Feather Relic";
             description = "An ancient stone relic bearing the symbol of a feather. It feels as light as the symbol placed upon it would be.\n" +
                 "Allows you to jump an additional time. Press <Spacebar> while in the air to use it.";

@@ -50,7 +50,8 @@ namespace Engine.Common
             public required Vector3 position;
             public required float min;
             public required float max;
-            public required Color color;
+            // NOTE: vec4 color is required because Color stores bytes. A/W channel is used for intensity and would be truncated to 0-1.
+            public required Vector4 color;
 
             public int GetLightHash()
             {
@@ -122,7 +123,7 @@ namespace Engine.Common
                 int index = freeLights.Buffer[freeLights.Length - 1];
                 freeLights.RemoveAt(freeLights.Length - 1);
 
-                lights[index] = new Light(config.position, config.min, config.max, config.color.ToVector4(), false, false, index);
+                lights[index] = new Light(config.position, config.min, config.max, config.color, false, false, index);
             }
         }
 
@@ -133,7 +134,7 @@ namespace Engine.Common
             {
                 if (lightsShadowmapped[i].light.GetLightHash() == config.GetLightHash())
                 {
-                    lightsShadowmapped[i].light = new Light(config.position, config.min, config.max, config.color.ToVector4(), true, false, i);
+                    lightsShadowmapped[i].light = new Light(config.position, config.min, config.max, config.color, true, false, i);
                     lightsShadowmapped[i].time += 1;
                     return;
                 }
@@ -147,7 +148,7 @@ namespace Engine.Common
 
                 lightsShadowmapped[index] = new ShadowmappedLight 
                 {
-                    light = new Light(config.position, config.min, config.max, config.color.ToVector4(), true, false, index), 
+                    light = new Light(config.position, config.min, config.max, config.color, true, false, index), 
                     time = 1,
                     dirty = true,
                 };

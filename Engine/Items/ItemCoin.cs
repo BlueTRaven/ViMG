@@ -16,8 +16,10 @@ namespace ViMG.Items
 
         private readonly string realResourceName;
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
-            base("coin_" + resource, sourceRect)
+            base("coin_" + resource)
         {
+            Client = new ClientItemCoin(this, sourceRect);
+
             this.resource = resource;
             this.Value = value;
             this.realResourceName = resource.Substring(0, 1).ToUpper() + resource.Substring(1, resource.Length - 1);
@@ -34,6 +36,13 @@ namespace ViMG.Items
         {
             return "A " + realResourceName + " Assarius coin.\n" +
                 "It is worth " + Value + " copper Assarii.";
+        }
+    }
+
+    public class ClientItemCoin : ClientItem
+    {
+        public ClientItemCoin(Item item, RectangleF sourceRect) : base(item, sourceRect)
+        {
         }
     }
 }
