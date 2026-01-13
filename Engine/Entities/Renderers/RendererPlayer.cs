@@ -151,6 +151,13 @@ namespace Engine.Entities.Renderers
             var entity = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
             var player = entity.GetExtra<Player.PlayerExtraState>();
 
+            var inventory = client.inventoryManager.Get(player.inventory);
+            var heldInventory = client.inventoryManager.Get(player.heldInventory);
+            var item = inventory.Get(curr.highlightIndex);
+            var heldItem = heldInventory.Get(0);
+            item.item?.Client.Hold(client, entity, inventory, curr.highlightIndex);
+            heldItem.item?.Client.Hold(client, entity, inventory, curr.highlightIndex);
+
             if (entity.state == (int)Player.State.Dead)
             {
                 //interpTime - player.deadTime < Player.DEAD_TIME
