@@ -22,8 +22,6 @@ namespace ViMG.Entities
 
         public Vector3[] positions;
 
-        private int light = -1;
-
         private float timer;
         private int seed;
 
@@ -60,21 +58,24 @@ namespace ViMG.Entities
             }
 
             positions[numSplits] = bottomPosition;
-
-            light = world.LightManager.Add(bottomPosition, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, LightningColor.ToVector4(), false);
         }
 
         public override void OnUnload()
         {
             base.OnUnload();
-
-            if (light != -1)
-                world.LightManager.Remove(light);
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+
+            world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+            {
+                position = bottomPosition,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 8,
+                color = LightningColor,
+            });
 
             timer -= (float)deltaTime;
 

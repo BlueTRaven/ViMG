@@ -37,8 +37,6 @@ namespace ViMG.WorldLogics
 			Color.White 
 		];
         
-		private int lavaLight;
-
 		public WeatherManager? WeatherManager = null;
 
 		private double timeSyncWeather;
@@ -95,23 +93,23 @@ namespace ViMG.WorldLogics
 				}
 			}
 
-			var localPlayer = world.GetLocalPlayer();
-			if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer != null && localPlayer.Position.Y / Cube.CUBE_SCALE < 140)
+			foreach (Player? player in world.player)
 			{
-				Vector3 lavaPosition = new Vector3(localPlayer.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), localPlayer.Position.Z);
-
-				if (lavaLight == -1)
-					lavaLight = world.LightManager.Add(lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
-				else
-					world.LightManager.Update(lavaLight, lavaPosition, Cube.CUBE_SCALE * 28, Cube.CUBE_SCALE * 32, Color.OrangeRed.ToVector4());
-			}
-			else
-			{
-				if (lavaLight != -1)
+				if (player != null)
 				{
-					world.LightManager.Remove(lavaLight);
-					lavaLight = -1;
-				}
+                    if (!world.WorldInfo.flags.Flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && player.Position.Y / Cube.CUBE_SCALE < 140)
+                    {
+                        Vector3 lavaPosition = new Vector3(player.Position.X, LAVA_HEIGHT + (Cube.CUBE_SCALE * 0.25f), player.Position.Z);
+
+						world.LightManager2.Add(new Engine.Common.LightManager2.LightConfig
+						{
+							position = lavaPosition,
+                            min = Cube.CUBE_SCALE * 28,
+                            max = Cube.CUBE_SCALE * 32,
+                            color = Color.OrangeRed,
+                        });
+                    }
+                }
 			}
 
 			if (WeatherChangeTimer <= 0 || Main.inputManager.JustPressed(Keys.L))
@@ -140,11 +138,10 @@ namespace ViMG.WorldLogics
 			}
 			else WeatherChangeTimer -= (float)deltaTime;
 
+			var anyAbove = world.player.Any(player => player != null && CubePosition.FromWorldSpace(player.Position).Y > 140);
 			//below this point, don't even bother updating the directional light as we can't see any of it anyway. It should have no contribution to the scene.
-			if (localPlayer != null && CubePosition.FromWorldSpace(localPlayer.Position).Y > 140)
+			if (anyAbove)
 			{
-				Main.Renderer.DoCSMLight = true;
-
 				Color sunlightColor = Color.White * (1 - world.GetTimeOfDay());
 
 				if (world.GetDuskTime() > 0)
@@ -163,25 +160,23 @@ namespace ViMG.WorldLogics
 
 				WeatherManager?.Update(deltaTime, alive, lightColor);
 
-				if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
-				{
+				//if ((int)((world.GetTime() * 60f) % 5f) == 0 || Main.camera.IsDirty)
+				//{
 					//directionalLight.UpdateCameras(world, lightDir, lightColor);
 
-					float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
-					Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
-					if (!Main.inputManager.IsHeld(Keys.F6))
-						Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
-					else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-					Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
-					Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
-				}
+				//	float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
+				//	Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+				//	if (!Main.inputManager.IsHeld(Keys.F6))
+				//		Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				//	else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+				//	Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+				//	Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				//}
 			}
 			else
 			{
-				Main.Renderer.DoCSMLight = false;
-
-				if (Main.inputManager.IsHeld(Keys.F6))
-					Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+				//if (Main.inputManager.IsHeld(Keys.F6))
+				//	Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 			}
 
 			if (Main.inputManager.JustPressed(Keys.V))

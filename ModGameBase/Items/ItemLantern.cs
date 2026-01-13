@@ -14,8 +14,6 @@ namespace ViMG.Items
 {
     public class ItemLantern : Item
     {
-        private int light = -1;
-        private bool shadowmapped;
         private static Vector4 color;
 
         static ItemLantern()
@@ -32,42 +30,18 @@ namespace ViMG.Items
         {
             base.Hold(player, inventory, index);
 
-            if (light == -1)
+            player.world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
             {
-                player.world.LightManager.AddShadowmapped(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color, out light, out shadowmapped);
-            }
-            else
-            {
-                if (shadowmapped)
-                {
-                    player.world.LightManager.UpdateShadowmapped(light, player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color, true);
-                }
-                else
-                {
-                    player.world.LightManager.Update(light, player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color);
-                }
-            }
-
-            /*if (light != -1)
-            {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
-
-            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.Orange.ToVector4());*/
+                position = player.Position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = new(color),
+            });
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)
         {
             base.EndHold(player, inventory, newIndex);
-
-            if (light != -1)
-            {
-                if (shadowmapped)
-                    player.GetWorld().LightManager.RemoveShadowmapped(light);
-                else player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
         }
     }
 }

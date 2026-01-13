@@ -14,8 +14,6 @@ namespace ViMG.Entities
     public class EntityCubeBonfire : Entity, ICubeTracker, IHitboxOwner
     {
         public CubePosition TrackedPosition { get; private set; }
-        private int light = -1;
-        private bool isShadowmapped;
         private int hitbox = -1;
 
         public EntityCubeBonfire()
@@ -42,9 +40,13 @@ namespace ViMG.Entities
 
             BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
-            LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-                Cube.CUBE_SCALE * 8f + s0, Cube.CUBE_SCALE * 16f, Color.OrangeRed.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
-                sphere, ref light, ref isShadowmapped, true);
+            world.LightManager2.AddShadowmapped(new LightManager2.LightConfig
+            {
+                position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+                min = Cube.CUBE_SCALE * 8f + s0,
+                max = Cube.CUBE_SCALE * 16f,
+                color = Color.OrangeRed,
+            });
         }
 
         public bool OnInteract(Player player)
@@ -60,15 +62,6 @@ namespace ViMG.Entities
         public override void OnUnload()
         {
             base.OnUnload();
-
-            if (light != -1)
-            {
-                if (isShadowmapped)
-                    world.LightManager.RemoveShadowmapped(light);
-                else world.LightManager.Remove(light);
-
-                light = -1;
-            }
 
             if (hitbox != -1)
             {

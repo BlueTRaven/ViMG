@@ -19,7 +19,6 @@ namespace ViMG.Entities
 
         private Vector4 lightColor;
         private Vector2 lightExtents;
-        private int light = -1;
 
         public CubeLight()
         {
@@ -44,11 +43,17 @@ namespace ViMG.Entities
             base.Initialize(world);
         }
 
-        public override void LoadContent(World world)
+        public override void Update(double deltaTime)
         {
-            base.LoadContent(world);
+            base.Update(deltaTime);
 
-            light = world.LightManager.Add(Position, lightExtents.X, lightExtents.Y, lightColor);
+            world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+            {
+                position = Position,
+                min = lightExtents.X,
+                max = lightExtents.Y,
+                color = new Color(lightColor),
+            });
         }
 
         public bool OnInteract(Player player)
@@ -58,7 +63,6 @@ namespace ViMG.Entities
 
         public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
-            world.LightManager.Remove(light);
             world.EntityManager.Kill(this);
         }
 

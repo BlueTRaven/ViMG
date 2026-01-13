@@ -437,9 +437,6 @@ namespace ViMG.Entities
 			if (projectiles[index].hitbox != -1)
 				world.HitboxManager.Remove(projectiles[index].hitbox);
 
-			if (projectiles[index].light != -1)
-				world.LightManager.Remove(projectiles[index].light);
-
 			SyncProjectile.Instance.Unload(projectiles[index].reference);
 			projectiles[index] = new Projectile(projectiles[index].reference.NextGeneration());
 		}

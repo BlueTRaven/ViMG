@@ -32,7 +32,6 @@ namespace ViMG.Entities
 		public MeshingData MeshingDataInstance;
 
 		private float craftTimer;
-		private int light = -1;
 
 		public EntityFurnace()
 		{
@@ -79,10 +78,15 @@ namespace ViMG.Entities
 
 			craftTimer -= (float)deltaTime;
 
-			if (craftTimer <= 0 && light != -1)
+            if (craftTimer > 0)
             {
-				world.LightManager.Remove(light);
-				light = -1;
+                world.LightManager2.Add(new Engine.Common.LightManager2.LightConfig
+                {
+                    position = Position, 
+                    min = Cube.CUBE_SCALE * 4,
+                    max = Cube.CUBE_SCALE * 8, 
+                    color = Color.OrangeRed,
+                });
             }
         }
 
@@ -139,9 +143,6 @@ namespace ViMG.Entities
         public void OnCraft()
         {
 			craftTimer = 3f;
-
-			if (light == -1)
-				light = world.LightManager.Add(Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.OrangeRed.ToVector4());
         }
 
         public Recipe FindRecipe()

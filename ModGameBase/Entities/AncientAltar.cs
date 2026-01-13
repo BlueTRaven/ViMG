@@ -23,21 +23,14 @@ namespace ViMG.Entities
 
 		public CubePosition TrackedPosition { get; private set; }
 
-		private int light = -1;
-		private bool isShadowmapped;
 		private float breatheOffset;
 
 		public AncientAltar()
         {
-            DoesSync = false;
-            DoesMajorSync = false;
         }
 
 		public AncientAltar(CubePosition position, float radius)
 		{
-            DoesSync = false;
-            DoesMajorSync = false;
-
             TrackedPosition = position;
 			this.radius = radius;
 			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2f);
@@ -58,8 +51,6 @@ namespace ViMG.Entities
 		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
 			world.EntityManager.Kill(this);
-			if (light != -1)
-				world.LightManager.Remove(light);
 		}
 
 		public override void Update(double deltaTime)
@@ -87,9 +78,13 @@ namespace ViMG.Entities
 			float p0 = ((world.GetTime() + breatheOffset) % 7f) / 7f;
 			float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 3;
 
-			LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-				0, MathF.Max(Cube.CUBE_SCALE, radius + s0), Color.Red.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
-				sphere, ref light, ref isShadowmapped, true);
+			world.LightManager2.AddShadowmapped(new LightManager2.LightConfig
+			{
+				position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+				min = 0,
+				max = MathF.Max(Cube.CUBE_SCALE, radius + s0),
+				color = Color.Red,
+			});
 		}
 
 		//public override void Draw(GraphicsDevice device, Effect effect)

@@ -46,8 +46,6 @@ namespace ViMG.Entities
 		private Rectangle3D Bounds => new Rectangle3D(Position - new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
 			new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.70f));
 		private int hitbox = -1;
-		private int light = -1;
-		private bool isShadowmapped;
 
 		public Imp()
         {
@@ -90,13 +88,13 @@ namespace ViMG.Entities
 
 			BoundingSphere sphere = new BoundingSphere(Position, Cube.CUBE_SCALE * 8);
 
-			LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-				Cube.CUBE_SCALE * 4f + s0, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()), Velocity.Length() > 0.0005f ? LightHelper.LightUpdateType.UpdateDirty : LightHelper.LightUpdateType.DontUpdate,
-				sphere, ref light, ref isShadowmapped, true);
-
-			/*if (light == -1)
-				light = world.LightManager.Add(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);
-			else world.LightManager.Update(light, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), Cube.CUBE_SCALE * 4 + s0, Cube.CUBE_SCALE * 8 + s1, Color.OrangeRed);*/
+			world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+            {
+                position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+                min = Cube.CUBE_SCALE * 4f + s0,
+                max = Cube.CUBE_SCALE * 8f,
+                color = Color.OrangeRed,
+            });
 
 			Vector3 actualMaxVel = MaxVelocity;
 
@@ -238,13 +236,6 @@ namespace ViMG.Entities
 		public override void OnUnload()
 		{
 			base.OnUnload();
-
-			if (light != -1)
-			{
-				if (!isShadowmapped)
-					world.LightManager.Remove(light);
-				else world.LightManager.RemoveShadowmapped(light);
-			}
 
 			if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);

@@ -14,8 +14,6 @@ namespace ViMG.Items
 {
     public class ItemSuspiciouslyGlowingSkull : Item
     {
-        private int light = -1;
-
         public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull", new RectangleF(64, 96, 32, 32))
         {
             name = "Suspiciously Glowing Skull";
@@ -27,24 +25,18 @@ namespace ViMG.Items
         {
             base.Hold(player, inventory, index);
 
-            if (light != -1)
+            player.world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
             {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
-
-            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 8, Color.Red.ToVector4() * 0.4f);
+                position = player.Position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = Color.Red * 0.4f,
+            });
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)
         {
             base.EndHold(player, inventory, newIndex);
-
-            if (light != -1)
-            {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

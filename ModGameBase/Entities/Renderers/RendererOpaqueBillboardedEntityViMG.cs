@@ -4,6 +4,7 @@ using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ModGameBase.Entities;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,42 @@ namespace ViMG.Entities.Renderers
                 };
 
                 cachedStats[0] = stats;
+                return cachedStats;
+            }
+        }
+
+        private class RenderedImp : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedImp() : base("imp", Main.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"))
+            {
+            }
+
+            public override void OnRender(ClientStates client, ref readonly BasicState entity)
+            {
+                base.OnRender(client, in entity);
+
+                float p0 = (entity.aliveTime % 0.65f) / 0.65f;
+                float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 1.25f;
+
+                client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+                {
+                    position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
+                    min = Cube.CUBE_SCALE * 4f + s0,
+                    max = Cube.CUBE_SCALE * 8f,
+                    color = Color.OrangeRed,
+                });
+            }
+
+            private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
+            {
+                RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
+
+                cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    scale = new Vector2(1, 2),
+                    sourceRect = sourceRect,
+                };
                 return cachedStats;
             }
         }
@@ -773,7 +810,7 @@ namespace ViMG.Entities.Renderers
 
         public static void DoRegistration(RendererOpaqueBillboardedEntity renderer)
         {
-            renderer.registry.Register(new RenderedGeneric("imp", Main.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)));
+            renderer.registry.Register(new RenderedImp());
             renderer.registry.Register(new RenderedSkeleton());
             renderer.registry.Register(new RenderedSkeleton2());
             renderer.registry.Register(new RenderedSkeletonBonePile());

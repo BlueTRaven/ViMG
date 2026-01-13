@@ -20,8 +20,6 @@ namespace ViMG.Entities
 		private float fade;
 		private Vector4 color;
 
-		private int light = -1;
-
 		public CubePosition TrackedPosition { get; private set; }
 
 		public GlowNode()
@@ -51,29 +49,18 @@ namespace ViMG.Entities
 
 			BoundingSphere sphere = new BoundingSphere(Position, radius);
 
-			if (!Main.camera.GetFrustum().Intersects(sphere))
+			world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
 			{
-				if (light != -1)
-				{
-					world.LightManager.Remove(light);
-					light = -1;
-				}
-			}
-			else
-			{
-				if (light == -1)
-				{
-					light = world.LightManager.Add(Position, radius - fade, radius, color);
-				}
-			}
+				position = Position,
+                min = radius - fade,
+                max = radius,
+                color = new Color(color),
+            });
 		}
 
 		public override void OnUnload()
 		{
 			base.OnUnload();
-
-			if (light != -1)
-				world.LightManager.Remove(light);
 		}
 
 		public bool OnInteract(Player player)

@@ -24,9 +24,6 @@ namespace ViMG.Entities
         //private static VerySimpleMesh mesh;
         //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("glow_node");
 
-        private int[] lights;
-        private bool[] shadowmapped;
-
         public LightStressTest()
         {
 
@@ -40,11 +37,6 @@ namespace ViMG.Entities
         public override void Initialize(World world)
         {
             base.Initialize(world);
-
-            lights = new int[64];
-            shadowmapped = new bool[64];
-
-            Array.Fill(lights, -1);
         }
 
         public override void Update(double deltaTime)
@@ -63,24 +55,14 @@ namespace ViMG.Entities
 
                 Vector3 lightPos = Position + new Vector3(x, y, z);
 
-                if (lights[i] == -1)
+                Vector4 color = new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 50);
+                world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
                 {
-                    Vector4 color = new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 50);
-                    world.LightManager.AddShadowmapped(lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color, out lights[i], out shadowmapped[i]);
-                }
-                else
-                {
-                    if (shadowmapped[i])
-                    {
-                        Vector4 color = world.LightManager.GetShadowmapped(lights[i]).color;
-                        world.LightManager.UpdateShadowmapped(lights[i], lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color, true);
-                    }
-                    else
-                    {
-                        Vector4 color = world.LightManager.Get(lights[i]).color;
-                        world.LightManager.Update(lights[i], lightPos, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 3, color);
-                    }
-                }
+                    position = lightPos,
+                    min = Cube.CUBE_SCALE * 2,
+                    max = Cube.CUBE_SCALE * 3,
+                    color = new Color(color),
+                });
             }
         }
 
