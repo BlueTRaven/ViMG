@@ -67,11 +67,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Save", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    var world = Main.gameStateManager.TheIsland.GetWorld();
-                    world.SaveWorld();
-                    gsManager.TheIsland.playerIO?.SerializeAll(world);
-                    gsManager.TheIsland.playerIO?.Save(world.LoadedFolderName);
-                    gsManager.TheIsland.playerIO?.DecacheCurrentlySerialized(world.EntityManager);
+                    gsManager.TheIsland.Save();
                 }
 
                 y += 32 + MARGIN;

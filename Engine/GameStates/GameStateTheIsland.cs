@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -734,6 +735,26 @@ namespace ViMG.GameStates
             //}
 
             return logic;
+        }
+
+        public void Save()
+        {
+            if (world != null)
+            {
+                Main.SessionInformation.LastLoadedSave = world.LoadedFolderName;
+                Main.SessionIO.Save();
+
+                string dir = string.Format("saves_bkp/{0}", DateTime.Now.ToString("yyyy-MM-dd"));
+                Directory.CreateDirectory(dir);
+                using (FileStream fs = new FileStream(string.Format("{0}/{1}-{2}.zip", dir, world.LoadedFolderName, DateTime.Now.ToString("hh-mm-ss")), FileMode.Create, FileAccess.Write)) 
+                {
+                    ZipFile.CreateFromDirectory(string.Format("saves/{0}", world.LoadedFolderName), fs);
+                }
+                world.SaveWorld();
+                playerIO?.SerializeAll(world);
+                playerIO?.Save(world.LoadedFolderName);
+                playerIO?.DecacheCurrentlySerialized(world.EntityManager);
+            }
         }
 
         public override void Draw(GraphicsDevice device, SpriteBatch batch)

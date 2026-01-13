@@ -460,9 +460,6 @@ namespace ViMG
 
             IMGUIConsole.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
-            Main.SessionInformation.LastLoadedSave = LoadedFolderName;
-			Main.SessionIO.Save();
-
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
 			ChunkLoadManager.FlushLoadQueue(this);
