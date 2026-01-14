@@ -112,6 +112,8 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            ChunkManager.CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
+
             WorldLogic.UpdateSimulation(deltaTime, this);
 
             PrevMovement = CurrMovement;

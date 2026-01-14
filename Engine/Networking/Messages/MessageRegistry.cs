@@ -28,8 +28,8 @@ namespace Engine.Networking.Messages
             Register(new WhoAmIRequest());
             Register(new SyncPlayerInputs());
             Register(new SyncCubeUpdate());
-            Register(new SyncCubeUpdateAuditRequest());
-            Register(new SyncCubeUpdateAuditResponse());
+            //Register(new SyncCubeUpdateAuditRequest());
+            //Register(new SyncCubeUpdateAuditResponse());
             Register(new SyncInventoryUpdate());
             //Register(new SyncInventoryUpdateAuditRequest());
             //Register(new SyncInventoryUpdateAuditResponse());

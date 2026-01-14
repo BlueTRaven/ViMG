@@ -1,5 +1,6 @@
 ﻿using Engine.ChunkStuff;
 using Engine.Clients.Entities;
+using Engine.Common;
 using Engine.Common.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,7 +22,7 @@ namespace Engine.Clients
         public CopiedChunkManager CopyManager;
         public ChunkManagerIO ChunkIO;
         public CubeTrackers CubeTrackers;
-
+        public CubeProgressTracker CubeProgressTracker;
 
         public int SizeInChunks = 32;
 
@@ -34,6 +35,8 @@ namespace Engine.Clients
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
             ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
             CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
+
+            CubeProgressTracker = new();
         }
 
         // TODO:

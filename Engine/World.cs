@@ -78,6 +78,7 @@ namespace ViMG
 		public ChatManager ChatManager;
 		public MenuDialogue MenuDialogue;
 		//public DialogueManager DialogueManager;
+		public CubeProgressTracker CubeProgressTracker;
 
 		private WorldInfoIO worldInfoIO;
 		public ChunkManagerIO ChunkIO;
@@ -99,18 +100,6 @@ namespace ViMG
 
         private double lastSyncTime;
 		private double lastAutosaveTime;
-
-        private struct MinedCube
-		{
-			public CubePosition position;
-			public ChunkPosition chunk;
-			public float timer;
-			public int progress;	//goes up one per "mine"
-		}
-
-		private Dictionary<CubePosition, MinedCube> miningCubes = new Dictionary<CubePosition, MinedCube>();
-		private List<CubePosition> miningRemove = new List<CubePosition>();
-		private List<MinedCube> miningUpdate = new List<MinedCube>();
 
 		public List<Player> PlayerRespawnedEvent = new List<Player>();
 		private float randomUpdatesTimer;
@@ -139,6 +128,8 @@ namespace ViMG
 			HousingManager = prototype.HousingManager;
 
 			//DialogueManager = new DialogueManager();
+
+			CubeProgressTracker = new CubeProgressTracker();
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -217,7 +208,7 @@ namespace ViMG
 		{
 			LightManager2.Reset();
 
-			//EntIO.TestConsistency(GetLocalPlayer());
+            //EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
 			if (Main.Time - lastSyncTime > SyncTime)
@@ -244,7 +235,9 @@ namespace ViMG
 
 			alive += (float)deltaTime;
 
-			ChatManager.Update(deltaTime);
+            CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
+
+            ChatManager.Update(deltaTime);
 			//DialogueManager.Update(deltaTime);
 
 			ChunkManager.Update(deltaTime, this);
@@ -276,49 +269,6 @@ namespace ViMG
             SyncPlayerInputs.Instance.Apply(player);
 
 			Logic.Update(this, deltaTime);
-
-			//TODO: remove allocation somehow
-			//Perhaps an expanding array
-			//Span<Cube> miningCubesUnwrapped = new Cube[miningCubes.Count];
-
-			using (var zoneUpdateMiningCubes = TracyImpl.Tracy.BeginZone()) 
-			{
-				foreach (var mined in miningCubes)
-				{
-					MinedCube mc = mined.Value;
-
-					if (ChunkLoadManager.IsLoaded(mc.chunk))
-					{
-						Cube cube = ChunkManager.CubeView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-
-						mc.timer -= (float)deltaTime;
-						if (mc.timer <= 0)
-						{
-							mc.progress--;
-							mc.timer = 2;
-						}
-
-						if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
-							miningRemove.Add(mc.position);
-						else miningUpdate.Add(mc);
-					}
-					else
-						miningRemove.Add(mc.position);
-				}
-
-				foreach (var pos in miningRemove)
-				{
-					miningCubes.Remove(pos);
-				}
-
-				foreach (var mc in miningUpdate)
-				{
-					miningCubes[mc.position] = mc;
-				}
-
-				miningRemove.Clear();
-				miningUpdate.Clear();
-			}
 
 			if (Main.ENABLE_RANDOM_UPDATES)
 			{
@@ -584,23 +534,23 @@ namespace ViMG
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
-			foreach (var mined in miningCubes)
-			{
-				Cube cube = ChunkManager.CubeView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			//foreach (var mined in miningCubes)
+			//{
+			//	Cube cube = ChunkManager.CubeView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-				if (cube != Main.Registry.CubeRegistry.Air)
-				{
-					float percent = (float)mined.Value.progress / (float)cube.MineProgressToBreak;
+			//	if (cube != Main.Registry.CubeRegistry.Air)
+			//	{
+			//		float percent = (float)mined.Value.progress / (float)cube.MineProgressToBreak;
 
-					float stepped = ((int)(percent * 8f)) / 8f;
+			//		float stepped = ((int)(percent * 8f)) / 8f;
 
-					RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
+			//		RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
 
-					RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
-					//Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube,
-					//	Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
-				}
-			}
+			//		RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
+			//		//Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshMiningCube,
+			//		//	Matrix.CreateTranslation(mined.Value.position.InWorldSpace(mined.Value.chunk)), sourceRect));
+			//	}
+			//}
 
 			//ProjectileManager.Draw(device);
 
@@ -756,14 +706,6 @@ namespace ViMG
             if (player != null && player.state == Player.State.Noclip)
 				instant = true;
 
-			MinedCube mined = new MinedCube()
-			{
-				position = position,
-				chunk = ChunkPosition.CubeChunk(position),
-				progress = num,
-				timer = 2
-			};
-
 			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
 			if (cube != Main.Registry.CubeRegistry.Air && (level >= cube.MineLevelRequirement || instant))
@@ -771,52 +713,22 @@ namespace ViMG
 				if (instant)
 				{
 					DoMineCube(position, player);
+					CubeProgressTracker.RemoveProgress(position);
 
 					return true;
 				}
 
-				bool doRemove = false;
-				if (miningCubes.TryGetValue(position, out var currentMined))
+				if (CubeProgressTracker.AddProgress(ChunkManager.CubeView, position, num))
 				{
-					doRemove = true;
-					mined = currentMined with
-					{
-						progress = currentMined.progress + mined.progress
-					};
-					miningCubes[position] = mined;
-				}
-				else
-				{
-					if (mined.progress < cube.MineProgressToBreak)
-						miningCubes.TryAdd(position, mined);
-				}
-
-                if (mined.progress >= cube.MineProgressToBreak)
-                {
-                    if (doRemove)
-						miningCubes.Remove(position);
-
-					// Client doesn't get to actually break blocks. Server does it for them
                     DoMineCube(position, player, Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
-     //               if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-					//{
-     //                   var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
-					//	{
-					//		position = position,
-					//		newId = 0,
-					//		oldId = cube.Id,
-					//		player = (byte)localPlayerIndex,
-					//		time = Main.Time,
-					//	};
-
-     //                   Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
-					//}
 
                     return true;
                 }
 			}
 
-			return false;
+            SyncCubeUpdate.Instance.SendCubeUpdate(position, player?.playerIndex ?? -1, CubeProgressTracker.GetProgress(position));
+
+            return false;
 		}
 
 		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
