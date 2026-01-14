@@ -15,33 +15,38 @@ namespace ViMG
 {
     public class ChunkManagerIO : WorldIO
     {
-        private enum LoadedState
+        private enum LoadedState : byte
         {
             Unloaded,   // On disk
             Palettized, // Present in memory, but palettized
+			Depalettizing,
             Loaded,     // Fully decompressed in memory
         }
 
         private struct LoadedChunk
         {
-            public LoadedState loadedState;
+			public LoadedState LoadedState => (LoadedState)loadedState;
+            public int loadedState;
 
             public PalettizedChunk palettizedChunk;
 
             // null if storedPalettized
             public ushort[]? cubes;
 
+			public object l;
+
 			public LoadedChunk()
 			{
 				palettizedChunk = new();
-				loadedState = LoadedState.Unloaded;
+				loadedState = (int)LoadedState.Unloaded;
 				cubes = null;
+				l = new();
 			}
 
             public LoadedChunk(PalettizedChunk palettizedChunk)
             {
                 this.palettizedChunk = palettizedChunk;
-                loadedState = LoadedState.Palettized;
+                loadedState = (int)LoadedState.Palettized;
                 cubes = null;
             }
         }
@@ -107,7 +112,7 @@ namespace ViMG
                 loadedChunks[i] = new()
                 {
                     cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
-                    loadedState = LoadedState.Loaded,
+                    loadedState = (int)LoadedState.Loaded,
                 };
             }
 		}
@@ -118,7 +123,7 @@ namespace ViMG
 			loadedChunks[i] = new()
 			{
                 cubes = new ushort[Chunk.NUM_CUBES_IN_CHUNK],
-				loadedState = LoadedState.Loaded,
+				loadedState = (int)LoadedState.Loaded,
             };
         }
 
@@ -133,7 +138,7 @@ namespace ViMG
 		public bool IsLoaded(ChunkPosition position)
 		{
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
-			return loadedChunks[i].loadedState != LoadedState.Unloaded;
+			return loadedChunks[i].LoadedState != LoadedState.Unloaded;
         }
 
         [Flags]
@@ -148,16 +153,25 @@ namespace ViMG
 		public Span<ushort> GetChunk(ChunkPosition position, GetMode mode)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
-			if (loadedChunks[i].loadedState == LoadedState.Unloaded) return null;
+			if (loadedChunks[i].LoadedState == LoadedState.Unloaded) return null;
 
-            if (loadedChunks[i].loadedState == LoadedState.Palettized)
+            if (Interlocked.CompareExchange(ref loadedChunks[i].loadedState, (int)LoadedState.Depalettizing, (int)LoadedState.Palettized) == (int)LoadedState.Palettized)
 			{
-				loadedChunks[i].cubes = PalettizedChunk.Depaletteize(loadedChunks[i].palettizedChunk);
-				loadedChunks[i].loadedState = LoadedState.Loaded;
-				loadedChunks[i].palettizedChunk = new PalettizedChunk();
+				lock (loadedChunks[i].l)
+				{
+					loadedChunks[i].cubes = PalettizedChunk.Depaletteize(loadedChunks[i].palettizedChunk);
+					loadedChunks[i].loadedState = (int)LoadedState.Loaded;
+					loadedChunks[i].palettizedChunk = new PalettizedChunk();
+				}
+			}
+			else if (loadedChunks[i].LoadedState == LoadedState.Depalettizing)
+			{
+				// Waits for above lock to be released on other thread
+				lock (loadedChunks[i].l) { }
+				Debug.Assert(loadedChunks[i].LoadedState == LoadedState.Loaded);
 			}
 
-			Debug.Assert(loadedChunks[i].cubes != null);
+				Debug.Assert(loadedChunks[i].cubes != null);
 
 			return loadedChunks[i].cubes!;
 		}
@@ -165,30 +179,30 @@ namespace ViMG
 		public PalettizedChunk? GetPalettizedChunk(ChunkPosition position)
 		{
 			Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
-			if (loadedChunks[i].loadedState != LoadedState.Palettized) return null;
+			if (loadedChunks[i].LoadedState != LoadedState.Palettized) return null;
 
 			return loadedChunks[i].palettizedChunk;
 		}
 
-		public ushort GetId(CubePosition position)
-		{
-			ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-            Util.ThreeDToOneD(new ValuePoint3D(chunkPos), new ValuePoint3D(sizeInChunks), out int i);
+		//public ushort GetId(CubePosition position)
+		//{
+		//	ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
+  //          Util.ThreeDToOneD(new ValuePoint3D(chunkPos), new ValuePoint3D(sizeInChunks), out int i);
 
-			if (loadedChunks[i].loadedState == LoadedState.Unloaded) return 0;
+		//	if (loadedChunks[i].LoadedState == LoadedState.Unloaded) return 0;
 
-			if (loadedChunks[i].loadedState == LoadedState.Palettized)
-			{
-				return loadedChunks[i].palettizedChunk.GetId(position.InChunkSpace());
-			}
-			else 
-			{
-                Util.ThreeDToOneD(new ValuePoint3D(position.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                return loadedChunks[i].cubes[j];
-			}
+		//	if (loadedChunks[i].LoadedState == LoadedState.Palettized)
+		//	{
+		//		return loadedChunks[i].palettizedChunk.GetId(position.InChunkSpace());
+		//	}
+		//	else 
+		//	{
+  //              Util.ThreeDToOneD(new ValuePoint3D(position.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+  //              return loadedChunks[i].cubes[j];
+		//	}
 
-			return 0;
-        }
+		//	return 0;
+  //      }
 
 		public void SetChunk(ref readonly PalettizedChunk palettized)
 		{
@@ -198,7 +212,7 @@ namespace ViMG
 			{
 				cubes = null,
 				palettizedChunk = palettized,
-				loadedState = LoadedState.Palettized,
+				loadedState = (int)LoadedState.Palettized,
 			};
         }
 
@@ -276,11 +290,11 @@ namespace ViMG
 			for (int i = 0; i < loadedChunks.Length; i++)
 			{
 				PalettizedChunk pal;
-				if (loadedChunks[i].loadedState == LoadedState.Unloaded)
+				if (loadedChunks[i].LoadedState == LoadedState.Unloaded)
 				{
 					LoadChunk(i);
 				}
-				if (loadedChunks[i].loadedState == LoadedState.Palettized)
+				if (loadedChunks[i].LoadedState == LoadedState.Palettized)
 					pal = loadedChunks[i].palettizedChunk;
 				else
 				{
@@ -321,7 +335,7 @@ namespace ViMG
 			PalettizedChunk c = new();
 			c.Load(bytes);
 
-			loadedChunks[index].loadedState = LoadedState.Palettized;
+			loadedChunks[index].loadedState = (int)LoadedState.Palettized;
 			loadedChunks[index].palettizedChunk = c;
         }
 
@@ -461,7 +475,7 @@ namespace ViMG
                                     ushort id = Unsafe.ReadUnaligned<ushort>(ref allBytes[offset * sizeof(ushort)]);
                                     loadedChunks[i].cubes[j] = id;
 
-									loadedChunks[i].loadedState = LoadedState.Loaded;
+									loadedChunks[i].loadedState = (int)LoadedState.Loaded;
                                 }
                             }
                         }

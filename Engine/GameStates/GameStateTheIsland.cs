@@ -7,6 +7,7 @@ using Engine.ChunkStuff;
 using Engine.Clients;
 using Engine.Items;
 using Engine.Networking;
+using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,6 +21,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Generation;
+using ViMG.IMGUIImpl;
 using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
@@ -737,23 +739,29 @@ namespace ViMG.GameStates
             return logic;
         }
 
-        public void Save()
+        public void Save(bool backup)
         {
             if (world != null)
             {
+                var watch = Stopwatch.StartNew();
                 Main.SessionInformation.LastLoadedSave = world.LoadedFolderName;
                 Main.SessionIO.Save();
 
-                string dir = string.Format("saves_bkp/{0}", DateTime.Now.ToString("yyyy-MM-dd"));
-                Directory.CreateDirectory(dir);
-                using (FileStream fs = new FileStream(string.Format("{0}/{1}-{2}.zip", dir, world.LoadedFolderName, DateTime.Now.ToString("hh-mm-ss")), FileMode.Create, FileAccess.Write)) 
+                if (backup)
                 {
-                    ZipFile.CreateFromDirectory(string.Format("saves/{0}", world.LoadedFolderName), fs);
+                    string dir = string.Format("saves_bkp/{0}", DateTime.Now.ToString("yyyy-MM-dd"));
+                    Directory.CreateDirectory(dir);
+                    using (FileStream fs = new FileStream(string.Format("{0}/{1}-{2}.zip", dir, world.LoadedFolderName, DateTime.Now.ToString("hh-mm-ss")), FileMode.Create, FileAccess.Write))
+                    {
+                        ZipFile.CreateFromDirectory(string.Format("saves/{0}", world.LoadedFolderName), fs);
+                    }
                 }
                 world.SaveWorld();
                 playerIO?.SerializeAll(world);
                 playerIO?.Save(world.LoadedFolderName);
                 playerIO?.DecacheCurrentlySerialized(world.EntityManager);
+
+                IMGUIConsole.LogLineAndSend(string.Format("Saved Game in {0} seconds", watch.Elapsed.TotalSeconds));
             }
         }
 

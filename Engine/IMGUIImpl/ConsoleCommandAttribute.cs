@@ -6,16 +6,28 @@ using System.Threading.Tasks;
 
 namespace ViMG.IMGUIImpl
 {
+    public enum ConsoleCommandRunSide
+    {
+        // Only run locally.
+        Client,
+        // Only run on the server. Requires admin.
+        Server,
+        // Run on both the client and server. Requires admin. Run on the server first, validated, then sent to the client.
+        ServerAndClient,
+    }
+
     [AttributeUsage(AttributeTargets.Method)]
     public class ConsoleCommandAttribute : Attribute
     {
-        public string name;
-        public string help;
+        public readonly string name;
+        public readonly string help;
+        public readonly ConsoleCommandRunSide runSide;
 
-        public ConsoleCommandAttribute(string name, string? help = null)
+        public ConsoleCommandAttribute(string name, string? help = null, ConsoleCommandRunSide runSide = ConsoleCommandRunSide.Client)
         {
             this.name = name;
             this.help = help ?? "";
+            this.runSide = runSide;
         }
     }
 

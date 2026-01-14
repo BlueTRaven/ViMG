@@ -87,7 +87,7 @@ namespace ModGameBase.Client.WorldLogics
 
         public override void UpdateSimulation(double deltaTime, ClientStates client)
         {
-            Console.WriteLine("Weather: {0}", WeatherManager.GetCurrentWeather().ToString());
+            //Console.WriteLine("Weather: {0}", WeatherManager.GetCurrentWeather().ToString());
 
             var prev = client.Previous(1);
             var curr = client.Current();

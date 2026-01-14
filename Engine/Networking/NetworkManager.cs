@@ -85,6 +85,7 @@ namespace Engine.Networking
             public int peerId = -1; // -1 if client (we can't send messages to other clients, just to server
 
             public string playerName;
+            public bool isAdmin;
 
             public int latency = 0;
             public bool initialized = false;
@@ -95,6 +96,7 @@ namespace Engine.Networking
             {
                 playerId = reader.GetInt();
                 playerName = reader.GetString();
+                isAdmin = reader.GetBool();
                 latency = 0;
                 peerId = -1;
             }
@@ -103,6 +105,7 @@ namespace Engine.Networking
             {
                 writer.Put(playerId);
                 writer.Put(playerName);
+                writer.Put(isAdmin);
                 latency = 0;
             }
         }

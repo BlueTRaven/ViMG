@@ -39,6 +39,9 @@ namespace Engine.Networking.Messages
             Register(new SyncInventoryAck());
             Register(new SyncCubeAction());
             Register(new SyncProjectile());
+            Register(new SyncConsoleCommandClient());
+            Register(new SyncConsoleCommandServer());
+            Register(new SyncConsoleOutput());
         }
 
         public override void Register(Message obj)

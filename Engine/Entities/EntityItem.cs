@@ -131,6 +131,7 @@ namespace ViMG.Entities
 
 			var state = new BasicState();
 			state.OnLoad(loadBytes, ref index);
+			this.world = world;
 			if (world != null)
 				Set(ref state);
         }

@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Networking;
+using Engine.Networking.Messages;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
@@ -236,7 +238,7 @@ namespace ViMG.IMGUIImpl
             }
         }
 
-        [ConsoleCommand("get", "Get the value of a console variable.")]
+        [ConsoleCommand("get", "Get the value of a console variable.", ConsoleCommandRunSide.Server)]
         public static void Get(string[] parameters)
         {
             RequireParam(parameters, 0, "name");
@@ -253,7 +255,7 @@ namespace ViMG.IMGUIImpl
             }
         }
 
-        [ConsoleCommand("set", "Set the value of a console variable.")]
+        [ConsoleCommand("set", "Set the value of a console variable.", ConsoleCommandRunSide.ServerAndClient)]
         public static void Set(string[] parameters)
         {
             RequireParam(parameters, 0, "name");
@@ -514,23 +516,57 @@ namespace ViMG.IMGUIImpl
             LogLine("> " + entireLine);
 
             string[] splits = entireLine.Split(' ');
+            string[] parameters = splits.Length > 1 ? splits[1..] : [];
+
             string commandName = splits[0];
+
+            NetworkManager.NetworkSide netSide = Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client ? NetworkManager.NetworkSide.Client : NetworkManager.NetworkSide.Server;
+            RunCommand(commandName, netSide, parameters);            
+        }
+
+        public struct CommandReturn
+        {
+            public string[] output;
+            public bool valid;
+        }
+
+        public static CommandReturn RunCommand(string commandName, NetworkManager.NetworkSide originatingSide, params string[] parameters)
+        {
+            return RunCommand(commandName, originatingSide, (Span<string>)parameters);
+        }
+
+        public static CommandReturn RunCommand(string commandName, NetworkManager.NetworkSide originatingSide, Span<string> parameters)
+        {
+            string[] newLines = [];
+            bool valid = false;
 
             if (commandsByName.TryGetValue(commandName, out var command))
             {
                 MethodInfo methodInfo = command.Item1;
                 // Note we leave out the command itself from the strings we pass in.
-                string[] parameters = splits.Length > 1 ? splits[1..] : null;
 
                 executingCommand = commandName;
-
-                try
+                if (originatingSide == NetworkManager.NetworkSide.Client && 
+                    (command.Item2.runSide == ConsoleCommandRunSide.Server || command.Item2.runSide == ConsoleCommandRunSide.ServerAndClient) && 
+                    Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
                 {
-                    methodInfo.Invoke(null, new object[] { parameters });
+                    // These commands are not run locally, but are instead sent to the server.
+                    SyncConsoleCommandClient.Instance.SendCommand(commandName, parameters.ToArray());
                 }
-                catch (Exception e)
+                else
                 {
-                    LogLine("[error] " + e.InnerException.Message);
+                    int before = lines.Length;
+                    try
+                    {
+                        methodInfo.Invoke(null, [parameters.ToArray()]);
+                        valid = true;
+                    }
+                    catch (Exception e)
+                    {
+                        LogLine("[error] " + e.InnerException.Message);
+                    }
+
+                    newLines = lines.Buffer[before..lines.Length];
                 }
             }
             else LogLine("[error] No command with name " + commandName + ".");
@@ -539,6 +575,12 @@ namespace ViMG.IMGUIImpl
             if (commandHistory.Length == MAX_HISTORY)
                 commandHistory.RemoveAt(0);
             commandHistory.Add(editingString);
+
+            return new CommandReturn
+            {
+                output = newLines,
+                valid = valid,
+            };
         }
 
         private static unsafe int Callback(ImGuiInputTextCallbackData* data)
@@ -714,6 +756,15 @@ namespace ViMG.IMGUIImpl
             lines.Add(line);
 
             lastRunLines++;
+        }
+
+        public static void LogLineAndSend(string line)
+        {
+            LogLine(line);
+            if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+            {
+                SyncConsoleOutput.Instance.SendOutput([line]);
+            }
         }
 
         [Conditional("DEBUG")]

@@ -98,6 +98,7 @@ namespace ViMG
 		public bool isCreateWorldReloading;
 
         private double lastSyncTime;
+		private double lastAutosaveTime;
 
         private struct MinedCube
 		{
@@ -228,6 +229,14 @@ namespace ViMG
 				SyncWorldState.Instance.DoSend();
 				lastSyncTime = Main.Time;
             }
+
+			// Autosave every 5 minutes?
+			if (Main.Time - lastAutosaveTime > 60 * 5)
+			{
+				
+				Main.gameStateManager.TheIsland.Save(true);
+				lastAutosaveTime = Main.Time;
+			}
 
             deltaTime *= TimeScale;
 

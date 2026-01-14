@@ -27,15 +27,10 @@ namespace ViMG.Entities
 
 		public Sapling()
         {
-            DoesSync = false;
-            DoesMajorSync = false;
         }
 
         public Sapling(CubePosition position)
         {
-            DoesSync = false;
-            DoesMajorSync = false;
-
             if (position.Y == 0)
 				throw new Exception();
 

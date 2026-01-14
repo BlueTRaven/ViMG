@@ -27,6 +27,7 @@ namespace Engine.Entities
         public bool continues; // If client input, if an artificialPress is received, artificialPress will not be reset
         //public bool previousRecordedPress;
         public bool recordedPress;
+        private bool forcedUnpress;
 
         public PlayerInput(Input input)
         {
@@ -96,6 +97,8 @@ namespace Engine.Entities
 
         public bool Changed(PlayerInput prev)
         {
+            if (forcedUnpress) return true;
+
             return recordedPress != prev.recordedPress;
         }
 
@@ -107,6 +110,12 @@ namespace Engine.Entities
         public bool Pressed()
         {
             return recordedPress;
+        }
+
+        public void ForceUnpress()
+        {
+            recordedPress = false;
+            forcedUnpress = true;
         }
     }
 }

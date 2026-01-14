@@ -67,7 +67,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Save", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.TheIsland.Save();
+                    gsManager.TheIsland.Save(false);
                 }
 
                 y += 32 + MARGIN;

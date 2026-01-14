@@ -202,15 +202,15 @@ namespace Engine.Clients
                 // Don't allow the player to control their character while a menu is open
                 if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer || (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened))
                 {
-                    CurrMovement.LeftClick.recordedPress = false;
-                    CurrMovement.RightClick.recordedPress = false;
-                    CurrMovement.MoveLeft.recordedPress = false;
-                    CurrMovement.MoveRight.recordedPress = false;
-                    CurrMovement.MoveForward.recordedPress = false;
-                    CurrMovement.MoveBack.recordedPress = false;
-                    CurrMovement.Jump.recordedPress = false;
-                    CurrMovement.Run.recordedPress = false;
-                    CurrMovement.MoveDown.recordedPress = false;
+                    CurrMovement.LeftClick.ForceUnpress();
+                    CurrMovement.RightClick.ForceUnpress();
+                    CurrMovement.MoveLeft.ForceUnpress();
+                    CurrMovement.MoveRight.ForceUnpress();
+                    CurrMovement.MoveForward.ForceUnpress();
+                    CurrMovement.MoveBack.ForceUnpress();
+                    CurrMovement.Jump.ForceUnpress();
+                    CurrMovement.Run.ForceUnpress();
+                    CurrMovement.MoveDown.ForceUnpress();
                 }
 
                 if (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
