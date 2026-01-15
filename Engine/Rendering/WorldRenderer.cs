@@ -30,112 +30,12 @@ namespace ViMG.Rendering
         private List<ChunkPosition> culledChunkDrawPositions = new List<ChunkPosition>();
 
         private VerySimpleMesh skyboxMesh;
+        private VerySimpleMesh breakMesh;
 
         public WorldRenderer(GraphicsDevice device)
         {
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
-
-            Vector3 l_b_f = new Vector3(0, 0, 1);
-            Vector3 r_b_f = new Vector3(1, 0, 1);
-            Vector3 r_b_n = new Vector3(1, 0, 0);
-            Vector3 l_b_n = new Vector3(0, 0, 0);
-
-            Vector3 l_t_n = new Vector3(0, 1, 0);
-            Vector3 r_t_n = new Vector3(1, 1, 0);
-            Vector3 r_t_f = new Vector3(1, 1, 1);
-            Vector3 l_t_f = new Vector3(0, 1, 1);
-
-            const float SKYBOX_SIDE_SIZE = 1024f;
-            const float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * 4f;
-            const float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * 2f;
-
-            //front face
-            int offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
-            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
-            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
-
-            //right face
-            offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
-            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
-            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
-
-            //back face
-            offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
-            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
-
-            //left face
-            offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
-            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
-            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
-
-            //top face
-            offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
-
-
-            //bottom face
-            offset = vertices.Length;
-            indices.Add(offset + 0);
-            indices.Add(offset + 1);
-            indices.Add(offset + 3);
-            indices.Add(offset + 1);
-            indices.Add(offset + 2);
-            indices.Add(offset + 3);
-
-            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
-
-            skyboxMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+            skyboxMesh = MeshHelper.MakeSkybox(device, 4f, 2f);
+            breakMesh = MeshHelper.MakeCube(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), VerySimpleMesh.Pass.Transparent);
         }
 
         public void Render(ClientStates client)
@@ -264,6 +164,27 @@ namespace ViMG.Rendering
                             Matrix.CreateTranslation(client.InterpCamera.Position),
                         Mesh = skyboxMesh,
                     });
+                }
+            }
+
+            var iter = client.ChunkManager.CubeProgressTracker.GetIter();
+            foreach (var mined in iter)
+            {
+                Cube cube = client.ChunkManager.CubeView.GetCube(mined.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+
+                if (cube != Main.Registry.CubeRegistry.Air)
+                {
+                    float percent = (float)mined.progress / (float)cube.MineProgressToBreak;
+
+                    float stepped = ((int)(percent * 8f)) / 8f;
+
+                    RectangleF sourceRect = new RectangleF(128f * stepped, 0, 16, 16);
+
+                    Vector3 wsPos = mined.position.InWorldSpace(mined.chunk);
+                    Matrix mat = Matrix.CreateTranslation(wsPos);
+                    RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
+                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((client.InterpCamera.Position - wsPos).Length(), material, breakMesh,
+                        mat, sourceRect));
                 }
             }
         }

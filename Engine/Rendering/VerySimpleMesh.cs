@@ -13,6 +13,14 @@ namespace ViMG.Rendering
 {
     public struct VerySimpleMesh : IDisposable
     {
+        public enum Pass
+        {
+            Opaque,
+            Transparent,
+            Shadow,
+            SolidColor,
+        }
+
         public VertexBuffer VBOPosition;
         public VertexBuffer VBOColor;
         public VertexBuffer VBOTexCoord;
@@ -21,6 +29,8 @@ namespace ViMG.Rendering
         public VertexBuffer VBOAnim;
 
         public IndexBuffer IBO;
+
+        public Pass pass;
 
         public VertexBufferBinding[] Bindings;
 
@@ -34,6 +44,23 @@ namespace ViMG.Rendering
             public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(1);
             public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2));
             public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(3);
+        }
+
+        public static VerySimpleMesh New(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, Pass pass)
+        {
+            switch (pass)
+            {
+                case Pass.Opaque:
+                    return Opaque(device, attributes);
+                case Pass.Transparent:
+                    return Transparent(device, attributes);
+                case Pass.Shadow:
+                    return Shadow(device, attributes);
+                case Pass.SolidColor:
+                    return SolidColor(device, attributes);
+                default:
+                    return default;
+            }
         }
 
         public static VerySimpleMesh Opaque(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, bool bakeTangents = true)
@@ -111,6 +138,7 @@ namespace ViMG.Rendering
             lock (refs)
                 refs.Add(mesh);
 
+            mesh.pass = Pass.Opaque;
             return mesh;
         }
 
@@ -126,6 +154,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.Transparent;
+
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
             if (attributes.position.GetOut(out var positions))
@@ -170,6 +200,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.Shadow;
+
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
             if (attributes.position.GetOut(out var positions))
@@ -208,6 +240,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.SolidColor;
+
             // FIXME: for some reason, air meshes are getting passed in with some indices, but no vertices. The attributes.position.Get()== null is to catch that.
             // This is a bug, it should be fixed at the root eventually.
             if (attributes.indices == null || attributes.indices.Count == 0 || attributes.position.Get() == null) return mesh;

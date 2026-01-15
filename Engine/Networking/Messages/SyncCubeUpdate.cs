@@ -94,12 +94,13 @@ namespace Engine.Networking.Messages
             CubePosition updatedPos = new CubePosition(a.X, a.Y, a.Z, CubePosition.CoordinateSpace.CubeSpace);
             ushort oldId = reader.GetUShort();
             ushort newId = reader.GetUShort();
-            int newProgress = reader.GetUShort();
+            ushort newProgress = reader.GetUShort();
 
             DoCubeUpdate(GS.GetClient().ChunkManager, new CubeToUpdate
             {
                 oldId = oldId,
                 newId = newId,
+                newProgress = newProgress,
                 position = updatedPos,
                 playerId = playerId,
                 time = time,
@@ -111,7 +112,6 @@ namespace Engine.Networking.Messages
             if (update.oldId == update.newId)
             {
                 chunkManager.CubeProgressTracker.SetProgress(chunkManager.CubeView, update.position, update.newProgress);
-                Console.WriteLine("New progress {0}", update.newProgress);
             }
             else
             {

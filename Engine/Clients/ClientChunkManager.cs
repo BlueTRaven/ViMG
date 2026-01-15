@@ -22,7 +22,7 @@ namespace Engine.Clients
         public CopiedChunkManager CopyManager;
         public ChunkManagerIO ChunkIO;
         public CubeTrackers CubeTrackers;
-        public CubeProgressTracker CubeProgressTracker;
+        public CubeBreakProgressTracker CubeProgressTracker;
 
         public int SizeInChunks = 32;
 

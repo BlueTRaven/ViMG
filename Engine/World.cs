@@ -78,7 +78,7 @@ namespace ViMG
 		public ChatManager ChatManager;
 		public MenuDialogue MenuDialogue;
 		//public DialogueManager DialogueManager;
-		public CubeProgressTracker CubeProgressTracker;
+		public CubeBreakProgressTracker CubeProgressTracker;
 
 		private WorldInfoIO worldInfoIO;
 		public ChunkManagerIO ChunkIO;
@@ -129,7 +129,7 @@ namespace ViMG
 
 			//DialogueManager = new DialogueManager();
 
-			CubeProgressTracker = new CubeProgressTracker();
+			CubeProgressTracker = new CubeBreakProgressTracker();
 
 			this.ChunkLoadManager = chunkLoadManager;
 
@@ -724,9 +724,10 @@ namespace ViMG
 
                     return true;
                 }
+
+				SyncCubeUpdate.Instance.SendCubeUpdate(position, player?.playerIndex ?? -1, CubeProgressTracker.GetProgress(position));
 			}
 
-            SyncCubeUpdate.Instance.SendCubeUpdate(position, player?.playerIndex ?? -1, CubeProgressTracker.GetProgress(position));
 
             return false;
 		}

@@ -10,9 +10,9 @@ using ViMG.Cubes;
 
 namespace Engine.Common
 {
-    public class CubeProgressTracker
+    public class CubeBreakProgressTracker
     {
-        private struct ProgressCube
+        public struct BreakProgress
         {
             public CubePosition position;
             public ChunkPosition chunk;
@@ -20,9 +20,9 @@ namespace Engine.Common
             public int progress;    //goes up one per "mine"
         }
 
-        private Dictionary<CubePosition, ProgressCube> tracked = new Dictionary<CubePosition, ProgressCube>();
+        private Dictionary<CubePosition, BreakProgress> tracked = new Dictionary<CubePosition, BreakProgress>();
         private List<CubePosition> toRemoveLater = new List<CubePosition>();
-        private List<ProgressCube> toUpdateLater = new List<ProgressCube>();
+        private List<BreakProgress> toUpdateLater = new List<BreakProgress>();
 
         public void Update(ICubeGetter cubeView, double deltaTime)
         {
@@ -30,7 +30,7 @@ namespace Engine.Common
 
             foreach (var mined in tracked)
             {
-                ProgressCube mc = mined.Value;
+                BreakProgress mc = mined.Value;
 
                 Cube cube = cubeView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
@@ -60,6 +60,11 @@ namespace Engine.Common
             toUpdateLater.Clear();
         }
 
+        public IEnumerable<BreakProgress> GetIter()
+        {
+            return tracked.Values;
+        }
+
         public ushort GetProgress(CubePosition position)
         {
             return (ushort)tracked[position].progress;
@@ -67,7 +72,7 @@ namespace Engine.Common
 
         public bool AddProgress(ICubeGetter cubeView, CubePosition position, int progress)
         {
-            ProgressCube curProgress = new()
+            BreakProgress curProgress = new()
             {
                 position = position,
                 chunk = ChunkPosition.CubeChunk(position),
@@ -75,9 +80,11 @@ namespace Engine.Common
                 timer = 2,
             };
 
-            if (tracked.TryGetValue(position, out curProgress))
+            if (tracked.TryGetValue(position, out var foundProgress))
             {
-                curProgress.progress += progress;
+                foundProgress.progress += progress;
+                foundProgress.timer = 2;
+                curProgress = foundProgress;
             }
 
             Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
@@ -99,7 +106,7 @@ namespace Engine.Common
 
         public bool SetProgress(ICubeGetter cubeView, CubePosition position, int progress)
         {
-            ProgressCube curProgress = new()
+            BreakProgress curProgress = new()
             {
                 position = position,
                 chunk = ChunkPosition.CubeChunk(position),
@@ -107,9 +114,11 @@ namespace Engine.Common
                 timer = 2,
             };
 
-            if (tracked.TryGetValue(position, out curProgress))
+            if (tracked.TryGetValue(position, out var foundProgress))
             {
-                curProgress.progress = progress;
+                foundProgress.progress = progress;
+                foundProgress.timer = 2;
+                curProgress = foundProgress;
             }
 
             Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);

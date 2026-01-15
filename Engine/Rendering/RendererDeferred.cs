@@ -301,7 +301,7 @@ namespace ViMG.Rendering
 
         public RendererDeferred(GraphicsDevice device)
         {
-            DEBUGCubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
+            DEBUGCubemapMesh = MeshHelper.MakeDebugCubemap(device, -Vector3.One, Vector3.One);
             DEBUGSphereMesh = MeshHelper.MakeUVSphere(device, 1);
 
             FastList<VertexCube> cubeVertices = new FastList<VertexCube>();

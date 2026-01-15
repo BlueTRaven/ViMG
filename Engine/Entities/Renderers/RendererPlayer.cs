@@ -34,11 +34,7 @@ namespace Engine.Entities.Renderers
         public RendererPlayer(GraphicsDevice device) : base("player_local", device)
         {
             mesh = MeshHelper.MakeQuad(device, 1, 0.98f * 2f, Enums.Alignment.Center);
-
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
-            MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-            lookAtMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+            lookAtMesh = MeshHelper.MakeCube(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), VerySimpleMesh.Pass.Transparent);
         }
 
         private static int[]? types = null;
@@ -112,9 +108,6 @@ namespace Engine.Entities.Renderers
                     {
                         Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
                             lookAtMesh,
-                            Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-                            Matrix.CreateScale(1.126f) *
-                            Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
                             Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult.hit)),
                             new RectangleF(0, 1008, 16, 16), lookAtColor));
                     }
