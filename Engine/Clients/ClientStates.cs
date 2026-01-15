@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
 
@@ -32,6 +33,7 @@ namespace Engine.Clients
         //public LightManager LightManager;
         public LightManager2 LightManager;
         private LightsRenderer lightRenderer;
+        private PhysicsInfo physicsInfo;
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
@@ -55,7 +57,9 @@ namespace Engine.Clients
         {
             this.device = device;
 
-            ChunkManager = new ClientChunkManager(device);
+            physicsInfo = new PhysicsInfo();
+
+            ChunkManager = new ClientChunkManager(device, physicsInfo);
 
             states = new ClientWorld[ViMG.Entities.EntityManager.EntPrevSrv];
             for (int i = 0; i < states.Length; i++)

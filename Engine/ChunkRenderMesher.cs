@@ -602,13 +602,15 @@ namespace ViMG
 
 		public struct VertexTexCoord
 		{
-			public short U;
-			public short V;
+			public Half U;
+			public Half V;
 
 			public VertexTexCoord(Vector2 uv)
 			{
-				U = (short)(uv.X * (float)short.MaxValue);
-                V = (short)(uv.Y * (float)short.MaxValue);
+				U = (Half)uv.X;
+				V = (Half)uv.Y;
+				//U = (short)(uv.X * (float)short.MaxValue);
+                //V = (short)(uv.Y * (float)short.MaxValue);
             }
 		}
 

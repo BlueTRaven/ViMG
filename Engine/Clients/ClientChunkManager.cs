@@ -11,12 +11,14 @@ using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
 using ViMG.GameStates;
+using ViMG.Physics;
 
 namespace Engine.Clients
 {
     public class ClientChunkManager
     {
-        private GraphicsDevice device;
+        private readonly GraphicsDevice device;
+        private readonly PhysicsInfo physicsInfo;
         public ClientCubeView CubeView;
         public ChunkMesher ChunkMesher;
         public CopiedChunkManager CopyManager;
@@ -26,13 +28,14 @@ namespace Engine.Clients
 
         public int SizeInChunks = 32;
 
-        public ClientChunkManager(GraphicsDevice device)
+        public ClientChunkManager(GraphicsDevice device, PhysicsInfo physicsInfo)
         {
             this.device = device;
-            
+            this.physicsInfo = physicsInfo;
             CubeTrackers = new CubeTrackers();
             ChunkIO = new ChunkManagerIO(SizeInChunks, "", 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
+            ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
             ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
             CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
 
@@ -57,9 +60,12 @@ namespace Engine.Clients
                 ChunkIO = Main.gameStateManager.TheIsland.GetWorld().ChunkIO;
                 CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
                 CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
+                ChunkMesher.CollisionMesher?.FinishFlush();
+                ChunkMesher.CollisionMesher?.UnloadAll();
                 ChunkMesher.RenderMesher.FinishFlush();
                 ChunkMesher.RenderMesher.UnloadAll();
-                ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
+                ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
+                //ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
             }
         }
 
