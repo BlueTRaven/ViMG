@@ -182,7 +182,7 @@ namespace ViMG.Cubes
             base.OnRightClick(client, playerId, position);
 
             var tracker = client.ChunkManager.CubeTrackers.Get(ChunkPosition.CubeChunk(position)).Get(position.InChunkSpace());
-			if (playerId == client.LocalPlayer)
+			if (playerId == client.LocalPlayerIndex)
 			{
                 var ent = client.Current().entities.GetByRef(ref tracker);
                 var invRef = new InventoryManager.InventoryReference((ushort)ent.counters[0], (short)ent.counters[1]);

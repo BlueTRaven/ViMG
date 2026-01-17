@@ -73,7 +73,7 @@ namespace ViMG.Entities
 
 			alive += (float)deltaTime;
 
-			contactChecker.Update(world, physicsHandle);
+			contactChecker.Update(world.PhysicsInfo, physicsHandle);
 
 			Vector3 actualMaxVel = MaxVelocity;
 

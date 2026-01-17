@@ -36,11 +36,9 @@ namespace Engine.Clients
         private LightsRenderer lightRenderer;
         private PhysicsInfo physicsInfo;
 
-        public PlayerMovement CurrMovement;
-        public PlayerMovement PrevMovement;
-        public BodyHandle LocalPlayerBody;
+        public ClientLocalPlayer? LocalPlayer = null;
 
-        public int LocalPlayer => Main.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
+        public int LocalPlayerIndex => Main.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
 
         private int head = 0;
         private int frame = 0;
@@ -49,11 +47,7 @@ namespace Engine.Clients
         public double Variance;
         public double CurrentTime;
 
-        private MouseState currMS;
-        private MouseState prevMS;
-
         public Camera InterpCamera = null;
-        private MenuPlayer menuPlayer;
 
         public ClientStates(GraphicsDevice device)
         {
@@ -128,148 +122,7 @@ namespace Engine.Clients
 
             current.projectiles.Update(ChunkManager.CubeView, deltaTime);
 
-            var localPlayerRef = current.entities.GetLocalPlayerRef();
-            if (current.entities.IsActive(ref localPlayerRef))
-            {
-                if (Main.inputManager.JustPressed(Keys.Escape) && Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
-                    Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(Main.gameStateManager));
-
-                if (Main.inputManager.JustPressed(Keys.F5))
-                {
-                    var sizeInChunks = ChunkManager.SizeInChunks;
-                    for (int i = 0; i < sizeInChunks * sizeInChunks * sizeInChunks; i++)
-                    {
-                        Util.OneDToThreeD(i, new ValuePoint3D(32), out var point);
-                        var chunkPos = new ChunkPosition(point.x, point.y, point.z);
-                        if (ChunkManager.ChunkIO.IsLoaded(chunkPos))
-                        {
-                            ChunkManager.CopyManager.MarkDirty(chunkPos);
-                            ChunkManager.ChunkMesher.RenderMesher?.MarkDirty(chunkPos);
-                        }
-                    }
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D1))
-                {
-                    current.highlightIndex = 0;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D2))
-                {
-                    current.highlightIndex = 1;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D3))
-                {
-                    current.highlightIndex = 2;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D4))
-                {
-                    current.highlightIndex = 3;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D5))
-                {
-                    current.highlightIndex = 4;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D6))
-                {
-                    current.highlightIndex = 5;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D7))
-                {
-                    current.highlightIndex = 6;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.D8))
-                {
-                    current.highlightIndex = 7;
-                }
-
-                if (Main.inputManager.JustPressed(Keys.E) && Main.gameStateManager.TheIsland.GetCurrentMenu() == menuPlayer)
-                {
-                    menuPlayer.Toggle();
-                }
-
-                PrevMovement = CurrMovement;
-                ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
-                CurrMovement.Update(ref localPlayer, deltaTime);
-
-                if (menuPlayer == null)
-                {
-                    var extra = localPlayer.GetExtra<ViMG.Player.PlayerExtraState>();
-                    menuPlayer = new MenuPlayer(Main.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
-                    menuPlayer.LoadContent();
-                    menuPlayer.Close();
-                    Main.gameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
-                }
-
-                // Don't allow the player to control their character while a menu is open
-                if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer || (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened))
-                {
-                    CurrMovement.LeftClick.ForceUnpress();
-                    CurrMovement.RightClick.ForceUnpress();
-                    CurrMovement.MoveLeft.ForceUnpress();
-                    CurrMovement.MoveRight.ForceUnpress();
-                    CurrMovement.MoveForward.ForceUnpress();
-                    CurrMovement.MoveBack.ForceUnpress();
-                    CurrMovement.Jump.ForceUnpress();
-                    CurrMovement.Run.ForceUnpress();
-                    CurrMovement.MoveDown.ForceUnpress();
-                    CurrMovement.Throw.ForceUnpress();
-                }
-
-                if (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
-                    CurrMovement.RightClick.Changed(PrevMovement.RightClick) ||
-                    CurrMovement.MoveLeft.Changed(PrevMovement.MoveLeft) ||
-                    CurrMovement.MoveRight.Changed(PrevMovement.MoveRight) ||
-                    CurrMovement.MoveForward.Changed(PrevMovement.MoveForward) ||
-                    CurrMovement.MoveBack.Changed(PrevMovement.MoveBack) ||
-                    CurrMovement.Jump.Changed(PrevMovement.Jump) ||
-                    CurrMovement.Run.Changed(PrevMovement.Run) ||
-                    CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
-                    CurrMovement.Throw.Changed(PrevMovement.Throw) ||
-                    previous.camera.RotationEuler != current.camera.RotationEuler)
-                {
-                    Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
-                }
-
-                current.camera.Position = localPlayer.position;
-
-                if (!menuPlayer.IsOpened && !Main.MouseControl)
-                {
-                    currMS = Mouse.GetState();
-
-                    if (currMS != prevMS)
-                    {
-                        float scalar = 0.25f;
-
-                        Vector3 camRotation = current.camera.RotationEuler;
-
-                        Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currMS.X, currMS.Y);
-                        prevMS = currMS;
-
-                        if (delta.Length() > float.Epsilon)
-                        {
-                            camRotation.Y += MathHelper.ToRadians(delta.Y) * scalar;
-                            camRotation.X += MathHelper.ToRadians(delta.X) * scalar;
-
-                            if (camRotation.Y > MathHelper.ToRadians(89))
-                                camRotation.Y = MathHelper.ToRadians(89);
-                            else if (camRotation.Y < -MathHelper.ToRadians(89))
-                                camRotation.Y = -MathHelper.ToRadians(89);
-
-                            current.camera.RotationEuler = camRotation;
-                            
-                            localPlayer.rotation = current.camera.Rotation;
-                            //localPlayer.rotation = Quaternion.CreateFromYawPitchRoll(-current.camera.RotationEuler.Y, -current.camera.RotationEuler.X, 0);
-                        }
-                    }
-                }
-            }
+            LocalPlayer?.Update(this, deltaTime);
         }
 
         public void Render(GraphicsDevice device, double deltaTime)

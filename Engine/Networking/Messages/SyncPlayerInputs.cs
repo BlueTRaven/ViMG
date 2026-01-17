@@ -64,7 +64,7 @@ namespace Engine.Networking.Messages
             netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
             netMessage.channel = (int)NetworkMessage.Channels.Inputs;
 
-            var currentInputs = GS.GetClient().CurrMovement;
+            var currentInputs = GS.GetClient().LocalPlayer?.CurrMovement ?? new();
             var localPlayerRef = GS.GetClient().Current().entities.GetLocalPlayerRef();
             var localPlayer = GS.GetClient().Current().entities.GetByRef(localPlayerRef);
             //var player = GS.GetWorld().GetLocalPlayer();
@@ -94,7 +94,7 @@ namespace Engine.Networking.Messages
             netMessage.writer.Put(localPlayer.position.Y);
             netMessage.writer.Put(localPlayer.position.Z);
             netMessage.writer.Put((ushort)inputTypes);
-            netMessage.writer.Put((byte)GS.GetClient().LocalPlayer);
+            netMessage.writer.Put((byte)GS.GetClient().LocalPlayerIndex);
 
             netMessage.Send();
         }
@@ -179,9 +179,6 @@ namespace Engine.Networking.Messages
             var inp = qinput.inputs;
 
             player.highlightIndex = qinput.highlightIndex;
-            //Console.WriteLine("highlight {0}", qinput.highlightIndex);
-
-            //player.CurrMovement.SetInputBitSet(player.PrevMovement, (uint)inp);
             player.CurrMovement.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
             player.CurrMovement.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
             player.CurrMovement.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
@@ -194,14 +191,6 @@ namespace Engine.Networking.Messages
             player.CurrMovement.Throw.recordedPress = (inp & InputTypes.Throw) == InputTypes.Throw;
 
             player.Rotation = qinput.rotation;
-            //player.highlightIndex = qinput.heldItem;
-            //var quat = qinput.rotation;
-            //var roll = float.Atan2(2 * (quat.W * quat.X + quat.Y * quat.Z), 1 - 2 * (quat.X * quat.X + quat.Y * quat.Y));
-            //var pitch = float.Asin(2 * (quat.W * quat.Y - quat.Z * quat.X));
-            //var yaw = float.Atan2(2 * (quat.W * quat.Z + quat.X * quat.Y), 1 - 2 * (quat.Y * quat.Y + quat.Z * quat.Z));
-            //player.Rotation = new Vector3(yaw, pitch, roll);
-            //player.Rotation = qinput.rotation;
-            //player.SetPositionWithOffset(qinput.position);
         }
     }
 }

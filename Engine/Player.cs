@@ -520,7 +520,6 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			PrevMovement = CurrMovement;
 			Get(out var get);
 			CurrMovement.Update(ref get, deltaTime);
 			//Position = get.position;
@@ -691,7 +690,7 @@ namespace ViMG
 					state = State.Normal;
 			}
 
-            contactChecker.Update(world, physicsHandle);
+            contactChecker.Update(world.PhysicsInfo, physicsHandle);
 
 			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
 				hasMoved = true;
@@ -836,9 +835,11 @@ namespace ViMG
 			else preUseTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
+
+            PrevMovement = CurrMovement;
         }
 
-		private void UpdateCollisionType()
+        private void UpdateCollisionType()
 		{
 			inWater = false;
 			inRope = false;
@@ -1072,7 +1073,7 @@ namespace ViMG
 
 			if (IsInControl)
 			{
-				if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(CurrMovement.Jump))
+				if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
 				{
 					hasMoved = true;
 					if (!contactChecker.OnGround)

@@ -624,12 +624,9 @@ namespace Engine.Networking.Messages
                     {
                         if (typeId == playerTypeId)
                         {
-                            if (state.counters[3] == client.LocalPlayer)
+                            if (state.counters[3] == client.LocalPlayerIndex)
                             {
-                                if (type == SyncStateType.MajorSync)
-                                    client.CurrMovement = new Common.PlayerMovement(reference, state.counters[3], true);
-
-                                if (client.Current().entities.IsActive(ref reference))
+                                if (client.Current().entities.IsActive(ref reference) && client.LocalPlayer != null)
                                 {
                                     // Update player
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
@@ -637,14 +634,15 @@ namespace Engine.Networking.Messages
                                     // Always keep client's rotation
                                     state.rotation = player.rotation;
                                     player = state;
-                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayerBody].Pose.Position = state.position.ToNumerics();
-                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayerBody].Velocity.Linear = state.velocity.ToNumerics();
+                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Pose.Position = state.position.ToNumerics();
+                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Velocity.Linear = state.velocity.ToNumerics();
                                 }
                                 else
                                 {
                                     // Create a new player
                                     client.Current().entities.Set(reference, typeName, state);
-                                    (client.LocalPlayerBody, _) = client.CurrMovement.MakeBody(state.position, client.ChunkManager.PhysicsInfo);
+                                    client.LocalPlayer = new Clients.ClientLocalPlayer(ref reference, ref state);
+                                    client.LocalPlayer.MakeNew(ref state, client.ChunkManager.PhysicsInfo);
                                 }
                             }
                             else
@@ -698,9 +696,10 @@ namespace Engine.Networking.Messages
                     if (playerIndex != -1)
                     {
                         client.Current().entities.RemovePlayer(reference);
-                        if (playerIndex == client.LocalPlayer)
+                        if (playerIndex == client.LocalPlayerIndex)
                         {
-                            client.ChunkManager.PhysicsInfo.Simulation.Bodies.Remove(client.LocalPlayerBody);
+                            client.LocalPlayer.Unload(client.ChunkManager.PhysicsInfo);
+                            client.LocalPlayer = null;
                         }
                     }
 
