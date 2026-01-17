@@ -18,7 +18,7 @@ namespace Engine.Clients
     public class ClientChunkManager
     {
         private readonly GraphicsDevice device;
-        private readonly PhysicsInfo physicsInfo;
+        public readonly PhysicsInfo PhysicsInfo;
         public ClientCubeView CubeView;
         public ChunkMesher ChunkMesher;
         public CopiedChunkManager CopyManager;
@@ -31,7 +31,7 @@ namespace Engine.Clients
         public ClientChunkManager(GraphicsDevice device, PhysicsInfo physicsInfo)
         {
             this.device = device;
-            this.physicsInfo = physicsInfo;
+            this.PhysicsInfo = physicsInfo;
             CubeTrackers = new CubeTrackers();
             ChunkIO = new ChunkManagerIO(SizeInChunks, "", 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
@@ -64,7 +64,7 @@ namespace Engine.Clients
                 ChunkMesher.CollisionMesher?.UnloadAll();
                 ChunkMesher.RenderMesher.FinishFlush();
                 ChunkMesher.RenderMesher.UnloadAll();
-                ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
+                ChunkMesher = new ChunkMesher(SizeInChunks, PhysicsInfo, device);
                 //ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
             }
         }

@@ -3,6 +3,7 @@ using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
 using Engine;
+using Engine.Common;
 using Engine.Entities;
 using Engine.Items;
 using Engine.Networking;
@@ -144,10 +145,15 @@ namespace ViMG
 
 			public float deadTime;
 			public float damageTime;
+			public float inputLockupTimer;
 
 			public int maxHealth;
 			public int maxMagic;
             public int magic;
+
+			public float accel;
+			public float speed;
+			public float runSpeed;
         }
 
         public const float INTERACT_DISTANCE = Cube.CUBE_SCALE * 4.5f;
@@ -172,10 +178,6 @@ namespace ViMG
 		public Quaternion Rotation { get; set; }
 		public Vector3 Facing;	//The direction the player is facing.
 
-		private static float moveSpeed = Cube.CUBE_SCALE * 0.8f;
-		public static Vector3 MaxVelocity = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
-		public static Vector3 MaxVelocitySwimming = new Vector3(2.8f) * Cube.CUBE_SCALE;
-		public static Vector3 MaxVelocitySwimmingFast = new Vector3(5.6f) * Cube.CUBE_SCALE;
 		public static float MaxFallVelocity;
 		private float fallStartY;   //the upper-most point of the current jump. If the player hits something > FALL_HEIGHT_FATAL, they will die.
 		private const float FALL_HEIGHT_DAMAGE_START = Cube.CUBE_SCALE * 5;
@@ -315,30 +317,12 @@ namespace ViMG
 		public bool IsLocalPlayer =>
             Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
-		public bool IsInControl => inputLockupTimer <= 0 && !hasMenuOpen;
-		// Used for multiplayer sync
-		public bool hasMenuOpen;
+		public bool IsInControl => inputLockupTimer <= 0;
 
 		public double TimeSinceInputSynced;
 
-        public PlayerInput prevMoveLeft;
-        public PlayerInput prevMoveRight;
-        public PlayerInput prevMoveForward;
-        public PlayerInput prevMoveBack;
-        public PlayerInput prevJump;
-        public PlayerInput prevRun;
-        public PlayerInput prevMoveDown;
-        public PlayerInput prevLeftClick;
-        public PlayerInput prevRightClick;
-        public PlayerInput MoveLeft;
-		public PlayerInput MoveRight;
-        public PlayerInput MoveForward;
-        public PlayerInput MoveBack;
-        public PlayerInput Jump;
-        public PlayerInput Run;
-        public PlayerInput MoveDown;
-        public PlayerInput LeftClick;
-        public PlayerInput RightClick;
+		public PlayerMovement CurrMovement;
+		public PlayerMovement PrevMovement;
 
 		private bool isNew = false;
 
@@ -448,57 +432,19 @@ namespace ViMG
 			Health = MaxHealth;
 			Magic = MaxMagic;
 
-			var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
-			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
-			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
-				new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
-			contactChecker = new ContactChecker();
+            CurrMovement = new PlayerMovement(world.EntityManager.GetReference(this), playerIndex, false);
 
-			world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
+			(physicsHandle, physicsShapeIndex) = CurrMovement.MakeBody(Position, world.PhysicsInfo);
+			contactChecker = new ContactChecker();
+   //         var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
+			//physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
+			//physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
+			//	new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
+
+			//world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
 			Console.WriteLine("Local id: {0} our id: {1}", world.localPlayerIndex, playerIndex);
 
-			//if (IsLocalPlayer)
-			//{
-			//	Console.WriteLine("Init local");
-			//	menuPlayer = new MenuPlayer(Main.gameStateManager, world.EntityManager.GetReference(this), heldInventory, this.inventory, craftInventory, accessoryInventory, gearInventory);
-			//	menuPlayer.Close();
-			//	Main.gameStateManager.TheIsland.SetMenu(menuPlayer);
-			//	if (!Main.IsHeadless)
-			//	{
-			//		menuPlayer.LoadContent();
-			//	}
-
-			//	if (Main.Args.startPaused)
-			//	{
-			//		Main.gameStateManager.TheIsland.PushMenu(new MenuPause(Main.gameStateManager, world));
-			//	}
-			//}
-
-			//if (IsLocalPlayer)
-			//{
-			//	MoveLeft = new PlayerInput(Keys.A);
-			//	MoveRight = new PlayerInput(Keys.D);
-			//	MoveForward = new PlayerInput(Keys.W);
-			//	MoveBack = new PlayerInput(Keys.S);
-			//	Jump = new PlayerInput(Keys.Space);
-			//	Run = new PlayerInput(Keys.LeftShift);
-			//	MoveDown = new PlayerInput(Keys.LeftControl);
-			//	LeftClick = new PlayerInput(MouseInput.LeftButton);
-			//	RightClick = new PlayerInput(MouseInput.RightButton);
-			//}
-			//else
-			//{
-                MoveLeft = PlayerInput.NonLocalInput(Keys.A, true);
-                MoveRight = PlayerInput.NonLocalInput(Keys.D, true);
-                MoveForward = PlayerInput.NonLocalInput(Keys.W, true);
-                MoveBack = PlayerInput.NonLocalInput(Keys.S, true);
-                Jump = PlayerInput.NonLocalInput(Keys.Space, true);
-                Run = PlayerInput.NonLocalInput(Keys.LeftShift, true);
-                MoveDown = PlayerInput.NonLocalInput(Keys.LeftControl, true);
-                LeftClick = PlayerInput.NonLocalInput(MouseInput.LeftButton, true);
-                RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, true);
-            //}
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
@@ -574,10 +520,21 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
+			PrevMovement = CurrMovement;
+			Get(out var get);
+			CurrMovement.Update(ref get, deltaTime);
+			//Position = get.position;
+			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity = get.velocity.ToNumerics();
+
             if (state != State.Noclip)
 				Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position + BODY_OFFSET;
+			else
+			{
+				world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = get.position.ToNumerics();
+				Position = get.position;
+            }
 
-            hasMoved = false;
+			hasMoved = false;
 			hasRotated = false;
 
 			var inventory = world.InventoryManager.Get(this.inventory);
@@ -599,15 +556,6 @@ namespace ViMG
 						state = State.Normal;
 					else state = State.Noclip;
 				}
-
-				//if ((Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened) || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer) 
-				//{
-				//	hasMenuOpen = true;
-				//}
-				//else
-				//{
-				//	hasMenuOpen = false;
-				//}
 			}
 			else
 			{
@@ -866,20 +814,7 @@ namespace ViMG
 			if (world.ChunkManager.IsInWorldBounds(lookAtResult.end))
 				this.LookAtEnd = CubePosition.FromWorldSpace(lookAtResult.end);
 
-			if (IsLocalPlayer)
-			{
-				if (lookAtResult.hasHit && world.ChunkManager.CubeView.GetCube(LookAtPos)
-					.GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(world, LookAtPos))
-				{
-					//? crosshair
-					Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
-				}
-				else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
-
-				UpdateMouse();
-
-				UpdateThrowItem();
-			}
+			UpdateThrowItem();
 
             hitboxTimer -= (float)deltaTime;
 
@@ -901,26 +836,6 @@ namespace ViMG
 			else preUseTimer -= (float)deltaTime;
 
 			alive += (float)deltaTime;
-
-            prevMoveLeft = MoveLeft;
-            prevMoveRight = MoveRight;
-            prevMoveForward = MoveForward;
-            prevMoveBack = MoveBack;
-            prevJump = Jump;
-            prevRun = Run;
-            prevMoveDown = MoveDown;
-            prevLeftClick = LeftClick;
-			prevRightClick = RightClick;
-
-            MoveLeft.Update();
-            MoveRight.Update();
-            MoveForward.Update();
-            MoveBack.Update();
-            Jump.Update();
-            Run.Update();
-            MoveDown.Update();
-            LeftClick.Update();
-            RightClick.Update();
         }
 
 		private void UpdateCollisionType()
@@ -1106,63 +1021,9 @@ namespace ViMG
 
 		private void UpdateMovementWater(double deltaTime)
 		{
-			Vector3 actualMaxVel = MaxVelocitySwimming;
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear;
 
-			bool movementPressed = false;
-			//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
-
-			if (Run.Pressed())
-			{
-				IsRunning = true;
-				actualMaxVel = MaxVelocitySwimmingFast;
-			}
-
-			float actualAcceleration = moveSpeed + stats.Acceleration;
-
-			if (IsRunning)
-			{
-				actualMaxVel *= 1 + stats.RunSpeed;
-				actualAcceleration *= 2;
-			}
-
-			actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
-
-			Vector3 toAddToVelocity = Vector3.Zero;
-
-			if (MoveForward.Pressed())
-			{
-				toAddToVelocity -= Vector3.Normalize((this as IRotatable).Forward) * actualAcceleration;
-				movementPressed = true;
-			}
-			if (MoveBack.Pressed())
-			{
-				toAddToVelocity += Vector3.Normalize((this as IRotatable).Forward) * actualAcceleration;
-				movementPressed = true;
-			}
-			if (MoveLeft.Pressed())
-			{
-				toAddToVelocity -= Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
-				movementPressed = true;
-			}
-			if (MoveRight.Pressed())
-			{
-				toAddToVelocity += Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
-				movementPressed = true;
-			}
-
-			if (Jump.Pressed())
-			{
-				toAddToVelocity += Vector3.Normalize(Vector3.Up) * actualAcceleration;
-				movementPressed = true;
-			}
-			if (MoveDown.Pressed())
-			{
-				toAddToVelocity -= Vector3.Normalize(Vector3.Up) * actualAcceleration;
-				movementPressed = true;
-			}
-
-			if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed(prevJump))
+            if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
 			{
 				hasMoved = true;
 				if (!contactChecker.OnGround)
@@ -1177,32 +1038,8 @@ namespace ViMG
 				}
 			}
 
-			Vector3 velXZ = velocity;
-			float maxVelXZ = actualMaxVel.Length();
-
-			if (velXZ.Length() > maxVelXZ)
-			{
-				//already above max velocity
-				//in this scenario just subtract some velocity.
-				Vector3 xz = velXZ;
-				xz -= Vector3.Normalize(xz) * actualAcceleration;
-				velocity = xz;
-			}
-			if ((velocity + toAddToVelocity).Length() > maxVelXZ)
-			{
-				//not above max velocity; set velocity to max velocity.
-				velXZ = Vector3.Normalize((velocity + toAddToVelocity)) * maxVelXZ;
-				velocity = velXZ;
-			}
-			else
-			{
-				velocity += toAddToVelocity;
-			}
-
-			if (movementPressed || velocity.Length() > float.Epsilon)
+			if (velocity.Length() > float.Epsilon)
 				hasMoved = true;
-
-			velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime;
 
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
 
@@ -1214,31 +1051,7 @@ namespace ViMG
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = Position.ToNumerics();
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = Vector3.Zero.ToNumerics();
 
-            const float MIN_CAM_SPEED = Cube.CUBE_SCALE / 4f;
-            const float MAX_CAM_SPEED = MIN_CAM_SPEED * 8;
-
-            float moveSpeed = MIN_CAM_SPEED;
-
-            if (Main.inputManager.IsHeld(Keys.LeftShift))
-                moveSpeed = MAX_CAM_SPEED;
-
             Vector3 oldPos = Position;
-
-			if (IsLocalPlayer)
-			{
-				if (Main.inputManager.IsPressed(Keys.W))
-					Position -= Vector3.Normalize((this as IRotatable).ForwardYawOnly) * moveSpeed;
-				if (Main.inputManager.IsPressed(Keys.S))
-					Position += Vector3.Normalize((this as IRotatable).ForwardYawOnly) * moveSpeed;
-				if (Main.inputManager.IsPressed(Keys.A))
-					Position -= Vector3.Normalize((this as IRotatable).Right) * moveSpeed;
-				if (Main.inputManager.IsPressed(Keys.D))
-					Position += Vector3.Normalize((this as IRotatable).Right) * moveSpeed;
-				if (Main.inputManager.IsPressed(Keys.Space))
-					Position += Vector3.Up * moveSpeed;
-				if (Main.inputManager.IsPressed(Keys.LeftControl))
-					Position -= Vector3.Up * moveSpeed;
-			}
 
             if (Position != oldPos)
                 hasMoved = true;
@@ -1251,54 +1064,15 @@ namespace ViMG
 
 		private float DEBUGTimeSkipHeldTime;
 
-        private void UpdateMovement(double deltaTime)
+		private void UpdateMovement(double deltaTime)
 		{
-			Vector3 actualMaxVel = MaxVelocity;
-
 			bool movementPressed = false;
 			//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
 			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
 
-			if (!Run.Pressed())
-				IsRunning = false;
-
 			if (IsInControl)
 			{
-				if (contactChecker.OnGround && Run.Pressed())
-					IsRunning = true;
-
-				float actualAcceleration = moveSpeed + stats.Acceleration;
-
-				if (IsRunning)
-				{
-					actualMaxVel *= 1 + stats.RunSpeed;
-					actualAcceleration *= 2;
-				}
-
-				actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
-
-				Vector3 toAddToVelocity = Vector3.Zero;
-				if (MoveForward.Pressed())
-				{
-					toAddToVelocity -= Vector3.Normalize((this as IRotatable).ForwardYawOnly) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (MoveBack.Pressed())
-				{
-					toAddToVelocity += Vector3.Normalize((this as IRotatable).ForwardYawOnly) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (MoveLeft.Pressed())
-				{
-					toAddToVelocity -= Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (MoveRight.Pressed())
-				{
-					toAddToVelocity += Vector3.Normalize((this as IRotatable).Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed(prevJump))
+				if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(CurrMovement.Jump))
 				{
 					hasMoved = true;
 					if (!contactChecker.OnGround)
@@ -1313,28 +1087,6 @@ namespace ViMG
 					}
 				}
 
-				Vector2 velXZ = velocity.XZ();
-				float maxVelXZ = actualMaxVel.XZ().Length();
-
-				if (velXZ.Length() > maxVelXZ)
-				{
-					//already above max velocity
-					//in this scenario just subtract some velocity.
-					Vector2 xz = velXZ;
-					xz -= Vector2.Normalize(xz) * actualAcceleration;
-					velocity = new Vector3(xz.X, velocity.Y, xz.Y);
-				}
-				if ((velocity + toAddToVelocity).XZ().Length() > maxVelXZ)
-				{
-					//not above max velocity; set velocity to max velocity.
-					velXZ = Vector2.Normalize((velocity + toAddToVelocity).XZ()) * maxVelXZ;
-					velocity = new Vector3(velXZ.X, velocity.Y, velXZ.Y);
-				}
-				else
-				{
-					velocity += toAddToVelocity;
-				}
-
 				UpdatePerformAction();
 			}
 
@@ -1344,36 +1096,33 @@ namespace ViMG
 				Facing = Vector3.Normalize(velocity);
 			}
 
-			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && !Jump.Pressed())
+			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && !CurrMovement.Jump.Pressed())
 			{
 				velocity.Y = Cube.CUBE_SCALE * 3.2f;
 			}
 
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
 
-			UpdateMaybeDash(deltaTime);
+			//UpdateMaybeDash(deltaTime);
 
-            DEBUGTimeSkipHeldTime += (float)deltaTime;
+			DEBUGTimeSkipHeldTime += (float)deltaTime;
 
-			if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+			if (Main.inputManager.JustPressed(Keys.T))
 			{
-				if (Main.inputManager.JustPressed(Keys.T))
-				{
-					DEBUGTimeSkipHeldTime = 0;
-					world.TimeScale = 2f;
-				}
-
-				if (Main.inputManager.JustReleased(Keys.T))
-				{
-					world.TimeScale = 1f;
-
-					if (DEBUGTimeSkipHeldTime <= 0.25f)
-						world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-
-					DEBUGTimeSkipHeldTime = 0;
-				}
+				DEBUGTimeSkipHeldTime = 0;
+				world.TimeScale = 2f;
 			}
-        }
+
+			if (Main.inputManager.JustReleased(Keys.T))
+			{
+				world.TimeScale = 1f;
+
+				if (DEBUGTimeSkipHeldTime <= 0.25f)
+					world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+
+				DEBUGTimeSkipHeldTime = 0;
+			}
+		}
 
 		private void UpdatePerformAction()
 		{
@@ -1381,7 +1130,7 @@ namespace ViMG
 
 			if (IsInControl && useTimer <= 0)
             {
-				if (LeftClick.Pressed())
+				if (CurrMovement.LeftClick.Pressed())
                 {
                     if (inventory.Get(highlightIndex).item != null && 
 						inventory.Get(highlightIndex).item.LeftClick(this, inventory, highlightIndex, 
@@ -1403,7 +1152,7 @@ namespace ViMG
                     }
                 }
 
-                if (RightClick.Pressed())
+                if (CurrMovement.RightClick.Pressed())
                 {
                     bool performedAction = false;
                     var entityTracking = world.EntityManager.GetEntityTrackingPosition(LookAtPos).GetOrDefault(null);
@@ -1439,7 +1188,7 @@ namespace ViMG
 					{
 						Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-						if (cube.CanRightClick(world, LookAtPos))
+						if (cube.CanRightClick(LookAtPos))
 						{
 							cube.OnRightClick(world, LookAtPos);
                             SyncCubeAction.Instance.QueueAction(new SyncCubeAction.CubeAction
@@ -1457,51 +1206,51 @@ namespace ViMG
             }
         }
 
-		private void UpdateMaybeDash(double deltaTime)
-        {
-			if (contactChecker.OnGround)
-            {
-				dashResetTimer -= (float)deltaTime;
-            }
+		//private void UpdateMaybeDash(double deltaTime)
+  //      {
+		//	if (contactChecker.OnGround)
+  //          {
+		//		dashResetTimer -= (float)deltaTime;
+  //          }
 
-			if (dashResetTimer <= 0)
-			{
-				if (stats.DashEffect != null && stats.DashNum > 0)
-				{
-					dashDoublePressTimer -= (float)deltaTime;
+		//	if (dashResetTimer <= 0)
+		//	{
+		//		if (stats.DashEffect != null && stats.DashNum > 0)
+		//		{
+		//			dashDoublePressTimer -= (float)deltaTime;
 
-					if (dashSubstate == 0)
-					{
-						if (Run.JustPressed(prevRun))
-						{
-							dashSubstate++;
-							dashDoublePressTimer = DOUBLEPRESS_DURATION;
-						}
-					}
-					else if (dashSubstate == 1)
-					{
-						if (dashDoublePressTimer >= 0)
-						{
-							if (Run.JustPressed(prevRun))
-							{
-								state = State.Dash;
+		//			if (dashSubstate == 0)
+		//			{
+		//				if (Run.JustPressed(prevRun))
+		//				{
+		//					dashSubstate++;
+		//					dashDoublePressTimer = DOUBLEPRESS_DURATION;
+		//				}
+		//			}
+		//			else if (dashSubstate == 1)
+		//			{
+		//				if (dashDoublePressTimer >= 0)
+		//				{
+		//					if (Run.JustPressed(prevRun))
+		//					{
+		//						state = State.Dash;
 
-								Vector3 vel = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
-								stats.DashEffect.StartDash(this, ref vel, out dashDirection, out dashTime, in stats);
-								world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = vel.ToNumerics();
-								dashTimer = dashTime;
+		//						Vector3 vel = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
+		//						stats.DashEffect.StartDash(this, ref vel, out dashDirection, out dashTime, in stats);
+		//						world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = vel.ToNumerics();
+		//						dashTimer = dashTime;
 
-								dashSubstate = 0;
-							}
-						}
-						else
-						{
-							dashSubstate = 0;
-						}
-					}
-				}
-			}
-        }
+		//						dashSubstate = 0;
+		//					}
+		//				}
+		//				else
+		//				{
+		//					dashSubstate = 0;
+		//				}
+		//			}
+		//		}
+		//	}
+  //      }
 
 		private void UpdateDash(double deltaTime)
         {
@@ -1624,77 +1373,11 @@ namespace ViMG
 			}
 		}
 
-		private unsafe void UpdateMouse()
-		{
-			//if (hasMoved && IsLocalPlayer)
-			//{
-			//	//Works fine, not geometry-aware
-			//	//Main.camera.Position = Position + Main.camera.Forward * Cube.CUBE_SCALE * 2f;
-
-			//	int intersectionCount = 0;
-
-			//	RayHit hit = new RayHit();
-			//	//camera.Forward is inverted, Forward is towards camera (i.e. backward). Whoopsie
-			//	SweepHitHandler handler = new SweepHitHandler(&hit, physicsHandle, &intersectionCount);
-
-			//	world.PhysicsInfo.Simulation.Sweep(new Sphere(Cube.CUBE_SCALE * 0.55f), new RigidPose(Position.ToNumerics()),
-			//		new BodyVelocity((Vector3.Normalize(Main.camera.Forward) * 8).ToNumerics()), desiredThirdPersonDistance, 
-			//		world.PhysicsInfo.GlobalBufferPool, ref handler);
-
-			//	float min = desiredThirdPersonDistance;
-   //             if (intersectionCount > 0)
-			//	{
-			//		if (handler.Hit->Hit)
-			//			min = float.Min(handler.Hit->T, min);
-			//	}
-
-			//	currentThirdPersonDistance = min;
-
-			//	const float maxToSide = Cube.CUBE_SCALE * 0.65f;
-			//	float pToSide = currentThirdPersonDistance / THIRDPERSON_MAX_DISTANCE;
-
-			//	Main.camera.Position = Position + Main.camera.Forward * currentThirdPersonDistance + Main.camera.Right * (maxToSide * pToSide);
-			//}
-
-			//if (menuPlayer.IsOpened || Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-			//	return;
-
-			//currentMS = Mouse.GetState();
-
-			//if (currentMS != previousMS)
-			//{
-			//	float scalar = 0.25f;
-
-			//	Vector3 camRotation = Rotation;
-
-			//	Vector2 delta = (Options.CurrentWindowResolution.ToVector2() / 2f) - new Vector2(currentMS.X, currentMS.Y);
-			//	previousMS = currentMS;
-			//	previousMousePosition = new Vector2(currentMS.X, currentMS.Y);
-
-			//	if (delta.Length() > float.Epsilon)
-			//	{
-			//		hasRotated = true;
-
-			//		camRotation.Y -= MathHelper.ToRadians(delta.X) * scalar;
-			//		camRotation.X -= MathHelper.ToRadians(delta.Y) * scalar;
-
-			//		if (camRotation.X > MathHelper.ToRadians(89))
-			//			camRotation.X = MathHelper.ToRadians(89);
-			//		else if (camRotation.X < -MathHelper.ToRadians(89))
-			//			camRotation.X = -MathHelper.ToRadians(89);
-
-			//		Rotation = camRotation;
-
-			//		Main.camera.Rotation = Rotation;
-			//	}
-			//}
-		}
-
 		private void UpdateThrowItem()
 		{
             var inventory = world.InventoryManager.Get(this.inventory);
 
-            if (Main.inputManager.JustPressed(Keys.Q))
+            if (CurrMovement.Throw.JustPressed(PrevMovement.Throw))
             {
                 int inventorySlot = highlightIndex;
 
@@ -2193,7 +1876,7 @@ namespace ViMG
 			SaveHelper.SaveCubePosition(saveBytes, SpawnPosition);
 
 			if (world != null)
-				SaveHelper.SaveInt32(saveBytes, (int)GetInputBitSet());
+				SaveHelper.SaveInt32(saveBytes, 0);
 			else SaveHelper.SaveInt32(saveBytes, 0);
 
 			//Get(out BasicState state);
@@ -2256,8 +1939,6 @@ namespace ViMG
 			if (version >= 14)
 			{
 				uint bitset = (uint)SaveHelper.LoadInt32(loadBytes, ref index);
-				if (world != null)
-					SetInputBitSet(bitset);
 			}
 
 			if (version >= 11 && version < 19)
@@ -2283,7 +1964,7 @@ namespace ViMG
 			{
 				position = Position,
 				velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
-				rotation = Quaternion.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z),
+				rotation = Rotation,
 				health = Health,
 				state = (int)this.state,
 				timers = { 
@@ -2294,7 +1975,7 @@ namespace ViMG
 				},
 				counters =
 				{
-					[0] = this.hasMenuOpen ? 1 : 0,
+					[0] = 0,
 					// TODO these should probably go in extra data
 					[2] = playerUuid,
 					[3] = playerIndex,
@@ -2316,6 +1997,7 @@ namespace ViMG
 
 				damageTime = damageTime,
 				deadTime = deadTime,
+				inputLockupTimer = inputLockupTimer,
 
 				magic = Magic,
 				maxHealth = GetCalculatedMaxHealth(),
@@ -2345,7 +2027,6 @@ namespace ViMG
 				this.preUseTimer = state.timers[1];
 				this.invulnTimer = state.timers[2];
 				this.inputLockupTimer = state.timers[3];
-				this.hasMenuOpen = state.counters[0] == 1;
 			}
         }
 
@@ -2353,60 +2034,6 @@ namespace ViMG
 		{
             this.Position = position;
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = (position - BODY_OFFSET).ToNumerics();
-        }
-
-        public uint GetInputBitSet()
-		{
-			SyncPlayerInputs.InputTypes pressed = SyncPlayerInputs.InputTypes.None;
-			SyncPlayerInputs.InputTypes prevPressed = SyncPlayerInputs.InputTypes.None;
-
-            if (Jump.recordedPress) pressed |= SyncPlayerInputs.InputTypes.Jump;
-            if (LeftClick.recordedPress) pressed |= SyncPlayerInputs.InputTypes.LeftClick;
-            if (MoveBack.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveBack;
-            if (MoveDown.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveDown;
-            if (MoveForward.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveForward;
-            if (MoveLeft.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveLeft;
-            if (MoveRight.recordedPress) pressed |= SyncPlayerInputs.InputTypes.MoveRight;
-            if (RightClick.recordedPress) pressed |= SyncPlayerInputs.InputTypes.RightClick;
-            if (Run.recordedPress) pressed |= SyncPlayerInputs.InputTypes.Run;
-
-            if (prevJump.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.Jump;
-            if (prevLeftClick.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.LeftClick;
-            if (prevMoveBack.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveBack;
-            if (prevMoveDown.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveDown;
-            if (prevMoveForward.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveForward;
-            if (prevMoveLeft.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveLeft;
-            if (prevMoveRight.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.MoveRight;
-            if (prevRightClick.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.RightClick;
-            if (prevRun.recordedPress) prevPressed |= SyncPlayerInputs.InputTypes.Run;
-
-			return ((uint)pressed << sizeof(ushort)) | (uint)prevPressed;
-        }
-
-		public void SetInputBitSet(uint bits)
-		{
-            SyncPlayerInputs.InputTypes presseds = (SyncPlayerInputs.InputTypes)(ushort)(bits >> sizeof(ushort));
-            SyncPlayerInputs.InputTypes prevPresseds = (SyncPlayerInputs.InputTypes)(ushort)bits;
-
-            Jump.recordedPress = (presseds & SyncPlayerInputs.InputTypes.Jump) == SyncPlayerInputs.InputTypes.Jump;
-            LeftClick.recordedPress = (presseds & SyncPlayerInputs.InputTypes.LeftClick) == SyncPlayerInputs.InputTypes.LeftClick;
-            MoveBack.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveBack) == SyncPlayerInputs.InputTypes.MoveBack;
-            MoveDown.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveDown) == SyncPlayerInputs.InputTypes.MoveDown;
-            MoveForward.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveForward) == SyncPlayerInputs.InputTypes.MoveForward;
-            MoveLeft.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveLeft) == SyncPlayerInputs.InputTypes.MoveLeft;
-            MoveRight.recordedPress = (presseds & SyncPlayerInputs.InputTypes.MoveRight) == SyncPlayerInputs.InputTypes.MoveRight;
-            RightClick.recordedPress = (presseds & SyncPlayerInputs.InputTypes.RightClick) == SyncPlayerInputs.InputTypes.RightClick;
-            Run.recordedPress = (presseds & SyncPlayerInputs.InputTypes.Run) == SyncPlayerInputs.InputTypes.Run;
-
-            prevJump.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.Jump) == SyncPlayerInputs.InputTypes.Jump;
-            prevLeftClick.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.LeftClick) == SyncPlayerInputs.InputTypes.LeftClick;
-            prevMoveBack.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveBack) == SyncPlayerInputs.InputTypes.MoveBack;
-            prevMoveDown.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveDown) == SyncPlayerInputs.InputTypes.MoveDown;
-            prevMoveForward.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveForward) == SyncPlayerInputs.InputTypes.MoveForward;
-            prevMoveLeft.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveLeft) == SyncPlayerInputs.InputTypes.MoveLeft;
-            prevMoveRight.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.MoveRight) == SyncPlayerInputs.InputTypes.MoveRight;
-            prevRightClick.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.RightClick) == SyncPlayerInputs.InputTypes.RightClick;
-            prevRun.recordedPress = (prevPresseds & SyncPlayerInputs.InputTypes.Run) == SyncPlayerInputs.InputTypes.Run;
         }
 
         public bool InventoryAction(int activatingPlayer, int action)

@@ -32,6 +32,7 @@ namespace Engine.Networking.Messages
             MoveDown = 1 << 7,
             LeftClick = 1 << 8,
             RightClick = 1 << 9,
+            Throw = 1 << 10,
         }
 
         private struct QueuedInput
@@ -60,7 +61,7 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
-            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
             netMessage.channel = (int)NetworkMessage.Channels.Inputs;
 
             var currentInputs = GS.GetClient().CurrMovement;
@@ -69,6 +70,7 @@ namespace Engine.Networking.Messages
             //var player = GS.GetWorld().GetLocalPlayer();
             //if (player == null || player.TimeInitialized == 0) return;
 
+            //currentInputs.GetInputBitSet(GS.GetClient().PrevMovement);
             InputTypes inputTypes = InputTypes.None;
             if (currentInputs.Jump.Pressed()) inputTypes |= InputTypes.Jump;
             if (currentInputs.LeftClick.Pressed()) inputTypes |= InputTypes.LeftClick;
@@ -79,6 +81,7 @@ namespace Engine.Networking.Messages
             if (currentInputs.MoveRight.Pressed()) inputTypes |= InputTypes.MoveRight;
             if (currentInputs.RightClick.Pressed()) inputTypes |= InputTypes.RightClick;
             if (currentInputs.Run.Pressed())  inputTypes |= InputTypes.Run;
+            if (currentInputs.Throw.Pressed()) inputTypes |= InputTypes.Throw;
 
             netMessage.writer.Put(Main.Time);
             netMessage.writer.Put(Main.Frame);
@@ -178,15 +181,17 @@ namespace Engine.Networking.Messages
             player.highlightIndex = qinput.highlightIndex;
             //Console.WriteLine("highlight {0}", qinput.highlightIndex);
 
-            player.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
-            player.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
-            player.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
-            player.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
-            player.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
-            player.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
-            player.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
-            player.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
-            player.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
+            //player.CurrMovement.SetInputBitSet(player.PrevMovement, (uint)inp);
+            player.CurrMovement.Jump.recordedPress = (inp & InputTypes.Jump) == InputTypes.Jump;
+            player.CurrMovement.LeftClick.recordedPress = (inp & InputTypes.LeftClick) == InputTypes.LeftClick;
+            player.CurrMovement.MoveBack.recordedPress = (inp & InputTypes.MoveBack) == InputTypes.MoveBack;
+            player.CurrMovement.MoveDown.recordedPress = (inp & InputTypes.MoveDown) == InputTypes.MoveDown;
+            player.CurrMovement.MoveForward.recordedPress = (inp & InputTypes.MoveForward) == InputTypes.MoveForward;
+            player.CurrMovement.MoveLeft.recordedPress = (inp & InputTypes.MoveLeft) == InputTypes.MoveLeft;
+            player.CurrMovement.MoveRight.recordedPress = (inp & InputTypes.MoveRight) == InputTypes.MoveRight;
+            player.CurrMovement.RightClick.recordedPress = (inp & InputTypes.RightClick) == InputTypes.RightClick;
+            player.CurrMovement.Run.recordedPress = (inp & InputTypes.Run) == InputTypes.Run;
+            player.CurrMovement.Throw.recordedPress = (inp & InputTypes.Throw) == InputTypes.Throw;
 
             player.Rotation = qinput.rotation;
             //player.highlightIndex = qinput.heldItem;
@@ -197,7 +202,6 @@ namespace Engine.Networking.Messages
             //player.Rotation = new Vector3(yaw, pitch, roll);
             //player.Rotation = qinput.rotation;
             //player.SetPositionWithOffset(qinput.position);
-            player.hasMenuOpen = qinput.hasMenuOpen;
         }
     }
 }

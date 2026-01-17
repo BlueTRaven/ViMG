@@ -38,7 +38,7 @@ namespace ViMG.Cubes
 			player.GetWorld().EntityManager.Add(new EntityFurnace(position, face));
 		}
 
-        public override bool CanRightClick(World world, CubePosition position)
+        public override bool CanRightClick(CubePosition position)
         {
 			return true;
         }

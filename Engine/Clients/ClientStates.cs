@@ -1,4 +1,5 @@
-﻿using BepuPhysics.Constraints;
+﻿using BepuPhysics;
+using BepuPhysics.Constraints;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
 using Engine.Common.Entities;
@@ -37,6 +38,7 @@ namespace Engine.Clients
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
+        public BodyHandle LocalPlayerBody;
 
         public int LocalPlayer => Main.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
 
@@ -116,11 +118,10 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            ChunkManager.PhysicsInfo.Simulation.Timestep((float)deltaTime);
             ChunkManager.CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
 
             WorldLogic.UpdateSimulation(deltaTime, this);
-
-            PrevMovement = CurrMovement;
 
             var current = Current();
             var previous = Previous(1);
@@ -193,8 +194,9 @@ namespace Engine.Clients
                     menuPlayer.Toggle();
                 }
 
+                PrevMovement = CurrMovement;
                 ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
-                CurrMovement.Update(ref localPlayer);
+                CurrMovement.Update(ref localPlayer, deltaTime);
 
                 if (menuPlayer == null)
                 {
@@ -217,6 +219,7 @@ namespace Engine.Clients
                     CurrMovement.Jump.ForceUnpress();
                     CurrMovement.Run.ForceUnpress();
                     CurrMovement.MoveDown.ForceUnpress();
+                    CurrMovement.Throw.ForceUnpress();
                 }
 
                 if (CurrMovement.LeftClick.Changed(PrevMovement.LeftClick) ||
@@ -228,6 +231,7 @@ namespace Engine.Clients
                     CurrMovement.Jump.Changed(PrevMovement.Jump) ||
                     CurrMovement.Run.Changed(PrevMovement.Run) ||
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
+                    CurrMovement.Throw.Changed(PrevMovement.Throw) ||
                     previous.camera.RotationEuler != current.camera.RotationEuler)
                 {
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);

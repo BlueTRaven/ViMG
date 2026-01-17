@@ -18,7 +18,7 @@ namespace ViMG.Cubes
             Client = new ClientCubeObeliskPlaque(this);
         }
 
-        public override bool CanRightClick(World world, CubePosition position)
+        public override bool CanRightClick(CubePosition position)
         {
             return true;
         }

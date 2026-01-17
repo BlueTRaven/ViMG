@@ -97,7 +97,11 @@ namespace Engine.Entities
 
         public bool Changed(PlayerInput prev)
         {
-            if (forcedUnpress) return true;
+            if (forcedUnpress)
+            {
+                forcedUnpress = false;
+                return true;
+            }
 
             return recordedPress != prev.recordedPress;
         }

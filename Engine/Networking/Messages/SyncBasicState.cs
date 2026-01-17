@@ -563,6 +563,8 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
+            var client = GS.GetClient();
+
             int seq = reader.GetInt();
             if (seq < clientSequence)
             {
@@ -591,11 +593,11 @@ namespace Engine.Networking.Messages
                 SyncStateType type = (SyncStateType)reader.GetByte();
                 if (type == SyncStateType.MinorSync || type == SyncStateType.MajorSync)
                 {
-                    int typeNameMapping = reader.GetUShort();
+                    int typeId = reader.GetUShort();
 
                     // TODO: we might want to base this on the last received state for this entity (before this ack)
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
-                    var state = GS.GetClient().Current().entities.GetByRef(ref reference);
+                    var state = client.Current().entities.GetByRef(ref reference);
                     // Also deserializes extra fields
                     state.DeserializeDelta(reader);
 
@@ -611,40 +613,52 @@ namespace Engine.Networking.Messages
                             // Since SyncChunk is not sent at any particular time, it can arrive before the entities it references are available.
                             // In this scenario we need to mark the chunks as dirty after the entities arrive,
                             // because trackers can be used to change how chunks are meshed (chest front face is different, for instance).
-                            GS.GetClient().ChunkManager.CopyManager.MarkDirty(chunkPos);
-                            GS.GetClient().ChunkManager.ChunkMesher.MarkChunkDirty(chunkPos);
+                            client.ChunkManager.CopyManager.MarkDirty(chunkPos);
+                            client.ChunkManager.ChunkMesher.MarkChunkDirty(chunkPos);
                         }
                     }
 
-                    var typeName = Main.Registry.EntityRegistry.Get((int)typeNameMapping)?.Identifier;
+                    var typeName = Main.Registry.EntityRegistry.Get((int)typeId)?.Identifier;
                     //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)
                     {
-                        if (typeNameMapping == playerTypeId)
+                        if (typeId == playerTypeId)
                         {
-                            if (state.counters[3] == GS.netManagerClient.whoAmI)
+                            if (state.counters[3] == client.LocalPlayer)
                             {
-                                GS.GetClient().CurrMovement = new Common.PlayerMovement(reference, state.counters[3], true);
+                                if (type == SyncStateType.MajorSync)
+                                    client.CurrMovement = new Common.PlayerMovement(reference, state.counters[3], true);
 
-                                if (GS.GetClient().Current().entities.IsActive(ref reference))
+                                if (client.Current().entities.IsActive(ref reference))
                                 {
-                                    // Don't overwrite player rotation
-                                    ref var player = ref GS.GetClient().Current().entities.GetByRefPtr(ref reference);
+                                    // Update player
+                                    // we do this slightly differently since the player entity has some stuff we don't want to overwrite
+                                    ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
+                                    // Always keep client's rotation
                                     state.rotation = player.rotation;
                                     player = state;
+                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayerBody].Pose.Position = state.position.ToNumerics();
+                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayerBody].Velocity.Linear = state.velocity.ToNumerics();
                                 }
                                 else
                                 {
-                                    GS.GetClient().Current().entities.Set(reference, typeName, state);
+                                    // Create a new player
+                                    client.Current().entities.Set(reference, typeName, state);
+                                    (client.LocalPlayerBody, _) = client.CurrMovement.MakeBody(state.position, client.ChunkManager.PhysicsInfo);
                                 }
                             }
                             else
-                                GS.GetClient().Current().entities.Set(reference, typeName, state);
-                            GS.GetClient().Current().entities.AddPlayer(reference, state.counters[2], state.counters[3]);
+                                client.Current().entities.Set(reference, typeName, state);
+                            client.Current().entities.AddPlayer(reference, state.counters[2], state.counters[3]);
                         } 
                         else
                         {
-                            GS.GetClient().Current().entities.Set(reference, typeName, state);
+                            if (client.Current().entities.GetTypeById(reference.id) == playerTypeId) 
+                            {
+                                // We're killing or overwriting a player?
+
+                            }
+                            client.Current().entities.Set(reference, typeName, state);
                         }
                         // Check to make sure we're not trying to create or update an entity that was unloaded this framee
                         //var unloadedThisSeq = entities[0][reference.id].latestSequence == seq && entities[0][reference.id].unloadedThisSeq;
@@ -662,16 +676,16 @@ namespace Engine.Networking.Messages
                         ackI += 1;
                     } else
                     {
-                        Console.WriteLine("Tried to create entity with type id {0}. This id does not exist!", typeNameMapping);
+                        Console.WriteLine("Tried to create entity with type id {0}. This id does not exist!", typeId);
                         // Remove the entity to keep it from being outdated?
-                        GS.GetClient().Current().entities.Remove(reference);
+                        client.Current().entities.Remove(reference);
                     }
                 }
                 else if (type == SyncStateType.Unload)
                 {
                     //Console.WriteLine("Server unloaded {0}", reference.id);
 
-                    GS.GetClient().Current().entities.Remove(reference);
+                    client.Current().entities.Remove(reference);
 
                     clientEntities[reference.id] = new SyncedEntity
                     {
@@ -680,8 +694,15 @@ namespace Engine.Networking.Messages
                         unloadedThisSeq = true,
                     };
 
-                    // NOTE: this will remove the player only if it's actually a player
-                    GS.GetClient().Current().entities.RemovePlayer(reference);
+                    int playerIndex = client.Current().entities.GetPlayerIndex(reference);
+                    if (playerIndex != -1)
+                    {
+                        client.Current().entities.RemovePlayer(reference);
+                        if (playerIndex == client.LocalPlayer)
+                        {
+                            client.ChunkManager.PhysicsInfo.Simulation.Bodies.Remove(client.LocalPlayerBody);
+                        }
+                    }
 
                     ackArr[ackI] = reference;
                     ackI += 1;

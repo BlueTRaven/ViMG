@@ -243,10 +243,8 @@ namespace ViMG.Cubes
 			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
 		}
 
-		public virtual bool CanRightClick(World world, CubePosition position)
+		public virtual bool CanRightClick(CubePosition position)
 		{
-			//cube trackers and multi cube trackers can be right clicked under any situation
-			//return this is ICubeTracker || this is IMultiCubeTracker; // ??? this is a Cube, not an entity...
 			return false;
 		}
 

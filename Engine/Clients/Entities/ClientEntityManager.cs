@@ -2,6 +2,7 @@
 using Engine.Networking;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -88,9 +89,9 @@ namespace Engine.Clients.Entities
 
         public void RemovePlayer(EntityManager.EntityReference reference)
         {
-            int playerIndex = GetPlayerIndex(reference);
-            if (playerIndex != -1)
-                players[playerIndex] = PlayerHolder.DEFAULT;
+            var playerIndex = GetPlayerIndex(reference);
+            Debug.Assert(playerIndex != -1);
+            players[playerIndex] = PlayerHolder.DEFAULT;
         }
 
         public int GetPlayerIndex(EntityManager.EntityReference reference)

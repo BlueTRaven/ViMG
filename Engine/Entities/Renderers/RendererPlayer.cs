@@ -47,6 +47,12 @@ namespace Engine.Entities.Renderers
 
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
+            if (client.ChunkManager.PhysicsInfo.Simulation.Bodies.BodyExists(client.LocalPlayerBody)) {
+                var pos = client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayerBody].Pose.Position;
+                Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(0, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                       lookAtMesh, Matrix.CreateTranslation(pos), new RectangleF(0, 1008 - 32, 16, 16)));
+            }
+
             for (int i = 0; i < EntityManager.EntMax; i++)
             {
                 var reference = client.Current().entities.GetReference(i);
@@ -112,6 +118,14 @@ namespace Engine.Entities.Renderers
                             new RectangleF(0, 1008, 16, 16), lookAtColor));
                     }
                 }
+
+                if (lookAtResult.hasHit && client.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
+                    .GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(CubePosition.FromWorldSpace(lookAtResult.hit)))
+                {
+                    //? crosshair
+                    Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
+                }
+                else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
 
                 //if (Main.gameStateManager.TheIsland.GetWorld() != null)
                 //{
