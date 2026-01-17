@@ -13,6 +13,24 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Effects/render_spheres.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/render_spheres.fx
+
+#begin Effects/render_cylinders.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/render_cylinders.fx
+
+#begin Effects/render_capsules.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/render_capsules.fx
+
 #begin Effects/air.fx
 /importer:EffectImporter
 /processor:EffectProcessor

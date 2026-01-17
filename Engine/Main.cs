@@ -104,7 +104,7 @@ namespace ViMG
 
 		//Debugging purposes only. Sometimes we want to run (semi)headless for profiling reasons.
 		private const bool NO_RENDER = false;
-		public const bool ENABLE_SHADOWS = true;
+		public const bool ENABLE_SHADOWS = false;
 		public const bool ENABLE_PCF = true;
 		public const bool DO_DETAIL = true;
 		public const bool TRANSPARENT_ORES = false;

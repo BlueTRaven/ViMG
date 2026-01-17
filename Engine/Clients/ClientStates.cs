@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Physics;
 using ViMG.Rendering;
 using ViMG.UIs;
@@ -25,6 +26,18 @@ namespace Engine.Clients
 {
     public class ClientStates
     {
+        [ConsoleCommandVar("r_render_client_ents")]
+        public static bool RenderClientEnts = true;
+        [ConsoleCommandVar("r_render_projectiles")]
+        public static bool RenderProjectiles = true;
+        [ConsoleCommandVar("r_render_lights")]
+        public static bool RenderLights = true;
+        [ConsoleCommandVar("r_render_world")]
+        public static bool RenderWorld = true;
+
+        [ConsoleCommandVar("rsv_render_debug_physics")]
+        public static bool RenderDebugPhysics = false;
+
         private GraphicsDevice device;
         public ClientWorld[] states;
         public ClientInventoryManager inventoryManager;
@@ -35,6 +48,8 @@ namespace Engine.Clients
         public LightManager2 LightManager;
         private LightsRenderer lightRenderer;
         private PhysicsInfo physicsInfo;
+
+        private Engine.Rendering.BepuDebugRendering.Renderer bepuDebugRenderer;
 
         public ClientLocalPlayer? LocalPlayer = null;
 
@@ -73,6 +88,8 @@ namespace Engine.Clients
             //LightManager = new LightManager(device);
             LightManager = new LightManager2();
             lightRenderer = new LightsRenderer(device);
+
+            bepuDebugRenderer = new Rendering.BepuDebugRendering.Renderer(device, null);
         }
 
         public void NewFrame(double time)
@@ -137,30 +154,47 @@ namespace Engine.Clients
                 InterpCamera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
             }
 
-            lightRenderer.UpdateDatas(LightManager, Main.Renderer.EffectLightAccumPointLight);
-            lightRenderer.Draw(device, LightManager);
-            lightRenderer.DrawShadowmap(device, ChunkManager, LightManager);
-            
+            if (RenderLights)
+            {
+                lightRenderer.UpdateDatas(LightManager, Main.Renderer.EffectLightAccumPointLight);
+                lightRenderer.Draw(device, LightManager);
+                lightRenderer.DrawShadowmap(device, ChunkManager, LightManager);
+            }
+
             LightManager.Reset();
             //LightManager.UpdateDatas(Main.Renderer.EffectLightAccumPointLight);
             //LightManager.DrawShadowmap(device, ChunkManager);
             //LightManager.Draw(device);
 
-            WorldLogic.Render(device, this);
-
-            worldRenderer.Render(this);
-
-            var iter = Main.Registry.RendererRegistry.GetIterable();
-            foreach (var a in iter)
+            if (RenderWorld)
             {
-                int[] renderedTypes = a.GetRenderedTypes();
-                foreach (int t in renderedTypes) 
+                WorldLogic.Render(device, this);
+
+                worldRenderer.Render(this);
+            }
+
+            if (RenderClientEnts)
+            {
+                var iter = Main.Registry.RendererRegistry.GetIterable();
+                foreach (var a in iter)
                 {
-                    a.RenderClientEnt(device, deltaTime, this, t);
+                    int[] renderedTypes = a.GetRenderedTypes();
+                    foreach (int t in renderedTypes)
+                    {
+                        a.RenderClientEnt(device, deltaTime, this, t);
+                    }
                 }
             }
 
-            ClientProjectileManager.Render(device, this);
+            if (RenderProjectiles)
+                ClientProjectileManager.Render(device, this);
+
+            if (RenderDebugPhysics && Main.gameStateManager.TheIsland.GetWorld() != null)
+            {
+                bepuDebugRenderer.Shapes.ClearInstances();
+                bepuDebugRenderer.Shapes.AddInstances(Main.gameStateManager.TheIsland.GetWorld().PhysicsInfo.Simulation);
+                bepuDebugRenderer.Render(device, InterpCamera);
+            }
         }
 
         public void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime)
