@@ -136,11 +136,13 @@ namespace Engine.Clients
 
                 PrevMovement = CurrMovement;
                 ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
+                var extra = localPlayer.GetExtra<ViMG.Player.PlayerExtraState>();
+                extra.highlightIndex = current.highlightIndex;
                 CurrMovement.Update(ref localPlayer, deltaTime);
 
                 if (menuPlayer == null)
                 {
-                    var extra = localPlayer.GetExtra<ViMG.Player.PlayerExtraState>();
+                    
                     menuPlayer = new MenuPlayer(Main.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
                     menuPlayer.LoadContent();
                     menuPlayer.Close();
@@ -172,7 +174,8 @@ namespace Engine.Clients
                     CurrMovement.Run.Changed(PrevMovement.Run) ||
                     CurrMovement.MoveDown.Changed(PrevMovement.MoveDown) ||
                     CurrMovement.Throw.Changed(PrevMovement.Throw) ||
-                    previous.camera.RotationEuler != current.camera.RotationEuler)
+                    previous.camera.RotationEuler != current.camera.RotationEuler ||
+                    current.highlightIndex != previous.highlightIndex)
                 {
                     Main.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
@@ -208,8 +211,9 @@ namespace Engine.Clients
                         }
                     }
                 }
-            }
 
+                localPlayer.SetExtra(ref extra);
+            }
         }
     }
 }

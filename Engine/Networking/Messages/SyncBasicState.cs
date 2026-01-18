@@ -631,6 +631,8 @@ namespace Engine.Networking.Messages
                                     // Update player
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
                                     ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
+                                    var extraC = player.GetExtra<Player.PlayerExtraState>();
+                                    var extraR = state.GetExtra<Player.PlayerExtraState>();
                                     // Always keep client's rotation
                                     state.rotation = player.rotation;
                                     player = state;
