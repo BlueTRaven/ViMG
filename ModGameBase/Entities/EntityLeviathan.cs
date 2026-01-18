@@ -63,7 +63,7 @@ namespace ViMG.Entities
 
             if (state == State.Enraged)
             {
-				world.HitboxManager.Update(hitbox, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 3), new Vector3(Cube.CUBE_SCALE * 6)).Offset(Position));
+				world.HitboxManager.Update(hitbox, new Engine.Physics.OrientedBoundingBox(Position, new(Cube.CUBE_SCALE * 3), Quaternion.Identity));
                 Vector3 direction = world.player[world.localPlayerIndex].Position - Position;
                 direction.Normalize();
 

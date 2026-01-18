@@ -63,7 +63,7 @@ namespace ViMG.Entities
 
                 float hitboxSize = (1 - hitboxTimer / HITBOX_TIME) * radius;
 
-                world.HitboxManager.Update(hitbox, new Rectangle3D(Position - new Vector3(hitboxSize / 2f), new Vector3(hitboxSize)));
+                world.HitboxManager.Update(hitbox, new Engine.Physics.OrientedBoundingBox(Position, new(hitboxSize / 2f), Quaternion.Identity));
             }
 
             if (timer <= 0)

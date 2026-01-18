@@ -120,7 +120,7 @@ namespace ViMG.Entities
 					}
                 }
 
-				world.HitboxManager.Update(hitbox, Bounds);
+				world.HitboxManager.Update(hitbox, Bounds.ToOBB());
 			}
 
 			Vector3 actualMaxVel = MaxVelocity;

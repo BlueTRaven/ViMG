@@ -50,7 +50,7 @@ namespace ViMG.Entities
             alive += (float)deltaTime;
 
             if (hitbox != -1)
-                world.HitboxManager.Update(hitbox, bounds.Offset(Position));
+                world.HitboxManager.Update(hitbox, bounds.Offset(Position).ToOBB());
 
             if (exploding && alive >= explodingTime)
                 world.EntityManager.Kill(this);

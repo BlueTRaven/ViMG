@@ -522,9 +522,6 @@ namespace ViMG
 		public void DrawDebug(GraphicsDevice device)
 		{
 			if (Main.Debug)
-				HitboxManager.DrawDebug(device);
-
-			if (Main.Debug)
 				HousingManager.DrawDebug(this, device);
 		}
 

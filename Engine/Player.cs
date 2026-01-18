@@ -580,7 +580,7 @@ namespace ViMG
 			if (hurtbox == -1)
 				hurtbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.PLAYER_TAKE, -1, -1f, invulnTimer <= 0);
 			else if (state != State.Noclip)
-				world.HitboxManager.Update(hurtbox, Bounds, invulnTimer <= 0);
+				world.HitboxManager.Update(hurtbox, Bounds.ToOBB(), invulnTimer <= 0);
 
 			UpdateStats(deltaTime);
 
@@ -742,9 +742,7 @@ namespace ViMG
 				}
 				else
 				{
-					Rectangle3D rect = new Rectangle3D(Position + hitboxOffset - new Vector3(hitboxSize / 2), new Vector3(hitboxSize));
-
-					world.HitboxManager.Update(hitbox, rect);
+					world.HitboxManager.Update(hitbox, new Engine.Physics.OrientedBoundingBox(Position + hitboxOffset, new Vector3(hitboxSize / 2f), Quaternion.Identity));
 				}
 			}
 
@@ -1481,13 +1479,29 @@ namespace ViMG
             float offset = hitboxSize + (Cube.CUBE_SCALE / 2f) - (hitboxSize / 2f);
             hitboxOffset = toSpawnLater.direction * offset;
 
-            Rectangle3D rect = new Rectangle3D(Position + hitboxOffset, new Vector3(hitboxSize));
             this.hitboxSize = toSpawnLater.hitboxSize;
-
-			// TODO use rotation
-            hitbox = world.HitboxManager.Add(this, rect, -(this as IRotatable).Forward, HitboxManager.Group.PLAYER_DEAL,
-                DealDamageCalculation(toSpawnLater.damageType, toSpawnLater.damage), toSpawnLater.knockback,
-                applyBuffs: toSpawnLater.applyBuffs, inventorySlot: toSpawnLater.inventorySlot);
+			var quat = EngineMathHelper.LookRotation(toSpawnLater.direction, Vector3.Up);
+			var obb = new Engine.Physics.OrientedBoundingBox(Position + hitboxOffset, new(hitboxSize / 2f), quat);
+            // TODO use rotation
+            world.HitboxManager.Add(new HitboxManager.HitboxParameters
+			{
+				owner = this,
+				manager = null,
+				bounds = obb,
+				direction = toSpawnLater.direction,
+				stats = new HitboxManager.HitboxStats
+				{
+					damage = DealDamageCalculation(toSpawnLater.damageType, toSpawnLater.damage),
+					group = HitboxManager.Group.PLAYER_DEAL,
+					knockback = toSpawnLater.knockback,
+					applyBuffs = toSpawnLater.applyBuffs,
+					inventorySlot = toSpawnLater.inventorySlot,
+					expirationTime = (float)Main.Time + HITBOX_TIME,
+				},
+			});
+            //hitbox = world.HitboxManager.Add(this, rect, -(this as IRotatable).Forward, HitboxManager.Group.PLAYER_DEAL,
+            //    DealDamageCalculation(toSpawnLater.damageType, toSpawnLater.damage), toSpawnLater.knockback,
+            //    applyBuffs: toSpawnLater.applyBuffs, inventorySlot: toSpawnLater.inventorySlot);
 
             hitboxTimer = HITBOX_TIME;
         }

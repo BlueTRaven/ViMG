@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Physics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -74,6 +75,11 @@ namespace ViMG
 			Vector3 size = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
             return new Rectangle3D(new Vector3(minX, minY, minZ), size);
+		}
+
+		public OrientedBoundingBox ToOBB()
+		{
+			return new OrientedBoundingBox(this);
 		}
     }
 

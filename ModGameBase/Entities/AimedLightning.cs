@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Engine;
 using Engine.Networking;
+using Engine.Physics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -54,7 +55,7 @@ namespace ViMG.Entities
             {
                 owner = this,
                 manager = this,
-                bounds = Rectangle3D.Empty,
+                bounds = OrientedBoundingBox.Empty,
                 direction = advanceDirection,
                 stats = stats,
                 canInteract = true
@@ -133,12 +134,12 @@ namespace ViMG.Entities
                     {
                         HitboxManager.HitboxParameters parameters = this.parameters with
                         {
-                            bounds = Rectangle3D.FromTwoPositions(positions[i - 1], positions[i])
+                            bounds = OrientedBoundingBox.FromTwoPositions(positions[i - 1], positions[i])
                         };
 
                         hitbox = world.HitboxManager.Add(parameters);
                     }
-                    else world.HitboxManager.Update(hitbox, Rectangle3D.FromTwoPositions(positions[i - 1], positions[i]));
+                    else world.HitboxManager.Update(hitbox, OrientedBoundingBox.FromTwoPositions(positions[i - 1], positions[i]));
                 }
             }
 

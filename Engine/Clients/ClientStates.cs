@@ -195,6 +195,11 @@ namespace Engine.Clients
                 bepuDebugRenderer.Shapes.AddInstances(Main.gameStateManager.TheIsland.GetWorld().PhysicsInfo.Simulation);
                 bepuDebugRenderer.Render(device, InterpCamera);
             }
+
+            if (Main.gameStateManager.TheIsland.GetWorld() != null)
+            {
+                Main.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, InterpCamera);
+            }
         }
 
         public void RenderUI(GraphicsDevice device, SpriteBatch batch, double deltaTime)

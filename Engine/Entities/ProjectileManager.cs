@@ -355,7 +355,7 @@ namespace ViMG.Entities
 				projectiles[i].SetCommon(ref p);
 
                 if (projectiles[i].hitbox != -1)
-                    world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+                    world.HitboxManager.Update(projectiles[i].hitbox, new(projectiles[i].bounds.Offset(projectiles[i].position)));
                 //if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
                 //            {
                 //	projectiles[i].light = world.LightManager.Add(projectiles[i].position, 

@@ -164,7 +164,7 @@ namespace ViMG.Entities
 
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 6, 1f, invulnTimer <= 0);
-			else world.HitboxManager.Update(hitbox, bounds.Offset(Position), invulnTimer <= 0);
+			else world.HitboxManager.Update(hitbox, bounds.Offset(Position).ToOBB(), invulnTimer <= 0);
 
 			invulnTimer -= (float)deltaTime;
 			alive += (float)deltaTime;

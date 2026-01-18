@@ -123,7 +123,7 @@ namespace ViMG.Entities
 
 				if (ai.touchHitbox == -1)
                     ai.touchHitbox = ai.world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
-				else ai.world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+				else ai.world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
 
 				Vector3 actualMaxVel = ai.MaxVelocity;
 

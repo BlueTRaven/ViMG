@@ -58,7 +58,7 @@ namespace ViMG.Entities
 
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, bounds.Offset(Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_TAKE, 1, 1);
-			else world.HitboxManager.Update(hitbox, bounds.Offset(Position));
+			else world.HitboxManager.Update(hitbox, bounds.Offset(Position).ToOBB());
 
 			for (int i = 0; i < World.MAX_PLAYERS; i++)
 			{

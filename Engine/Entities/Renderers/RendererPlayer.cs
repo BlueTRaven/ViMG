@@ -47,11 +47,11 @@ namespace Engine.Entities.Renderers
 
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            if (client.LocalPlayer != null && client.ChunkManager.PhysicsInfo.Simulation.Bodies.BodyExists(client.LocalPlayer.Body)) {
-                var pos = client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Pose.Position;
-                Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(0, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                       lookAtMesh, Matrix.CreateTranslation(pos), new RectangleF(0, 1008 - 32, 16, 16)));
-            }
+            //if (client.LocalPlayer != null && client.ChunkManager.PhysicsInfo.Simulation.Bodies.BodyExists(client.LocalPlayer.Body)) {
+            //    var pos = client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Pose.Position;
+            //    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(0, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+            //           lookAtMesh, Matrix.CreateTranslation(pos), new RectangleF(0, 1008 - 32, 16, 16)));
+            //}
 
             for (int i = 0; i < EntityManager.EntMax; i++)
             {

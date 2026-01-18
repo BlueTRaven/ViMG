@@ -1,4 +1,7 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Collidables;
+using BepuPhysics.CollisionDetection.CollisionTasks;
+using BrUtility;
+using Engine.Physics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,7 +13,6 @@ using ViMG.Entities;
 using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
-using static Engine.Common.LightManager;
 
 namespace ViMG
 {
@@ -43,7 +45,8 @@ namespace ViMG
 			public readonly int index;
 			public readonly bool active;
 
-			public readonly Rectangle3D bounds;
+			//public readonly Rectangle3D bounds;
+			public readonly OrientedBoundingBox bounds;
 			public readonly Vector3 direction;
 
 			public readonly IHitboxOwner owner;
@@ -66,7 +69,8 @@ namespace ViMG
 				active = false;
 				owner = null;
 				manager = null;
-				bounds = new Rectangle3D();
+				bounds = new OrientedBoundingBox();
+				//bounds = new Rectangle3D();
 				direction = Vector3.Zero;
 				group = Group.INVALID;
 				damage = -1;
@@ -83,7 +87,7 @@ namespace ViMG
 				active = true;
 				this.owner = owner;
 				this.manager = null;
-				this.bounds = bounds;
+				this.bounds = new OrientedBoundingBox(bounds.Center, bounds.Size / 2, Quaternion.Identity);
 				this.direction = direction;
 				this.group = group;
 				this.damage = damage;
@@ -102,7 +106,7 @@ namespace ViMG
 				active = true;
 				this.owner = owner;
 				this.manager = manager;
-				this.bounds = bounds;
+				this.bounds = new OrientedBoundingBox(bounds.Center, bounds.Size / 2, Quaternion.Identity);
 				this.direction = direction;
 				this.group = group;
 				this.damage = damage;
@@ -121,7 +125,7 @@ namespace ViMG
                 active = true;
                 this.owner = parameters.owner;
                 this.manager = parameters.manager;
-                this.bounds = parameters.bounds;
+				this.bounds = parameters.bounds;
                 this.direction = parameters.direction;
                 this.group = parameters.stats.group;
                 this.damage = parameters.stats.damage;
@@ -134,7 +138,7 @@ namespace ViMG
                 this.data = parameters.stats.data;
             }
 
-            public Hitbox(Hitbox old, Rectangle3D bounds, bool canInteract)
+            public Hitbox(Hitbox old, OrientedBoundingBox bounds, bool canInteract)
 			{
 				this.index = old.index;
 				active = true;
@@ -158,7 +162,7 @@ namespace ViMG
 
 		public record struct HitboxParameters
 		{
-            public Rectangle3D bounds;
+            public OrientedBoundingBox bounds;
             public Vector3 direction;
 
             public required IHitboxOwner owner;
@@ -180,9 +184,13 @@ namespace ViMG
 
             public int data;
             public int inventorySlot;
+
+			public float expirationTime;
         }
 
+		// TODO generations
 		private Hitbox[] hitboxes;
+		private float[] expirations;
 
 		private int capacity;
 		public int Capacity => capacity;
@@ -194,9 +202,10 @@ namespace ViMG
 			this.grow = grow;
 
 			hitboxes = new Hitbox[capacity];
+			expirations = new float[capacity];
 		}
 
-		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null, IHitboxOwner manager = null, int inventorySlot = -1, int data = 0)
+		public int Add(IHitboxOwner owner, Rectangle3D bounds, Vector3 direction, Group group, int damage, float knockback, bool canInteract = true, Buff.BuffInstance[] applyBuffs = null, IHitboxOwner manager = null, int inventorySlot = -1, int data = 0, float expiration = float.MaxValue)
 		{
 			for (int i = 0; i < capacity; i++)
 			{
@@ -205,6 +214,7 @@ namespace ViMG
 				if (!hitbox.active)
 				{
 					hitbox = new Hitbox(i, owner, manager, bounds, direction, group, damage, knockback, canInteract, applyBuffs ?? Array.Empty<Buff.BuffInstance>(), inventorySlot, data);
+					expirations[i] = expiration;
 
 					return i;
 				}
@@ -223,7 +233,7 @@ namespace ViMG
                 if (!hitbox.active)
                 {
                     hitbox = new Hitbox(i, parameters);
-
+					expirations[i] = parameters.stats.expirationTime;
                     return i;
                 }
             }
@@ -234,16 +244,9 @@ namespace ViMG
 
 		private void Grow()
 		{
-			Hitbox[] old = hitboxes;
-
 			capacity += grow;
-
-			hitboxes = new Hitbox[capacity];
-
-			for (int i = 0; i < old.Length; i++)
-			{
-				hitboxes[i] = old[i];
-			}
+			Array.Resize(ref hitboxes, capacity);
+			Array.Resize(ref expirations, capacity);
 		}
 
 		public ref Hitbox Get(int index)
@@ -258,7 +261,7 @@ namespace ViMG
 			hitboxes[index] = new Hitbox(index);
 		}
 
-		public void Update(int index, Rectangle3D bounds, bool canInteract = true)
+		public void Update(int index, OrientedBoundingBox bounds, bool canInteract = true)
 		{
 			if (hitboxes[index].active)
 			{
@@ -273,13 +276,18 @@ namespace ViMG
 					if (i == index || !ourHitbox.active || !otherHitbox.active)
 						continue;
 
-					if (otherHitbox.bounds.Intersects(bounds))
+					if (otherHitbox.bounds.Overlaps(bounds))
 					{
 						ourHitbox.owner.OnInteractWithOther(ourHitbox, otherHitbox);
 						ourHitbox.manager?.OnInteractWithOther(ourHitbox, otherHitbox);
 
 						otherHitbox.owner.OnInteractWithOther(otherHitbox, ourHitbox);
 						otherHitbox.manager?.OnInteractWithOther(otherHitbox, ourHitbox);
+					}
+
+					if (expirations[i] - (float)Main.Time <= 0)
+					{
+						Remove(i);
 					}
 				}
 			}
@@ -297,9 +305,9 @@ namespace ViMG
 		private static VerySimpleMesh debugMesh;
 
 		[ConsoleCommandVar("rsv_hitbox_draw", "Singleplayer only. Draws hitboxes. Default = false")]
-		public static bool DoDebugDraw = false;
+		public static bool DoDebugDraw = true;
 
-		public void DrawDebug(GraphicsDevice device)
+		public void DrawDebug(GraphicsDevice device, Engine.Common.Camera camera)
         {
 			if (!DoDebugDraw) return;
 
@@ -307,7 +315,7 @@ namespace ViMG
             {
                 FastList<VertexCube> vertices = new FastList<VertexCube>();
                 List<int> indices = new List<int>();
-				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, Vector3.One, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
+				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(-Vector3.One / 2, Vector3.One / 2, MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
                 debugMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
                 //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
@@ -316,14 +324,20 @@ namespace ViMG
             {
 				if (hitboxes[i].active)
 				{
-					float distance = (hitboxes[i].bounds.Position - Main.camera.Position).Length();
-					Matrix transform = Matrix.CreateScale(hitboxes[i].bounds.Size) *
-						Matrix.CreateTranslation(hitboxes[i].bounds.Position);
+					float distance = (hitboxes[i].bounds.Center - camera.Position).Length();
+					Matrix transform = Matrix.CreateScale(hitboxes[i].bounds.HalfExtents * 2) *
+						Matrix.CreateFromQuaternion(hitboxes[i].bounds.Orientation) *
+						Matrix.CreateTranslation(hitboxes[i].bounds.Center);
 
 					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance, 
 						new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh,
 						transform, tintColor: Color.Red * 0.5f));
-				}
+
+                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+                        new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh,
+						Matrix.CreateScale(Cube.CUBE_SCALE * 0.25f) * 
+						Matrix.CreateTranslation(hitboxes[i].bounds.Center), tintColor: Color.White * 0.5f));
+                }
             }
         }
 	}

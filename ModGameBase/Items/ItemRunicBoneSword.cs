@@ -62,8 +62,8 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, otherHitbox);
 
-            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Position.X + otherHitbox.bounds.Size.X / 2f,
-                otherHitbox.bounds.Top, otherHitbox.bounds.Position.Z + otherHitbox.bounds.Size.Z / 2f), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
+            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Center.X,
+                otherHitbox.bounds.Top, otherHitbox.bounds.Center.Z), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
                 batchStats, Main.Registry.ProjectileRegistry.Get("bone").Id, stats,
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
         }
