@@ -305,7 +305,7 @@ namespace ViMG
 		private static VerySimpleMesh debugMesh;
 
 		[ConsoleCommandVar("rsv_hitbox_draw", "Singleplayer only. Draws hitboxes. Default = false")]
-		public static bool DoDebugDraw = true;
+		public static bool DoDebugDraw = false;
 
 		public void DrawDebug(GraphicsDevice device, Engine.Common.Camera camera)
         {

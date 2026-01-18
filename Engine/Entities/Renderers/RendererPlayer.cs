@@ -74,8 +74,15 @@ namespace Engine.Entities.Renderers
                     Matrix.CreateTranslation(entity.position);
 
                 Color color = Color.White;
-                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                    mesh, worldMat, null, color.ToVector3()));
+                var distFromCam = (entity.position - client.InterpCamera.Position).Length();
+                if (distFromCam < Cube.CUBE_SCALE * 2f)
+                {
+                    var min = Cube.CUBE_SCALE * 2f;
+                    var max = Cube.CUBE_SCALE * 0.5f;
+
+                    var p = float.Clamp((distFromCam - max) / (min - max), 0, 1);
+                    color *= p;
+                }
                 Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     mesh, worldMat, null, color.ToVector3()));
 
