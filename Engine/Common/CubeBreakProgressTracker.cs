@@ -89,7 +89,7 @@ namespace Engine.Common
 
             Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-            if (curProgress.progress > cube.MineProgressToBreak)
+            if (curProgress.progress >= cube.MineProgressToBreak)
             {
                 tracked.Remove(position);
                 return true;
@@ -123,7 +123,7 @@ namespace Engine.Common
 
             Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-            if (curProgress.progress > cube.MineProgressToBreak)
+            if (curProgress.progress >= cube.MineProgressToBreak)
             {
                 tracked.Remove(position);
                 return true;

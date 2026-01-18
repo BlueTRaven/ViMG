@@ -245,8 +245,10 @@ namespace Engine.Networking
             ulong bits = 0;
             for (int i = 0; i < MAX_EXTRA_STATE_INTS; i++)
             {
-                uint currInt = BitConverter.ToUInt32(extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
-                uint prevInt = BitConverter.ToUInt32(prevState.extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))]);
+                int min = i * sizeof(uint);
+                int max = i * sizeof(uint) + sizeof(uint);
+                uint currInt = BitConverter.ToUInt32(extraBytes[min..max]);
+                uint prevInt = BitConverter.ToUInt32(prevState.extraBytes[min..max]);
                 if (currInt != prevInt)
                 {
                     bits |= (1UL << i);
@@ -256,7 +258,7 @@ namespace Engine.Networking
             return bits;
         }
 
-        public void DeserializeDelta(NetDataReader reader)
+        public uint DeserializeDelta(NetDataReader reader, bool withExtraFields = true)
         {
             version = reader.GetInt();
             Fields bits = (Fields)reader.GetUInt();
@@ -308,21 +310,61 @@ namespace Engine.Networking
                     counters[i] = reader.GetInt();
             }
 
+            if (withExtraFields)
+            {
+                ulong extraBytesBits = reader.GetULong();
+
+                if ((bits & Fields.ExtraFields) == Fields.ExtraFields)
+                {
+                    for (int i = 0; i < MAX_EXTRA_STATE_INTS; i++)
+                    {
+                        ulong bit = 1UL << i;
+                        if ((extraBytesBits & bit) == bit)
+                        //if (true)
+                        {
+                            int min = i * sizeof(uint);
+                            int max = i * sizeof(uint) + sizeof(uint);
+                            var extraBitBytes = extraBytes[min..max];
+                            uint cui = BitConverter.ToUInt32(extraBitBytes);
+                            uint ui = reader.GetUInt();
+                            BitConverter.TryWriteBytes(extraBitBytes, ui);
+                        }
+                    }
+                }
+            }
+
+            return (uint)bits;
+        }
+
+        public void DeserializeDeltaExtraFields(NetDataReader reader, uint bits)
+        {
             ulong extraBytesBits = reader.GetULong();
 
-            if ((bits & Fields.ExtraFields) == Fields.ExtraFields)
+            if (((Fields)bits & Fields.ExtraFields) == Fields.ExtraFields)
             {
                 for (int i = 0; i < MAX_EXTRA_STATE_INTS; i++)
                 {
                     ulong bit = 1UL << i;
                     if ((extraBytesBits & bit) == bit)
+                    //if (true)
                     {
-                        var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+                        int min = i * sizeof(uint);
+                        int max = i * sizeof(uint) + sizeof(uint);
+                        var extraBitBytes = extraBytes[min..max];
+                        uint cui = BitConverter.ToUInt32(extraBitBytes);
                         uint ui = reader.GetUInt();
                         BitConverter.TryWriteBytes(extraBitBytes, ui);
                     }
                 }
             }
+        }
+
+        public uint GetExtraAtBit(int bit)
+        {
+            int min = bit * sizeof(uint);
+            int max = bit * sizeof(uint) + sizeof(uint);
+            uint currInt = BitConverter.ToUInt32(extraBytes[min..max]);
+            return currInt;
         }
 
         public void SerializeDelta(NetDataWriter writer, uint _bits)
@@ -379,16 +421,24 @@ namespace Engine.Networking
         {
             writer.Put(extraBytesBits);
 
+            var startLen = writer.Length;
+
             for (int i = 0; i < MAX_EXTRA_STATE_INTS; i++)
             {
                 ulong bit = 1UL << i;
                 if ((extraBytesBits & bit) == bit)
+                //if (true)
                 {
-                    var extraBitBytes = extraBytes[(i * sizeof(uint))..(i * sizeof(uint) + sizeof(uint))];
+                    int min = i * sizeof(uint);
+                    int max = i * sizeof(uint) + sizeof(uint);
+
+                    var extraBitBytes = extraBytes[min..max];
                     uint ui = BitConverter.ToUInt32(extraBitBytes);
                     writer.Put(ui);
                 }
             }
+
+            Debug.Assert(writer.Length == startLen + System.Numerics.BitOperations.PopCount(extraBytesBits) * 4);
         }
 
         public unsafe void SetExtra<T>(ref readonly T val) where T : unmanaged

@@ -136,13 +136,12 @@ namespace Engine.Clients
 
                 PrevMovement = CurrMovement;
                 ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
-                var extra = localPlayer.GetExtra<ViMG.Player.PlayerExtraState>();
+                var extra = localPlayer.GetExtra<Player.PlayerExtraState>();
                 extra.highlightIndex = current.highlightIndex;
                 CurrMovement.Update(ref localPlayer, deltaTime);
 
                 if (menuPlayer == null)
                 {
-                    
                     menuPlayer = new MenuPlayer(Main.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
                     menuPlayer.LoadContent();
                     menuPlayer.Close();

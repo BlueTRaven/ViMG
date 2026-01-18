@@ -2020,6 +2020,9 @@ namespace ViMG
 			};
 
 			state.SetExtra(ref pstate);
+
+			pstate = state.GetExtra<PlayerExtraState>();
+			Debug.Assert(pstate.useAnimType == (int)useAnimType);
         }
 
         public void Set(ref readonly BasicState state)

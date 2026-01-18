@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -299,6 +300,7 @@ namespace Engine.Networking.Messages
             public EntityManager.EntityReference reference;
             // NOTE: equivalent to Main.Frame
             public int latestSequence;
+            //public BasicState latestAckedVersion;
             public bool unloadedThisSeq;
         }
 
@@ -351,6 +353,7 @@ namespace Engine.Networking.Messages
                 serverEntities[playerId][ack.ackdEntities[i].id].reference.generation = ack.ackdEntities[i].generation;
                 // Note we blindly set the sequence here; earlier we discard sequences that are not the latest, so this should work fine
                 serverEntities[playerId][ack.ackdEntities[i].id].latestSequence = sequence;
+                //serverEntities[playerId][ack.ackdEntities[i].id].latestAckedVersion = GS.GetWorld().EntityManager.GetPrevStateAbs(ack.ackdEntities[i].id, sequence);
             }
         }
 
@@ -445,6 +448,7 @@ namespace Engine.Networking.Messages
 
             lastSyncTime = Main.Time;
             serverSequence += 1;
+            GS.GetWorld().EntityManager.frame = serverSequence;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -472,25 +476,39 @@ namespace Engine.Networking.Messages
                     // Subwriter may not be submitted
                     var subWriter = new NetDataWriter();
                     subWriter.Put(ent.reference);
-                    subWriter.Put((byte)ent.type);
 
                     if (ent.basicSyncState != null)
                     {
-                        subWriter.Put((ushort)ent.typeNameMapping);
+                        var useType = (byte)ent.type;
 
                         ent.basicSyncState.Get(out BasicState state);
+
                         BasicState prevState;
                         if (ent.type == SyncStateType.MinorSync)
-                            prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, serverEntities[ent.playerId][ent.reference.id].latestSequence);
+                        {
+                            var latestSeq = serverEntities[ent.playerId][ent.reference.id].latestSequence;
+                            if (latestSeq - serverSequence > EntityManager.EntPrevSrv)
+                            {
+                                // Too old - do a major sync
+                                prevState = new();
+                                useType = (byte)SyncStateType.MajorSync;
+                            }
+                            else
+                            {
+                                prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, latestSeq);
+                            }
+                        }
                         else if (ent.type == SyncStateType.MajorSync)
                         {
-                            var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
+                            //var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
                             //Console.WriteLine("Server sent create ent {0} {1} ({2})", ent.reference.id, entType.Identifier, ent.typeNameMapping);
                             prevState = new();
                         }
                         else
                             throw new Exception();
 
+                        subWriter.Put(useType);
+                        subWriter.Put((ushort)ent.typeNameMapping);
 
                         uint bits = state.GetDeltaBits(ref prevState);
                         ulong extraBits = state.GetExtraBytesBits(ref prevState);
@@ -516,6 +534,7 @@ namespace Engine.Networking.Messages
                     }
                     else
                     {
+                        subWriter.Put((byte)ent.type);
                         subWriters.Add(subWriter);
                     }
 
@@ -595,11 +614,17 @@ namespace Engine.Networking.Messages
                 {
                     int typeId = reader.GetUShort();
 
+                    if (typeId == playerTypeId)
+                    {
+                        Console.Write("");
+                    }
+
                     // TODO: we might want to base this on the last received state for this entity (before this ack)
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
                     var state = client.Current().entities.GetByRef(ref reference);
                     // Also deserializes extra fields
-                    state.DeserializeDelta(reader);
+                    uint bits = state.DeserializeDelta(reader, false);
+                    state.DeserializeDeltaExtraFields(reader, bits);
 
                     if (type == SyncStateType.MajorSync)
                     {
@@ -631,8 +656,6 @@ namespace Engine.Networking.Messages
                                     // Update player
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
                                     ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
-                                    var extraC = player.GetExtra<Player.PlayerExtraState>();
-                                    var extraR = state.GetExtra<Player.PlayerExtraState>();
                                     // Always keep client's rotation
                                     state.rotation = player.rotation;
                                     player = state;

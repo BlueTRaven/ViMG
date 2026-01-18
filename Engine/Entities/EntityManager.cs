@@ -141,6 +141,9 @@ namespace ViMG.Entities
 		private HashSet<Entity> toDeleteLater = new HashSet<Entity>();
 
 		public Engine.Common.Entities.CubeTrackers MeshCubeTrackers;
+
+		public int frame;
+
 		private class CubeTrackers
 		{
 			public ICubeTracker[] cubeTrackers;
@@ -655,29 +658,6 @@ namespace ViMG.Entities
 				}
 			}
 
-			for (int i = 0; i < EntMax; i++)
-			{
-				bool clear = false;
-
-                if (ents[i].active && !ents[i].entity.Dead)
-				{
-					if (ents[i].entity is ISyncBasicState basicState)
-					{
-						basicState.Get(out var state);
-
-						ents[i].prevState[Main.Frame % EntPrevSrv] = state;
-					}
-					else clear = true;
-				}
-                else clear = true;
-
-				if (clear)
-				{
-					if (ents[i].prevState != null)
-						ents[i].prevState[Main.Frame % EntPrevSrv] = new BasicState();
-				}
-            }
-
 			iteratingUpdate = false;
 
 			foreach (Entity entity in toDeleteLater)
@@ -690,7 +670,32 @@ namespace ViMG.Entities
 
 		public void UpdateNetwork()
 		{
-			SyncEntityState.Instance.DoSync(this, world.player);
+            for (int i = 0; i < EntMax; i++)
+            {
+                bool clear = false;
+
+                if (ents[i].active && !ents[i].entity.Dead)
+                {
+                    if (ents[i].entity is ISyncBasicState basicState)
+                    {
+                        basicState.Get(out var state);
+
+                        ents[i].prevState[Main.Frame % EntPrevSrv] = state;
+                    }
+                    else clear = true;
+                }
+                else clear = true;
+
+                if (clear)
+                {
+                    if (ents[i].prevState != null)
+                        ents[i].prevState[Main.Frame % EntPrevSrv] = new BasicState();
+                }
+            }
+
+            SyncEntityState.Instance.DoSync(this, world.player);
+			
+			frame += 1;
 		}
 
 		public int GetPrevIndexTime(float time) 
@@ -703,7 +708,7 @@ namespace ViMG.Entities
             // negative numbers would be in the future, big nono
             Debug.Assert(prev >= 0 && prev < EntPrevSrv);
 
-			int which = Main.Frame - prev;
+			int which = this.frame - prev;
 			which = ((which % EntPrevSrv) + EntPrevSrv) % EntPrevSrv;
 
             return ents[id].prevState?[which] ?? new();
@@ -711,7 +716,7 @@ namespace ViMG.Entities
 
 		public BasicState GetPrevStateAbs(int id, int frame)
 		{
-			var diff = Main.Frame - frame;
+			var diff = this.frame - frame;
 
 			// If we overflowed, just return no state
 			if (diff >= EntPrevSrv) return new();

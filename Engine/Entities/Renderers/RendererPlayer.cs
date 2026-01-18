@@ -83,8 +83,8 @@ namespace Engine.Entities.Renderers
                     var p = float.Clamp((distFromCam - max) / (min - max), 0, 1);
                     color *= p;
                 }
-                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                    mesh, worldMat, null, color.ToVector3()));
+                Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(distFromCam, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                    mesh, worldMat, null, color));
 
                 var fwd = BasicState.Forward(ref entity);
                 var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackTouchable, client.ChunkManager.CubeView);

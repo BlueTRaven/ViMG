@@ -37,6 +37,13 @@ namespace ViMG
 	{
         [ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
         public static float SyncTime = 1.0f / 20.0f;
+		[ConsoleCommandVar("sv_time_mult", "Time multiplier. Default = 1")]
+		public static float TimeMult = 1f;
+		[ConsoleCommandVar("sv_world_time_mult", "World time multiplier. Effects things like day/night cycle. Default = 1")]
+		public static float WorldTimeMult = 1f;
+
+		[ConsoleCommandVar("sv_autosave_time", "Time between autosaves. Default = 5 minutes")]
+		public static float AutosaveTime = 60f * 5f;
 
         public readonly string LoadedFolderName;
 		public readonly int Layer;
@@ -222,18 +229,17 @@ namespace ViMG
             }
 
 			// Autosave every 5 minutes?
-			if (Main.Time - lastAutosaveTime > 60 * 5)
+			if (Main.Time - lastAutosaveTime > AutosaveTime)
 			{
-				
 				Main.gameStateManager.TheIsland.Save(true);
 				lastAutosaveTime = Main.Time;
 			}
 
-            deltaTime *= TimeScale;
+            deltaTime *= TimeScale * TimeMult;
 
             PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
-			alive += (float)deltaTime;
+			alive += (float)deltaTime * WorldTimeMult;
 
             CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
 
