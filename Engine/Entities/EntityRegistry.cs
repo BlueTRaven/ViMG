@@ -57,6 +57,8 @@ namespace Engine.Entities
             for (int i = 0; i < 4; i++)
                 interp.counters[i] = prev.GetInterpCounter(curr, i);
 
+            interp.aliveTime = float.Lerp(prev.aliveTime, curr.aliveTime, (float)Main.TimeC);
+
             return interp;
         }
     }

@@ -312,7 +312,7 @@ namespace Engine.Networking.Messages
 
         // if we're running locally then we only have one instance of a Message class!
         // have to use different fields...
-        private int serverSequence;
+        public int serverSequence;
         private int clientSequence;
 
         private int playerTypeId = -1;
@@ -347,6 +347,18 @@ namespace Engine.Networking.Messages
 
         public void AddAck(SyncEntityStateAck.Ack ack, int playerId, int sequence)
         {
+            TimeSpan delay = DateTime.Now - ack.initialRecv;
+            //Console.WriteLine("ack recv {0} diff {1}", ack.initialRecv, delay);
+            //if (delay.TotalSeconds > World.SyncTime)
+            //{
+            //    Console.WriteLine("ack LATE!!! {0}s", delay.TotalSeconds - World.SyncTime);
+            //}
+            //Console.WriteLine("seq {0} now {1}", sequence, serverSequence);
+            if (serverSequence - sequence > 1)
+            {
+                Console.WriteLine("Late {0}", serverSequence - sequence);
+            }
+
             for (int i = 0; i < ack.numAckd; i++)
             {
                 //Console.WriteLine("Ack for {0} {1} {2}", playerId, ack.ackdEntities[i].id, sequence);
@@ -448,7 +460,6 @@ namespace Engine.Networking.Messages
 
             lastSyncTime = Main.Time;
             serverSequence += 1;
-            GS.GetWorld().EntityManager.frame = serverSequence;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -460,6 +471,7 @@ namespace Engine.Networking.Messages
 
             int playerId = addData as int? ?? throw new Exception();
 
+            netMessage.writer.Put(DateTime.Now.Ticks);
             netMessage.writer.Put(serverSequence);
 
             int numsendpos = netMessage.writer.Length;
@@ -490,11 +502,17 @@ namespace Engine.Networking.Messages
                             if (latestSeq - serverSequence > EntityManager.EntPrevSrv)
                             {
                                 // Too old - do a major sync
+                                var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
+                                Console.WriteLine("Ent {0}:{1} sync timeout", entType.Identifier, ent.reference.id);
                                 prevState = new();
                                 useType = (byte)SyncStateType.MajorSync;
                             }
                             else
                             {
+                                //if (ent.reference.id == 1251)
+                                //{
+                                //    Console.WriteLine("Slime 1251 diff: {0} {1} = {2}", serverSequence, latestSeq, serverSequence - latestSeq);
+                                //}
                                 prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, latestSeq);
                             }
                         }
@@ -584,6 +602,15 @@ namespace Engine.Networking.Messages
 
             var client = GS.GetClient();
 
+            long ticks = reader.GetLong();
+            DateTime sendTime = new DateTime(ticks);
+            TimeSpan delay = DateTime.Now - sendTime;
+            //Console.WriteLine("ent recv {0} diff {1}", sendTime, delay);
+            //if (delay.TotalSeconds > World.SyncTime)
+            //{
+            //    Console.WriteLine("ent LATE!!! {0}s", delay.TotalSeconds - World.SyncTime);
+            //}
+
             int seq = reader.GetInt();
             if (seq < clientSequence)
             {
@@ -613,11 +640,6 @@ namespace Engine.Networking.Messages
                 if (type == SyncStateType.MinorSync || type == SyncStateType.MajorSync)
                 {
                     int typeId = reader.GetUShort();
-
-                    if (typeId == playerTypeId)
-                    {
-                        Console.Write("");
-                    }
 
                     // TODO: we might want to base this on the last received state for this entity (before this ack)
                     // We'd need to store that somehow. Right now we just store the latest sequence we've ack'd globally...
@@ -661,6 +683,7 @@ namespace Engine.Networking.Messages
                                     player = state;
                                     client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Pose.Position = state.position.ToNumerics();
                                     client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Velocity.Linear = state.velocity.ToNumerics();
+                                    client.Current().camera.Position = state.position;
                                 }
                                 else
                                 {
@@ -738,7 +761,16 @@ namespace Engine.Networking.Messages
             }
 
             if (ackI > 0)
-                GS.netManagerClient?.SendMessageToPeer(SyncEntityStateAck.Instance, peer, new SyncEntityStateAck.Ack { numAckd = ackI, ackdEntities = ackArr, sequence = seq });
+            {
+                GS.netManagerClient?.SendMessageToPeer(SyncEntityStateAck.Instance, peer,
+                    new SyncEntityStateAck.Ack
+                    {
+                        numAckd = ackI,
+                        ackdEntities = ackArr,
+                        sequence = seq,
+                        initialRecv = sendTime
+                    });
+            }
         }
     }
 
@@ -766,8 +798,11 @@ namespace Engine.Networking.Messages
             public EntityAckArr ackdEntities;
             public int sequence;
 
+            public DateTime initialRecv;
+
             public void Deserialize(NetDataReader reader)
             {
+                initialRecv = new DateTime(reader.GetLong());
                 sequence = reader.GetInt();
                 numAckd = reader.GetInt();
 
@@ -779,6 +814,7 @@ namespace Engine.Networking.Messages
 
             public void Serialize(NetDataWriter writer)
             {
+                writer.Put(initialRecv.Ticks);
                 writer.Put(sequence);
                 writer.Put(numAckd);
 

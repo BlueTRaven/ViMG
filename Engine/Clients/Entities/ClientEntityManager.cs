@@ -76,6 +76,14 @@ namespace Engine.Clients.Entities
             }
         }
 
+        public void Update(double deltaTime)
+        {
+            for (int i = 0; i < entities.Length; i++)
+            {
+                entities[i].state.aliveTime += (float)deltaTime;
+            }
+        }
+
         public void AddPlayer(EntityManager.EntityReference reference, int playerUuid, int playerIndex)
         {
             players[playerIndex] = new PlayerHolder
@@ -168,6 +176,7 @@ namespace Engine.Clients.Entities
 
         public void Set(ViMG.Entities.EntityManager.EntityReference reference, string type, BasicState state) 
         {
+            var oldGen = entities[reference.id].generation;
             entities[reference.id] = new()
             {
                 id = reference.id,
@@ -177,7 +186,9 @@ namespace Engine.Clients.Entities
                 entityType = type,
                 entityTypeId = Main.Registry.EntityRegistry.Get(type).Id,
             };
-            entities[reference.id].state.aliveTime = 0;
+
+            if (oldGen != reference.generation)
+                entities[reference.id].state.aliveTime = 0;
         }
 
         public void Remove(ViMG.Entities.EntityManager.EntityReference reference)

@@ -35,8 +35,8 @@ namespace ViMG
 {
     public class World
 	{
-        [ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
-        public static float SyncTime = 1.0f / 20.0f;
+		[ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
+		public static float SyncTime = 1f;// 1.0f / 20.0f;
 		[ConsoleCommandVar("sv_time_mult", "Time multiplier. Default = 1")]
 		public static float TimeMult = 1f;
 		[ConsoleCommandVar("sv_world_time_mult", "World time multiplier. Effects things like day/night cycle. Default = 1")]
@@ -921,7 +921,7 @@ namespace ViMG
         }
 
 		[ConsoleCommand("set_time", "Sets the world's time. Param 0: time to set to, between 0 and 600 (wraps around), 0 being dawn, 300 being dusk. " +
-			"Alternatively, Param 0 can be \"dawn\", \"noon\", \"dusk\", or \"midnight\", for those respective times.")]
+			"Alternatively, Param 0 can be \"dawn\", \"noon\", \"dusk\", or \"midnight\", for those respective times.", ConsoleCommandRunSide.ServerAndClient)]
 		public static void SetTime(string[] parameters)
 		{
 			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
@@ -929,7 +929,11 @@ namespace ViMG
 				if (IMGUIConsole.RequireParam(parameters, 0, "time"))
 				{
 					if (int.TryParse(parameters[0], out int timeSetTo))
+					{ 
 						gsIsland.GetWorld().alive = timeSetTo;
+						if (gsIsland.GetClient() != null)
+							gsIsland.GetClient().Current().time = timeSetTo;
+					}
 					else
 					{
 						if (parameters[0] == "dawn")

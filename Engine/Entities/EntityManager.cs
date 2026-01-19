@@ -142,8 +142,6 @@ namespace ViMG.Entities
 
 		public Engine.Common.Entities.CubeTrackers MeshCubeTrackers;
 
-		public int frame;
-
 		private class CubeTrackers
 		{
 			public ICubeTracker[] cubeTrackers;
@@ -680,7 +678,7 @@ namespace ViMG.Entities
                     {
                         basicState.Get(out var state);
 
-                        ents[i].prevState[Main.Frame % EntPrevSrv] = state;
+                        ents[i].prevState[SyncEntityState.Instance.serverSequence % EntPrevSrv] = state;
                     }
                     else clear = true;
                 }
@@ -689,13 +687,11 @@ namespace ViMG.Entities
                 if (clear)
                 {
                     if (ents[i].prevState != null)
-                        ents[i].prevState[Main.Frame % EntPrevSrv] = new BasicState();
+                        ents[i].prevState[SyncEntityState.Instance.serverSequence % EntPrevSrv] = new BasicState();
                 }
             }
 
             SyncEntityState.Instance.DoSync(this, world.player);
-			
-			frame += 1;
 		}
 
 		public int GetPrevIndexTime(float time) 
@@ -708,7 +704,7 @@ namespace ViMG.Entities
             // negative numbers would be in the future, big nono
             Debug.Assert(prev >= 0 && prev < EntPrevSrv);
 
-			int which = this.frame - prev;
+			int which = SyncEntityState.Instance.serverSequence - prev;
 			which = ((which % EntPrevSrv) + EntPrevSrv) % EntPrevSrv;
 
             return ents[id].prevState?[which] ?? new();
@@ -716,7 +712,7 @@ namespace ViMG.Entities
 
 		public BasicState GetPrevStateAbs(int id, int frame)
 		{
-			var diff = this.frame - frame;
+			var diff = SyncEntityState.Instance.serverSequence - frame;
 
 			// If we overflowed, just return no state
 			if (diff >= EntPrevSrv) return new();

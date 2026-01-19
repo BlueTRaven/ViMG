@@ -204,7 +204,7 @@ namespace ViMG.Entities.Renderers
 
                 float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
 
-                if ((jumpTimer % interval) / interval < 0.5f)
+                if ((entity.aliveTime % interval) / interval < 0.5f)
                     ysrc = 16;
 
                 bool noticed = entity.counters[1] > 0;

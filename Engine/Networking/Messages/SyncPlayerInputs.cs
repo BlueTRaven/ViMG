@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using static Engine.Networking.Messages.SyncPlayerInputs;
 
 namespace Engine.Networking.Messages
 {

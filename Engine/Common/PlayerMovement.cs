@@ -100,7 +100,7 @@ namespace Engine.Common
         // What's our granularity here? 
         // Per-frame or per-sync?
         // per-sync is bad, drop lots of inputs at 20hz...
-        public void Update(ref BasicState player, double deltaTime)
+        public void Update(ref BasicState player, double deltaTime, bool doSim = true)
         {
             const float MIN_NOCLIP_SPEED = Cube.CUBE_SCALE / 4f;
             const float MAX_NOCLIP_SPEED = MIN_NOCLIP_SPEED * 8;
@@ -115,6 +115,9 @@ namespace Engine.Common
             LeftClick.Update();
             RightClick.Update();
             Throw.Update();
+
+            if (!doSim) 
+                return;
 
             var state = (Player.State)player.state;
             Vector3 fwdYO = BasicState.ForwardYawOnly(ref player);
