@@ -43,8 +43,8 @@ namespace ViMG.Entities.Renderers
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                var position = entPrev.GetInterpPosition(entCurr);
-                var rotation = entPrev.GetInterpRotation(entCurr);
+                var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
+                var rotation = entPrev.GetInterpRotation(entCurr, client.TimeC);
                 Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, doorMesh,
                     Matrix.CreateFromQuaternion(rotation) *
                     Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));

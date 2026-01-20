@@ -292,9 +292,9 @@ namespace ViMG.GameStates
                     if (client != null && !manager.Paused)
                     {
                         client.CurrentTime += deltaTime;
-                        var expectedTime = client.LastFrameTime + World.SyncTime;
+                        //var expectedTime = client.LastFrameTime + World.SyncTime;
                         //Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
-                        Main.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
+                        //Main.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
 
                         client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
@@ -766,16 +766,16 @@ namespace ViMG.GameStates
             }
         }
 
-        public override void Draw(GraphicsDevice device, SpriteBatch batch)
+        public override void Draw(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            base.Draw(device, batch);
+            base.Draw(device, batch, deltaTime);
 
             if (client != null)
             {
-                client.Render(device, 0);
-                Main.Renderer.Draw(batch, client.Previous(1).camera, client.Current().camera);
+                client.Render(device, deltaTime);
+                Main.Renderer.Draw(batch, client.currInterpState.camera);
             }
 
             if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer && world != null)

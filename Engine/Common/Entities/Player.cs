@@ -22,8 +22,10 @@ namespace Engine.Common.Entities
             var interp = base.GetInterpolated(in a, in b, t);
             var extraPrev = a.GetExtra<ViMG.Player.PlayerExtraState>();
             var extraCurr = b.GetExtra<ViMG.Player.PlayerExtraState>();
-            extraCurr.useAnimTimer = float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)Main.TimeC);
+            extraCurr.useAnimTimer = float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)t);
             interp.SetExtra(ref extraCurr);
+
+            interp.rotation = b.rotation;
 
             return interp;
         }

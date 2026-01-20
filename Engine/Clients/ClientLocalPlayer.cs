@@ -205,6 +205,7 @@ namespace Engine.Clients
                                 camRotation.Y = -MathHelper.ToRadians(89);
 
                             current.camera.RotationEuler = camRotation;
+                            client.currInterpState.camera.RotationEuler = camRotation;
 
                             localPlayer.rotation = current.camera.Rotation;
                         }

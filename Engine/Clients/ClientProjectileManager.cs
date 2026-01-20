@@ -93,9 +93,9 @@ namespace Engine.Clients
                     ProjectileHelper.Projectile pcurr = client.Current().projectiles.GetProjectile(i);
                     ProjectileHelper.Projectile projectile = new ProjectileHelper.Projectile 
                     {
-                        position = Vector3.Lerp(pprev.position, pcurr.position, (float)Main.TimeC),
-                        velocity = Vector3.Lerp(pprev.velocity, pcurr.velocity, (float)Main.TimeC),
-                        timeLeft = float.Lerp(pprev.timeLeft, pcurr.timeLeft, (float)Main.TimeC),
+                        position = Vector3.Lerp(pprev.position, pcurr.position, (float)client.TimeC),
+                        velocity = Vector3.Lerp(pprev.velocity, pcurr.velocity, (float)client.TimeC),
+                        timeLeft = float.Lerp(pprev.timeLeft, pcurr.timeLeft, (float)client.TimeC),
                     };
 
                     if (visStats.hasLight)

@@ -89,9 +89,7 @@ namespace ViMG.Cubes
         {
             const float FRAME_TIME = 0.125f * 3;
 
-            var prev = client.Previous(1);
-            var curr = client.Current();
-            float alive = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            float alive = (float)client.currInterpState.time;
 
             float t = ((alive % FRAME_TIME) * 3f) / (FRAME_TIME * 3f);
 

@@ -63,8 +63,12 @@ namespace Engine.Clients
         public double LastFrameTime;
         public double Variance;
         public double CurrentTime;
+        public double RenderTime;
+        public double LastFrameRenderTime;
 
         //public Camera InterpCamera = null;
+
+        public double TimeC => 1 - (((LastFrameRenderTime + World.SyncTime) - RenderTime) / World.SyncTime);
 
         public ClientStates(GraphicsDevice device)
         {
@@ -107,6 +111,8 @@ namespace Engine.Clients
 
             LastFrameTime = time;
             CurrentTime = time;
+
+            LastFrameRenderTime = RenderTime;
 
             Variance = expectedArrivalTime - time;
             //Console.WriteLine("New frame {0} time {1:.0000}s expected {2:.0000}s variance {3:.0000}s {4}", frame, time, expectedArrivalTime, double.Abs(Variance), Variance > 0 ? "early" : "late");
@@ -153,12 +159,14 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            RenderTime += deltaTime;
+
             {
                 var prevCamera = prevInterpState.camera;
                 var currCamera = Current().camera;
-                currInterpState.camera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)Main.TimeC);
-                currInterpState.camera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)Main.TimeC);
-                currInterpState.camera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
+                currInterpState.camera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)TimeC);
+                //currInterpState.camera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)TimeC);
+                currInterpState.camera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)TimeC);
 
                 for (int i = 0; i < EntityManager.EntMax; i++)
                 {
@@ -171,6 +179,8 @@ namespace Engine.Clients
 
                     ent = Main.Registry.EntityRegistry.Get(typeId)?.GetInterpolated(this, reference) ?? new();
                 }
+
+                currInterpState.time = (float)double.Lerp(prevInterpState.time, Current().time, TimeC);
             }
 
             if (RenderLights)

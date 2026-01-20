@@ -161,7 +161,7 @@ namespace Engine.Entities.Renderers
 
             var curr = client.Current();
             var prev = client.Previous(1);
-            float interpTime = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            float interpTime = (float)double.Lerp(prev.time, curr.time, client.TimeC);
             var entity = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
             var player = entity.GetExtra<Player.PlayerExtraState>();
 

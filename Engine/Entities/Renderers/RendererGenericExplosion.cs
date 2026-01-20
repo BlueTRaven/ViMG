@@ -38,11 +38,11 @@ namespace ViMG.Entities.Renderers
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                float radius = (1 - entPrev.GetInterpTimer(entCurr, 0) / GenericExplosion.EXPLOSION_TIME) * entPrev.GetInterpTimer(entCurr, 1);
-                float sort = (entPrev.GetInterpPosition(entCurr) - Main.camera.Position).Length();
+                float radius = (1 - entPrev.GetInterpTimer(entCurr, 0, client.TimeC) / GenericExplosion.EXPLOSION_TIME) * entPrev.GetInterpTimer(entCurr, 1, client.TimeC);
+                float sort = (entPrev.GetInterpPosition(entCurr, client.TimeC) - Main.camera.Position).Length();
                 Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
                     new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
-                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr)), null, Color.Red * 0.5f));
+                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr, client.TimeC)), null, Color.Red * 0.5f));
             }
         }
     }

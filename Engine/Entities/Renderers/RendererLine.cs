@@ -39,12 +39,12 @@ namespace ViMG.Entities.Renderers
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                var position = entPrev.GetInterpPosition(entCurr);
+                var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
                 var endPosition = Vector3.Lerp(entPrev.rotation.ToVector4().ToVector3(), entCurr.rotation.ToVector4().ToVector3(), (float)Main.TimeP);
-                var time = entPrev.GetInterpTimer(entCurr, 0);
-                var width = entPrev.GetInterpTimer(entCurr, 1);
-                var tileHeight = entPrev.GetInterpTimer(entCurr, 2);
-                var alive = entPrev.GetInterpTimer(entCurr, 3);
+                var time = entPrev.GetInterpTimer(entCurr, 0, client.TimeC);
+                var width = entPrev.GetInterpTimer(entCurr, 1, client.TimeC);
+                var tileHeight = entPrev.GetInterpTimer(entCurr, 2, client.TimeC);
+                var alive = entPrev.GetInterpTimer(entCurr, 3, client.TimeC);
                 var colorPrev = new Color((uint)entPrev.counters[0]);
                 var colorCurr = new Color((uint)entCurr.counters[0]);
                 var color = Color.Lerp(colorPrev, colorCurr, (float)Main.TimeP);

@@ -102,7 +102,7 @@ namespace ModGameBase.Client.WorldLogics
 
             Vector4 lightColor = sunlightColor.ToVector4();
 
-            float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            float time = (float)double.Lerp(prev.time, curr.time, client.TimeC);
             float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
             Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
@@ -137,7 +137,7 @@ namespace ModGameBase.Client.WorldLogics
             var curr = client.Current();
             var prev = client.Previous(1);
 
-            float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
+            float time = (float)double.Lerp(prev.time, curr.time, client.TimeC);
 
             WeatherManager.Draw(device, client.currInterpState.camera, time);
 

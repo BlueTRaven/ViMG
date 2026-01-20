@@ -49,8 +49,8 @@ namespace ViMG.Entities.Renderers
                 var entCurr = client.Current().entities.GetById(reference.id);
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                var position = entPrev.GetInterpPosition(entCurr);
-                var timer = entPrev.GetInterpTimer(entCurr, 0);
+                var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
+                var timer = entPrev.GetInterpTimer(entCurr, 0, client.TimeC);
 
                 var yawPitch = new Vector2(entCurr.rotation.X, entCurr.rotation.Y);
 

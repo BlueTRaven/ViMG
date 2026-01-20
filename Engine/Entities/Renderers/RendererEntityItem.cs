@@ -48,8 +48,8 @@ namespace ViMG.Entities.Renderers
                 {
                     itemInstance.item.Client.DrawInWorld(device, itemInstance,
                         Matrix.CreateTranslation(-origin) *
-                        Matrix.CreateFromQuaternion(entPrev.GetInterpRotation(entCurr)) *
-                        Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr))
+                        Matrix.CreateFromQuaternion(entPrev.GetInterpRotation(entCurr, client.TimeC)) *
+                        Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr, client.TimeC))
                         );
                 }
             }

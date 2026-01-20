@@ -70,9 +70,9 @@ namespace ViMG.GameStates
             currentGameState?.DrawUI(batch);
         }
 
-        public void Draw(GraphicsDevice device, SpriteBatch batch)
+        public void Draw(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
-            currentGameState?.Draw(device, batch);
+            currentGameState?.Draw(device, batch, deltaTime);
         }
 
         public GameState GetCurrentGameState()

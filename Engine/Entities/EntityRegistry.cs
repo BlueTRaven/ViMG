@@ -47,20 +47,20 @@ namespace Engine.Entities
             if (!client.Current().entities.IsActive(ref reference))
                 curr = prev;
 
-            return GetInterpolated(ref prev, ref curr, Main.TimeC);
+            return GetInterpolated(ref prev, ref curr, client.TimeC);
         }
 
         protected virtual BasicState GetInterpolated(ref readonly BasicState a, ref readonly BasicState b, double t)
         {
             var interp = a;
-            interp.position = a.GetInterpPosition(b);
-            interp.rotation = a.GetInterpRotation(b);
-            interp.velocity = a.GetInterpVelocity(b);
+            interp.position = a.GetInterpPosition(b, t);
+            interp.rotation = a.GetInterpRotation(b, t);
+            interp.velocity = a.GetInterpVelocity(b, t);
             for (int i = 0; i < 4; i++)
-                interp.timers[i] = a.GetInterpTimer(b, i);
+                interp.timers[i] = a.GetInterpTimer(b, i, t);
 
             for (int i = 0; i < 4; i++)
-                interp.counters[i] = a.GetInterpCounter(b, i);
+                interp.counters[i] = a.GetInterpCounter(b, i, t);
 
             interp.aliveTime = float.Lerp(a.aliveTime, b.aliveTime, (float)t);
 

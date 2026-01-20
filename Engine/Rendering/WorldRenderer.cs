@@ -47,7 +47,7 @@ namespace ViMG.Rendering
             bool isDirty = previous.camera.Position != current.camera.Position || previous.camera.RotationEuler != current.camera.RotationEuler || previous.camera.Scale != current.camera.Scale;
             if (isDirty) current.camera.MarkDirty();
 
-            var time = double.Lerp(previous.time, current.time, Main.TimeC);
+            var time = client.currInterpState.time;
 
             if (chunkDrawPositionsDirty || current.camera.IsDirty)
             {

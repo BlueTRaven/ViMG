@@ -458,29 +458,29 @@ namespace Engine.Networking
             return MemoryMarshal.Cast<byte, T>(bytes)[0];
         }
 
-        public Vector3 GetInterpPosition(BasicState other)
+        public Vector3 GetInterpPosition(BasicState other, double t)
         {
-            return Vector3.Lerp(position, other.position, (float)Main.TimeC);
+            return Vector3.Lerp(position, other.position, (float)t);
         }
         
-        public Vector3 GetInterpVelocity(BasicState other)
+        public Vector3 GetInterpVelocity(BasicState other, double t)
         {
-            return Vector3.Lerp(velocity, other.velocity, (float)Main.TimeC);
+            return Vector3.Lerp(velocity, other.velocity, (float)t);
         }
 
-        public Quaternion GetInterpRotation(BasicState other)
+        public Quaternion GetInterpRotation(BasicState other, double t)
         {
-            return Quaternion.Lerp(rotation, other.rotation, (float)Main.TimeC);
+            return Quaternion.Lerp(rotation, other.rotation, (float)t);
         }
 
-        public float GetInterpTimer(BasicState other, int timer)
+        public float GetInterpTimer(BasicState other, int timer, double t)
         {
-            return MathHelper.Lerp(timers[timer], other.timers[timer], (float)Main.TimeC);
+            return MathHelper.Lerp(timers[timer], other.timers[timer], (float)t);
         }
 
-        public int GetInterpCounter(BasicState other, int counter)
+        public int GetInterpCounter(BasicState other, int counter, double t)
         {
-            return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)Main.TimeC);
+            return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)t);
         }
 
         public void OnSave(List<byte> saveBytes)

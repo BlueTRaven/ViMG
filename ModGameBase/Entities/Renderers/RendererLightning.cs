@@ -56,8 +56,8 @@ namespace ViMG.Entities.Renderers
                 {
                     positions.Clear();
 
-                    Vector3 position = entPrev.GetInterpPosition(entCurr);
-                    Vector3 bottomPosition = entPrev.GetInterpVelocity(entCurr);
+                    Vector3 position = entPrev.GetInterpPosition(entCurr, client.TimeC);
+                    Vector3 bottomPosition = entPrev.GetInterpVelocity(entCurr, client.TimeC);
 
                     Vector3 direction = bottomPosition - position;
                     float distance = direction.Length();
@@ -90,17 +90,17 @@ namespace ViMG.Entities.Renderers
                 {
                     positions.Clear();
                     basePositions.Clear();
-                    positions.Add(entPrev.GetInterpPosition(entCurr));
-                    basePositions.Add(entPrev.GetInterpPosition(entCurr));
+                    positions.Add(entPrev.GetInterpPosition(entCurr, client.TimeC));
+                    basePositions.Add(entPrev.GetInterpPosition(entCurr, client.TimeC));
 
-                    int advanceNum = entPrev.GetInterpCounter(entCurr, 0);
+                    int advanceNum = entPrev.GetInterpCounter(entCurr, 0, client.TimeC);
                     int seed = entCurr.counters[1];
 
-                    float advanceLength = entPrev.GetInterpTimer(entCurr, 1);
-                    float maxLength = entPrev.GetInterpTimer(entCurr, 2);
-                    float advanceVariance = entPrev.GetInterpTimer(entCurr, 3);
+                    float advanceLength = entPrev.GetInterpTimer(entCurr, 1, client.TimeC);
+                    float maxLength = entPrev.GetInterpTimer(entCurr, 2, client.TimeC);
+                    float advanceVariance = entPrev.GetInterpTimer(entCurr, 3, client.TimeC);
 
-                    Vector3 advanceDirection = entPrev.GetInterpVelocity(entCurr);
+                    Vector3 advanceDirection = entPrev.GetInterpVelocity(entCurr, client.TimeC);
 
                     float totalLength = 0;
 
