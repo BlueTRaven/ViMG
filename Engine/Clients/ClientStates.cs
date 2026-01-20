@@ -40,6 +40,8 @@ namespace Engine.Clients
 
         private GraphicsDevice device;
         public ClientWorld[] states;
+        public ClientWorld currInterpState;
+        public ClientWorld prevInterpState;
         public ClientInventoryManager inventoryManager;
         public ClientChunkManager ChunkManager;
         public ClientWorldLogic WorldLogic;
@@ -62,7 +64,7 @@ namespace Engine.Clients
         public double Variance;
         public double CurrentTime;
 
-        public Camera InterpCamera = null;
+        //public Camera InterpCamera = null;
 
         public ClientStates(GraphicsDevice device)
         {
@@ -77,7 +79,10 @@ namespace Engine.Clients
             {
                 states[i] = new ClientWorld();
             }
-            InterpCamera = new CameraPerspective(states[0].camera.Position, states[0].camera.RotationEuler, states[0].camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
+            currInterpState = new ClientWorld();
+            prevInterpState = new ClientWorld();
+
+            //InterpCamera = new CameraPerspective(states[0].camera.Position, states[0].camera.RotationEuler, states[0].camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
             inventoryManager = new ClientInventoryManager();
 
@@ -109,6 +114,8 @@ namespace Engine.Clients
             ClientWorld prev = Current();
             head = (head + 1) % ViMG.Entities.EntityManager.EntPrevSrv;
             Current().NewFrame(prev, time);
+            prevInterpState.NewFrame(currInterpState, currInterpState.time);
+            currInterpState.NewFrame(prev, time);
 
             SyncInventoryUpdate.Instance.Apply(inventoryManager);
         }
@@ -147,11 +154,23 @@ namespace Engine.Clients
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
             {
-                var prevCamera = Previous(1).camera;
+                var prevCamera = prevInterpState.camera;
                 var currCamera = Current().camera;
-                InterpCamera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)Main.TimeC);
-                InterpCamera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)Main.TimeC);
-                InterpCamera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
+                currInterpState.camera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)Main.TimeC);
+                currInterpState.camera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)Main.TimeC);
+                currInterpState.camera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)Main.TimeC);
+
+                for (int i = 0; i < EntityManager.EntMax; i++)
+                {
+                    var reference = currInterpState.entities.GetReference(i);
+                    if (reference.id == -1) continue;
+
+                    ref var ent = ref currInterpState.entities.GetByRefPtr(ref reference);
+
+                    int typeId = currInterpState.entities.GetTypeById(reference.id);
+
+                    ent = Main.Registry.EntityRegistry.Get(typeId)?.GetInterpolated(this, reference) ?? new();
+                }
             }
 
             if (RenderLights)
@@ -193,12 +212,12 @@ namespace Engine.Clients
             {
                 bepuDebugRenderer.Shapes.ClearInstances();
                 bepuDebugRenderer.Shapes.AddInstances(Main.gameStateManager.TheIsland.GetWorld().PhysicsInfo.Simulation);
-                bepuDebugRenderer.Render(device, InterpCamera);
+                bepuDebugRenderer.Render(device, currInterpState.camera);
             }
 
             if (Main.gameStateManager.TheIsland.GetWorld() != null)
             {
-                Main.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, InterpCamera);
+                Main.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, currInterpState.camera);
             }
         }
 

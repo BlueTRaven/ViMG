@@ -36,7 +36,7 @@ namespace ViMG
     public class World
 	{
 		[ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
-		public static float SyncTime = 1f;// 1.0f / 20.0f;
+		public static float SyncTime = 1.0f / 20.0f;
 		[ConsoleCommandVar("sv_time_mult", "Time multiplier. Default = 1")]
 		public static float TimeMult = 1f;
 		[ConsoleCommandVar("sv_world_time_mult", "World time multiplier. Effects things like day/night cycle. Default = 1")]

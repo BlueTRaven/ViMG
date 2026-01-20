@@ -113,7 +113,7 @@ namespace Engine.Clients
                     {
                         Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(visStats.scale) *
-                            Matrix.CreateFromQuaternion(-client.InterpCamera.Rotation) *
+                            Matrix.CreateFromQuaternion(-client.currInterpState.camera.Rotation) *
                             Matrix.CreateTranslation(projectile.position), visStats.sourceRect));
                     }
                     else
@@ -122,7 +122,7 @@ namespace Engine.Clients
                         axis.Normalize();
 
                         Matrix mat = Matrix.CreateConstrainedBillboard(projectile.position,
-                            client.InterpCamera.Position, axis, -client.InterpCamera.Forward, Vector3.Forward);
+                            client.currInterpState.camera.Position, axis, -client.currInterpState.camera.Forward, Vector3.Forward);
 
                         Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(visStats.scale) *

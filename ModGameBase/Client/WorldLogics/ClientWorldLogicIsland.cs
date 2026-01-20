@@ -111,10 +111,10 @@ namespace ModGameBase.Client.WorldLogics
 
             WeatherManager.Update(deltaTime, (float)client.Current().time, lightColor);
             var interpPlayer = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
-            WeatherManager.UpdateClient(deltaTime, client.InterpCamera, interpPlayer.position, client.ChunkManager.CubeView);
+            WeatherManager.UpdateClient(deltaTime, client.currInterpState.camera, interpPlayer.position, client.ChunkManager.CubeView);
             WeatherManager.UpdateClientLight(deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
 
-            directionalLight.UpdateCameras(client, client.InterpCamera, lightDir, lightColor);
+            directionalLight.UpdateCameras(client, client.currInterpState.camera, lightDir, lightColor);
 
             if (Main.Time - timeSinceLastCamUpdate > 1)
             {
@@ -139,7 +139,7 @@ namespace ModGameBase.Client.WorldLogics
 
             float time = (float)double.Lerp(prev.time, curr.time, Main.TimeC);
 
-            WeatherManager.Draw(device, client.InterpCamera, time);
+            WeatherManager.Draw(device, client.currInterpState.camera, time);
 
             //if (world.LoadedFolderName == "coconut")
             //    sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
@@ -147,14 +147,14 @@ namespace ModGameBase.Client.WorldLogics
             float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
             // TODO this should be elsewhere - we don't need to update this very often?
-            directionalLight.DrawShadowmap(device, client.InterpCamera, client.ChunkManager.ChunkMesher.RenderMesher);
-            directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, client.InterpCamera);
+            directionalLight.DrawShadowmap(device, client.currInterpState.camera, client.ChunkManager.ChunkMesher.RenderMesher);
+            directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, client.currInterpState.camera);
 
             Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw(200,
                 materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
                 Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-                Matrix.CreateTranslation(client.InterpCamera.Position),
+                Matrix.CreateTranslation(client.currInterpState.camera.Position),
                 tintColor: Color.White));
 
             var localPlayerRef = curr.entities.GetLocalPlayerRef();

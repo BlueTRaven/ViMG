@@ -293,9 +293,10 @@ namespace ViMG.GameStates
                     {
                         client.CurrentTime += deltaTime;
                         var expectedTime = client.LastFrameTime + World.SyncTime;
-                        Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
+                        //Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
+                        Main.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
 
-                        client.ChunkManager.ChunkMesher.Update(client.InterpCamera.Position, client.ChunkManager.CopyManager, client.Current().entities);
+                        client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
                     }
                 }

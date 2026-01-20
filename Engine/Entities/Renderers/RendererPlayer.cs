@@ -58,8 +58,8 @@ namespace Engine.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                var entType = Main.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
-                var entity = entType?.GetInterpolated(client, reference) ?? new();
+                //var entType = Main.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
+                var entity = client.currInterpState.entities.GetByRef(ref reference); //entType?.GetInterpolated(client, reference) ?? new();
 
                 var extraState = entity.GetExtra<Player.PlayerExtraState>();
                 Inventory? inventory = client.inventoryManager.Get(extraState.inventory);
@@ -74,7 +74,7 @@ namespace Engine.Entities.Renderers
                     Matrix.CreateTranslation(entity.position);
 
                 Color color = Color.White;
-                var distFromCam = (entity.position - client.InterpCamera.Position).Length();
+                var distFromCam = (entity.position - client.currInterpState.camera.Position).Length();
                 if (distFromCam < Cube.CUBE_SCALE * 2f)
                 {
                     var min = Cube.CUBE_SCALE * 2f;

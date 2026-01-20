@@ -110,7 +110,7 @@ namespace ViMG.Entities.Renderers
 
             var prev = client.Previous(1);
             var current = client.Current();
-            var camera = client.InterpCamera;
+            var camera = client.currInterpState.camera;
             Matrix billboard = Matrix.CreateRotationX(Math.Clamp(camera.RotationEuler.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                     Matrix.CreateRotationY(camera.RotationEuler.X);
 
@@ -126,7 +126,7 @@ namespace ViMG.Entities.Renderers
                 // TODO get rid of str compare
                 if (current.entities.GetTypeById(reference.id) != type) continue;
 
-                var entInterp = Main.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
+                var entInterp = client.currInterpState.entities.GetByRef(ref reference); //Main.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
                 //var entCurr = client.Current().entities.GetById(reference.id);
                 //var entPrev = client.Previous(1).entities.GetById(reference.id);
 

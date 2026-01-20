@@ -17,14 +17,11 @@ namespace Engine.Common.Entities
         {
         }
 
-        public override BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
+        protected override BasicState GetInterpolated(ref readonly BasicState a, ref readonly BasicState b, double t)
         {
-            var interp = base.GetInterpolated(client, reference);
-
-            var prev = client.Previous(1).entities.GetByRef(ref reference);
-            var curr = client.Current().entities.GetByRef(ref reference);
-            var extraPrev = prev.GetExtra<ViMG.Player.PlayerExtraState>();
-            var extraCurr = curr.GetExtra<ViMG.Player.PlayerExtraState>();
+            var interp = base.GetInterpolated(in a, in b, t);
+            var extraPrev = a.GetExtra<ViMG.Player.PlayerExtraState>();
+            var extraCurr = b.GetExtra<ViMG.Player.PlayerExtraState>();
             extraCurr.useAnimTimer = float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)Main.TimeC);
             interp.SetExtra(ref extraCurr);
 

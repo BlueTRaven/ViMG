@@ -1,4 +1,5 @@
 ﻿using Engine.Clients;
+using Engine.Common;
 using Engine.Networking;
 using SharpDX.Diagnostics;
 using System;
@@ -39,25 +40,29 @@ namespace Engine.Entities
 
         public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
-            var prev = client.Previous(1).entities.GetByRef(ref reference);
+            var prev = client.prevInterpState.entities.GetByRef(ref reference);
             var curr = client.Current().entities.GetByRef(ref reference);
-            
             if (!client.Previous(1).entities.IsActive(ref reference))
                 prev = curr;
             if (!client.Current().entities.IsActive(ref reference))
                 curr = prev;
 
-            var interp = prev;
-            interp.position = prev.GetInterpPosition(curr);
-            interp.rotation = prev.GetInterpRotation(curr);
-            interp.velocity = prev.GetInterpVelocity(curr);
+            return GetInterpolated(ref prev, ref curr, Main.TimeC);
+        }
+
+        protected virtual BasicState GetInterpolated(ref readonly BasicState a, ref readonly BasicState b, double t)
+        {
+            var interp = a;
+            interp.position = a.GetInterpPosition(b);
+            interp.rotation = a.GetInterpRotation(b);
+            interp.velocity = a.GetInterpVelocity(b);
             for (int i = 0; i < 4; i++)
-                interp.timers[i] = prev.GetInterpTimer(curr, i);
+                interp.timers[i] = a.GetInterpTimer(b, i);
 
             for (int i = 0; i < 4; i++)
-                interp.counters[i] = prev.GetInterpCounter(curr, i);
+                interp.counters[i] = a.GetInterpCounter(b, i);
 
-            interp.aliveTime = float.Lerp(prev.aliveTime, curr.aliveTime, (float)Main.TimeC);
+            interp.aliveTime = float.Lerp(a.aliveTime, b.aliveTime, (float)t);
 
             return interp;
         }

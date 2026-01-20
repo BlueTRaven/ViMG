@@ -51,7 +51,7 @@ namespace ViMG.Rendering
 
             if (chunkDrawPositionsDirty || current.camera.IsDirty)
             {
-                ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(client.InterpCamera.Position);
+                ChunkPosition camPos = ChunkPosition.WorldSpaceChunk(client.currInterpState.camera.Position);
 
                 culledChunkDrawPositions.Clear();
 
@@ -66,7 +66,7 @@ namespace ViMG.Rendering
                             //int length = (int)(new Vector3(chunkPos.X, chunkPos.Y, chunkPos.Z) - new Vector3(camPos.X, camPos.Y, camPos.Z)).Length();
 
                             if (client.ChunkManager.IsInWorldBounds(chunkPos) &&
-                                client.InterpCamera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
+                                client.currInterpState.camera.FrustumIntersects(new Rectangle3D(chunkPos.InWorldSpace(), new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE))))
                             {
                                 culledChunkDrawPositions.Add(chunkPos);
                             }
@@ -93,8 +93,8 @@ namespace ViMG.Rendering
                 mesh = client.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
                 if (mesh.IBO != null)
                 {
-                    Vector3 minBounds = client.InterpCamera.Position - pos.InWorldSpace();
-                    Vector3 maxBounds = client.InterpCamera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+                    Vector3 minBounds = client.currInterpState.camera.Position - pos.InWorldSpace();
+                    Vector3 maxBounds = client.currInterpState.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
                     //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
@@ -107,8 +107,8 @@ namespace ViMG.Rendering
                     mesh = client.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
                     if (mesh.IBO != null)
                     {
-                        Vector3 minBounds = client.InterpCamera.Position - pos.InWorldSpace();
-                        Vector3 maxBounds = client.InterpCamera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
+                        Vector3 minBounds = client.currInterpState.camera.Position - pos.InWorldSpace();
+                        Vector3 maxBounds = client.currInterpState.camera.Position - minBounds + new Vector3(Chunk.CHUNK_SIZE * Cube.CUBE_SCALE);
 
                         Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
@@ -137,7 +137,7 @@ namespace ViMG.Rendering
                         skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
                         Matrix.CreateFromYawPitchRoll(y, p, 0) *
-                        Matrix.CreateTranslation(client.InterpCamera.Position),
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position),
                         null, Color.White));
                 }
 
@@ -149,7 +149,7 @@ namespace ViMG.Rendering
                         new RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Day),
                         skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
-                        Matrix.CreateTranslation(client.InterpCamera.Position),
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position),
                         null, Color.White * alphaDay));
                 }
 
@@ -161,7 +161,7 @@ namespace ViMG.Rendering
                         Material = new Rendering.RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Weather),
                         TintColor = client.WorldLogic.skybox.WeatherColor.ToVector4() * client.WorldLogic.skybox.WeatherAlpha,
                         Transform = Matrix.CreateTranslation(new Vector3(-0.5f)) *
-                            Matrix.CreateTranslation(client.InterpCamera.Position),
+                            Matrix.CreateTranslation(client.currInterpState.camera.Position),
                         Mesh = skyboxMesh,
                     });
                 }
@@ -183,7 +183,7 @@ namespace ViMG.Rendering
                     Vector3 wsPos = mined.position.InWorldSpace(mined.chunk);
                     Matrix mat = Matrix.CreateTranslation(wsPos);
                     RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
-                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((client.InterpCamera.Position - wsPos).Length(), material, breakMesh,
+                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((client.currInterpState.camera.Position - wsPos).Length(), material, breakMesh,
                         mat, sourceRect));
                 }
             }

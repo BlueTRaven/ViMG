@@ -146,6 +146,7 @@ namespace Engine.Clients.Entities
 
         public ref BasicState GetByRefPtr(ref readonly EntityManager.EntityReference reference)
         {
+
             if (entities[reference.id].generation != reference.generation)
             {
                 throw new Exception("Generation mismatch");
