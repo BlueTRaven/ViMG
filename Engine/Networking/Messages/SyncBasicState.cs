@@ -691,6 +691,7 @@ namespace Engine.Networking.Messages
                                     client.Current().entities.Set(reference, typeName, state);
                                     client.LocalPlayer = new Clients.ClientLocalPlayer(ref reference, ref state);
                                     client.LocalPlayer.MakeNew(ref state, client.ChunkManager.PhysicsInfo);
+                                    client.Current().camera.Rotation = state.rotation;
                                 }
                             }
                             else

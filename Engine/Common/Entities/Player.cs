@@ -32,8 +32,8 @@ namespace Engine.Common.Entities
                 extraInterp.useAnimTimer = EntityRegistry.NetworkLerp(extraPrev.useAnimTimer, extraPrevI.useAnimTimer, extraCurr.useAnimTimer, (float)t, 1.0f / 20.0f);// float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)t);
             }
 
-            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
-                Console.WriteLine("useAnimTimer: {0:0.0000}. Prev = {1:0.00} curr = {2:0.00} - t = {3:0.000}", extraInterp.useAnimTimer, extraPrevI.useAnimTimer, extraCurr.useAnimTimer, t);
+            //if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+            //    Console.WriteLine("useAnimTimer: {0:0.0000}. Prev = {1:0.00} curr = {2:0.00} - t = {3:0.000}", extraInterp.useAnimTimer, extraPrevI.useAnimTimer, extraCurr.useAnimTimer, t);
 
             interp.SetExtra(ref extraInterp);
 

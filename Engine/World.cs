@@ -114,6 +114,7 @@ namespace ViMG
 		private int nextLayer;
 		private Task<World> nextWorld;
 
+		public DateTime startTime;
         private float alive;
 
         public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
@@ -158,6 +159,8 @@ namespace ViMG
 				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
             LightManager2 = new LightManager2();
+
+			startTime = DateTime.Now;
         }
 
         public void InitMeshes(GraphicsDevice device)

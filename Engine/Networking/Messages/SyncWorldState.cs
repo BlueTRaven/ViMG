@@ -30,6 +30,7 @@ namespace Engine.Networking.Messages
             base.SendMessage(netMessage, addData);
 
             netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            netMessage.writer.Put((DateTime.Now - GS.GetWorld().startTime).Ticks);
             netMessage.writer.Put(GS.GetWorld().GetTime());
             netMessage.writer.Put((ulong)GS.GetWorld().WorldInfo.flags.Flags);
 
@@ -40,8 +41,12 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
+            long ticks = reader.GetLong();
+            TimeSpan timeSent = new TimeSpan(ticks);
             float time = reader.GetFloat();
             ulong flags = reader.GetULong();
+
+            //time = (float)timeSent.TotalSeconds;
 
             //GS.GetWorld()?.SetTime(time);
 

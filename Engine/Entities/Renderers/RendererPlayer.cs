@@ -71,7 +71,7 @@ namespace Engine.Entities.Renderers
                 //else if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
                 //    Console.WriteLine("No");
 
-                    highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
+                highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
 
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 

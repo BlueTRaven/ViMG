@@ -1635,7 +1635,7 @@ namespace ViMG
 			var extraState = player.GetExtra<PlayerExtraState>();
 			float percent = extraState.useAnimTimer / extraState.useAnimTime;
 
-			if (percent <= 0)
+			if (percent <= 0 || float.IsNaN(percent))
 				percent = 0;
 
 			// TODO use Rotation instead of Forward/Up/LR

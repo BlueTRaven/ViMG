@@ -35,12 +35,11 @@ namespace ViMG.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                var entCurr = client.Current().entities.GetById(reference.id);
-                var entPrev = client.Previous(1).entities.GetById(reference.id);
+                var ent = client.currInterpState.entities.GetByRef(ref reference);
 
                 Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-                ItemInstance itemInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(entCurr.counters[0]), entCurr.counters[1], entCurr.counters[2]);
+                ItemInstance itemInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(ent.counters[0]), ent.counters[1], ent.counters[2]);
                 if (itemInstance.item is ItemCube)
                     origin.Z = Cube.CUBE_SCALE / 4f;
 
@@ -48,8 +47,8 @@ namespace ViMG.Entities.Renderers
                 {
                     itemInstance.item.Client.DrawInWorld(device, itemInstance,
                         Matrix.CreateTranslation(-origin) *
-                        Matrix.CreateFromQuaternion(entPrev.GetInterpRotation(entCurr, client.TimeC)) *
-                        Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr, client.TimeC))
+                        Matrix.CreateFromQuaternion(ent.rotation) *
+                        Matrix.CreateTranslation(ent.position)
                         );
                 }
             }
