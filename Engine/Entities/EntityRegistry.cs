@@ -40,29 +40,30 @@ namespace Engine.Entities
 
         public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
-            var prev = client.prevInterpState.entities.GetByRef(ref reference);
+            var prev = client.Previous(1).entities.GetByRef(ref reference);
+            var prevInterp = client.prevInterpState.entities.GetByRef(ref reference);
             var curr = client.Current().entities.GetByRef(ref reference);
             if (!client.Previous(1).entities.IsActive(ref reference))
-                prev = curr;
+                prevInterp = curr;
             if (!client.Current().entities.IsActive(ref reference))
-                curr = prev;
+                curr = prevInterp;
 
-            return GetInterpolated(ref prev, ref curr, client.TimeC);
+            return GetInterpolated(ref prev, ref prevInterp, ref curr, client.TimeC);
         }
 
-        protected virtual BasicState GetInterpolated(ref readonly BasicState a, ref readonly BasicState b, double t)
+        protected virtual BasicState GetInterpolated(ref readonly BasicState prev, ref readonly BasicState prevInterp, ref readonly BasicState curr, double t)
         {
-            var interp = a;
-            interp.position = a.GetInterpPosition(b, t);
-            interp.rotation = a.GetInterpRotation(b, t);
-            interp.velocity = a.GetInterpVelocity(b, t);
+            var interp = prevInterp;
+            interp.position = prevInterp.GetInterpPosition(curr, t);
+            interp.rotation = prevInterp.GetInterpRotation(curr, t);
+            interp.velocity = prevInterp.GetInterpVelocity(curr, t);
             for (int i = 0; i < 4; i++)
-                interp.timers[i] = a.GetInterpTimer(b, i, t);
+                interp.timers[i] = prevInterp.GetInterpTimer(curr, i, t);
 
             for (int i = 0; i < 4; i++)
-                interp.counters[i] = a.GetInterpCounter(b, i, t);
+                interp.counters[i] = prevInterp.GetInterpCounter(curr, i, t);
 
-            interp.aliveTime = float.Lerp(a.aliveTime, b.aliveTime, (float)t);
+            interp.aliveTime = float.Lerp(prevInterp.aliveTime, curr.aliveTime, (float)t);
 
             return interp;
         }
@@ -94,6 +95,20 @@ namespace Engine.Entities
         public EntityType GetFromEntity(Entity ent)
         {
             return Get(ent.GetType().FullName);
+        }
+
+        // If the discontinuity between a and b is larger than error, return b.
+        // When a server entity sets a timer to some value, the client will naturally try to interpolate this when we don't want it to.
+        // This can detect that and throw it out.
+        // For this reason, don't use timers smaller than error.
+        public static float NetworkLerp(float a, float interp, float b, float t, float error = 1.0f / 60.0f)
+        {
+            if (float.Abs(b - a) > error)
+            {
+                return b;
+            }
+
+            return float.Lerp(interp, b, t);
         }
     }
 }

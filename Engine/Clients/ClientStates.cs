@@ -159,7 +159,8 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
-            RenderTime += deltaTime;
+            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+                RenderTime += deltaTime;
 
             {
                 var prevCamera = prevInterpState.camera;

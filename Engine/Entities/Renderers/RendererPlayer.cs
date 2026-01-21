@@ -21,6 +21,7 @@ using ViMG.Entities;
 using ViMG.Entities.Renderers;
 using ViMG.Items;
 using ViMG.Rendering;
+using ViMG.UIs;
 using ViMG.VertexDeclarations;
 
 namespace Engine.Entities.Renderers
@@ -64,7 +65,13 @@ namespace Engine.Entities.Renderers
                 var extraState = entity.GetExtra<Player.PlayerExtraState>();
                 Inventory? inventory = client.inventoryManager.Get(extraState.inventory);
                 var highlightedItem = inventory?.Get(extraState.highlightIndex) ?? new();
-                highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
+                //if (extraState.useAnimType == 64)
+                //    //if (extraState.useAnimTimer >= 0)
+                //    Console.WriteLine("{0}", extraState.useAnimTimer);
+                //else if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
+                //    Console.WriteLine("No");
+
+                    highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
 
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 

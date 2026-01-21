@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.UIs;
 
 namespace Engine.Common.Entities
 {
@@ -17,15 +18,26 @@ namespace Engine.Common.Entities
         {
         }
 
-        protected override BasicState GetInterpolated(ref readonly BasicState a, ref readonly BasicState b, double t)
+        protected override BasicState GetInterpolated(ref readonly BasicState prev, ref readonly BasicState prevInterp, ref readonly BasicState curr, double t)
         {
-            var interp = base.GetInterpolated(in a, in b, t);
-            var extraPrev = a.GetExtra<ViMG.Player.PlayerExtraState>();
-            var extraCurr = b.GetExtra<ViMG.Player.PlayerExtraState>();
-            extraCurr.useAnimTimer = float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)t);
-            interp.SetExtra(ref extraCurr);
+            var interp = base.GetInterpolated(in prev, in prevInterp, in curr, t);
+            var extraPrev = prev.GetExtra<ViMG.Player.PlayerExtraState>();
+            var extraPrevI = prevInterp.GetExtra<ViMG.Player.PlayerExtraState>();
+            var extraCurr = curr.GetExtra<ViMG.Player.PlayerExtraState>();
+            var extraInterp = extraCurr;
+            if (extraPrev.useAnimType != extraCurr.useAnimType)
+                extraInterp.useAnimTimer = extraInterp.useAnimTime;
+            else
+            {
+                extraInterp.useAnimTimer = EntityRegistry.NetworkLerp(extraPrev.useAnimTimer, extraPrevI.useAnimTimer, extraCurr.useAnimTimer, (float)t, 1.0f / 20.0f);// float.Lerp(extraPrev.useAnimTimer, extraCurr.useAnimTimer, (float)t);
+            }
 
-            interp.rotation = b.rotation;
+            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+                Console.WriteLine("useAnimTimer: {0:0.0000}. Prev = {1:0.00} curr = {2:0.00} - t = {3:0.000}", extraInterp.useAnimTimer, extraPrevI.useAnimTimer, extraCurr.useAnimTimer, t);
+
+            interp.SetExtra(ref extraInterp);
+
+            interp.rotation = curr.rotation;
 
             return interp;
         }

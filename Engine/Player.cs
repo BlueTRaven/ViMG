@@ -824,11 +824,15 @@ namespace ViMG
 					hitboxToSpawnLater = new HitboxToSpawnLater();
 				}
 
-				useTimer -= (float)deltaTime;
-				useAnimTimer -= (float)deltaTime;
+				if (useTimer > 0)
+					useTimer -= (float)deltaTime;
+				else useTimer = 0;
+				if (useAnimTimer > 0)
+					useAnimTimer -= (float)deltaTime;
+				else useAnimTimer = 0;
 
 				if (useAnimTimer <= 0 && useTimer <= 0)
-					useAnimType = UseAnimationType.Use;
+					useAnimType = UseAnimationType.None;
 			}
 			else preUseTimer -= (float)deltaTime;
 
@@ -1682,6 +1686,7 @@ namespace ViMG
        //                     (this as IRotatable).Up * Cube.CUBE_SCALE / 4);
 					}
                 case UseAnimationType.Use:
+				case UseAnimationType.None:
 				default:
 					return Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
 						Matrix.CreateScale(0.5f * scale) *
