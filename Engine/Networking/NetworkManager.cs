@@ -1,6 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using Engine.Networking.Messages;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -465,8 +465,8 @@ namespace Engine.Networking
                 sent[i] = (float)(statistics[i].BytesSent - statistics[i + 1].BytesSent) / 10000.0f;
                 received[i] = (float)(statistics[i].BytesReceived - statistics[i + 1].BytesReceived) / 10000.0f;
             }
-            ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, 0, null, 0, (float)(maxSent) / 10000.0f, new(0, 80));
-            ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, 0, null, 0, (float)(maxRecieved) / 10000.0f, new(0, 80));
+            ImGui.PlotLines("Bytes Sent", ref sent[0], statistics.Length, (string)null, (float)(maxSent) / 10000.0f);
+            ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, (string)null, (float)(maxRecieved) / 10000.0f);
         }
 
     }

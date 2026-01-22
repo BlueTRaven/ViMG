@@ -7,7 +7,6 @@ using Engine.ChunkStuff;
 using Engine.Clients;
 using Engine.Items;
 using Engine.Networking;
-using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;

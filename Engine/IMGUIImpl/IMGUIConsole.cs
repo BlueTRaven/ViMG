@@ -1,7 +1,7 @@
 ﻿using BrUtility;
 using Engine.Networking;
 using Engine.Networking.Messages;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
@@ -490,7 +490,7 @@ namespace ViMG.IMGUIImpl
                     {
                         ImGui.SetKeyboardFocusHere(0);
                     }
-                    if (ImGui.InputText("Input", ref editingString, (uint)500, input_text_flags, Callback, (nint)null))
+                    if (ImGui.InputText("Input", ref editingString, (nuint)500, input_text_flags, Callback, (void*)null))
                     {
                         if (editingString != "")
                         {

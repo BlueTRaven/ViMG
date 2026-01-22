@@ -11,7 +11,6 @@ using System.Threading;
 using ViMG.UIs;
 using ViMG.Rendering;
 using ViMG.GameStates;
-using ImGuiNET;
 using MonoGame.ImGuiNet;
 using TracyNative = Tracy;
 using ViMG.TracyImpl;
@@ -21,6 +20,7 @@ using Engine.Mods;
 using Engine;
 using Engine.Entities;
 using Engine.Common;
+using Hexa.NET.ImGui;
 
 namespace ViMG
 {
@@ -243,7 +243,7 @@ namespace ViMG
 			IsFixedTimeStep = false;
 
 			imguiRenderer = new ImGuiRenderer(this);
-			imguiRenderer.RebuildFontAtlas();
+			//imguiRenderer.RebuildFontAtlas();
 
             gameStateManager = new GameStateManager();
             gameStateManager.Initialize();
@@ -484,9 +484,9 @@ namespace ViMG
 				{
 					if (ImGui.BeginMenu("Menu"))
 					{
-						ImGui.MenuItem("Settings Menu", null, ref IMGUISettings.Show);
-						ImGui.MenuItem("Debug Info Menu", null, ref IMGUISettings.ShowDebugInfo);
-						ImGui.MenuItem("Console", null, ref Options.ShowConsole);
+						ImGui.MenuItem("Settings Menu", (string)null, ref IMGUISettings.Show);
+						ImGui.MenuItem("Debug Info Menu", (string)null, ref IMGUISettings.ShowDebugInfo);
+						ImGui.MenuItem("Console", (string)null, ref Options.ShowConsole);
                         ImGui.EndMenu();
 					}
 					
@@ -496,13 +496,14 @@ namespace ViMG
 				if (IMGUISettings.Show && ImGui.Begin("Settings", ref IMGUISettings.Show))
 				{
 					IMGUISettings.AutoIMGUI();
-				}
-				ImGui.End();
+
+                    ImGui.End();
+                }
 
 				if (IMGUISettings.ShowDebugInfo && ImGui.Begin("Debug Info", ref IMGUISettings.ShowDebugInfo))
 				{
 					ImGui.Text(string.Format("FPS: {0}", frameCounter.AverageFramesPerSecond.ToString()));
-					ImGui.PlotLines("Fixed Update Frame Times", ref frameTimes[0], numFrameTimes, 0, null, 0, (float)(FIXED_STEP * 4), new(0, 80));
+					ImGui.PlotLines("Fixed Update Frame Times", ref frameTimes[0], numFrameTimes, (string)null, (float)FIXED_STEP * 4);
 					ImGui.Text(string.Format("Chunks Drawn: {0} in {1} seconds", World.NumChunksDrawn, World.ChunkDrawTime));
 					ImGui.Text(string.Format("Draw Calls: {0}", GraphicsDevice.Metrics.DrawCount));
 					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
@@ -533,8 +534,8 @@ namespace ViMG
 							theIsland.netManagerClient.IMGUIDebug();
 						}
 					}
+					ImGui.End();
 				}
-                ImGui.End();
 
 				IMGUIConsole.Console();
 			}
