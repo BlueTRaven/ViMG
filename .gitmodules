@@ -14,3 +14,6 @@
 [submodule "LiteNetLib"]
 	path = LiteNetLib
 	url = git@github.com:RevenantX/LiteNetLib.git
+[submodule "Hexa.NET.ImGui"]
+	path = Hexa.NET.ImGui
+	url = git@github.com:HexaEngine/Hexa.NET.ImGui.git
