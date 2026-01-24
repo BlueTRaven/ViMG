@@ -21,6 +21,8 @@ using Engine;
 using Engine.Entities;
 using Engine.Common;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImPlot;
+using Engine.IMGUIImpl;
 
 namespace ViMG
 {
@@ -398,7 +400,7 @@ namespace ViMG
 
             var zone = TracyImpl.Tracy.BeginZone();
 
-            imguiRenderer.BeginLayout(gameTime);
+            imguiRenderer.BeforeLayout(gameTime);
 
             Renderer.FrameStart();
 
@@ -413,10 +415,11 @@ namespace ViMG
             //if (WorldLoaded)
             //world.Draw(GraphicsDevice, CubeLitEffect);
             IMGUIEntIODebug.Show();
+            IMGUINetworkDebug.Show();
 
             //Renderer.Draw(batch);
 
-			GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.SetRenderTarget(null);
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
@@ -550,7 +553,7 @@ namespace ViMG
 				Console.WriteLine(message);
             }
 
-            imguiRenderer.EndLayout();
+            imguiRenderer.AfterLayout();
 
             zone.End();
         }

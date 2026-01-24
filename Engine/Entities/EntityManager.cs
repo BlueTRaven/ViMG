@@ -678,7 +678,7 @@ namespace ViMG.Entities
                     {
                         basicState.Get(out var state);
 
-                        ents[i].prevState[SyncEntityState.Instance.serverSequence % EntPrevSrv] = state;
+                        ents[i].prevState[SyncWorldState.Instance.ServerSequence % EntPrevSrv] = state;
                     }
                     else clear = true;
                 }
@@ -687,7 +687,7 @@ namespace ViMG.Entities
                 if (clear)
                 {
                     if (ents[i].prevState != null)
-                        ents[i].prevState[SyncEntityState.Instance.serverSequence % EntPrevSrv] = new BasicState();
+                        ents[i].prevState[SyncWorldState.Instance.ServerSequence % EntPrevSrv] = new BasicState();
                 }
             }
 
@@ -704,7 +704,7 @@ namespace ViMG.Entities
             // negative numbers would be in the future, big nono
             Debug.Assert(prev >= 0 && prev < EntPrevSrv);
 
-			int which = SyncEntityState.Instance.serverSequence - prev;
+			int which = SyncWorldState.Instance.ServerSequence - prev;
 			which = ((which % EntPrevSrv) + EntPrevSrv) % EntPrevSrv;
 
             return ents[id].prevState?[which] ?? new();
@@ -712,7 +712,7 @@ namespace ViMG.Entities
 
 		public BasicState GetPrevStateAbs(int id, int frame)
 		{
-			var diff = SyncEntityState.Instance.serverSequence - frame;
+			var diff = SyncWorldState.Instance.ServerSequence - frame;
 
 			// If we overflowed, just return no state
 			if (diff >= EntPrevSrv) return new();

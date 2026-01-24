@@ -5,6 +5,7 @@ using BrUtility;
 using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
+using Engine.IMGUIImpl;
 using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -795,6 +796,8 @@ namespace ViMG.GameStates
             if (client != null)
                 client.RenderUI(device, batch, 0);
 
+            IMGUINetworkDebug.Render(batch);
+
             //if (world != null && !IsLoading)
             //{
             //    world.DrawUI(batch);
@@ -834,6 +837,8 @@ namespace ViMG.GameStates
             TextHelper.DrawText(batch, fi, sb.ToString(), Color.White,
                     new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
                     Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 1);
+
+
         }
     }
 }

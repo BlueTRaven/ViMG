@@ -20,6 +20,7 @@
     <Compile Remove="BrUtility\**" />
     <Compile Remove="Engine\**" />
     <Compile Remove="GenerateWorld\**" />
+    <Compile Remove="Hexa.NET.ImGui\**" />
     <Compile Remove="LiteNetLib\**" />
     <Compile Remove="MigrationBackup\**" />
     <Compile Remove="ModGameBase\**" />
@@ -29,6 +30,7 @@
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="GenerateWorld\**" />
+    <EmbeddedResource Remove="Hexa.NET.ImGui\**" />
     <EmbeddedResource Remove="LiteNetLib\**" />
     <EmbeddedResource Remove="MigrationBackup\**" />
     <EmbeddedResource Remove="ModGameBase\**" />
@@ -38,6 +40,7 @@
     <None Remove="BrUtility\**" />
     <None Remove="Engine\**" />
     <None Remove="GenerateWorld\**" />
+    <None Remove="Hexa.NET.ImGui\**" />
     <None Remove="LiteNetLib\**" />
     <None Remove="MigrationBackup\**" />
     <None Remove="ModGameBase\**" />

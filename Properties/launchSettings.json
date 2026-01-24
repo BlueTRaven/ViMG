@@ -2,7 +2,8 @@
   "profiles": {
     "ViMG3": {
       "commandName": "Project",
-      "commandLineArgs": "--windowpos 0 0"
+      "commandLineArgs": "--windowpos 0 0",
+      "nativeDebugging": false
     },
     "ViMG Quickstart Server": {
       "commandName": "Project",

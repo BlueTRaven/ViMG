@@ -3,6 +3,7 @@ using BepuPhysics.Constraints;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
 using Engine.Common.Entities;
+using Engine.IMGUIImpl;
 using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
@@ -101,7 +102,7 @@ namespace Engine.Clients
             bepuDebugRenderer = new Rendering.BepuDebugRendering.Renderer(device, null);
         }
 
-        public void NewFrame(double time)
+        public void NewFrame(int sequence, double time)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
@@ -114,7 +115,8 @@ namespace Engine.Clients
 
             LastFrameRenderTime = RenderTime;
 
-            Variance = expectedArrivalTime - time;
+            Variance = time - expectedArrivalTime;
+
             //Console.WriteLine("New frame {0} time {1:.0000}s expected {2:.0000}s variance {3:.0000}s {4}", frame, time, expectedArrivalTime, double.Abs(Variance), Variance > 0 ? "early" : "late");
 
             ClientWorld prev = Current();

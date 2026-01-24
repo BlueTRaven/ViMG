@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.IMGUIImpl;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
@@ -306,14 +307,8 @@ namespace Engine.Networking.Messages
 
         private FastList<ToSync> toSync;
 
-        private double lastSyncTime;
         private SyncedEntity[][] serverEntities;
         private SyncedEntity[] clientEntities;
-
-        // if we're running locally then we only have one instance of a Message class!
-        // have to use different fields...
-        public int serverSequence;
-        private int clientSequence;
 
         private int playerTypeId = -1;
 
@@ -354,9 +349,9 @@ namespace Engine.Networking.Messages
             //    Console.WriteLine("ack LATE!!! {0}s", delay.TotalSeconds - World.SyncTime);
             //}
             //Console.WriteLine("seq {0} now {1}", sequence, serverSequence);
-            if (serverSequence - sequence > 1)
+            if (SyncWorldState.Instance.ServerSequence - sequence > 1)
             {
-                Console.WriteLine("Late {0}", serverSequence - sequence);
+                Console.WriteLine("Late {0} {1:0.00}", SyncWorldState.Instance.ServerSequence - sequence, delay.TotalSeconds);
             }
 
             for (int i = 0; i < ack.numAckd; i++)
@@ -457,9 +452,6 @@ namespace Engine.Networking.Messages
                 GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
                 toSync.Clear();
             }
-
-            lastSyncTime = Main.Time;
-            serverSequence += 1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -472,7 +464,7 @@ namespace Engine.Networking.Messages
             int playerId = addData as int? ?? throw new Exception();
 
             netMessage.writer.Put(DateTime.Now.Ticks);
-            netMessage.writer.Put(serverSequence);
+            netMessage.writer.Put(SyncWorldState.Instance.ServerSequence);
 
             int numsendpos = netMessage.writer.Length;
             netMessage.writer.Put(toSync.Length);
@@ -499,7 +491,7 @@ namespace Engine.Networking.Messages
                         if (ent.type == SyncStateType.MinorSync)
                         {
                             var latestSeq = serverEntities[ent.playerId][ent.reference.id].latestSequence;
-                            if (latestSeq - serverSequence > EntityManager.EntPrevSrv)
+                            if (latestSeq - SyncWorldState.Instance.ServerSequence > EntityManager.EntPrevSrv)
                             {
                                 // Too old - do a major sync
                                 var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
@@ -612,16 +604,10 @@ namespace Engine.Networking.Messages
             //}
 
             int seq = reader.GetInt();
-            if (seq < clientSequence)
+            if (seq < SyncWorldState.Instance.ClientSequence)
             {
-                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, clientSequence);
+                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
                 return;
-            }
-
-            if (clientSequence != seq)
-            {
-                clientSequence = seq;
-                //GS.GetClient().NewFrame();
             }
 
             int num = reader.GetInt();
@@ -631,6 +617,10 @@ namespace Engine.Networking.Messages
 
             if (playerTypeId == -1)
                 playerTypeId = Main.Registry.EntityRegistry.Get(typeof(Player).FullName).Id;
+
+            int numBits = 0;
+            int numBytes = 0;
+            int beforeFirstEntRead = reader.Position;
 
             for (int i = 0; i < num; i++)
             {
@@ -646,6 +636,8 @@ namespace Engine.Networking.Messages
                     var state = client.Current().entities.GetByRef(ref reference);
                     // Also deserializes extra fields
                     uint bits = state.DeserializeDelta(reader, false);
+                    numBits += System.Numerics.BitOperations.PopCount(bits);
+
                     state.DeserializeDeltaExtraFields(reader, bits);
 
                     if (type == SyncStateType.MajorSync)
@@ -760,6 +752,8 @@ namespace Engine.Networking.Messages
                     throw new Exception();
                 }
             }
+
+            IMGUINetworkDebug.AddClientEntSync(seq, delay.TotalSeconds, num, numBits, reader.Position - beforeFirstEntRead);
 
             if (ackI > 0)
             {

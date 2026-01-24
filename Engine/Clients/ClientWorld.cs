@@ -19,6 +19,8 @@ namespace Engine.Clients
         public Camera camera;
 
         public double time;
+        public int sequence;
+
         public int highlightIndex;
 
         public ClientWorld()

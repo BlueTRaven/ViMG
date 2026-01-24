@@ -115,7 +115,7 @@ namespace ViMG
 		private Task<World> nextWorld;
 
 		public DateTime startTime;
-        private float alive;
+        private double alive;
 
         public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, int worldSize)
@@ -221,7 +221,7 @@ namespace ViMG
             //EntIO.TestConsistency(GetLocalPlayer());
             using var zone = TracyImpl.Tracy.BeginZone();
 
-			if (Main.Time - lastSyncTime > SyncTime)
+			if (alive - lastSyncTime > SyncTime)
 			{
 				EntityManager.UpdateNetwork();
 				InventoryManager.UpdateNetwork(player);
@@ -594,7 +594,7 @@ namespace ViMG
         #region Time
         public float GetTime()
         {
-			return alive;
+			return (float)alive;
         }
 
 		public void SetTime(float time)
@@ -625,7 +625,7 @@ namespace ViMG
 			float duskStart = 0.5f - ((1 - DUSK_START - 0.5f) * duskStartOffsetScale);
 			float duskEnd = ((DUSK_END - 0.5f) * duskEndOffsetScale) + 0.5f;
 
-			float timeOfDayPercent = ((alive + timeOffset) % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+			float timeOfDayPercent = (((float)alive + timeOffset) % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
 
 			//Night time
 			if (timeOfDayPercent > duskEnd && timeOfDayPercent <= dawnStart)
@@ -654,7 +654,7 @@ namespace ViMG
 			const float DUSK_START = 0.42f;
 			const float DUSK_END = 0.56f;
 
-			float timeOfDayPercent = (alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+			float timeOfDayPercent = ((float)alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
 
 			if (timeOfDayPercent > DUSK_START && timeOfDayPercent <= DUSK_END)
 				return (timeOfDayPercent - DUSK_START) / (DUSK_END - DUSK_START);
@@ -674,7 +674,7 @@ namespace ViMG
 
 		public float GetTimeOfNight()
         {
-			float timeOfDay = alive % DAY_CYCLE_TIME;
+			float timeOfDay = (float)alive % DAY_CYCLE_TIME;
 
 			if (!IsNight())
 				return 0;
