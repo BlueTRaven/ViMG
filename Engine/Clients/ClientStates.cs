@@ -177,6 +177,12 @@ namespace Engine.Clients
                 //currInterpState.camera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)TimeC);
                 currInterpState.camera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)TimeC);
 
+                if ((prevCamera.Position - currCamera.Position).Length() > 100)
+                {
+                    currInterpState.camera.Position = currCamera.Position;
+                    currInterpState.camera.Scale = currCamera.Scale;
+                }
+
                 for (int i = 0; i < EntityManager.EntMax; i++)
                 {
                     var reference = currInterpState.entities.GetReference(i);

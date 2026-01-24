@@ -30,7 +30,7 @@ namespace ViMG
 
 		public CubePosition InCubeSpace()
 		{
-			return new CubePosition(X * Chunk.CHUNK_SIZE, Y * Chunk.CHUNK_SIZE, Z * Chunk.CHUNK_SIZE);
+			return new CubePosition(X * Chunk.CHUNK_SIZE, Y * Chunk.CHUNK_SIZE, Z * Chunk.CHUNK_SIZE, CubePosition.CoordinateSpace.CubeSpace);
 		}
 
 		public Vector3 InWorldSpace()

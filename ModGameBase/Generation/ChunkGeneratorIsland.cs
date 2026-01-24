@@ -12,6 +12,7 @@ using System.Diagnostics;
 using ViMG.Entities;
 using ViMG.GameStates;
 using Engine.Items;
+using ModGameBase.Generation;
 
 namespace ViMG.Generation
 {
@@ -271,11 +272,22 @@ namespace ViMG.Generation
         {
             base.PostGenerateDetail(world);
 
+			StructureGeneratorList l = new StructureGeneratorList();
+			l.structuresToGen = new();
+			l.structuresToGen.Add(new StructureGeneratorList.StructureGeneration
+			{
+				structure = ellipsoidAtBottomOfHole,
+				generatePos = new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace),
+				dontwriteStructureBlacklist = BlacklistAir,
+				overwriteWorldBlacklist = Array.Empty<ushort>(),
+			});
+			l.GenerateStructures(world.ChunkManager);
+
 			Vector2 holePos = new Vector2(holeLocationX, holeLocationY);
 
-			ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, ellipsoidAtBottomOfHole, 
-				new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace), 
-				BlacklistAir, Span<ushort>.Empty, false);
+			//ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, ellipsoidAtBottomOfHole,
+			//	new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace),
+			//	BlacklistAir, Span<ushort>.Empty, false);
 
 			//place one preset geode always located within the ellipsoid
 			Vector2 geodeAng = GetRandom().NextAngle();

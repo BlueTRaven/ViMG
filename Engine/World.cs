@@ -229,7 +229,7 @@ namespace ViMG
 				InventoryManager.UpdateNetwork(player);
 				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
-				lastSyncTime = Main.Time;
+				lastSyncTime = alive;
             }
 
 			// Autosave every 5 minutes?
