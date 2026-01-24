@@ -223,11 +223,12 @@ namespace ViMG
 
 			if (alive - lastSyncTime > SyncTime)
 			{
+				SyncWorldState.Instance.DoSend();
+
 				EntityManager.UpdateNetwork();
 				InventoryManager.UpdateNetwork(player);
 				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
-				SyncWorldState.Instance.DoSend();
 				lastSyncTime = Main.Time;
             }
 

@@ -36,15 +36,15 @@ namespace Engine.Networking.Messages
         {
             base.SendMessage(netMessage, addData);
 
-            netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
+            ServerSequence += 1;
+
+            netMessage.deliveryMethod = DeliveryMethod.Unreliable;
             netMessage.writer.Put((DateTime.Now - GS.GetWorld().startTime).Ticks);
             netMessage.writer.Put(ServerSequence);
             netMessage.writer.Put(GS.GetWorld().GetTime());
             netMessage.writer.Put((ulong)GS.GetWorld().WorldInfo.flags.Flags);
 
             netMessage.Send();
-
-            ServerSequence += 1;
         }
 
         public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
