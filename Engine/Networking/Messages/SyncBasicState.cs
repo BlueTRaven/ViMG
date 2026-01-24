@@ -330,6 +330,10 @@ namespace Engine.Networking.Messages
             }
             for (int i = 0; i < EntityManager.EntMax; i++)
                 clientEntities[i] = new() { reference = new() { id = i, generation = -1 }, latestSequence = -1 };
+
+            var counter = new NetDataWriter();
+            AddEntBasics(counter, new EntityManager.EntityReference(), SyncStateType.Unload, 0);
+            numBytesHeader = counter.Length;
         }
 
         public void PlayerDisconnected(int playerIndex)
@@ -342,17 +346,14 @@ namespace Engine.Networking.Messages
 
         public void AddAck(SyncEntityStateAck.Ack ack, int playerId, int sequence)
         {
+            IMGUINetworkDebug.AddClientEntAck(sequence, (DateTime.Now - ack.initialSend).TotalSeconds);
+
             TimeSpan delay = DateTime.Now - ack.initialRecv;
-            //Console.WriteLine("ack recv {0} diff {1}", ack.initialRecv, delay);
-            //if (delay.TotalSeconds > World.SyncTime)
-            //{
-            //    Console.WriteLine("ack LATE!!! {0}s", delay.TotalSeconds - World.SyncTime);
-            //}
             //Console.WriteLine("seq {0} now {1}", sequence, serverSequence);
-            if (SyncWorldState.Instance.ServerSequence - sequence > 1)
-            {
-                Console.WriteLine("Late {0} {1:0.00}", SyncWorldState.Instance.ServerSequence - sequence, delay.TotalSeconds);
-            }
+            //if (SyncWorldState.Instance.ServerSequence - sequence > 1)
+            //{
+            //    Console.WriteLine("Late {0} {1:0.00}", SyncWorldState.Instance.ServerSequence - sequence, delay.TotalSeconds);
+            //}
 
             for (int i = 0; i < ack.numAckd; i++)
             {
@@ -454,6 +455,8 @@ namespace Engine.Networking.Messages
             }
         }
 
+        private List<NetDataWriter> subwriters = new List<NetDataWriter>();
+        private int numBytesHeader = 0;
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
@@ -469,18 +472,13 @@ namespace Engine.Networking.Messages
             int numsendpos = netMessage.writer.Length;
             netMessage.writer.Put(toSync.Length);
 
-            List<NetDataWriter> subWriters = new List<NetDataWriter>();
+            subwriters.Clear();
 
             foreach (var ent in toSync.Slice())
             {
                 // -1 = send to all players
                 if (ent.playerId == playerId || playerId == -1)
                 {
-                    // FIXME pre-emptive allocation, not great, we can remove this
-                    // Subwriter may not be submitted
-                    var subWriter = new NetDataWriter();
-                    subWriter.Put(ent.reference);
-
                     if (ent.basicSyncState != null)
                     {
                         var useType = (byte)ent.type;
@@ -517,52 +515,67 @@ namespace Engine.Networking.Messages
                         else
                             throw new Exception();
 
-                        subWriter.Put(useType);
-                        subWriter.Put((ushort)ent.typeNameMapping);
-
                         uint bits = state.GetDeltaBits(ref prevState);
                         ulong extraBits = state.GetExtraBytesBits(ref prevState);
+                        
+                        //ulong numBytes = state.GetNumBytesFromBits(bits, extraBits);
 
                         // We haven't changed at all, don't bother syncing
                         if (bits != 0)
                         {
-                            state.SerializeDelta(subWriter, bits);
-                            state.SerializeDeltaExtraFields(subWriter, extraBits);
+                            var subwriter = new NetDataWriter();
+
+                            //if (netMessage.writer.Length + subwriter.Length + numBytesHeader + (int)numBytes > netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable))
+                            //{
+                            //    netMessage.writer.Put(subwriter.AsReadOnlySpan());
+                            //    netMessage.Send();
+                            //    subwriter = new NetDataWriter();
+                            //}
+
+                            subwriter.Put(ent.reference);
+
+                            subwriter.Put(useType);
+                            subwriter.Put((ushort)ent.typeNameMapping);
+
+                            state.SerializeDelta(subwriter, bits);
+                            state.SerializeDeltaExtraFields(subwriter, extraBits);
 
                             if (ent.type == SyncStateType.MajorSync)
                             {
-                                subWriter.Put(ent.trackedPositions?.Length ?? 0);
+                                subwriter.Put(ent.trackedPositions?.Length ?? 0);
                                 if (ent.trackedPositions != null)
                                 {
                                     for (int i = 0; i < ent.trackedPositions.Length; i++)
-                                        ent.trackedPositions[i].Serialize(subWriter);
+                                        ent.trackedPositions[i].Serialize(subwriter);
                                 }
                             }
 
-                            subWriters.Add(subWriter);
+                            subwriters.Add(subwriter);
                         }
                     }
                     else
                     {
-                        subWriter.Put((byte)ent.type);
-                        subWriters.Add(subWriter);
+                        var subwriter = new NetDataWriter();
+                        subwriter.Put(ent.reference);
+                        subwriter.Put((byte)ent.type);
+                        subwriters.Add(subwriter);
                     }
 
-                    Debug.Assert(subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(int) - sizeof(int));
+                    //Debug.Assert(subwriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(int) - sizeof(int));
                 }
             }
 
             var atStart = netMessage.writer.Length;
 
             int numSend = 0;
-            for (int i = 0; i < subWriters.Count; i++)
+            for (int i = 0; i < subwriters.Count; i++)
             {
-                NetDataWriter subWriter = subWriters[i];
-                if (netMessage.writer.Length + subWriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) -  sizeof(int) - sizeof(int) && numSend < MAX_ENTS_PER_SYNC)
+                NetDataWriter subwriter = subwriters[i];
+                if (netMessage.writer.Length + subwriter.Length < netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) -  sizeof(int) - sizeof(int) && numSend < MAX_ENTS_PER_SYNC)
                 {
                     numSend += 1;
                     
-                    netMessage.writer.Put(subWriter.AsReadOnlySpan());
+                    netMessage.writer.Put(subwriter.AsReadOnlySpan());
                 }
                 else
                 {
@@ -574,7 +587,7 @@ namespace Engine.Networking.Messages
 
                     netMessage.writer.SetPosition(atStart);
                     numSend = 1;
-                    netMessage.writer.Put(subWriter.AsReadOnlySpan());
+                    netMessage.writer.Put(subwriter.AsReadOnlySpan());
                 }
             }
 
@@ -588,6 +601,14 @@ namespace Engine.Networking.Messages
             }
         }
 
+        private void AddEntBasics(NetDataWriter writer, EntityManager.EntityReference reference, SyncStateType syncType, ushort typeId)
+        {
+            writer.Put(reference);
+
+            writer.Put((byte)syncType);
+            writer.Put(typeId);
+        }
+
         public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
         {
             base.ReceiveMessage(reader, peer);
@@ -596,7 +617,8 @@ namespace Engine.Networking.Messages
 
             long ticks = reader.GetLong();
             DateTime sendTime = new DateTime(ticks);
-            TimeSpan delay = DateTime.Now - sendTime;
+            DateTime recvTime = DateTime.Now;
+            TimeSpan delay = recvTime - sendTime;
             //Console.WriteLine("ent recv {0} diff {1}", sendTime, delay);
             //if (delay.TotalSeconds > World.SyncTime)
             //{
@@ -763,7 +785,8 @@ namespace Engine.Networking.Messages
                         numAckd = ackI,
                         ackdEntities = ackArr,
                         sequence = seq,
-                        initialRecv = sendTime
+                        initialSend = sendTime,
+                        initialRecv = recvTime
                     });
             }
         }
@@ -793,10 +816,12 @@ namespace Engine.Networking.Messages
             public EntityAckArr ackdEntities;
             public int sequence;
 
+            public DateTime initialSend;
             public DateTime initialRecv;
 
             public void Deserialize(NetDataReader reader)
             {
+                initialSend = new DateTime(reader.GetLong());
                 initialRecv = new DateTime(reader.GetLong());
                 sequence = reader.GetInt();
                 numAckd = reader.GetInt();
@@ -809,6 +834,7 @@ namespace Engine.Networking.Messages
 
             public void Serialize(NetDataWriter writer)
             {
+                writer.Put(initialSend.Ticks);
                 writer.Put(initialRecv.Ticks);
                 writer.Put(sequence);
                 writer.Put(numAckd);

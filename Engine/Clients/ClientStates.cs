@@ -61,6 +61,8 @@ namespace Engine.Clients
         private int head = 0;
         private int frame = 0;
 
+        public DateTime Started;
+        public DateTime LastFramePrecise;
         public double LastFrameTime;
         public double Variance;
         public double CurrentTime;
@@ -73,6 +75,8 @@ namespace Engine.Clients
 
         public ClientStates(GraphicsDevice device)
         {
+            Started = DateTime.Now;
+
             this.device = device;
 
             physicsInfo = new PhysicsInfo();
@@ -102,7 +106,7 @@ namespace Engine.Clients
             bepuDebugRenderer = new Rendering.BepuDebugRendering.Renderer(device, null);
         }
 
-        public void NewFrame(int sequence, double time)
+        public void NewFrame(int sequence, double time, DateTime timePrecise)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
@@ -112,6 +116,8 @@ namespace Engine.Clients
 
             LastFrameTime = time;
             CurrentTime = time;
+
+            LastFramePrecise = timePrecise;
 
             LastFrameRenderTime = RenderTime;
 

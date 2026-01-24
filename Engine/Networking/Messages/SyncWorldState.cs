@@ -39,7 +39,7 @@ namespace Engine.Networking.Messages
             ServerSequence += 1;
 
             netMessage.deliveryMethod = DeliveryMethod.Unreliable;
-            netMessage.writer.Put((DateTime.Now - GS.GetWorld().startTime).Ticks);
+            netMessage.writer.Put(DateTime.Now.Ticks);
             netMessage.writer.Put(ServerSequence);
             netMessage.writer.Put(GS.GetWorld().GetTime());
             netMessage.writer.Put((ulong)GS.GetWorld().WorldInfo.flags.Flags);
@@ -52,7 +52,9 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             long ticks = reader.GetLong();
-            TimeSpan timeSent = new TimeSpan(ticks);
+            DateTime timeSent = new DateTime(ticks);
+            TimeSpan delay = DateTime.Now - timeSent;
+
             ClientSequence = reader.GetInt();
             float time = reader.GetFloat();
             ulong flags = reader.GetULong();
@@ -64,15 +66,15 @@ namespace Engine.Networking.Messages
             if (time < GS.GetClient().Current().time || ClientSequence < GS.GetClient().Current().sequence)
                 return;
             GS.GetClient().Current().flags.Flags = (WorldFlags.FlagValues)flags;
-            GS.GetClient().NewFrame(ClientSequence, time);
+            GS.GetClient().NewFrame(ClientSequence, time, timeSent);
 
             var expected = GS.GetClient().LastFrameTime + World.SyncTime;
             IMGUINetworkDebug.AddServerFrame(new IMGUINetworkDebug.NetworkDebugFrame 
             {
                 frame = ClientSequence,
-                actualTime = time,
-                expectedTime = expected,
-                variance = time - expected,
+                actualTime = (timeSent - GS.GetClient().Started).TotalSeconds,
+                expectedTime = (GS.GetClient().LastFramePrecise - GS.GetClient().Started).TotalSeconds + World.SyncTime,
+                variance = delay.TotalSeconds,
             });
         }
     }

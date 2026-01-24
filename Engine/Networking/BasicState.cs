@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -237,6 +238,58 @@ namespace Engine.Networking
             }
 
             return (uint)bits;
+        }
+
+        public ulong GetNumBytesFromBits(uint bits, ulong extraBytesBits)
+        {
+            ulong sum = 0;
+
+            Fields fields = (Fields)bits;
+            if ((fields & Fields.PosX) == Fields.PosX)
+                sum += sizeof(float);
+            if ((fields & Fields.PosY) == Fields.PosY)
+                sum += sizeof(float);
+            if ((fields & Fields.PosZ) == Fields.PosZ)
+                sum += sizeof(float);
+
+            if ((fields & Fields.VelX) == Fields.VelX)
+                sum += sizeof(float);
+            if ((fields & Fields.VelY) == Fields.VelY)
+                sum += sizeof(float);
+            if ((fields & Fields.VelZ) == Fields.VelZ)
+                sum += sizeof(float);
+
+            if ((fields & Fields.RotX) == Fields.RotX)
+                sum += sizeof(float);
+            if ((fields & Fields.RotY) == Fields.RotY)
+                sum += sizeof(float);
+            if ((fields & Fields.RotZ) == Fields.RotZ)
+                sum += sizeof(float);
+            if ((fields & Fields.RotW) == Fields.RotW)
+                sum += sizeof(float);
+
+            if ((fields & Fields.Health) == Fields.Health)
+                sum += sizeof(int);
+            if ((fields & Fields.State) == Fields.State)
+                sum += sizeof(int);
+
+            for (int i = 0; i < 4; i++)
+            {
+                Fields bit = (Fields)((int)Fields.Timer0 + i);
+                if ((fields & bit) == bit)
+                    sum += sizeof(float);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Fields bit = (Fields)((int)Fields.Counter0 + i);
+                if ((fields & bit) == bit)
+                    sum += sizeof(int);
+            }
+
+            sum += (ulong)(System.Numerics.BitOperations.PopCount(extraBytesBits) * sizeof(int));
+
+            return sum;
         }
 
         // NOTE: even if MAX_EXTRA_STATE_BYTES != 256 (64 int chunks) right now, we still use a ulong for extra bits.
