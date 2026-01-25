@@ -69,13 +69,13 @@ namespace ViMG.Entities
                 color = Color.OrangeRed.ToVector4(),
             });
 
-            world.LightManager2.Add(new LightManager2.LightConfig
-            {
-                position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
-                min = Cube.CUBE_SCALE * 3 + s0,
-                max = Cube.CUBE_SCALE * 12,
-                color = Color.OrangeRed.ToVector4(),
-            });
+            //world.LightManager2.Add(new LightManager2.LightConfig
+            //{
+            //    position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+            //    min = Cube.CUBE_SCALE * 3 + s0,
+            //    max = Cube.CUBE_SCALE * 8,
+            //    color = Color.OrangeRed.ToVector4() * 0.5f,
+            //});
             /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {
                 if (light != -1)

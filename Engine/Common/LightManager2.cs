@@ -63,11 +63,11 @@ namespace Engine.Common
         {
             public bool dirty;
             public Light light;
-            public int time;
         }
 
         private Light[] prevLights = new Light[LightManager.LightsMax];
         private Light[] lights = new Light[LightManager.LightsMax];
+        private ShadowmappedLight[] prevLightsShadowmapped = new ShadowmappedLight[LightManager.LightsShadowmappedMax];
         private ShadowmappedLight[] lightsShadowmapped = new ShadowmappedLight[LightManager.LightsShadowmappedMax];
 
         private FastList<int> freeLights;
@@ -102,17 +102,21 @@ namespace Engine.Common
                 freeLights.Add(i);
             }
 
+            var temp2 = lightsShadowmapped;
+            lightsShadowmapped = prevLightsShadowmapped;
+            prevLightsShadowmapped = temp2;
+            Array.Fill(lightsShadowmapped, new ShadowmappedLight());
+
             freeLightsS.Clear();
 
             // TODO double buffer shadowmapped lights too
             for (int i = lightsShadowmapped.Length - 1; i >= 0; i--)
             {
-                if (lightsShadowmapped[i].time < 0)
+                if (!prevLightsShadowmapped[i].light.active)
                 {
                     lightsShadowmapped[i] = new();
                     freeLightsS.Add(i);
-                } else lightsShadowmapped[i].time--;
-                //freeLights.Add(i);
+                }
             }
         }
 
@@ -132,10 +136,9 @@ namespace Engine.Common
             // Is the light already present?
             for (int i = 0; i < LightManager.LightsShadowmappedMax; i++)
             {
-                if (lightsShadowmapped[i].light.GetLightHash() == config.GetLightHash())
+                if (prevLightsShadowmapped[i].light.GetLightHash() == config.GetLightHash())
                 {
                     lightsShadowmapped[i].light = new Light(config.position, config.min, config.max, config.color, true, false, i);
-                    lightsShadowmapped[i].time += 1;
                     return;
                 }
             }
@@ -149,7 +152,6 @@ namespace Engine.Common
                 lightsShadowmapped[index] = new ShadowmappedLight 
                 {
                     light = new Light(config.position, config.min, config.max, config.color, true, false, index), 
-                    time = 1,
                     dirty = true,
                 };
             }
