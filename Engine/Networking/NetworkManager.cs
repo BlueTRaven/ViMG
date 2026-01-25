@@ -19,7 +19,7 @@ using ViMG.IMGUIImpl;
 
 namespace Engine.Networking
 {
-    public class NetworkManager : INetEventListener
+    public class NetworkManager : INetEventListener, INatPunchListener
     {
         public const double TIME_TRAVEL_DELAY = 0;//0.75;// Main.FIXED_STEP * 3;
 
@@ -117,7 +117,8 @@ namespace Engine.Networking
             
             netManager.EnableStatistics = true;
             netManager.ChannelsCount = 4;
-            netManager.NatPunchEnabled = true;
+            netManager.NatPunchEnabled = false;
+            netManager.NatPunchModule.Init(this);
 
 #if DEBUG
             netManager.DisconnectTimeout = 120 * 1000;
@@ -152,7 +153,9 @@ namespace Engine.Networking
             else if (IsClient)
             {
                 netManager.Start();
-                netManager.Connect(Ip, Port, "");
+                if (netManager.NatPunchEnabled)
+                    netManager.NatPunchModule.SendNatIntroduceRequest(Ip, Port, "");
+                else netManager.Connect(Ip, Port, "");
                 clientDCTime = DateTime.Now;
             }
 
@@ -227,6 +230,8 @@ namespace Engine.Networking
         {
             netManager.TriggerUpdate();
             netManager.PollEvents();
+            if (netManager.NatPunchEnabled)
+                netManager.NatPunchModule.PollEvents();
 
             if (Main.Time - lastStatisticCheck > 1)
             {
@@ -492,5 +497,20 @@ namespace Engine.Networking
             ImGui.PlotLines("Bytes Recieved", ref received[0], statistics.Length, (string)null, (float)(maxRecieved) / 10000.0f);
         }
 
+        public void OnNatIntroductionRequest(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, string token)
+        {
+            if (IsServer)
+            {
+                netManager.NatPunchModule.NatIntroduce(localEndPoint, remoteEndPoint, localEndPoint, remoteEndPoint, token);
+            }
+        }
+
+        public void OnNatIntroductionSuccess(IPEndPoint targetEndPoint, NatAddressType type, string token)
+        {
+            if (IsClient)
+            {
+                netManager.Connect(targetEndPoint, "");
+            }
+        }
     }
 }
