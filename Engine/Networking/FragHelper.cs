@@ -15,16 +15,21 @@ namespace Engine.Networking
     public struct FragHelper
     {
         private NetworkMessage netMessage;
+        private readonly int maxSend;
+
         private NetDataWriter writer;
         private int startPosition;
         private int maxSize;
 
-        private List<NetDataWriter> subWriters = new List<NetDataWriter>();
-        private NetDataWriter currentWriter;
 
-        public FragHelper(NetworkMessage netMessage)
+        private List<NetDataWriter> subWriters = new List<NetDataWriter>();
+        private NetDataWriter currentWriter = null!;
+
+        public FragHelper(NetworkMessage netMessage, int maxSend)
         {
             this.netMessage = netMessage;
+            this.maxSend = maxSend;
+
             this.writer = netMessage.writer;
             startPosition = writer.Length;
             maxSize = netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable) - sizeof(ushort);
@@ -51,7 +56,7 @@ namespace Engine.Networking
             int numSend = 0;
             foreach (var writer in subWriters)
             {
-                if (netMessage.writer.Length + writer.Length > maxSize)
+                if (netMessage.writer.Length + writer.Length > maxSize || numSend > maxSend)
                 {
                     var end = netMessage.writer.Length;
                     netMessage.writer.SetPosition(startPosition);

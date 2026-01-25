@@ -38,16 +38,14 @@ namespace ViMG.GameStates
 
         public bool IsLoading;
         private static object lockObj = new object();
-        private static string loadMessage;
+        private static string loadMessage = "";
         public static string LoadMessage 
         {
             get 
             {
                 lock (lockObj) 
                 {
-                    //return a COPY since we might be modifying this value.
-                    //This is slow, but whatever, we're only using this during loading.
-                    return new string(loadMessage); 
+                    return loadMessage; 
                 } 
             }
             set 

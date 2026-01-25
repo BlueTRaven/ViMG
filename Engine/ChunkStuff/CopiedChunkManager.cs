@@ -349,21 +349,26 @@ namespace Engine.ChunkStuff
 
         public CopiedChunkData GetCopy(ChunkPosition position)
         {
-            CopyChunkArr arr = new();
-            for (int i = 0; i < 3 * 3 * 3; i++)
+            if (IsInWorldBounds(position))
             {
-                Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
-                var realPos = position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
-                //var realPos = position + chunkAdjacents[i];
-                if (IsInWorldBounds(realPos))
+                CopyChunkArr arr = new();
+                for (int i = 0; i < 3 * 3 * 3; i++)
                 {
-                    Debug.Assert(copiedChunks[realPos].currentGeneration == copiedChunks[realPos].generation, "Generation mismatch. Make sure to call StartCopyChunk and FinishCopyChunks.");
-                    arr[i] = copiedChunks[realPos].data!;
+                    Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                    var realPos = position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                    //var realPos = position + chunkAdjacents[i];
+                    if (IsInWorldBounds(realPos))
+                    {
+                        Debug.Assert(copiedChunks[realPos].currentGeneration == copiedChunks[realPos].generation, "Generation mismatch. Make sure to call StartCopyChunk and FinishCopyChunks.");
+                        arr[i] = copiedChunks[realPos].data!;
+                    }
+                    else arr[i] = null;
                 }
-                else arr[i] = null;
+
+                return new CopiedChunkData(arr, copiedChunks[position].trackers, position, copiedChunks[position].generation);
             }
 
-            return new CopiedChunkData(arr, copiedChunks[position].trackers, position, copiedChunks[position].generation);
+            return new CopiedChunkData();
         }
 
         private CopyTaskResult CopyChunk(object? state)

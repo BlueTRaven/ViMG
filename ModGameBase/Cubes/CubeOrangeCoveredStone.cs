@@ -35,8 +35,8 @@ namespace ViMG.Cubes
         private Cube mushroomTop;
         private Cube mushroomSmall;
 
-        private CubePosition[] placeOffsets = new CubePosition[8] 
-        {
+        private CubePosition[] placeOffsets =
+        [
             new CubePosition(1, 1, 0),
             new CubePosition(1, 1, 1),
             new CubePosition(0, 1, 1),
@@ -45,7 +45,7 @@ namespace ViMG.Cubes
             new CubePosition(-1, 1, -1),
             new CubePosition(1, 1, -1),
             new CubePosition(0, 1, -1),
-        };
+        ];
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)
         {

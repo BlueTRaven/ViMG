@@ -508,6 +508,9 @@ namespace ViMG
 
 		public bool MarkDirty(ChunkPosition position)
 		{
+			if (!IsInWorldBounds(position))
+				return false;
+
 			GetChunkMeshInfo(position).version++;
 
 			if (!dirtyChunkKnown.Contains(position))
@@ -521,7 +524,14 @@ namespace ViMG
 			return false;
 		}
 
-		public bool IsMeshed(ChunkPosition position)
+        private bool IsInWorldBounds(ChunkPosition position)
+        {
+            return position.X >= 0 && position.X < sizeInChunks &&
+                    position.Y >= 0 && position.Y < sizeInChunks &&
+                    position.Z >= 0 && position.Z < sizeInChunks;
+        }
+
+        public bool IsMeshed(ChunkPosition position)
 		{
 			//we know we're not meshing this chunk currently if meshVersion is equal to version.
 			return GetChunkMeshInfo(position).meshVersion == GetChunkMeshInfo(position).version;

@@ -13,6 +13,7 @@ using ViMG.Entities;
 using ViMG.GameStates;
 using Engine.Items;
 using ModGameBase.Generation;
+using BrUtility.Src;
 
 namespace ViMG.Generation
 {
@@ -136,7 +137,7 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			if (Main.DO_DETAIL)
+			if (Main.GEN_DETAIL)
 			{
 				
 				structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
@@ -273,13 +274,12 @@ namespace ViMG.Generation
             base.PostGenerateDetail(world);
 
 			StructureGeneratorList l = new StructureGeneratorList();
-			l.structuresToGen = new();
 			l.structuresToGen.Add(new StructureGeneratorList.StructureGeneration
 			{
 				structure = ellipsoidAtBottomOfHole,
 				generatePos = new CubePosition(holeLocationX - 32, layerYOffsetInCubes + 32, holeLocationY - 32, CubePosition.CoordinateSpace.CubeSpace),
-				dontwriteStructureBlacklist = BlacklistAir,
-				overwriteWorldBlacklist = Array.Empty<ushort>(),
+				dontwriteStructureBlacklist = Array.Empty<ushort>(),
+				overwriteWorldBlacklist = BlacklistAir,
 			});
 			l.GenerateStructures(world.ChunkManager);
 
@@ -315,7 +315,11 @@ namespace ViMG.Generation
 			List<Rectangle3DI> cavePositions = new List<Rectangle3DI>();
 
 			ProfilingHelper.Start("Generating Caves...");
-			for (int i = 0; i < 132; i++)
+			const int MAX_GOL_CAVES = 132;
+			const int MAX_GOL_MCAVES = 128;
+			GameStateTheIsland.ProgressMax = MAX_GOL_CAVES + MAX_GOL_MCAVES;
+			GameStateTheIsland.ProgressMin = 0;
+			for (int i = 0; i < MAX_GOL_CAVES; i++)
             {
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes), 
 					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, world.ChunkManager.SizeInCubes));
@@ -324,9 +328,11 @@ namespace ViMG.Generation
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structure, randomPos, BlacklistCave, Span<ushort>.Empty, false);
-			}
 
-			for (int i = 0; i < 128; i++)
+                GameStateTheIsland.ProgressMin++;
+            }
+
+			for (int i = 0; i < MAX_GOL_MCAVES; i++)
 			{
 				CubePosition randomPos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes), 
 					layerYOffsetInCubes + GetRandom().Next(0, SEA_FLOOR + 16), GetRandom().Next(0, world.ChunkManager.SizeInCubes));
@@ -335,7 +341,9 @@ namespace ViMG.Generation
 				cavePositions.Add(new Rectangle3DI(new Point3D(randomPos.X, randomPos.Y, randomPos.Z), structure.size));
 
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structure, randomPos, BlacklistCave, Span<ushort>.Empty, false);
-			}
+
+                GameStateTheIsland.ProgressMin++;
+            }
 			ProfilingHelper.End("Done.");
 
 			/*ProfilingHelper.Start("Generating water caves and flood filling...");
@@ -350,10 +358,19 @@ namespace ViMG.Generation
 			}
 			ProfilingHelper.End("Done.");*/
 
-			ProfilingHelper.Start("Generating cave connections...");
-			for (int i = 0; i < 800; i++)
-				GenerateCaveConnection(world.ChunkManager, cavePositions);
-			ProfilingHelper.End("Done.");
+			if (Main.GEN_CAVES)
+			{
+				ProfilingHelper.Start("Generating cave connections...");
+				const int MAX_CAVES = 800;
+				GameStateTheIsland.ProgressMax = MAX_CAVES;
+				GameStateTheIsland.ProgressMin = 0;
+				for (int i = 0; i < MAX_CAVES; i++)
+				{
+					GenerateCaveConnection(world.ChunkManager, cavePositions);
+					GameStateTheIsland.ProgressMin++;
+				}
+				ProfilingHelper.End("Done.");
+			}
 
 			ProfilingHelper.Start("Generating ores...");
 			ProfilingHelper.Start("Copper...");
@@ -629,10 +646,14 @@ namespace ViMG.Generation
 		{
 			int startCaveIndex = GetRandom().Next(0, cavePositions.Count);
 
-			List<CubePosition> airs = ChunkHelper.SelectInArea(manager, cavePositions[startCaveIndex], 0);
-			if (airs.Count <= 0)
+			var startCave = cavePositions[startCaveIndex];
+
+			var buf = new CubePosition[startCave.Size.X * startCave.Size.Y * startCave.Size.Z];
+            FastStackList<CubePosition> airs = new(buf);
+			ChunkHelper.SelectInArea(airs, manager, cavePositions[startCaveIndex], 0);
+			if (airs.Length <= 0)
 				return;
-			CubePosition startPosition = airs[GetRandom().Next(0, airs.Count)];
+			CubePosition startPosition = airs[GetRandom().Next(0, airs.Length)];
 
 			//Find the nearest 3 CubePositions to this point.
 			int ni = 0;
@@ -677,10 +698,13 @@ namespace ViMG.Generation
 
 			//all that just to choose between one of the three closest caves.
 			int nearestIndex = GetRandom().Next(0, 3);
-			airs = ChunkHelper.SelectInArea(manager, cavePositions[nearests[nearestIndex]], 0);
-			if (airs.Count <= 0)
+			var nearestR = cavePositions[nearests[nearestIndex]];
+			buf = new CubePosition[nearestR.Size.X * nearestR.Size.Y * nearestR.Size.Z];
+            airs = new(buf);
+			ChunkHelper.SelectInArea(airs, manager, nearestR, 0);
+			if (airs.Length <= 0)
 				return;
-			CubePosition endPosition = airs[GetRandom().Next(0, airs.Count)];//new CubePosition(cavePositions[nearests[GetRandom().Next(0, 3)]].Position);
+			CubePosition endPosition = airs[GetRandom().Next(0, airs.Length)];//new CubePosition(cavePositions[nearests[GetRandom().Next(0, 3)]].Position);
 			Vector3 dir = new Vector3(endPosition.X - startPosition.X, endPosition.Y - startPosition.Y, endPosition.Z - startPosition.Z);
 
 			const float RADIUS_MIN = 2;

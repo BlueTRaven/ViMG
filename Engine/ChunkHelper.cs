@@ -1,7 +1,9 @@
-﻿using Engine.Items;
+﻿using BrUtility.Src;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -232,9 +234,11 @@ namespace ViMG
 			return positions;
 		}
 
-		public static List<CubePosition> SelectInArea(ChunkManager manager, Rectangle3DI bounds, ushort ofType)
+		public static void SelectInArea(FastStackList<CubePosition> selected, ChunkManager manager, Rectangle3DI bounds, ushort ofType)
         {
-			List<CubePosition> selected = new List<CubePosition>();
+			Debug.Assert(selected.Capacity >= bounds.Size.X * bounds.Size.Y * bounds.Size.Z);
+
+			//List<CubePosition> selected = new List<CubePosition>();
 
 			for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
             {
@@ -251,8 +255,6 @@ namespace ViMG
                     }
 				}
 			}
-
-			return selected;
         }
 	}
 }

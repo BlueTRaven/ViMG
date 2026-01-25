@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,12 +34,11 @@ namespace ModGameBase.Generation
             public List<ChunkStructure> structuresInThisChunk;
         }
 
-        public FastList<StructureGeneration> structuresToGen;
+        public FastList<StructureGeneration> structuresToGen = new();
 
         public void GenerateStructures(ChunkManager manager)
         {
             ChunkStructures[] structuresInChunks = new ChunkStructures[32 * 32 * 32];
-            //Dictionary<ChunkPosition, ChunkStructures> structuresInChunks = new();
 
             for (int i = 0; i < structuresToGen.Length; i++)
             {
@@ -48,11 +48,11 @@ namespace ModGameBase.Generation
                 ChunkPosition min = ChunkPosition.CubeChunk(structureToGen.generatePos);
                 ChunkPosition max = ChunkPosition.CubeChunk(structureToGen.generatePos + sizeInCubes);
 
-                for (int z = min.Z; z < max.Z; z++)
+                for (int z = min.Z; z <= max.Z; z++)
                 {
-                    for (int y = min.Y; y < max.Y; y++)
+                    for (int y = min.Y; y <= max.Y; y++)
                     {
-                        for (int x = min.X; x < max.X; x++)
+                        for (int x = min.X; x <= max.X; x++)
                         {
                             Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(32), out int j);
                             if (structuresInChunks[j].structuresInThisChunk == null)
@@ -62,21 +62,26 @@ namespace ModGameBase.Generation
                             CubePosition chunkPosInCubeSpace = chunkPos.InCubeSpace();
                             CubePosition nextChunkPosInCubeSpace = new ChunkPosition(x + 1, y + 1, z + 1).InCubeSpace();
                             CubePosition posInChunk = structureToGen.generatePos - chunkPosInCubeSpace;
-                            CubePosition sizeInChunk = nextChunkPosInCubeSpace - structureToGen.generatePos;
+                            posInChunk = new CubePosition(int.Max(0, posInChunk.X), int.Max(0, posInChunk.Y), int.Max(0, posInChunk.Z));
+                            CubePosition sizeInChunk = new CubePosition(Chunk.CHUNK_SIZE - posInChunk.X, Chunk.CHUNK_SIZE - posInChunk.Y, Chunk.CHUNK_SIZE - posInChunk.Z);
+                            if (x == max.X)
+                                sizeInChunk.X = (structureToGen.generatePos.X + sizeInCubes.X) - chunkPosInCubeSpace.X;
+                            if (y == max.Y)
+                                sizeInChunk.Y = (structureToGen.generatePos.Y + sizeInCubes.Y) - chunkPosInCubeSpace.Y;
+                            if (z == max.Z)
+                                sizeInChunk.Z = (structureToGen.generatePos.Z + sizeInCubes.Z) - chunkPosInCubeSpace.Z;
 
+                            Rectangle3DI rect = new Rectangle3DI(new Point3D(posInChunk.X, posInChunk.Y, posInChunk.Z),
+                                    new Point3D(sizeInChunk.X, sizeInChunk.Y, sizeInChunk.Z));
+
+                            Debug.Assert(rect.Position.X >= 0 && rect.Position.Y >= 0 && rect.Position.Z >= 0);
+                            Debug.Assert(rect.Size.X <= Chunk.CHUNK_SIZE && rect.Size.Y <= Chunk.CHUNK_SIZE && rect.Size.Z <= Chunk.CHUNK_SIZE);
 
                             structuresInChunks[j].structuresInThisChunk.Add(new ChunkStructure
                             {
                                 structureIndex = i,
-                                boundsInThisChunk = new Rectangle3DI(new Point3D(posInChunk.X, posInChunk.Y, posInChunk.Z),
-                                    new Point3D(sizeInChunk.X, sizeInChunk.Y, sizeInChunk.Z)),
+                                boundsInThisChunk = rect,
                             });
-
-                            //structures.structuresInThisChunk.Add(new ChunkStructure
-                            //{
-                            //    structureIndex = i,
-                            //    boundsInThisChunk = 
-                            //});
                         }
                     }
                 }
@@ -150,48 +155,6 @@ namespace ModGameBase.Generation
 
                 manager.CubeView.SetCubes(positions[0..idsI], ids[0..idsI]);
             }
-
-            //List<List<int>> buckets = new();
-
-            //var s = structuresToGen[0];
-            //var mn = s.generatePos;
-            //var mx = s.generatePos + new CubePosition(s.structure.size.X, s.structure.size.Y, s.structure.size.Z);
-
-            //var mnc = ChunkPosition.CubeChunk(mn);
-            //var mxc = ChunkPosition.CubeChunk(mx) + new ChunkPosition(1, 1, 1);
-
-            //for (int x = mnc.X; x < mxc.X; x++)
-            //{
-            //    for (int y = mnc.Y; y < mxc.Y; y++)
-            //    {
-            //        for (int z = mnc.Z; z < mxc.Z; z++)
-            //        {
-            //            ChunkPosition chunkPos = new ChunkPosition(x, y, z);
-            //            CubePosition chunkPosInCubeSpace = chunkPos.InCubeSpace();
-            //            CubePosition nextChunkPosInCubeSpace = new ChunkPosition(x + 1, y + 1, z + 1).InCubeSpace();
-            //            CubePosition posInChunk = s.generatePos - chunkPosInCubeSpace;
-            //            CubePosition sizeInChunk = nextChunkPosInCubeSpace - mn;
-
-            //            Rectangle3DI boundsInChunk = new Rectangle3DI(new Point3D(posInChunk.X, posInChunk.Y, posInChunk.Z), 
-            //                new Point3D(sizeInChunk.X, sizeInChunk.Y, sizeInChunk.Z));
-
-            //            for (int cx = 0; cx < Chunk.CHUNK_SIZE; cx++)
-            //            {
-            //                for (int cy = 0; cy < Chunk.CHUNK_SIZE; cy++)
-            //                {
-            //                    for (int cz = 0; cz < Chunk.CHUNK_SIZE; cz++)
-            //                    {
-            //                        if (boundsInChunk.Contains(new Point3D(cx, cy, cz)))
-            //                        {
-            //                            CubePosition positionInCS = new CubePosition(cx, cy, cz) + chunkPosInCubeSpace;
-            //                            CubePosition positionInStructure = positionInCS - s.generatePos;
-            //                        }
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
         }
     }
 }

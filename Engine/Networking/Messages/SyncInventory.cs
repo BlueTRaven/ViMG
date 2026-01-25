@@ -17,7 +17,7 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventory : Message
     {
-        public const int MAX_INVS_PER_SYNC = 32;
+        public const int MAX_INVS_PER_SYNC = 256;
 
         public static SyncInventory Instance;
 
@@ -134,7 +134,7 @@ namespace Engine.Networking.Messages
 
             netMessage.writer.Put(serverSequence);
 
-            var fragHelper = new FragHelper(netMessage);
+            var fragHelper = new FragHelper(netMessage, MAX_INVS_PER_SYNC);
 
             foreach (var invToSync in toSync.Slice())
             {
