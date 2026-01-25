@@ -1,5 +1,6 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Constraints;
+using BrAssetsManager;
 using Engine.Clients.WorldLogics;
 using Engine.Common;
 using Engine.Common.Entities;
@@ -254,6 +255,10 @@ namespace Engine.Clients
                     a.RenderUI(device, batch, deltaTime, this, t);
                 }
             }
+
+            if (LocalPlayer != null)
+                batch.Draw(Main.assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
+                    Options.CurrentWindowResolution.Y / 2 - 8), Main.CrosshairSourceRect.ToRectangle(), Color.White);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -263,11 +268,11 @@ namespace Engine.Clients
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
+                    ChunkManager.ChunkMesher.Dispose();
+
                     ChunkManager.PhysicsInfo.Simulation.Dispose();
                     ChunkManager.PhysicsInfo.Properties.Dispose();
                     ChunkManager.PhysicsInfo.GlobalBufferPool.Clear();
-
-                    ChunkManager.ChunkMesher.Dispose();
 
                     bepuDebugRenderer.Dispose();
                 }

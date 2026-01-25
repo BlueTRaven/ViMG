@@ -435,9 +435,6 @@ namespace ViMG
 				world.DrawUI(batch);
 			else ui.Draw(batch);*/
 
-			batch.Draw(assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8, 
-				Options.CurrentWindowResolution.Y / 2 - 8), CrosshairSourceRect.ToRectangle(), Color.White);
-
 			batch.End();
 
 			batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);

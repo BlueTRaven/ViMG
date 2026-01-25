@@ -196,6 +196,8 @@ namespace Engine.Networking
         {
             Debug.Assert(whoAmI == -1);
 
+            if (!startedConnecting) return;
+
             netManager.TriggerUpdate();
             netManager.PollEvents();
 
@@ -210,12 +212,14 @@ namespace Engine.Networking
 
         public void Disconnect()
         {
+            bool wasConnected = netManager.ConnectedPeersCount > 0;
             whoAmI = -1;
             uniqueNetPlayers = 0;
             Array.Fill(netPlayers, new NetPlayer());
             netManager.DisconnectAll();
+            netManager.Stop();
 
-            if (netManager.ConnectedPeersCount != 0)
+            if (wasConnected)
                 Console.WriteLine("Disconnected");
         }
 
