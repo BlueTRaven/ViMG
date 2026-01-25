@@ -53,11 +53,8 @@ namespace Engine.Clients
             {
                 CubePosition pos = positions[i];
                 ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-                if (cachedChunkData == null || chunkPos != cachedChunkPos)
+                if (cachedChunkData == null || cachedChunkData.Length == 0 || chunkPos != cachedChunkPos)
                 {
-                    if (cachedChunkData != null)
-                        io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Read);
-
                     cachedChunkPos = chunkPos;
                     cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
                 }

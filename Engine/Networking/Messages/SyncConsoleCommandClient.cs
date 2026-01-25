@@ -68,7 +68,7 @@ namespace Engine.Networking.Messages
             }
 
             IMGUIConsole.CommandReturn output = IMGUIConsole.RunCommand(commandName, NetworkManager.NetworkSide.Server, parameters.Slice());
-            if (output.valid)
+            if (output.valid && IMGUIConsole.GetCommandByName(commandName)?.runSide != ConsoleCommandRunSide.Server)
             {
                 SyncConsoleCommandServer.Instance.SendCommand(commandName, parameters.Slice().ToArray());
             }

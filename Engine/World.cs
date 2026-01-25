@@ -4,6 +4,7 @@ using BepuUtilities.Memory;
 using BrUtility;
 using Engine.Clients;
 using Engine.Common;
+using Engine.Entities;
 using Engine.Items;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -33,7 +34,7 @@ using ViMG.WorldLogics;
 
 namespace ViMG
 {
-    public class World
+	public class World
 	{
 		[ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
 		public static float SyncTime = 1.0f / 20.0f;
@@ -45,7 +46,7 @@ namespace ViMG
 		[ConsoleCommandVar("sv_autosave_time", "Time between autosaves. Default = 5 minutes")]
 		public static float AutosaveTime = 60f * 5f;
 
-        public readonly string LoadedFolderName;
+		public readonly string LoadedFolderName;
 		public readonly int Layer;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
@@ -101,11 +102,11 @@ namespace ViMG
 		private ChunkPosition oldChunkPosition;
 		private Vector3 oldCameraRotation;
 
-        public bool isDisposed;
+		public bool isDisposed;
 		// TODO HACK
 		public bool isCreateWorldReloading;
 
-        private double lastSyncTime;
+		private double lastSyncTime;
 		private double lastAutosaveTime;
 
 		public List<Player> PlayerRespawnedEvent = new List<Player>();
@@ -115,14 +116,14 @@ namespace ViMG
 		private Task<World> nextWorld;
 
 		public DateTime startTime;
-        private double alive;
+		private double alive;
 
-        public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager, 
+		public World(WorldPrototype prototype, ChunkLoadManager chunkLoadManager,
 			WorldInfoIO winfoIO, EntityManagerIO entityIO, ChunkManagerIO chunkIO, int worldSize)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            this.Layer = prototype.Layer;
+			this.Layer = prototype.Layer;
 			this.LoadedFolderName = prototype.WorldName;
 
 			ChunkManager = prototype.ChunkManager;
@@ -141,7 +142,7 @@ namespace ViMG
 
 			this.ChunkLoadManager = chunkLoadManager;
 
-            worldInfoIO = winfoIO;
+			worldInfoIO = winfoIO;
 			EntIO = entityIO;
 			this.ChunkIO = chunkIO;
 
@@ -154,28 +155,28 @@ namespace ViMG
 
 			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
-			
+
 			if (Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
 				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
-            LightManager2 = new LightManager2();
+			LightManager2 = new LightManager2();
 
 			startTime = DateTime.Now;
-        }
+		}
 
-        public void InitMeshes(GraphicsDevice device)
-        {
-            ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
-            MenuDialogue = new MenuDialogue(Main.gameStateManager);
+		public void InitMeshes(GraphicsDevice device)
+		{
+			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
+			MenuDialogue = new MenuDialogue(Main.gameStateManager);
 
-            //LightManager = new LightManager(device);
+			//LightManager = new LightManager(device);
 		}
 
 		public void FinishLoading(GraphicsDevice device)
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
+		{
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            //The player reference will not be set up after loading. We need to do that ourselves.
+			//The player reference will not be set up after loading. We need to do that ourselves.
 			foreach (Player p in EntityManager.GetAll<Player>())
 			{
 				player[p.playerIndex] = p;
@@ -192,10 +193,10 @@ namespace ViMG
 			//	//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
 			//	//TODO obsolete/deprecated
 			//	EntIO.DeserializePlayerChunk();
-   //             foreach (Player p in EntityManager.GetAll<Player>())
-   //             {
-   //                 player[p.playerIndex] = p;
-   //             }
+			//             foreach (Player p in EntityManager.GetAll<Player>())
+			//             {
+			//                 player[p.playerIndex] = p;
+			//             }
 
 			//	if (GetLocalPlayer() != null)
 			//	{
@@ -218,8 +219,8 @@ namespace ViMG
 		{
 			LightManager2.Reset();
 
-            //EntIO.TestConsistency(GetLocalPlayer());
-            using var zone = TracyImpl.Tracy.BeginZone();
+			//EntIO.TestConsistency(GetLocalPlayer());
+			using var zone = TracyImpl.Tracy.BeginZone();
 
 			if (alive - lastSyncTime > SyncTime)
 			{
@@ -230,7 +231,7 @@ namespace ViMG
 				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
 				lastSyncTime = alive;
-            }
+			}
 
 			// Autosave every 5 minutes?
 			if (Main.Time - lastAutosaveTime > AutosaveTime)
@@ -239,15 +240,15 @@ namespace ViMG
 				lastAutosaveTime = Main.Time;
 			}
 
-            deltaTime *= TimeScale * TimeMult;
+			deltaTime *= TimeScale * TimeMult;
 
-            PhysicsInfo.Simulation.Timestep((float)deltaTime);
+			PhysicsInfo.Simulation.Timestep((float)deltaTime);
 
 			alive += (float)deltaTime * WorldTimeMult;
 
-            CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
+			CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
 
-            ChatManager.Update(deltaTime);
+			ChatManager.Update(deltaTime);
 			//DialogueManager.Update(deltaTime);
 
 			ChunkManager.Update(deltaTime, this);
@@ -267,16 +268,16 @@ namespace ViMG
 			// and this bullshit when a player respawns.
 			foreach (Player player in PlayerRespawnedEvent)
 			{
-                if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+				if (Main.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
 				{
-                    Player p = new Player(player);
-                    EntityManager.ForceAdd(p);
-                    this.player[player.playerIndex] = p;
+					Player p = new Player(player);
+					EntityManager.ForceAdd(p);
+					this.player[player.playerIndex] = p;
 				}
 			}
 			PlayerRespawnedEvent.Clear();
 
-            SyncPlayerInputs.Instance.Apply(player);
+			SyncPlayerInputs.Instance.Apply(player);
 
 			Logic.Update(this, deltaTime);
 
@@ -325,10 +326,10 @@ namespace ViMG
 		}
 
 		private void TryLoadNextLayer()
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
+		{
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (Logic.AllowsLoadingNextLayer(this) && nextWorld == null)
+			if (Logic.AllowsLoadingNextLayer(this) && nextWorld == null)
 			{
 				if (player[localPlayerIndex].Position.Y < Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 3)
 					nextLayer = Layer + 1;
@@ -344,7 +345,7 @@ namespace ViMG
 			if (player[localPlayerIndex] != null)
 			{
 				if (player[localPlayerIndex].Position.Y > Cube.CUBE_SCALE * Chunk.CHUNK_SIZE * 5 &&
-                player[localPlayerIndex].Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
+				player[localPlayerIndex].Position.Y <= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (Chunk.CHUNK_SIZE * Cube.CUBE_SCALE * 5) && nextWorld != null)
 				{
 					if (nextWorld.IsCompleted)
 					{
@@ -354,7 +355,7 @@ namespace ViMG
 				}
 
 				if (nextWorld != null && player[localPlayerIndex].Position.Y < Cube.CUBE_SCALE * 4 ||
-                    player[localPlayerIndex].Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
+					player[localPlayerIndex].Position.Y >= sizeInChunks * Chunk.CHUNK_SIZE * Cube.CUBE_SCALE - (4 * Cube.CUBE_SCALE))
 				{
 					GameStateTheIsland.LoadMessage = "Waiting for world to finish loading...";
 					if (!nextWorld.IsCompleted)
@@ -365,7 +366,7 @@ namespace ViMG
 
 					if (nextLayer == Layer + 1)
 					{
-                        player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+						player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
 						ProfilingHelper.Start("Copying Layer");
 						for (int x = 0; x < sizeInCubes; x++)
@@ -383,10 +384,10 @@ namespace ViMG
 						ProfilingHelper.End("Done");
 					}
 					else if (nextLayer == Layer - 1)
-                        player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
+						player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
 					EntityManager.Unload(player[localPlayerIndex]);
-                    player[localPlayerIndex].world = loadedWorld;
+					player[localPlayerIndex].world = loadedWorld;
 					loadedWorld.EntityManager.Add(player[localPlayerIndex]);
 					loadedWorld.player = player;
 
@@ -400,7 +401,7 @@ namespace ViMG
 					//as it normally does.)
 					loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
 
-                    Main.gameStateManager.TheIsland.SetWorld(loadedWorld);
+					Main.gameStateManager.TheIsland.SetWorld(loadedWorld);
 
 					GameStateTheIsland.LoadMessage = "Saving...";
 					//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
@@ -424,10 +425,10 @@ namespace ViMG
 		}
 
 		public void SaveWorld()
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
+		{
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            IMGUIConsole.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+			IMGUIConsole.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
@@ -448,7 +449,7 @@ namespace ViMG
 				WorldInfo.playerPositions[i] = player[i]?.Position ?? WorldInfo.spawnPosition;
 				WorldInfo.playerLayers[i] = Layer;
 			}
-				
+
 			worldInfoIO.Save(LoadedFolderName, WorldInfo);
 		}
 
@@ -487,31 +488,31 @@ namespace ViMG
 		public Player? GetClosestPlayer(Vector3 position)
 		{
 			Player? closestPlayer = null;
-            float closestDistance = float.MaxValue;
-            foreach (Player? player in player)
+			float closestDistance = float.MaxValue;
+			foreach (Player? player in player)
 			{
 				if (player != null)
 				{
 					var dist = (player.Position - position).Length();
 
-                    if (dist < closestDistance)
+					if (dist < closestDistance)
 					{
 						closestDistance = dist;
 						closestPlayer = player;
 					}
-                }
+				}
 			}
 
 			return closestPlayer;
 		}
 
-        public float DistanceFromPlayer(Player player, Vector3 position)
-        {
-            return (player.Position - position).Length();
-        }
+		public float DistanceFromPlayer(Player player, Vector3 position)
+		{
+			return (player.Position - position).Length();
+		}
 
-        // Gets the distance from the closest player
-        public float DistanceFromPlayer(Vector3 position)
+		// Gets the distance from the closest player
+		public float DistanceFromPlayer(Vector3 position)
 		{
 			float closestDistance = float.MaxValue;
 
@@ -524,7 +525,7 @@ namespace ViMG
 			}
 
 			return closestDistance;
-        }
+		}
 
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
@@ -535,9 +536,9 @@ namespace ViMG
 				HousingManager.DrawDebug(this, device);
 		}
 
-        public void Draw(GraphicsDevice device)
+		public void Draw(GraphicsDevice device)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			using var zone = TracyImpl.Tracy.BeginZone();
 
 			Stopwatch drawTime = Stopwatch.StartNew();
 
@@ -567,7 +568,7 @@ namespace ViMG
 
 		public void DrawUI(SpriteBatch batch)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			using var zone = TracyImpl.Tracy.BeginZone();
 
 			GetLocalPlayer()?.DrawUI(batch);
 
@@ -577,9 +578,9 @@ namespace ViMG
 
 		public void OnCubeUpdate(CubePosition updating, ushort updatedId)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            Logic.OnCubeUpdated(updating, updatedId);
+			Logic.OnCubeUpdated(updating, updatedId);
 
 			HousingManager.OnCubeUpdate(this, updating, updatedId);
 			//TODO: this should be optimized. Right now we're updating literally every entity. We don't need to do this,
@@ -592,11 +593,11 @@ namespace ViMG
 			}
 		}
 
-        #region Time
-        public float GetTime()
-        {
+		#region Time
+		public float GetTime()
+		{
 			return (float)alive;
-        }
+		}
 
 		public void SetTime(float time)
 		{
@@ -604,9 +605,9 @@ namespace ViMG
 		}
 
 		public void AddTime(float time)
-        {
+		{
 			alive += time;
-        }
+		}
 
 		public float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1, float timeOffset = 0)
 		{
@@ -631,10 +632,10 @@ namespace ViMG
 			//Night time
 			if (timeOfDayPercent > duskEnd && timeOfDayPercent <= dawnStart)
 				return 1;
-            else if (timeOfDayPercent > duskStart && timeOfDayPercent <= duskEnd)
-					return (timeOfDayPercent - duskStart) / (duskEnd - duskStart);
+			else if (timeOfDayPercent > duskStart && timeOfDayPercent <= duskEnd)
+				return (timeOfDayPercent - duskStart) / (duskEnd - duskStart);
 			else if ((timeOfDayPercent > dawnStart && timeOfDayPercent <= 1) || (timeOfDayPercent >= 0 && timeOfDayPercent <= dawnEnd))
-            {
+			{
 				float percent = 0;
 				if (timeOfDayPercent > dawnStart)
 					percent = (timeOfDayPercent - dawnStart) / ((timeOfDayPercent + dawnEnd) - dawnStart);
@@ -650,7 +651,7 @@ namespace ViMG
 		}
 
 		public float GetDuskTime()
-        {
+		{
 			//Dusk starts at the last 8% of the day cycle.
 			const float DUSK_START = 0.42f;
 			const float DUSK_END = 0.56f;
@@ -664,53 +665,53 @@ namespace ViMG
 		}
 
 		public bool IsDay()
-        {
+		{
 			return (alive % DAY_CYCLE_TIME) <= DAY_CYCLE_TIME / 2f;
-        }
+		}
 
 		public bool IsNight()
-        {
+		{
 			return (alive % DAY_CYCLE_TIME) > DAY_CYCLE_TIME / 2f;
-        }
+		}
 
 		public float GetTimeOfNight()
-        {
+		{
 			float timeOfDay = (float)alive % DAY_CYCLE_TIME;
 
 			if (!IsNight())
 				return 0;
-            else
-            {
+			else
+			{
 				float nightTime = timeOfDay - (DAY_CYCLE_TIME / 2f);
 
 				float midnightTime = DAY_CYCLE_TIME * 0.25f;
 
 				if (nightTime < midnightTime)
-                {
+				{
 					const float START = DAY_CYCLE_TIME / 2f;
 					const float END = DAY_CYCLE_TIME * 0.75f;
 
 					return (timeOfDay - START) / (END - START);
 				}
-                else
-                {
+				else
+				{
 					const float START = DAY_CYCLE_TIME * 0.75f;
 					const float END = DAY_CYCLE_TIME;
 
 					return 1 - ((timeOfDay - START) / (END - START));
-                }
+				}
 
 				//return nightTime / (DAY_CYCLE_TIME / 2f);
-            }
-        }
-        #endregion
+			}
+		}
+		#endregion
 
-        public bool TryMineCube(Player? player, CubePosition position, int level, int num, bool instant = false)
+		public bool TryMineCube(Player? player, CubePosition position, int level, int num, bool instant = false)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+			using var zone = TracyImpl.Tracy.BeginZone();
 
-            //debug mode mines instantly
-            if (player != null && player.state == Player.State.Noclip)
+			//debug mode mines instantly
+			if (player != null && player.state == Player.State.Noclip)
 				instant = true;
 
 			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
@@ -727,23 +728,23 @@ namespace ViMG
 
 				if (CubeProgressTracker.AddProgress(ChunkManager.CubeView, position, num))
 				{
-                    DoMineCube(position, player, Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+					DoMineCube(position, player, Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
-                    return true;
-                }
+					return true;
+				}
 
 				SyncCubeUpdate.Instance.SendCubeUpdate(position, player?.playerIndex ?? -1, CubeProgressTracker.GetProgress(position));
 			}
 
 
-            return false;
+			return false;
 		}
 
 		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
 		{
-            Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
 
-            ChunkManager.CubeView.SetCube(position, 0, player);
+			ChunkManager.CubeView.SetCube(position, 0, player);
 
 			if (doDrops)
 			{
@@ -760,39 +761,39 @@ namespace ViMG
 				}
 			}
 
-            cube.OnMined(player, position);
-        }
+			cube.OnMined(player, position);
+		}
 
 		public bool PlaceCube(Player? player, CubePosition position, ushort id)
 		{
-            if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
-            {
+			if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
+			{
 				ushort oldId = ChunkManager.CubeView.GetId(position);
-                ChunkManager.CubeView.SetCube(player.PlaceAtPos, id, player);
-                Cube cube = Main.Registry.CubeRegistry.Get(id);
-                cube.OnPlayerPlaced(player, player.PlaceAtPos);
+				ChunkManager.CubeView.SetCube(player.PlaceAtPos, id, player);
+				Cube cube = Main.Registry.CubeRegistry.Get(id);
+				cube.OnPlayerPlaced(player, player.PlaceAtPos);
 
-                //if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-                //{
-                //    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
-                //    {
-                //        position = player.PlaceAtPos,
-                //        newId = id,
-                //        oldId = oldId,
-                //        player = (byte)player.playerIndex,
-                //        time = Main.Time,
-                //    };
+				//if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+				//{
+				//    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
+				//    {
+				//        position = player.PlaceAtPos,
+				//        newId = id,
+				//        oldId = oldId,
+				//        player = (byte)player.playerIndex,
+				//        time = Main.Time,
+				//    };
 
-                //    Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
-                //}
+				//    Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
+				//}
 
-                return true;
-            }
+				return true;
+			}
 
 			return false;
-        }
+		}
 
-		public struct RaycastResult 
+		public struct RaycastResult
 		{
 			public Vector3 start;
 			public Vector3 end;
@@ -913,7 +914,7 @@ namespace ViMG
 		}
 
 		public void Dispose()
-        {
+		{
 			isDisposed = true;
 			ChunkLoadManager.Dispose();
 			//LightManager.Dispose();
@@ -922,7 +923,7 @@ namespace ViMG
 			PhysicsInfo.Simulation.Dispose();
 			PhysicsInfo.Properties.Dispose();
 			PhysicsInfo.GlobalBufferPool.Clear();
-        }
+		}
 
 		[ConsoleCommand("set_time", "Sets the world's time. Param 0: time to set to, between 0 and 600 (wraps around), 0 being dawn, 300 being dusk. " +
 			"Alternatively, Param 0 can be \"dawn\", \"noon\", \"dusk\", or \"midnight\", for those respective times.", ConsoleCommandRunSide.ServerAndClient)]
@@ -933,7 +934,7 @@ namespace ViMG
 				if (IMGUIConsole.RequireParam(parameters, 0, "time"))
 				{
 					if (int.TryParse(parameters[0], out int timeSetTo))
-					{ 
+					{
 						gsIsland.GetWorld().alive = timeSetTo;
 						if (gsIsland.GetClient() != null)
 							gsIsland.GetClient().Current().time = timeSetTo;
@@ -949,14 +950,14 @@ namespace ViMG
 						else if (parameters[0] == "midnight")
 							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 3;
 						else IMGUIConsole.LogLine("[error] Time not recognized.");
-                    }
+					}
 				}
 			}
-            else
-            {
-                IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
-            }
-        }
+			else
+			{
+				IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+			}
+		}
 
 		[ConsoleCommand("give", "Gives the player an item.")]
 		public static void GiveItem(string[] parameters)
@@ -1001,9 +1002,9 @@ namespace ViMG
 					}
 					else
 					{
-                        IMGUIConsole.LogLine("[error] Tried to get player with name " + parameters[0] + ", but a player by that name did not exist.");
-                    }
-                }
+						ErrorPlayerDoesNotExist(parameters[0]);
+					}
+				}
 				else
 				{
 					IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
@@ -1011,7 +1012,7 @@ namespace ViMG
 			}
 		}
 
-		[ConsoleCommand("list_entities", "Lists all entities. Supply 'spawnable' to parameter 0 to list only entities that are spawnable.")]
+		[ConsoleCommand("list_entities", "Lists all entities. Supply 'spawnable' to parameter 0 to list only entities that are spawnable.", ConsoleCommandRunSide.ServerAndClient)]
 		public static void ListEntities(string[] parameters)
 		{
 			bool listParameterless = false;
@@ -1020,65 +1021,82 @@ namespace ViMG
 				listParameterless = true;
 			}
 
-			foreach (Type entType in Utility.GetTypes<Entity>())
+			foreach (EntityType entType in Main.Registry.EntityRegistry.GetIterable())
 			{
-				if (listParameterless && entType.GetConstructor(Type.EmptyTypes) != null)
-                    IMGUIConsole.LogLine(entType.Name);
-				else 
-					IMGUIConsole.LogLine(entType.Name);
+				if (listParameterless && entType.type.GetConstructor(Type.EmptyTypes) != null)
+					IMGUIConsole.LogLine(entType.Identifier);
+				else
+					IMGUIConsole.LogLine(entType.Identifier);
 			}
 		}
 
-		[ConsoleCommand("spawn", "Spawns an entity. Can be spawned on self or at the player's looking position.")]
+		[ConsoleCommand("spawn", "Spawns an entity. Can be spawned on self or at the player's looking position.", ConsoleCommandRunSide.Server)]
 		public static void SpawnEntity(string[] parameters)
 		{
 			if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
 			{
-				if (IMGUIConsole.RequireParam(parameters, 0, "location", ["self", "ray"]))
+				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
-					string location = parameters[0];
-
-					IMGUIConsole.RequireParam(parameters, 1, "entity");
-
-					string entityName = parameters[1];
-
-					Type entityType = Utility.GetType(Assembly.GetExecutingAssembly().GetName().Name, entityName);
-
-					if (entityType == null)
+					World world = gsIsland.GetWorld();
+					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
+					Player? player = world.player.First(x => x != null && x.playerIndex == netPlayer.playerId);
+					if (player == null)
 					{
-                        IMGUIConsole.LogLine("[error] Entity " + entityName + " does not exist!");
-						return;
-                    }
-				
-					if (entityType.GetConstructor(Type.EmptyTypes) == null)
-					{
-						IMGUIConsole.LogLine("[error] Entity " + entityName + " exists, but has no parameterless constructor, and cannot be spawned.");
+						ErrorPlayerDoesNotExist(parameters[0]);
 						return;
 					}
 
-					var created = Activator.CreateInstance(entityType);
-
-					if (created != null && created is Entity ent)
+					if (IMGUIConsole.RequireParam(parameters, 1, "location", ["self", "ray"]))
 					{
-						if (location == "self")
-						{
-							ent.Position = gsIsland.GetWorld().EntityManager.GetFirst<Player>().Position;
-						}
-						else if (location == "ray")
-						{
-							CubePosition lookAt = gsIsland.GetWorld().EntityManager.GetFirst<Player>().LookAtPos;
+						string location = parameters[1];
 
-							ent.Position = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
+						IMGUIConsole.RequireParam(parameters, 2, "entity");
+
+						string entityName = parameters[2];
+
+						Type entityType = Main.Registry.EntityRegistry.Get(entityName).type;
+
+						if (entityType == null)
+						{
+							IMGUIConsole.LogLine("[error] Entity " + entityName + " does not exist!");
+							return;
 						}
 
-						gsIsland.GetWorld().EntityManager.Add(ent);
+						if (entityType.GetConstructor(Type.EmptyTypes) == null)
+						{
+							IMGUIConsole.LogLine("[error] Entity " + entityName + " exists, but has no parameterless constructor, and cannot be spawned.");
+							return;
+						}
+
+						var created = Activator.CreateInstance(entityType);
+
+						if (created != null && created is Entity ent)
+						{
+							if (location == "self")
+							{
+								ent.Position = player.Position;
+							}
+							else if (location == "ray")
+							{
+								CubePosition lookAt = player.LookAtPos;
+
+								ent.Position = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
+							}
+
+							gsIsland.GetWorld().EntityManager.Add(ent);
+						}
 					}
 				}
-			}
-			else
-			{
-				IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+				else
+				{
+					IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + Main.gameStateManager.GetCurrentGameState().ToString());
+				}
 			}
 		}
-	}
+
+		public static void ErrorPlayerDoesNotExist(string playerName)
+		{
+            IMGUIConsole.LogError(string.Format("Tried to get player with name {0}, but a player by that name did not exist.", playerName));
+        }
+    }
 }

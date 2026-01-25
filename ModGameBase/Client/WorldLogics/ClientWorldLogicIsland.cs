@@ -162,6 +162,8 @@ namespace ModGameBase.Client.WorldLogics
 
             if (!curr.flags.HasFlag(WorldFlags.FlagValues.SKULLHEAD_DEAD) && localPlayer.position.Y / Cube.CUBE_SCALE < 140)
             {
+                Vector3 lavaPosition = new Vector3(localPlayer.position.X, Cube.CUBE_SCALE * 40.5f + (Cube.CUBE_SCALE * 0.25f), localPlayer.position.Z);
+
                 Matrix mat = Matrix.CreateScale(Cube.CUBE_SCALE * 512, 1, Cube.CUBE_SCALE * 512) *
                     Matrix.CreateTranslation(localPlayer.position.X, Cube.CUBE_SCALE * 40.5f, localPlayer.position.Z);
 
@@ -174,6 +176,14 @@ namespace ModGameBase.Client.WorldLogics
                 };
                 Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(materialLava,
                     meshLavaQuad, mat, sourceRect));
+
+                client.LightManager.Add(new LightManager2.LightConfig()
+                {
+                    position = lavaPosition,
+                    color = Color.OrangeRed.ToVector4(),
+                    min = Cube.CUBE_SCALE * 28,
+                    max = Cube.CUBE_SCALE * 32,
+                });
             }
         }
     }

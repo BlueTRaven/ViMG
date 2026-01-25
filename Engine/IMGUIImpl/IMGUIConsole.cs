@@ -524,6 +524,11 @@ namespace ViMG.IMGUIImpl
             RunCommand(commandName, netSide, parameters);            
         }
 
+        public static ConsoleCommandAttribute? GetCommandByName(string name)
+        {
+            return commandsByName[name].Item2;
+        }
+
         public struct CommandReturn
         {
             public string[] output;
@@ -747,6 +752,11 @@ namespace ViMG.IMGUIImpl
                     break;
             }
             return 0;
+        }
+
+        public static void LogError(string line)
+        {
+            LogLine("[error] " + line);
         }
 
         public static void LogLine(string line)
