@@ -54,6 +54,7 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
+            clicked = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
         }
@@ -77,7 +78,7 @@ namespace ViMG.UIs
 
             UI.StartParent(new Vector2(Options.CurrentWindowResolution.X / 2 - 64, Options.CurrentWindowResolution.Y / 2 - 128));
 
-            if (Main.inputManager.JustReleased(A1r.Input.MouseInput.LeftButton))
+            if (!Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
                 clicked = false;
 
             if (state == MenuState.Main)

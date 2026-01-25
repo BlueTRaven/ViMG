@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using Engine.Networking.Messages;
+using Engine.UIs;
 using Hexa.NET.ImGui;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -162,6 +163,8 @@ namespace Engine.Networking
         {
             if (!startedConnecting) return false;
 
+            return whoAmI != -1;
+
             if (whoAmI == -1)
             {
                 netManager.TriggerUpdate();
@@ -186,6 +189,22 @@ namespace Engine.Networking
             else
             {
                 return true;
+            }
+        }
+
+        public void CheckConnected()
+        {
+            Debug.Assert(whoAmI == -1);
+
+            netManager.TriggerUpdate();
+            netManager.PollEvents();
+
+            if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
+            {
+                Disconnect();
+                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFailedToConnect(Main.gameStateManager, MenuFailedToConnect.ConnectionFailureReason.Refused, Ip, Port));
+                Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
             }
         }
 

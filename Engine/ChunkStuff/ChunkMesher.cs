@@ -114,6 +114,8 @@ namespace Engine.ChunkStuff
 
             RenderMesher?.UnloadAll();
             CollisionMesher?.UnloadAll();
+
+            bufferPool.Clear();
         }
 
         public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)

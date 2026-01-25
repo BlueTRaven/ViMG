@@ -847,13 +847,13 @@ namespace ViMG.UIs
 				{
 					if (button.hovered && button.nsHovered != null)
 					{
-						button.nsHovered.Draw(batch, button.color, button.bounds, 1, 0.75f);
+						button.nsHovered.Draw(batch, button.color, button.bounds, scale, 0.75f);
 					}
 					else if (button.clickLeft && button.nsClicked != null)
 					{
-						button.nsClicked.Draw(batch, button.color, button.bounds, 1, 0.75f);
+						button.nsClicked.Draw(batch, button.color, button.bounds, scale, 0.75f);
 					}
-					else button.nsSource.Draw(batch, button.color, button.bounds, 1, 0.75f);
+					else button.nsSource.Draw(batch, button.color, button.bounds, scale, 0.75f);
 				}
 				else
 				{
@@ -887,10 +887,32 @@ namespace ViMG.UIs
 			{
 				Rectangle bounds = new RectangleF(label.position, label.width, label.height).ToRectangle();
 
-                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length,
-					bounds, label.alignment);
+				// Labels are aligned individually on the X axis, but aligned as a group on the Y axis
+				float verticalAlignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length, bounds, label.alignment).Y;
 
-				TextHelper.DrawText(batch, label.font, label.text, alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
+                int previ = 0;
+				int i = label.text.offset;
+				while (true)
+				{
+					if (i == label.text.length || label.text.text[i] == '\n')
+					{
+                        Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, previ, i - previ,
+							bounds, label.alignment);
+						alignmentOffset.Y = verticalAlignmentOffset;
+
+                        TextHelper.DrawText(batch, label.font, new TextHelper.WrappedText(label.text.wrapWidth, label.text.text, previ, i - previ), alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
+
+						bounds.Y += (int)(label.font.StringHeight(label.text.text.AsSpan()[previ..i]) * scale * label.font.size);
+
+                        if (i == label.text.length) break;
+						previ = i + 1;
+                    }
+					i += 1;
+                }
+                //Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length,
+				//	bounds, label.alignment);
+
+				//TextHelper.DrawText(batch, label.font, label.text, alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
 
 				//This is exclusively here for drawing textInput's cursor, since textInput uses a label.
 				if (iteration % 60 < 30)

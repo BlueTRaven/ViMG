@@ -237,12 +237,12 @@ namespace Engine.Rendering.BepuDebugRendering
                 //GlyphRenderer.Dispose();
 
                 //dsv.Dispose();
-                depthBuffer.Dispose();
+                depthBuffer?.Dispose();
                 //rtv.Dispose();
-                colorBuffer.Dispose();
+                colorBuffer?.Dispose();
                 //resolvedSRV.Dispose();
                 //resolvedRTV.Dispose();
-                resolvedColorBuffer.Dispose();
+                resolvedColorBuffer?.Dispose();
 
                 rasterizerState.Dispose();
                 opaqueDepthState.Dispose();
@@ -251,6 +251,8 @@ namespace Engine.Rendering.BepuDebugRendering
                 uiBlendState.Dispose();
 
                 Shapes.Dispose();
+
+                pool.Clear();
             }
         }
 

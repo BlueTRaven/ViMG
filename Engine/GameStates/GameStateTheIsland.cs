@@ -229,6 +229,7 @@ namespace ViMG.GameStates
             }
             if (client != null)
             {
+                client.Dispose();
                 client = null;
             }
             SetMenu(null);
@@ -297,6 +298,10 @@ namespace ViMG.GameStates
                         client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
                     }
+                } 
+                else
+                {
+                    netManagerClient.CheckConnected();
                 }
             }
 
@@ -814,6 +819,13 @@ namespace ViMG.GameStates
                     Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
 
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
+            {
+                TextHelper.DrawText(batch, fi, string.Format("Connecting to {0}:{1}...", netManagerClient.Ip, netManagerClient.Port), Color.White,
+                    new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+                    Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
+            }
+
             StringBuilder sb = new StringBuilder();
             sb.Append("This is a ");
             switch (Main.gameStateManager.netMode)
@@ -825,7 +837,7 @@ namespace ViMG.GameStates
                     break;
                 case GameStateManager.NetworkingMode.Server:
                     sb.Append("Server session. There are ");
-                    sb.Append(netManagerServer.uniqueNetPlayers);
+                    sb.Append(netManagerServer?.uniqueNetPlayers);
                     sb.Append(" connected players.");
                     break;
                 case GameStateManager.NetworkingMode.Singleplayer:
@@ -835,8 +847,6 @@ namespace ViMG.GameStates
             TextHelper.DrawText(batch, fi, sb.ToString(), Color.White,
                     new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
                     Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 1);
-
-
         }
     }
 }

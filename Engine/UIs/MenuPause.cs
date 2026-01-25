@@ -22,11 +22,15 @@ namespace ViMG.UIs
             fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             uiTex = Main.assetsManager.GetAsset<Texture2D>("ui_buttons");
 
-            buttonParams = new UI.ButtonConstructionParameters(new RectangleF(0, 0, 128 + 32, 32),
-                    new UI.LabelConstructionParameters("", fi, 128, Vector2.Zero, alignment: Enums.Alignment.Center, height: 32),
-                    new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 0, 128, 32), 4, 4, 4, 4),
-                    new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4),
-                    new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4));
+            buttonParams = new UI.ButtonConstructionParameters
+            {
+                bounds = new RectangleF(0, 0, 128, 32),
+                label = new UI.LabelConstructionParameters("", fi, 128, Vector2.Zero, alignment: Enums.Alignment.Center, height: 32),
+                nsSource = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 0, 128, 32), 4, 4, 4, 4),
+                nsClicked = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4),
+                nsHovered = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4),
+                color = Color.White,
+            };
         }
 
         public override void OnOpen()
@@ -99,19 +103,25 @@ namespace ViMG.UIs
 
             if (UI.MakeButton(buttonParams with
             {
-                label = buttonParams.label.WithNewText("Exit to Menu"),
-                bounds = buttonParams.bounds with { y = y },
+                label = buttonParams.label.WithNewText("Exit to\nMenu") with
+                {
+                    height = buttonParams.bounds.height + 16,
+                },
+                bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
             }).clickLeft)
             {
                 Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
             }
 
-            y += 32 + MARGIN;
+            y += 48 + MARGIN;
 
             if (UI.MakeButton(buttonParams with
             {
-                label = buttonParams.label.WithNewText("Exit to Desktop"),
-                bounds = buttonParams.bounds with { y = y },
+                label = buttonParams.label.WithNewText("Exit to\nDesktop") with
+                {
+                    height = buttonParams.bounds.height + 16,
+                },
+                bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
             }).clickLeft)
             {
                 Main.gameStateManager.TheIsland.Disconnect();
