@@ -195,7 +195,12 @@ namespace ViMG.WorldLogics
         private WeatherType nextTransitionType;  //we can queue up one additional transition. 
         private float nextTransitionTime;
 
-        public WeatherManager(GraphicsDevice device)
+        public WeatherManager()
+        {
+            currentWeather = MakeWeatherState(WeatherType.Cloudy, Color.White);
+        }
+
+        public void LoadContent(GraphicsDevice device)
         {
             drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
 
@@ -243,9 +248,6 @@ namespace ViMG.WorldLogics
             }
 
             skyboxCloudsMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
-            //skyboxCloudsMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
-
-            currentWeather = MakeWeatherState(WeatherType.Cloudy, Color.White);
         }
 
         public void Update(double deltaTime, float worldTime, Vector4 lightColor)

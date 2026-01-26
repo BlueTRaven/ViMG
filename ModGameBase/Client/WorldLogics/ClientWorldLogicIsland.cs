@@ -83,7 +83,8 @@ namespace ModGameBase.Client.WorldLogics
                 Night = GlobalState.AssetsManager.GetAsset<Texture2D>("skybox_night"),
             };
 
-            WeatherManager = new WeatherManager(device);
+            WeatherManager = new WeatherManager();
+            WeatherManager.LoadContent(device);
         }
 
         public override void UpdateSimulation(double deltaTime, ClientStates client)

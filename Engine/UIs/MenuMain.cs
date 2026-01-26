@@ -165,9 +165,9 @@ namespace ViMG.UIs
                                 gsManager.TheIsland.localPlayerName = directories[i];
 
                             gsManager.SetGameState(gsManager.TheIsland);
-                            gsManager.TheIsland.Connect(serverIp, serverPort);
+                            //gsManager.TheIsland.Connect(serverIp, serverPort);
                             if (startAsServer)
-                                gsManager.TheIsland.StartSingleplayer(directories[i]);
+                                gsManager.TheIsland.StartServer(directories[i], serverIp, serverPort);
                             else gsManager.TheIsland.StartSingleplayer(directories[i]);
                         }
                     }
@@ -276,7 +276,7 @@ namespace ViMG.UIs
             UI.Draw(batch, 1);
         }
 
-        private string[] GetWorldSaveDirectories()
+        public static string[] GetWorldSaveDirectories()
         {
             string[] strings;
 

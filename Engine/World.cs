@@ -168,7 +168,7 @@ namespace ViMG
 		public void InitMeshes(GraphicsDevice device)
 		{
 			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
-			MenuDialogue = new MenuDialogue(GlobalState.GameStateManager);
+			//MenuDialogue = new MenuDialogue(GlobalState.GameStateManager);
 
 			//LightManager = new LightManager(device);
 		}

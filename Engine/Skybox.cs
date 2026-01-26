@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,10 +22,13 @@ namespace ViMG
 
         public Skybox()
         {
-            Day = DrawHelper.BlackPixel;
-            Night = DrawHelper.BlackPixel;
-            Underground = DrawHelper.BlackPixel;
-            Weather = DrawHelper.BlackPixel;
+            if (!GlobalState.IsHeadless)
+            {
+                Day = DrawHelper.BlackPixel;
+                Night = DrawHelper.BlackPixel;
+                Underground = DrawHelper.BlackPixel;
+                Weather = DrawHelper.BlackPixel;
+            }
         }
     }
 }

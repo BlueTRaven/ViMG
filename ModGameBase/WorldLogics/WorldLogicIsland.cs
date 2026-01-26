@@ -56,7 +56,7 @@ namespace ViMG.WorldLogics
         {
             base.FinishLoading(world, device);
 
-            WeatherManager = new WeatherManager(device);
+            WeatherManager = new WeatherManager();
         }
 
         public override void Initialize(World world)
