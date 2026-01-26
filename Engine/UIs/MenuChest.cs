@@ -1,4 +1,5 @@
-﻿using Engine.Items;
+﻿using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -56,8 +57,8 @@ namespace ViMG.UIs
             var heldInventory = invManager.Get(this.heldInventory);
             var chestInventory = invManager.Get(this.chestInventory);
 
-			if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape))
-				Main.gameStateManager.GetCurrentGameState().PopMenu();
+			if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape))
+				GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
 
 			UI.Start();
 

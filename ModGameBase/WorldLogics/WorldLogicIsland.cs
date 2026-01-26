@@ -77,9 +77,9 @@ namespace ViMG.WorldLogics
 			base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && GlobalState.Time - timeSyncWeather > 1)
+            if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && GlobalState.Time - timeSyncWeather > 1)
             {
-                Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWeather.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
+                GlobalState.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWeather.Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, null);
                 timeSyncWeather = GlobalState.Time;
             }
 

@@ -141,7 +141,7 @@ namespace ViMG
             writer.WriteLine("show_console " + ShowConsole);
         }
 
-        public static void OnLoad(List<string> lines, GraphicsDeviceManager graphics)
+        public static void OnLoad(List<string> lines)
         {
             foreach (string line in lines)
             {
@@ -175,12 +175,9 @@ namespace ViMG
                 if (split[0] == "debug_timescale")
                     float.TryParse(split[1], out DEBUGTimescale);
 
-                if (split[0] == "show_connsole")
+                if (split[0] == "show_console")
                     bool.TryParse(split[1], out ShowConsole);
             }
-
-            //graphics.PreferredBackBufferWidth = CurrentWindowResolution.X;
-            //graphics.PreferredBackBufferHeight = CurrentWindowResolution.Y;
         }
     }
 }

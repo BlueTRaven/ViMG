@@ -60,8 +60,8 @@ namespace ViMG.UIs
             var playerInventory = invManager.Get(this.playerInventory);
             var heldInventory = invManager.Get(this.heldInventory);
 
-            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
-                Main.gameStateManager.GetCurrentGameState().PopMenu();
+            if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
+                GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
 
             TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 

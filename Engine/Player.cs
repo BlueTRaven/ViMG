@@ -315,7 +315,7 @@ namespace ViMG
 		public int playerUuid;
 		public int playerIndex;
 		public bool IsLocalPlayer =>
-            Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
+            GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		public bool IsInControl => inputLockupTimer <= 0;
 
@@ -500,7 +500,7 @@ namespace ViMG
             // it should stay loaded.
             // TODO: revisit this. Maybe not the best way of doing things. It's possible we COULD allow players to be unloaded so long as they're
             // not the local player.
-            //IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || Main.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
+            //IMGUIConsole.Assert(world.isCreateWorldReloading || world.isDisposed || GlobalState.gameStateManager.TheIsland.netManager.netPlayers[playerIndex].playerId == -1);
 
             if (hitbox != -1)
 				world.HitboxManager.Remove(hitbox);
@@ -560,7 +560,7 @@ namespace ViMG
 			{
 				// Check to make sure we're still alive
 				// This is the case if our playerIndex is present in the netPlayer array
-				if (Main.gameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
+				if (GlobalState.gameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
 				{
 					world.EntityManager.Kill(this);
 					return;
@@ -755,8 +755,8 @@ namespace ViMG
 
 				//if (Main.inputManager.JustPressed(Keys.E))
 				//{
-				//	if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-				//		Main.gameStateManager.GetCurrentGameState().PopMenu();
+				//	if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
+				//		GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
 				//	else menuPlayer.Toggle();
 				//}
 

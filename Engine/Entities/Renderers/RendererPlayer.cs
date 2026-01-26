@@ -68,7 +68,7 @@ namespace Engine.Entities.Renderers
                 //if (extraState.useAnimType == 64)
                 //    //if (extraState.useAnimTimer >= 0)
                 //    Console.WriteLine("{0}", extraState.useAnimTimer);
-                //else if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
+                //else if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
                 //    Console.WriteLine("No");
 
                 highlightedItem.item?.Client?.DrawInHand(device, client.Renderer, highlightedItem, entity, -BasicState.Forward(ref entity));
@@ -141,12 +141,12 @@ namespace Engine.Entities.Renderers
                 }
                 else Main.CrosshairSourceRect = new RectangleF(0, 0, 16, 16);
 
-                //if (Main.gameStateManager.TheIsland.GetWorld() != null)
+                //if (GlobalState.gameStateManager.TheIsland.GetWorld() != null)
                 //{
-                //    var srvPlayer = Main.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
+                //    var srvPlayer = GlobalState.gameStateManager.TheIsland.GetWorld().EntityManager.GetByRef(reference) as Player;
 
                 //    var fwd2 = (srvPlayer as IRotatable).Forward;
-                //    var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, Main.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
+                //    var lookAtResult2 = CubeView.Raycast(srvPlayer.Position, srvPlayer.Position - fwd2 * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackSolid, GlobalState.gameStateManager.TheIsland.GetWorld().ChunkManager.CubeView);
 
                 //    if (lookAtResult2.hasHit)
                 //    {

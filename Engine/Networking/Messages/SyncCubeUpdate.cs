@@ -43,7 +43,7 @@ namespace Engine.Networking.Messages
 
         public void SendCubeUpdate(ChunkManager.CubeUpdated updated)
         {
-            Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
+            GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
             {
                 oldId = updated.oldId,
                 newId = updated.newId,
@@ -56,7 +56,7 @@ namespace Engine.Networking.Messages
 
         public void SendCubeUpdate(CubePosition position, int playerId, ushort progress)
         {
-            Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
+            GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
             {
                 oldId = 0,
                 newId = 0,
@@ -279,7 +279,7 @@ namespace Engine.Networking.Messages
     //    public void RollbackAction(AuditedCubeUpdate action)
     //    {
     //        //Console.WriteLine("did rollback {0}", action.index);
-    //        IMGUIConsole.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
+    //        IMGUIConsole.Assert(GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
     //        var player = GS.GetWorld().player[action.player];
     //        if (player != null)
@@ -290,7 +290,7 @@ namespace Engine.Networking.Messages
     //    public void DoAction(AuditedCubeUpdate action)
     //    {
     //        //Console.WriteLine("did action {0}", action.index);
-    //        IMGUIConsole.Assert(Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
+    //        IMGUIConsole.Assert(GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client);
 
     //        var player = GS.GetWorld().player[action.player];
     //        if (player != null)

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Hexa.NET.ImGui;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
@@ -178,7 +179,7 @@ namespace ViMG.IMGUIImpl
                                             filterCache = filterCache.OrderBy(x => x.id).ToList();
                                             break;
                                         case Sort.Distance:
-                                            if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+                                            if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
                                             {
                                                 filterCache = filterCache.OrderBy(x => (x.position.InWorldSpace() - gsIsland.GetWorld().EntityManager.GetFirst<Player>().Position).Length()).ToList();
                                             }
@@ -211,13 +212,13 @@ namespace ViMG.IMGUIImpl
                                         ImGui.SameLine();
                                         ImGui.Text("X: " + entityData.position.X + " Y: " + entityData.position.Y + " Z: " + entityData.position.Z);
 
-                                        if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+                                        if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
                                         {
                                             if (lookAt)
                                             {
                                                 // TODO
                                                 // Too lazy to figure the math rn
-                                                //(Main.gameStateManager.GetCurrentGameState() as GameStateTheIsland).GetWorld().player.rot
+                                                //(GlobalState.gameStateManager.GetCurrentGameState() as GameStateTheIsland).GetWorld().player.rot
                                             }
                                             if (ImGui.Button("Draw in world"))
                                             {
@@ -225,7 +226,7 @@ namespace ViMG.IMGUIImpl
                                                 debugDraw = entityData.id;
                                             }
 
-                                            if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient() != null && 
+                                            if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient() != null && 
                                                 debugDraw.HasValue && debugDraw.Value == entityData.id)
                                             {
                                                 theIsland.GetClient().Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw

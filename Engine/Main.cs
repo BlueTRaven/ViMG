@@ -42,7 +42,6 @@ namespace ViMG
 		public static Effect VertexPositionTextureDebugEffect;
 
 		//private World world;
-		public static GameStateManager gameStateManager;
 
 		public static InputManager inputManager;
 
@@ -110,9 +109,7 @@ namespace ViMG
 
             GlobalState.SessionInformation = new SessionInformation();
             GlobalState.SessionIO = new SessionIO();
-            GlobalState.SessionIO.Load(graphics);
-
-            GlobalState.Args.ParseArgs(args);
+            GlobalState.SessionIO.Load();
 
 			graphics = new GraphicsDeviceManager(this)
 			{
@@ -207,8 +204,8 @@ namespace ViMG
 			imguiRenderer = new ImGuiRenderer(this);
 			//imguiRenderer.RebuildFontAtlas();
 
-            gameStateManager = new GameStateManager();
-            gameStateManager.Initialize();
+            GlobalState.gameStateManager = new GameStateManager();
+            GlobalState.gameStateManager.Initialize();
 
             base.Initialize();
 
@@ -232,7 +229,7 @@ namespace ViMG
 		private void WindowResolutionChanged(object? sender, EventArgs args)
         {
 			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
-			if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
+			if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
 			{
 				theIsland.GetClient()?.currInterpState.camera.MarkDirty();
 				theIsland.GetClient()?.Current().camera.MarkDirty();
@@ -250,7 +247,7 @@ namespace ViMG
         {
 			batch = new SpriteBatch(GraphicsDevice);
             GlobalState.AssetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
-			gameStateManager.LoadContent(GraphicsDevice);
+            GlobalState.gameStateManager.LoadContent(GraphicsDevice);
 		}
 
 		protected override void Update(GameTime gt)
@@ -265,7 +262,7 @@ namespace ViMG
 
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
-			if (gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				IsMouseVisible = DrawCursor;
 			}
@@ -321,12 +318,12 @@ namespace ViMG
 				if (inputManager.JustPressed(Keys.O))
 					Options.CenterMouse();
 
-				gameStateManager.Update(deltaTime);
+                GlobalState.gameStateManager.Update(deltaTime);
 				//if (WorldLoaded)
 					//world.Update(deltaTime);
 			}
 
-			if (gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				if (IsActive && !paused && !MouseControl)
 					Options.CenterMouse();
@@ -357,7 +354,7 @@ namespace ViMG
 
 			GraphicsDevice.Clear(Color.White);
 
-			gameStateManager.Draw(GraphicsDevice, batch, gameTime.ElapsedGameTime.TotalSeconds);
+            GlobalState.gameStateManager.Draw(GraphicsDevice, batch, gameTime.ElapsedGameTime.TotalSeconds);
 
             //if (WorldLoaded)
             //world.Draw(GraphicsDevice, CubeLitEffect);
@@ -370,7 +367,7 @@ namespace ViMG
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-			gameStateManager.DrawUI(batch);
+            GlobalState.gameStateManager.DrawUI(batch);
 			
 			batch.End();
 
@@ -448,7 +445,7 @@ namespace ViMG
 					ImGui.Text(string.Format("Draw Calls: {0}", GraphicsDevice.Metrics.DrawCount));
 					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
 
-					Engine.Common.Camera? camera = gameStateManager.TheIsland.GetClient()?.Current().camera;
+					Engine.Common.Camera? camera = GlobalState.gameStateManager.TheIsland.GetClient()?.Current().camera;
                     ImGui.Text(string.Format("Position: {0}", camera?.Position));
                     var fwd = camera?.Forward ?? Vector3.Zero;
 					var pitchyaw = camera?.RotationEuler ?? Vector3.Zero;
@@ -456,7 +453,7 @@ namespace ViMG
 						"Yaw: {3:0.00} Pitch: {4:0.00}", fwd.X, fwd.Y, fwd.Z, pitchyaw.Y, pitchyaw.X));
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera?.Position ?? new()).ToString()));
 
-					if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
+					if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
 					{
 						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
 

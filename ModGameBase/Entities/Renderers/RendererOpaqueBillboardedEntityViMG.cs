@@ -586,7 +586,7 @@ namespace ViMG.Entities.Renderers
                 velXZ.Normalize();
 
                 // TODO pass in camera? Don't like using global state like this
-                float facingDotCamera = Vector3.Dot(velXZ, -Main.gameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
+                float facingDotCamera = Vector3.Dot(velXZ, -GlobalState.gameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
 
                 //Facing within 45 degrees of the camera.
                 bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);

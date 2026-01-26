@@ -137,7 +137,7 @@ namespace Engine.Networking.Messages
                     position = position,
                 };
                 
-                //if (Main.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+                //if (GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
                     DoAction(qaction, GS.GetWorld().player);
                 //else queued.Add(qaction);
             }

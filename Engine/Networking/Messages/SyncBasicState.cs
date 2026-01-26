@@ -195,7 +195,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedSyncEntity queuedSync in queued)
             {
-                //Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
+                //Console.WriteLine("{0} Delay: {1:0.02}", GlobalState.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
                 //if (GlobalState.Time >= queuedSync.time)
                 //{
                 DoAction(queuedSync, entityManager, entIO);

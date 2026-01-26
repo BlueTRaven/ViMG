@@ -26,14 +26,14 @@ namespace Engine.Networking
         [ConsoleCommand("list_players", "lists currently connected players")]
         public static void ListPlayers(string[] parameters)
         {
-            var networkManager = Main.gameStateManager.TheIsland?.netManagerServer != null ? Main.gameStateManager.TheIsland?.netManagerServer : Main.gameStateManager.TheIsland?.netManagerClient;
+            var networkManager = GlobalState.gameStateManager.TheIsland?.netManagerServer != null ? GlobalState.gameStateManager.TheIsland?.netManagerServer : GlobalState.gameStateManager.TheIsland?.netManagerClient;
             var players = networkManager.netPlayers.Where(x => x.playerId != -1);
             if (players != null)
             {
                 IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count()));
                 foreach (NetPlayer player in players)
                 {
-                    if (player.playerId == Main.gameStateManager.TheIsland?.GetWorld()?.localPlayerIndex)
+                    if (player.playerId == GlobalState.gameStateManager.TheIsland?.GetWorld()?.localPlayerIndex)
                     {
                         IMGUIConsole.LogLine(string.Format("\tId: {0} (local player)", player.playerId));
                     }
@@ -145,7 +145,7 @@ namespace Engine.Networking
                 //{
                 //    playerId = 0,
                 //    peerId = -1,
-                //    playerName = Main.gameStateManager.TheIsland.localPlayerName,
+                //    playerName = GlobalState.gameStateManager.TheIsland.localPlayerName,
                 //};
                 //uniqueNetPlayers += 1;
                 Console.WriteLine("Started server on port 9050");
@@ -176,7 +176,7 @@ namespace Engine.Networking
                 if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
                 {
                     Disconnect();
-                    Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                    GlobalState.gameStateManager.SetGameState(GlobalState.gameStateManager.MainMenu);
                     Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
                     return false;
                 }
@@ -207,8 +207,8 @@ namespace Engine.Networking
             if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
             {
                 Disconnect();
-                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
-                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFailedToConnect(Main.gameStateManager, MenuFailedToConnect.ConnectionFailureReason.Refused, Ip, Port));
+                GlobalState.gameStateManager.SetGameState(GlobalState.gameStateManager.MainMenu);
+                GlobalState.gameStateManager.GetCurrentGameState().PushMenu(new MenuFailedToConnect(GlobalState.gameStateManager, MenuFailedToConnect.ConnectionFailureReason.Refused, Ip, Port));
                 Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
             }
         }
@@ -267,7 +267,7 @@ namespace Engine.Networking
                     if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
                     {
                         Disconnect();
-                        Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                        GlobalState.gameStateManager.SetGameState(GlobalState.gameStateManager.MainMenu);
                     }
                 }
                 else clientDCTime = DateTime.Now;
@@ -327,7 +327,7 @@ namespace Engine.Networking
         {
             if (IsServer)
             {
-                var world = Main.gameStateManager.TheIsland.GetWorld();
+                var world = GlobalState.gameStateManager.TheIsland.GetWorld();
                 int index = -1; 
                 for (int i = 0; i < World.MAX_PLAYERS; i++)
                 {
@@ -347,19 +347,19 @@ namespace Engine.Networking
                 IMGUIConsole.Assert(world.player[playerIndex] != null);
                 Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 SyncEntityState.Instance.PlayerDisconnected(index);
-                Main.gameStateManager.TheIsland.playerIO?.Serialize(world, playerIndex);
+                GlobalState.gameStateManager.TheIsland.playerIO?.Serialize(world, playerIndex);
                 world.EntityManager.Unload(world.player[playerIndex]);
                 world.player[playerIndex] = null;
                 netPlayers[index] = new NetPlayer();
                 SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
 
-                Main.gameStateManager.TheIsland.GetWorld().ChunkLoadManager.UnloadAllFor(playerIndex);
+                GlobalState.gameStateManager.TheIsland.GetWorld().ChunkLoadManager.UnloadAllFor(playerIndex);
             }
             else
             {
                 // Server has disconnected from us? We should go back to main menu.
                 Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.Reason.ToString());
-                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                GlobalState.gameStateManager.SetGameState(GlobalState.gameStateManager.MainMenu);
             }
         }
 
@@ -415,7 +415,7 @@ namespace Engine.Networking
 
         public void NewPlayer(NetPeer peer, string playerName)
         {
-            var world = Main.gameStateManager.TheIsland.GetWorld();
+            var world = GlobalState.gameStateManager.TheIsland.GetWorld();
             int index = -1;
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
@@ -435,7 +435,7 @@ namespace Engine.Networking
             uniqueNetPlayers += 1;
 
             SendMessageToPeer(WhoAmI.Instance, peer, index);
-            Main.gameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
+            GlobalState.gameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
             world.ChunkLoadManager.LoadAroundTarget(world);
             // Inform others of new player
             SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);

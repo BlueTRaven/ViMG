@@ -269,7 +269,7 @@ namespace ViMG.UIs
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
-			ItemSlotClickOutput reciperval = HandleRecipeFilter(Main.gameStateManager, inventory.Get(index), itemSlot.button);
+			ItemSlotClickOutput reciperval = HandleRecipeFilter(GlobalState.gameStateManager, inventory.Get(index), itemSlot.button);
 
 			if (reciperval != ItemSlotClickOutput.None)
 				return reciperval;
@@ -288,7 +288,7 @@ namespace ViMG.UIs
 			{
 				// TODO
 				// playerIndex will always be the local player index (this is only called for handling menus, after all!
-				Main.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
+				GlobalState.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
 				{
 					playerId = (byte)0,
 					entity = invOwner,
@@ -516,9 +516,9 @@ namespace ViMG.UIs
 
 		public static void InventoryActionClient(EntityManager.EntityReference entity, InventoryManager.InventoryReference inventory, int activatingPlayer, int action)
 		{
-			Debug.Assert(Main.gameStateManager.netMode != GameStateManager.NetworkingMode.Server);
+			Debug.Assert(GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server);
 
-            Main.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, Main.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
+            GlobalState.gameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.gameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
             {
                 playerId = (byte)activatingPlayer,
                 entity = entity,

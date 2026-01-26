@@ -142,7 +142,7 @@ namespace ViMG.Entities
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
             }
 
-            //if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+            //if (GlobalState.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
             //{
             //    Ray ray = new Ray(world.player[world.localPlayerIndex].Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
 
@@ -156,12 +156,12 @@ namespace ViMG.Entities
             //}
 
             ////When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
-            //if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
+            //if (GlobalState.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
             //{
             //    if (world.MenuDialogue.SelectedOption == 1)
             //    {
             //        var player = world.player[world.localPlayerIndex];
-            //        Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
+            //        GlobalState.gameStateManager.TheIsland.PushMenu(new MenuShop(GlobalState.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
             //    }
 
             //    shouldFollowUpMenu = false;
@@ -177,7 +177,7 @@ namespace ViMG.Entities
             }
             else world.MenuDialogue.StartOptions(options);
 
-            Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            GlobalState.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
             shouldFollowUpMenu = true;
         }

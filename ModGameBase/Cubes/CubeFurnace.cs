@@ -191,7 +191,7 @@ namespace ViMG.Cubes
                 var playerRef = client.Current().entities.GetPlayerRef(playerId);
                 var player = client.Current().entities.GetByRef(playerRef);
                 var playerExtra = player.GetExtra<Player.PlayerExtraState>();
-                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(Main.gameStateManager, playerRef, tracker, playerExtra.inventory, playerExtra.heldInventory, invRef));
+                GlobalState.gameStateManager.GetCurrentGameState().PushMenu(new MenuFurnace<EntityFurnace>(GlobalState.gameStateManager, playerRef, tracker, playerExtra.inventory, playerExtra.heldInventory, invRef));
 			}
         }
     }

@@ -91,7 +91,7 @@ namespace Engine.UIs
                 bounds = buttonParams.bounds with { x = buttonParams.bounds.x - 48, y = y, width = 128 + 96 },
             }).clickLeft)
             {
-                Main.gameStateManager.GetCurrentGameState().PopMenu();
+                GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
             }
 
             UI.EndParent();

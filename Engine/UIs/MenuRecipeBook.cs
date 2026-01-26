@@ -63,8 +63,8 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-            if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
-                Main.gameStateManager.GetCurrentGameState().PopMenu();
+            if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
+                GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
 
             //TODO: size should be determined statically for each catalyst rather than asking to do a UI.
             Size eachSize = Size.Zero;

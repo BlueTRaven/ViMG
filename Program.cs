@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D9;
+﻿using Engine;
+using SharpDX.Direct3D9;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -16,6 +17,8 @@ namespace ViMG
         [STAThread]
         static void Main(string[] args)
         {
+            GlobalState.Args.ParseArgs(args);
+
             // NOTE: This overrides debugger exception behavior, so don't do it if a debugger is attached.
             if (!Debugger.IsAttached)
                 AppDomain.CurrentDomain.UnhandledException += UnhandledException;

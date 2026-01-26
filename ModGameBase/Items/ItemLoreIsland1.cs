@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -33,7 +34,7 @@ namespace ViMG.Items
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             player.world.MenuDialogue.StartText(text);
-            Main.gameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
+            GlobalState.gameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
 
             return base.RightClick(player, inventory, index, facing, out actionStats);
         }

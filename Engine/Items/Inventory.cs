@@ -134,7 +134,7 @@ namespace Engine.Items
 					time = GlobalState.Time
 				};
 
-                Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
+                GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
 			}
 
 			events.Clear();
@@ -174,7 +174,7 @@ namespace Engine.Items
 						oldInstance = oldInstance,
 						newInstance = items[i],
 					});
-					//if (Main.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+					//if (GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
 					//{
 					//	var a = new SyncInventoryUpdate.QueuedInventoryUpdate
 					//	{
@@ -186,7 +186,7 @@ namespace Engine.Items
 					//		time = GlobalState.Time
 					//	};
 
-					//	GlobalState.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, a);
+					//	GlobalState.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, GlobalState.gameStateManager.TheIsland.netManager.netManager, a);
 					//}
 
 					return true;

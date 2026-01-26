@@ -36,7 +36,7 @@ namespace ViMG
             }
         }
 
-        public void Load(GraphicsDeviceManager graphics)
+        public void Load()
         {
             if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION))
                 return;
@@ -68,7 +68,7 @@ namespace ViMG
                         }
                     }
 
-                    Options.OnLoad(lines, graphics);
+                    Options.OnLoad(lines);
                 }
             }
         }

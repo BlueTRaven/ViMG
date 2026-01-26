@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.GameStates;
 using ViMG.IMGUIImpl;
 
 namespace Engine
@@ -11,6 +12,9 @@ namespace Engine
     public static class GlobalState
     {
         public static ArgParser Args = new ArgParser();
+
+        public static GameStateManager gameStateManager;
+
         public static ViMGAssetsManager AssetsManager;
         public static RegistryService Registry;
 

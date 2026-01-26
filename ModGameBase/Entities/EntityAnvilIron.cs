@@ -1,4 +1,5 @@
-﻿using Engine.Items;
+﻿using Engine;
+using Engine.Items;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -47,7 +48,7 @@ namespace ViMG.Entities
 		{
 			if (player.IsLocalPlayer)
 			{
-				Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(Main.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory));
+				GlobalState.gameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(GlobalState.gameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory));
 			}
 
 			return true;
