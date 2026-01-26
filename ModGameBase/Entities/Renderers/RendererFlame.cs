@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Constraints;
+using Engine;
 using Engine.Clients;
 using Engine.Common;
 using Microsoft.Xna.Framework;
@@ -24,7 +25,7 @@ namespace ModGameBase.Entities.Renderers
 
         public override int[] GetRenderedTypes()
         {
-            return [Main.Registry.EntityRegistry.Get<EntityCubeFlame>().Id];
+            return [GlobalState.Registry.EntityRegistry.Get<EntityCubeFlame>().Id];
         }
 
         public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int entityType)
@@ -36,7 +37,7 @@ namespace ModGameBase.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != entityType) continue;
 
-                var entity = Main.Registry.EntityRegistry.Get(entityType).GetInterpolated(client, reference);
+                var entity = GlobalState.Registry.EntityRegistry.Get(entityType).GetInterpolated(client, reference);
 
                 float p0 = (((float)client.CurrentTime + entity.timers[0]) % 0.65f) / 0.65f;
                 float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 0.5f;

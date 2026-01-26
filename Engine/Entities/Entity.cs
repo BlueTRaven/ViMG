@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -66,7 +67,7 @@ namespace ViMG.Entities
 
             random = new Random((int)Id + Main.Frame);
 
-            TimeInitialized = Main.Time;
+            TimeInitialized = GlobalState.Time;
 		}
 
 		public virtual void LoadContent(World world)

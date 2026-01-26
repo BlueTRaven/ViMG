@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,7 +28,7 @@ namespace ViMG.Items
 
 			if (player.IsLooking && player.CanPlace)
 			{
-                Cube glowNode = Main.Registry.CubeRegistry.Get("glow_node");
+                Cube glowNode = GlobalState.Registry.CubeRegistry.Get("glow_node");
 
                 if (player.world.PlaceCube(player, player.PlaceAtPos, glowNode.Id))
                 {

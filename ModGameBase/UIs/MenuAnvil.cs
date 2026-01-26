@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -37,7 +38,7 @@ namespace ViMG.UIs
 			this.heldInventory = heldInventory;
 			this.anvilInventory = anvilInventory;
 
-			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+			fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
 		public override void OnOpen()
@@ -98,7 +99,7 @@ namespace ViMG.UIs
 
 			bounds.x += SIZE;
             
-            itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+            itemSlots[0] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 				anvilInventory.Get(0));
 
@@ -115,7 +116,7 @@ namespace ViMG.UIs
 				b.x += (j % 3) * SIZE;
 				b.y += (int)(j / 3f) * SIZE;
 
-				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(b, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(b, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 					anvilInventory.Get(i));
 			}
@@ -150,17 +151,17 @@ namespace ViMG.UIs
 
 			bounds.y += SIZE * 2;
 
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
 
 			bounds.y += SIZE;
 
-			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 				new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 				anvilInventory.Get(7));
 
 			bounds.x += SIZE;
 
-			UI.Button craftRecipeButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+			UI.Button craftRecipeButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
 				new RectangleF(0, 96, 16, 16), new RectangleF(16, 96, 16, 16), new RectangleF(16, 96, 16, 16)));
 			if (craftRecipeButton.clickLeft)
 			{
@@ -176,7 +177,7 @@ namespace ViMG.UIs
 
 			bounds.x += SIZE;
 
-			UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 				new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 
 			if (recipeBookButton.hovered)
@@ -188,7 +189,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-                gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"], new ItemInstance()));
+                gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, GlobalState.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"], new ItemInstance()));
 			}
 
 			UI.EndParent();
@@ -197,8 +198,8 @@ namespace ViMG.UIs
 
 		private Recipe FindRecipe(Inventory inventory)
 		{
-			var recipesTools = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"]);
-			var recipesArmor = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Anvil (Armor)"]);
+			var recipesTools = GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(GlobalState.Registry.RecipeRegistry.catalystByName["Anvil (Tools)"]);
+			var recipesArmor = GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(GlobalState.Registry.RecipeRegistry.catalystByName["Anvil (Armor)"]);
 
 			Recipe foundRecipe = null;
 

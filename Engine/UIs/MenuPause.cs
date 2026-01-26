@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,8 +20,8 @@ namespace ViMG.UIs
 
         public MenuPause(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
-            uiTex = Main.assetsManager.GetAsset<Texture2D>("ui_buttons");
+            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            uiTex = GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons");
 
             buttonParams = new UI.ButtonConstructionParameters
             {
@@ -125,7 +126,7 @@ namespace ViMG.UIs
             }).clickLeft)
             {
                 Main.gameStateManager.TheIsland.Disconnect();
-                Main.Exit = true;
+                GlobalState.Exit = true;
             }
         }
 

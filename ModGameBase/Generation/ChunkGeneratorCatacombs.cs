@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace ViMG.Generation
         {
             base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
-            stone = Main.Registry.CubeRegistry.Get("stone_crypt");
+            stone = GlobalState.Registry.CubeRegistry.Get("stone_crypt");
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)

@@ -9,6 +9,7 @@ using BrUtility;
 using Microsoft.Xna.Framework.Graphics;
 using ViMG.Rendering;
 using ViMG.IMGUIImpl;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -55,7 +56,7 @@ namespace ViMG.Entities
 
                 Vector3 lightPos = Position + new Vector3(x, y, z);
 
-                Vector4 color = new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 50);
+                Vector4 color = new Vector4(GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), 50);
                 world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
                 {
                     position = lightPos,

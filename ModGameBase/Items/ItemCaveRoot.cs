@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,7 +15,7 @@ namespace ViMG.Items
 {
     public class ItemCaveRoot : Item
     {
-        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 30f);
+        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("well_fed"), 30f);
 
         public ItemCaveRoot() : base("food_root1")
         {

@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Common.Entities;
 using Engine.Networking.Messages;
@@ -103,7 +104,7 @@ namespace ViMG
 
                     SyncCubeUpdate.Instance.SendCubeUpdate(updated);
                 }
-                else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
+                else CubeView.GetCube(updated.notified).GetOrDefault(GlobalState.Registry.CubeRegistry.Air)
                         .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);
 
                 updatedThisFrame++;
@@ -166,7 +167,7 @@ namespace ViMG
         /// <param name="updatedId">The new id of the cube</param>
         public void MarkCubeDirty(Player? player, CubePosition position, ushort oldId, ushort updatedId)
         {
-            updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, position, oldId, updatedId));
+            updatedCubePositions.Enqueue(new CubeUpdated(player, GlobalState.Time, position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
             {
@@ -178,7 +179,7 @@ namespace ViMG
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
                     CopyManager.MarkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
-                    updatedCubePositions.Enqueue(new CubeUpdated(player, Main.Time, position, adjacentPosition, oldId, updatedId));
+                    updatedCubePositions.Enqueue(new CubeUpdated(player, GlobalState.Time, position, adjacentPosition, oldId, updatedId));
                 }
             }
         }

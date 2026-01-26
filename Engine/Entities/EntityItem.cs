@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -54,8 +55,8 @@ namespace ViMG.Entities
 			else box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
 
 			const float scale = MathF.PI;
-			Vector3 initialAngular = new Vector3(Main.random.NextFloat(-scale, scale), Main.random.NextFloat(-scale, scale),
-				Main.random.NextFloat(-scale, scale));
+			Vector3 initialAngular = new Vector3(GlobalState.random.NextFloat(-scale, scale), GlobalState.random.NextFloat(-scale, scale),
+				GlobalState.random.NextFloat(-scale, scale));
 
 			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(box);
 			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(
@@ -82,7 +83,7 @@ namespace ViMG.Entities
 			velocity.X = Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
 			velocity.Z = Math.Clamp(velocity.Z, -MaxVelocity.Z, MaxVelocity.Z);
 
-            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
                 velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime * 4f;
 
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
@@ -153,7 +154,7 @@ namespace ViMG.Entities
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation = state.rotation.ToNumerics();
 
-			ItemInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(state.counters[0]), state.counters[1], state.counters[2]);
+			ItemInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(state.counters[0]), state.counters[1], state.counters[2]);
         }
     }
 }

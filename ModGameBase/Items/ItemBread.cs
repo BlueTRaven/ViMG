@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemBread : Item
     {
-        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("well_fed"), 60f * 5f);
+        private static Buffs.Buff.BuffInstance buff = new Buffs.Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("well_fed"), 60f * 5f);
 
         public ItemBread() : base("food_bread1")
         {

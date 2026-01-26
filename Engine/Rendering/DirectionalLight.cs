@@ -87,7 +87,7 @@ namespace Engine.Rendering
 
 			//Main.CubeLitEffect.Parameters["CascadePlaneDistances"].SetValue(farPlanes);
 			//Main.CubeLitEffect.Parameters["FarPlane"].SetValue(Main.camera.Far);
-			//(Main.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
+			//(GlobalState.Registry.ItemRegistry.Get("debug_depth_target") as Items.ItemDebugDepthTarget).DepthTarget = target;
 
 			rs = new RasterizerState()
 			{
@@ -261,7 +261,7 @@ namespace Engine.Rendering
 			//Main.WVP.SetView(camera.GetViewMatrix());
 
 			Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-			Effect effectDepth = Main.assetsManager.GetAsset<Effect>("depth");
+			Effect effectDepth = GlobalState.assetsManager.GetAsset<Effect>("depth");
 			effectDepth.Parameters["WorldViewProjection"].SetValue(viewProj);
 			//effectDepth.Parameters["World"].SetValue(Matrix.Identity);
 
@@ -292,7 +292,7 @@ namespace Engine.Rendering
                 //        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
                 //    }
 
-                //    //mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
+                //    //mesh.DrawDepth(device, GlobalState.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
                 //}
             }
 			/*for (int x = -world.DrawDistanceHoriz; x <= world.DrawDistanceHoriz; x++)
@@ -322,7 +322,7 @@ namespace Engine.Rendering
 									device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mesh.IBO.IndexCount / 3);
 								}
 
-								//mesh.DrawDepth(device, Main.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
+								//mesh.DrawDepth(device, GlobalState.assetsManager.GetAsset<Effect>("depth"), Matrix.Identity, viewProj);
 							}
 						}
 					}

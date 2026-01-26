@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -33,7 +34,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.world.ChunkManager.IsInWorldBounds(pos) &&
-					player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+					player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			if (lookAtResult.hasHit)
@@ -53,7 +54,7 @@ namespace ViMG.Items
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
-						if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
+						if (GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air).Touchable)
 							player.GetWorld().TryMineCube(player, affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
@@ -61,7 +62,7 @@ namespace ViMG.Items
 				{
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 					{
-						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
+						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable)
 							player.GetWorld().TryMineCube(player, CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}

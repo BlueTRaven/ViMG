@@ -102,7 +102,7 @@ namespace Engine.Clients
             inventoryManager = new ClientInventoryManager();
 
             // TODO how to support multiple layers?
-            WorldLogic = Activator.CreateInstance(Main.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
+            WorldLogic = Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
             worldRenderer = new WorldRenderer(device);
 
             //LightManager = new LightManager(device);
@@ -196,7 +196,7 @@ namespace Engine.Clients
 
                     int typeId = currInterpState.entities.GetTypeById(reference.id);
 
-                    ent = Main.Registry.EntityRegistry.Get(typeId)?.GetInterpolated(this, reference) ?? new();
+                    ent = GlobalState.Registry.EntityRegistry.Get(typeId)?.GetInterpolated(this, reference) ?? new();
                 }
 
                 currInterpState.time = (float)double.Lerp(prevInterpState.time, Current().time, TimeC);
@@ -223,7 +223,7 @@ namespace Engine.Clients
 
             if (RenderClientEnts)
             {
-                var iter = Main.Registry.RendererRegistry.GetIterable();
+                var iter = GlobalState.Registry.RendererRegistry.GetIterable();
                 foreach (var a in iter)
                 {
                     int[] renderedTypes = a.GetRenderedTypes();
@@ -267,7 +267,7 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
-            var iter = Main.Registry.RendererRegistry.GetIterable();
+            var iter = GlobalState.Registry.RendererRegistry.GetIterable();
             foreach (var a in iter)
             {
                 int[] renderedTypes = a.GetRenderedTypes();
@@ -278,7 +278,7 @@ namespace Engine.Clients
             }
 
             if (LocalPlayer != null)
-                batch.Draw(Main.assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
+                batch.Draw(GlobalState.assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
                     Options.CurrentWindowResolution.Y / 2 - 8), Main.CrosshairSourceRect.ToRectangle(), Color.White);
         }
 

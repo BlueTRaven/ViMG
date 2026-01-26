@@ -5,6 +5,7 @@ using ViMG.Rendering;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using Engine;
 
 namespace ViMG.Entities.Renderers
 {
@@ -34,7 +35,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types == null)
-                types = [Main.Registry.EntityRegistry.Get<SkullheadEye>().Id];
+                types = [GlobalState.Registry.EntityRegistry.Get<SkullheadEye>().Id];
             return types;
         }
 

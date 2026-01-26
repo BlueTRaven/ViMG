@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Constraints;
+using Engine;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,7 +23,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types[0] == 0)
-                types[0] = Main.Registry.EntityRegistry.Get<EntityItem>().Id;
+                types[0] = GlobalState.Registry.EntityRegistry.Get<EntityItem>().Id;
             return types;
         }
 
@@ -39,7 +40,7 @@ namespace ViMG.Entities.Renderers
 
                 Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-                ItemInstance itemInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(ent.counters[0]), ent.counters[1], ent.counters[2]);
+                ItemInstance itemInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(ent.counters[0]), ent.counters[1], ent.counters[2]);
                 if (itemInstance.item is ItemCube)
                     origin.Z = Cube.CUBE_SCALE / 4f;
 

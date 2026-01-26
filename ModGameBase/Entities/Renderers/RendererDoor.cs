@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,7 +30,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types == null)
-                types = [Main.Registry.EntityRegistry.Get<Door>().Id];
+                types = [GlobalState.Registry.EntityRegistry.Get<Door>().Id];
             return types;
         }
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -73,9 +74,9 @@ namespace ViMG.Entities
             base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), 
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
+				new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+						GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), 
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
 			world.EntityManager.Add(ent);
 		}
 
@@ -180,11 +181,11 @@ namespace ViMG.Entities
 						{
 							idleHome = new Vector2(Position.X, Position.Z);
 
-							idleTimer = Main.random.NextFloat(4f, 12f);
-							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-							idleMovements = Main.random.Next(2, 6);
+							idleTimer = GlobalState.random.NextFloat(4f, 12f);
+							idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
+							idleMovements = GlobalState.random.Next(2, 6);
 
-							idleDirection = Main.random.NextAngle();
+							idleDirection = GlobalState.random.NextAngle();
 						}
 						else
 						{
@@ -196,8 +197,8 @@ namespace ViMG.Entities
 							if (idleTimer <= 0 && idleMoveTimer <= 0)
 							{
 								idleMovements--;
-								idleDirection = Main.random.NextAngle();
-								idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+								idleDirection = GlobalState.random.NextAngle();
+								idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
 							}
 						}
 
@@ -277,7 +278,7 @@ namespace ViMG.Entities
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
 						if (world.ChunkManager.IsInWorldBounds(pos) && 
-							world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+							world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -310,7 +311,7 @@ namespace ViMG.Entities
 				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 					(Vector3 pos) =>
 					{
-						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 						return cube.Collision != Cube.CollisionValue.None;
 					});
@@ -373,7 +374,7 @@ namespace ViMG.Entities
             {
 				if (updating == trackBoneBlockPosition)
 				{
-					if (updatedId != Main.Registry.CubeRegistry.Get("brittle_bone_block").Id)
+					if (updatedId != GlobalState.Registry.CubeRegistry.Get("brittle_bone_block").Id)
 					{
 						state = State.LyingInPileKillable;
 						resurrectTimer += 4;	//additional 4 seconds if we kill the block.
@@ -389,7 +390,7 @@ namespace ViMG.Entities
 		//TODO performance
 		private bool SearchForNearbyBoneBlocks()
         {
-			Cube boneBlock = Main.Registry.CubeRegistry.Get("brittle_bone_block");
+			Cube boneBlock = GlobalState.Registry.CubeRegistry.Get("brittle_bone_block");
 
 			const int searchRadius = 4;
 
@@ -401,7 +402,7 @@ namespace ViMG.Entities
                     {
 						CubePosition checkPos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
+						if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == boneBlock)
                         {
 							trackBoneBlockPosition = checkPos;
 

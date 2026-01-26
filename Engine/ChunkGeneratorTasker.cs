@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,7 +85,7 @@ namespace ViMG
 				BroadChunkTaskState state = new BroadChunkTaskState(world, chunkStart, chunkEnd, total, positions, generator);
 				Task task = new Task(GenerateChunkBroadTaskFn, state);
 
-				if (Main.MULTITHREAD_BROAD_PHASE)
+				if (GlobalState.MULTITHREAD_BROAD_PHASE)
 					task.Start();
 				else task.RunSynchronously();
 
@@ -115,7 +116,7 @@ namespace ViMG
 			ProfilingHelper.End("Broad phase generation done.");
 
 			ProfilingHelper.Start("Beginning detail phase generation...");
-			if (Main.GEN_DETAIL)
+			if (GlobalState.GEN_DETAIL)
 			{
                 GameStateTheIsland.LoadMessage = "Detail phase generation...";
 
@@ -144,7 +145,7 @@ namespace ViMG
                 //GenerateHeightmap();
             }
 
-			if (Main.GEN_CUBE_POST_DETAIL)
+			if (GlobalState.GEN_CUBE_POST_DETAIL)
 			{
 				GameStateTheIsland.LoadMessage = "Post generation...";
 				ProfilingHelper.Start("Beginning post generation...");
@@ -176,14 +177,14 @@ namespace ViMG
 
 		private static void PostChunkGen(WorldPrototype world, ChunkPosition position)
 		{
-			FastList<CubePosition>[] posToCubes = new FastList<CubePosition>[Main.Registry.CubeRegistry.Count];
+			FastList<CubePosition>[] posToCubes = new FastList<CubePosition>[GlobalState.Registry.CubeRegistry.Count];
 
 			for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
 			{
 				Util.OneDToThreeD(i, new ValuePoint3D(Chunk.CHUNK_SIZE), out var pt);
                 CubePosition cubePosition = new CubePosition(pt.x, pt.y, pt.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-                Cube cube = world.ChunkManager.CubeView.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = world.ChunkManager.CubeView.GetCube(cubePosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
                 if (posToCubes[cube.Id] == null) posToCubes[cube.Id] = new FastList<CubePosition>();
                 posToCubes[cube.Id].Add(cubePosition);
             }
@@ -192,7 +193,7 @@ namespace ViMG
 			{
 				if (posToCubes[i] != null)
 				{
-					Cube cube = Main.Registry.CubeRegistry.Get(i) ?? Main.Registry.CubeRegistry.Air;
+					Cube cube = GlobalState.Registry.CubeRegistry.Get(i) ?? GlobalState.Registry.CubeRegistry.Air;
 
 					for (int j = 0; j < posToCubes[i].Length; j++)
 					{
@@ -209,7 +210,7 @@ namespace ViMG
    //                 {
 			//			CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-			//			Cube cube = world.ChunkManager.CubeView.GetCube(cubePosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			//			Cube cube = world.ChunkManager.CubeView.GetCube(cubePosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 			//			if (posToCubes[cube.Id] == null) posToCubes[cube.Id] = new List<CubePosition>();
 			//			posToCubes[cube.Id].Add(cubePosition);
 

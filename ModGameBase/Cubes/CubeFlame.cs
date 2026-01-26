@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
@@ -30,7 +31,7 @@ namespace ViMG.Cubes
         {
             base.OnPlayerPlaced(player, position);
 
-            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + Main.random.NextFloat(3f * 60f, 15f * 60f)));
+            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + GlobalState.random.NextFloat(3f * 60f, 15f * 60f)));
         }
 
         public override void OnLoaded(World world, CubePosition position)

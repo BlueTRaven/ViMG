@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,7 +44,7 @@ namespace ViMG.Entities
 
 			startTime = world.GetTime();
             //any amount of time between three minutes and an hour, in intervals of a minute.
-            toGrowTime = world.GetTime() + Main.random.Next(3, 60) * 60;
+            toGrowTime = world.GetTime() + GlobalState.random.Next(3, 60) * 60;
         }
 
         public override void Update(double deltaTime)
@@ -54,7 +55,7 @@ namespace ViMG.Entities
             {
                 world.EntityManager.Kill(this);   
 
-				int num = Main.random.Next(3, 12);
+				int num = GlobalState.random.Next(3, 12);
 
 				Tree tree = new Tree(TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE * 0.5f, 0, Cube.CUBE_SCALE * 0.5f),
 					num, TrackedPosition);

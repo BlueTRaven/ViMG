@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -40,7 +41,7 @@ namespace ViMG.Items
         {
             if (player.IsLooking && player.CanPlace)
             {
-                Cube startCube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube startCube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
                 //TODO safety
                 //This doesn't have the safety checks anymore.
@@ -64,7 +65,7 @@ namespace ViMG.Items
         //Batching gets
         public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
-            Cube startCube = cubeView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube startCube = cubeView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             if (normal.X != 0 && normal.Y == 0 && normal.Z == 0)
             {
@@ -113,8 +114,8 @@ namespace ViMG.Items
                 {
                     visitedPositions.Add(pos);
 
-                    if (cubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air &&
-                        cubeView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
+                    if (cubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Air &&
+                        cubeView.GetCube(checkPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == startCube)
                     {
                         validPositions[numPlaced++] = pos;
 

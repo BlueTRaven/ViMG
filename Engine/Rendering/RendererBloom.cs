@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -32,8 +33,8 @@ namespace ViMG.Rendering
         {
             this.device = device;
 
-            downsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_downsample");
-            upsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_upsample");
+            downsampleEffect = GlobalState.assetsManager.GetAsset<Effect>("bloom_downsample");
+            upsampleEffect = GlobalState.assetsManager.GetAsset<Effect>("bloom_upsample");
 
             ConstructRTs(Options.CurrentWindowResolution);
 

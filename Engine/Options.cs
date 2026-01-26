@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
@@ -86,7 +87,7 @@ namespace ViMG
 
         public static void CenterMouse()
         {
-            if (Thread.CurrentThread == Main.MainThread)
+            if (Thread.CurrentThread == GlobalState.MainThread)
                 Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
         }
 

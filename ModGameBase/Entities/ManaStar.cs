@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -71,7 +72,7 @@ namespace ViMG.Entities
 
                     //Set position to be the point where we end up being eventually.
                     
-                    Vector2 startXZ = world.player[world.localPlayerIndex].Position.XZ() + new Vector2(Main.random.Next(-32, 32) * Cube.CUBE_SCALE, Main.random.Next(-32, 32) * Cube.CUBE_SCALE);
+                    Vector2 startXZ = world.player[world.localPlayerIndex].Position.XZ() + new Vector2(GlobalState.random.Next(-32, 32) * Cube.CUBE_SCALE, GlobalState.random.Next(-32, 32) * Cube.CUBE_SCALE);
                     CubePosition endPos = world.ChunkManager.CubeView.GetFirstSolidDown(
                         CubePosition.FromWorldSpace(new Vector3(startXZ.X, world.sizeInCubes * Cube.CUBE_SCALE, startXZ.Y))).Get() +
                         new CubePosition(0, 1, 0);
@@ -89,7 +90,7 @@ namespace ViMG.Entities
             else if (state == State.Finished)
             {
                 world.ChunkManager.CubeView.SetCube(CubePosition.FromWorldSpace(Position), 
-                    Main.Registry.CubeRegistry.Get("mana_star").Id, true);
+                    GlobalState.Registry.CubeRegistry.Get("mana_star").Id, true);
                 //if (timer <= 0)
                     world.EntityManager.Kill(this);
             }

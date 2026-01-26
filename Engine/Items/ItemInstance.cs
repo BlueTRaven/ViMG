@@ -1,4 +1,5 @@
-﻿using LiteNetLib.Utils;
+﻿using Engine;
+using LiteNetLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -55,7 +56,7 @@ namespace ViMG.Items
 			int num = reader.GetInt();
 			int dam = reader.GetInt();
 
-			return new ItemInstance(Main.Registry.ItemRegistry.Get(id), num, dam);
+			return new ItemInstance(GlobalState.Registry.ItemRegistry.Get(id), num, dam);
         }
     }
 }

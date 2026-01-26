@@ -2,6 +2,7 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.Clients;
 using Engine.Common;
 using Engine.Entities;
@@ -211,10 +212,10 @@ namespace ViMG
 			}
 
 			// Autosave every 5 minutes?
-			if (Main.Time - lastAutosaveTime > AutosaveTime)
+			if (GlobalState.Time - lastAutosaveTime > AutosaveTime)
 			{
 				Main.gameStateManager.TheIsland.Save(true);
-				lastAutosaveTime = Main.Time;
+				lastAutosaveTime = GlobalState.Time;
 			}
 
 			deltaTime *= TimeScale * TimeMult;
@@ -258,23 +259,23 @@ namespace ViMG
 
 			Logic.Update(this, deltaTime);
 
-			if (Main.ENABLE_RANDOM_UPDATES)
+			if (GlobalState.ENABLE_RANDOM_UPDATES)
 			{
 				using (var zoneRandomUpdates = TracyImpl.Tracy.BeginZone())
 				{
-					Span<CubePosition> rups = stackalloc CubePosition[Main.RANDOM_UPDATES_PER_CHUNK];
-					Span<ushort> rupis = stackalloc ushort[Main.RANDOM_UPDATES_PER_CHUNK];
+					Span<CubePosition> rups = stackalloc CubePosition[GlobalState.RANDOM_UPDATES_PER_CHUNK];
+					Span<ushort> rupis = stackalloc ushort[GlobalState.RANDOM_UPDATES_PER_CHUNK];
 
 					//perform random updates
 					//There is RANDOM_UPDATES_PER_CHUNK updates per chunk per RANDOM_UPDATES_TIME.
 					if (randomUpdatesTimer <= 0)
 					{
-						randomUpdatesTimer += Main.RANDOM_UPDATES_TIME;
+						randomUpdatesTimer += GlobalState.RANDOM_UPDATES_TIME;
 						foreach (ChunkPosition loadedPosition in ChunkLoadManager.GetLoaded())
 						{
-							for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+							for (int i = 0; i < GlobalState.RANDOM_UPDATES_PER_CHUNK; i++)
 							{
-								int num = Main.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
+								int num = GlobalState.random.Next(0, Chunk.NUM_CUBES_IN_CHUNK);
 								Util.OneDToThreeD(num, new ValuePoint3D(Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE), out ValuePoint3D pi);
 								CubePosition randomUpdatePos = new CubePosition(pi.x, pi.y, pi.z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(loadedPosition);
 
@@ -283,11 +284,11 @@ namespace ViMG
 
 							ChunkManager.CubeView.GetIds(rups, rupis);
 
-							for (int i = 0; i < Main.RANDOM_UPDATES_PER_CHUNK; i++)
+							for (int i = 0; i < GlobalState.RANDOM_UPDATES_PER_CHUNK; i++)
 							{
-								Cube cube = Main.Registry.CubeRegistry.GetOrDefault(rupis[i], Main.Registry.CubeRegistry.Air);
+								Cube cube = GlobalState.Registry.CubeRegistry.GetOrDefault(rupis[i], GlobalState.Registry.CubeRegistry.Air);
 
-								if (cube != Main.Registry.CubeRegistry.Air)
+								if (cube != GlobalState.Registry.CubeRegistry.Air)
 									cube.OnRandomUpdate(this, ChunkManager, rups[i]);
 							}
 						}
@@ -352,7 +353,7 @@ namespace ViMG
 							{
 								for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
 								{
-									Cube cube = ChunkManager.CubeView.GetCube(new CubePosition(x, y, z)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+									Cube cube = ChunkManager.CubeView.GetCube(new CubePosition(x, y, z)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 									loadedWorld.ChunkManager.CubeView.SetCube(new CubePosition(x, sizeInCubes - Chunk.CHUNK_SIZE + y, z), cube.Id);
 								}
@@ -457,7 +458,7 @@ namespace ViMG
 
 			if (validIndices.Count > 0)
 			{
-				return player[validIndices[Main.random.Next(validIndices.Count)]];
+				return player[validIndices[GlobalState.random.Next(validIndices.Count)]];
 			}
 			else return null;
 		}
@@ -515,9 +516,9 @@ namespace ViMG
 
 			//foreach (var mined in miningCubes)
 			//{
-			//	Cube cube = ChunkManager.CubeView.GetCube(mined.Value.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			//	Cube cube = ChunkManager.CubeView.GetCube(mined.Value.position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
-			//	if (cube != Main.Registry.CubeRegistry.Air)
+			//	if (cube != GlobalState.Registry.CubeRegistry.Air)
 			//	{
 			//		float percent = (float)mined.Value.progress / (float)cube.MineProgressToBreak;
 
@@ -685,9 +686,9 @@ namespace ViMG
 			if (player != null && player.state == Player.State.Noclip)
 				instant = true;
 
-			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
-			if (cube != Main.Registry.CubeRegistry.Air && (level >= cube.MineLevelRequirement || instant))
+			if (cube != GlobalState.Registry.CubeRegistry.Air && (level >= cube.MineLevelRequirement || instant))
 			{
 				if (instant)
 				{
@@ -713,7 +714,7 @@ namespace ViMG
 
 		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
 		{
-			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 			ChunkManager.CubeView.SetCube(position, 0, player);
 
@@ -725,8 +726,8 @@ namespace ViMG
 				foreach (ItemInstance item in items)
 				{
 					EntityItem ent = new EntityItem(position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f),
-						new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-							Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
+						new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+							GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), item);
 
 					EntityManager.Add(ent);
 				}
@@ -741,7 +742,7 @@ namespace ViMG
 			{
 				ushort oldId = ChunkManager.CubeView.GetId(position);
 				ChunkManager.CubeView.SetCube(player.PlaceAtPos, id, player);
-				Cube cube = Main.Registry.CubeRegistry.Get(id);
+				Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
 				cube.OnPlayerPlaced(player, player.PlaceAtPos);
 
 				//if (player != null && player.IsLocalPlayer && Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
@@ -752,7 +753,7 @@ namespace ViMG
 				//        newId = id,
 				//        oldId = oldId,
 				//        player = (byte)player.playerIndex,
-				//        time = Main.Time,
+				//        time = GlobalState.Time,
 				//    };
 
 				//    Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, Main.gameStateManager.TheIsland.netManagerServer?.netManager, action);
@@ -946,8 +947,8 @@ namespace ViMG
 						{
 							Item item;
 							if (int.TryParse(parameters[1], out int itemIndex))
-								item = Main.Registry.ItemRegistry.Get(itemIndex);
-							else item = Main.Registry.ItemRegistry.Get(parameters[1]);
+								item = GlobalState.Registry.ItemRegistry.Get(itemIndex);
+							else item = GlobalState.Registry.ItemRegistry.Get(parameters[1]);
 
 							if (item != null)
 							{
@@ -992,7 +993,7 @@ namespace ViMG
 				listParameterless = true;
 			}
 
-			foreach (EntityType entType in Main.Registry.EntityRegistry.GetIterable())
+			foreach (EntityType entType in GlobalState.Registry.EntityRegistry.GetIterable())
 			{
 				if (listParameterless && entType.type.GetConstructor(Type.EmptyTypes) != null)
 					IMGUIConsole.LogLine(entType.Identifier);
@@ -1025,7 +1026,7 @@ namespace ViMG
 
 						string entityName = parameters[2];
 
-						Type entityType = Main.Registry.EntityRegistry.Get(entityName).type;
+						Type entityType = GlobalState.Registry.EntityRegistry.Get(entityName).type;
 
 						if (entityType == null)
 						{

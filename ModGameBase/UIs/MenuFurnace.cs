@@ -1,6 +1,7 @@
 ﻿using BepuPhysics.Constraints;
 using BrNineSlice;
 using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -62,7 +63,7 @@ namespace ViMG.UIs
             if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 Main.gameStateManager.GetCurrentGameState().PopMenu();
 
-            TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 			UI.Start();
 
@@ -149,7 +150,7 @@ namespace ViMG.UIs
 			UI.StartParent(new Vector2(0, 18 * 2));
 			//bounds.x -= SIZE;
 			//bounds.y += SIZE;
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
             UI.StartParent(new Vector2(0, 18 * 2));
             //bounds.y += SIZE;
 
@@ -164,7 +165,7 @@ namespace ViMG.UIs
             //bounds.x += SIZE;
 
             UI.Button craftRecipeButton = UI.MakeButton(MenuHelper.ActionButtonParameters);
-			UI.MakeTexture(new RectangleF(1, 1, 16, 16).Scale(2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16));
+			UI.MakeTexture(new RectangleF(1, 1, 16, 16).Scale(2), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16));
 
 			if (craftRecipeButton.clickLeft)
 			{
@@ -188,7 +189,7 @@ namespace ViMG.UIs
 			//bounds.y += SIZE * 2 + MARGIN;
 
 			UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(16, 18 * 2 * 4.5f, 16 * 2, 16 * 2), 
-				Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+				GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
 				new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 
 			if (recipeBookButton.hovered)
@@ -200,7 +201,7 @@ namespace ViMG.UIs
 
 			if (recipeBookButton.clickLeft)
 			{
-				gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance()));
+				gsManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, GlobalState.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace, new ItemInstance()));
 			}
 
 			UI.EndParent();

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -132,7 +133,7 @@ namespace ModGameBase.Generation
                                     //Allow world cube to be overwritten by structure
                                     if (structure.overwriteWorldBlacklist.Length != 0)
                                     {
-                                        int overwritingId = manager.CubeView.GetCube(positionInCS).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+                                        int overwritingId = manager.CubeView.GetCube(positionInCS).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
                                         for (int blacklistI = 0; blacklistI < structure.overwriteWorldBlacklist.Length; blacklistI++)
                                         {

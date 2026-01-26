@@ -42,7 +42,7 @@ namespace Engine.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types == null)
-                types = [Main.Registry.EntityRegistry.Get<Player>().Id];
+                types = [GlobalState.Registry.EntityRegistry.Get<Player>().Id];
             return types;
         }
 
@@ -59,7 +59,7 @@ namespace Engine.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                //var entType = Main.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
+                //var entType = GlobalState.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
                 var entity = client.currInterpState.entities.GetByRef(ref reference); //entType?.GetInterpolated(client, reference) ?? new();
 
                 var extraState = entity.GetExtra<Player.PlayerExtraState>();
@@ -96,7 +96,7 @@ namespace Engine.Entities.Renderers
                 var fwd = BasicState.Forward(ref entity);
                 var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackTouchable, client.ChunkManager.CubeView);
 
-                float s = MathF.Sin(MathF.PI * 2f * ((float)Main.Time % 2f)) * 0.5f + 0.5f;
+                float s = MathF.Sin(MathF.PI * 2f * ((float)GlobalState.Time % 2f)) * 0.5f + 0.5f;
                 Color lookAtColor = Color.Lerp(Color.White, Color.Black, s);
 
                 if (lookAtResult.hasHit)
@@ -112,7 +112,7 @@ namespace Engine.Entities.Renderers
 
                     //    for (int j = 0; j < positions.Length; j++)
                     //    {
-                    //        if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[j], Main.Registry.CubeRegistry.Air).Touchable)
+                    //        if (pickStats.CanPredictAir() || GlobalState.Registry.CubeRegistry.GetOrDefault(ids[j], GlobalState.Registry.CubeRegistry.Air).Touchable)
                     //        {
                     //            Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), StaticMaterials.Cubes,
                     //                lookAtMesh,
@@ -134,7 +134,7 @@ namespace Engine.Entities.Renderers
                 }
 
                 if (lookAtResult.hasHit && client.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
-                    .GetOrDefault(Main.Registry.CubeRegistry.Air).CanRightClick(CubePosition.FromWorldSpace(lookAtResult.hit)))
+                    .GetOrDefault(GlobalState.Registry.CubeRegistry.Air).CanRightClick(CubePosition.FromWorldSpace(lookAtResult.hit)))
                 {
                     //? crosshair
                     Main.CrosshairSourceRect = new RectangleF(16, 0, 16, 16);
@@ -169,7 +169,7 @@ namespace Engine.Entities.Renderers
             var curr = client.Current();
             var prev = client.Previous(1);
             float interpTime = (float)double.Lerp(prev.time, curr.time, client.TimeC);
-            var entity = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
+            var entity = GlobalState.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
             var player = entity.GetExtra<Player.PlayerExtraState>();
 
             var inventory = client.inventoryManager.Get(player.inventory);

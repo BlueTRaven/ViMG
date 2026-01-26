@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -42,7 +43,7 @@ namespace ViMG.Items
 
             if (applyBuffs == null)
             {
-                applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("bleeding"), 7) };
+                applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("bleeding"), 7) };
             }
 
             actionStats = new ActionStats(meleeStats.attackStats);

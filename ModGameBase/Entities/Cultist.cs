@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -44,7 +45,7 @@ namespace ViMG.Entities
 			buffManager = new BuffManager(this);
 
 			ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, Main.Registry.ProjectileRegistry.Get("cultist_ball").Id);
+				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, GlobalState.Registry.ProjectileRegistry.Get("cultist_ball").Id);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
 

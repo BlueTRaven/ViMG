@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Common.Entities;
 using Microsoft.Xna.Framework;
@@ -227,7 +228,7 @@ namespace ViMG
 
 				if (task.Status == TaskStatus.Created)
 				{
-					if (Main.MULTITHREAD_MESHING)
+					if (GlobalState.MULTITHREAD_MESHING)
 						task.Start();
 					else task.RunSynchronously();
 				}
@@ -341,7 +342,7 @@ namespace ViMG
 
                     IMGUIConsole.Assert(task.task.Status == TaskStatus.Created);
 
-					if (Main.MULTITHREAD_MESHING)
+					if (GlobalState.MULTITHREAD_MESHING)
 						task.task.Start();
 					else task.task.RunSynchronously();
 				}
@@ -748,7 +749,7 @@ namespace ViMG
                             if (id == 0 || renderingFaces == MeshHelper.CubeFace.NONE)
                                 continue;
 
-                            Cube cube = Main.Registry.CubeRegistry.Get(id);
+                            Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
 
                             if (cube.ShouldMeshPass(pass))
                             {
@@ -782,7 +783,7 @@ namespace ViMG
                             CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                             CubeMeshingParameters parameters = new CubeMeshingParameters()
                             {
-                                cube = Main.Registry.CubeRegistry.Air,
+                                cube = GlobalState.Registry.CubeRegistry.Air,
                                 id = id,
                                 positionWS = positionCS.InWorldSpace(),
                                 positionCS = positionCS,
@@ -790,7 +791,7 @@ namespace ViMG
                                 faces = renderingFaces
                             };
 
-                            Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices, vertexCount);
+                            GlobalState.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices, vertexCount);
                         }
 
 						//using (var zoneCopy = TracyImpl.Tracy.BeginZone(name: "Copy")) 
@@ -851,7 +852,7 @@ namespace ViMG
 							if (id == 0 || renderingFaces == MeshHelper.CubeFace.NONE)
 								continue;
 
-							Cube cube = Main.Registry.CubeRegistry.Get(id);
+							Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
 
 							if (cube.ShouldMeshPass(pass))
 							{
@@ -888,7 +889,7 @@ namespace ViMG
 
 							CubeMeshingParameters parameters = new CubeMeshingParameters()
 							{
-								cube = Main.Registry.CubeRegistry.Air,
+								cube = GlobalState.Registry.CubeRegistry.Air,
 								id = id,
 								positionWS = (data.ChunkPosition.InCubeSpace() + cubePosition).InWorldSpace(),
 								positionCS = data.ChunkPosition.InCubeSpace() + cubePosition,
@@ -896,7 +897,7 @@ namespace ViMG
 								faces = renderingFaces
 							};
 
-							Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices);
+							GlobalState.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices);
 						}
 					}
 				}

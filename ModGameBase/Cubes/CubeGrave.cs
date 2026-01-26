@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -57,26 +58,26 @@ namespace ViMG.Cubes
         {
             base.GetDrops(itemsToDrop);
 
-            int valueToDrop = Main.random.Next(5, 25);
+            int valueToDrop = GlobalState.random.Next(5, 25);
 
             ItemHelper.GetCoins(valueToDrop, out var coinsCopper, out var coinsBronze, out _, out _, out _);
             itemsToDrop.Add(coinsCopper);
             itemsToDrop.Add(coinsBronze);
 
-            if (Main.random.NextFloat() < 0.05f)
+            if (GlobalState.random.NextFloat() < 0.05f)
             {
-                int which = Main.random.Next(0, 3);
+                int which = GlobalState.random.Next(0, 3);
 
                 switch (which)
                 {
                     case 0:
-                        itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("helmet_oldiron"), 1, 0));
+                        itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("helmet_oldiron"), 1, 0));
                         break;
                     case 1:
-                        itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("body_oldiron"), 1,  0));
+                        itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("body_oldiron"), 1,  0));
                         break;
                     case 2:
-                        itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("legs_oldiron"), 1, 0));
+                        itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("legs_oldiron"), 1, 0));
                         break;
                 }
             }

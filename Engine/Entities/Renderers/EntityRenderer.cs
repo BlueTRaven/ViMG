@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -42,7 +43,7 @@ namespace ViMG.Entities.Renderers
 
             for (int i = 0; i < types.Length; i++)
             {
-                if (Main.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
+                if (GlobalState.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
                     OnEntityOfOurTypeAdded(i, entity);
             }
         }
@@ -53,7 +54,7 @@ namespace ViMG.Entities.Renderers
 
             for (int i = 0; i < types.Length; i++)
             {
-                if (Main.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
+                if (GlobalState.Registry.EntityRegistry.GetFromEntity(entity).Id == types[i])
                     OnEntityOfOurTypeRemoved(i, entity);
             }
         }

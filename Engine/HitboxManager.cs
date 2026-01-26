@@ -1,6 +1,7 @@
 ﻿using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection.CollisionTasks;
 using BrUtility;
+using Engine;
 using Engine.Physics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -285,7 +286,7 @@ namespace ViMG
 						otherHitbox.manager?.OnInteractWithOther(otherHitbox, ourHitbox);
 					}
 
-					if (expirations[i] - (float)Main.Time <= 0)
+					if (expirations[i] - (float)GlobalState.Time <= 0)
 					{
 						Remove(i);
 					}

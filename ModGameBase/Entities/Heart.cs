@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -72,7 +73,7 @@ namespace ViMG.Entities
 						{
 							world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
 							world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
-							player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
+							player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("heart_enemy_spawnrate_increase"), 1));
 						}
 					}
 				}

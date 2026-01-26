@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -348,7 +349,7 @@ namespace ViMG
 		public static ItemInstance LoadItemInstance(Span<byte> data, ref int index)
 		{
 			string identifier = LoadString(data, ref index);
-			Item item = Main.Registry.ItemRegistry.Get(identifier);
+			Item item = GlobalState.Registry.ItemRegistry.Get(identifier);
 
 			int num = LoadInt32(data, ref index);
 			int damage = LoadInt32(data, ref index);

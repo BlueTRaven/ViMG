@@ -76,7 +76,7 @@ namespace Engine.Clients
 
         public ProjectileManager.ProjectileVisStats GetVisStats(int id)
         {
-            return Main.Registry.ProjectileRegistry.Get(projectiles[id].visStatsId)?.VisStats() ?? new();
+            return GlobalState.Registry.ProjectileRegistry.Get(projectiles[id].visStatsId)?.VisStats() ?? new();
         }
 
         public static void Render(GraphicsDevice device, ClientStates client)

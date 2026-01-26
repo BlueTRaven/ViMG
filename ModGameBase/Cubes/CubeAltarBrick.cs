@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -18,10 +19,10 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_altar_brick"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_altar_brick"), 1, 1));
 
-			if (Main.random.NextDouble() < 1.0 / 200.0)
-				itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
+			if (GlobalState.random.NextDouble() < 1.0 / 200.0)
+				itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
 		}
 	}
 }

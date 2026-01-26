@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
@@ -32,7 +33,7 @@ namespace ViMG.Cubes
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)
         {
-            return manager.CubeView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+            return manager.CubeView.GetCube(position - new CubePosition(0, 1, 0)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
         }
 
         public override void OnAdjacentUpdated(World world, ChunkManager manager, CubePosition position, CubePosition updating, int updatedId, double updatedTime)
@@ -40,7 +41,7 @@ namespace ViMG.Cubes
             if (updating.Y == position.Y - 1)
             {
                 //if the cube below us updates and it is an air block/no longer solid, remove self.
-                Cube cube = Main.Registry.CubeRegistry.Get(updatedId);
+                Cube cube = GlobalState.Registry.CubeRegistry.Get(updatedId);
 
                 if (cube == null || !cube.Solid)
                     manager.CubeView.SetCube(position, 0);
@@ -53,7 +54,7 @@ namespace ViMG.Cubes
         {
             base.OnPlayerPlaced(player, position);
 
-            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + Main.random.NextFloat(3f * 60f, 15f * 60f)));
+            player.GetWorld().EntityManager.Add(new EntityCubeFlame(position, player.GetWorld().GetTime() + GlobalState.random.NextFloat(3f * 60f, 15f * 60f)));
 
             //player.GetWorld().EntityManager.Add(new CubeLight(position, Color.OrangeRed.ToVector4(), new Vector2(Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8)));
         }
@@ -108,7 +109,7 @@ namespace ViMG.Cubes
 
                 heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
                 //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
             return heldMesh;

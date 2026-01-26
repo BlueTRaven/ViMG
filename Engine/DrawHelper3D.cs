@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -396,7 +397,7 @@ namespace ViMG
 			device.DepthStencilState = Main.nodepthDSS;
 
 			if (axesMesh == null)
-				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), Main.assetsManager.GetAsset<Texture2D>("axes"));
+				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), GlobalState.assetsManager.GetAsset<Texture2D>("axes"));
 
 			axesMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, Transform.FromTRS(position, Vector3.Zero, Vector3.One));
 		}

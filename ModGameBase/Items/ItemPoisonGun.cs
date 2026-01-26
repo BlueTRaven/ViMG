@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -38,7 +39,7 @@ namespace ViMG.Items
 			{
 				applyBuffs = new Buff.BuffInstance[1]
 				{
-					new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("poisoned"), 10)
+					new Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("poisoned"), 10)
 				};
 
 				stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
@@ -55,7 +56,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, Main.Registry.ProjectileRegistry.Get("musketball").Id, stats, index),
+					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				
 				inventory.Remove(ammoIndex, 1);

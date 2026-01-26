@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using ViMG.VertexDeclarations;
 using ViMG.Rendering;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -52,7 +53,7 @@ namespace ViMG.Entities
 
         private static float GetGrownTime(World world)
         {
-            return world.GetTime() + Main.random.NextFloat(6, 8); //TODO actual growth time
+            return world.GetTime() + GlobalState.random.NextFloat(6, 8); //TODO actual growth time
         }
 
         public bool OnInteract(Player player)
@@ -65,7 +66,7 @@ namespace ViMG.Entities
                     grownTime = GetGrownTime(world)
                 };
 
-                world.EntityManager.Add(new EntityItem(player.Position, Vector3.Zero, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_root1"), 1, 1)));
+                world.EntityManager.Add(new EntityItem(player.Position, Vector3.Zero, new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("food_root1"), 1, 1)));
                 return true;
             }
             return false;

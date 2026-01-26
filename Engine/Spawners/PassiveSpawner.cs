@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
+using Engine;
 
 namespace ViMG.Spawners
 {
@@ -42,7 +43,7 @@ namespace ViMG.Spawners
 
         public virtual void Update(double deltaTime, World world)
         {
-            if (!Main.ENABLE_ENT_SPAWNING)
+            if (!GlobalState.ENABLE_ENT_SPAWNING)
                 return;
 
             checkTimer -= (float)deltaTime;
@@ -57,7 +58,7 @@ namespace ViMG.Spawners
 
         protected void DoSpawnCheck(World world)
         {
-            if (Main.random.NextDouble() < spawnChance * manager.SpawnChanceMultipler)
+            if (GlobalState.random.NextDouble() < spawnChance * manager.SpawnChanceMultipler)
             {
                 const int MAX_TRIES = 20;
                 int tries = MAX_TRIES;
@@ -90,8 +91,8 @@ namespace ViMG.Spawners
 
             Vector3 v = Vector3.Left;
             v = Vector3.Transform(v,
-                Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
-            v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
+                Matrix.CreateFromYawPitchRoll(GlobalState.random.NextFloat(radMin, radMax), GlobalState.random.NextFloat(radMin, radMax), 0));
+            v *= GlobalState.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
             
             Player? player = world.GetRandomPlayer();
             if (player is not null)
@@ -105,7 +106,7 @@ namespace ViMG.Spawners
             if (world.ChunkManager.IsInWorldBounds(ChunkPosition.WorldSpaceChunk(v)) && world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(v)))
             {
                 var cubeAtPos = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(v)).Get();
-                if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
+                if (cubeAtPos == null || cubeAtPos == GlobalState.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
                     CubePosition pos = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 

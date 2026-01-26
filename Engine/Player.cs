@@ -375,7 +375,7 @@ namespace ViMG
 			SpawnPosition = CubePosition.FromWorldSpace(worldInfo.spawnPosition);
             Position = worldInfo.spawnPosition;
 
-            Main.Registry.ModRegistry.AddSpawnInventoryItems(inventoryManager.Get(inventory));
+            GlobalState.Registry.ModRegistry.AddSpawnInventoryItems(inventoryManager.Get(inventory));
 		}
 
         public override void Initialize(World world)
@@ -472,8 +472,8 @@ namespace ViMG
 				//{
 				//	if (craftInventory.Get(i).valid)
 				//	{
-				//		EntityItem ent = new EntityItem(Position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f,
-				//			Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), craftInventory.Get(i));
+				//		EntityItem ent = new EntityItem(Position, new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f,
+				//			GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), craftInventory.Get(i));
 				//		world.EntityManager.Add(ent);
 				//	}
 				//}
@@ -616,7 +616,7 @@ namespace ViMG
 			}
 			else if (state == State.Dead)
 			{
-				if ((float)Main.Time - deadTime > DEAD_TIME)
+				if ((float)GlobalState.Time - deadTime > DEAD_TIME)
 					KillWithoutAnimation();
 			}
 			else if (state == State.Normal)
@@ -846,7 +846,7 @@ namespace ViMG
 			inWater = false;
 			inRope = false;
 
-			Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+			Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
             
 			if (cube.Collision == Cube.CollisionValue.LiquidWater)
 				inWater = true;
@@ -1141,7 +1141,7 @@ namespace ViMG
                         PerformAction(actionStats);
 					else
 					{
-                        Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                        Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
                         cube.OnLeftClick(world, LookAtPos);
 						SyncCubeAction.Instance.QueueAction(new SyncCubeAction.CubeAction
 						{
@@ -1189,7 +1189,7 @@ namespace ViMG
 
 					if (!performedAction)
 					{
-						Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 						if (cube.CanRightClick(LookAtPos))
 						{
@@ -1500,7 +1500,7 @@ namespace ViMG
 					knockback = toSpawnLater.knockback,
 					applyBuffs = toSpawnLater.applyBuffs,
 					inventorySlot = toSpawnLater.inventorySlot,
-					expirationTime = (float)Main.Time + HITBOX_TIME,
+					expirationTime = (float)GlobalState.Time + HITBOX_TIME,
 				},
 			});
             //hitbox = world.HitboxManager.Add(this, rect, -(this as IRotatable).Forward, HitboxManager.Group.PLAYER_DEAL,
@@ -1576,7 +1576,7 @@ namespace ViMG
 
 			//		for (int i = 0; i < positions.Length; i++)
 			//		{
-			//			if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
+			//			if (pickStats.CanPredictAir() || GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air).Touchable)
 			//			{
 			//				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
    //                             lookAtMesh,

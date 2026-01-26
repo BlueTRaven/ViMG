@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.Common.Entities;
 using Engine.Networking;
 using Engine.Networking.Messages;
@@ -246,7 +247,7 @@ namespace ViMG.Entities
 
 			if (!Main.IsHeadless)
 			{
-				foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+				foreach (var r in GlobalState.Registry.RendererRegistry.GetIterable())
 				{
 					if (r != null)
 						r.NewEntityManagerInitialized(this);
@@ -258,7 +259,7 @@ namespace ViMG.Entities
 		{
 			if (!Main.IsHeadless)
 			{
-				foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+				foreach (var r in GlobalState.Registry.RendererRegistry.GetIterable())
 				{
 					if (r != null)
 						r.EntityManagerDisposed(this);
@@ -910,7 +911,7 @@ namespace ViMG.Entities
 
 		public void Draw(GraphicsDevice device, Effect effect)
 		{
-			//foreach (var r in Main.Registry.RendererRegistry.GetIterable())
+			//foreach (var r in GlobalState.Registry.RendererRegistry.GetIterable())
 			//{
 			//	if (r != null)
 			//	{

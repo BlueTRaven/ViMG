@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -48,32 +49,32 @@ namespace ViMG.Entities
         {
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
                 value = 50,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_magicpotion1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_magicpotion1"), -1, 0),
                 value = 50,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_blank"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_blank"), -1, 0),
                 value = 120,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("rope"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("rope"), -1, 0),
                 value = 25,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_lore_island1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_lore_island1"), -1, 0),
                 value = 500,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_bread1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("food_bread1"), -1, 0),
                 value = 235,
             },
         };
@@ -130,7 +131,7 @@ namespace ViMG.Entities
             Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 
             if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position))
-                .GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("water"))
+                .GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Get("water"))
             {
                 Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;
                 velocity -= new Vector3(0, Physics.PhysicsInfo.SIM_GRAVITY * 1.01f, 0);

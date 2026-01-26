@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
 using Engine.Common.Entities;
@@ -24,7 +25,7 @@ namespace ViMG.Cubes
 
 		public CubeFurnace() : base("furnace_t1", 6)
 		{
-			Main.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
+			GlobalState.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
 
 			Client = new ClientCubeFurnace(this);
         }
@@ -47,38 +48,38 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_furnace_t1"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_furnace_t1"), 1, 1));
 		}
 
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
 			recipes.Add(new RecipeFuzzy("sand_to_flask", this,
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("flask_empty"), 1, 1) }));
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_empty"), 1, 1) }));
 
 			recipes.Add(new RecipeLayout("sand_to_glass", this,
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("item_glass"), 1, 1) }));
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_sand"), 1, 1), new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_sand"), 1, 1) },
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_glass"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy("iron_chunk_to_ingot",this,
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("iron_chunk"), 1, 1) },
-							new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), 1, 1) }));
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("iron_chunk"), 1, 1) },
+							new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_iron"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy("tin_chunk_to_ingot", this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("tin_chunk"), 1, 1) },
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_tin"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy("copper_chunk_to_ingot", this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 1, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 1, 1) }));
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("copper_chunk"), 1, 1) },
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_copper"), 1, 1) }));
 
 			recipes.Add(new RecipeFuzzy("tin_copper_chunk_to_bronze_ingot", this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("tin_chunk"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("copper_chunk"), 2, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }, 2));
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("tin_chunk"), 1, 1), new ItemInstance(GlobalState.Registry.ItemRegistry.Get("copper_chunk"), 2, 1) },
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }, 2));
 
 			recipes.Add(new RecipeFuzzy("tin_copper_ingot_to_bronze_ingot", this,
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), 1, 1), new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), 2, 1) },
-				new ItemInstance[] { new ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }));
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_tin"), 1, 1), new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_copper"), 2, 1) },
+				new ItemInstance[] { new ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_bronze"), 3, 1) }));
 		}
 
 		public Size GetSize()
@@ -91,7 +92,7 @@ namespace ViMG.Cubes
 			if (buttonParameters == null)
 			{
                 buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2),
-					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
             }
 
@@ -110,7 +111,7 @@ namespace ViMG.Cubes
 			UI.EndParent();
 			UI.StartParent(new Vector2(0, 18 * 4));
 
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
 
             UI.EndParent();
             UI.StartParent(new Vector2(0, 18 * 6));
@@ -142,7 +143,7 @@ namespace ViMG.Cubes
 
 		public Texture2D GetTexture()
 		{
-			return Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
+			return GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory");
 		}
 
 		public RectangleF GetSourceRect()

@@ -14,6 +14,7 @@ using System.Reflection.Metadata;
 using LiteNetLib.Utils;
 using Engine.Common;
 using Engine.ChunkStuff;
+using Engine;
 
 namespace ViMG.WorldLogics
 {
@@ -378,9 +379,9 @@ namespace ViMG.WorldLogics
 
                 if (nextLightningTimer <= 0)
                 {
-                    nextLightningTimer = Main.random.NextFloat(nextLightningRange.X, nextLightningRange.Y);
+                    nextLightningTimer = GlobalState.random.NextFloat(nextLightningRange.X, nextLightningRange.Y);
 
-                    DoLightning(Main.random.NextFloat(0, float.Pi * 2f));
+                    DoLightning(GlobalState.random.NextFloat(0, float.Pi * 2f));
 
                     return true;
                 }
@@ -548,9 +549,9 @@ namespace ViMG.WorldLogics
         {
             if (timeUntilNextEmit <= 0)
             {
-                timeUntilNextEmit += Main.random.NextFloat(settings.timeUntilNextEmit.X, settings.timeUntilNextEmit.Y);
+                timeUntilNextEmit += GlobalState.random.NextFloat(settings.timeUntilNextEmit.X, settings.timeUntilNextEmit.Y);
 
-                int num = Main.random.Next(settings.particlesPerEmit.X, settings.particlesPerEmit.Y);
+                int num = GlobalState.random.Next(settings.particlesPerEmit.X, settings.particlesPerEmit.Y);
                 
                 if (IsTransitioning())
                     num = (int)(num * (1 - transitionTimer / currentTransition.Time));
@@ -561,9 +562,9 @@ namespace ViMG.WorldLogics
                 {
                     if (!particles[i].inUse)
                     {
-                        float r = Main.random.NextFloat(0, MAX_RADIUS);
+                        float r = GlobalState.random.NextFloat(0, MAX_RADIUS);
 
-                        Vector2 ang = Main.random.NextAngle();
+                        Vector2 ang = GlobalState.random.NextAngle();
                         particles[i].inUse = true;
                         particles[i].position = position + new Vector3(ang.X * r, 0, ang.Y * r);
                         particles[i].position.Y = position.Y - Cube.CUBE_SCALE * 16;  //place at the top of the world for now
@@ -620,7 +621,7 @@ namespace ViMG.WorldLogics
             min = int.Min(min, max);
             max = int.Max(min, max);
 
-            cubeView.GetCubes(queryPositions.AsSpan()[min..max], touchedCubes.AsSpan()[min..max], Main.Registry.CubeRegistry.Air);
+            cubeView.GetCubes(queryPositions.AsSpan()[min..max], touchedCubes.AsSpan()[min..max], GlobalState.Registry.CubeRegistry.Air);
 
             for (int i = min; i < max; i++)
             {

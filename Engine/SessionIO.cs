@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -28,8 +29,8 @@ namespace ViMG
             {
                 using (StreamWriter sw = new StreamWriter(fs))
                 {
-                    sw.WriteLine("save " + Main.SessionInformation.LastLoadedSave);
-                    sw.WriteLine("loaded_mods " + string.Join(',', Main.SessionInformation.LoadedMods));
+                    sw.WriteLine("save " + GlobalState.SessionInformation.LastLoadedSave);
+                    sw.WriteLine("loaded_mods " + string.Join(',', GlobalState.SessionInformation.LoadedMods));
                     Options.OnSave(sw);
                 }
             }
@@ -44,7 +45,7 @@ namespace ViMG
             {
                 using (StreamReader reader = new StreamReader(fs))
                 {
-                    //Main.SessionInformation.LastLoadedSave = reader.ReadLine().Substring(5);
+                    //GlobalState.SessionInformation.LastLoadedSave = reader.ReadLine().Substring(5);
 
                     List<string> lines = new List<string>();
                     string? line = reader.ReadLine();
@@ -59,11 +60,11 @@ namespace ViMG
                         string[] split = l.Split(' ');
                         if (split[0] == "save")
                         {
-                            Main.SessionInformation.LastLoadedSave = split[1];
+                            GlobalState.SessionInformation.LastLoadedSave = split[1];
                         } 
                         else if (split[0] == "loaded_mods")
                         {
-                            Main.SessionInformation.LoadedMods = split[1].Split(',');
+                            GlobalState.SessionInformation.LoadedMods = split[1].Split(',');
                         }
                     }
 

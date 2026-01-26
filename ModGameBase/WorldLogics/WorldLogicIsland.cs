@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -76,10 +77,10 @@ namespace ViMG.WorldLogics
 			base.Update(world, deltaTime);
 			alive += (float)deltaTime;
 
-            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && Main.Time - timeSyncWeather > 1)
+            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Server && GlobalState.Time - timeSyncWeather > 1)
             {
                 Main.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncWeather.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, null);
-                timeSyncWeather = Main.Time;
+                timeSyncWeather = GlobalState.Time;
             }
 
             foreach (Player player in world.player)
@@ -116,22 +117,22 @@ namespace ViMG.WorldLogics
 			{
 				if (!WeatherManager.IsTransitioning())
 				{
-					bool isActive = Main.random.NextFloat() < ACTIVE_WEATHER_CHANCE;
+					bool isActive = GlobalState.random.NextFloat() < ACTIVE_WEATHER_CHANCE;
 
 					WeatherManager.WeatherType[] types;
 
 					if (!isActive)
 					{
 						types = WeatherManager.PassiveWeatherTypes;
-						WeatherChangeTimer = Main.random.NextFloat(passiveWeatherTime.X, passiveWeatherTime.Y);
+						WeatherChangeTimer = GlobalState.random.NextFloat(passiveWeatherTime.X, passiveWeatherTime.Y);
 					}
 					else
 					{
 						types = WeatherManager.ActiveWeatherTypes;
-						WeatherChangeTimer = Main.random.NextFloat(activeWeatherTime.X, activeWeatherTime.Y);
+						WeatherChangeTimer = GlobalState.random.NextFloat(activeWeatherTime.X, activeWeatherTime.Y);
 					}
 
-					WeatherManager.WeatherType nextWeather = types[Main.random.Next(0, types.Length)];
+					WeatherManager.WeatherType nextWeather = types[GlobalState.random.Next(0, types.Length)];
 
 					WeatherManager.DoTransition(nextWeather, 15f);
 				}
@@ -167,10 +168,10 @@ namespace ViMG.WorldLogics
 				//	float ambient = 1 - world.GetTimeOfDay(dawnEndOffsetScale: 1.25f);
 				//	Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
 				//	if (!Main.inputManager.IsHeld(Keys.F6))
-				//		Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				//		Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				//	else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 				//	Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
-				//	Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+				//	Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
 				//}
 			}
 			else
@@ -195,7 +196,7 @@ namespace ViMG.WorldLogics
 
                 //for (int i = 0; i < 100; i++)
 				//world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, slime));
-				//world.EntityManager.Add(new ManaStar(new Vector2(Main.random.NextFloat(-180, 180), Main.random.NextFloat(-70, 70))));
+				//world.EntityManager.Add(new ManaStar(new Vector2(GlobalState.random.NextFloat(-180, 180), GlobalState.random.NextFloat(-70, 70))));
 				//world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
 			}
         }
@@ -215,10 +216,10 @@ namespace ViMG.WorldLogics
 		//	directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, Main.camera);
 
 		//	//TODO: re-implement this easter egg
-		//	Texture2D sunTexture = Main.assetsManager.GetAsset<Texture2D>("sun");
+		//	Texture2D sunTexture = GlobalState.assetsManager.GetAsset<Texture2D>("sun");
 
 		//	if (world.LoadedFolderName == "coconut")
-		//		sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
+		//		sunTexture = GlobalState.assetsManager.GetAsset<Texture2D>("coconut");
 
 		//	float angle = 360 * ((world.GetTime() % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 

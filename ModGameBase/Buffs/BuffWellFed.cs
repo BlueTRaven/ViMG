@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace ViMG.Buffs
         {
             base.LoadContent(device);
 
-            this.texture = Main.assetsManager.GetAsset<Texture2D>("skill");
+            this.texture = GlobalState.assetsManager.GetAsset<Texture2D>("skill");
         }
 
         public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)

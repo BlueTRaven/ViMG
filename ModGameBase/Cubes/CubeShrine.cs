@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -33,7 +34,7 @@ namespace ViMG.Cubes
         {
             base.PostChunkGen(world, position);
 
-            EntityShrine shrine = new EntityShrine(position, Main.Registry.BuffRegistry.Get(buff));
+            EntityShrine shrine = new EntityShrine(position, GlobalState.Registry.BuffRegistry.Get(buff));
             world.AddEntity(shrine);
         }
 
@@ -41,7 +42,7 @@ namespace ViMG.Cubes
         {
             base.OnPlayerPlaced(player, position);
 
-            EntityShrine shrine = new EntityShrine(position, Main.Registry.BuffRegistry.Get(buff));
+            EntityShrine shrine = new EntityShrine(position, GlobalState.Registry.BuffRegistry.Get(buff));
             player.GetWorld().EntityManager.Add(shrine);
         }
 

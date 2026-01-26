@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -65,9 +66,9 @@ namespace ViMG.Entities
 			base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-					Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), Main.random.Next(2, 8), 1));
+				new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+					GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("slime_chunk"), GlobalState.random.Next(2, 8), 1));
 			world.EntityManager.Add(ent);
 		}
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Common;
 using Engine.Networking.Messages;
 using LiteNetLib.Utils;
@@ -415,7 +416,7 @@ namespace ViMG.Entities
 				//	CubePosition pos = positions[j];
 				//	ushort id = ids[j];
 
-				//	if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+				//	if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
     //                {
 				//		if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position,
 				//											projectiles[i].stats.collisionRadius, out Vector3 change))
@@ -489,8 +490,8 @@ namespace ViMG.Entities
                 }
 				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.RandomOffsetInRange)
                 {
-					yawOffset = Main.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
-					pitchOffset = Main.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
+					yawOffset = GlobalState.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
+					pitchOffset = GlobalState.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
 				}
 				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.ManualSpacing)
                 {

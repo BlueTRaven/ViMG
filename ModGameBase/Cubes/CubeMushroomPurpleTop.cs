@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -41,7 +42,7 @@ namespace ViMG.Cubes
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is a mushroom block
-                if (data.GetCube(parameters.position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+                if (data.GetCube(parameters.position - new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
                 {
                     //use the same top texture instead of the ordinary side texture.
                     return new RectangleF(48, 96, 16, 16);

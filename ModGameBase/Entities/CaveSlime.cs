@@ -10,6 +10,7 @@ using BrUtility;
 using ViMG.Buffs;
 using ViMG.Rendering;
 using Engine.Networking;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -65,9 +66,9 @@ namespace ViMG.Entities
 			base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
-					6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE)),
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
+				new Vector3(GlobalState.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+					6.4f * Cube.CUBE_SCALE, GlobalState.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE)),
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
 			world.EntityManager.Add(ent);
 		}
 

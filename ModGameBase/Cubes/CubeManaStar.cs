@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace ViMG.Cubes
         {
             base.GetDrops(itemsToDrop);
 
-            itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("mana_star"), 1, 0));
+            itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("mana_star"), 1, 0));
         }
     }
 }

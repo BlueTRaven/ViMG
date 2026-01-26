@@ -147,7 +147,7 @@ namespace Engine.Common
 
             //Span<ushort> ids = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
             //GetIdsForChunk(chunkPosition, ids);
-            Span<int> usedIds = stackalloc int[Main.Registry.CubeRegistry.Count];
+            Span<int> usedIds = stackalloc int[GlobalState.Registry.CubeRegistry.Count];
             for (int i = 0; i < usedIds.Length; i++)
                 usedIds[i] = -1;
             Span<ushort> uniqueIds = stackalloc ushort[Chunk.NUM_CUBES_IN_CHUNK];
@@ -235,7 +235,7 @@ namespace Engine.Common
             //Console.WriteLine("Palette: ");
             //foreach (ushort id in chunk.palette)
             //{
-            //    Console.WriteLine(Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air));
+            //    Console.WriteLine(GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air));
             //}
 
             return chunk;

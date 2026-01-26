@@ -1,5 +1,6 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.Networking;
 using System;
 using System.Collections.Generic;
@@ -156,14 +157,14 @@ namespace ViMG.ChunkStuff
         {
             //Add one since padding is -1
             var id = GetId(position);
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
+            return new Optional<Cube>(GlobalState.Registry.CubeRegistry.Get(id));
         }
 
         public MeshHelper.CubeFace GetFace(CubePosition position)
         {
             //using var zone = TracyImpl.Tracy.BeginZone();
 
-            Cube cube = GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube cube = GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             //TODO re-enable air
             if (cube.Transparency == Cube.TransparencyValue.Invisible || cube.Transparency == Cube.TransparencyValue.Air)
@@ -192,7 +193,7 @@ namespace ViMG.ChunkStuff
         //TODO: separate out visual stuff, not sure how yet
         private bool HasClearSide(int x, int y, int z, Cube currentCube)
         {
-            Cube adjacentCube = GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube adjacentCube = GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             if (currentCube.Transparency != Cube.TransparencyValue.Air)
             {

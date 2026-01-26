@@ -80,7 +80,7 @@ namespace Engine.Networking.Messages
                 {
                     if (clickToSync.inventoryIndex >= 0)
                     {
-                        Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", Main.Time, player.ToString(), entity.ToString(), clickToSync.inventory.id);
+                        Console.WriteLine("Remote Inventory Input: {0:02} {1} {2} {3} ", GlobalState.Time, player.ToString(), entity.ToString(), clickToSync.inventory.id);
                         MenuHelper.DoClick(player, inventory, GS.GetWorld().InventoryManager.Get(player.heldInventory), clickToSync.inventoryIndex, false);
                     }
 

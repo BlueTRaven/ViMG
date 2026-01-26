@@ -84,7 +84,7 @@ namespace Engine.Networking.Messages
             if (currentInputs.Run.Pressed())  inputTypes |= InputTypes.Run;
             if (currentInputs.Throw.Pressed()) inputTypes |= InputTypes.Throw;
 
-            netMessage.writer.Put(Main.Time);
+            netMessage.writer.Put(GlobalState.Time);
             netMessage.writer.Put(Main.Frame);
             netMessage.writer.Put(GS.GetClient().Current().highlightIndex);
             netMessage.writer.Put(localPlayer.rotation.X);
@@ -106,7 +106,7 @@ namespace Engine.Networking.Messages
 
             double time = reader.GetDouble();
             int frame = reader.GetInt();
-            //Console.WriteLine("Receive with time: {0:.02} (our time: {1:.02} delta {2:.02})", time, Main.Time + NetworkManager.TIME_TRAVEL_DELAY, time - (Main.Time + NetworkManager.TIME_TRAVEL_DELAY));
+            //Console.WriteLine("Receive with time: {0:.02} (our time: {1:.02} delta {2:.02})", time, GlobalState.Time + NetworkManager.TIME_TRAVEL_DELAY, time - (GlobalState.Time + NetworkManager.TIME_TRAVEL_DELAY));
             //Console.WriteLine("Frame: {0} (our frame: {1} delta {2})", frame, Main.Frame, frame - Main.Frame);
             int highlightIndex = reader.GetInt();
             Quaternion rotation = Quaternion.Identity;
@@ -148,9 +148,9 @@ namespace Engine.Networking.Messages
         {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
 
-            //if (Main.Time - t > 1)
+            //if (GlobalState.Time - t > 1)
             //{
-            //    t = Main.Time;
+            //    t = GlobalState.Time;
 
             //    Console.WriteLine("{0}", int.Max(queued1.Count, queued2.Count));
             //}
@@ -159,7 +159,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedInput qinput in queued)
             {
-                if (Main.Time >= qinput.time)
+                if (GlobalState.Time >= qinput.time)
                 {
                     DoAction(qinput, players);
                 }

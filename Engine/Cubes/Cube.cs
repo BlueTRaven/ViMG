@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
@@ -240,7 +241,7 @@ namespace ViMG.Cubes
 
 		protected void DropSelf(List<ItemInstance> itemsToDrop)
 		{
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_" + Identifier), 1, 1));
 		}
 
 		public virtual bool CanRightClick(CubePosition position)
@@ -472,12 +473,12 @@ namespace ViMG.Cubes
 
 		public void DropSelf(List<ItemInstance> itemsToDrop, int num = 1)
 		{
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get(this.Identifier + "_item"), num, 1));
 		}
 
 		public static Item GetItem(Cube cube)
         {
-			return Main.Registry.ItemRegistry.Get("item_" + cube.Identifier);
+			return GlobalState.Registry.ItemRegistry.Get("item_" + cube.Identifier);
         }
 	}
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -37,7 +38,7 @@ namespace ViMG.Items
 
 			CubePosition placePos = player.IsLooking && player.CanPlace ? player.PlaceAtPos : player.LookAtEnd;
 
-			Cube cube = Main.Registry.CubeRegistry.Get("flame");
+			Cube cube = GlobalState.Registry.CubeRegistry.Get("flame");
 
 			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos))
             {

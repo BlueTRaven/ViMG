@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -40,7 +41,7 @@ namespace ViMG.Items
                 {
                     //TODO check solidity, not id != 0
                     return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
-                        player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+                        player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
                 });
 
                 Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;

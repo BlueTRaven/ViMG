@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,8 +15,8 @@ namespace ViMG.Generation
 
         public StructureGeneratorGOL3DWaterCave(int seed, ChunkManager chunkManager) : base("GOL3DWaterCave", seed, chunkManager)
         {
-            water = Main.Registry.CubeRegistry.Get("water");
-            stone = Main.Registry.CubeRegistry.Get("stone");
+            water = GlobalState.Registry.CubeRegistry.Get("water");
+            stone = GlobalState.Registry.CubeRegistry.Get("stone");
         }
 
         protected override Structure[] GenerateOne(ref StructureTaskState state)
@@ -134,7 +135,7 @@ namespace ViMG.Generation
                         break;
                     }
 
-                    if (manager.CubeView.GetCube(waterPosition).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+                    if (manager.CubeView.GetCube(waterPosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Air)
                     {
                         actualFills.Add(waterPosition);
                         touchedPositions.Add(waterPosition);
@@ -168,7 +169,7 @@ namespace ViMG.Generation
                         Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(structure.size.X, structure.size.Y, structure.size.Z), out int i);
                         CubePosition realPos = new CubePosition(pos.X + x, pos.Y + y, pos.Z + z, pos.Coord);
 
-                        int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+                        int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
                         if (overwritingId == stone.Id || (overwritingId == 0 && structure.data[i] == water.Id && placeWater))
                             manager.CubeView.SetCube(realPos, structure.data[i]);

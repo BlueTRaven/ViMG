@@ -137,7 +137,7 @@ namespace Engine.Networking
         {
             isServer = netMode == GameStateManager.NetworkingMode.Server;
 
-            StartTime = Main.Time;
+            StartTime = GlobalState.Time;
             if (IsServer)
             {
                 netManager.Start(Port);
@@ -233,7 +233,7 @@ namespace Engine.Networking
             if (netManager.NatPunchEnabled)
                 netManager.NatPunchModule.PollEvents();
 
-            if (Main.Time - lastStatisticCheck > 1)
+            if (GlobalState.Time - lastStatisticCheck > 1)
             {
                 for (int i = statistics.Length - 1; i >= 1; i--)
                 {
@@ -248,15 +248,15 @@ namespace Engine.Networking
                 maxSent = ulong.Max(statistics[0].BytesSent, maxSent);
                 maxRecieved = ulong.Max(statistics[0].BytesReceived, maxRecieved);
 
-                lastStatisticCheck = Main.Time;
+                lastStatisticCheck = GlobalState.Time;
             }
 
             if (IsServer)
             {
-                if (Main.Time - timeUpdateTime > 0.125)
+                if (GlobalState.Time - timeUpdateTime > 0.125)
                 {
                     SendMessageToAll(WhoAmI.Instance, netManager, null);
-                    timeUpdateTime = Main.Time;
+                    timeUpdateTime = GlobalState.Time;
                 }
             }
 
@@ -297,7 +297,7 @@ namespace Engine.Networking
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
         {
-            Main.Registry.MessageRegistry.Dispatch(netManager, reader, peer, channelNumber, deliveryMethod);
+            GlobalState.Registry.MessageRegistry.Dispatch(netManager, reader, peer, channelNumber, deliveryMethod);
             //Console.WriteLine("Received {0} from {1}", result, peer);
 
             reader.Recycle();

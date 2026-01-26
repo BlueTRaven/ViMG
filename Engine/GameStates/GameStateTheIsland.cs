@@ -74,7 +74,7 @@ namespace ViMG.GameStates
             this.device = device;
             base.LoadContent(device);
             
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public void BeginLoadWorld(string worldName)
@@ -104,14 +104,14 @@ namespace ViMG.GameStates
                     playerIO.Load(worldName);
                 }
 
-                //if (!Main.Args.dedicatedServer)
+                //if (!GlobalState.Args.dedicatedServer)
                 //    playerIO.DeserializeLocal(world);
 
                 if (world == null) throw new Exception("Errored while loading world");
 
                 LoadMessage = "Loading World...";
                 ProfilingHelper.Start("Building Meshes...");
-                //if (!Main.Args.dedicatedServer)
+                //if (!GlobalState.Args.dedicatedServer)
                 //{
                     //Now we can tell the ChunkLoadManager what should be loaded.
                     //world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
@@ -133,7 +133,7 @@ namespace ViMG.GameStates
                 return world;
             });
 
-            if (Main.MULTITHREAD_LOADING)
+            if (GlobalState.MULTITHREAD_LOADING)
                 worldTask.Start();
             else worldTask.RunSynchronously();
         }
@@ -159,7 +159,7 @@ namespace ViMG.GameStates
                 return world;
             });
 
-            if (Main.MULTITHREAD_LOADING)
+            if (GlobalState.MULTITHREAD_LOADING)
                 layerTask.Start();
             else layerTask.RunSynchronously();
 
@@ -292,8 +292,8 @@ namespace ViMG.GameStates
                     {
                         client.CurrentTime += deltaTime;
                         //var expectedTime = client.LastFrameTime + World.SyncTime;
-                        //Main.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
-                        //Main.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
+                        //GlobalState.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
+                        //GlobalState.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
 
                         client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);
@@ -358,7 +358,7 @@ namespace ViMG.GameStates
             // This is up here so we can use this information when loading a world (coconut easter egg)
             // but it also might present a problem; if we error at any point during the creation/loading process,
             // pressing "Continue" will just try to load the same world that caused the error instead of staying the same.
-            Main.SessionInformation.LastLoadedSave = worldName;
+            GlobalState.SessionInformation.LastLoadedSave = worldName;
 
             var generator = CreateLayerGenerator(0);
             var logic = CreateLayerLogic(0);
@@ -423,7 +423,7 @@ namespace ViMG.GameStates
             //chunkLoadManager.UnloadAll();
 
             worldInfoIO.Save(worldName, world.WorldInfo);
-            Main.SessionIO?.Save();
+            GlobalState.SessionIO?.Save();
 
             ProfilingHelper.End("Done.");
 
@@ -437,8 +437,8 @@ namespace ViMG.GameStates
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
-            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
 
             CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
                 new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
@@ -490,8 +490,8 @@ namespace ViMG.GameStates
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
-            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
 
             CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
                 new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
@@ -520,7 +520,7 @@ namespace ViMG.GameStates
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
-            Main.SessionInformation.LastLoadedSave = worldName;
+            GlobalState.SessionInformation.LastLoadedSave = worldName;
 
             var logic = CreateLayerLogic(worldInfo.playerLayers[0]);
 
@@ -557,8 +557,8 @@ namespace ViMG.GameStates
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
-            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
 
             CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
                 new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
@@ -594,7 +594,7 @@ namespace ViMG.GameStates
 
                 Skybox skybox = new Skybox();
 
-                Main.SessionInformation.LastLoadedSave = worldName;
+                GlobalState.SessionInformation.LastLoadedSave = worldName;
 
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer);
@@ -653,7 +653,7 @@ namespace ViMG.GameStates
                 var housingManager = new HousingManager();
                 housingManager.FinishLoading(worldInfo);
 
-                Main.SessionInformation.LastLoadedSave = worldName;
+                GlobalState.SessionInformation.LastLoadedSave = worldName;
                 var logic = CreateLayerLogic(layer);
 
                 Skybox skybox = new Skybox();
@@ -698,9 +698,9 @@ namespace ViMG.GameStates
 
         private static ChunkGenerator CreateLayerGenerator(int layer)
         {
-            if (Main.Registry.WorldLogicRegistry.generators == null || Main.Registry.WorldLogicRegistry.generators.Length < layer || Main.Registry.WorldLogicRegistry.generators[layer] == null) 
+            if (GlobalState.Registry.WorldLogicRegistry.generators == null || GlobalState.Registry.WorldLogicRegistry.generators.Length < layer || GlobalState.Registry.WorldLogicRegistry.generators[layer] == null) 
                 throw new Exception(string.Format("No LayerGenerator defined for layer {0}", layer));
-            ChunkGenerator generator = (ChunkGenerator)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.generators[layer], layer, 0);
+            ChunkGenerator generator = (ChunkGenerator)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.generators[layer], layer, 0);
 
             //switch (layer)
             //{
@@ -721,10 +721,10 @@ namespace ViMG.GameStates
 
         private static WorldLogics.WorldLogic CreateLayerLogic(int layer)
         {
-            if (Main.Registry.WorldLogicRegistry.logics == null || Main.Registry.WorldLogicRegistry.logics.Length < layer || Main.Registry.WorldLogicRegistry.logics[layer] == null)
+            if (GlobalState.Registry.WorldLogicRegistry.logics == null || GlobalState.Registry.WorldLogicRegistry.logics.Length < layer || GlobalState.Registry.WorldLogicRegistry.logics[layer] == null)
                 throw new Exception(string.Format("No WorldLogic defined for layer {0}", layer));
 
-            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.logics[layer]);
+            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.logics[layer]);
 
             //switch (layer)
             //{
@@ -748,8 +748,8 @@ namespace ViMG.GameStates
             if (world != null)
             {
                 var watch = Stopwatch.StartNew();
-                Main.SessionInformation.LastLoadedSave = world.LoadedFolderName;
-                Main.SessionIO.Save();
+                GlobalState.SessionInformation.LastLoadedSave = world.LoadedFolderName;
+                GlobalState.SessionIO.Save();
 
                 if (backup)
                 {

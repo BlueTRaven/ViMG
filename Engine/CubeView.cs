@@ -1,4 +1,5 @@
-﻿using Engine.ChunkStuff;
+﻿using Engine;
+using Engine.ChunkStuff;
 using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation;
@@ -178,7 +179,7 @@ namespace ViMG
 
             ushort id = GetId(position);
 
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
+            return new Optional<Cube>(GlobalState.Registry.CubeRegistry.Get(id));
         }
 
         public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def)
@@ -186,7 +187,7 @@ namespace ViMG
             Span<ushort> ids = stackalloc ushort[positions.Length];
             GetIds(positions, ids);
 
-            var registry = Main.Registry.CubeRegistry.GetIterable();
+            var registry = GlobalState.Registry.CubeRegistry.GetIterable();
 
             for (int i = 0; i < positions.Length; i++) 
             {
@@ -323,19 +324,19 @@ namespace ViMG
         public static bool RaycastCallbackTouchable(Vector3 position, object? ctx)
         {
             ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
-            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
         }
 
         public static bool RaycastCallbackSolid(Vector3 position, object? ctx)
         {
             ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
-            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
         }
 
         public static bool RaycastCallbackSolidNoRope(Vector3 position, object? ctx)
         {
             ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
-            var cube = cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            var cube = cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
             return cube.Solid && cube.Collision != Cube.CollisionValue.Rope;
         }
 

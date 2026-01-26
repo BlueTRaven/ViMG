@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,9 +45,9 @@ namespace ViMG.Spawners
             if (position.Y < 181)
                 return false;
 
-            Cube c = manager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass") || 
-                c == Main.Registry.CubeRegistry.Get("stone"))
+            Cube c = manager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            if (c == GlobalState.Registry.CubeRegistry.Get("dirt") || c == GlobalState.Registry.CubeRegistry.Get("grass") || 
+                c == GlobalState.Registry.CubeRegistry.Get("stone"))
                 return true;
 
             return false;

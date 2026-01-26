@@ -87,7 +87,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedInventoryUpdate action in queued)
             {
-                if (Main.Time >= action.time)
+                if (GlobalState.Time >= action.time)
                 {
                     // Invalidate any audits that may be attempting to update this position
                     //for (int i = 0; i < MAX_AUDITS; i++)
@@ -101,7 +101,7 @@ namespace Engine.Networking.Messages
                     var inventory = inventoryManager.Get(action.inventory);
                     inventory.DoEvent(action);
 
-                    Console.WriteLine("Remote Inventory action: {0:02} {1} {2} -> {3}", Main.Time, action.inventory.id, action.oldInstance.item, action.newInstance.item);
+                    Console.WriteLine("Remote Inventory action: {0:02} {1} {2} -> {3}", GlobalState.Time, action.inventory.id, action.oldInstance.item, action.newInstance.item);
                     //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
                 }
                 else
@@ -234,8 +234,8 @@ namespace Engine.Networking.Messages
     //            entityId = entityId,
     //            inventoryId = id,
     //            inventoryIndex = inventoryIndex,
-    //            oldInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(oldInstanceItemId), oldInstanceNum, oldInstanceDamage),
-    //            newInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage),
+    //            oldInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(oldInstanceItemId), oldInstanceNum, oldInstanceDamage),
+    //            newInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage),
     //        };
 
     //        activeAudits[player][index] = action;
@@ -281,7 +281,7 @@ namespace Engine.Networking.Messages
     //                }
     //                else
     //                {
-    //                    if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
+    //                    if (GlobalState.Time - activeAudits[i][j].time >= TIMEOUT)
     //                    {
     //                        RollbackAction(activeAudits[i][j]);
     //                        activeAudits[i][j].active = false;
@@ -374,7 +374,7 @@ namespace Engine.Networking.Messages
     //        var newInstanceNum = reader.GetInt();
     //        var newInstanceDamage = reader.GetInt();
 
-    //        var newInstance = new ItemInstance(Main.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage);
+    //        var newInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(newInstanceItemId), newInstanceNum, newInstanceDamage);
     //        //Console.WriteLine("Received accept {0} AuditedInventoryUpdate: {1} newInstanceItemId {2}", index, accepted, newInstanceItemId);
 
     //        SyncInventoryUpdateAuditRequest.Instance.activeAudits[GS.GetWorld().localPlayerIndex][index].oldInstance = newInstance;

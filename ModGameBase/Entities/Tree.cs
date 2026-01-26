@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -53,7 +54,7 @@ namespace ViMG.Entities
             base.Initialize(world);
 
             if (cube == null)
-                cube = Main.Registry.CubeRegistry.Get("tree") as CubeTree;
+                cube = GlobalState.Registry.CubeRegistry.Get("tree") as CubeTree;
 
             for (int i = 1; i < size; i++)
             {

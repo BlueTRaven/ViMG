@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -27,7 +28,7 @@ namespace ViMG.Cubes
             base.GetDrops(itemsToDrop);
 
             //drop stone instead of orange stuff
-            itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1));
+            itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_stone"), 1, 1));
         }
 
 
@@ -53,12 +54,12 @@ namespace ViMG.Cubes
 
             if (mushroomStem == null)
             {
-                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
-                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_orange_top");
-                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_orange_small");
+                mushroomStem = GlobalState.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_top");
+                mushroomSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_small");
             }
 
-            if (Main.random.NextFloat() < 1f / 30f)
+            if (GlobalState.random.NextFloat() < 1f / 30f)
                 SpawnMushrooms(world.ChunkManager, position, false);
         }
 
@@ -68,13 +69,13 @@ namespace ViMG.Cubes
 
             if (mushroomStem == null)
             {
-                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
-                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_orange_top");
-                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_orange_small");
+                mushroomStem = GlobalState.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_top");
+                mushroomSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_small");
             }
 
             //Don't try to spawn a mushroom most of the time
-            if (Main.random.NextFloat() < 0.05f)
+            if (GlobalState.random.NextFloat() < 0.05f)
                 SpawnMushrooms(world.ChunkManager, position, true);
         }
 
@@ -84,7 +85,7 @@ namespace ViMG.Cubes
             CubePosition abovePosition = position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
             if (ChunkHelper.CanPlaceIfNonSolid(manager, abovePosition, out Cube offsetCube))
             {
-                bool smallMushroom = Main.random.NextCoinFlip();
+                bool smallMushroom = GlobalState.random.NextCoinFlip();
 
                 if (smallMushroom)
                 {
@@ -92,7 +93,7 @@ namespace ViMG.Cubes
                 }
                 else
                 {
-                    int size = Main.random.Next(3, 8);
+                    int size = GlobalState.random.Next(3, 8);
                     bool canPlaceBigMushroom = true;
 
                     if (restrictBase)
@@ -192,7 +193,7 @@ namespace ViMG.Cubes
             if ((face & MeshHelper.CubeFace.SIDES) > 0)
             {
                 //if the cube above is the same
-                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
                 {
                     //use the stone texture for the sides
                     return new RectangleF(16, 0, 16, 16);

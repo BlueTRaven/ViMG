@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,8 +16,8 @@ namespace ViMG.Items
     {
         private static Buffs.Buff.BuffInstance[] buffs = new Buffs.Buff.BuffInstance[] 
         {
-            new(Main.Registry.BuffRegistry.Get("well_fed"), 30f),
-            new(Main.Registry.BuffRegistry.Get("fire_resist"), 3f * 30f),
+            new(GlobalState.Registry.BuffRegistry.Get("well_fed"), 30f),
+            new(GlobalState.Registry.BuffRegistry.Get("fire_resist"), 3f * 30f),
         };
 
         public ItemPinkPepper() : base("food_pink_pepper")

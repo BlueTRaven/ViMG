@@ -185,7 +185,7 @@ namespace Engine.Clients.Entities
                 state = state,
                 active = true,
                 entityType = type,
-                entityTypeId = Main.Registry.EntityRegistry.Get(type).Id,
+                entityTypeId = GlobalState.Registry.EntityRegistry.Get(type).Id,
             };
 
             if (oldGen != reference.generation)

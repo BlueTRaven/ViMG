@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using Engine;
 using Engine.Networking;
 using System;
 using System.Collections.Generic;
@@ -102,7 +103,7 @@ namespace ViMG.Entities
 
             cooldownTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
 
-            buff = Main.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
+            buff = GlobalState.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
         }
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool) 

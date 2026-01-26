@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -105,7 +106,7 @@ namespace ViMG.Entities
 
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-            visStatsId = Main.Registry.ProjectileRegistry.Get("skullhead_skull").Id;
+            visStatsId = GlobalState.Registry.ProjectileRegistry.Get("skullhead_skull").Id;
 
             //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
             world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
@@ -115,30 +116,30 @@ namespace ViMG.Entities
         {
             base.OnKill();
 
-			int which = Main.random.Next(0, 5);
+			int which = GlobalState.random.Next(0, 5);
 
 			Items.ItemInstance drop;
 			if (which == 0)
-				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("bow_bowner"), 1, 1);
+				drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("bow_bowner"), 1, 1);
 			else if (which == 1)
-				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("sword_runic_bone"), 1, 1);
+				drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("sword_runic_bone"), 1, 1);
 			else if (which == 2)
-				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("magic_bone_staff"), 1, 1);
+				drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("magic_bone_staff"), 1, 1);
 			else if (which == 3)
-				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("heart_ossified"), 1, 1);
+				drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("heart_ossified"), 1, 1);
 			else if (which == 4)
-				drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("bone_whistle"), 1, 1);
-			else drop = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1);
+				drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("bone_whistle"), 1, 1);
+			else drop = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_dirt"), 1, 1);
 
 			EntityItem ent = new EntityItem(Position, 
-				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-					Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), drop);
+				new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+					GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), drop);
 			world.EntityManager.Add(ent);
 
 			ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-					Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_infused_bone"), Main.random.Next(4, 20), 1));
+				new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+					GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("brittle_infused_bone"), GlobalState.random.Next(4, 20), 1));
 			world.EntityManager.Add(ent);
 
 			if (!world.WorldInfo.flags.Flags.HasFlag(WorldLogics.WorldFlags.FlagValues.SKULLHEAD_DEAD))
@@ -260,7 +261,7 @@ namespace ViMG.Entities
 					stateTimer = Constants.ROTATE_TIME;
 					stateTime = Constants.ROTATE_TIME;
 
-					stateCounter = Main.random.NextCoinFlip() ? -1 : 1;
+					stateCounter = GlobalState.random.NextCoinFlip() ? -1 : 1;
 				}
 
 				ClampVelocityLength(Cube.CUBE_SCALE * 32f);

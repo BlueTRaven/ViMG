@@ -45,6 +45,7 @@
  */
 
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -164,7 +165,7 @@ namespace SMAADemo
             IMGUIConsole.Assert(_height > 0);
             IMGUIConsole.Assert(_device != null);
 
-            effect = Main.assetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
+            effect = GlobalState.assetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
 
             device = _device;
             width = _width;
@@ -208,8 +209,8 @@ namespace SMAADemo
 
 
             // Load the precomputed textures.
-            areaTex = Main.assetsManager.GetAsset<Texture2D>("AreaTexDX10");
-            searchTex = Main.assetsManager.GetAsset<Texture2D>("SearchTex");
+            areaTex = GlobalState.assetsManager.GetAsset<Texture2D>("AreaTexDX10");
+            searchTex = GlobalState.assetsManager.GetAsset<Texture2D>("SearchTex");
 
             // Create some handles for techniques and variables.
             zplanesHandle = effect.Parameters["zplanes"];
@@ -247,7 +248,7 @@ namespace SMAADemo
                     edgeTex = null;
                 }
 
-                //Main.assetsManager.UnloadAsset<Effect>("SMAA_" + _preset.ToString());
+                //GlobalState.assetsManager.UnloadAsset<Effect>("SMAA_" + _preset.ToString());
                 effect = null;
                 //effect.Dispose();
 

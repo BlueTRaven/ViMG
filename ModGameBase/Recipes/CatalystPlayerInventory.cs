@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace ViMG.Recipes
 					instance = recipe.Layout[i];
 				else instance = new ItemInstance();
 
-				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				itemSlots[i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 					instance);
 			}
@@ -40,7 +41,7 @@ namespace ViMG.Recipes
 			bounds.x += UIConstants.SIZE;
 			bounds.y = 0;
 
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
 
 			bounds.x += UIConstants.SIZE;
 
@@ -55,7 +56,7 @@ namespace ViMG.Recipes
 					instance = recipe.Outputs[i];
 				else instance = new ItemInstance();
 					
-				itemSlots[6 + i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				itemSlots[6 + i] = UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 					instance);
 			}
@@ -79,7 +80,7 @@ namespace ViMG.Recipes
 					instance = recipe.Layout[i];
 				}
 
-				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 					instance);
 			}
@@ -87,13 +88,13 @@ namespace ViMG.Recipes
 			bounds.x += textureSize;
 			bounds.y = 0;
 		
-			UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
 
 			bounds.x += textureSize;
 
 			for (int i = 0; i < recipe.Outputs.Length; i++)
 			{
-				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 					recipe.Outputs[i]);
 
@@ -105,7 +106,7 @@ namespace ViMG.Recipes
 
 		public void RegisterRecipes(List<Recipe> recipes)
 		{
-			ItemRegistry registry = Main.Registry.ItemRegistry;
+			ItemRegistry registry = GlobalState.Registry.ItemRegistry;
 
 			recipes.Add(new RecipeLayout("wood_platform", this, 
 				new ItemInstance[6] 
@@ -252,7 +253,7 @@ namespace ViMG.Recipes
 
 		public Texture2D GetTexture()
 		{
-			return Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
+			return GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory");
 		}
 
 		public RectangleF GetSourceRect()

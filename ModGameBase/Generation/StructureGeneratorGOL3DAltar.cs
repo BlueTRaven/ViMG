@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,9 +17,9 @@ namespace ViMG.Generation
 
         public StructureGeneratorGOL3DAltar(int seed, ChunkManager chunkManager) : base("GOL3D", seed, chunkManager)
         {
-            altarBrickCube = Main.Registry.CubeRegistry.Get("altar_brick");
-            altarCube = Main.Registry.CubeRegistry.Get("ancient_altar_generated");
-            stone = Main.Registry.CubeRegistry.Get("stone");
+            altarBrickCube = GlobalState.Registry.CubeRegistry.Get("altar_brick");
+            altarCube = GlobalState.Registry.CubeRegistry.Get("ancient_altar_generated");
+            stone = GlobalState.Registry.CubeRegistry.Get("stone");
         }
 
         protected override Structure[] GenerateOne(ref StructureTaskState state)

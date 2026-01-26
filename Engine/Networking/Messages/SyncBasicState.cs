@@ -97,7 +97,7 @@ namespace Engine.Networking.Messages
                 netMessage.deliveryMethod = DeliveryMethod.ReliableUnordered;
             }
 
-            double time = Main.Time;
+            double time = GlobalState.Time;
 
             // TODO this may be necessary
             // If we receive a FullSync and EntityUnloaded message together, the former might be processed AFTER the latter,
@@ -107,8 +107,8 @@ namespace Engine.Networking.Messages
             //    time += 0.25;
             //}
 
-            netMessage.writer.Put(Main.Time);
-            entity.entity.TimeSynced = Main.Time;
+            netMessage.writer.Put(GlobalState.Time);
+            entity.entity.TimeSynced = GlobalState.Time;
 
             netMessage.writer.Put(entity.entity.Id);
 
@@ -133,7 +133,7 @@ namespace Engine.Networking.Messages
                     }
                     break;
                 case SyncType.FullSync:
-                    entity.entity.TimeMajorSynced = Main.Time;
+                    entity.entity.TimeMajorSynced = GlobalState.Time;
                     var entityData = new EntityManagerIO.EntityData(entity.entity);
                     List<byte> bytes = new List<byte>();
                     entityData.Save(bytes);
@@ -196,7 +196,7 @@ namespace Engine.Networking.Messages
             foreach (QueuedSyncEntity queuedSync in queued)
             {
                 //Console.WriteLine("{0} Delay: {1:0.02}", Main.gameStateManager.TheIsland.netManager.whoAmI, (DateTime.Now - queuedSync.actualReceiveTime).TotalSeconds);
-                //if (Main.Time >= queuedSync.time)
+                //if (GlobalState.Time >= queuedSync.time)
                 //{
                 DoAction(queuedSync, entityManager, entIO);
                 //}
@@ -391,7 +391,7 @@ namespace Engine.Networking.Messages
                             {
                                 if ((entSerializableAttr.serializationType & EntitySerializableAttribute.SerializationType.Server) == EntitySerializableAttribute.SerializationType.Server)
                                 {
-                                    var regId = Main.Registry.EntityRegistry.GetFromEntity(ent).Id;
+                                    var regId = GlobalState.Registry.EntityRegistry.GetFromEntity(ent).Id;
                                     CubePosition[]? trackedPositions = null;
                                     if (ent is ICubeTracker tracker)
                                     {
@@ -441,7 +441,7 @@ namespace Engine.Networking.Messages
                             type = SyncStateType.MinorSync,
                             playerId = player.playerIndex,
                             reference = reference,
-                            typeNameMapping = Main.Registry.EntityRegistry.GetFromEntity(ent).Id, //typeNameToTypeId[ent.GetType().FullName],
+                            typeNameMapping = GlobalState.Registry.EntityRegistry.GetFromEntity(ent).Id, //typeNameToTypeId[ent.GetType().FullName],
                             basicSyncState = syncsBasicState,
                         });
                     }
@@ -489,7 +489,7 @@ namespace Engine.Networking.Messages
                             if (latestSeq - SyncWorldState.Instance.ServerSequence > EntityManager.EntPrevSrv)
                             {
                                 // Too old - do a major sync
-                                var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
+                                var entType = GlobalState.Registry.EntityRegistry.Get(ent.typeNameMapping);
                                 Console.WriteLine("Ent {0}:{1} sync timeout", entType.Identifier, ent.reference.id);
                                 prevState = new();
                                 useType = (byte)SyncStateType.MajorSync;
@@ -505,7 +505,7 @@ namespace Engine.Networking.Messages
                         }
                         else if (ent.type == SyncStateType.MajorSync)
                         {
-                            //var entType = Main.Registry.EntityRegistry.Get(ent.typeNameMapping);
+                            //var entType = GlobalState.Registry.EntityRegistry.Get(ent.typeNameMapping);
                             //Console.WriteLine("Server sent create ent {0} {1} ({2})", ent.reference.id, entType.Identifier, ent.typeNameMapping);
                             prevState = new();
                         }
@@ -635,7 +635,7 @@ namespace Engine.Networking.Messages
             SyncEntityStateAck.EntityAckArr ackArr = new();
 
             if (playerTypeId == -1)
-                playerTypeId = Main.Registry.EntityRegistry.Get(typeof(Player).FullName).Id;
+                playerTypeId = GlobalState.Registry.EntityRegistry.Get(typeof(Player).FullName).Id;
 
             int numBits = 0;
             int numBytes = 0;
@@ -676,7 +676,7 @@ namespace Engine.Networking.Messages
                         }
                     }
 
-                    var typeName = Main.Registry.EntityRegistry.Get((int)typeId)?.Identifier;
+                    var typeName = GlobalState.Registry.EntityRegistry.Get((int)typeId)?.Identifier;
                     //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)
                     {

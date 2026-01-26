@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -66,7 +67,7 @@ namespace ViMG.Cubes
                     break;
             }
 
-            if (data.GetId(parameters.position + opposite) == Main.Registry.CubeRegistry.Get("obelisk").Id)
+            if (data.GetId(parameters.position + opposite) == GlobalState.Registry.CubeRegistry.Get("obelisk").Id)
                 return new RectangleF(64, 176, 16, 16);
 
             return new RectangleF(160, 208, 16, 16);

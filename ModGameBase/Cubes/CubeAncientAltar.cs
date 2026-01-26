@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace ViMG.Cubes
 
 			if (dropsSelf)
 				DropSelf(itemsToDrop);
-			else itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
+			else itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("altar_dust"), 1, 1));
 		}
 
 		public override void PostChunkGen(WorldPrototype world, CubePosition position)

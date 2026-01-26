@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Engine.Common;
 using Microsoft.Xna.Framework;
@@ -42,10 +43,8 @@ namespace ViMG.Rendering
         {
             var previous = client.Previous(1);
             var current = client.Current();
-            previous.camera.FrameBegin();
-            current.camera.FrameBegin();
-            bool isDirty = previous.camera.Position != current.camera.Position || previous.camera.RotationEuler != current.camera.RotationEuler || previous.camera.Scale != current.camera.Scale;
-            if (isDirty) current.camera.MarkDirty();
+
+            client.currInterpState.camera.FrameBegin();
 
             var time = client.currInterpState.time;
 
@@ -170,9 +169,9 @@ namespace ViMG.Rendering
             var iter = client.ChunkManager.CubeProgressTracker.GetIter();
             foreach (var mined in iter)
             {
-                Cube cube = client.ChunkManager.CubeView.GetCube(mined.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = client.ChunkManager.CubeView.GetCube(mined.position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
-                if (cube != Main.Registry.CubeRegistry.Air)
+                if (cube != GlobalState.Registry.CubeRegistry.Air)
                 {
                     float percent = (float)mined.progress / (float)cube.MineProgressToBreak;
 

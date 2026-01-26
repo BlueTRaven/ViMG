@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -33,12 +34,12 @@ namespace ViMG.Items
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 
 			int bulletIndex = -1;
-			ItemInstance item = inventory.FindType(Main.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
+			ItemInstance item = inventory.FindType(GlobalState.Registry.ItemRegistry.Get("bullet_base"), out bulletIndex);
 			if (item.valid)
 			{
 				inventory.Remove(bulletIndex, 1);
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + (player as IRotatable).Right * 4,
-					Vector3.Normalize(facing) * 100, 2, Main.Registry.ProjectileRegistry.Get("musketball").Id, projStats),
+					Vector3.Normalize(facing) * 100, 2, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, projStats),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
 
 				return true;

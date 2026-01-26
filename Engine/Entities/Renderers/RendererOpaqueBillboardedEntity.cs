@@ -126,7 +126,7 @@ namespace ViMG.Entities.Renderers
                 // TODO get rid of str compare
                 if (current.entities.GetTypeById(reference.id) != type) continue;
 
-                var entInterp = client.currInterpState.entities.GetByRef(ref reference); //Main.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
+                var entInterp = client.currInterpState.entities.GetByRef(ref reference); //GlobalState.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
                 //var entCurr = client.Current().entities.GetById(reference.id);
                 //var entPrev = client.Previous(1).entities.GetById(reference.id);
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,10 +62,10 @@ namespace ViMG.Rendering
 
             public DrawMaterial(string name)
             {
-                Diffuse = Main.assetsManager.GetAsset<Texture2D>(name);
-                Normal = Main.assetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
-                Specular = Main.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.BlackPixel;
-                Emissive = Main.assetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
+                Diffuse = GlobalState.assetsManager.GetAsset<Texture2D>(name);
+                Normal = GlobalState.assetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
+                Specular = GlobalState.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.BlackPixel;
+                Emissive = GlobalState.assetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
 
                 if (Diffuse == null)
                     throw new Exception("AAAAA");
@@ -72,10 +73,10 @@ namespace ViMG.Rendering
 
             public DrawMaterial(string diffuseName, string? normalName, string? specularName, string? emissiveName)
             {
-                Diffuse = Main.assetsManager.GetAsset<Texture2D>(diffuseName);
-                Normal = normalName != null ? Main.assetsManager.GetAsset<Texture2D>(normalName) : DrawHelper.NormalPixel;
-                Specular = specularName != null ? Main.assetsManager.GetAsset<Texture2D>(specularName) : DrawHelper.BlackPixel;
-                Emissive = emissiveName != null ? Main.assetsManager.GetAsset<Texture2D>(emissiveName) : DrawHelper.BlackPixel;
+                Diffuse = GlobalState.assetsManager.GetAsset<Texture2D>(diffuseName);
+                Normal = normalName != null ? GlobalState.assetsManager.GetAsset<Texture2D>(normalName) : DrawHelper.NormalPixel;
+                Specular = specularName != null ? GlobalState.assetsManager.GetAsset<Texture2D>(specularName) : DrawHelper.BlackPixel;
+                Emissive = emissiveName != null ? GlobalState.assetsManager.GetAsset<Texture2D>(emissiveName) : DrawHelper.BlackPixel;
             }
         }
 
@@ -350,25 +351,25 @@ namespace ViMG.Rendering
 
             ConstructRTs(Options.CurrentWindowResolution);
 
-            EffectGBuffer = Main.assetsManager.GetAsset<Effect>("deferred_gbuffer");
-            EffectDeferred = Main.assetsManager.GetAsset<Effect>("deferred");
-            EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
-            EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
-            EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
-            EffectSkybox = Main.assetsManager.GetAsset<Effect>("skybox");
-            EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
-            EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
-            EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
-            EffectRadialFog = Main.assetsManager.GetAsset<Effect>("radial_fog");
-            EffectAurora = Main.assetsManager.GetAsset<Effect>("aurora");
-            EffectStars = Main.assetsManager.GetAsset<Effect>("stars");
+            EffectGBuffer = GlobalState.assetsManager.GetAsset<Effect>("deferred_gbuffer");
+            EffectDeferred = GlobalState.assetsManager.GetAsset<Effect>("deferred");
+            EffectLightAccumCSM = GlobalState.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
+            EffectLightAccumPointLight = GlobalState.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
+            EffectTransparent = GlobalState.assetsManager.GetAsset<Effect>("transparent");
+            EffectSkybox = GlobalState.assetsManager.GetAsset<Effect>("skybox");
+            EffectEmpty = GlobalState.assetsManager.GetAsset<Effect>("air");
+            EffectHDR = GlobalState.assetsManager.GetAsset<Effect>("hdr");
+            EffectFXAA = GlobalState.assetsManager.GetAsset<Effect>("fxaa");
+            EffectRadialFog = GlobalState.assetsManager.GetAsset<Effect>("radial_fog");
+            EffectAurora = GlobalState.assetsManager.GetAsset<Effect>("aurora");
+            EffectStars = GlobalState.assetsManager.GetAsset<Effect>("stars");
 
-            DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
+            DEBUGEffectVisualizeCubemap = GlobalState.assetsManager.GetAsset<Effect>("visualize_cubemap");
 
             //EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
 
-            //EffectRadialFog.Parameters["Color"].SetValue(Main.assetsManager.GetAsset<Texture2D>("fog_colormap"));
+            //EffectRadialFog.Parameters["Color"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("fog_colormap"));
 
             Main.WindowResizedEvent += ConstructRTs;
 

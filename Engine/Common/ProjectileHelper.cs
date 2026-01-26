@@ -77,7 +77,7 @@ namespace Engine.Common
                 CubePosition pos = positions[j];
                 ushort id = ids[j];
 
-                if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+                if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
                 {
                     if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectile.position,
                                                         stats.collisionRadius, out Vector3 change))

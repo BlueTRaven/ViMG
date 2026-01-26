@@ -40,7 +40,7 @@ namespace Engine.Entities
 
         public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
-            if (client.currInterpState.entities.GetTypeById(reference.id) == Main.Registry.EntityRegistry.Get<EntityItem>().Id)
+            if (client.currInterpState.entities.GetTypeById(reference.id) == GlobalState.Registry.EntityRegistry.Get<EntityItem>().Id)
             {
 
             }

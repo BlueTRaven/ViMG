@@ -28,7 +28,6 @@ namespace ViMG
 {
     public class Main : Game
     {
-		public static ArgParser Args = new ArgParser();
 		public static event Action<Point> WindowResizedEvent;
 		public static event EventHandler<TextInputEventArgs> WindowTextInputEvent;
 
@@ -45,18 +44,10 @@ namespace ViMG
 		//private World world;
 		public static GameStateManager gameStateManager;
 
-		public static Engine.Common.Camera camera;
-
 		public static InputManager inputManager;
-		public static ViMGAssetsManager assetsManager;
-		public static RegistryService Registry;
 
 		public static FrameCounter frameCounter;
 		public static int Frame;
-
-		public static Random random = new Random(SEED);
-
-		public const int SEED = 1338;
 
 		public static RasterizerState genericRS;
 		public static RasterizerState reverseRS;
@@ -69,18 +60,11 @@ namespace ViMG
 
 		private bool paused;
 
-#if DEBUG
-		public static bool Debug = true;
-#else
-		public static bool Debug = false;
-#endif
 
 		public static bool DebugChunks;
 		public static string DEBUGPopupText = "";
 
 		public static FogManager FogManager;
-		public static SessionInformation SessionInformation;
-		public static SessionIO SessionIO;
 
 		public const int FIXED_FPS = 60;
 
@@ -89,8 +73,6 @@ namespace ViMG
 
 		public static double TimeP = 0;
 		//public static double TimeC = 0;
-
-		public static Thread MainThread;
 
 		public static bool MouseControl;
 		public static bool DrawCursor;
@@ -101,29 +83,13 @@ namespace ViMG
 		private const bool NO_RENDER = false;
 		public const bool ENABLE_SHADOWS = true;
 		public const bool ENABLE_PCF = true;
-		public const bool GEN_BROAD = true;
-		public const bool GEN_DETAIL = true;
-		public const bool GEN_CAVES = false;
-		public const bool GEN_CUBE_POST_DETAIL = false;
+		
 		public const bool TRANSPARENT_ORES = false;
-		[ConsoleCommandVar("random_spawns", "enable random entity spawning")]
-		public static bool ENABLE_ENT_SPAWNING = false;
-		public const float RANDOM_UPDATES_TIME = 8f / 60f;
-		[ConsoleCommandVar("random_cube_updates", "enable random cube updates (grass spreading, etc)")]
-		public static bool ENABLE_RANDOM_UPDATES = false;
-		public const int RANDOM_UPDATES_PER_CHUNK = 1;
+		
 		public const bool DO_RENDER_MESHING = true;
 		public const bool DO_COLLISION_MESHING = true;
-		public const bool MULTITHREADING = true;
-		public const bool MULTITHREAD_BROAD_PHASE = MULTITHREADING && true;
-		public const bool MULTITHREAD_LOADING = MULTITHREADING && true;
-		public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
-		public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
-
-		public static double Time;
+		
         public static bool IsHeadless = false;
-
-        public static bool Exit = false;
 
 		//public static bool WorldLoaded = false;
 
@@ -140,13 +106,13 @@ namespace ViMG
         {
 			//FieldTest.DoTest();
 
-			MainThread = Thread.CurrentThread;
+			GlobalState.MainThread = Thread.CurrentThread;
 
-			SessionInformation = new SessionInformation();
-			SessionIO = new SessionIO();
-			SessionIO.Load(graphics);
+            GlobalState.SessionInformation = new SessionInformation();
+            GlobalState.SessionIO = new SessionIO();
+            GlobalState.SessionIO.Load(graphics);
 
-			Args.ParseArgs(args);
+            GlobalState.Args.ParseArgs(args);
 
 			graphics = new GraphicsDeviceManager(this)
 			{
@@ -157,15 +123,14 @@ namespace ViMG
 				PreferredBackBufferHeight = Options.CurrentWindowResolution.Y,
 			};
 
-			if (Args.windowPosition != null)
+			if (GlobalState.Args.windowPosition != null)
 			{
-				this.Window.Position = Args.windowPosition.Value;
+				this.Window.Position = GlobalState.Args.windowPosition.Value;
 			}
 
             Content.RootDirectory = "Content";
 
-			camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
-			assetsManager = new ViMGAssetsManager(Content);
+            GlobalState.assetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
 
@@ -252,8 +217,8 @@ namespace ViMG
 			Window.AllowUserResizing = true;
 
 			modManager.LoadModDlls();
-			Registry = new RegistryService(GraphicsDevice);
-			Registry.Register();
+            GlobalState.Registry = new RegistryService(GraphicsDevice);
+            GlobalState.Registry.Register();
 
 			//world = new World(GraphicsDevice, 512);
 
@@ -267,7 +232,11 @@ namespace ViMG
 		private void WindowResolutionChanged(object? sender, EventArgs args)
         {
 			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
-			camera.MarkDirty();
+			if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
+			{
+				theIsland.GetClient()?.currInterpState.camera.MarkDirty();
+				theIsland.GetClient()?.Current().camera.MarkDirty();
+			}
 
 			WindowResizedEvent?.Invoke(Options.CurrentWindowResolution);
 		}
@@ -280,7 +249,7 @@ namespace ViMG
 		protected override void LoadContent()
         {
 			batch = new SpriteBatch(GraphicsDevice);
-			assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
+            GlobalState.assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
 			gameStateManager.LoadContent(GraphicsDevice);
 		}
 
@@ -289,10 +258,8 @@ namespace ViMG
             TracyImpl.Tracy.FrameMark();
 			var zone = TracyImpl.Tracy.BeginZone();
 		
-            if (Exit)
+            if (GlobalState.Exit)
 				Exit();
-
-			camera.FrameBegin();
 
 			//WorldLoaded = world.LoadedFolderName != null;
 
@@ -312,7 +279,7 @@ namespace ViMG
 				//else ui.Update(GraphicsDevice, gt.ElapsedGameTime.TotalSeconds);
 
 				time += gt.ElapsedGameTime.TotalSeconds;
-			while (time >= FIXED_STEP && !Exit)
+			while (time >= FIXED_STEP && !GlobalState.Exit)
 			{
 				time -= FIXED_STEP;
 
@@ -334,13 +301,13 @@ namespace ViMG
 
             DEBUGPopupText = "";
 
-			Time += deltaTime;
+            GlobalState.Time += deltaTime;
 
 			inputManager.Update(new GameTime());
 
 			if (inputManager.JustPressed(Keys.F1))
 			{
-				Debug = !Debug;
+                GlobalState.Debug = !GlobalState.Debug;
 			}
 
 			if (inputManager.JustPressed(Keys.P))
@@ -409,7 +376,7 @@ namespace ViMG
 
 			batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-			if (Debug)
+			if (GlobalState.Debug)
 			{
 				//TextHelper.FontInfo font = new TextHelper.FontInfo(assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
@@ -66,10 +67,10 @@ namespace ViMG.Cubes
 
         public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
         {
-            chains ??= Main.Registry.CubeRegistry.Get("ceiling_chains");
+            chains ??= GlobalState.Registry.CubeRegistry.Get("ceiling_chains");
 
-            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
             if (aboveCube != cube)
             {

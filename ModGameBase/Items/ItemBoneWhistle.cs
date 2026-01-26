@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -34,7 +35,7 @@ namespace ViMG.Items
         public static bool HasBoneWhistle(Player player)
         {
             var accessoryInventory = player.world.InventoryManager.Get(player.accessoryInventory);
-            return accessoryInventory.Find(Main.Registry.ItemRegistry.Get("bone_whistle")).valid;
+            return accessoryInventory.Find(GlobalState.Registry.ItemRegistry.Get("bone_whistle")).valid;
         }
     }
 }

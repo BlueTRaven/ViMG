@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,7 +44,7 @@ namespace ViMG.Items
 
 				//CUBE_SCALE * 15
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
-					Vector3.Normalize(facing) * rangedAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, Main.Registry.ProjectileRegistry.Get("arrow").Id, stats, index),
+					Vector3.Normalize(facing) * rangedAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("arrow").Id, stats, index),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 				if (projectile != -1)
 				{

@@ -11,6 +11,7 @@ using ViMG.Rendering;
 using ViMG.Buffs;
 using Engine.Networking;
 using Engine.Common;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -145,7 +146,7 @@ namespace ViMG.Entities
                         {
 							ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
 								HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
-							int visStatsId = Main.Registry.ProjectileRegistry.Get("imp_fireball").Id;
+							int visStatsId = GlobalState.Registry.ProjectileRegistry.Get("imp_fireball").Id;
 							//ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(
 							//	new RectangleF(32, 0, 16, 16), Cube.CUBE_SCALE, 
 							//	Color.Red.ToVector4(), new Vector2(Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE * 4));
@@ -173,11 +174,11 @@ namespace ViMG.Entities
 					{
 						idleHome = new Vector2(Position.X, Position.Z);
 
-						idleTimer = Main.random.NextFloat(4f, 12f);
-						idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-						idleMovements = Main.random.Next(2, 6);
+						idleTimer = GlobalState.random.NextFloat(4f, 12f);
+						idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
+						idleMovements = GlobalState.random.Next(2, 6);
 
-						idleDirection = Main.random.NextAngle();
+						idleDirection = GlobalState.random.NextAngle();
 					}
 					else
 					{
@@ -189,8 +190,8 @@ namespace ViMG.Entities
 						if (idleTimer <= 0 && idleMoveTimer <= 0)
 						{
 							idleMovements--;
-							idleDirection = Main.random.NextAngle();
-							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+							idleDirection = GlobalState.random.NextAngle();
+							idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
 						}
 					}
 
@@ -274,7 +275,7 @@ namespace ViMG.Entities
 				CubePosition pos = positions[i];
 				ushort id = ids[i];
 
-				if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+                if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 				{
 					Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -305,7 +306,7 @@ namespace ViMG.Entities
 				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 					(Vector3 pos) =>
 					{
-						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 						return cube.Collision != Cube.CollisionValue.None;
 					});

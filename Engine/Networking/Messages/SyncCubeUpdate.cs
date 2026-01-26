@@ -63,7 +63,7 @@ namespace Engine.Networking.Messages
                 newProgress = progress,
                 position = position,
                 playerId = (sbyte)playerId,
-                time = Main.Time,
+                time = GlobalState.Time,
             });
         }
 
@@ -266,7 +266,7 @@ namespace Engine.Networking.Messages
     //                }
     //                //else
     //                //{
-    //                //    if (Main.Time - activeAudits[i][j].time >= TIMEOUT)
+    //                //    if (GlobalState.Time - activeAudits[i][j].time >= TIMEOUT)
     //                //    {
     //                //        RollbackAction(activeAudits[i][j]);
     //                //        activeAudits[i][j].active = false;

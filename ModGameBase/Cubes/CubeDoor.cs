@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace ViMG.Cubes
         {
             var above = manager.CubeView.GetCube(position + new CubePosition(0, 1, 0));
 
-            if (above.GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air)
+            if (above.GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Air)
                 return true;
             else return false;
         }

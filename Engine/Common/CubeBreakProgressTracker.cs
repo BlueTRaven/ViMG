@@ -32,7 +32,7 @@ namespace Engine.Common
             {
                 BreakProgress mc = mined.Value;
 
-                Cube cube = cubeView.GetCube(mc.position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = cubeView.GetCube(mc.position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
                 mc.timer -= (float)deltaTime;
                 if (mc.timer <= 0)
@@ -41,7 +41,7 @@ namespace Engine.Common
                     mc.timer = 2;
                 }
 
-                if (mc.progress <= 0 || cube == Main.Registry.CubeRegistry.Air)
+                if (mc.progress <= 0 || cube == GlobalState.Registry.CubeRegistry.Air)
                     toRemoveLater.Add(mc.position);
                 else toUpdateLater.Add(mc);
             }
@@ -87,7 +87,7 @@ namespace Engine.Common
                 curProgress = foundProgress;
             }
 
-            Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube cube = cubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             if (curProgress.progress >= cube.MineProgressToBreak)
             {
@@ -121,7 +121,7 @@ namespace Engine.Common
                 curProgress = foundProgress;
             }
 
-            Cube cube = cubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube cube = cubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             if (curProgress.progress >= cube.MineProgressToBreak)
             {

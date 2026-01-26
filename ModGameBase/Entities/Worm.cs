@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -42,7 +43,7 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
-            Cube c = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube c = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             Rectangle3D cubeBounds;
 

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -23,8 +24,8 @@ namespace ViMG.Items
 
 			this.CubeId = cubeId;
 
-			name = Main.Registry.CubeRegistry.Get(cubeId).Name;
-			description = Main.Registry.CubeRegistry.Get(cubeId).Description;
+			name = GlobalState.Registry.CubeRegistry.Get(cubeId).Name;
+			description = GlobalState.Registry.CubeRegistry.Get(cubeId).Description;
 		}
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -64,7 +65,7 @@ namespace ViMG.Items
         {
             //base.Draw(device, transform);
 
-            Cube cube = Main.Registry.CubeRegistry.Get((this.item as ItemCube).CubeId) ?? Main.Registry.CubeRegistry.Air;
+            Cube cube = GlobalState.Registry.CubeRegistry.Get((this.item as ItemCube).CubeId) ?? GlobalState.Registry.CubeRegistry.Air;
 
             var mesh = cube.Client.GetHeldMesh(device);
 

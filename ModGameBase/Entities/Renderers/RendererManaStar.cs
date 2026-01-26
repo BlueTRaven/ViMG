@@ -11,6 +11,7 @@ using BrUtility;
 using ViMG.Rendering;
 using Microsoft.Xna.Framework;
 using Engine.Clients;
+using Engine;
 
 namespace ViMG.Entities.Renderers
 {
@@ -34,7 +35,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types == null)
-                types = [Main.Registry.EntityRegistry.Get<ManaStar>().Id];
+                types = [GlobalState.Registry.EntityRegistry.Get<ManaStar>().Id];
             return types;
         }
 

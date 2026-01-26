@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,7 +26,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types[0] == 0)
-                types[0] = Main.Registry.EntityRegistry.Get<Line>().Id;
+                types[0] = GlobalState.Registry.EntityRegistry.Get<Line>().Id;
             return types;
         }
 
@@ -40,14 +41,14 @@ namespace ViMG.Entities.Renderers
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
                 var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
-                var endPosition = Vector3.Lerp(entPrev.rotation.ToVector4().ToVector3(), entCurr.rotation.ToVector4().ToVector3(), (float)Main.TimeP);
+                var endPosition = Vector3.Lerp(entPrev.rotation.ToVector4().ToVector3(), entCurr.rotation.ToVector4().ToVector3(), (float)client.TimeC);
                 var time = entPrev.GetInterpTimer(entCurr, 0, client.TimeC);
                 var width = entPrev.GetInterpTimer(entCurr, 1, client.TimeC);
                 var tileHeight = entPrev.GetInterpTimer(entCurr, 2, client.TimeC);
                 var alive = entPrev.GetInterpTimer(entCurr, 3, client.TimeC);
                 var colorPrev = new Color((uint)entPrev.counters[0]);
                 var colorCurr = new Color((uint)entCurr.counters[0]);
-                var color = Color.Lerp(colorPrev, colorCurr, (float)Main.TimeP);
+                var color = Color.Lerp(colorPrev, colorCurr, (float)client.TimeC);
                 var materialSet = entCurr.counters[1];
 
                 (RendererDeferred.DrawMaterial material, RectangleF sourceRectangle) = Line.GetMaterialFromSet(materialSet);

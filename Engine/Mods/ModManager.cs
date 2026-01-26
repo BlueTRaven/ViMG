@@ -14,9 +14,9 @@ namespace Engine.Mods
         
         public void LoadModDlls()
         {
-            foreach (string str in Main.SessionInformation.LoadedMods)
+            foreach (string str in GlobalState.SessionInformation.LoadedMods)
             {
-                string? modsFolder = Main.SessionInformation.ModsFolder;
+                string? modsFolder = GlobalState.SessionInformation.ModsFolder;
 
                 if (modsFolder == null)
                 {

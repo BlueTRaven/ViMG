@@ -4,6 +4,7 @@ using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Common.Entities;
 using Microsoft.Xna.Framework;
@@ -215,7 +216,7 @@ namespace ViMG
 
                 if (task.Status == TaskStatus.Created)
                 {
-                    if (Main.MULTITHREAD_MESHING)
+                    if (GlobalState.MULTITHREAD_MESHING)
                         task.Start();
                     else task.RunSynchronously();
                 }
@@ -377,7 +378,7 @@ namespace ViMG
 
                         if (task.task.Status == TaskStatus.Created)
                         {
-                            if (Main.MULTITHREAD_MESHING)
+                            if (GlobalState.MULTITHREAD_MESHING)
                                 task.task.Start();
                             else task.task.RunSynchronously();
                         }

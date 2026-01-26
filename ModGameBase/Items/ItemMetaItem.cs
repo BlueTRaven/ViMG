@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -18,7 +19,7 @@ namespace ViMG.Items
 		public T Get(ItemInstance item)
 		{
 			//fallback is item 1
-			Item metaBaseItem = Main.Registry.ItemRegistry.GetOrDefault(item.damage, Main.Registry.ItemRegistry.Get(1));
+			Item metaBaseItem = GlobalState.Registry.ItemRegistry.GetOrDefault(item.damage, GlobalState.Registry.ItemRegistry.Get(1));
 
 			return metaBaseItem as T;
 		}
@@ -64,7 +65,7 @@ namespace ViMG.Items
 
                 meta.Client.DrawInInventory(batch, item, position, scale);
             }
-            else batch.Draw(Main.assetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            else batch.Draw(GlobalState.assetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

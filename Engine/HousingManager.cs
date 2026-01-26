@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -125,7 +126,7 @@ namespace ViMG
                 //If this is the case just choose a random block I guess...
                 //TODO make this more robust
                 if (housing.homePosition == position)
-                    checkPos = housing.interiorPositions[Main.random.Next(0, housing.interiorPositions.Length)];
+                    checkPos = housing.interiorPositions[GlobalState.random.Next(0, housing.interiorPositions.Length)];
 
                 HousingValidity valid = DetermineIfValidHousing(world, checkPos, out Housing newHousing);
 
@@ -199,7 +200,7 @@ namespace ViMG
 
                 CubePosition fillPosition = floodFills.Dequeue();
 
-                Cube cube = world.ChunkManager.CubeView.GetCube(fillPosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = world.ChunkManager.CubeView.GetCube(fillPosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
                 bool isWall = cube.Solid || cube.Collision == Cube.CollisionValue.Door;
                 bool isAir = !cube.Solid;

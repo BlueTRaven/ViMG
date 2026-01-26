@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using Hexa.NET.ImGui;
@@ -310,13 +311,13 @@ namespace ViMG.IMGUIImpl
         [ConsoleCommand("quit", "Exits the program.")]
         public static void QuitCommand(string[] parameters)
         {
-            Main.Exit = true;
+            GlobalState.Exit = true;
         }
 
         [ConsoleCommand("exit", "Exits the program.")]
         public static void ExitCommand(string[] parameters)
         {
-            Main.Exit = true;
+            GlobalState.Exit = true;
         }
 
         public static bool RequireParam(string[] parameters, int index, string paramName, string[] options = null)
@@ -364,9 +365,9 @@ namespace ViMG.IMGUIImpl
 
         public static unsafe void Console()
         {
-            if (Main.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
+            if (GlobalState.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
             {
-                lastRunTime = (float)Main.Time;
+                lastRunTime = (float)GlobalState.Time;
                 File.WriteAllLines("current_run.txt", commandHistory.Buffer[0..commandHistory.Length]);
 
                 lastRunLines1 = lastRunLines;

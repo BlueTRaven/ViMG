@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -54,7 +55,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedImp : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedImp() : base("imp", Main.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"))
+            public RenderedImp() : base("imp", GlobalState.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"))
             {
             }
 
@@ -90,7 +91,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSkeleton : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSkeleton() : base("skeleton", Main.Registry.EntityRegistry.Get<Skeleton>().Id, new RendererDeferred.DrawMaterial("skeleton"))
+            public RenderedSkeleton() : base("skeleton", GlobalState.Registry.EntityRegistry.Get<Skeleton>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -116,7 +117,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSkeleton2 : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSkeleton2() : base("skeleton2", Main.Registry.EntityRegistry.Get<Skeleton2>().Id, new RendererDeferred.DrawMaterial("skeleton"))
+            public RenderedSkeleton2() : base("skeleton2", GlobalState.Registry.EntityRegistry.Get<Skeleton2>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -136,7 +137,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSkeletonBonePile : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSkeletonBonePile() : base("skeleton_bonepile", Main.Registry.EntityRegistry.Get<SkeletonBonePile>().Id, new RendererDeferred.DrawMaterial("skeleton"))
+            public RenderedSkeletonBonePile() : base("skeleton_bonepile", GlobalState.Registry.EntityRegistry.Get<SkeletonBonePile>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
             }
 
@@ -156,7 +157,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedBigSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedBigSlime() : base("slime_big", Main.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
+            public RenderedBigSlime() : base("slime_big", GlobalState.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
             public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
@@ -188,7 +189,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSlime() : base(typeof(Slime).FullName, Main.Registry.EntityRegistry.Get<Slime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
+            public RenderedSlime() : base(typeof(Slime).FullName, GlobalState.Registry.EntityRegistry.Get<Slime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
 
@@ -220,7 +221,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedCaveSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedCaveSlime() : base("slime_cave", Main.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
+            public RenderedCaveSlime() : base("slime_cave", GlobalState.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
             private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
             public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
@@ -251,7 +252,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedGhost : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedGhost() : base("ghost", Main.Registry.EntityRegistry.Get<Ghost>().Id, new RendererDeferred.DrawMaterial("grave_ghost"))
+            public RenderedGhost() : base("ghost", GlobalState.Registry.EntityRegistry.Get<Ghost>().Id, new RendererDeferred.DrawMaterial("grave_ghost"))
             {
             }
 
@@ -317,7 +318,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedCultist : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedCultist() : base("cultist", Main.Registry.EntityRegistry.Get<Cultist>().Id, new RendererDeferred.DrawMaterial("cultist"))
+            public RenderedCultist() : base("cultist", GlobalState.Registry.EntityRegistry.Get<Cultist>().Id, new RendererDeferred.DrawMaterial("cultist"))
             {
             }
 
@@ -354,7 +355,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedDucken : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedDucken() : base("ducken", Main.Registry.EntityRegistry.Get<Ducken>().Id, new RendererDeferred.DrawMaterial("ducken"))
+            public RenderedDucken() : base("ducken", GlobalState.Registry.EntityRegistry.Get<Ducken>().Id, new RendererDeferred.DrawMaterial("ducken"))
             {
             }
 
@@ -429,7 +430,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedGhoul : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedGhoul() : base("ghoul", Main.Registry.EntityRegistry.Get<Ghoul>().Id, new RendererDeferred.DrawMaterial("ghoul"))
+            public RenderedGhoul() : base("ghoul", GlobalState.Registry.EntityRegistry.Get<Ghoul>().Id, new RendererDeferred.DrawMaterial("ghoul"))
             {
 
             }
@@ -454,7 +455,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedGlowNode : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedGlowNode() : base("glow_node", Main.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial("glow_node"))
+            public RenderedGlowNode() : base("glow_node", GlobalState.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial("glow_node"))
             {
                 Material.Emissive = DrawHelper.WhitePixel;
             }
@@ -493,7 +494,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedLeviathan : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedLeviathan() : base("leviathan", Main.Registry.EntityRegistry.Get<EntityLeviathan>().Id, new RendererDeferred.DrawMaterial("leviathan"))
+            public RenderedLeviathan() : base("leviathan", GlobalState.Registry.EntityRegistry.Get<EntityLeviathan>().Id, new RendererDeferred.DrawMaterial("leviathan"))
             {
             }
 
@@ -515,7 +516,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedHeart : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedHeart() : base("heart", Main.Registry.EntityRegistry.Get<Heart>().Id, new RendererDeferred.DrawMaterial("heart"))
+            public RenderedHeart() : base("heart", GlobalState.Registry.EntityRegistry.Get<Heart>().Id, new RendererDeferred.DrawMaterial("heart"))
             {
             }
 
@@ -546,7 +547,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedPlayerBubble : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedPlayerBubble() : base("player_bubble", Main.Registry.EntityRegistry.Get<PlayerBubble>().Id, new RendererDeferred.DrawMaterial("bubble"))
+            public RenderedPlayerBubble() : base("player_bubble", GlobalState.Registry.EntityRegistry.Get<PlayerBubble>().Id, new RendererDeferred.DrawMaterial("bubble"))
             {
             }
 
@@ -574,7 +575,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSnake : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSnake() : base("snake", Main.Registry.EntityRegistry.Get<Snake>().Id, new RendererDeferred.DrawMaterial("snake"))
+            public RenderedSnake() : base("snake", GlobalState.Registry.EntityRegistry.Get<Snake>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
@@ -635,7 +636,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSnakeFlying : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedSnakeFlying() : base("snake_flying", Main.Registry.EntityRegistry.Get<SnakeFlying>().Id, new RendererDeferred.DrawMaterial("snake"))
+            public RenderedSnakeFlying() : base("snake_flying", GlobalState.Registry.EntityRegistry.Get<SnakeFlying>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
@@ -686,7 +687,7 @@ namespace ViMG.Entities.Renderers
                 back = new RectangleF(0, 32, 16, 16)
             };
 
-            public RenderedStoneBeetle() : base("stone_beetle", Main.Registry.EntityRegistry.Get<StoneBeetle>().Id, new RendererDeferred.DrawMaterial("stone_beetle"))
+            public RenderedStoneBeetle() : base("stone_beetle", GlobalState.Registry.EntityRegistry.Get<StoneBeetle>().Id, new RendererDeferred.DrawMaterial("stone_beetle"))
             {
             }
 
@@ -725,7 +726,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedTestNPC : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedTestNPC(int type) : base(Main.Registry.EntityRegistry.Get(type).Identifier, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
+            public RenderedTestNPC(int type) : base(GlobalState.Registry.EntityRegistry.Get(type).Identifier, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
             {
             }
 
@@ -750,7 +751,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedLightStressTest : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedLightStressTest() : base("light_stress_test", Main.Registry.EntityRegistry.Get<LightStressTest>().Id, new RendererDeferred.DrawMaterial("glow_node"))
+            public RenderedLightStressTest() : base("light_stress_test", GlobalState.Registry.EntityRegistry.Get<LightStressTest>().Id, new RendererDeferred.DrawMaterial("glow_node"))
             {
             }
 
@@ -779,7 +780,7 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedWorm : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public RenderedWorm() : base("worm", Main.Registry.EntityRegistry.Get<Worm>().Id, new RendererDeferred.DrawMaterial("worm"))
+            public RenderedWorm() : base("worm", GlobalState.Registry.EntityRegistry.Get<Worm>().Id, new RendererDeferred.DrawMaterial("worm"))
             {
             }
 
@@ -820,7 +821,7 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new RenderedCaveSlime());
             renderer.registry.Register(new RenderedGhost());
             renderer.registry.Register(new RenderedCultist());
-            renderer.registry.Register(new RenderedGeneric("salamander", Main.Registry.EntityRegistry.Get<CaveSalamander>().Id, new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
+            renderer.registry.Register(new RenderedGeneric("salamander", GlobalState.Registry.EntityRegistry.Get<CaveSalamander>().Id, new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
             renderer.registry.Register(new RenderedDucken());
             renderer.registry.Register(new RenderedGhoul());
             renderer.registry.Register(new RenderedGlowNode());
@@ -830,8 +831,8 @@ namespace ViMG.Entities.Renderers
             renderer.registry.Register(new RenderedSnake());
             renderer.registry.Register(new RenderedSnakeFlying());
             renderer.registry.Register(new RenderedStoneBeetle());
-            renderer.registry.Register(new RenderedTestNPC(Main.Registry.EntityRegistry.Get<TestNPC>().Id));
-            //renderer.registry.Register(new RenderedTestNPC(Main.Registry.EntityRegistry.Get<Player>().Id));
+            renderer.registry.Register(new RenderedTestNPC(GlobalState.Registry.EntityRegistry.Get<TestNPC>().Id));
+            //renderer.registry.Register(new RenderedTestNPC(GlobalState.Registry.EntityRegistry.Get<Player>().Id));
             renderer.registry.Register(new RenderedLightStressTest());
             renderer.registry.Register(new RenderedWorm());
         }

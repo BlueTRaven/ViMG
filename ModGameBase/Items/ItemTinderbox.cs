@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -32,14 +33,14 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
 			{
 				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
-					Cube cube = Main.Registry.CubeRegistry.Get("campfire");
+					Cube cube = GlobalState.Registry.CubeRegistry.Get("campfire");
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos)

@@ -8,6 +8,7 @@ using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
 using SharpDX.MediaFoundation;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -205,7 +206,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -239,7 +240,7 @@ namespace ViMG.Entities
 						var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
 							(Vector3 pos) =>
 							{
-								Cube cube = entity.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+								Cube cube = entity.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 								return cube.Collision != Cube.CollisionValue.None;
 							});

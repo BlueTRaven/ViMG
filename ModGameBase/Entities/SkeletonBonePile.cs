@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -46,9 +47,9 @@ namespace ModGameBase.Entities
             base.OnKill();
 
             EntityItem ent = new EntityItem(Position,
-            new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
-            new ViMG.Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
+            new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+                    GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+            new ViMG.Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
             world.EntityManager.Add(ent);
         }
 
@@ -143,7 +144,7 @@ namespace ModGameBase.Entities
 
         private bool SearchForNearbyBoneBlocks()
         {
-            Cube boneBlock = Main.Registry.CubeRegistry.Get("brittle_bone_block");
+            Cube boneBlock = GlobalState.Registry.CubeRegistry.Get("brittle_bone_block");
 
             const int searchRadius = 4;
 
@@ -156,7 +157,7 @@ namespace ModGameBase.Entities
                     {
                         CubePosition checkPos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-                        if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
+                        if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == boneBlock)
                         {
                             trackBoneBlockPosition = checkPos;
 

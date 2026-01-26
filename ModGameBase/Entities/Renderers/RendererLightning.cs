@@ -31,8 +31,8 @@ namespace ViMG.Entities.Renderers
             {
                 types =
                 [
-                    Main.Registry.EntityRegistry.Get<Lightning>().Id,
-                    Main.Registry.EntityRegistry.Get<AimedLightning>().Id,
+                    GlobalState.Registry.EntityRegistry.Get<Lightning>().Id,
+                    GlobalState.Registry.EntityRegistry.Get<AimedLightning>().Id,
                 ];
             }
             return types;
@@ -52,7 +52,7 @@ namespace ViMG.Entities.Renderers
                 var entPrev = client.Previous(1).entities.GetById(reference.id);
 
                 // TODO cache this id
-                if (type == Main.Registry.EntityRegistry.Get<Lightning>().Id)
+                if (type == GlobalState.Registry.EntityRegistry.Get<Lightning>().Id)
                 {
                     positions.Clear();
 
@@ -86,7 +86,7 @@ namespace ViMG.Entities.Renderers
                         DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
                     }
                 }
-                if (type == Main.Registry.EntityRegistry.Get<AimedLightning>().Id)
+                if (type == GlobalState.Registry.EntityRegistry.Get<AimedLightning>().Id)
                 {
                     positions.Clear();
                     basePositions.Clear();

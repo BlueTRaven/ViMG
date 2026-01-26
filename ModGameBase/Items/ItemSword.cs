@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -59,7 +60,7 @@ namespace ViMG.Items
 
 		public static ItemInstance CreateSword(ItemInstance itemBlade)
 		{
-			return new ItemInstance(Main.Registry.ItemRegistry.Get("sword"), 1, itemBlade.item.Id);
+			return new ItemInstance(GlobalState.Registry.ItemRegistry.Get("sword"), 1, itemBlade.item.Id);
 		}
 	}
 }

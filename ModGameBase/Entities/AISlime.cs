@@ -9,6 +9,7 @@ using ViMG.Cubes;
 using BrUtility;
 using BepuPhysics.CollisionDetection;
 using Engine.Networking;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -183,7 +184,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 

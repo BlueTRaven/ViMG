@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -35,7 +36,7 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, otherHitbox);
 
-            player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("leather_glove")));
+            player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("leather_glove")));
         }
     }
 }

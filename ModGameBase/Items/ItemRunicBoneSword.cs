@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -64,7 +65,7 @@ namespace ViMG.Items
 
             player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Center.X,
                 otherHitbox.bounds.Top, otherHitbox.bounds.Center.Z), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
-                batchStats, Main.Registry.ProjectileRegistry.Get("bone").Id, stats,
+                batchStats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id, stats,
                 new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
         }
     }

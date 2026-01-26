@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.MediaFoundation;
@@ -87,7 +88,7 @@ namespace ViMG.Entities
             ai.TurnSpeed = MathHelper.ToRadians(3f);
             ai.CollidesWithWorld = false;
 
-            anchor = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
+            anchor = new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
         }
 
         public override void OnUnload()
@@ -122,9 +123,9 @@ namespace ViMG.Entities
             else
             {
                 anchor = new Vector3(
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
-                    Main.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
+                    GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
+                    GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 12, Cube.CUBE_SCALE * 12), 
+                    GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 8, Cube.CUBE_SCALE * 8));
 
                 newAnchorTimer = 5;
             }

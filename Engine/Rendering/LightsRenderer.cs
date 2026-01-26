@@ -173,7 +173,7 @@ namespace Engine.Rendering
             device.DepthStencilState = dss;
             device.RasterizerState = rs;
 
-            Effect effectDepth = Main.assetsManager.GetAsset<Effect>("depth_pointlight");
+            Effect effectDepth = GlobalState.assetsManager.GetAsset<Effect>("depth_pointlight");
 
             bool anyDrawn = false;
 

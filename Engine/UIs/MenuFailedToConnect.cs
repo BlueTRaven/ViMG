@@ -31,8 +31,8 @@ namespace Engine.UIs
             this.failReason = failReason;
             this.connectIp = connectIp;
             this.connectPort = connectPort;
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
-            uiTex = Main.assetsManager.GetAsset<Texture2D>("ui_buttons");
+            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            uiTex = GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons");
 
             buttonParams = new UI.ButtonConstructionParameters
             {

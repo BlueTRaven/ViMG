@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
 using BrUtility;
+using Engine;
 
 namespace ViMG.Spawners
 {
@@ -51,8 +52,8 @@ namespace ViMG.Spawners
             if (position.Y > 160)
                 return false;
 
-            Cube c = manager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("stone"))
+            Cube c = manager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            if (c == GlobalState.Registry.CubeRegistry.Get("dirt") || c == GlobalState.Registry.CubeRegistry.Get("stone"))
                 return true;
 
             return false;
@@ -65,7 +66,7 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (Main.random.NextCoinFlip() || flyingSnakes.Count >= GetSpawnCap())
+            if (GlobalState.random.NextCoinFlip() || flyingSnakes.Count >= GetSpawnCap())
             {
                 if (snakes.Count < GetSpawnCap())
                 {

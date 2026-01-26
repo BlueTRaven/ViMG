@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
+using Engine;
 
 namespace ViMG.Generation
 {
@@ -33,14 +34,14 @@ namespace ViMG.Generation
 
         public StructureGeneratorGOL3DShrooms(int seed, ChunkManager chunkManager) : base("GOL3D Shrooms", seed, chunkManager)
         {
-            stone = Main.Registry.CubeRegistry.Get("stone");
-            mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
-            stoneCoveredOrange = Main.Registry.CubeRegistry.Get("stone_covered_orange");
-            stoneCoveredPurple = Main.Registry.CubeRegistry.Get("stone_covered_purple");
-            /*mushroomOrangeTop = Main.Registry.CubeRegistry.Get("mushroom_orange_top");
-            mushroomOrangeSmall = Main.Registry.CubeRegistry.Get("mushroom_orange_small");
-            mushroomPurpleTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
-            mushroomPurpleSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");*/
+            stone = GlobalState.Registry.CubeRegistry.Get("stone");
+            mushroomStem = GlobalState.Registry.CubeRegistry.Get("mushroom_stem");
+            stoneCoveredOrange = GlobalState.Registry.CubeRegistry.Get("stone_covered_orange");
+            stoneCoveredPurple = GlobalState.Registry.CubeRegistry.Get("stone_covered_purple");
+            /*mushroomOrangeTop = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_top");
+            mushroomOrangeSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_orange_small");
+            mushroomPurpleTop = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_top");
+            mushroomPurpleSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_small");*/
         }
 
         protected unsafe override Structure[] GenerateOne(ref StructureTaskState state)

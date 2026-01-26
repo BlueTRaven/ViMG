@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Engine;
+using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
@@ -52,10 +53,10 @@ namespace ViMG.GameStates
         private static bool parsedArgs = false;
         public void Update(double deltaTime)
         {
-            //if (!parsedArgs && Main.Args.startMode == "TheIsland")
+            //if (!parsedArgs && GlobalState.Args.startMode == "TheIsland")
             //{
-            //    var netMode = Enum.Parse<NetworkingMode>(Main.Args.networkingMode);
-            //    if ((netMode == NetworkingMode.Client && Main.Time > 1) || netMode != NetworkingMode.Client)
+            //    var netMode = Enum.Parse<NetworkingMode>(GlobalState.Args.networkingMode);
+            //    if ((netMode == NetworkingMode.Client && GlobalState.Time > 1) || netMode != NetworkingMode.Client)
             //    {
             //        Continue(netMode);
             //        parsedArgs = true;
@@ -90,18 +91,18 @@ namespace ViMG.GameStates
 
         public void Continue(NetworkingMode netMode, string ip, int port)
         {
-            if (Main.SessionInformation.LastLoadedSave != null)
+            if (GlobalState.SessionInformation.LastLoadedSave != null)
             {
                 this.netMode = netMode;
                 TheIsland.localPlayerName = MenuMain.GetDefaultPlayerName(this);
                 SetGameState(TheIsland);
                 if (netMode == NetworkingMode.Singleplayer)
                 {
-                    TheIsland.StartSingleplayer(Main.SessionInformation.LastLoadedSave);
+                    TheIsland.StartSingleplayer(GlobalState.SessionInformation.LastLoadedSave);
                 }
                 else if (netMode == NetworkingMode.Server)
                 {
-                    TheIsland.StartServer(Main.SessionInformation.LastLoadedSave, ip, port);
+                    TheIsland.StartServer(GlobalState.SessionInformation.LastLoadedSave, ip, port);
                 }
                 else if (netMode == NetworkingMode.Client)
                 {

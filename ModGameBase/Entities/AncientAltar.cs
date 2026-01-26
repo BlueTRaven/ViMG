@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Common;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -40,7 +41,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			breatheOffset = Main.random.NextFloat(0, 10f);
+			breatheOffset = GlobalState.random.NextFloat(0, 10f);
         }
 
         public bool OnInteract(Player player)
@@ -96,7 +97,7 @@ namespace ViMG.Entities
 
 		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 		//		Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
-		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 		//		DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
 		//		Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
 		//		Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));*/

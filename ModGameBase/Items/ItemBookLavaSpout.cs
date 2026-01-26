@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,7 +43,7 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + Vector3.Normalize(facing) * (Cube.CUBE_SCALE / 3f),
-                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, Main.Registry.ProjectileRegistry.Get("lava").Id, stats, index),
+                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("lava").Id, stats, index),
                     new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
 
                 return true;

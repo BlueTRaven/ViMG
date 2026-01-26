@@ -123,7 +123,7 @@ namespace Engine.Items
 		{
 			foreach (var action in events)
 			{
-				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", Main.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", GlobalState.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
 				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
 				{
 					inventory = new InventoryManager.InventoryReference((ushort)id, (short)generation),
@@ -131,7 +131,7 @@ namespace Engine.Items
 					inventoryIndex = action.index,
 					oldInstance = action.oldInstance,
 					newInstance = action.newInstance,
-					time = Main.Time
+					time = GlobalState.Time
 				};
 
                 Main.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
@@ -183,10 +183,10 @@ namespace Engine.Items
 					//		oldInstance = oldInstance,
 					//		newInstance = items[i],
 					//		player = -1,
-					//		time = Main.Time
+					//		time = GlobalState.Time
 					//	};
 
-					//	Main.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, a);
+					//	GlobalState.Registry.MessageRegistry.SendMessageToAll(SyncInventoryUpdate.Instance, Main.gameStateManager.TheIsland.netManager.netManager, a);
 					//}
 
 					return true;

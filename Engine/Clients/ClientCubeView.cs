@@ -108,7 +108,7 @@ namespace Engine.Clients
 
             ushort id = GetId(position);
 
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
+            return new Optional<Cube>(GlobalState.Registry.CubeRegistry.Get(id));
         }
 
         public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def)
@@ -116,7 +116,7 @@ namespace Engine.Clients
             Span<ushort> ids = stackalloc ushort[positions.Length];
             GetIds(positions, ids);
 
-            var registry = Main.Registry.CubeRegistry.GetIterable();
+            var registry = GlobalState.Registry.CubeRegistry.GetIterable();
 
             for (int i = 0; i < positions.Length; i++)
             {

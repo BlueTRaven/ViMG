@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,7 +25,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types[0] == 0)
-                types[0] = Main.Registry.EntityRegistry.Get<GenericExplosion>().Id;
+                types[0] = GlobalState.Registry.EntityRegistry.Get<GenericExplosion>().Id;
             return types;
         }
 

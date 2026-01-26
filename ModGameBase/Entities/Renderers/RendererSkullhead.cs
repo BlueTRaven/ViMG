@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct3D9;
@@ -28,7 +29,7 @@ namespace ViMG.Entities.Renderers
         public override int[] GetRenderedTypes()
         {
             if (types == null)
-                types = [Main.Registry.EntityRegistry.Get<Skullhead>().Id];
+                types = [GlobalState.Registry.EntityRegistry.Get<Skullhead>().Id];
             return types;
         }
 

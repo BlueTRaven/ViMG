@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace ViMG.Spawners
             }
 
             Vector2 islandCenter = new Vector2(world.sizeInCubes * Cube.CUBE_SCALE / 2f, world.sizeInCubes * Cube.CUBE_SCALE / 2f);
-            Vector2 angleVector = Main.random.NextAngle() * 124 * Cube.CUBE_SCALE;
+            Vector2 angleVector = GlobalState.random.NextAngle() * 124 * Cube.CUBE_SCALE;
 
             Vector3 startPosition = new Vector3(islandCenter.X + angleVector.X, world.sizeInCubes * Cube.CUBE_SCALE, islandCenter.Y + angleVector.Y);
 

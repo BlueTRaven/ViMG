@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -71,13 +72,13 @@ namespace ViMG.Entities
 			world.EntityManager.Kill(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();
-			Main.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
+			GlobalState.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
 
 			foreach (ItemInstance item in items)
 			{
 				EntityItem ent = new EntityItem(Position,
-					new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, 
-						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+					new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, 
+						GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
 					item);
 				world.EntityManager.Add(ent);
 			}

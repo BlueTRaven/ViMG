@@ -1,5 +1,6 @@
 ﻿using BrNineSlice;
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -957,7 +958,7 @@ namespace ViMG.UIs
 		//private static TextHelper.FontInfo tooltipFontLabel;
 		/*private static void DrawTooltip(SpriteBatch batch, Tooltip tooltip, float scale)
 		{
-            var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+            var fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
             Vector2 mousePos = Main.inputManager.GetMousePosition().ToVector2();
 
@@ -1003,7 +1004,7 @@ namespace ViMG.UIs
 					int minW = Options.CurrentWindowResolution.X / 10;
 					int maxW = Options.CurrentWindowResolution.X / 5;
 
-					var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+					var fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
 					string name = itemSlot.item.item.GetName(itemSlot.item);
 					string description = itemSlot.item.item.GetDescription(itemSlot.item);
@@ -1047,7 +1048,7 @@ namespace ViMG.UIs
 					numString = "\u221E";
 				else numString = num.ToString();
 
-				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
+				TextHelper.DrawText(batch, new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
 					numString, Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, 
 					64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
 			}

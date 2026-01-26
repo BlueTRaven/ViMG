@@ -1,4 +1,5 @@
 ﻿using BrUtility.Src;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using System;
@@ -59,7 +60,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -100,7 +101,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = chunkManager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = chunkManager.CubeView.GetCube(realPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -124,17 +125,17 @@ namespace ViMG
 			switch (num)
             {
 				case 0:
-					return Main.Registry.CubeRegistry.Get("shrine_shimu");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_shimu");
 				case 1:
-					return Main.Registry.CubeRegistry.Get("shrine_irat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_irat");
 				case 2:
-					return Main.Registry.CubeRegistry.Get("shrine_adrath");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_adrath");
 				case 3:
-					return Main.Registry.CubeRegistry.Get("shrine_akkat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_akkat");
 				case 4:
-					return Main.Registry.CubeRegistry.Get("shrine_gidamu");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_gidamu");
 				case 5:
-					return Main.Registry.CubeRegistry.Get("shrine_arat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_arat");
 				default: return null;
 			}
         }
@@ -143,7 +144,7 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = manager.CubeView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				offsetCube = manager.CubeView.GetCube(positionInCubeSpace).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 				if (!offsetCube.Solid)
 				{
 					return true;
@@ -248,7 +249,7 @@ namespace ViMG
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (manager.IsInWorldBounds(pos) && manager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+						if (manager.IsInWorldBounds(pos) && manager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id == ofType)
                         {
 							selected.Add(pos);
                         }

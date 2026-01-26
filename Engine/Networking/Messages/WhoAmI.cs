@@ -70,7 +70,7 @@ namespace Engine.Networking.Messages
 
             int whoAmI = addData as int? ?? -1;
             netMessage.writer.Put(whoAmI);
-            netMessage.writer.Put(Main.Time - NetworkManager.TIME_TRAVEL_DELAY);
+            netMessage.writer.Put(GlobalState.Time - NetworkManager.TIME_TRAVEL_DELAY);
             netMessage.writer.Put(Main.Frame - (int)Math.Floor((double)Main.FIXED_FPS * NetworkManager.TIME_TRAVEL_DELAY));
 
             netMessage.Send();
@@ -80,18 +80,18 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
-            double oldTime = Main.Time;
+            double oldTime = GlobalState.Time;
             int whoAmI = reader.GetInt();
-            Main.Time = reader.GetDouble();
+            GlobalState.Time = reader.GetDouble();
             Main.Frame = reader.GetInt();
 
             if (whoAmI != -1)
             {
                 GS.netManagerClient.whoAmI = whoAmI;
-                Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, Main.Time);
+                Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, GlobalState.Time);
             } else
             {
-                //Console.WriteLine("Fix time: {0:0.02}", Main.Time - oldTime);
+                //Console.WriteLine("Fix time: {0:0.02}", GlobalState.Time - oldTime);
             }
         }
     }

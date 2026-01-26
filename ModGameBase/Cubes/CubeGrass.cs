@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,7 +22,7 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_dirt"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_dirt"), 1, 1));
 		}
 
 		private Cube dirt;
@@ -47,7 +48,7 @@ namespace ViMG.Cubes
             base.OnRandomUpdate(world, manager, position);
 
 			if (dirt == null)
-				dirt = Main.Registry.CubeRegistry.Get("dirt");
+				dirt = GlobalState.Registry.CubeRegistry.Get("dirt");
 
 			Span<CubePosition> positions = stackalloc CubePosition[13];
 			Span<ushort> ids = stackalloc ushort[13];
@@ -80,7 +81,7 @@ namespace ViMG.Cubes
 						
 						if (world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(abovePosition)))
 						{
-							if (!manager.CubeView.GetCube(abovePosition).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+							if (!manager.CubeView.GetCube(abovePosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
 							{
 								//set dirt to grass
 								manager.CubeView.SetCube(offsetPosition, Id);
@@ -104,12 +105,12 @@ namespace ViMG.Cubes
 			base.OnAdjacentUpdated(world, manager, position, updating, updatedId, updatedTime);
 
             if (dirt == null)
-                dirt = Main.Registry.CubeRegistry.Get("dirt");
+                dirt = GlobalState.Registry.CubeRegistry.Get("dirt");
 
             //top block is updating.
             if (updating.Y == position.Y + 1)
             {
-				if (updatedId != 0 && Main.Registry.CubeRegistry.Get(updatedId).Solid)
+				if (updatedId != 0 && GlobalState.Registry.CubeRegistry.Get(updatedId).Solid)
                 {
 					manager.CubeView.SetCube(position, dirt.Id);
                 }

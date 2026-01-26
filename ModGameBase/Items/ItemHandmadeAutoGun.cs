@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,10 +47,10 @@ namespace ViMG.Items
 
                 Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
                 Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
-                batchStats.spacingYaw = Main.random.NextFloat(-15, 15);
-                batchStats.spacingPitch = Main.random.NextFloat(-7.5f, 7.5f);
+                batchStats.spacingYaw = GlobalState.random.NextFloat(-15, 15);
+                batchStats.spacingPitch = GlobalState.random.NextFloat(-7.5f, 7.5f);
 
-                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, Main.Registry.ProjectileRegistry.Get("musketball").Id, stats, bounds, index);
+                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, stats, bounds, index);
 
                 inventory.Remove(ammoIndex, 2);
                 return true;

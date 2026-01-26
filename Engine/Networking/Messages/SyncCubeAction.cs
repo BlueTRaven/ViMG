@@ -80,7 +80,7 @@ namespace Engine.Networking.Messages
                 var leftClicked = reader.GetBool();
                 var rightClicked = reader.GetBool();
 
-                Cube cube = Main.Registry.CubeRegistry.Get(cubeId) ?? Main.Registry.CubeRegistry.Air;
+                Cube cube = GlobalState.Registry.CubeRegistry.Get(cubeId) ?? GlobalState.Registry.CubeRegistry.Air;
                 if (leftClicked)
                     cube.Client?.OnLeftClick(GS.GetClient(), playerId, position);
                 if (rightClicked)

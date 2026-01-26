@@ -14,6 +14,7 @@ using ViMG.GameStates;
 using Engine.Items;
 using ModGameBase.Generation;
 using BrUtility.Src;
+using Engine;
 
 namespace ViMG.Generation
 {
@@ -28,18 +29,18 @@ namespace ViMG.Generation
 		private static ushort[] BlacklistOre = new ushort[] 
 		{
 			0, 
-			Main.Registry.CubeRegistry.Get("water").Id,
-			Main.Registry.CubeRegistry.Get("sand").Id,
+			GlobalState.Registry.CubeRegistry.Get("water").Id,
+			GlobalState.Registry.CubeRegistry.Get("sand").Id,
 		};
 		private static ushort[] BlacklistCave = new ushort[]
 		{
 			0,
-			Main.Registry.CubeRegistry.Get("sand").Id,
-			Main.Registry.CubeRegistry.Get("water").Id,
-			Main.Registry.CubeRegistry.Get("ore_tin").Id,
-			Main.Registry.CubeRegistry.Get("ore_copper").Id,
-			Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
-			Main.Registry.CubeRegistry.Get("ore_iron").Id
+			GlobalState.Registry.CubeRegistry.Get("sand").Id,
+			GlobalState.Registry.CubeRegistry.Get("water").Id,
+			GlobalState.Registry.CubeRegistry.Get("ore_tin").Id,
+			GlobalState.Registry.CubeRegistry.Get("ore_copper").Id,
+			GlobalState.Registry.CubeRegistry.Get("ore_glowdust").Id,
+			GlobalState.Registry.CubeRegistry.Get("ore_iron").Id
 		};
 
 		private static string[] SpecialItemCaveChest = new string[]
@@ -137,24 +138,24 @@ namespace ViMG.Generation
 				presetHeightmap[x, y] = 1 - ((float)colors[i].R / 255f);
 			}
 
-			if (Main.GEN_DETAIL)
+			if (GlobalState.GEN_DETAIL)
 			{
 				
 				structureBatchesGOL3DAltarCaves = new StructureGeneratorGOL3DAltar(Seed, null).Generate(128, 8);
 				structureBatchesGOL3DShroomCaves = new StructureGeneratorGOL3DShrooms(Seed, null).Generate(64, 8);
 				structureBatchesGOL3DWaterCaves = new StructureGeneratorGOL3DWaterCave(Seed, null).Generate(56, 8);
-				structureBatchesOreIron = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_iron").Id,
+				structureBatchesOreIron = new StructureGeneratorOre(GlobalState.Registry.CubeRegistry.Get("ore_iron").Id,
 					3, 6, Seed, null).Generate(18, 3);
-				structureBatchesOreGlow = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_glowdust").Id,
+				structureBatchesOreGlow = new StructureGeneratorOre(GlobalState.Registry.CubeRegistry.Get("ore_glowdust").Id,
 					4, 12, Seed, null).Generate(18, 3);
-				structureBatchesOreTin = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_tin").Id,
+				structureBatchesOreTin = new StructureGeneratorOre(GlobalState.Registry.CubeRegistry.Get("ore_tin").Id,
 					2, 5, Seed, null).Generate(18, 3);
-				structureBatchesOreCopper = new StructureGeneratorOre(Main.Registry.CubeRegistry.Get("ore_copper").Id,
+				structureBatchesOreCopper = new StructureGeneratorOre(GlobalState.Registry.CubeRegistry.Get("ore_copper").Id,
 					2, 5, Seed, null).Generate(18, 3);
 
 				ushort[] sd = new ushort[64 * 16 * 64];
 
-				ushort stone = Main.Registry.CubeRegistry.Get("stone").Id;
+				ushort stone = GlobalState.Registry.CubeRegistry.Get("stone").Id;
 
 				for (int i = 0; i < sd.Length; i++)
 					sd[i] = stone;
@@ -173,28 +174,28 @@ namespace ViMG.Generation
 				}
 
 				ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
-				obelisk = Main.assetsManager.GetAsset<Structure>("obelisk");
-				house = Main.assetsManager.GetAsset<Structure>("house");
-				geode = Main.assetsManager.GetAsset<Structure>("lava_geode");
+				obelisk = GlobalState.assetsManager.GetAsset<Structure>("obelisk");
+				house = GlobalState.assetsManager.GetAsset<Structure>("house");
+				geode = GlobalState.assetsManager.GetAsset<Structure>("lava_geode");
 				dungeon = new Structure[4]
 				{
-				Main.assetsManager.GetAsset<Structure>("dungeon"),
-				Main.assetsManager.GetAsset<Structure>("dungeon_tall"),
-				Main.assetsManager.GetAsset<Structure>("dungeon_hallway"),
-				Main.assetsManager.GetAsset<Structure>("dungeon_staircase"),
+				GlobalState.assetsManager.GetAsset<Structure>("dungeon"),
+				GlobalState.assetsManager.GetAsset<Structure>("dungeon_tall"),
+				GlobalState.assetsManager.GetAsset<Structure>("dungeon_hallway"),
+				GlobalState.assetsManager.GetAsset<Structure>("dungeon_staircase"),
 				};
 				shrine = new Structure[2]
 				{
-				Main.assetsManager.GetAsset<Structure>("shrine_new"),
-				Main.assetsManager.GetAsset<Structure>("shrine_old"),
+				GlobalState.assetsManager.GetAsset<Structure>("shrine_new"),
+				GlobalState.assetsManager.GetAsset<Structure>("shrine_old"),
 				};
 			}
 		}
 
 		public override Vector3 GetPlayerPosition(ChunkManager chunkManager)
         {
-			int x = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
-			int z = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
+			int x = GlobalState.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
+			int z = GlobalState.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
 
 			CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f,
 				chunkManager.SizeInCubes * Cube.CUBE_SCALE, chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f));
@@ -246,7 +247,7 @@ namespace ViMG.Generation
 						{
 							var posBelow = new CubePosition(x, y - 1, z, CubePosition.CoordinateSpace.ChunkSpace).InCubeSpace(position);
 
-							if (world.ChunkManager.CubeView.GetCube(posBelow).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("grass"))
+							if (world.ChunkManager.CubeView.GetCube(posBelow).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Get("grass"))
 							{
 								int val = GetRandom().Next(0, 256);
 								if (val == 0)
@@ -257,11 +258,11 @@ namespace ViMG.Generation
 										num, pos), true);
 								}
 								else if (val == 1)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("sapling").Id, false);    //Sapling
+									world.ChunkManager.CubeView.SetCube(pos, GlobalState.Registry.CubeRegistry.Get("sapling").Id, false);    //Sapling
 								else if (val == 2)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("fibrous_plant").Id, false); //Fibrous plant
+									world.ChunkManager.CubeView.SetCube(pos, GlobalState.Registry.CubeRegistry.Get("fibrous_plant").Id, false); //Fibrous plant
 								else if (val == 3)
-									world.ChunkManager.CubeView.SetCube(pos, Main.Registry.CubeRegistry.Get("azure_flower").Id, false); //Azure flower
+									world.ChunkManager.CubeView.SetCube(pos, GlobalState.Registry.CubeRegistry.Get("azure_flower").Id, false); //Azure flower
 							}
 						}
 					}
@@ -358,7 +359,7 @@ namespace ViMG.Generation
 			}
 			ProfilingHelper.End("Done.");*/
 
-			if (Main.GEN_CAVES)
+			if (GlobalState.GEN_CAVES)
 			{
 				ProfilingHelper.Start("Generating cave connections...");
 				const int MAX_CAVES = 800;
@@ -432,7 +433,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
                 {
 					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
@@ -442,7 +443,7 @@ namespace ViMG.Generation
 
 						if (IsNotNearAny(positions, lastPosition, actualGenPos, 16 * Cube.CUBE_SCALE))
 						{
-							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("chest_wood").Id, false);
+							world.ChunkManager.CubeView.SetCube(actualGenPos, GlobalState.Registry.CubeRegistry.Get("chest_wood").Id, false);
 
 							int randomFace = GetRandom().Next();
 
@@ -469,7 +470,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
 				{
 					if (IsNotNearAny(positions, lastPosition, pos, 16 * Cube.CUBE_SCALE))
 					{
@@ -498,7 +499,7 @@ namespace ViMG.Generation
                 CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
                     layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-                if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+                if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
                 {
                     var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
@@ -512,12 +513,12 @@ namespace ViMG.Generation
                         {
                             positions[lastPosition++] = actualGenPos;
                             
-							world.ChunkManager.CubeView.SetCube(actualGenPos, Main.Registry.CubeRegistry.Get("brittle_bone_block").Id, false);
+							world.ChunkManager.CubeView.SetCube(actualGenPos, GlobalState.Registry.CubeRegistry.Get("brittle_bone_block").Id, false);
                             world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 1, 0), 
-								Main.Registry.CubeRegistry.Get("grave").Id, false);
+								GlobalState.Registry.CubeRegistry.Get("grave").Id, false);
 							if (which == 1)
 								world.ChunkManager.CubeView.SetCube(actualGenPos + new CubePosition(0, 2, 0), 
-									Main.Registry.CubeRegistry.Get("grave").Id, false);
+									GlobalState.Registry.CubeRegistry.Get("grave").Id, false);
 
                             world.WorldInfo.pointsOfInterest.Add(new PointOfInterest(actualGenPos, "grave", 1));
 
@@ -539,7 +540,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					layerYOffsetInCubes + GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
 				{
 					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
@@ -581,7 +582,7 @@ namespace ViMG.Generation
 				CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
 					GetRandom().Next(16, SEA_FLOOR), GetRandom().Next(0, world.ChunkManager.SizeInCubes), CubePosition.CoordinateSpace.CubeSpace);
 
-				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+				if (!world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
 				{
 					var solidDown = world.ChunkManager.CubeView.GetFirstSolidDown(pos);
 
@@ -880,17 +881,17 @@ namespace ViMG.Generation
 			if (id == 0)
 				return false;
 
-			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
+			if (id == GlobalState.Registry.CubeRegistry.Get("structure_replace_00").Id)
             {
-				id = Main.Registry.CubeRegistry.Get("furnace_t1").Id;
+				id = GlobalState.Registry.CubeRegistry.Get("furnace_t1").Id;
 				entityManager.Add(new Entities.EntityFurnace(position, MeshHelper.CubeFace.RIGHT), true);
 
 				return true;
             }
 
-			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
+			if (id == GlobalState.Registry.CubeRegistry.Get("structure_replace_01").Id)
 			{
-				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
+				id = GlobalState.Registry.CubeRegistry.Get("chest_wood").Id;
 				entityManager.Add(new Entities.EntityChest(position, GenerateHouseLoot(inventoryManager), 3, 3, MeshHelper.CubeFace.RIGHT), true);
 
 				return true;
@@ -905,17 +906,17 @@ namespace ViMG.Generation
 
 			//TODO replace structure_replace_00 with chest; 01 with bodies? skeletons? Something I haven't made yet. For now, air
 
-			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
+			if (id == GlobalState.Registry.CubeRegistry.Get("structure_replace_00").Id)
 			{
-				id = Main.Registry.CubeRegistry.Get("chest_wood").Id;
+				id = GlobalState.Registry.CubeRegistry.Get("chest_wood").Id;
 				entityManager.Add(new Entities.EntityChest(position, GenerateGenericLoot(inventoryManager), 3, 3, GetRandom().RandomHorizontalFace()), true);
 
 				return true;
 			}
 
-			if (id == Main.Registry.CubeRegistry.Get("structure_replace_01").Id)
+			if (id == GlobalState.Registry.CubeRegistry.Get("structure_replace_01").Id)
 			{
-				id = (GetRandom().Next(0, 4) == 0) ? Main.Registry.CubeRegistry.Get("bonepile").Id : (ushort)0;
+				id = (GetRandom().Next(0, 4) == 0) ? GlobalState.Registry.CubeRegistry.Get("bonepile").Id : (ushort)0;
 				return true;
 			}
 
@@ -927,7 +928,7 @@ namespace ViMG.Generation
 			if (id == 0)
 				return false;
 
-			if (id == Main.Registry.CubeRegistry.Get("structure_replace_00").Id)
+			if (id == GlobalState.Registry.CubeRegistry.Get("structure_replace_00").Id)
 			{
 				id = ChunkHelper.ChooseShrine(GetRandom()).Id;
 
@@ -973,13 +974,13 @@ namespace ViMG.Generation
 			{
 				if (cubeSpacePos.Y == sample && cubeSpacePos.Y >= SEA_LEVEL)
 				{
-					return Main.Registry.CubeRegistry.Get("grass").Id;
+					return GlobalState.Registry.CubeRegistry.Get("grass").Id;
 				}
 				else
 				{
 					if (cubeSpacePos.Y >= sample - 4 && cubeSpacePos.Y <= sample && cubeSpacePos.Y <= SEA_LEVEL)
 					{
-						return Main.Registry.CubeRegistry.Get("sand").Id;
+						return GlobalState.Registry.CubeRegistry.Get("sand").Id;
 					}
 
 					if (cubeSpacePos.Y < sample - 8)
@@ -991,8 +992,8 @@ namespace ViMG.Generation
 						//TODO GetRandom causes issues when multithreading, sometimes always returning 0 for this
 						//(thus replacing the entire dirt layer with brittle bone blocks)
 						if (state.random.NextDouble() < 1.0 / Math.Pow(16.0, 3.0))
-							return Main.Registry.CubeRegistry.Get("brittle_bone_block").Id;
-						return Main.Registry.CubeRegistry.Get("dirt").Id;
+							return GlobalState.Registry.CubeRegistry.Get("brittle_bone_block").Id;
+						return GlobalState.Registry.CubeRegistry.Get("dirt").Id;
 					}
 				}
 			}
@@ -1000,7 +1001,7 @@ namespace ViMG.Generation
 			{
 				//water if below sea level, air otherwise
 				if (cubeSpacePos.Y < SEA_LEVEL)
-					return Main.Registry.CubeRegistry.Get("water").Id;
+					return GlobalState.Registry.CubeRegistry.Get("water").Id;
 				else return 0;
 			}
 		}
@@ -1044,9 +1045,9 @@ namespace ViMG.Generation
         {
 			List<Items.ItemInstance> inventoryItems = new List<Items.ItemInstance>();
 
-			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_spell_ember"), 1, 1));
-			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("run_leather_boots"), 1, 1));
-			//inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_story_01"), 1, 1));	//TODO
+			inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_spell_ember"), 1, 1));
+			inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("run_leather_boots"), 1, 1));
+			//inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_story_01"), 1, 1));	//TODO
 
 			var inventoryRef = inventoryManager.Add(new Inventory.InventoryConfig(9));
 			var inventory = inventoryManager.Get(inventoryRef);
@@ -1065,27 +1066,27 @@ namespace ViMG.Generation
 
 			string specialItem = SpecialItemCaveChest[GetRandom().Next(0, SpecialItemCaveChest.Length)];
 
-			inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get(specialItem), 1, 1));
+			inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get(specialItem), 1, 1));
 
 			if (GetRandom().NextCoinFlip())
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), GetRandom().Next(1, 4), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_healthpotion1"), GetRandom().Next(1, 4), 1));
 
 			if (GetRandom().NextCoinFlip())
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ammo_arrow_stone"), GetRandom().Next(10, 20), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ammo_arrow_stone"), GetRandom().Next(10, 20), 1));
 
 			if (GetRandom().NextCoinFlip())
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_iron"), GetRandom().Next(1, 2), 1));
-			else inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_bronze"), GetRandom().Next(1, 3), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_iron"), GetRandom().Next(1, 2), 1));
+			else inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_bronze"), GetRandom().Next(1, 3), 1));
 
 			int ingotGenPattern = GetRandom().Next(1, 3);
 			if (ingotGenPattern == 0)
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 4), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 4), 1));
 			else if (ingotGenPattern == 1)
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 4), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 4), 1));
 			else
             {
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 2), 1));
-				inventoryItems.Add(new Items.ItemInstance(Main.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 2), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_tin"), GetRandom().Next(1, 2), 1));
+				inventoryItems.Add(new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("ingot_copper"), GetRandom().Next(1, 2), 1));
 			}
 
             var inventoryRef = inventoryManager.Add(new Inventory.InventoryConfig(9));

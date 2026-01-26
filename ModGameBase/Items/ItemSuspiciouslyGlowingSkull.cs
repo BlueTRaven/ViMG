@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Engine.Items;
 using Engine.Networking;
@@ -51,16 +52,16 @@ namespace ViMG.Items
             (Vector3 pos) =>
             {
                 return player.world.ChunkManager.IsInWorldBounds(pos) &&
-                    player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+                    player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
             });
 
             if (lookAtResult.hasHit)
             {
                 CubePosition pos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
-                Cube cube = player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-                bool a = cube == Main.Registry.CubeRegistry.Get("ancient_altar_placeable");
-                bool b = cube == Main.Registry.CubeRegistry.Get("ancient_altar_generated");
+                Cube cube = player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+                bool a = cube == GlobalState.Registry.CubeRegistry.Get("ancient_altar_placeable");
+                bool b = cube == GlobalState.Registry.CubeRegistry.Get("ancient_altar_generated");
 
                 if (a || b)
                 {

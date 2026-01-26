@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -53,7 +54,7 @@ namespace ViMG
 			//TODO: opengl doesn't support multithreaded uploading.
 			//IF we end up supporting opengl (not sure we will)
 			//then this will cause issues as we have to explicitly call Upload
-			if (Thread.CurrentThread == Main.MainThread || Main.MULTITHREAD_UPLOADMESH)
+			if (Thread.CurrentThread == GlobalState.MainThread || GlobalState.MULTITHREAD_UPLOADMESH)
 				Upload(device, vertices, indices);
 			else UploadLater(vertices, indices);
 		}
@@ -61,7 +62,7 @@ namespace ViMG
 		private void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
 			//don't attempt to upload if we've exited or the device is lost.
-			if (Main.Exit || device.IsDisposed)
+			if (GlobalState.Exit || device.IsDisposed)
 				return;
 
 			if (Uploaded)

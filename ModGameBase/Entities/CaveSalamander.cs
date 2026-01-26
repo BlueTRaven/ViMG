@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -55,9 +56,9 @@ namespace ViMG.Entities
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 12, false);
             contactChecker = new Physics.ContactChecker();
 
-            target = Position + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-                Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-                Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
+            target = Position + new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+                GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+                GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
 
             var physicsShape = new Sphere(Cube.CUBE_SCALE / 2f);
 			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
@@ -89,11 +90,11 @@ namespace ViMG.Entities
 				{
 					if (wanderTimer <= 0)
 					{
-						target = Position + new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-							Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
-							Main.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
+						target = Position + new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+							GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f),
+							GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 4f, Cube.CUBE_SCALE * 4f));
 
-						wanderTimer = Main.random.NextFloat(0.65f, 2.5f);
+						wanderTimer = GlobalState.random.NextFloat(0.65f, 2.5f);
 					}
 				}
 				else target = world.GetClosestPlayer(Position)?.Position ?? Vector3.Zero;

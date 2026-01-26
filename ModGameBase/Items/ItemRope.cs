@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Common;
 using Engine.Entities;
 using Engine.Items;
@@ -26,7 +27,7 @@ namespace ViMG.Items
             name = "Rope";
             description = "Sturdy, strong rope. Use it to traverse big pits!";
 
-			cube = Main.Registry.CubeRegistry.Get("rope");
+			cube = GlobalState.Registry.CubeRegistry.Get("rope");
 		}
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -38,7 +39,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -47,7 +48,7 @@ namespace ViMG.Items
 				{
 					//we're placing on a pre-existing rope block.
 					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
-						.GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+						.GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
 					{
 						Cube currentCube = cube;
 						CubePosition nextPos = CubePosition.FromWorldSpace(lookAtResult.hit);
@@ -56,7 +57,7 @@ namespace ViMG.Items
                         {
 							nextPos -= new CubePosition(0, 1, 0);
 
-							currentCube = player.GetWorld().ChunkManager.CubeView.GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							currentCube = player.GetWorld().ChunkManager.CubeView.GetCube(nextPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 							//if not in world bounds, then we can't place it, so just return false.
 							if (!player.GetWorld().ChunkManager.IsInWorldBounds(nextPos))

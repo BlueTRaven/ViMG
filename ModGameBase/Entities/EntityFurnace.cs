@@ -1,4 +1,5 @@
 ﻿using BepuUtilities.Memory;
+using Engine;
 using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -149,7 +150,7 @@ namespace ViMG.Entities
         {
             var inventory = world.InventoryManager.Get(this.inventory);
 
-            var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace);
+            var recipes = GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(GlobalState.Registry.CubeRegistry.Get("furnace_t1") as CubeFurnace);
 
             Recipe foundRecipe = null;
 

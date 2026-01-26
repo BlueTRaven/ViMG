@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
 using Engine.Items;
 using Microsoft.Xna.Framework;
@@ -64,7 +65,7 @@ namespace ViMG.Items
 					{
 						if (player.GetWorld().ChunkManager.IsInWorldBounds(affectedPositions[i]))
 						{
-							var cube = Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air);
+							var cube = GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air);
 
                             if (cube.Touchable)
 								player.GetWorld().TryMineCube(player, affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
@@ -73,7 +74,7 @@ namespace ViMG.Items
 				}
                 else
                 {
-					var cube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+					var cube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
                     
                     if (cube.Touchable)
 						player.GetWorld().TryMineCube(player, player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
@@ -85,7 +86,7 @@ namespace ViMG.Items
 
 		public static ItemInstance CreatePickaxe(ItemInstance itemHead)
 		{
-			return new ItemInstance(Main.Registry.GetCurrentMod().Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
+			return new ItemInstance(GlobalState.Registry.GetCurrentMod().Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
 		}
 
         public ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item)

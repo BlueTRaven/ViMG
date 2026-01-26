@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,7 +22,7 @@ namespace ViMG.UIs
 
 		protected readonly GameStateManager gsManager;
 
-		public bool RespondToInput => Main.Time - timeOpened > 0.125;
+		public bool RespondToInput => GlobalState.Time - timeOpened > 0.125;
 		protected double timeOpened = 0;
 
 		public Menu(GameStateManager gsManager)
@@ -37,7 +38,7 @@ namespace ViMG.UIs
 
 		public virtual void OnOpen()
         {
-			timeOpened = Main.Time;
+			timeOpened = GlobalState.Time;
         }
 
 		public virtual void OnClose()
