@@ -16,8 +16,8 @@ SessionInformation ses = new SessionInformation();
 ses.ModsFolder = "C:\\Users\\taylo\\Documents\\programming\\CS\\ViMG2\\bin\\Debug\\mods\\net8.0-windows";
 GlobalState.SessionInformation = ses;
 Main.IsHeadless = true;
-GlobalState.gameStateManager = new GameStateManager();
-GlobalState.gameStateManager.Initialize();
+GlobalState.GameStateManager = new GameStateManager();
+GlobalState.GameStateManager.Initialize();
 //Main.camera = new Engine.Common.CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
 var _services = new GameServiceContainer();

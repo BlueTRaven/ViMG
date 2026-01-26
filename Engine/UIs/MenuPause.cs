@@ -38,7 +38,7 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
-            if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
                 gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
@@ -48,7 +48,7 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
                 gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;
@@ -111,7 +111,7 @@ namespace ViMG.UIs
                 bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
             }).clickLeft)
             {
-                GlobalState.gameStateManager.SetGameState(GlobalState.gameStateManager.MainMenu);
+                GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.MainMenu);
             }
 
             y += 48 + MARGIN;
@@ -125,7 +125,7 @@ namespace ViMG.UIs
                 bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
             }).clickLeft)
             {
-                GlobalState.gameStateManager.TheIsland.Disconnect();
+                GlobalState.GameStateManager.TheIsland.Disconnect();
                 GlobalState.Exit = true;
             }
         }

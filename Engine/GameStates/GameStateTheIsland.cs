@@ -179,7 +179,7 @@ namespace ViMG.GameStates
                 netManagerClient.Port = port;
             }
 
-            if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client)
                 ConnectLocal();
         }
 
@@ -282,7 +282,7 @@ namespace ViMG.GameStates
                 netManagerServer?.PollEvents();
             }
 
-            if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server) 
+            if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server) 
             {
                 // If world takes longer than client whoami timeout, this might fail?
                 if (netManagerClient.ClientHasConnected())
@@ -385,7 +385,7 @@ namespace ViMG.GameStates
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(GlobalState.gameStateManager.TheIsland.localPlayerName), true);
+            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(GlobalState.GameStateManager.TheIsland.localPlayerName), true);
             prototype.EntityManager.Add(player, true);
 
             player.Position = playerSpawnPosition;
@@ -818,7 +818,7 @@ namespace ViMG.GameStates
                     Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
 
-            if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
+            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
             {
                 TextHelper.DrawText(batch, fi, string.Format("Connecting to {0}:{1}...", netManagerClient.Ip, netManagerClient.Port), Color.White,
                     new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
@@ -827,7 +827,7 @@ namespace ViMG.GameStates
 
             StringBuilder sb = new StringBuilder();
             sb.Append("This is a ");
-            switch (GlobalState.gameStateManager.netMode)
+            switch (GlobalState.GameStateManager.netMode)
             {
                 case GameStateManager.NetworkingMode.Client:
                     sb.Append("Client session. Connected to: ");

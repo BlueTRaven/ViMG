@@ -177,7 +177,7 @@ namespace ViMG.Entities
             }
             else world.MenuDialogue.StartOptions(options);
 
-            GlobalState.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            GlobalState.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
             shouldFollowUpMenu = true;
         }

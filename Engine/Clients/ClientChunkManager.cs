@@ -53,11 +53,11 @@ namespace Engine.Clients
         // ChunkIO is definitely available).
         public void MaybeSetToServer()
         {
-            if (GlobalState.gameStateManager.TheIsland.GetWorld() != null && ChunkIO != GlobalState.gameStateManager.TheIsland.GetWorld().ChunkIO)
+            if (GlobalState.GameStateManager.TheIsland.GetWorld() != null && ChunkIO != GlobalState.GameStateManager.TheIsland.GetWorld().ChunkIO)
             {
                 CubeTrackers = new CubeTrackers(); // Might not be necessary
 
-                ChunkIO = GlobalState.gameStateManager.TheIsland.GetWorld().ChunkIO;
+                ChunkIO = GlobalState.GameStateManager.TheIsland.GetWorld().ChunkIO;
                 CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
                 CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
                 ChunkMesher.CollisionMesher?.FinishFlush();

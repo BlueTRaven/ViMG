@@ -365,7 +365,7 @@ namespace ViMG
                     // Sync chunk loading to other players
                     // NOTE: this is here, after deserialization, as this sends over chunk meshing data too
                     // (which requires entities to be initialized)
-                    var peer = GlobalState.gameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
+                    var peer = GlobalState.GameStateManager.TheIsland.netManagerServer?.GetPeer(queuedChunk.player);
                     if (peer != null)
                     {
                         var sync = new SyncChunk.ChunkToSync
@@ -373,7 +373,7 @@ namespace ViMG
                             chunkPosition = queuedChunk.position,
                             ids = queuedChunk.copyData?.GetAllIds(),
                         };
-                        GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
+                        GlobalState.GameStateManager.TheIsland.netManagerServer.SendMessageToPeer(SyncChunk.Instance, peer, sync);
                     }
 
                     hasChanged = true;
@@ -423,7 +423,7 @@ namespace ViMG
         [Obsolete]
 		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
-			if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+			if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client)
                 IMGUIConsole.Assert(false);
 
             int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
@@ -614,7 +614,7 @@ namespace ViMG
                 if (allUnloaded)
                 {
                     // Don't bother serializing on client - we never deserialize things
-                    if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
+                    if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client)
                         entIO.Serialize(pos);
 
                     entityManager.UnloadInChunk(pos);
@@ -713,7 +713,7 @@ namespace ViMG
 
         public void UnloadAllFor(int playerIndex)
         {
-            if (GlobalState.gameStateManager.TheIsland.netManagerServer.uniqueNetPlayers == 0)
+            if (GlobalState.GameStateManager.TheIsland.netManagerServer.uniqueNetPlayers == 0)
             {
                 UnloadAll();
                 return;

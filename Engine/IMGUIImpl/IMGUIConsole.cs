@@ -521,7 +521,7 @@ namespace ViMG.IMGUIImpl
 
             string commandName = splits[0];
 
-            NetworkManager.NetworkSide netSide = GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client ? NetworkManager.NetworkSide.Client : NetworkManager.NetworkSide.Server;
+            NetworkManager.NetworkSide netSide = GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client ? NetworkManager.NetworkSide.Client : NetworkManager.NetworkSide.Server;
             RunCommand(commandName, netSide, parameters);            
         }
 
@@ -554,7 +554,7 @@ namespace ViMG.IMGUIImpl
                 executingCommand = commandName;
                 if (originatingSide == NetworkManager.NetworkSide.Client && 
                     (command.Item2.runSide == ConsoleCommandRunSide.Server || command.Item2.runSide == ConsoleCommandRunSide.ServerAndClient) && 
-                    GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+                    GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
                 {
                     // These commands are not run locally, but are instead sent to the server.
                     SyncConsoleCommandClient.Instance.SendCommand(commandName, parameters.ToArray());
@@ -772,7 +772,7 @@ namespace ViMG.IMGUIImpl
         public static void LogLineAndSend(string line)
         {
             LogLine(line);
-            if (GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
+            if (GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Server)
             {
                 SyncConsoleOutput.Instance.SendOutput([line]);
             }

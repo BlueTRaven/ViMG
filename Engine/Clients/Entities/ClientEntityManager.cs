@@ -124,7 +124,7 @@ namespace Engine.Clients.Entities
         {
             for (int i = 0; i < players.Length; i++)
             {
-                if (players[i].playerIndex == GlobalState.gameStateManager.TheIsland.netManagerClient.whoAmI)
+                if (players[i].playerIndex == GlobalState.GameStateManager.TheIsland.netManagerClient.whoAmI)
                 {
                     return players[i].entity;
                 }

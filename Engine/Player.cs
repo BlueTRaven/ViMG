@@ -315,7 +315,7 @@ namespace ViMG
 		public int playerUuid;
 		public int playerIndex;
 		public bool IsLocalPlayer =>
-            GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
+            GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		public bool IsInControl => inputLockupTimer <= 0;
 
@@ -560,7 +560,7 @@ namespace ViMG
 			{
 				// Check to make sure we're still alive
 				// This is the case if our playerIndex is present in the netPlayer array
-				if (GlobalState.gameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
+				if (GlobalState.GameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
 				{
 					world.EntityManager.Kill(this);
 					return;

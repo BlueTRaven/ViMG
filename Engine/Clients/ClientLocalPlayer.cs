@@ -38,12 +38,12 @@ namespace Engine.Clients
             prevMS = Main.inputManager.previousMouseState;
 
             var extra = entity.GetExtra<Player.PlayerExtraState>();
-            menuPlayer = new MenuPlayer(GlobalState.gameStateManager, reference, extra.heldInventory, 
+            menuPlayer = new MenuPlayer(GlobalState.GameStateManager, reference, extra.heldInventory, 
                 extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
             menuPlayer.LoadContent();
             menuPlayer.Close();
 
-            GlobalState.gameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
+            GlobalState.GameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
         }
 
         public void MakeNew(ref BasicState player, PhysicsInfo physicsInfo)
@@ -58,7 +58,7 @@ namespace Engine.Clients
         {
             physicsInfo.Simulation.Bodies.Remove(Body);
 
-            GlobalState.gameStateManager.GetCurrentGameState().SetMenu(null);
+            GlobalState.GameStateManager.GetCurrentGameState().SetMenu(null);
         }
 
         public void Update(ClientStates client, double deltaTime) 
@@ -71,8 +71,8 @@ namespace Engine.Clients
             var localPlayerRef = current.entities.GetLocalPlayerRef();
             if (current.entities.IsActive(ref localPlayerRef))
             {
-                if (Main.inputManager.JustPressed(Keys.Escape) && GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
-                    GlobalState.gameStateManager.GetCurrentGameState().PushMenu(new MenuPause(GlobalState.gameStateManager));
+                if (Main.inputManager.JustPressed(Keys.Escape) && GlobalState.GameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+                    GlobalState.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(GlobalState.GameStateManager));
 
                 if (Main.inputManager.JustPressed(Keys.F5))
                 {
@@ -129,7 +129,7 @@ namespace Engine.Clients
                     current.highlightIndex = 7;
                 }
 
-                if (Main.inputManager.JustPressed(Keys.E) && GlobalState.gameStateManager.TheIsland.GetCurrentMenu() == menuPlayer)
+                if (Main.inputManager.JustPressed(Keys.E) && GlobalState.GameStateManager.TheIsland.GetCurrentMenu() == menuPlayer)
                 {
                     menuPlayer.Toggle();
                 }
@@ -142,14 +142,14 @@ namespace Engine.Clients
 
                 if (menuPlayer == null)
                 {
-                    menuPlayer = new MenuPlayer(GlobalState.gameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
+                    menuPlayer = new MenuPlayer(GlobalState.GameStateManager, localPlayerRef, extra.heldInventory, extra.inventory, extra.craftInventory, extra.accessoryInventory, extra.gearInventory);
                     menuPlayer.LoadContent();
                     menuPlayer.Close();
-                    GlobalState.gameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
+                    GlobalState.GameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
                 }
 
                 // Don't allow the player to control their character while a menu is open
-                if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer || (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened))
+                if (GlobalState.GameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer || (GlobalState.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && menuPlayer.IsOpened))
                 {
                     CurrMovement.LeftClick.ForceUnpress();
                     CurrMovement.RightClick.ForceUnpress();
@@ -176,7 +176,7 @@ namespace Engine.Clients
                     previous.camera.RotationEuler != current.camera.RotationEuler ||
                     current.highlightIndex != previous.highlightIndex)
                 {
-                    GlobalState.gameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, GlobalState.gameStateManager.TheIsland.netManagerClient.netManager, null);
+                    GlobalState.GameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
 
                 current.camera.Position = localPlayer.position;

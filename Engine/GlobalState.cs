@@ -13,7 +13,7 @@ namespace Engine
     {
         public static ArgParser Args = new ArgParser();
 
-        public static GameStateManager gameStateManager;
+        public static GameStateManager GameStateManager;
 
         public static ViMGAssetsManager AssetsManager;
         public static RegistryService Registry;

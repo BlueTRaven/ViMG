@@ -59,7 +59,7 @@ namespace Engine.Clients
 
         public ClientLocalPlayer? LocalPlayer = null;
 
-        public int LocalPlayerIndex => GlobalState.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
+        public int LocalPlayerIndex => GlobalState.GameStateManager.TheIsland.netManagerClient?.whoAmI ?? -1;
 
         private int head = 0;
         private int frame = 0;
@@ -177,7 +177,7 @@ namespace Engine.Clients
 
             Renderer.FrameStart();
 
-            if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
+            if (GlobalState.GameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
                 RenderTime += deltaTime;
 
             {
@@ -237,16 +237,16 @@ namespace Engine.Clients
             if (RenderProjectiles)
                 ClientProjectileManager.Render(device, this);
 
-            if (RenderDebugPhysics && GlobalState.gameStateManager.TheIsland.GetWorld() != null)
+            if (RenderDebugPhysics && GlobalState.GameStateManager.TheIsland.GetWorld() != null)
             {
                 bepuDebugRenderer.Shapes.ClearInstances();
-                bepuDebugRenderer.Shapes.AddInstances(GlobalState.gameStateManager.TheIsland.GetWorld().PhysicsInfo.Simulation);
+                bepuDebugRenderer.Shapes.AddInstances(GlobalState.GameStateManager.TheIsland.GetWorld().PhysicsInfo.Simulation);
                 bepuDebugRenderer.Render(device, currInterpState.camera);
             }
 
-            if (GlobalState.gameStateManager.TheIsland.GetWorld() != null)
+            if (GlobalState.GameStateManager.TheIsland.GetWorld() != null)
             {
-                GlobalState.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, Renderer, currInterpState.camera);
+                GlobalState.GameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, Renderer, currInterpState.camera);
             }
 
             Renderer.Draw(batch, currInterpState.camera);

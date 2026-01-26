@@ -47,7 +47,7 @@ namespace Engine.Networking.Messages
                 return;
             }
 
-            GlobalState.gameStateManager.TheIsland.netManagerServer.NewPlayer(peer, playerName);
+            GlobalState.GameStateManager.TheIsland.netManagerServer.NewPlayer(peer, playerName);
         }
     }
 

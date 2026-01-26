@@ -12,21 +12,18 @@ namespace Engine
 {
     public class HeadlessRunner
     {
+        private Runner runner;
+
         public void Run()
         {
-            GlobalState.MainThread = Thread.CurrentThread;
-
-            GlobalState.SessionInformation = new SessionInformation();
-            GlobalState.SessionIO = new SessionIO();
-            GlobalState.SessionIO.Load();
-
+            this.runner = new Runner();
             var _services = new GameServiceContainer();
             var _content = new ContentManager(_services);
+            _content.RootDirectory = "Content";
 
-            GlobalState.AssetsManager = new ViMGAssetsManager(_content);
+            runner.Initialize(_content);
 
-            //gameStateManager = new GameStateManager();
-            //gameStateManager.Initialize();
+            runner.LoadContent();
         }
     }
 }

@@ -134,7 +134,7 @@ namespace Engine.Items
 					time = GlobalState.Time
 				};
 
-                GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
+                GlobalState.GameStateManager.TheIsland.netManagerServer.SendMessageToAll(SyncInventoryUpdate.Instance, GlobalState.GameStateManager.TheIsland.netManagerServer.netManager, invUpdate);
 			}
 
 			events.Clear();

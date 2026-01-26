@@ -19,7 +19,7 @@ namespace Engine.Networking.Messages
         // Passthrough messages are sent from a client to a server and are immediately re-distributed from the server to all other clients (exluding the one who sent it)
         public bool Passthrough = false; 
 
-        protected GameStateTheIsland GS => GlobalState.gameStateManager.TheIsland;
+        protected GameStateTheIsland GS => GlobalState.GameStateManager.TheIsland;
 
         public virtual void SendMessage(NetworkMessage netMessage, object? addData)
         {

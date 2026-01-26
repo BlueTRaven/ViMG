@@ -56,7 +56,7 @@ namespace Engine.Networking.Messages
             var chunk = PalettizedChunk.Palettize(chunkToSync.chunkPosition, queryIds);
 
             netMessage.writer.Put(chunkToSync.chunkPosition);
-            if (GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
+            if (GlobalState.GameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
             {
                 netMessage.writer.Put((int)chunk.type);
                 netMessage.writer.PutArray(chunk.palette);
@@ -125,7 +125,7 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             var chunkPosition = reader.Get<ChunkPosition>();
-            if (GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
+            if (GlobalState.GameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Client)
             {
                 PalettizeType paletteType = (PalettizeType)reader.GetInt();
                 var palette = reader.GetUShortArray();

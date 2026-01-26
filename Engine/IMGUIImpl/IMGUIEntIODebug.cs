@@ -179,7 +179,7 @@ namespace ViMG.IMGUIImpl
                                             filterCache = filterCache.OrderBy(x => x.id).ToList();
                                             break;
                                         case Sort.Distance:
-                                            if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+                                            if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
                                             {
                                                 filterCache = filterCache.OrderBy(x => (x.position.InWorldSpace() - gsIsland.GetWorld().EntityManager.GetFirst<Player>().Position).Length()).ToList();
                                             }
@@ -212,7 +212,7 @@ namespace ViMG.IMGUIImpl
                                         ImGui.SameLine();
                                         ImGui.Text("X: " + entityData.position.X + " Y: " + entityData.position.Y + " Z: " + entityData.position.Z);
 
-                                        if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+                                        if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
                                         {
                                             if (lookAt)
                                             {
@@ -226,7 +226,7 @@ namespace ViMG.IMGUIImpl
                                                 debugDraw = entityData.id;
                                             }
 
-                                            if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient() != null && 
+                                            if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient() != null && 
                                                 debugDraw.HasValue && debugDraw.Value == entityData.id)
                                             {
                                                 theIsland.GetClient().Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw

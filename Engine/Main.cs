@@ -101,15 +101,19 @@ namespace ViMG
 
 		private ModManager modManager = new ModManager();
 
+		private Runner runner;
+
         public Main(string[] args) : base()
         {
 			//FieldTest.DoTest();
 
-			GlobalState.MainThread = Thread.CurrentThread;
+			runner = new Runner();
 
-            GlobalState.SessionInformation = new SessionInformation();
-            GlobalState.SessionIO = new SessionIO();
-            GlobalState.SessionIO.Load();
+			//GlobalState.MainThread = Thread.CurrentThread;
+
+   //         GlobalState.SessionInformation = new SessionInformation();
+   //         GlobalState.SessionIO = new SessionIO();
+   //         GlobalState.SessionIO.Load();
 
 			graphics = new GraphicsDeviceManager(this)
 			{
@@ -127,7 +131,7 @@ namespace ViMG
 
             Content.RootDirectory = "Content";
 
-            GlobalState.AssetsManager = new ViMGAssetsManager(Content);
+            //GlobalState.AssetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
 
@@ -137,6 +141,8 @@ namespace ViMG
 
 		protected override void Initialize()
 		{
+			runner.Initialize(Content);
+
 			genericDSS = new DepthStencilState()
 			{
 				DepthBufferEnable = true,
@@ -204,8 +210,8 @@ namespace ViMG
 			imguiRenderer = new ImGuiRenderer(this);
 			//imguiRenderer.RebuildFontAtlas();
 
-            GlobalState.gameStateManager = new GameStateManager();
-            GlobalState.gameStateManager.Initialize();
+            //GlobalState.GameStateManager = new GameStateManager();
+            //GlobalState.GameStateManager.Initialize();
 
             base.Initialize();
 
@@ -229,7 +235,7 @@ namespace ViMG
 		private void WindowResolutionChanged(object? sender, EventArgs args)
         {
 			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
-			if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
+			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
 			{
 				theIsland.GetClient()?.currInterpState.camera.MarkDirty();
 				theIsland.GetClient()?.Current().camera.MarkDirty();
@@ -246,8 +252,8 @@ namespace ViMG
 		protected override void LoadContent()
         {
 			batch = new SpriteBatch(GraphicsDevice);
-            GlobalState.AssetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
-            GlobalState.gameStateManager.LoadContent(GraphicsDevice);
+			runner.LoadContent();
+            GlobalState.GameStateManager.LoadContent(GraphicsDevice);
 		}
 
 		protected override void Update(GameTime gt)
@@ -262,7 +268,7 @@ namespace ViMG
 
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
-			if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				IsMouseVisible = DrawCursor;
 			}
@@ -318,12 +324,12 @@ namespace ViMG
 				if (inputManager.JustPressed(Keys.O))
 					Options.CenterMouse();
 
-                GlobalState.gameStateManager.Update(deltaTime);
+                GlobalState.GameStateManager.Update(deltaTime);
 				//if (WorldLoaded)
 					//world.Update(deltaTime);
 			}
 
-			if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				if (IsActive && !paused && !MouseControl)
 					Options.CenterMouse();
@@ -354,7 +360,7 @@ namespace ViMG
 
 			GraphicsDevice.Clear(Color.White);
 
-            GlobalState.gameStateManager.Draw(GraphicsDevice, batch, gameTime.ElapsedGameTime.TotalSeconds);
+            GlobalState.GameStateManager.Draw(GraphicsDevice, batch, gameTime.ElapsedGameTime.TotalSeconds);
 
             //if (WorldLoaded)
             //world.Draw(GraphicsDevice, CubeLitEffect);
@@ -367,7 +373,7 @@ namespace ViMG
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-            GlobalState.gameStateManager.DrawUI(batch);
+            GlobalState.GameStateManager.DrawUI(batch);
 			
 			batch.End();
 
@@ -445,7 +451,7 @@ namespace ViMG
 					ImGui.Text(string.Format("Draw Calls: {0}", GraphicsDevice.Metrics.DrawCount));
 					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
 
-					Engine.Common.Camera? camera = GlobalState.gameStateManager.TheIsland.GetClient()?.Current().camera;
+					Engine.Common.Camera? camera = GlobalState.GameStateManager.TheIsland.GetClient()?.Current().camera;
                     ImGui.Text(string.Format("Position: {0}", camera?.Position));
                     var fwd = camera?.Forward ?? Vector3.Zero;
 					var pitchyaw = camera?.RotationEuler ?? Vector3.Zero;
@@ -453,7 +459,7 @@ namespace ViMG
 						"Yaw: {3:0.00} Pitch: {4:0.00}", fwd.X, fwd.Y, fwd.Z, pitchyaw.Y, pitchyaw.X));
 					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera?.Position ?? new()).ToString()));
 
-					if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
+					if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
 					{
 						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
 

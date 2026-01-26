@@ -43,7 +43,7 @@ namespace Engine.Networking.Messages
 
         public void SendCubeUpdate(ChunkManager.CubeUpdated updated)
         {
-            GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
+            GlobalState.GameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.GameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
             {
                 oldId = updated.oldId,
                 newId = updated.newId,
@@ -56,7 +56,7 @@ namespace Engine.Networking.Messages
 
         public void SendCubeUpdate(CubePosition position, int playerId, ushort progress)
         {
-            GlobalState.gameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.gameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
+            GlobalState.GameStateManager.TheIsland.netManagerServer.SendMessageToAll(Instance, GlobalState.GameStateManager.TheIsland.netManagerServer.netManager, new CubeToUpdate
             {
                 oldId = 0,
                 newId = 0,

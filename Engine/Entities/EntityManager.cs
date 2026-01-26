@@ -312,7 +312,7 @@ namespace ViMG.Entities
 			// Shouldn't add entities if not server or singleplayer?
 			// What about player entities...?
 			//Debug.Assert(GlobalState.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client, "Created entity on client", "Tried to create entity {0} on client", entity.ToString());
-			if (GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+			if (GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
 			{
 				Console.WriteLine("Tried to create entity {0} on client", entity.ToString());
 
@@ -420,7 +420,7 @@ namespace ViMG.Entities
 
 		public void Unload(Entity entity, bool delay = false)
         {
-            if (entity.NetEntity && GlobalState.gameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
+            if (entity.NetEntity && GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
             {
                 // Force entity to be disabled
                 entity.NetEnable = false;
@@ -947,7 +947,7 @@ namespace ViMG.Entities
 				return;
 			}
 
-            var entManager = GlobalState.gameStateManager.TheIsland.GetWorld().EntityManager;
+            var entManager = GlobalState.GameStateManager.TheIsland.GetWorld().EntityManager;
             var ents = entManager.GetAll(type);
 			foreach (var ent in ents)
 				entManager.Unload(ent);
@@ -956,7 +956,7 @@ namespace ViMG.Entities
         [ConsoleCommand("killallbutplayer", "killallbutplayer - kills all entities but player entities")]
         public static void KillAllExceptPlayer(string[] parameters)
 		{
-            var entManager = GlobalState.gameStateManager.TheIsland.GetWorld().EntityManager;
+            var entManager = GlobalState.GameStateManager.TheIsland.GetWorld().EntityManager;
 
 			foreach (var ent in entManager.GetEntities())
 			{

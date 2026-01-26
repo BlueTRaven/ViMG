@@ -157,7 +157,7 @@ namespace ViMG
 			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
 
-			if (GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Client)
+			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client)
 				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
 			LightManager2 = new LightManager2();
@@ -168,7 +168,7 @@ namespace ViMG
 		public void InitMeshes(GraphicsDevice device)
 		{
 			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
-			MenuDialogue = new MenuDialogue(GlobalState.gameStateManager);
+			MenuDialogue = new MenuDialogue(GlobalState.GameStateManager);
 
 			//LightManager = new LightManager(device);
 		}
@@ -182,7 +182,7 @@ namespace ViMG
 			{
 				player[p.playerIndex] = p;
 			}
-			localPlayerIndex = GlobalState.gameStateManager.TheIsland.netManagerClient?.whoAmI ?? 0;
+			localPlayerIndex = GlobalState.GameStateManager.TheIsland.netManagerClient?.whoAmI ?? 0;
 			// -1 means singleplayer
 			if (localPlayerIndex == -1) localPlayerIndex = 0;
 
@@ -214,7 +214,7 @@ namespace ViMG
 			// Autosave every 5 minutes?
 			if (GlobalState.Time - lastAutosaveTime > AutosaveTime)
 			{
-				GlobalState.gameStateManager.TheIsland.Save(true);
+				GlobalState.GameStateManager.TheIsland.Save(true);
 				lastAutosaveTime = GlobalState.Time;
 			}
 
@@ -246,7 +246,7 @@ namespace ViMG
 			// and this bullshit when a player respawns.
 			foreach (Player player in PlayerRespawnedEvent)
 			{
-				if (GlobalState.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+				if (GlobalState.GameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
 				{
 					Player p = new Player(player);
 					EntityManager.ForceAdd(p);
@@ -316,7 +316,7 @@ namespace ViMG
 				else nextLayer = Layer;
 
 				if (nextLayer != Layer)
-					nextWorld = GlobalState.gameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, nextLayer);
+					nextWorld = GlobalState.GameStateManager.TheIsland.BeginLoadLayer(LoadedFolderName, nextLayer);
 			}
 
 			//if in the middle 22 chunks (> 0-5 chunks && < 32-27 chunks), unload the loaded world.
@@ -379,7 +379,7 @@ namespace ViMG
 					//as it normally does.)
 					loadedWorld.ChunkLoadManager.FlushLoadQueue(this);
 
-					GlobalState.gameStateManager.TheIsland.SetWorld(loadedWorld);
+					GlobalState.GameStateManager.TheIsland.SetWorld(loadedWorld);
 
 					GameStateTheIsland.LoadMessage = "Saving...";
 					//Player has been moved to nextWorld, therefore we need to save some parts of the current world to tell the world that it's gone.
@@ -406,7 +406,7 @@ namespace ViMG
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();
 
-			IMGUIConsole.Assert(GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+			IMGUIConsole.Assert(GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
@@ -700,7 +700,7 @@ namespace ViMG
 
 				if (CubeProgressTracker.AddProgress(ChunkManager.CubeView, position, num))
 				{
-					DoMineCube(position, player, GlobalState.gameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+					DoMineCube(position, player, GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client);
 
 					return true;
 				}
@@ -901,7 +901,7 @@ namespace ViMG
 			"Alternatively, Param 0 can be \"dawn\", \"noon\", \"dusk\", or \"midnight\", for those respective times.", ConsoleCommandRunSide.ServerAndClient)]
 		public static void SetTime(string[] parameters)
 		{
-			if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
 			{
 				if (IMGUIConsole.RequireParam(parameters, 0, "time"))
 				{
@@ -927,14 +927,14 @@ namespace ViMG
 			}
 			else
 			{
-				IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.gameStateManager.GetCurrentGameState().ToString());
+				IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.GameStateManager.GetCurrentGameState().ToString());
 			}
 		}
 
 		[ConsoleCommand("give", "Gives the player an item.")]
 		public static void GiveItem(string[] parameters)
 		{
-			if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
 			{
 				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
@@ -979,7 +979,7 @@ namespace ViMG
 				}
 				else
 				{
-					IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.gameStateManager.GetCurrentGameState().ToString());
+					IMGUIConsole.LogLine("[error] give can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.GameStateManager.GetCurrentGameState().ToString());
 				}
 			}
 		}
@@ -1005,7 +1005,7 @@ namespace ViMG
 		[ConsoleCommand("spawn", "Spawns an entity. Can be spawned on self or at the player's looking position.", ConsoleCommandRunSide.Server)]
 		public static void SpawnEntity(string[] parameters)
 		{
-			if (GlobalState.gameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
 			{
 				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
@@ -1061,7 +1061,7 @@ namespace ViMG
 				}
 				else
 				{
-					IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.gameStateManager.GetCurrentGameState().ToString());
+					IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.GameStateManager.GetCurrentGameState().ToString());
 				}
 			}
 		}
