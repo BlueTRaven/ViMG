@@ -93,6 +93,7 @@ namespace ViMG.Entities
 
         }
 
+		[Obsolete()]
 		public virtual void Draw(GraphicsDevice device, Effect effect)
 		{
 

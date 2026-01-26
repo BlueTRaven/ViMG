@@ -53,6 +53,8 @@ namespace Engine.Clients
         private LightsRenderer lightRenderer;
         private PhysicsInfo physicsInfo;
 
+        public RendererDeferred Renderer;
+
         private Engine.Rendering.BepuDebugRendering.Renderer bepuDebugRenderer;
 
         public ClientLocalPlayer? LocalPlayer = null;
@@ -77,6 +79,8 @@ namespace Engine.Clients
 
         public ClientStates(GraphicsDevice device)
         {
+            Renderer = new RendererDeferred(device);
+
             Started = DateTime.Now;
 
             this.device = device;
@@ -152,6 +156,8 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            Renderer.Update(deltaTime);
+
             ChunkManager.PhysicsInfo.Simulation.Timestep((float)deltaTime);
             ChunkManager.CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
 
@@ -165,9 +171,11 @@ namespace Engine.Clients
             LocalPlayer?.Update(this, deltaTime);
         }
 
-        public void Render(GraphicsDevice device, double deltaTime)
+        public void Render(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
+            Renderer.FrameStart();
 
             if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause)
                 RenderTime += deltaTime;
@@ -196,9 +204,9 @@ namespace Engine.Clients
 
             if (RenderLights)
             {
-                lightRenderer.UpdateDatas(LightManager, Main.Renderer.EffectLightAccumPointLight);
-                lightRenderer.Draw(device, LightManager);
-                lightRenderer.DrawShadowmap(device, ChunkManager, LightManager);
+                lightRenderer.UpdateDatas(LightManager, Renderer.EffectLightAccumPointLight);
+                lightRenderer.Draw(device, Renderer, LightManager);
+                lightRenderer.DrawShadowmap(device, Renderer, ChunkManager, LightManager);
             }
 
             LightManager.Reset();
@@ -238,7 +246,20 @@ namespace Engine.Clients
 
             if (Main.gameStateManager.TheIsland.GetWorld() != null)
             {
-                Main.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, currInterpState.camera);
+                Main.gameStateManager.TheIsland.GetWorld().HitboxManager.DrawDebug(device, Renderer, currInterpState.camera);
+            }
+
+            Renderer.Draw(batch, currInterpState.camera);
+
+            if (Renderer.GetOutput() != null)
+            {
+                device.SetRenderTarget(null);
+
+                batch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
+
+                batch.Draw(Renderer.GetOutput().Value.RenderTarget as RenderTarget2D, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+
+                batch.End();
             }
         }
 

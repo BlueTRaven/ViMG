@@ -172,7 +172,7 @@ namespace ViMG.Entities.Renderers
             }
             SBO.SetData(draws.Buffer);
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
+            client.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
         }
     }
 }

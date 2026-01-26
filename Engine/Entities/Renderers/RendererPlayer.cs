@@ -71,7 +71,7 @@ namespace Engine.Entities.Renderers
                 //else if (Main.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
                 //    Console.WriteLine("No");
 
-                highlightedItem.item?.Client?.DrawInHand(device, highlightedItem, entity, -BasicState.Forward(ref entity));
+                highlightedItem.item?.Client?.DrawInHand(device, client.Renderer, highlightedItem, entity, -BasicState.Forward(ref entity));
 
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 
@@ -90,7 +90,7 @@ namespace Engine.Entities.Renderers
                     var p = float.Clamp((distFromCam - max) / (min - max), 0, 1);
                     color *= p;
                 }
-                Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(distFromCam, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                client.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(distFromCam, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     mesh, worldMat, null, color));
 
                 var fwd = BasicState.Forward(ref entity);
@@ -126,7 +126,7 @@ namespace Engine.Entities.Renderers
                     //}
                     //else
                     {
-                        Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
+                        client.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)lookAtResult.hit.Length(), StaticMaterials.Cubes,
                             lookAtMesh,
                             Matrix.CreateTranslation(CubePosition.RoundToCubeSpace(lookAtResult.hit)),
                             new RectangleF(0, 1008, 16, 16), lookAtColor));

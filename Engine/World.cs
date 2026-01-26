@@ -530,12 +530,6 @@ namespace ViMG
 		public static int NumChunksDrawn;
 		public static double ChunkDrawTime;
 
-		public void DrawDebug(GraphicsDevice device)
-		{
-			if (Main.Debug)
-				HousingManager.DrawDebug(this, device);
-		}
-
 		public void Draw(GraphicsDevice device)
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();

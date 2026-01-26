@@ -112,7 +112,7 @@ namespace ModGameBase.Client.WorldLogics
             WeatherManager.Update(deltaTime, (float)client.Current().time, lightColor);
             var interpPlayer = Main.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
             WeatherManager.UpdateClient(deltaTime, client.currInterpState.camera, interpPlayer.position, client.ChunkManager.CubeView);
-            WeatherManager.UpdateClientLight(deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
+            WeatherManager.UpdateClientLight(client.Renderer, deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
 
             directionalLight.UpdateCameras(client, client.currInterpState.camera, lightDir, lightColor);
 
@@ -121,12 +121,12 @@ namespace ModGameBase.Client.WorldLogics
                 timeSinceLastCamUpdate = Main.Time;
 
                 float ambient = 1 - SurfaceTimeHelper.GetTimeOfDay(client.Current().time, dawnEndOffsetScale: 1.25f);
-                Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
+                client.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
                 if (!Main.inputManager.IsHeld(Keys.F6))
-                    Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
-                else Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-                Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
-                Main.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+                    client.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+                else client.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+                client.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
+                client.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(Main.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
             }
         }
 
@@ -139,7 +139,7 @@ namespace ModGameBase.Client.WorldLogics
 
             float time = (float)double.Lerp(prev.time, curr.time, client.TimeC);
 
-            WeatherManager.Draw(device, client.currInterpState.camera, time);
+            WeatherManager.Draw(device, client.Renderer, client.currInterpState.camera, time);
 
             //if (world.LoadedFolderName == "coconut")
             //    sunTexture = Main.assetsManager.GetAsset<Texture2D>("coconut");
@@ -148,9 +148,9 @@ namespace ModGameBase.Client.WorldLogics
 
             // TODO this should be elsewhere - we don't need to update this very often?
             directionalLight.DrawShadowmap(device, client.currInterpState.camera, client.ChunkManager.ChunkMesher.RenderMesher);
-            directionalLight.Bind(Main.Renderer.EffectLightAccumCSM, client.currInterpState.camera);
+            directionalLight.Bind(client.Renderer.EffectLightAccumCSM, client.currInterpState.camera);
 
-            Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw(200,
+            client.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw(200,
                 materialSun, meshSun,
                 Matrix.CreateTranslation(new Vector3(0, 0, SKYBOX_SUN_DISTANCE)) *
                 Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
@@ -174,7 +174,7 @@ namespace ModGameBase.Client.WorldLogics
                     width = 128 * 16,
                     height = 128 * 16,
                 };
-                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(materialLava,
+                client.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(materialLava,
                     meshLavaQuad, mat, sourceRect));
 
                 client.LightManager.Add(new LightManager2.LightConfig()

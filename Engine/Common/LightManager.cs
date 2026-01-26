@@ -10,11 +10,8 @@ using ViMG.Rendering;
 
 namespace Engine.Common
 {
-	// TODO refactor this for client separation
-	// TODO does this even need to be present on server?
-	// Probably yes, or at least some very basic variation of it that just includes light position and size,
-	// as some enemies or mechanics may want to use lights.
-	public class LightManager
+    [Obsolete()]
+    public class LightManager
 	{
 		[ConsoleCommandVar("r_draw_light_instance_volumes", "Draws light instance volumes - for debugging purposes. Normal lights are red, shadowmapped lights are orange.")]
 		public static bool DebugDrawLightInstanceVolumes = false;
@@ -304,43 +301,44 @@ namespace Engine.Common
 			effect.Parameters["ShadowmappedLights"].SetValue(bufferShadowmappedLights);
 		}
 
+		[Obsolete()]
 		public void Draw(GraphicsDevice device)
         {
-			for (int i = 0; i < LightsShadowmappedMax; i++)
-            {
-				Light light = lights[i];
+			//for (int i = 0; i < LightsShadowmappedMax; i++)
+   //         {
+			//	Light light = lights[i];
 
-				if (light.active)
-					Main.Renderer.DrawsPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
+			//	if (light.active)
+   //                 client.Renderer.DrawsPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
 
-				if (DebugDrawLightInstanceVolumes)
-				{
-					Main.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
-					{
-						Color = Color.Red * 0.2f,
-						Position = light.position,
-						Scale = new Vector3(light.end),
-					});
-				}
-            }
+			//	if (DebugDrawLightInstanceVolumes)
+			//	{
+   //                 client.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
+			//		{
+			//			Color = Color.Red * 0.2f,
+			//			Position = light.position,
+			//			Scale = new Vector3(light.end),
+			//		});
+			//	}
+   //         }
 
-			for (int i = 0; i < LightsShadowmappedMax; i++)
-            {
-				Light light = lightsShadowmapped[i];
+			//for (int i = 0; i < LightsShadowmappedMax; i++)
+   //         {
+			//	Light light = lightsShadowmapped[i];
 				
-				if (light.active)
-					Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
+			//	if (light.active)
+			//		Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
 
-                if (DebugDrawLightInstanceVolumes)
-                {
-                    Main.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
-                    {
-                        Color = Color.Orange * 0.2f,
-                        Position = light.position,
-                        Scale = new Vector3(light.end),
-                    });
-                }
-            }
+   //             if (DebugDrawLightInstanceVolumes)
+   //             {
+   //                 Main.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
+   //                 {
+   //                     Color = Color.Orange * 0.2f,
+   //                     Position = light.position,
+   //                     Scale = new Vector3(light.end),
+   //                 });
+   //             }
+   //         }
         }
 
 		private ChunkPosition[] drawnChunks = new ChunkPosition[9 * 9 * 9];
@@ -444,8 +442,8 @@ namespace Engine.Common
 				}
 			}
 
-			if (anyDrawn)
-				Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
+			//if (anyDrawn)
+			//	Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
 		}
 
 		public void Dispose()

@@ -92,11 +92,6 @@ namespace ViMG
 		public static double TimeP = 0;
 		//public static double TimeC = 0;
 
-		public static RenderTarget2D DepthTarget;
-		public static RenderTarget2D WorldTarget;
-
-		public static RendererDeferred Renderer;
-
 		public static Thread MainThread;
 
 		public static bool MouseControl;
@@ -259,8 +254,6 @@ namespace ViMG
 			Window.ClientSizeChanged += WindowResolutionChanged;
 			Window.AllowUserResizing = true;
 
-			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
-
 			modManager.LoadModDlls();
 			Registry = new RegistryService(GraphicsDevice);
 			Registry.Register();
@@ -272,16 +265,11 @@ namespace ViMG
 			//Main.MouseControl = false;
 			//Main.DrawCursor = false;
 #endif
-
-			Renderer = new RendererDeferred(GraphicsDevice);
 		}
 
 		private void WindowResolutionChanged(object? sender, EventArgs args)
         {
 			Options.CurrentWindowResolution = new Point(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
-			WorldTarget?.Dispose();
-			WorldTarget = new RenderTarget2D(GraphicsDevice, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y, 
-				false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 			camera.MarkDirty();
 
 			WindowResizedEvent?.Invoke(Options.CurrentWindowResolution);
@@ -374,8 +362,6 @@ namespace ViMG
 					//world.Update(deltaTime);
 			}
 
-			Renderer.Update(deltaTime);
-
 			if (gameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				if (IsActive && !paused && !MouseControl)
@@ -405,8 +391,6 @@ namespace ViMG
 
             imguiRenderer.BeforeLayout(gameTime);
 
-            Renderer.FrameStart();
-
 			GraphicsDevice.Clear(Color.White);
 
 			Matrix view = camera.GetViewMatrix();
@@ -426,15 +410,8 @@ namespace ViMG
 
 			batch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);
 
-			if (Renderer.GetOutput() != null)
-				batch.Draw(Renderer.GetOutput().Value.RenderTarget as RenderTarget2D, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
-			//batch.Draw(WorldTarget, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
-
 			gameStateManager.DrawUI(batch);
-			/*if (WorldLoaded)
-				world.DrawUI(batch);
-			else ui.Draw(batch);*/
-
+			
 			batch.End();
 
 			batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, null);

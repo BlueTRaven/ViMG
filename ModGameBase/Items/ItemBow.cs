@@ -86,13 +86,13 @@ namespace ViMG.Items
             this.color = color;
         }
 
-        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
         }
 
         public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)

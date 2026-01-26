@@ -24,11 +24,11 @@ namespace ViMG.WorldLogics
             {
                 firstUpdate = true;
 
-                Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
-                Main.Renderer.DoCSMLight = false;
+                //Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
+                //Main.Renderer.DoCSMLight = false;
 
-                Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(0);
-                Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(0);
+                //Main.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(0);
+                //Main.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(0);
             }
         }
     }

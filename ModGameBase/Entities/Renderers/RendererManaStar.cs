@@ -65,7 +65,7 @@ namespace ViMG.Entities.Renderers
                     if (state == ManaStar.State.DivingInSky)
                         distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / ManaStar.DIVINGINSKY_TIME));
 
-                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
+                    client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
                         material, mesh,
                         Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                         Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
@@ -100,12 +100,12 @@ namespace ViMG.Entities.Renderers
 
                     float sortVal = (Main.camera.Position - position).Length();
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
                     material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p),
                         // TODO mult by time
                         directionalSourceRect.front, Color.White /** manaStar.world.GetTimeOfNight() * (1 - t)*/));
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
                         material, mesh,
                     Matrix.CreateScale(sx, 1, 1) *
                         lerpEndRotMat * Matrix.CreateTranslation(p),

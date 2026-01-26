@@ -336,12 +336,12 @@ namespace ViMG.WorldLogics
             }
         }
 
-        public bool UpdateClientLight(double deltaTime, float worldTime, Skybox skybox, ref Vector3 lightDir, ref Vector4 lightColor)
+        public bool UpdateClientLight(RendererDeferred renderer, double deltaTime, float worldTime, Skybox skybox, ref Vector3 lightDir, ref Vector4 lightColor)
         {
             if (transitionTimer > 0)
             {
                 float p = 1 - (transitionTimer / currentTransition.Time);
-                Main.Renderer.FogExtents = Vector2.Lerp(currentTransition.A.FogExtents, currentTransition.B.FogExtents, p);
+                renderer.FogExtents = Vector2.Lerp(currentTransition.A.FogExtents, currentTransition.B.FogExtents, p);
                 if (skybox != null)
                 {
                     skybox.WeatherAlpha = MathHelper.Lerp(currentTransition.A.SkyboxAlpha, currentTransition.B.SkyboxAlpha, p);
@@ -353,7 +353,7 @@ namespace ViMG.WorldLogics
             }
             else
             {
-                Main.Renderer.FogExtents = currentWeather.FogExtents;
+                renderer.FogExtents = currentWeather.FogExtents;
                 skybox.WeatherAlpha = currentWeather.SkyboxAlpha;
                 skybox.WeatherColor = currentWeather.SkyboxColor;
                 lightColor = currentWeather.DirLightColor.ToVector4()
@@ -661,9 +661,9 @@ namespace ViMG.WorldLogics
                 drawInstanceBuffer.SetData(instancedData, min, max - min);
         }
 
-        public void Draw(GraphicsDevice device, Engine.Common.Camera camera, float worldTime)
+        public void Draw(GraphicsDevice device, RendererDeferred renderer, Engine.Common.Camera camera, float worldTime)
         {
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
+            renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
                 materialRain, rainMesh, drawInstanceBuffer, min, max - min));
 
             if (currentWeather.WType == WeatherType.Cloudy || IsTransitioningFrom(WeatherType.Cloudy) || IsTransitioningTo(WeatherType.Cloudy))
@@ -682,7 +682,7 @@ namespace ViMG.WorldLogics
                         p = 1 - transitionTimer / currentTransition.Time;
                 }
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = materialCloudy,
@@ -694,7 +694,7 @@ namespace ViMG.WorldLogics
                     Mesh = skyboxCloudsMesh,
                 });
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
@@ -721,7 +721,7 @@ namespace ViMG.WorldLogics
                         p = 1 - transitionTimer / currentTransition.Time;
                 }
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = materialSparselyCloudy,
@@ -733,7 +733,7 @@ namespace ViMG.WorldLogics
                     Mesh = skyboxCloudsMesh,
                 });
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = materialFog,
@@ -745,7 +745,7 @@ namespace ViMG.WorldLogics
                     Mesh = skyboxCloudsMesh,
                 });
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
@@ -768,7 +768,7 @@ namespace ViMG.WorldLogics
                         p = 1 - transitionTimer / currentTransition.Time;
                 }
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = materialFog,
@@ -779,7 +779,7 @@ namespace ViMG.WorldLogics
                     Mesh = skyboxCloudsMesh,
                 });
 
-                Main.Renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
+                renderer.DrawsSkyboxPass.Add(new RendererDeferred.TransparentDraw()
                 {
                     SortValue = 199,
                     Material = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),

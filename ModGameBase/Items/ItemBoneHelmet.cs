@@ -62,12 +62,12 @@ namespace ViMG.Items
         {
         }
 
-        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 

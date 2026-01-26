@@ -307,7 +307,7 @@ namespace ViMG
 		[ConsoleCommandVar("rsv_hitbox_draw", "Singleplayer only. Draws hitboxes. Default = false")]
 		public static bool DoDebugDraw = false;
 
-		public void DrawDebug(GraphicsDevice device, Engine.Common.Camera camera)
+		public void DrawDebug(GraphicsDevice device, RendererDeferred renderer, Engine.Common.Camera camera)
         {
 			if (!DoDebugDraw) return;
 
@@ -329,11 +329,11 @@ namespace ViMG
 						Matrix.CreateFromQuaternion(hitboxes[i].bounds.Orientation) *
 						Matrix.CreateTranslation(hitboxes[i].bounds.Center);
 
-					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance, 
+					renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance, 
 						new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh,
 						transform, tintColor: Color.Red * 0.5f));
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+                    renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
                         new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh,
 						Matrix.CreateScale(Cube.CUBE_SCALE * 0.25f) * 
 						Matrix.CreateTranslation(hitboxes[i].bounds.Center), tintColor: Color.White * 0.5f));

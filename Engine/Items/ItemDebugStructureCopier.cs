@@ -130,9 +130,9 @@ namespace ViMG.Items
         {
         }
 
-        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
-            base.DrawInWorld(device, item, transform);
+            base.DrawInWorld(device, renderer, item, transform);
 
             var copier = this.item as ItemDebugStructureCopier;
 
@@ -169,7 +169,7 @@ namespace ViMG.Items
                 }
                 else scale.Z -= Cube.CUBE_SCALE;
 
-                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
+                renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
                     new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube,
                     Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start),
                     tintColor: Color.White * 0.5f));

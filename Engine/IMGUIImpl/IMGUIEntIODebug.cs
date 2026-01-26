@@ -225,16 +225,17 @@ namespace ViMG.IMGUIImpl
                                                 debugDraw = entityData.id;
                                             }
 
-                                            if (debugDraw.HasValue && debugDraw.Value == entityData.id)
+                                            if (Main.gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient() != null && 
+                                                debugDraw.HasValue && debugDraw.Value == entityData.id)
                                             {
-                                                Main.Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
+                                                theIsland.GetClient().Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
                                                 {
                                                     Color = new Color(Color.Purple, 0.2f),
                                                     Position = entityData.position.InWorldSpace(),
                                                     Scale = new Vector3(Cubes.Cube.CUBE_SCALE * Chunk.CHUNK_SIZE),
                                                 });
 
-                                                Main.Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
+                                                theIsland.GetClient().Renderer.DEBUGMarkersRect.Add(new Rendering.RendererDeferred.DEBUGDraw
                                                 {
                                                     Color = new Color(Color.Purple, 0.2f),
                                                     Position = loadedEnt.Position,

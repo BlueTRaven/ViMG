@@ -178,7 +178,7 @@ namespace ViMG.Entities.Renderers
                             SortValue = distance,
                         };
 
-                        Main.Renderer.AddTransparentDraw(draw);
+                        client.Renderer.AddTransparentDraw(draw);
                     }
                 }
             }
@@ -193,7 +193,7 @@ namespace ViMG.Entities.Renderers
 
             renderer.SBO.SetData(renderer.Draws.Buffer);
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
+            client.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
                 renderer.Material, mesh, renderer.SBO, 0, renderer.Draws.Length));
         }
     }

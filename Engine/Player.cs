@@ -1512,93 +1512,93 @@ namespace ViMG
 
 		public override void Draw(GraphicsDevice device, Effect effect)
 		{
-            var inventory = world.InventoryManager.Get(this.inventory);
+   //         var inventory = world.InventoryManager.Get(this.inventory);
 
-            lookAtMaterial = StaticMaterials.Cubes;
+   //         lookAtMaterial = StaticMaterials.Cubes;
 
-   //         if (inventory.Get(highlightIndex).item != null)
+   ////         if (inventory.Get(highlightIndex).item != null)
+			////{
+			////	// TODO use Rotation
+			////	inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
+			////}
+
+			//if (mesh.IBO == null)
+			//	mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f, Enums.Alignment.Center);
+			//	//mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
+
+			//if (lookAtMesh.IBO == null)
 			//{
-			//	// TODO use Rotation
-			//	inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
+   //             FastList<VertexCube> vertices = new FastList<VertexCube>();
+   //             List<int> indices = new List<int>();
+			//	MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
+			//	lookAtMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+			//	//lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+			//	//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
+			//	//lookAtMesh.Name = "Look At Mesh";
 			//}
 
-			if (mesh.IBO == null)
-				mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f, Enums.Alignment.Center);
-				//mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
+			//if (currentThirdPersonDistance > THIRDPERSON_FADEOUT_START)
+			//{
+			//	float p = ((currentThirdPersonDistance - THIRDPERSON_FADEOUT_START) / 
+			//		(THIRDPERSON_FADEOUT_END - THIRDPERSON_FADEOUT_START));
 
-			if (lookAtMesh.IBO == null)
-			{
-                FastList<VertexCube> vertices = new FastList<VertexCube>();
-                List<int> indices = new List<int>();
-				MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-				lookAtMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
-				//lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-				//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-				//lookAtMesh.Name = "Look At Mesh";
-			}
+			//	Color color = Color.White * p;
 
-			if (currentThirdPersonDistance > THIRDPERSON_FADEOUT_START)
-			{
-				float p = ((currentThirdPersonDistance - THIRDPERSON_FADEOUT_START) / 
-					(THIRDPERSON_FADEOUT_END - THIRDPERSON_FADEOUT_START));
+			//	// TODO use local Rotation
+			//	Matrix worldMat = Matrix.CreateRotationX(Math.Clamp(-Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+			//		Matrix.CreateRotationY(-Rotation.Y) *
+			//		Matrix.CreateTranslation(world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position);
 
-				Color color = Color.White * p;
+   //             /*if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
+			//	{
+			//		Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(currentThirdPersonDistance,
+   //                     worldMat, DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, color));
+			//	}
+			//	else
+			//	{
+			//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
+			//			DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
+			//	}*/
+   //         }
 
-				// TODO use local Rotation
-				Matrix worldMat = Matrix.CreateRotationX(Math.Clamp(-Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-					Matrix.CreateRotationY(-Rotation.Y) *
-					Matrix.CreateTranslation(world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position);
+			//if (IsLocalPlayer && lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
+			//{
+			//	float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
+			//	Color color = Color.Lerp(Color.White, Color.Black, s);
 
-                /*if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
-				{
-					Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(currentThirdPersonDistance,
-                        worldMat, DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, color));
-				}
-				else
-				{
-					Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
-						DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
-				}*/
-            }
+			//	if (ExpandedMineState && 
+			//		inventory.Get(highlightIndex).valid && inventory.Get(highlightIndex).item is IHasAreaEffect pickStats)
+			//	{
+			//		CubePosition[] positions = pickStats.GetAffectedPositions(world.ChunkManager.CubeView, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
+			//		Span<ushort> ids = stackalloc ushort[positions.Length];
 
-			if (IsLocalPlayer && lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
-			{
-				float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
-				Color color = Color.Lerp(Color.White, Color.Black, s);
+			//		world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);
 
-				if (ExpandedMineState && 
-					inventory.Get(highlightIndex).valid && inventory.Get(highlightIndex).item is IHasAreaEffect pickStats)
-				{
-					CubePosition[] positions = pickStats.GetAffectedPositions(world.ChunkManager.CubeView, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
-					Span<ushort> ids = stackalloc ushort[positions.Length];
-
-					world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);
-
-					for (int i = 0; i < positions.Length; i++)
-					{
-						if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
-						{
-							Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-                                lookAtMesh,
-                                Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-								Matrix.CreateScale(1.126f) *
-								Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-								Matrix.CreateTranslation(positions[i].InWorldSpace()),
-								new RectangleF(0, 1008, 16, 16), color));
-						}
-					}
-				}
-				else 
-				{
-					Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-                        lookAtMesh,
-                        Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-						Matrix.CreateScale(1.126f) *
-						Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-						Matrix.CreateTranslation(LookAtPos.InWorldSpace()),
-						new RectangleF(0, 1008, 16, 16), color));
-				}
-			}
+			//		for (int i = 0; i < positions.Length; i++)
+			//		{
+			//			if (pickStats.CanPredictAir() || Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
+			//			{
+			//				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
+   //                             lookAtMesh,
+   //                             Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+			//					Matrix.CreateScale(1.126f) *
+			//					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+			//					Matrix.CreateTranslation(positions[i].InWorldSpace()),
+			//					new RectangleF(0, 1008, 16, 16), color));
+			//			}
+			//		}
+			//	}
+			//	else 
+			//	{
+			//		Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
+   //                     lookAtMesh,
+   //                     Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
+			//			Matrix.CreateScale(1.126f) *
+			//			Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
+			//			Matrix.CreateTranslation(LookAtPos.InWorldSpace()),
+			//			new RectangleF(0, 1008, 16, 16), color));
+			//	}
+			//}
 		}
 
 		public void DrawUI(SpriteBatch batch)

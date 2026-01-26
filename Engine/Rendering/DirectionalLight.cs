@@ -344,8 +344,6 @@ namespace Engine.Rendering
         {
 			target?.Dispose();
 			targetsArr?.Dispose();
-
-			Main.Renderer.DoCSMLight = false;
 		}
     }
 }

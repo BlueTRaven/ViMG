@@ -777,14 +777,13 @@ namespace ViMG.GameStates
 
             if (client != null)
             {
-                client.Render(device, deltaTime);
-                Main.Renderer.Draw(batch, client.currInterpState.camera);
+                client.Render(device, batch, deltaTime);
             }
 
-            if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer && world != null)
-            {
-                world.DrawDebug(device);
-            }
+            //if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer && world != null)
+            //{
+            //    world.DrawDebug(device);
+            //}
         }
 
         public override void DrawUI(SpriteBatch batch)

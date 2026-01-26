@@ -45,7 +45,7 @@ namespace ViMG.Entities.Renderers
 
                 var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
                 var rotation = entPrev.GetInterpRotation(entCurr, client.TimeC);
-                Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, doorMesh,
+                client.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, doorMesh,
                     Matrix.CreateFromQuaternion(rotation) *
                     Matrix.CreateTranslation(position), sourceRect: new RectangleF(0, 128, 16, 32)));
             }

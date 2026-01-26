@@ -111,7 +111,7 @@ namespace Engine.Clients
 
                     if (!visStats.rollFollowsVelocity)
                     {
-                        Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
+                        client.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(visStats.scale) *
                             Matrix.CreateFromQuaternion(-client.currInterpState.camera.Rotation) *
                             Matrix.CreateTranslation(projectile.position), visStats.sourceRect));
@@ -124,7 +124,7 @@ namespace Engine.Clients
                         Matrix mat = Matrix.CreateConstrainedBillboard(projectile.position,
                             client.currInterpState.camera.Position, axis, -client.currInterpState.camera.Forward, Vector3.Forward);
 
-                        Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
+                        client.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(material, mesh,
                             Matrix.CreateScale(visStats.scale) *
                             mat, visStats.sourceRect));
                     }

@@ -326,12 +326,12 @@ namespace ViMG
 		}
 
 		private static RendererDeferred.DrawMaterial healthbarMaterial = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel);
-		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
+		public static void DrawHealthbar(GraphicsDevice device, RendererDeferred renderer, int health, int maxHealth, Vector3 position)
         {
 			if (meshHealthbar.IBO == null)
 				MakeMeshHealthbar(device);
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
 				healthbarMaterial, meshHealthbar,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
@@ -341,7 +341,7 @@ namespace ViMG
 		}
 		
 		//Draws a line that is tiled along the vertical axis.
-		public static void DrawLineTiled(Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
+		public static void DrawLineTiled(RendererDeferred renderer, Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
 			RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
 			Vector3 axis = endPosition - startPosition;
@@ -355,7 +355,7 @@ namespace ViMG
 
 			for (int i = 0; i < tileTimes; i++)
 			{
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+				renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
 					sourceRectangle, color.ToVector3()));
 			}
@@ -367,7 +367,7 @@ namespace ViMG
 			Vector2 fixedPosition = sourceRectangle.Position;
 			fixedPosition.Y += sourceRectangle.height - fixedHeight;
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
 				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
 				color.ToVector3()));
@@ -375,7 +375,7 @@ namespace ViMG
 
 		//Draws a stretched texture along a line.
 		//If you want the texture to be tiled properly, use DrawLineTiled.
-		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
+		public static void DrawLine(RendererDeferred renderer, Vector3 startPosition, Vector3 endPosition, float width,
             RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
             Vector3 axis = endPosition - startPosition;
@@ -384,7 +384,7 @@ namespace ViMG
 
             Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateScale(width, distance, width) * mat,
                 sourceRectangle, color.ToVector3()));
         }

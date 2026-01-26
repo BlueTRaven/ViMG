@@ -45,7 +45,7 @@ namespace ViMG.Entities.Renderers
 
                 if (itemInstance.item != null)
                 {
-                    itemInstance.item.Client.DrawInWorld(device, itemInstance,
+                    itemInstance.item.Client.DrawInWorld(device, client.Renderer, itemInstance,
                         Matrix.CreateTranslation(-origin) *
                         Matrix.CreateFromQuaternion(ent.rotation) *
                         Matrix.CreateTranslation(ent.position)

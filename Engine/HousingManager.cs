@@ -243,7 +243,8 @@ namespace ViMG
         [ConsoleCommandVar("rsv_housing_draw", "Singleplayer only. Draws housing. Default = false")]
         public static bool DoDebugDraw = false;
 
-        public void DrawDebug(World world, GraphicsDevice device)
+        // TODO
+        public void DrawDebug(GraphicsDevice device, RendererDeferred renderer)
         {
             if (!DoDebugDraw) return;
 
@@ -257,24 +258,24 @@ namespace ViMG
                 //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
-            if (world.WorldInfo.housings != null)
-            {
-                foreach (Housing housing in world.WorldInfo.housings)
-                {
-                    foreach (CubePosition pos in housing.interiorPositions)
-                    {
-                        Vector3 worldPos = pos.InWorldSpace();
-                        float distance = (worldPos - Main.camera.Position).Length();
-                        Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                            Matrix.CreateTranslation(worldPos);
+            //if (world.WorldInfo.housings != null)
+            //{
+            //    foreach (Housing housing in world.WorldInfo.housings)
+            //    {
+            //        foreach (CubePosition pos in housing.interiorPositions)
+            //        {
+            //            Vector3 worldPos = pos.InWorldSpace();
+            //            float distance = (worldPos - Main.camera.Position).Length();
+            //            Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
+            //                Matrix.CreateTranslation(worldPos);
 
-                        //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
-                        Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-                            new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
-                            tintColor: Color.Green * 0.125f));
-                    }
-                }
-            }
+            //            //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+            //            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+            //                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
+            //                tintColor: Color.Green * 0.125f));
+            //        }
+            //    }
+            //}
         }
     }
 }

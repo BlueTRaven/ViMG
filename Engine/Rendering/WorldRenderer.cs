@@ -88,7 +88,7 @@ namespace ViMG.Rendering
 
                 VerySimpleMesh mesh = client.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Opaque) ?? new();
                 if (mesh.IBO != null)
-                    Main.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
+                    client.Renderer.AddOpaqueDraw(new RendererDeferred.GBufferDraw(cubesMaterial, mesh, transform));
 
                 mesh = client.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Transparent) ?? new();
                 if (mesh.IBO != null)
@@ -99,10 +99,10 @@ namespace ViMG.Rendering
                     Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
                     //Vector3 max = new Vector3(Math.Max(minBounds.X, maxBounds.X), Math.Max(minBounds.Y, maxBounds.Y), Math.Max(minBounds.Z, maxBounds.Z));
 
-                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
+                    client.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((int)min.Length(), cubesMaterial, mesh, transform));
                 }
 
-                if (Main.Renderer.EffectEmptyEnabled)
+                if (client.Renderer.EffectEmptyEnabled)
                 {
                     mesh = client.ChunkManager.ChunkMesher?.RenderMesher?.GetMesh(pos, Cubes.Cube.RenderPass.Air) ?? new();
                     if (mesh.IBO != null)
@@ -112,7 +112,7 @@ namespace ViMG.Rendering
 
                         Vector3 min = new Vector3(Math.Min(minBounds.X, maxBounds.X), Math.Min(minBounds.Y, maxBounds.Y), Math.Min(minBounds.Z, maxBounds.Z));
 
-                        Main.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
+                        client.Renderer.DrawsEmptyPass.Add(new Rendering.RendererDeferred.TransparentDraw((int)min.Length(),
                             StaticMaterials.Cubes, mesh, transform));
                     }
                 }
@@ -132,7 +132,7 @@ namespace ViMG.Rendering
                     float p = (float)Math.Sin(Math.PI * 2 * ((time % mp) / mp));
                     float y = (float)Math.Sin(Math.PI * 2 * ((time % my) / my));
 
-                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
+                    client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1001,
                         new RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Night),
                         skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
@@ -143,9 +143,9 @@ namespace ViMG.Rendering
 
                 if (alphaDay > 0)
                 {
-                    Main.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
+                    client.Renderer.EffectRadialFog.Parameters["ColorInterpolate"].SetValue(new Vector3(0, 1, 1 - alphaDay));
 
-                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
+                    client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(1000,
                         new RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Day),
                         skyboxMesh,
                         Matrix.CreateTranslation(new Vector3(-0.5f)) *
@@ -155,7 +155,7 @@ namespace ViMG.Rendering
 
                 if (client.WorldLogic.skybox.WeatherAlpha > 0)
                 {
-                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
+                    client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw()
                     {
                         SortValue = 100,
                         Material = new Rendering.RendererDeferred.DrawMaterial(client.WorldLogic.skybox.Weather),
@@ -183,7 +183,7 @@ namespace ViMG.Rendering
                     Vector3 wsPos = mined.position.InWorldSpace(mined.chunk);
                     Matrix mat = Matrix.CreateTranslation(wsPos);
                     RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mine");
-                    Main.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((client.currInterpState.camera.Position - wsPos).Length(), material, breakMesh,
+                    client.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw((client.currInterpState.camera.Position - wsPos).Length(), material, breakMesh,
                         mat, sourceRect));
                 }
             }

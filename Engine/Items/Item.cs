@@ -220,7 +220,7 @@ namespace ViMG.Items
 
         public virtual void Hold(ClientStates client, BasicState player, Inventory inventory, int index) { }
 
-        public void DrawInHand(GraphicsDevice device, ItemInstance item, BasicState player, Vector3 facing)
+        public void DrawInHand(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, BasicState player, Vector3 facing)
         {
             float widthScale = 1;
             float heightScale = 1;
@@ -237,7 +237,7 @@ namespace ViMG.Items
             Vector3 correctedScale = new Vector3(widthScale, heightScale, 1);
             //if (!player.IsLocalPlayer) correctedScale *= new Vector3(4);
 
-            DrawInWorld(device, item, Player.GetHeldMatrix(player, origin,
+            DrawInWorld(device, renderer, item, Player.GetHeldMatrix(player, origin,
                 correctedScale * new Vector3(scale, scale, 1)));
         }
 
@@ -249,7 +249,7 @@ namespace ViMG.Items
             batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
 
-        public virtual void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        public virtual void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
@@ -261,7 +261,7 @@ namespace ViMG.Items
                 sourceRect.width = -sourceRect.width;
             }
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld,
                 transform, sourceRect));
         }

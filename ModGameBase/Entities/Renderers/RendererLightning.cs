@@ -83,7 +83,7 @@ namespace ViMG.Entities.Renderers
                         Vector3 prev = positions[j - 1];
                         Vector3 current = positions[j];
 
-                        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
+                        DrawHelper3D.DrawLine(client.Renderer, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
                     }
                 }
                 if (type == Main.Registry.EntityRegistry.Get<AimedLightning>().Id)
@@ -132,7 +132,7 @@ namespace ViMG.Entities.Renderers
                         Vector3 prev = positions[j - 1];
                         Vector3 current = positions[j];
 
-                        DrawHelper3D.DrawLine(prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
+                        DrawHelper3D.DrawLine(client.Renderer, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                             mesh, RectangleF.Empty, LightningColor);
                     }
                 }

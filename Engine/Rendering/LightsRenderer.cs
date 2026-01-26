@@ -122,18 +122,18 @@ namespace Engine.Rendering
             effect.Parameters["ShadowmappedLights"].SetValue(bufferShadowmappedLights);
         }
 
-        public void Draw(GraphicsDevice device, LightManager2 lightManager)
+        public void Draw(GraphicsDevice device, RendererDeferred renderer, LightManager2 lightManager)
         {
             for (int i = 0; i < LightManager.LightsShadowmappedMax; i++)
             {
                 LightManager2.Light light = lightManager.Get(i);
 
                 if (light.active)
-                    Main.Renderer.DrawsPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
+                    renderer.DrawsPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end));
 
                 if (LightManager.DebugDrawLightInstanceVolumes)
                 {
-                    Main.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
+                    renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
                     {
                         Color = Color.Red * 0.2f,
                         Position = light.position,
@@ -147,11 +147,11 @@ namespace Engine.Rendering
                 LightManager2.Light light = lightManager.GetShadowmapped(i);
 
                 if (light.active)
-                    Main.Renderer.DrawsShadowmappedPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
+                    renderer.DrawsShadowmappedPointLightVolumePass.Add(new RendererDeferred.PointLightVolumeDraw(i, light.position, light.end, null));
 
                 if (LightManager.DebugDrawLightInstanceVolumes)
                 {
-                    Main.Renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
+                    renderer.DEBUGMarkersSphere.Add(new RendererDeferred.DEBUGDraw
                     {
                         Color = Color.Orange * 0.2f,
                         Position = light.position,
@@ -163,7 +163,7 @@ namespace Engine.Rendering
 
         private ChunkPosition[] drawnChunks = new ChunkPosition[9 * 9 * 9];
 
-        public void DrawShadowmap(GraphicsDevice device, ClientChunkManager chunkManager, LightManager2 lightManager)
+        public void DrawShadowmap(GraphicsDevice device, RendererDeferred renderer, ClientChunkManager chunkManager, LightManager2 lightManager)
         {
             if (!Main.ENABLE_SHADOWS)
             {
@@ -259,7 +259,7 @@ namespace Engine.Rendering
             }
 
             if (anyDrawn)
-                Main.Renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
+                renderer.EffectLightAccumPointLight.Parameters["Cubemaps"].SetValue(lightsCubemaps);
         }
 
         public void Dispose()

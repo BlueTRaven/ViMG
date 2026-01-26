@@ -33,22 +33,22 @@ namespace ViMG.Items
             this.metaItem = item as ItemMetaItem<T>;
         }
 
-        public override void DrawInWorld(GraphicsDevice device, ItemInstance item, Matrix transform)
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
             var meta = metaItem.Get(item);
 
             if (meta != null)
             {
-                base.DrawInWorld(device, item, transform);
+                base.DrawInWorld(device, renderer, item, transform);
 
-                meta.Client.DrawInWorld(device, item, transform);
+                meta.Client.DrawInWorld(device, renderer, item, transform);
             }
             else
             {
                 //If no valid meta, draw an error texture.
                 if (meshItemQuadInWorld.IBO != null)
                 {
-                    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
+                    renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(StaticMaterials.Items,
                         meshItemQuadInWorld, transform, new RectangleF(112, 112, 16, 16)));
                 }
             }

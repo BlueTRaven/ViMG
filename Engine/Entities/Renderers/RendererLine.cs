@@ -52,8 +52,8 @@ namespace ViMG.Entities.Renderers
 
                 (RendererDeferred.DrawMaterial material, RectangleF sourceRectangle) = Line.GetMaterialFromSet(materialSet);
                 if (tileHeight != -1)
-                    DrawHelper3D.DrawLineTiled(position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
-                else DrawHelper3D.DrawLine(position, endPosition, width, material, mesh, sourceRectangle, color);
+                    DrawHelper3D.DrawLineTiled(client.Renderer, position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
+                else DrawHelper3D.DrawLine(client.Renderer, position, endPosition, width, material, mesh, sourceRectangle, color);
             }
         }
     }
