@@ -33,7 +33,7 @@ namespace Engine
 
             GlobalState.GameStateManager.netMode = GameStateManager.NetworkingMode.Server;
 
-            while (true)
+            while (!GlobalState.Exit)
             {
                 Console.WriteLine("Enter a Save Name or * to list available saves:");
                 var saveName = Console.ReadLine();
@@ -66,7 +66,7 @@ namespace Engine
                         }
                     }
                     int port = 9050;
-                    while (true)
+                    while (!GlobalState.Exit)
                     {
                         Console.WriteLine("Enter port (or press enter for the default port, {0})", port);
                         var portStr = Console.ReadLine();
@@ -83,7 +83,7 @@ namespace Engine
             }
 
             DateTime prevTime = DateTime.Now;
-            while (true)
+            while (!GlobalState.Exit)
             {
                 DateTime now = DateTime.Now;
                 TimeSpan delta = now - prevTime;

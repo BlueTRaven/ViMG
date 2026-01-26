@@ -405,7 +405,7 @@ namespace Engine.Networking.Messages
                                             trackedPositions[j] = mtracker.TrackedPositions.ElementAt(j);
                                     }
 
-                                    Console.WriteLine("Server sent create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
+                                    //Console.WriteLine("Server sent create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
                                     toSync.AddAssumeCapacity(new()
                                     {
                                         type = SyncStateType.MajorSync,
@@ -423,7 +423,7 @@ namespace Engine.Networking.Messages
                             // Client never had it loaded in the first place
                             if (serverEntities[player.playerIndex][i].reference.generation != -1)
                             {
-                                Console.WriteLine("Server sent unload ent {0}", reference.id);
+                                //Console.WriteLine("Server sent unload ent {0}", reference.id);
 
                                 toSync.AddAssumeCapacity(new()
                                 {

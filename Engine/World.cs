@@ -931,7 +931,7 @@ namespace ViMG
 			}
 		}
 
-		[ConsoleCommand("give", "Gives the player an item.")]
+		[ConsoleCommand("give", "Gives the player an item.", ConsoleCommandRunSide.Server)]
 		public static void GiveItem(string[] parameters)
 		{
 			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
