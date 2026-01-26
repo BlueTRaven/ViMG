@@ -142,10 +142,28 @@ namespace ViMG.IMGUIImpl
         static IMGUIConsole()
         {
             ReplaceOut();
+        }
 
-            Trace.Listeners.Clear();
-            Trace.AutoFlush = true;
-            Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
+        public static ConsoleTextWriter ReplaceOut()
+        {
+            if (textWriter == null)
+            {
+                textWriter = new ConsoleTextWriter(System.Console.Out);
+                System.Console.SetOut(textWriter);
+                Trace.Listeners.Clear();
+                Trace.AutoFlush = true;
+                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
+            }
+
+            return textWriter;
+        }
+
+        public static void CollectCommands()
+        {
+            commands.Clear();
+            commandsByName.Clear();
+            vars.Clear();
+            varsByName.Clear();
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -159,6 +177,10 @@ namespace ViMG.IMGUIImpl
 
                             if (consoleCommandAttr != null)
                             {
+                                var parameters = methodInfo.GetParameters();
+                                Debug.Assert(parameters.Length == 1, "ConsoleCommands must have one parameter");
+                                Debug.Assert(parameters[0].ParameterType == typeof(string[]), "ConsoleCommands must have a string[] parameter");
+
                                 commands.Add((methodInfo, consoleCommandAttr));
                                 commandsByName.Add(consoleCommandAttr.name, (methodInfo, consoleCommandAttr));
                             }
@@ -180,20 +202,6 @@ namespace ViMG.IMGUIImpl
                     }
                 }
             }
-        }
-
-        public static ConsoleTextWriter ReplaceOut()
-        {
-            if (textWriter == null)
-            {
-                textWriter = new ConsoleTextWriter(System.Console.Out);
-                System.Console.SetOut(textWriter);
-                Trace.Listeners.Clear();
-                Trace.AutoFlush = true;
-                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
-            }
-
-            return textWriter;
         }
 
         [ConsoleCommand("help")]
@@ -601,6 +609,8 @@ namespace ViMG.IMGUIImpl
                 commandHistory.RemoveAt(0);
             StringBuilder sb = new StringBuilder();
             sb.Append(commandName);
+            if (parameters.Length > 0) 
+                sb.Append(' ');
             for (int i = 0; i < parameters.Length; i++)
             {
                 sb.Append(parameters[i]);

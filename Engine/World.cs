@@ -1046,8 +1046,7 @@ namespace ViMG
 							}
 							else if (location == "ray")
 							{
-								CubePosition lookAt = player.LookAtPos;
-
+								CubePosition lookAt = player.LookAtEnd;
 								ent.Position = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
 							}
 

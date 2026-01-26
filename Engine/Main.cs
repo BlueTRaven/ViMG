@@ -97,8 +97,6 @@ namespace ViMG
 		private int numFrameTimes = 0;
 		private float[] frameTimes = new float[256];
 
-		private ModManager modManager = new ModManager();
-
 		private Runner runner;
 
         public Main(string[] args) : base()

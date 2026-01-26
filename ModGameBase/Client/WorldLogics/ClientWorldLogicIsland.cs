@@ -105,18 +105,10 @@ namespace ModGameBase.Client.WorldLogics
             Vector4 lightColor = sunlightColor.ToVector4();
 
             float time = (float)double.Lerp(prev.time, curr.time, client.TimeC);
-            float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
-
-            Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
-             Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
-             Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
-
+         
             WeatherManager.Update(deltaTime, (float)client.Current().time, lightColor);
             var interpPlayer = GlobalState.Registry.EntityRegistry.Get<Player>().GetInterpolated(client, curr.entities.GetLocalPlayerRef());
             WeatherManager.UpdateClient(deltaTime, client.currInterpState.camera, interpPlayer.position, client.ChunkManager.CubeView);
-            WeatherManager.UpdateClientLight(client.Renderer, deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
-
-            directionalLight.UpdateCameras(client, client.currInterpState.camera, lightDir, lightColor);
 
             if (GlobalState.Time - timeSinceLastCamUpdate > 1)
             {
@@ -132,21 +124,39 @@ namespace ModGameBase.Client.WorldLogics
             }
         }
 
-        public override void Render(GraphicsDevice device, ClientStates client)
+        public override void Render(GraphicsDevice device, ClientStates client, double deltaTime)
         {
             Texture2D sunTexture = GlobalState.AssetsManager.GetAsset<Texture2D>("sun");
 
             var curr = client.Current();
             var prev = client.Previous(1);
-
+            
             float time = (float)double.Lerp(prev.time, curr.time, client.TimeC);
+            float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
+
+            Vector3 lightDir = Vector3.Transform(new Vector3(0, 0, SUN_LIGHT_DISTANCE),
+             Matrix.CreateRotationX(MathHelper.ToRadians(angle)) *
+             Matrix.CreateRotationY(MathHelper.ToRadians(45f)));
+            
+            Color sunlightColor = Color.White * (1 - SurfaceTimeHelper.GetTimeOfDay(curr.time));
+
+            if (SurfaceTimeHelper.GetDuskTime(curr.time) > 0)
+            {
+                duskColors[0] = sunlightColor;  //so that we don't snap to the wrong color...
+                duskColors[^1] = sunlightColor;
+                sunlightColor = Utility.MultiLerp(SurfaceTimeHelper.GetDuskTime(curr.time), Color.Lerp, duskColors);
+            }
+
+            Vector4 lightColor = sunlightColor.ToVector4();
+
+            WeatherManager.UpdateClientLight(client.Renderer, deltaTime, (float)curr.time, skybox, ref lightDir, ref lightColor);
+
+            directionalLight.UpdateCameras(client, client.currInterpState.camera, lightDir, lightColor);
 
             WeatherManager.Draw(device, client.Renderer, client.currInterpState.camera, time);
 
             //if (world.LoadedFolderName == "coconut")
             //    sunTexture = GlobalState.assetsManager.GetAsset<Texture2D>("coconut");
-
-            float angle = 360 * ((time % World.DAY_CYCLE_TIME) / World.DAY_CYCLE_TIME);
 
             // TODO this should be elsewhere - we don't need to update this very often?
             directionalLight.DrawShadowmap(device, client.currInterpState.camera, client.ChunkManager.ChunkMesher.RenderMesher);

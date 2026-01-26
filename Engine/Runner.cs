@@ -1,4 +1,5 @@
 ﻿using Engine.Mods;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 
 namespace Engine
 {
@@ -43,6 +45,8 @@ namespace Engine
             modManager.LoadModDlls();
             GlobalState.Registry = new RegistryService(device);
             GlobalState.Registry.Register();
+
+            IMGUIConsole.CollectCommands();
         }
 
         public int UnfixedUpdate(TimeSpan elapsed)

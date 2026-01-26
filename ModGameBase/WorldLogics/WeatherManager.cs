@@ -15,6 +15,8 @@ using LiteNetLib.Utils;
 using Engine.Common;
 using Engine.ChunkStuff;
 using Engine;
+using ViMG.IMGUIImpl;
+using ViMG.GameStates;
 
 namespace ViMG.WorldLogics
 {
@@ -828,6 +830,39 @@ namespace ViMG.WorldLogics
             lightningTimer = reader.GetFloat();
             nextLightningTimer = reader.GetFloat();
             lightningAngle = reader.GetFloat();
+        }
+
+        [ConsoleCommand("set_weather", "Sets weather to one of WeatherManager.WeatherType, or Random for random weather.", ConsoleCommandRunSide.Server)]
+        public static void SetWeather(string[] parameters)
+        {
+            if (!IMGUIConsole.RequireParam(parameters, 0, "weather_type", Enum.GetNames<WeatherType>()))
+                return;
+
+            if (!Enum.TryParse(parameters[0], true, out WeatherType weatherType))
+                return;
+
+            float time = 0;
+            if (parameters.Length >= 1)
+            {
+                if (!float.TryParse(parameters[1], out time))
+                    time = 1;
+            }
+
+            if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
+            {
+                if (theIsland.GetWorld() != null)
+                {
+                    if (theIsland.GetWorld().Logic is WorldLogicIsland logicIsland)
+                    {
+                        logicIsland?.WeatherManager?.DoTransition(weatherType, time);
+                        Console.WriteLine("Set weather to {0}", weatherType.ToString());
+                    } 
+                }
+            }
+            else
+            {
+                return;
+            }
         }
     }
 }

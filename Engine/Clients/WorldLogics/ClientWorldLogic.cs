@@ -19,7 +19,7 @@ namespace Engine.Clients.WorldLogics
 
         }
 
-        public virtual void Render(GraphicsDevice device, ClientStates client)
+        public virtual void Render(GraphicsDevice device, ClientStates client, double deltaTime)
         {
 
         }
