@@ -16,17 +16,22 @@ namespace ViMG.Items
 {
     public class ItemCube : Item
 	{
-		public ushort CubeId;
+		public readonly ushort CubeId;
+        private readonly Cube cube;
 
 		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier)
 		{
-			Client = new ClientItemCube(this, cube.Client.GetHeldSourceRect());
-
 			this.CubeId = cubeId;
+            this.cube = cube;
 
 			name = GlobalState.Registry.CubeRegistry.Get(cubeId).Name;
 			description = GlobalState.Registry.CubeRegistry.Get(cubeId).Description;
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemCube(this, cube.Client.GetHeldSourceRect());
+        }
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

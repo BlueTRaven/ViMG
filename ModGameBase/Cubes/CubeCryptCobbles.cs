@@ -14,8 +14,11 @@ namespace ViMG.Cubes
         {
             Name = "Crypt Cobbles";
             Description = "Perhaps once used for paving the ground of crypts.";
+        }
 
-            Client = new(this, new RectangleF(128, 96, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(128, 96, 16, 16), Color.White);
         }
     }
 }

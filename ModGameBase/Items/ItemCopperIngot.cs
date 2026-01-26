@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemCopperIngot() : base("ingot_copper")
 		{
-            Client = new ClientItem(this, new RectangleF(112, 0, 16, 16));
-
             name = "Copper Ingot";
 			description = "A refined chunk of copper ore. Can be made into a variety of shapes and tools.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 0, 16, 16));
+        }
 	}
 }

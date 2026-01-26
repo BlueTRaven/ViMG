@@ -15,11 +15,14 @@ namespace ViMG.Items
     {
         public ItemBoneChestplate() : base("body_bone")
         {
-            Client = new ClientItemBoneChestplate(this);
-
             name = "Bone Chestplate";
             description = "Bodyarmor made of inflexible bone.";
             Tags.Add("armor_body");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemBoneChestplate(this);
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

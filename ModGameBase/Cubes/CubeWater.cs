@@ -13,8 +13,11 @@ namespace ViMG.Cubes
 			Touchable = false;
 			Transparency = TransparencyValue.TransparentOccludesSiblings;
 			Collision = CollisionValue.LiquidWater;
+        }
 
-            Client = new(this, new RectangleF(0, 16, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(0, 16, 16, 16), Color.White);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

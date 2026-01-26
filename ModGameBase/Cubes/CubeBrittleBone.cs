@@ -13,9 +13,11 @@ namespace ViMG.Cubes
 		public CubeBrittleBone() : base("brittle_bone_block", 6)
 		{
 			Transparency = TransparencyValue.Transparent;
+        }
 
-            Client = new(this, new CubeFacingLayout(new RectangleF(80, 32, 16, 16), new RectangleF(96, 32, 16, 16), new RectangleF(96, 32, 16, 16)),
-            Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new CubeFacingLayout(new RectangleF(80, 32, 16, 16), new RectangleF(96, 32, 16, 16), new RectangleF(96, 32, 16, 16)), Color.White);
         }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

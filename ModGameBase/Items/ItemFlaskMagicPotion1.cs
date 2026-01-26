@@ -15,10 +15,13 @@ namespace ViMG.Items
     {
         public ItemFlaskMagicPotion1() : base("flask_magicpotion1")
         {
-            Client = new ClientItem(this, new RectangleF(48, 96, 16, 16));
-
             name = "Magic Potion 1";
             description = "A potion that restores magic power. It smells like chalk and tastes like it too.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 96, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

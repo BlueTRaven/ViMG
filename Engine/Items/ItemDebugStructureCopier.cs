@@ -30,11 +30,15 @@ namespace ViMG.Items
 
         public ItemDebugStructureCopier() : base("DEBUGStructureCopier")
         {
-            Client = new ClientItemDebugStructureCopier(this);
             name = "DEBUG STRUCTURE COPIER";
             description = "Right click to begin selecting.\n" +
                 "Select two points, then press shift+left click to save to file.\n" +
                 "Press shift+right click to reset at any point.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemDebugStructureCopier(this);
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

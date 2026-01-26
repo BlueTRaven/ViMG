@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemTinIngot() : base("ingot_tin")
         {
-            Client = new ClientItem(this, new RectangleF(96, 0, 16, 16));
-
             name = "Tin Ingot";
 			description = "A refined chunk of tin ore. Can be made into a variety of shapes and tools.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 0, 16, 16));
+        }
 	}
 }

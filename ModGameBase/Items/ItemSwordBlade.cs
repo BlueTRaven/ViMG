@@ -10,16 +10,21 @@ namespace ViMG.Items
 {
     public class ItemSwordBlade : Item
 	{
-		private readonly MeleeAttackStats stats;
+        private readonly Color color;
+        private readonly MeleeAttackStats stats;
 		private readonly string materialName;
 
 		public ItemSwordBlade(string material, Color color, MeleeAttackStats stats) : base("sword_blade_" + material)
 		{
-            Client = new ClientItemSwordBlade(this, color);
-
             this.materialName = char.ToUpper(material[0]) + material.Substring(1);
-			this.stats = stats;
+            this.color = color;
+            this.stats = stats;
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemSwordBlade(this, color);
+        }
 
 		public string GetItemMaterial()
 		{

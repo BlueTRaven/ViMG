@@ -13,10 +13,13 @@ namespace ViMG.Items
     {
         public ItemString() : base("string")
         {
-            Client = new ClientItem(this, new RectangleF(16, 32, 16, 16));
-
             name = "String";
             description = "A simple piece of string extracted from Fibrous Plants.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 32, 16, 16));
         }
     }
 }

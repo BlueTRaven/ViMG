@@ -23,8 +23,11 @@ namespace ViMG.Cubes
         public CubeCrystal() : base("crystal_quartz", 1)
         {
             Transparency = TransparencyValue.Transparent;
+        }
 
-            Client = new ClientCubeCrystal(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeCrystal(this);
         }
     
         public override bool ShouldMeshPass(RenderPass pass)

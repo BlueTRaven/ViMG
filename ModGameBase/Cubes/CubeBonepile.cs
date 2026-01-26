@@ -19,8 +19,11 @@ namespace ViMG.Cubes
 
             Name = "Bone Pile";
             Description = "A motley pile of bones.";
+        }
 
-            Client = new(this, new RectangleF(64, 48, 32, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(64, 48, 32, 16), Color.White);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

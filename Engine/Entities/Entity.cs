@@ -72,7 +72,7 @@ namespace ViMG.Entities
 
 		public virtual void LoadContent(World world)
 		{
-            IMGUIConsole.Assert(!Main.IsHeadless);
+            IMGUIConsole.Assert(!GlobalState.IsHeadless);
 		}
 
 		public virtual void Update(double deltaTime)

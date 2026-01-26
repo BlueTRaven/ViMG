@@ -25,11 +25,14 @@ namespace ViMG.Items
 
         public ItemIronAxe() : base("wepaxe_iron")
         {
-            Client = new ClientItem(this, new RectangleF(128, 64, 16, 16), flipXInHand: true);
-
             name = "Iron Axe";
             description = "An axe made of well-crafted iron.\n" +
                 meleeStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(128, 64, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

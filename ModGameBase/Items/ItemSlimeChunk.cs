@@ -13,10 +13,13 @@ namespace ViMG.Items
 	{
 		public ItemSlimeChunk() : base("slime_chunk")
         {
-            Client = new ClientItem(this, new RectangleF(0, 112, 16, 16));
-
             name = "Slime Chunk";
 			description = "A gooey chunk of slime. Smells surprisingly nice.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 112, 16, 16));
+        }
 	}
 }

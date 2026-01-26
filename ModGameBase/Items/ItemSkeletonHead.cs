@@ -14,14 +14,17 @@ namespace ViMG.Items
     {
         public ItemSkeletonHead() : base("skeleton_head")
         {
-            Client = new ClientItem(this, new RectangleF(48, 64, 16, 16));
-
             name = "Skeleton Head";
             description = "Unlike most skeletons on this strange island, this one doesn't appear to be alive.\n" +
                 "+5% attack damage\n" +
                 "+5% melee attack speed";
 
             Tags.Add("accessory");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 64, 16, 16));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

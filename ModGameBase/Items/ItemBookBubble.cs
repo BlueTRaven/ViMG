@@ -21,13 +21,16 @@ namespace ViMG.Items
 
         public ItemBookBubble() : base("book_spell_bubble")
         {
-            Client = new ClientItem(this, new RectangleF(64, 48, 16, 16), flipXInHand: true);
-
             name = "Spellbook: Bubble";
             description = "A spellbook with an explanation of how to cast \"Bubble\".\n" +
                 "Press LMB to use.\n" +
                 magicStats.GetTooltip() +
                 "Creates a floating bubble. Enemies that touch this bubble will cause it to explode and deal heavy damage.\n";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(64, 48, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

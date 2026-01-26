@@ -12,9 +12,13 @@ namespace ViMG.Items
 	{
 		public ItemIronChunk() : base("iron_chunk")
 		{
-            Client = new ClientItem(this, new RectangleF(48, 16, 16, 16));
             name = "Iron Ore Chunk";
 			description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 16, 16, 16));
+        }
 	}
 }

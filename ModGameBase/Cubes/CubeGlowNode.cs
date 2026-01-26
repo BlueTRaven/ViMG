@@ -16,8 +16,11 @@ namespace ViMG.Cubes
 		{
 			Transparency = TransparencyValue.Invisible;
 			Collision = CollisionValue.None;
+        }
 
-            Client = new(this, RectangleF.Empty, Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, RectangleF.Empty, Color.White);
         }
 
 		public override void PostChunkGen(WorldPrototype world, CubePosition position)

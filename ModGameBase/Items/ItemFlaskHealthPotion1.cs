@@ -13,11 +13,14 @@ namespace ViMG.Items
 	{
 		public ItemFlaskHealthPotion1() : base("flask_healthpotion1")
 		{
-            Client = new ClientItem(this, new RectangleF(16, 96, 16, 16));
-
             name = "Health Potion 1";
 			description = "A health potion. It smells surprisingly nice.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 96, 16, 16));
+        }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {

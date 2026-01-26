@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Engine;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,16 +28,18 @@ namespace ViMG.GameStates
         {
             base.LoadContent(device);
 
-            if (!Main.IsHeadless)
+            if (!GlobalState.IsHeadless)
                 menuMain.LoadContent();
         }
 
         public override void OnOpen(GameState changingFrom)
         {
-            menuMain = new MenuMain(manager);
-            if (!Main.IsHeadless)
+            if (!GlobalState.IsHeadless)
+            {
+                menuMain = new MenuMain(manager);
                 menuMain.LoadContent();
-            SetMenu(menuMain);
+                SetMenu(menuMain);
+            }
 
             base.OnOpen(changingFrom);
         }

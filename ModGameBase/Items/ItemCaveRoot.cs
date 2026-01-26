@@ -19,11 +19,14 @@ namespace ViMG.Items
 
         public ItemCaveRoot() : base("food_root1")
         {
-            Client = new ClientItem(this, new RectangleF(128, 96, 16, 16));
-
             name = "Cave Root Tuber";
             description = "The tuber of a Cave Root. Hardy and nutrituous, but bitter tasting.\n" +
                 "Grants Well Fed for 30 seconds.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(128, 96, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

@@ -14,8 +14,11 @@ namespace ViMG.Cubes
         public CubeBars() : base("bars", 7)
         {
             Transparency = TransparencyValue.Transparent;
+        }
 
-            Client = new(this, new RectangleF(128, 0, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(128, 0, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

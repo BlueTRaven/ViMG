@@ -11,10 +11,17 @@ namespace ViMG.Items
 {
     public abstract class ItemMetaItem<T> : Item where T : Item
 	{
-		public ItemMetaItem(string identifier, RectangleF sourceRect) : base(identifier)
+        private readonly RectangleF sourceRect;
+
+        public ItemMetaItem(string identifier, RectangleF sourceRect) : base(identifier)
 		{
-			Client = new ClientItemMetaItem<T>(this, sourceRect);
-		}
+            this.sourceRect = sourceRect;
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemMetaItem<T>(this, sourceRect);
+        }
 
 		public T Get(ItemInstance item)
 		{

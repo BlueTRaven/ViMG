@@ -33,7 +33,9 @@ namespace ViMG.UIs
 		public virtual void LoadContent()
 		{
             // It is invalid to call LoadContent while headless
-            IMGUIConsole.Assert(!Main.IsHeadless);
+			// ... this was before I separated out client and server stuff, and now the server shouldn't ever 
+			// be able to run menus. This check is kinda unnecessary...
+            IMGUIConsole.Assert(!GlobalState.IsHeadless);
 		}
 
 		public virtual void OnOpen()

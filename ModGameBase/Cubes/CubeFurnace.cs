@@ -26,8 +26,11 @@ namespace ViMG.Cubes
 		public CubeFurnace() : base("furnace_t1", 6)
 		{
 			GlobalState.Registry.GetCurrentMod().Registry.RecipeRegistry.RegisterCatalyst(this);
+        }
 
-			Client = new ClientCubeFurnace(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeFurnace(this);
         }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)

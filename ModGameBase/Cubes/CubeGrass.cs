@@ -14,8 +14,11 @@ namespace ViMG.Cubes
 		public CubeGrass() : base("grass", 2)
 		{
 			Name = "Grass";
-            
-			Client = new ClientCube(this, new CubeFacingLayout(new RectangleF(32, 0, 16, 16), new RectangleF(48, 0, 16, 16), new RectangleF(0, 0, 16, 16)), Color.White);
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCube(this, new CubeFacingLayout(new RectangleF(32, 0, 16, 16), new RectangleF(48, 0, 16, 16), new RectangleF(0, 0, 16, 16)), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

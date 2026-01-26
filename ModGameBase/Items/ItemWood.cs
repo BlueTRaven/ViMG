@@ -12,10 +12,13 @@ namespace ViMG.Items
 	{
 		public ItemWood() : base("wood")
         {
-            Client = new ClientItem(this, new RectangleF(0, 32, 16, 16));
-
             name = "Wood Log";
 			description = "A log of wood. ...kinda looks like bacon, doesn't it? No, you can't eat it.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 32, 16, 16));
+        }
 	}
 }

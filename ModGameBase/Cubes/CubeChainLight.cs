@@ -27,8 +27,11 @@ namespace ViMG.Cubes
 
             color = Color.CornflowerBlue.ToVector4();
             color.W = 0.5f;
+        }
 
-            Client = new ClientCubeChainLight(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeChainLight(this);
         }
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)

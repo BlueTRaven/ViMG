@@ -25,11 +25,14 @@ namespace ViMG.Items
 
         public ItemOrnamentalSword() : base("sword_ornamental")
         {
-            Client = new ClientItem(this, new RectangleF(64, 128, 16, 16));
-
             name = "Ornamental Sword";
             description = "A large sword that looks fancy but in reality is pretty flimsy.\n" +
                 meleeStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(64, 128, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

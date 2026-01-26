@@ -28,9 +28,12 @@ namespace ViMG.Cubes
 			this.rows = rows;
 			this.columns = columns;
 			this.slots = rows * columns;
-
-			this.Client = new ClientCubeChest(this);
 		}
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeChest(this);
+        }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
 		{

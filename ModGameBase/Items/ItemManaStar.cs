@@ -14,8 +14,6 @@ namespace ViMG.Items
     {
         public ItemManaStar() : base("mana_star")
         {
-            Client = new ClientItem(this, new RectangleF(176, 32, 16, 16));
-
             name = "Mana Star";
             description = "A hefty astroid composed of an unknown blue material.\n" +
                 "It fell from the heavens... from where did it come?\n" +
@@ -23,6 +21,11 @@ namespace ViMG.Items
                 "+5 Maximum Magic";
 
             Tags.Add("gear_magic");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(176, 32, 16, 16));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

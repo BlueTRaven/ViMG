@@ -29,12 +29,15 @@ namespace ViMG.Items
 
         public ItemRustedSword() : base("sword_rusted")
         {
-            Client = new ClientItem(this, new RectangleF(32, 128, 16, 16));
-
             name = "Rusted Sword";
             description = "A rusted and ruined sword made of iron. Perhaps it had once been a fine blade, but it is now a shadow of its former self.\n" +
                 meleeStats.GetTooltip() +
                 "Hitting enemies applies bleed for 7 seconds.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 128, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemFlask() : base("flask_empty")
 		{
-            Client = new ClientItem(this, new RectangleF(0, 96, 16, 16));
-
             name = "Empty Flask";
 			description = "An empty flask without substance to fill its void.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 96, 16, 16));
+        }
 	}
 }

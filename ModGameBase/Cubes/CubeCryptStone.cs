@@ -15,8 +15,11 @@ namespace ViMG.Cubes
         {
             Name = "Crypt Stone";
             Description = "Dusty and old, this stone seems to bear many shards and fragments of bone.";
+        }
 
-            Client = new(this, new RectangleF(112, 96, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(112, 96, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

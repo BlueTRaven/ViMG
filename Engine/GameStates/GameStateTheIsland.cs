@@ -392,7 +392,7 @@ namespace ViMG.GameStates
             player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            if (!Main.IsHeadless)
+            if (!GlobalState.IsHeadless)
                 world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();

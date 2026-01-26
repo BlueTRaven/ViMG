@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemInfusedBone() : base("brittle_infused_bone")
 		{
-            Client = new ClientItem(this, new RectangleF(48, 112, 16, 16));
-
             name = "Infused Brittle Bone";
 			description = "A brittle bone that has been infused with a strange red energy.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 112, 16, 16));
+        }
 	}
 }

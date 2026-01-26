@@ -15,14 +15,17 @@ namespace ViMG.Items
     {
         public ItemBoneWhistle() : base("bone_whistle")
         {
-            Client = new ClientItem(this, new RectangleF(80, 80, 16, 16));
-
             name = "Bone Whistle";
             description = "A whistle carved of bone.\n" +
                 "+5 defense\n" +
                 "Skeletons and other weak creatures of bone will no longer attack you.";
 
             Tags.Add("accessory");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 80, 16, 16));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

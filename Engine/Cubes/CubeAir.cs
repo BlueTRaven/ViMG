@@ -13,8 +13,6 @@ namespace ViMG.Cubes
 			Touchable = false;
 			Collision = CollisionValue.None;
 			Transparency = TransparencyValue.Air;
-
-			Client = new(this, new RectangleF(0, 976, 1, 1), Color.White);
 		}
-	}
+    }
 }

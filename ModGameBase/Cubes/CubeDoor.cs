@@ -17,8 +17,11 @@ namespace ViMG.Cubes
             Name = "Door";
 
             Transparency = TransparencyValue.Invisible;
+        }
 
-            Client = new(this, new RectangleF(32, 32, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(32, 32, 16, 16), Color.White);
         }
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)

@@ -21,11 +21,14 @@ namespace ViMG.Items
 
         public ItemRodOfShock() : base("staff_spell_shock")
         {
-            Client = new ClientItem(this, new RectangleF(112, 96, 16, 16));
-
             name = "Staff of Shock";
             description = "Delivers a brief shock in a line in front of you. Ouch.\n" +
                 magicStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 96, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

@@ -21,8 +21,11 @@ namespace ViMG.Cubes
 
             Transparency = TransparencyValue.Transparent;
 			Collision = CollisionValue.None;
+        }
 
-            Client = new(this, new RectangleF(48, 80, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(48, 80, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

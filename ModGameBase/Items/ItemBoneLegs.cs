@@ -15,11 +15,14 @@ namespace ViMG.Items
     {
         public ItemBoneLegs() : base("legs_bone")
         {
-            Client = new ClientItemBoneLegs(this);
-
             name = "Bone Leggings";
             description = "Leggings produced from bone.";
             Tags.Add("armor_legs");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemBoneLegs(this);
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

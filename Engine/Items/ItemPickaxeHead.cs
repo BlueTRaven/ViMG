@@ -39,16 +39,21 @@ namespace ViMG.Items
 			}
 		}
 
-		private PickaxeStats stats;
-		private string materialName;
+		private readonly PickaxeStats stats;
+		private readonly string materialName;
+		private readonly Color color;
 
 		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material)
 		{
-			Client = new ClientItemPickaxeHead(this, color);
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
-
-			this.stats = stats;
+            this.color = color;
+            this.stats = stats;
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemPickaxeHead(this, color);
+        }
 
 		public string GetItemMaterial()
 		{

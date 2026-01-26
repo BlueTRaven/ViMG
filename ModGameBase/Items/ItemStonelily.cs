@@ -14,14 +14,17 @@ namespace ViMG.Items
     {
         public ItemStonelily() : base("stone_lily")
         {
-            Client = new ClientItem(this, new RectangleF(0, 80, 16, 16));
-
             name = "Stone Lily";
             description = "A lily made of solid stone. Despite its cold exterior, its beautiful appearance warms your heart.\n" +
                 "+4 defense\n" +
                 "+5% magic damage";
 
             Tags.Add("accessory");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 80, 16, 16));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

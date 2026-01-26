@@ -25,8 +25,10 @@ namespace ViMG
 
             try
             {
-                using (var game = new Main(args))
-                    game.Run();
+                HeadlessRunner runner = new HeadlessRunner();
+                runner.Run();
+                //using (var game = new Main(args))
+                //    game.Run();
             }
             catch (Exception e)
             {

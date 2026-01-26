@@ -19,8 +19,11 @@ namespace ViMG.Cubes
         public CubeOrangeCoveredStone() : base("stone_covered_orange", 3)
         {
             Name = "Orange Mushroom Covered Stone";
+        }
 
-            Client = new ClientCubeOrangeCoveredStone(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeOrangeCoveredStone(this);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

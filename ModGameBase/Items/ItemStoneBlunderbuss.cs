@@ -29,13 +29,16 @@ namespace ViMG.Items
 
 		public ItemStoneBlunderbuss() : base("stone_blunderbuss")
         {
-            Client = new ClientItem(this, new RectangleF(80, 128, 16, 16), flipXInHand: true);
-
             name = "Stone Blunderbuss";
-			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +
+			description = "A blunderbuss crudely made from stone. How? Don't ask.\n" +
 				attackStats.GetTooltip() +
 				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread.\n" +
 				"Consumes 4 ammo per shot.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 128, 16, 16), flipXInHand: true);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

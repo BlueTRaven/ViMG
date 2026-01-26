@@ -27,8 +27,11 @@ namespace ViMG.Cubes
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.None;
+        }
 
-            Client = new ClientCubeCampfire(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeCampfire(this);
         }
 
         public override bool CanPlace(World world, ChunkManager manager, CubePosition position)

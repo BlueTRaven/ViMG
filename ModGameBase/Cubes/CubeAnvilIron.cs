@@ -19,8 +19,11 @@ namespace ViMG.Cubes
 		public CubeAnvilIron() : base("anvil_iron", 6)
 		{
 			Transparency = TransparencyValue.Transparent;
+        }
 
-            Client = new(this, new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White);
         }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)

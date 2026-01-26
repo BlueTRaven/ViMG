@@ -13,18 +13,23 @@ namespace ViMG.Items
 {
     public class ItemMetalHelmet : Item
     {
-        private string material;
+        private readonly string material;
+        private readonly Color color;
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
         public ItemMetalHelmet(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("helmet_" + material)
         {
-            Client = new ClientItemMetalHelmet(this, color);
-
             this.material = char.ToUpper(material[0]) + material.Substring(1);
+            this.color = color;
             this.stats = stats;
             this.setBonus = setBonus;
             Tags.Add("armor_head");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemMetalHelmet(this, color);
         }
 
         public override string GetName(ItemInstance item)

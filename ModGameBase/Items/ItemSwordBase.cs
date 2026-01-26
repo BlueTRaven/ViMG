@@ -15,7 +15,11 @@ namespace ViMG.Items
 	{
 		public ItemSwordBase() : base("sword_base")
         {
-            Client = new ClientItem(this, new RectangleF(0, 0, 16, 16));
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 0, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

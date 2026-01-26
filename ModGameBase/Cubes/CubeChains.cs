@@ -21,8 +21,11 @@ namespace ViMG.Cubes
             Collision = CollisionValue.Rope;
 
             Name = "Rusted Steel Chains";
+        }
 
-            Client = new ClientCubeChains(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeChains(this);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

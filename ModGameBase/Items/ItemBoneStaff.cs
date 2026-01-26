@@ -23,8 +23,6 @@ namespace ViMG.Items
 
         public ItemBoneStaff() : base("magic_bone_staff")
         {
-            Client = new ClientItem(this, new RectangleF(208, 124, 19, 20));
-
             name = "Runic Bone Staff";
             description = "A staff crafted from finely-carved bone.\n" +
                 magicStats.GetTooltip();
@@ -32,6 +30,11 @@ namespace ViMG.Items
             visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(80, 128, 32, 32), Cube.CUBE_SCALE);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, magicStats.attackStats.damage,
                 magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(208, 124, 19, 20));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

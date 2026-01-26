@@ -15,7 +15,11 @@ namespace ViMG.Items
 	{
 		public ItemPickaxeBase() : base("pickaxe_base")
         {
-            Client = new ClientItem(this, new RectangleF(16, 0, 16, 16));
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 0, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

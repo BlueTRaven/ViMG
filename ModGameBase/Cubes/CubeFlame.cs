@@ -23,8 +23,11 @@ namespace ViMG.Cubes
         {
             Transparency = TransparencyValue.Transparent | TransparencyValue.InvisibleOnDepth;
             Collision = CollisionValue.None;
+        }
 
-            Client = new ClientCubeFlame(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeFlame(this);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

@@ -25,8 +25,11 @@ namespace ViMG.Cubes
             Name = "Thorn";
 
             Transparency = TransparencyValue.TransparentOccludesSiblings;
+        }
 
-            Client = new ClientCubeThorn(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeThorn(this);
         }
 
         public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)

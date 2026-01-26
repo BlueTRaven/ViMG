@@ -19,12 +19,15 @@ namespace ViMG.Items
 
 		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal")
 		{
-            Client = new ClientItem(this, new RectangleF(32, 144, 16, 16), flipXInHand: true);
-
             name = "Lavacrystal Pickaxe";
 			description = "A pickaxe made of enchanted bones and lava crystal.\n" +
 				stats.GetTooltip();
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 144, 16, 16), flipXInHand: true);
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

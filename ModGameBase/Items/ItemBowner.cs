@@ -23,8 +23,6 @@ namespace ViMG.Items
 
         public ItemBowner() : base("bow_bowner")
         {
-			Client = new ClientItem(this, new RectangleF(160, 128, 16, 16));
-
             name = "Bowner";
             description = "A bow crafted from finely-carved bone.\n" +
                 attackStats.GetTooltip() +
@@ -34,6 +32,11 @@ namespace ViMG.Items
 				Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE, 1, true, 0.5f, true);
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(160, 128, 16, 16));
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

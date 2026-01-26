@@ -24,11 +24,14 @@ namespace ViMG.Items
 
         public ItemLoreIsland1() : base("book_lore_island1")
         {
-            Client = new ClientItem(this, new RectangleF(48, 32, 16, 16));
-
             name = "The Island of Vi: A Mythica";
             description = "(Lore Item)\n" +
                 "By Serris of Agaldam";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 32, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

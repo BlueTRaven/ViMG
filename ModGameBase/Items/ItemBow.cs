@@ -15,18 +15,21 @@ namespace ViMG.Items
 {
     public class ItemBow : Item
 	{
-		private string materialName;
-
-		private readonly RangedAttackStats rangedAttackStats;
+		private readonly string materialName;
+        private readonly Color color;
+        private readonly RangedAttackStats rangedAttackStats;
 
 		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material)
 		{
-			Client = new ClientItemBow(this, color);
-
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
-
-			this.rangedAttackStats = stats;
+            this.color = color;
+            this.rangedAttackStats = stats;
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemBow(this, color);
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

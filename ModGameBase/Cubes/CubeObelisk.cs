@@ -19,8 +19,11 @@ namespace ViMG.Cubes
         public CubeObelisk() : base("obelisk", 0, 4)
         {
             Transparency = TransparencyValue.TransparentOccludesSiblings;
+        }
 
-            Client = new ClientCubeObelisk(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeObelisk(this);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -88,8 +88,6 @@ namespace ViMG
 		public const bool DO_RENDER_MESHING = true;
 		public const bool DO_COLLISION_MESHING = true;
 		
-        public static bool IsHeadless = false;
-
 		//public static bool WorldLoaded = false;
 
 		//private MenuMain ui;

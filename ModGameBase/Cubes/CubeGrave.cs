@@ -21,8 +21,11 @@ namespace ViMG.Cubes
         {
             Name = "Grave";
             Description = "Not obtainable";
+        }
 
-            Client = new ClientCubeGrave(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeGrave(this);
         }
 
         private static CubePosition[] adjacents =

@@ -47,6 +47,8 @@ namespace Engine
 
         public int UnfixedUpdate(TimeSpan elapsed)
         {
+            GlobalState.Time += elapsed.TotalSeconds;
+
             int numUpdates = 0;
             accumulator += elapsed.TotalSeconds;
             while (accumulator >= Main.FIXED_STEP && !GlobalState.Exit)
@@ -61,10 +63,7 @@ namespace Engine
 
         public void FixedUpdate(double deltaTime)
         {
-            GlobalState.Time += deltaTime;
-
             GlobalState.GameStateManager.Update(deltaTime);
-
         }
     }
 }

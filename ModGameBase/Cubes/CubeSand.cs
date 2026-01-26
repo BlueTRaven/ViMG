@@ -14,8 +14,12 @@ namespace ViMG.Cubes
 	{
 		public CubeSand() : base("sand", 2)
 		{
-            Client = new ClientCubeSand(this);
 		}
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeSand(this);
+        }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{

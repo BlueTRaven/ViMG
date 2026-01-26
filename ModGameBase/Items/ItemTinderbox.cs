@@ -18,10 +18,13 @@ namespace ViMG.Items
     {
         public ItemTinderbox() : base("tinderbox")
         {
-            Client = new ClientItem(this, new RectangleF(32, 32, 16, 16));
-
             name = "Tinderbox";
             description = "A tinderbox, as well as a set of flint and steel, used to light fires. Right-click on the ground to create a fire that should last you for some time.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 32, 16, 16));
         }
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

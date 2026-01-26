@@ -14,13 +14,16 @@ namespace ViMG.Items
     {
         public ItemOssifiedHeart() : base("heart_ossified")
         {
-            Client = new ClientItem(this, new RectangleF(160, 43, 16, 21));
-
             name = "Ossified Heart";
             description = "Bone in the shape of a heart. Perhaps it was once a true heart, and disease turned it to bone.\n" +
                 "+15 max hp";
 
             Tags.Add("gear_heart");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(160, 43, 16, 21));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

@@ -19,8 +19,11 @@ namespace ViMG.Cubes
             Transparency = TransparencyValue.TransparentOccludesSiblings;
 
             Name = "Glass";
+        }
 
-            Client = new ClientCubeGlass(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeGlass(this);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

@@ -19,11 +19,14 @@ namespace ViMG.Items
     {
         public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull")
         {
-            Client = new ClientItemSuspiciouslyGlowingSkull(this);
-
             name = "Suspiciously Glowing Skull";
             description = "A skull that emits a faint red glowing light. It's unsettling...\n" +
                 "Right click on an altar and something will happen.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemSuspiciouslyGlowingSkull(this);
         }
 
         public override void Hold(Player player, Inventory inventory, int index)

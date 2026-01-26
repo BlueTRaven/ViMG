@@ -30,8 +30,6 @@ namespace ViMG.Items
 
         public ItemRunicBoneSword() : base("sword_runic_bone")
         {
-            Client = new ClientItem(this, new RectangleF(176, 112, 32, 32), scale: 2f);
-
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
                 meleeStats.GetTooltip() +
@@ -41,6 +39,11 @@ namespace ViMG.Items
 
             stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(176, 112, 32, 32), scale: 2f);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

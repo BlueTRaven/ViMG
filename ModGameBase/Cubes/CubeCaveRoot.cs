@@ -19,8 +19,11 @@ namespace ViMG.Cubes
 
             //The entity is responsible for drawing this
             Transparency = TransparencyValue.Invisible;
+        }
 
-            Client = new(this, new RectangleF(), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(), Color.White);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

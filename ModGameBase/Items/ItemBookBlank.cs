@@ -13,11 +13,14 @@ namespace ViMG.Items
     {
         public ItemBookBlank() : base("book_blank")
         {
-            Client = new ClientItem(this, new RectangleF(48, 32, 16, 16));
-
             name = "Book";
             description = "A book made of paper bound together.\n" +
                 "Record your journeys, your discoveries of foreign magics, or perhaps... long-lost love...";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 32, 16, 16));
         }
     }
 }

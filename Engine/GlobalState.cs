@@ -12,6 +12,7 @@ namespace Engine
     public static class GlobalState
     {
         public static ArgParser Args = new ArgParser();
+        public static bool IsHeadless = false;
 
         public static GameStateManager GameStateManager;
 

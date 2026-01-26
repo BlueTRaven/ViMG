@@ -16,12 +16,15 @@ namespace ViMG.Items
     {
         public ItemScrollSonar() : base("scroll_sonar")
         {
-            Client = new ClientItem(this, new RectangleF(112, 32, 16, 16));
-
             name = "Scroll: Void";
             description = "Locates nearby empty spaces.\n" +
                 "Magic Use: 5\n" +
                 "Consumed on use.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 32, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

@@ -19,8 +19,6 @@ namespace ViMG.Items
 
 		public ItemGun() : base("gun_base")
         {
-            Client = new ClientItem(this, new RectangleF(32, 0, 16, 16));
-
             projStats = new ProjectileManager.ProjectileStats()
 			{
 				group = HitboxManager.Group.PLAYER_DEAL,
@@ -28,6 +26,11 @@ namespace ViMG.Items
 				dieOnCollision = true
 			};
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 0, 16, 16));
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Engine.Clients;
 using Engine.Items;
 using Engine.Networking;
@@ -131,12 +132,19 @@ namespace ViMG.Items
 
 		public int Id = -1;
 
-        public ClientItem Client = new ClientItem(null, new RectangleF(112, 112, 16, 16));
+        public ClientItem Client { get; private set; } = null!;
 
 		public Item(string identifier)
 		{
 			this.Identifier = identifier;
+            if (!GlobalState.IsHeadless)
+                Client = ClientInit();
 		}
+
+        public virtual ClientItem ClientInit()
+        {
+            return new ClientItem(null, new RectangleF(112, 112, 16, 16));
+        }
 		
 		public virtual string GetName(ItemInstance item)
 		{

@@ -18,8 +18,11 @@ namespace ViMG.Cubes
         public CubeMushroomPurpleTop() : base("mushroom_purple_top", 4)
         {
             Name = "Purple Mushroom Top";
+        }
 
-            Client = new ClientCubeMushroomPurpleTop(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeMushroomPurpleTop(this);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -15,14 +15,17 @@ namespace ViMG.Items
     {
         public ItemLeatherGloves() : base("leather_gloves")
         {
-            Client = new ClientItem(this, new RectangleF(48, 48, 16, 16));
-
             name = "Leather Gloves";
             description = "A pair of sturdy leather gloves.\n" +
                 "+3 defense\n" +
                 "Hitting an enemy increases your attack speed by 10% for 3 seconds. This effect cannot occur more than once every 10 seconds.";
 
             Tags.Add("accessory");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 48, 16, 16));
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

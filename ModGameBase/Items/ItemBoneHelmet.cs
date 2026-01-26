@@ -34,11 +34,14 @@ namespace ViMG.Items
 
         public ItemBoneHelmet() : base("helmet_bone")
         {
-            Client = new ClientItemBoneHelmet(this);
-
             name = "Bone Helmet";
             description = "A helmet carved from bone. Ordinarily fairly inflexible, enchantments make this armor piece fairly competent.";
             Tags.Add("armor_head");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemBoneHelmet(this);
         }
 
         public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)

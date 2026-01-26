@@ -16,7 +16,11 @@ namespace ViMG.Cubes
     {
         public CubeObeliskPlaque() : base("obelisk_plaque", 0, 4)
         {
-            Client = new ClientCubeObeliskPlaque(this);
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeObeliskPlaque(this);
         }
 
         public override bool CanRightClick(CubePosition position)

@@ -13,12 +13,15 @@ namespace ViMG.Items
     {
         public ItemMusketBall() : base("ammo_bullet_musketball")
         {
-            Client = new ClientItem(this, new RectangleF(96, 32, 16, 16));
-
             name = "Musket Ball";
             description = "A ball made as ammunition for simple ranged weaponry.";
 
             Tags.Add("ammo_bullet");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 32, 16, 16));
         }
     }
 }

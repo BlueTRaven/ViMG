@@ -11,9 +11,12 @@ namespace ViMG.Items
 	{
 		public ItemArrowStone() : base("ammo_arrow_stone")
 		{
-            Client = new ClientItem(this, new RectangleF(16, 48, 16, 16));
-
             Tags.Add("ammo_arrow");
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 48, 16, 16));
+        }
 	}
 }

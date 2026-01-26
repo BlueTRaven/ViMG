@@ -17,8 +17,11 @@ namespace ViMG.Cubes
 		public CubeAncientAltar(bool dropsSelf) : base(dropsSelf ? "ancient_altar_placeable" : "ancient_altar_generated", 12, dropsSelf ? 0 : 1)
 		{
             this.dropsSelf = dropsSelf;
+        }
 
-            Client = new(this, new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new CubeFacingLayout(new RectangleF(80, 16, 16, 16), new RectangleF(96, 16, 16, 16), new RectangleF(96, 16, 16, 16)), Color.White);
         }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

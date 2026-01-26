@@ -18,16 +18,21 @@ namespace ViMG.Cubes
 {
     public class CubeShrine : Cube
     {
+        private readonly RectangleF sourceRect;
         private readonly string buff;
 
         public CubeShrine(string identifier, RectangleF sourceRect, string buff, string name = "", string description = "") : base(identifier, 999)
         {
+            this.sourceRect = sourceRect;
             this.buff = buff;
 
             this.Name = name;
             this.Description = description;
+        }
 
-            Client = new ClientCubeShrine(this, sourceRect);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeShrine(this, sourceRect);
         }
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)

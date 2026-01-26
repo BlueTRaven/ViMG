@@ -16,6 +16,8 @@ namespace Engine
 
         public void Run()
         {
+            GlobalState.IsHeadless = true;
+
             this.runner = new Runner();
             var _services = new GameServiceContainer();
             var _content = new ContentManager(_services);
@@ -26,6 +28,24 @@ namespace Engine
             runner.LoadContent();
 
             runner.Register(null);
+
+            GlobalState.GameStateManager.netMode = GameStateManager.NetworkingMode.Server;
+            var saveName = Console.ReadLine();
+
+            DateTime prevTime = DateTime.Now;
+            while (true)
+            {
+                DateTime now = DateTime.Now;
+                TimeSpan delta = now - prevTime;
+
+                int numFixedUpdates = runner.UnfixedUpdate(delta);
+                for (int i = 0; i < numFixedUpdates; i++)
+                {
+                    runner.FixedUpdate(Main.FIXED_STEP * Options.DEBUGTimescale);
+                }
+
+                prevTime = now;
+            }
         }
     }
 }

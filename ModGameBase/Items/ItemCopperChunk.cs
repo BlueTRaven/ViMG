@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemCopperChunk() : base("copper_chunk")
 		{
-            Client = new ClientItem(this, new RectangleF(80, 16, 16, 16));
-
             name = "Copper Ore Chunk";
 			description = "A weighty chunk of copper ore. It's too raw to be used for anything.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 16, 16, 16));
+        }
 	}
 }

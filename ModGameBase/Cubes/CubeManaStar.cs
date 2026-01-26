@@ -16,8 +16,11 @@ namespace ViMG.Cubes
         {
             Name = "Mana Star";
             Description = "Cube item version. Unobtainable.";
+        }
 
-            Client = new(this, new RectangleF(112, 112, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(112, 112, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

@@ -15,14 +15,20 @@ namespace ViMG.Items
         public readonly int Value;
 
         private readonly string realResourceName;
+        private readonly RectangleF sourceRect;
+
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
             base("coin_" + resource)
         {
-            Client = new ClientItemCoin(this, sourceRect);
-
             this.resource = resource;
             this.Value = value;
+            this.sourceRect = sourceRect;
             this.realResourceName = resource.Substring(0, 1).ToUpper() + resource.Substring(1, resource.Length - 1);
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemCoin(this, sourceRect);
         }
 
         public override string GetName(ItemInstance item)

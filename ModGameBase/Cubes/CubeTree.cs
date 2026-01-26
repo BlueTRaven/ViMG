@@ -15,8 +15,11 @@ namespace ViMG.Cubes
 		public CubeTree() : base("tree", 2)
 		{
 			Transparency = TransparencyValue.Invisible;
+        }
 
-            Client = new(this, new RectangleF(64, 0, 16, 16), Color.White);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(64, 0, 16, 16), Color.White);
         }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)

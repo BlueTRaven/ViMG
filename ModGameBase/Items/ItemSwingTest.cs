@@ -16,9 +16,12 @@ namespace ViMG.Items
     {
         public ItemSwingTest() : base("swing_test")
         {
-            Client = new ClientItem(this, new RectangleF(48, 0, 16, 16));
-
             name = "Swing Test";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 0, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

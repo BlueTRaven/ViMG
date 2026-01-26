@@ -24,8 +24,11 @@ namespace ViMG.Cubes
 
             Name = "Bonfire";
             Description = "You shouldn't really have this in your inventory...";
+        }
 
-            Client = new ClientCubeBonfire(this);
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeBonfire(this);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

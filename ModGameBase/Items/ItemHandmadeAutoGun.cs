@@ -25,11 +25,14 @@ namespace ViMG.Items
 
         public ItemHandmadeAutoGun() : base("handmade_autogun")
         {
-            Client = new ClientItem(this, new RectangleF(96, 128, 16, 16), flipXInHand: true);
-
             name = "Handmade Automatic Gun";
             description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.\n" +
                 attackStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 128, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

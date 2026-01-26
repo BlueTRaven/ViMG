@@ -23,11 +23,14 @@ namespace ViMG.Items
 
 		public ItemFlintlockPistol() : base("flintlock_pistol")
         {
-            Client = new ClientItem(this, new RectangleF(144, 128, 16, 16), flipXInHand: true);
-
             name = "Flintlock Pistol";
             description = "An old flintlock pistol. Better than a matchlock pistol!\n" +
 				attackStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(144, 128, 16, 16), flipXInHand: true);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

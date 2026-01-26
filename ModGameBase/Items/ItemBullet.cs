@@ -12,7 +12,11 @@ namespace ViMG.Items
 	{
 		public ItemBullet() : base("bullet_base")
 		{
-            Client = new ClientItem(this, new RectangleF(0, 48, 16, 16));
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 48, 16, 16));
         }
 	}
 }

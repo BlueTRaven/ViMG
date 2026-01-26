@@ -26,7 +26,11 @@ namespace ViMG.Items
 
         public ItemLantern() : base("lantern")
         {
-            Client = new ClientItemLantern(this);
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemLantern(this);
         }
 
         public override void Hold(Player player, Inventory inventory, int index)

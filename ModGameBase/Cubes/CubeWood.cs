@@ -13,7 +13,11 @@ namespace ViMG.Cubes
     {
         public CubeWood() : base("wood", 4)
         {
-            Client = new(this, new RectangleF(32, 32, 16, 16), Color.White);
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(32, 32, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

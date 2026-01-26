@@ -11,10 +11,13 @@ namespace ViMG.Items
 	{
 		public ItemBronzeIngot() : base("ingot_bronze")
 		{
-            Client = new ClientItem(this, new RectangleF(112, 16, 16, 16));
-
             name = "Bronze Ingot";
 			description = "An ingot of bronze, made from alloying copper and tin. Can be made into a variety of shapes and tools. Welcome to the bronze age.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 16, 16, 16));
+        }
 	}
 }

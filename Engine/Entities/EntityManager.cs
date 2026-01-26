@@ -245,7 +245,7 @@ namespace ViMG.Entities
         {
 			this.world = world;
 
-			if (!Main.IsHeadless)
+			if (!GlobalState.IsHeadless)
 			{
 				foreach (var r in GlobalState.Registry.RendererRegistry.GetIterable())
 				{
@@ -257,7 +257,7 @@ namespace ViMG.Entities
 
 		public void Dispose()
 		{
-			if (!Main.IsHeadless)
+			if (!GlobalState.IsHeadless)
 			{
 				foreach (var r in GlobalState.Registry.RendererRegistry.GetIterable())
 				{
@@ -352,7 +352,7 @@ namespace ViMG.Entities
 			entitiesByType[entity.GetType()].Add(entity);
 
             entity.Initialize(world);
-            if (!Main.IsHeadless)
+            if (!GlobalState.IsHeadless)
             {
                 entity.LoadContent(world);
             }

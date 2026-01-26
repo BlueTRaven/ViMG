@@ -22,13 +22,16 @@ namespace ViMG.Items
 
         public ItemRope() : base("rope")
         {
-            Client = new ClientItem(this, new RectangleF(112, 64, 16, 16), material: StaticMaterials.Cubes);
-
             name = "Rope";
             description = "Sturdy, strong rope. Use it to traverse big pits!";
 
 			cube = GlobalState.Registry.CubeRegistry.Get("rope");
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 64, 16, 16), material: StaticMaterials.Cubes);
+        }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

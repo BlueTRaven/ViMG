@@ -135,9 +135,9 @@ namespace ViMG.Cubes
 		public const float PIXELS_PER_CUBE = 16;
 		public const float PIXEL_SCALE = CUBE_SCALE / PIXELS_PER_CUBE;
 
-		private readonly int[] cubeFaceLookup = new int[(int)MeshHelper.CubeFace.BACK + 1] 
-		{
-			-1,	//0 - none
+		private readonly int[] cubeFaceLookup =
+        [
+            -1,	//0 - none
 			0,	//1 - left
 			1,	//2 - right
 			-1, //3 - left | right - invalid
@@ -170,7 +170,7 @@ namespace ViMG.Cubes
 			-1, //30
 			-1, //31
 			5,  //32 - back
-		};
+		];
 
 		public enum RenderPass
         {
@@ -220,16 +220,24 @@ namespace ViMG.Cubes
 		public TransparencyValue Transparency;
 		public CollisionValue Collision = CollisionValue.Collidable;
 
-		public ClientCube Client { get; protected set; }
+		public ClientCube Client { get; private set; } = null!;
 
 		public Cube(string identifier, int mineProgressToBreak, int mineLevelRequirement = 0)
 		{
 			this.Identifier = identifier;
 			this.MineProgressToBreak = mineProgressToBreak;
 			this.MineLevelRequirement = mineLevelRequirement;
+
+			if (!GlobalState.IsHeadless)
+				Client = ClientInit();
 		}
 
-		public void SetId(ushort id)
+		public virtual ClientCube ClientInit() 
+		{
+            return new(this, new RectangleF(0, 976, 1, 1), Color.White);
+        }
+
+        public void SetId(ushort id)
 		{
 			this.Id = id;
 		}

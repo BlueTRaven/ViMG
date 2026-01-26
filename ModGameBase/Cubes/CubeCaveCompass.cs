@@ -17,8 +17,11 @@ namespace ViMG.Cubes
         public CubeCaveCompass() : base("cave_compass_placed", 1)
         {
             Transparency = TransparencyValue.Transparent;
+        }
 
-            Client = new(this, new RectangleF(new Vector2(16f / 1024f, 32f / 1024f), new Vector2(16f / 1024f)), Color.White * 0.5f);
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(new Vector2(16f / 1024f, 32f / 1024f), new Vector2(16f / 1024f)), Color.White * 0.5f);
         }
 
         public override void OnPlayerPlaced(Player player, CubePosition position)

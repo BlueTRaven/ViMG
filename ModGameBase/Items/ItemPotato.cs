@@ -22,11 +22,14 @@ namespace ViMG.Items
 
         public ItemPotato() : base("food_potato")
         {
-            Client = new ClientItem(this, new RectangleF(192, 80, 16, 16));
-
             name = "Potato";
             description = "A hearty potato.\n" +
                 "Grants Well Fed for 30 seconds and 5% Strength Up for 3 minutes.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(192, 80, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

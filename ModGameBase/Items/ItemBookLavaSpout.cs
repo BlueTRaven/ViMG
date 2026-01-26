@@ -23,11 +23,14 @@ namespace ViMG.Items
 
         public ItemBookLavaSpout() : base("book_spell_lava_spout")
         {
-            Client = new ClientItem(this, new RectangleF(144, 96, 16, 16));
-
             name = "Spellbook: Lava Spout";
             description = "The book's pages erupt into lava.\n" +
                 magicStats.GetTooltip();
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(144, 96, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

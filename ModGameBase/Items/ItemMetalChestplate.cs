@@ -13,18 +13,23 @@ namespace ViMG.Items
 {
     public class ItemMetalChestplate : Item
     {
-        private string material;
+        private readonly string material;
+        private readonly Color color;
         private readonly Player.AccumulatedStats stats;
         private readonly SetBonus setBonus;
 
         public ItemMetalChestplate(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("body_" + material)
         {
-            Client = new ClientItemMetalChestplate(this, color);
-
-            this.material = char.ToUpper(material[0]) + material.Substring(1); 
+            this.material = char.ToUpper(material[0]) + material.Substring(1);
+            this.color = color;
             this.stats = stats;
             this.setBonus = setBonus;
             Tags.Add("armor_body");
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItemMetalChestplate(this, color);
         }
 
         public override string GetName(ItemInstance item)

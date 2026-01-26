@@ -16,11 +16,14 @@ namespace ViMG.Items
 	{
 		public ItemGlowNode() : base("glow_node")
         {
-            Client = new ClientItem(this, new RectangleF(0, 0, 16, 16), material: new RendererDeferred.DrawMaterial("glow_node"));
-
             name = "Glow Node";
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 0, 16, 16), material: new RendererDeferred.DrawMaterial("glow_node"));
+        }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{

@@ -18,12 +18,15 @@ namespace ViMG.Items
 
         public ItemBread() : base("food_bread1")
         {
-            Client = new ClientItem(this, new RectangleF(96, 96, 16, 16));
-
             name = "Agaldam Bread";
             description = "A thick, dry, brick-like loaf of bread. If your teeth survive eating this, " +
                 "it's said one slice provides enough nutrients for a single meal.\n" +
                 "Grants Well Fed for 5 minutes.";
+        }
+
+        public override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 96, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
