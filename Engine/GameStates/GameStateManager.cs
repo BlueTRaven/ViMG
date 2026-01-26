@@ -50,6 +50,11 @@ namespace ViMG.GameStates
             MainMenu.LoadContent(device);
         }
 
+        public void UnfixedUpdate(double deltaTime)
+        {
+            currentGameState?.UnfixedUpdate(deltaTime);
+        }
+
         private static bool parsedArgs = false;
         public void Update(double deltaTime)
         {

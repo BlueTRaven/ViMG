@@ -1,6 +1,7 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Win32;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,7 +51,7 @@ namespace Engine.Networking.Messages
             base.Register(obj);
         }
 
-        public void Dispatch(NetManager netManager, NetPacketReader reader, NetPeer source, byte channel, DeliveryMethod deliveryMethod)
+        public void Dispatch(NetworkManager netManager, NetPacketReader reader, NetPeer source, byte channel, DeliveryMethod deliveryMethod)
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
@@ -63,12 +64,14 @@ namespace Engine.Networking.Messages
                 var allBytes = reader.GetRemainingBytes();
                 reader.SetPosition(position);
                 reader.GetInt();
-                netManager.SendToAll(allBytes, channel, deliveryMethod, source);
+                netManager.netManager.SendToAll(allBytes, channel, deliveryMethod, source);
             }
 
             using (var zoneGetMessage = ViMG.TracyImpl.Tracy.BeginZone(name: "ReceiveMessage"))
             {
-                Get(messageType).ReceiveMessage(reader, source);
+                var message = Get(messageType);
+                ViMG.TracyImpl.Tracy.EmitMessage(string.Format("[{0}] Recv Message {1}", netManager.IsServer ? "Server" : "Client", message.GetType().FullName));
+                message.ReceiveMessage(reader, source);
             }
         }
     }

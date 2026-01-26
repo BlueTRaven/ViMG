@@ -701,6 +701,31 @@ namespace ViMG.TracyImpl
 #endif
         }
 
+        public static void FrameMark(string str)
+        {
+#if !NOTRACY
+            CString cs = new CString(str);
+            TracyNative.PInvoke.TracyEmitFrameMark(cs);
+            cs.Dispose();
+#endif
+        }
+
+        public static void SetThreadName(string str)
+        {
+#if !NOTRACY
+            CString cs = new CString(str);
+            TracyNative.PInvoke.TracySetThreadName(cs);
+            cs.Dispose();
+#endif
+        }
+
+        public static void EmitMessage(string str)
+        {
+#if !NOTRACY
+            TracyNative.PInvoke.TracyEmitMessageL((CString)str, 0);
+#endif
+        }
+
         public struct Zone : IDisposable
         {
             private TracyNative.PInvoke.TracyCZoneContext context;
@@ -728,7 +753,6 @@ namespace ViMG.TracyImpl
 #if NOTRACY
             return new Zone();
 #else
-
             ulong srcLoc;
             
             if (name == null)

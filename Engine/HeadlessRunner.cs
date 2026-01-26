@@ -21,6 +21,8 @@ namespace Engine
 
         public void Run()
         {
+            ViMG.TracyImpl.Tracy.SetThreadName("Main Thread");
+
             GlobalState.IsHeadless = true;
 
             this.runner = new Runner();
@@ -142,9 +144,12 @@ namespace Engine
 
         private void Loop(object? param)
         {
+            ViMG.TracyImpl.Tracy.SetThreadName("Game Thread");
             DateTime prevTime = DateTime.Now;
             while (!GlobalState.Exit)
             {
+                ViMG.TracyImpl.Tracy.FrameMark();
+
                 rwLock.AcquireReaderLock(0);
                 if (commandsToRunInGameThread.Count > 0)
                 {

@@ -29,6 +29,11 @@ namespace ViMG.GameStates
 
         }
 
+        public virtual void UnfixedUpdate(double deltaTime)
+        {
+
+        }
+
         public virtual void Update(double deltaTime)
         {
             bool doDisable = !currentMenu?.RespondToInput ?? false;

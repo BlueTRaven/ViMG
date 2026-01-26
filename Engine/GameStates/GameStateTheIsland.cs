@@ -256,9 +256,9 @@ namespace ViMG.GameStates
             ConnectLocal();
         }
 
-        public override void Update(double deltaTime)
+        public override void UnfixedUpdate(double deltaTime)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            base.UnfixedUpdate(deltaTime);
 
             if (world == null)
             {
@@ -274,12 +274,33 @@ namespace ViMG.GameStates
 
             if (world != null)
             {
-                if (!manager.Paused)
-                    world.Update(deltaTime);
-
                 // Server can only poll events if world is loaded?
                 // I don't know if this really should be true or not. We might want to just instantly disconnect players while waiting? Or something?
                 netManagerServer?.PollEvents();
+            }
+
+            if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+            {
+                // If world takes longer than client whoami timeout, this might fail?
+                if (netManagerClient.ClientHasConnected())
+                {
+                    netManagerClient?.PollEvents();
+                }
+                else
+                {
+                    netManagerClient.CheckConnected();
+                }
+            }
+        }
+
+        public override void Update(double deltaTime)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone();
+
+            if (world != null)
+            {
+                if (!manager.Paused)
+                    world.Update(deltaTime);
             }
 
             if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server) 
@@ -287,7 +308,6 @@ namespace ViMG.GameStates
                 // If world takes longer than client whoami timeout, this might fail?
                 if (netManagerClient.ClientHasConnected())
                 {
-                    netManagerClient?.PollEvents();
                     if (client != null && !manager.Paused)
                     {
                         client.CurrentTime += deltaTime;
@@ -299,10 +319,6 @@ namespace ViMG.GameStates
                         client.UpdatePlayer(deltaTime);
                     }
                 } 
-                else
-                {
-                    netManagerClient.CheckConnected();
-                }
             }
 
             base.Update(deltaTime);

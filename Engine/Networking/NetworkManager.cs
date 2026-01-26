@@ -297,7 +297,7 @@ namespace Engine.Networking
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
         {
-            GlobalState.Registry.MessageRegistry.Dispatch(netManager, reader, peer, channelNumber, deliveryMethod);
+            GlobalState.Registry.MessageRegistry.Dispatch(this, reader, peer, channelNumber, deliveryMethod);
             //Console.WriteLine("Received {0} from {1}", result, peer);
 
             reader.Recycle();
@@ -415,6 +415,9 @@ namespace Engine.Networking
 
         public void NewPlayer(NetPeer peer, string playerName)
         {
+            ViMG.TracyImpl.Tracy.EmitMessage("NewPlayer");
+            using var zone = ViMG.TracyImpl.Tracy.BeginZone();
+
             var world = GlobalState.GameStateManager.TheIsland.GetWorld();
             int index = -1;
             for (int i = 0; i < World.MAX_PLAYERS; i++)
@@ -450,6 +453,8 @@ namespace Engine.Networking
 
         public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
         {
+            ViMG.TracyImpl.Tracy.EmitMessage(string.Format("[{0}] Send Message {1}", IsServer ? "Server" : "Client", message.GetType().FullName));
+
             if (IsServer)
             {
                 IMGUIConsole.Assert((message.SendableFrom & NetworkSide.Server) == NetworkManager.NetworkSide.Server);

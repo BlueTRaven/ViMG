@@ -189,10 +189,6 @@ namespace ViMG
 			Logic.FinishLoading(this, device);
 		}
 
-		public void UnfixedUpdate()
-		{
-		}
-
 		public void Update(double deltaTime)
 		{
 			LightManager2.Reset();

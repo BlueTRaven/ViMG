@@ -49,6 +49,8 @@ namespace Engine
         {
             GlobalState.Time += elapsed.TotalSeconds;
 
+            GlobalState.GameStateManager.UnfixedUpdate(elapsed.TotalSeconds);
+
             int numUpdates = 0;
             accumulator += elapsed.TotalSeconds;
             while (accumulator >= Main.FIXED_STEP && !GlobalState.Exit)
