@@ -20,8 +20,8 @@ namespace ViMG.UIs
 
         public MenuPause(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
-            uiTex = GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons");
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            uiTex = GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons");
 
             buttonParams = new UI.ButtonConstructionParameters
             {

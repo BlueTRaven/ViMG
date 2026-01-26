@@ -24,8 +24,8 @@ var _services = new GameServiceContainer();
 var _content = new ContentManager(_services);
 _content.RootDirectory = "Content";
 
-GlobalState.assetsManager = new ViMGAssetsManager(_content);
-GlobalState.assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
+GlobalState.AssetsManager = new ViMGAssetsManager(_content);
+GlobalState.AssetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
 
 ModManager modManager = new ModManager();
 modManager.LoadModDlls();

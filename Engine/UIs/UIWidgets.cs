@@ -42,12 +42,12 @@ namespace ViMG.UIs
             UI.EndParent();
         }
 
-        private static NineSlice tooltipPanelNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+        private static NineSlice tooltipPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
             new RectangleF(256, 64, 64, 64), 16);
         private static TextHelper.FontInfo tooltipLabelTitleFI = new TextHelper.FontInfo(
-            GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         private static TextHelper.FontInfo tooltipLabelDescFI = new TextHelper.FontInfo(
-            GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true);
+            GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true);
         public static void MakeTooltip(Vector2 position, string title, string description)
         {
             const float minWidth = 256;

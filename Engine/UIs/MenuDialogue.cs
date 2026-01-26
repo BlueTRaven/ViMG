@@ -61,7 +61,7 @@ namespace ViMG.UIs
 
         public MenuDialogue(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public override void OnOpen()

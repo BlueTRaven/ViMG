@@ -132,14 +132,14 @@ namespace ViMG.UIs
         }
 
 		public static UI.ButtonConstructionParameters ButtonParameters = new UI.ButtonConstructionParameters(
-			new RectangleF(0, 0, 18, 18), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+			new RectangleF(0, 0, 18, 18), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), 
 			new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
         public static UI.ButtonConstructionParameters ActionButtonParameters = new UI.ButtonConstructionParameters(
-			new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
             new RectangleF(92, 18, 18, 18), new RectangleF(110, 18, 18, 18), new RectangleF(110, 18, 18, 18));
 
-        public static NineSlice MainPanelNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
-        public static NineSlice SecondaryPanelNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
+        public static NineSlice MainPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+        public static NineSlice SecondaryPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
         public static void DoPlayerInventory(EntityManager.EntityReference player, Inventory inventory, Inventory heldInventory, 
 			int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
@@ -484,7 +484,7 @@ namespace ViMG.UIs
 		{
 			if (held.valid)
 			{
-				var fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black);
+				var fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black);
 
 				Vector2 pos = Main.inputManager.GetMousePosition().ToVector2();
 				RectangleF bounds = new RectangleF(pos, size, size);

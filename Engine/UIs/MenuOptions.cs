@@ -37,7 +37,7 @@ namespace ViMG.UIs
 
         public MenuOptions(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             Main.MouseControl = true;
             Main.DrawCursor = true;
 
@@ -102,7 +102,7 @@ namespace ViMG.UIs
 
             UI.StartParent(new Vector2(Options.CurrentWindowResolution.X / 2 - 64, Options.CurrentWindowResolution.Y / 2 - 128));
 
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(-32, 256, 32, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(-32, 256, 32, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("<", fi, 32, Vector2.Zero),
                 new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32))).clickLeft)
             {
@@ -114,10 +114,10 @@ namespace ViMG.UIs
 
             UI.MakeLabel(new UI.LabelConstructionParameters("Anti-Aliasing", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
 
-            if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("Anti-Aliasing", fi, 128 + 16, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
-                new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
                 optionsAA, outputsAA, ref dropdownAAOpen, ref currentAAOption))
             {
@@ -155,10 +155,10 @@ namespace ViMG.UIs
             {
                 UI.MakeLabel(new UI.LabelConstructionParameters("FXAA Quality", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
 
-                if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("FXAA Quality", fi, 128 + 16, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
-                    new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
                     optionsFXAA, outputsFXAA, ref dropdownFXAAOpen, ref currentFXAAOption))
                 {
@@ -171,10 +171,10 @@ namespace ViMG.UIs
             {
                 UI.MakeLabel(new UI.LabelConstructionParameters("SMAA Quality", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
 
-                if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("SMAA Quality", fi, 128 + 16, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
-                    new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                    new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
                     optionsSMAA, outputsSMAA, ref dropdownSMAAOpen, ref currentSMAAOption))
                 {
@@ -186,10 +186,10 @@ namespace ViMG.UIs
 
             UI.MakeLabel(new UI.LabelConstructionParameters("HDR Type", fi, 128 + 16, pos - new Vector2(128 + 16, 0)));
 
-            if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            if (UIWidgets.MakeDropdown(new UI.ButtonConstructionParameters(new RectangleF(pos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new UI.LabelConstructionParameters("HDR", fi, 128 + 16, Vector2.Zero),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
-                new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+                new UI.ButtonConstructionParameters(new RectangleF(128, -32, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32)),
                 optionsHDR, outputsHDR, ref dropdownHDROpen, ref currentHDROption))
             {
@@ -202,20 +202,20 @@ namespace ViMG.UIs
 
             UI.MakeLabel(new UI.LabelConstructionParameters("Instanced Light Volumes", fi, 256 - 8, pos - new Vector2(256 - 8, 0)));
 
-            UIWidgets.MakeCheckbox(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            UIWidgets.MakeCheckbox(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32)),
-                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(16, 16, 16, 16)),
-                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 16, 16, 16)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(16, 16, 16, 16)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 16, 16, 16)),
                 ref Options.UseInstancedLightVolumes);
             
             pos.Y += 32 + MARGIN;
 
             UI.MakeLabel(new UI.LabelConstructionParameters("Bloom", fi, 128, pos - new Vector2(128, 0)));
 
-            UIWidgets.MakeCheckbox(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            UIWidgets.MakeCheckbox(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(0, 64, 32, 32), new RectangleF(32, 64, 32, 32), new RectangleF(32, 64, 32, 32)),
-                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(16, 16, 16, 16)),
-                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 16, 16, 16)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(16, 16, 16, 16)),
+                new UI.TextureConstructionParameters(new RectangleF(8, 8, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 16, 16, 16)),
                 ref Options.BloomEnabled);
 
             pos.Y += 32 + MARGIN;
@@ -225,9 +225,9 @@ namespace ViMG.UIs
             float range = Options.RENDER_DISTANCE_MAX - Options.RENDER_DISTANCE_MIN;
             float rdScalar = ((float)Options.RenderDistance - Options.RENDER_DISTANCE_MIN) / range;
 
-            UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"),
+            UIWidgets.MakeSlider(new UI.ButtonConstructionParameters(new RectangleF(pos, 32, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                 new RectangleF(64, 64, 32, 32), new RectangleF(96, 64, 32, 32), new RectangleF(96, 64, 32, 32)),
-                new UI.TextureConstructionParameters(new RectangleF(0, 0, 128, 32), GlobalState.assetsManager.GetAsset<Texture2D>("ui_buttons"), new RectangleF(0, 96, 128, 32)),
+                new UI.TextureConstructionParameters(new RectangleF(0, 0, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"), new RectangleF(0, 96, 128, 32)),
                 128, ref rdScalar);
 
             Options.RenderDistance = (int)(rdScalar * range + Options.RENDER_DISTANCE_MIN);

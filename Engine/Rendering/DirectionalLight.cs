@@ -261,7 +261,7 @@ namespace Engine.Rendering
 			//Main.WVP.SetView(camera.GetViewMatrix());
 
 			Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-			Effect effectDepth = GlobalState.assetsManager.GetAsset<Effect>("depth");
+			Effect effectDepth = GlobalState.AssetsManager.GetAsset<Effect>("depth");
 			effectDepth.Parameters["WorldViewProjection"].SetValue(viewProj);
 			//effectDepth.Parameters["World"].SetValue(Matrix.Identity);
 

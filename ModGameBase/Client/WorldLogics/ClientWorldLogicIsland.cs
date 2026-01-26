@@ -29,8 +29,8 @@ namespace ModGameBase.Client.WorldLogics
 
         private static VerySimpleMesh meshSun;
         private static VerySimpleMesh meshLavaQuad;
-        private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(GlobalState.assetsManager.GetAsset<Texture2D>("sun"));
-        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(GlobalState.assetsManager.GetAsset<Texture2D>("lava"), emissive: GlobalState.assetsManager.GetAsset<Texture2D>("lava"));
+        private static RendererDeferred.DrawMaterial materialSun = new RendererDeferred.DrawMaterial(GlobalState.AssetsManager.GetAsset<Texture2D>("sun"));
+        private static RendererDeferred.DrawMaterial materialLava = new RendererDeferred.DrawMaterial(GlobalState.AssetsManager.GetAsset<Texture2D>("lava"), emissive: GlobalState.AssetsManager.GetAsset<Texture2D>("lava"));
         private static Color[] duskColors =
         [
             Color.White,
@@ -51,7 +51,7 @@ namespace ModGameBase.Client.WorldLogics
 
             directionalLight = new Engine.Rendering.DirectionalLight(device, Main.NEAR, Main.FAR, splits);
 
-            directionalLight.WorldheightMap = GlobalState.assetsManager.GetAsset<Texture2D>("sun_worldheight_map");
+            directionalLight.WorldheightMap = GlobalState.AssetsManager.GetAsset<Texture2D>("sun_worldheight_map");
 
             BrUtility.FastList<VertexCube> vertices = new();
             List<int> indices = [0, 1, 3, 1, 2, 3];
@@ -78,9 +78,9 @@ namespace ModGameBase.Client.WorldLogics
 
             this.skybox = new Skybox
             {
-                Day = GlobalState.assetsManager.GetAsset<Texture2D>("skybox_day"),
-                Weather = GlobalState.assetsManager.GetAsset<Texture2D>("skybox_stormy"),
-                Night = GlobalState.assetsManager.GetAsset<Texture2D>("skybox_night"),
+                Day = GlobalState.AssetsManager.GetAsset<Texture2D>("skybox_day"),
+                Weather = GlobalState.AssetsManager.GetAsset<Texture2D>("skybox_stormy"),
+                Night = GlobalState.AssetsManager.GetAsset<Texture2D>("skybox_night"),
             };
 
             WeatherManager = new WeatherManager(device);
@@ -124,16 +124,16 @@ namespace ModGameBase.Client.WorldLogics
                 float ambient = 1 - SurfaceTimeHelper.GetTimeOfDay(client.Current().time, dawnEndOffsetScale: 1.25f);
                 client.Renderer.EffectGBuffer.Parameters["AmbientStrength"].SetValue(ambient);
                 if (!Main.inputManager.IsHeld(Keys.F6))
-                    client.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+                    client.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(GlobalState.AssetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
                 else client.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
                 client.Renderer.EffectTransparent.Parameters["AmbientStrength"].SetValue(ambient);
-                client.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
+                client.Renderer.EffectTransparent.Parameters["WorldheightMapAmb"].SetValue(GlobalState.AssetsManager.GetAsset<Texture2D>("sun_worldheight_map"));
             }
         }
 
         public override void Render(GraphicsDevice device, ClientStates client)
         {
-            Texture2D sunTexture = GlobalState.assetsManager.GetAsset<Texture2D>("sun");
+            Texture2D sunTexture = GlobalState.AssetsManager.GetAsset<Texture2D>("sun");
 
             var curr = client.Current();
             var prev = client.Previous(1);

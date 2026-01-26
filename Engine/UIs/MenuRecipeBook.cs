@@ -40,7 +40,7 @@ namespace ViMG.UIs
 				this.filterCatalyst = currentCatalysts[0];
 			GetFilteredRecipes();
 
-			fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+			fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
 		public override void OnOpen()
@@ -96,7 +96,7 @@ namespace ViMG.UIs
 
 			foreach (IRecipeCatalyst catalyst in currentCatalysts)
 			{
-				var button = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				var button = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)));
 
 				UI.MakeTexture(bounds, catalyst.GetTexture(), catalyst.GetSourceRect());
@@ -117,7 +117,7 @@ namespace ViMG.UIs
 			{
 				if (page > 0)
 				{
-					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 						new RectangleF(0, 112, 8, 8), new RectangleF(8, 112, 8, 8), new RectangleF(8, 112, 8, 8))).clickLeft)
 					{
 						page--;
@@ -126,7 +126,7 @@ namespace ViMG.UIs
 
 				if (page * numPerPage + numPerPage < currentRecipes.Count)
 				{
-					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 						new RectangleF(0, 120, 8, 8), new RectangleF(8, 120, 8, 8), new RectangleF(8, 120, 8, 8))).clickLeft)
 					{
 						page++;

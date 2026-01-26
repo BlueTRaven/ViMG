@@ -278,7 +278,7 @@ namespace Engine.Clients
             }
 
             if (LocalPlayer != null)
-                batch.Draw(GlobalState.assetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
+                batch.Draw(GlobalState.AssetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
                     Options.CurrentWindowResolution.Y / 2 - 8), Main.CrosshairSourceRect.ToRectangle(), Color.White);
         }
 

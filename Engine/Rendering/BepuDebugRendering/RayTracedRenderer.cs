@@ -94,7 +94,7 @@ namespace Engine.Rendering.BepuDebugRendering
             indices.SetData(DemoRenderer.Helpers.GetBoxIndices(maximumInstancesPerDraw));
             verticesDummy = new VertexBuffer(device, typeof(DummyVertex), maximumInstancesPerDraw * 8, BufferUsage.WriteOnly);
 
-            effect = GlobalState.assetsManager.GetAsset<Effect>(shaderPath);
+            effect = GlobalState.AssetsManager.GetAsset<Effect>(shaderPath);
         }
 
         public void Render(GraphicsDevice device, Camera camera, Point screenResolution, Span<TInstance> instances, int start, int count)

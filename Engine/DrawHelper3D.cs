@@ -397,7 +397,7 @@ namespace ViMG
 			device.DepthStencilState = Main.nodepthDSS;
 
 			if (axesMesh == null)
-				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), GlobalState.assetsManager.GetAsset<Texture2D>("axes"));
+				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), GlobalState.AssetsManager.GetAsset<Texture2D>("axes"));
 
 			axesMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, Transform.FromTRS(position, Vector3.Zero, Vector3.One));
 		}

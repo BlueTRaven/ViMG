@@ -174,20 +174,20 @@ namespace ViMG.Generation
 				}
 
 				ellipsoidAtBottomOfHole = new Structure(new Point3D(64, 16, 64), sd);
-				obelisk = GlobalState.assetsManager.GetAsset<Structure>("obelisk");
-				house = GlobalState.assetsManager.GetAsset<Structure>("house");
-				geode = GlobalState.assetsManager.GetAsset<Structure>("lava_geode");
+				obelisk = GlobalState.AssetsManager.GetAsset<Structure>("obelisk");
+				house = GlobalState.AssetsManager.GetAsset<Structure>("house");
+				geode = GlobalState.AssetsManager.GetAsset<Structure>("lava_geode");
 				dungeon = new Structure[4]
 				{
-				GlobalState.assetsManager.GetAsset<Structure>("dungeon"),
-				GlobalState.assetsManager.GetAsset<Structure>("dungeon_tall"),
-				GlobalState.assetsManager.GetAsset<Structure>("dungeon_hallway"),
-				GlobalState.assetsManager.GetAsset<Structure>("dungeon_staircase"),
+				GlobalState.AssetsManager.GetAsset<Structure>("dungeon"),
+				GlobalState.AssetsManager.GetAsset<Structure>("dungeon_tall"),
+				GlobalState.AssetsManager.GetAsset<Structure>("dungeon_hallway"),
+				GlobalState.AssetsManager.GetAsset<Structure>("dungeon_staircase"),
 				};
 				shrine = new Structure[2]
 				{
-				GlobalState.assetsManager.GetAsset<Structure>("shrine_new"),
-				GlobalState.assetsManager.GetAsset<Structure>("shrine_old"),
+				GlobalState.AssetsManager.GetAsset<Structure>("shrine_new"),
+				GlobalState.AssetsManager.GetAsset<Structure>("shrine_old"),
 				};
 			}
 		}

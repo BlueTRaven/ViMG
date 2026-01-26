@@ -130,7 +130,7 @@ namespace ViMG
 
             Content.RootDirectory = "Content";
 
-            GlobalState.assetsManager = new ViMGAssetsManager(Content);
+            GlobalState.AssetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
 
@@ -249,7 +249,7 @@ namespace ViMG
 		protected override void LoadContent()
         {
 			batch = new SpriteBatch(GraphicsDevice);
-            GlobalState.assetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
+            GlobalState.AssetsManager.LoadContent(Directory.GetCurrentDirectory() + "/Content");
 			gameStateManager.LoadContent(GraphicsDevice);
 		}
 

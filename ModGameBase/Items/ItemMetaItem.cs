@@ -65,7 +65,7 @@ namespace ViMG.Items
 
                 meta.Client.DrawInInventory(batch, item, position, scale);
             }
-            else batch.Draw(GlobalState.assetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            else batch.Draw(GlobalState.AssetsManager.GetAsset<Texture2D>("swrod"), position, new Rectangle(112, 112, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
         }
     }
 }

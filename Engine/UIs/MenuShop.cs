@@ -29,7 +29,7 @@ namespace ViMG.UIs
         private InventoryManager.InventoryReference heldInventory;
         private ShopStockedItem[] stock;
 
-        private TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+        private TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         private UI.ItemSlot[] inventoryItemSlots = new UI.ItemSlot[Player.INVENTORY_ROWS * Player.INVENTORY_COLUMNS];
 
         private int holdingItemSlot = -1;

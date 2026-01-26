@@ -121,12 +121,12 @@ namespace ViMG.UIs
         {
             base.LoadContent();
 
-            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
-			healthbarLowerNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
-			healthbarUpperNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
-			magicbarLowerNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
-            magicbarUpperNS = new NineSlice(GlobalState.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
+			healthbarLowerNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
+			healthbarUpperNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
+			magicbarLowerNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
+            magicbarUpperNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
         }
 
         public void Open()
@@ -242,7 +242,7 @@ namespace ViMG.UIs
 				if (Main.inputManager.JustPressed(Keys.Escape))
 					Close();
 
-				TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+				TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 				UI.StartParent(new Vector2(MARGIN * 2f + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
 
@@ -252,7 +252,7 @@ namespace ViMG.UIs
 				pos = new Vector2(16 * 3.5f * SCALE, 0);
 
 				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(0, 16, 123 * SCALE, 55 * SCALE), 
-					GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(128, 0, 123, 55), below: true));
 				//UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
 
@@ -309,7 +309,7 @@ namespace ViMG.UIs
 
 				bounds = new RectangleF(16 * 2 * 4.125f, 2, SIZE, SIZE);
 
-				UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
+				UI.MakeTexture(bounds, GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
 
 				bounds.x += 29 * 2f;
 				bounds.y -= 2;
@@ -329,7 +329,7 @@ namespace ViMG.UIs
 
                 UI.Button craftRecipeButton = UI.MakeButton(actionButtonParameters);
 				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(bounds.x + 1, bounds.y + 1, 16 * SCALE, 16 * SCALE),
-					GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16)));
+					GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16)));
 
 				if (craftRecipeButton.clickLeft)
 				{
@@ -344,7 +344,7 @@ namespace ViMG.UIs
 				}
 
 				UI.StartParent(new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2));
-				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16), GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), 
 					new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 				UI.EndParent();
 
@@ -384,7 +384,7 @@ namespace ViMG.UIs
 
 					if (!accessoryInventory.Get(i).valid)
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE), 
-							GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
+							GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
 					var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory);
 					if (output != MenuHelper.ItemSlotClickOutput.None)
@@ -415,7 +415,7 @@ namespace ViMG.UIs
 
                     if (!accessoryInventory.Get(i + 3).valid)
                         UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
-                            GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
+                            GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
 
                     var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory);
                     if (output != MenuHelper.ItemSlotClickOutput.None)
@@ -454,7 +454,7 @@ namespace ViMG.UIs
 					if (!gearInventory.Get(i).valid)
 					{
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
-							GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
+							GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
 
 						if (itemslot.button.hovered)
 							UIWidgets.MakeTooltip(new Vector2(0, SIZE), tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);

@@ -21,7 +21,7 @@ namespace ViMG.Buffs
         public override void LoadContent(GraphicsDevice device)
         {
             base.LoadContent(device);
-            this.texture = GlobalState.assetsManager.GetAsset<Texture2D>("skill");
+            this.texture = GlobalState.AssetsManager.GetAsset<Texture2D>("skill");
         }
     }
 }

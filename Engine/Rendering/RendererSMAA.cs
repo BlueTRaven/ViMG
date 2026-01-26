@@ -165,7 +165,7 @@ namespace SMAADemo
             IMGUIConsole.Assert(_height > 0);
             IMGUIConsole.Assert(_device != null);
 
-            effect = GlobalState.assetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
+            effect = GlobalState.AssetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
 
             device = _device;
             width = _width;
@@ -209,8 +209,8 @@ namespace SMAADemo
 
 
             // Load the precomputed textures.
-            areaTex = GlobalState.assetsManager.GetAsset<Texture2D>("AreaTexDX10");
-            searchTex = GlobalState.assetsManager.GetAsset<Texture2D>("SearchTex");
+            areaTex = GlobalState.AssetsManager.GetAsset<Texture2D>("AreaTexDX10");
+            searchTex = GlobalState.AssetsManager.GetAsset<Texture2D>("SearchTex");
 
             // Create some handles for techniques and variables.
             zplanesHandle = effect.Parameters["zplanes"];

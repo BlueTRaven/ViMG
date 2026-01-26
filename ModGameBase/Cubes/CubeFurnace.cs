@@ -92,7 +92,7 @@ namespace ViMG.Cubes
 			if (buttonParameters == null)
 			{
                 buttonParameters = new UI.ButtonConstructionParameters(new RectangleF(Vector2.Zero, 18 * 2, 18 * 2),
-					GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
             }
 
@@ -111,7 +111,7 @@ namespace ViMG.Cubes
 			UI.EndParent();
 			UI.StartParent(new Vector2(0, 18 * 4));
 
-			UI.MakeTexture(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
+			UI.MakeTexture(bounds, GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 32, 16, 16));
 
             UI.EndParent();
             UI.StartParent(new Vector2(0, 18 * 6));
@@ -143,7 +143,7 @@ namespace ViMG.Cubes
 
 		public Texture2D GetTexture()
 		{
-			return GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory");
+			return GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory");
 		}
 
 		public RectangleF GetSourceRect()

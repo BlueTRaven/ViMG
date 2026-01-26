@@ -55,7 +55,7 @@ namespace ViMG.UIs
         {
             if (fi.font == null)
             {
-                fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+                fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
             }
 
             float yPos = 0;

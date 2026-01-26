@@ -74,7 +74,7 @@ namespace ViMG.GameStates
             this.device = device;
             base.LoadContent(device);
             
-            fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public void BeginLoadWorld(string worldName)

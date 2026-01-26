@@ -14,9 +14,9 @@ namespace ViMG.Rendering
         public static RendererDeferred.DrawMaterial Cubes = new RendererDeferred.DrawMaterial("cubes_textures");
         public static RendererDeferred.DrawMaterial CubesWithEmissiveOres = new RendererDeferred.DrawMaterial()
         {
-            Diffuse = GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures"),
-            Normal = GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures_normal"),
-            Emissive = GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores"),
+            Diffuse = GlobalState.AssetsManager.GetAsset<Texture2D>("cubes_textures"),
+            Normal = GlobalState.AssetsManager.GetAsset<Texture2D>("cubes_textures_normal"),
+            Emissive = GlobalState.AssetsManager.GetAsset<Texture2D>("cubes_textures_emissive_ores"),
             Specular = DrawHelper.WhitePixel,
         };
 

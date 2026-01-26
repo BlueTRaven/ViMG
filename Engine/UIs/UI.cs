@@ -1048,7 +1048,7 @@ namespace ViMG.UIs
 					numString = "\u221E";
 				else numString = num.ToString();
 
-				TextHelper.DrawText(batch, new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
+				TextHelper.DrawText(batch, new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
 					numString, Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, 
 					64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
 			}

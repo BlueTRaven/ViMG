@@ -11,7 +11,7 @@ namespace Engine
     public static class GlobalState
     {
         public static ArgParser Args = new ArgParser();
-        public static ViMGAssetsManager assetsManager;
+        public static ViMGAssetsManager AssetsManager;
         public static RegistryService Registry;
 
         public const int SEED = 1338;

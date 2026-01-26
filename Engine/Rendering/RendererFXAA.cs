@@ -146,13 +146,13 @@ namespace ViMG.Rendering
             switch (Options.CurrentFXAAQuality)
             {
                 case Options.FXAAQuality.FXAA_LOW:
-                    effect = GlobalState.assetsManager.GetAsset<Effect>("FXAAGreenLumaLow");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaLow");
                     break;
                 case Options.FXAAQuality.FXAA_MEDIUM:
-                    effect = GlobalState.assetsManager.GetAsset<Effect>("FXAAGreenLumaMedium");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaMedium");
                     break;
                 case Options.FXAAQuality.FXAA_HIGH:
-                    effect = GlobalState.assetsManager.GetAsset<Effect>("FXAAGreenLumaHigh");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaHigh");
                     break;
             }
 

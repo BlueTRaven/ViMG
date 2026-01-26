@@ -96,7 +96,7 @@ namespace Engine.IMGUIImpl
 
             if (fi.font == null)
             {
-                var font = GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono");
+                var font = GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono");
                 fi = new TextHelper.FontInfo
                 {
                     font = font,

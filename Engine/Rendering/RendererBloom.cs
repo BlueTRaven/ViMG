@@ -33,8 +33,8 @@ namespace ViMG.Rendering
         {
             this.device = device;
 
-            downsampleEffect = GlobalState.assetsManager.GetAsset<Effect>("bloom_downsample");
-            upsampleEffect = GlobalState.assetsManager.GetAsset<Effect>("bloom_upsample");
+            downsampleEffect = GlobalState.AssetsManager.GetAsset<Effect>("bloom_downsample");
+            upsampleEffect = GlobalState.AssetsManager.GetAsset<Effect>("bloom_upsample");
 
             ConstructRTs(Options.CurrentWindowResolution);
 
