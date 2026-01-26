@@ -24,6 +24,8 @@ namespace Engine
             runner.Initialize(_content);
 
             runner.LoadContent();
+
+            runner.Register(null);
         }
     }
 }

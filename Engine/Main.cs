@@ -219,9 +219,7 @@ namespace ViMG
 			Window.ClientSizeChanged += WindowResolutionChanged;
 			Window.AllowUserResizing = true;
 
-			modManager.LoadModDlls();
-            GlobalState.Registry = new RegistryService(GraphicsDevice);
-            GlobalState.Registry.Register();
+			runner.Register(GraphicsDevice);
 
 			//world = new World(GraphicsDevice, 512);
 
@@ -268,6 +266,13 @@ namespace ViMG
 
 			frameCounter.Update((float)gt.ElapsedGameTime.TotalSeconds);
 
+			int numUpdates = runner.UnfixedUpdate(gt.ElapsedGameTime);
+			for (int i = 0; i < numUpdates; i++)
+			{
+				runner.FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
+				FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
+			}
+
 			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
 			{
 				IsMouseVisible = DrawCursor;
@@ -277,17 +282,13 @@ namespace ViMG
 				IsMouseVisible = true;
 			}
 
-				//if (WorldLoaded)
-				//world.UnfixedUpdate();
-				//else ui.Update(GraphicsDevice, gt.ElapsedGameTime.TotalSeconds);
+			//time += gt.ElapsedGameTime.TotalSeconds;
+			//while (time >= FIXED_STEP && !GlobalState.Exit)
+			//{
+			//	time -= FIXED_STEP;
 
-				time += gt.ElapsedGameTime.TotalSeconds;
-			while (time >= FIXED_STEP && !GlobalState.Exit)
-			{
-				time -= FIXED_STEP;
-
-				FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
-			}
+			//	FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
+			//}
 
 			TimeP = time / FIXED_STEP;
 
@@ -324,7 +325,7 @@ namespace ViMG
 				if (inputManager.JustPressed(Keys.O))
 					Options.CenterMouse();
 
-                GlobalState.GameStateManager.Update(deltaTime);
+                //GlobalState.GameStateManager.Update(deltaTime);
 				//if (WorldLoaded)
 					//world.Update(deltaTime);
 			}
