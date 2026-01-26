@@ -46,8 +46,7 @@ namespace ViMG.Items
 					Cube cube = GlobalState.Registry.CubeRegistry.Get("campfire");
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos)
-						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos))
 					{
 						player.GetWorld().ChunkManager.CubeView.SetCube(placeAtPos, cube.Id);
 

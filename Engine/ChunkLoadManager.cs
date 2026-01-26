@@ -95,10 +95,6 @@ namespace ViMG
 
 		public void Update(double deltaTime, World world)
 		{
-            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.M))
-            {
-                FlushLoadQueue(world);
-            }
             using var zone = TracyImpl.Tracy.BeginZone();
 
 			distanceUnloadCheckTimer -= (float)deltaTime;

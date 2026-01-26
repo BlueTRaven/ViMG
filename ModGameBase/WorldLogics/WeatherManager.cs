@@ -94,10 +94,10 @@ namespace ViMG.WorldLogics
 
         private static VerySimpleMesh skyboxCloudsMesh;
         private static VerySimpleMesh rainMesh;
-        private static RendererDeferred.DrawMaterial materialRain = new RendererDeferred.DrawMaterial("rain");
-        private static RendererDeferred.DrawMaterial materialSparselyCloudy = new RendererDeferred.DrawMaterial("skybox_sparseclouds");
-        private static RendererDeferred.DrawMaterial materialCloudy = new RendererDeferred.DrawMaterial("skybox_clouds");
-        private static RendererDeferred.DrawMaterial materialFog = new RendererDeferred.DrawMaterial("skybox_fog");
+        private static RendererDeferred.DrawMaterial materialRain;
+        private static RendererDeferred.DrawMaterial materialSparselyCloudy;
+        private static RendererDeferred.DrawMaterial materialCloudy;
+        private static RendererDeferred.DrawMaterial materialFog;
 
         public enum WeatherType
         {
@@ -202,6 +202,11 @@ namespace ViMG.WorldLogics
 
         public void LoadContent(GraphicsDevice device)
         {
+            materialRain = new RendererDeferred.DrawMaterial("rain");
+            materialSparselyCloudy = new RendererDeferred.DrawMaterial("skybox_sparseclouds");
+            materialCloudy = new RendererDeferred.DrawMaterial("skybox_clouds");
+            materialFog = new RendererDeferred.DrawMaterial("skybox_fog");
+
             drawInstanceBuffer = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), MAX_RAIN_PARTICLES, BufferUsage.WriteOnly, ShaderAccess.Read);
 
             rainMesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Center);

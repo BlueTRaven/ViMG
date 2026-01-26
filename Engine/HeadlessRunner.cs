@@ -78,6 +78,7 @@ namespace Engine
 
                     GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.TheIsland);
                     GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port);
+                    break;
                 }
             }
 

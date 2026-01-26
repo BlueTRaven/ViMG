@@ -63,7 +63,7 @@ namespace ViMG
 			const float texelY = 1f / textureHeight;
 
 			//face doesn't matter, any works
-			RectangleF sourceRect = parameters.cube.Client.GetSourceRect(pass, data, parameters);
+			RectangleF sourceRect = parameters.cube.Client?.GetSourceRect(pass, data, parameters) ?? RectangleF.Empty;
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
@@ -259,7 +259,7 @@ namespace ViMG
 
 		public static void ApplyCubeAnim(Cube.RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
-			Cube.CubeAnimation anim = parameters.cube.Client.GetAnimation(pass, data, parameters, parameters.faces);
+			Cube.CubeAnimation anim = parameters.cube.Client?.GetAnimation(pass, data, parameters, parameters.faces) ?? new();
 			if (anim.Valid)
 			{
 				for (int i = verticesStart; i < verticesEnd; i++)

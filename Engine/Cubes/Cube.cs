@@ -372,7 +372,7 @@ namespace ViMG.Cubes
             const float cubeSideWidth = 1f / textureWidth;
             const float cubeSideHeight = 1f / textureHeight;
 
-			RectangleF sourceRect = Client.GetSourceRect(pass, data, parameters, face);
+			RectangleF sourceRect = Client?.GetSourceRect(pass, data, parameters, face) ?? RectangleF.Empty;
 
             Vector2 uvNear = new Vector2(sourceRect.x * cubeSideWidth, sourceRect.y * cubeSideHeight);
             Vector2 uvFar = new Vector2((sourceRect.x + sourceRect.width) * cubeSideWidth, (sourceRect.y + sourceRect.height) * cubeSideHeight);
@@ -382,7 +382,7 @@ namespace ViMG.Cubes
             vertices.Add(new VertexCube(quad.c, Client?.GetTintColor() ?? Color.White, new Vector2(uvNear.X, uvNear.Y), quad.n));
             vertices.Add(new VertexCube(quad.d, Client?.GetTintColor() ?? Color.White, new Vector2(uvFar.X, uvNear.Y), quad.n));
 
-            var anim = Client.GetAnimation(pass, data, parameters, face);
+            var anim = Client?.GetAnimation(pass, data, parameters, face) ?? new();
 
             if (anim.Valid)
             {

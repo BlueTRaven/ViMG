@@ -98,11 +98,11 @@ namespace ViMG.Entities
             AlwaysRender = world.IsNight();
 
             // TODO debug
-            if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
-            {
-                timer = DIVINGINSKY_TIME;
-                state = State.DivingInSky;
-            }
+            //if (Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
+            //{
+            //    timer = DIVINGINSKY_TIME;
+            //    state = State.DivingInSky;
+            //}
         }
 
         public void Get(out BasicState state)

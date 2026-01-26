@@ -549,12 +549,12 @@ namespace ViMG
 
 			if (IsLocalPlayer)
 			{
-				if (Main.inputManager.JustPressed(Keys.G))
-				{
-					if (state == State.Noclip)
-						state = State.Normal;
-					else state = State.Noclip;
-				}
+				//if (Main.inputManager.JustPressed(Keys.G))
+				//{
+				//	if (state == State.Noclip)
+				//		state = State.Normal;
+				//	else state = State.Noclip;
+				//}
 			}
 			else
 			{
@@ -621,9 +621,6 @@ namespace ViMG
 			}
 			else if (state == State.Normal)
 			{
-				if (Main.inputManager.JustPressed(Keys.LeftControl))
-					ExpandedMineState = !ExpandedMineState;
-
 				invulnTimer -= (float)deltaTime;
 
 				UpdateCollisionType();
@@ -695,29 +692,29 @@ namespace ViMG
 			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
 				hasMoved = true;
 
-			int scroll = Main.inputManager.GetMouseScroll();
+			//int scroll = Main.inputManager.GetMouseScroll();
 
-            if (scroll != 0)
-			{
-				int sign = Math.Sign(scroll);
+   //         if (scroll != 0)
+			//{
+			//	int sign = Math.Sign(scroll);
 
-				desiredThirdPersonDistance += sign;
+			//	desiredThirdPersonDistance += sign;
 
-				desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
-			}
+			//	desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+			//}
 
-			if (Main.inputManager.JustPressed(Keys.PageDown))
-			{
-				desiredThirdPersonDistance += Cube.CUBE_SCALE;
+			//if (Main.inputManager.JustPressed(Keys.PageDown))
+			//{
+			//	desiredThirdPersonDistance += Cube.CUBE_SCALE;
 
-                desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
-            }
-			if (Main.inputManager.JustPressed(Keys.PageUp))
-			{
-                desiredThirdPersonDistance -= Cube.CUBE_SCALE;
+   //             desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+   //         }
+			//if (Main.inputManager.JustPressed(Keys.PageUp))
+			//{
+   //             desiredThirdPersonDistance -= Cube.CUBE_SCALE;
 
-                desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
-            }
+   //             desiredThirdPersonDistance = float.Clamp(desiredThirdPersonDistance, 0, THIRDPERSON_MAX_DISTANCE);
+   //         }
 
 			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
 			Vector2 center = new Vector2(worldRadius, worldRadius);
@@ -748,10 +745,10 @@ namespace ViMG
 
 			if (IsLocalPlayer)
 			{
-				if (Main.inputManager.JustPressed(Keys.F3))
-				{
-					Main.DebugChunks = !Main.DebugChunks;
-				}
+				//if (Main.inputManager.JustPressed(Keys.F3))
+				//{
+				//	Main.DebugChunks = !Main.DebugChunks;
+				//}
 
 				//if (Main.inputManager.JustPressed(Keys.E))
 				//{
@@ -1110,21 +1107,21 @@ namespace ViMG
 
 			DEBUGTimeSkipHeldTime += (float)deltaTime;
 
-			if (Main.inputManager.JustPressed(Keys.T))
-			{
-				DEBUGTimeSkipHeldTime = 0;
-				world.TimeScale = 2f;
-			}
+			//if (Main.inputManager.JustPressed(Keys.T))
+			//{
+			//	DEBUGTimeSkipHeldTime = 0;
+			//	world.TimeScale = 2f;
+			//}
 
-			if (Main.inputManager.JustReleased(Keys.T))
-			{
-				world.TimeScale = 1f;
+			//if (Main.inputManager.JustReleased(Keys.T))
+			//{
+			//	world.TimeScale = 1f;
 
-				if (DEBUGTimeSkipHeldTime <= 0.25f)
-					world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
+			//	if (DEBUGTimeSkipHeldTime <= 0.25f)
+			//		world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
 
-				DEBUGTimeSkipHeldTime = 0;
-			}
+			//	DEBUGTimeSkipHeldTime = 0;
+			//}
 		}
 
 		private void UpdatePerformAction()
@@ -1387,8 +1384,8 @@ namespace ViMG
                 if (inventory.Get(inventorySlot).valid)
                 {
                     int num = 1;
-                    if (Main.inputManager.IsPressed(Keys.LeftControl))
-                        num = inventory.Get(inventorySlot).num;
+                    //if (Main.inputManager.IsPressed(Keys.LeftControl))
+                    //    num = inventory.Get(inventorySlot).num;
 
                     ThrowItem(inventory, inventorySlot, num);
                 }

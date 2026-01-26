@@ -113,7 +113,7 @@ namespace ViMG.WorldLogics
                 }
 			}
 
-			if (WeatherChangeTimer <= 0 || Main.inputManager.JustPressed(Keys.L))
+			if (WeatherChangeTimer <= 0)
 			{
 				if (!WeatherManager.IsTransitioning())
 				{
@@ -180,25 +180,6 @@ namespace ViMG.WorldLogics
 				//	Main.Renderer.EffectGBuffer.Parameters["WorldheightMapAmb"].SetValue(DrawHelper.WhitePixel);
 			}
 
-			if (Main.inputManager.JustPressed(Keys.V))
-			{
-				//world.GetLocalPlayer()?.Kill();
-				//world.ChunkManager.CubeView.TestPalettize(ChunkPosition.WorldSpaceChunk(world.GetLocalPlayer().Position));
-				world.EntityManager.Add(new Slime(world.GetLocalPlayer().Position - (world.GetLocalPlayer() as IRotatable).Forward * Cube.CUBE_SCALE * 5f));
-
-                //var visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
-                //visStats.rollFollowsVelocity = true;
-
-                //world.ProjectileManager.Add(new ProjectileManager.Projectile(this, Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f,
-                //	-Main.camera.Forward * Cube.CUBE_SCALE * 0.25f, 10,
-                //	visStats, new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, Cube.CUBE_SCALE * 1f, Cube.CUBE_SCALE * 0.125f, Cube.CUBE_SCALE)),
-                //	new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.5f), new Vector3(Cube.CUBE_SCALE)));
-
-                //for (int i = 0; i < 100; i++)
-				//world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, slime));
-				//world.EntityManager.Add(new ManaStar(new Vector2(GlobalState.random.NextFloat(-180, 180), GlobalState.random.NextFloat(-70, 70))));
-				//world.EntityManager.Add(new Lightning(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5));
-			}
         }
 
         public override bool AllowsLoadingNextLayer(World world)

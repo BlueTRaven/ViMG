@@ -50,7 +50,7 @@ namespace ViMG.Items
 				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
 					//we're placing on a pre-existing rope block.
-					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
+					if (player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
 						.GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
 					{
 						Cube currentCube = cube;
