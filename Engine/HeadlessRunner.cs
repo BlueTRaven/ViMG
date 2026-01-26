@@ -84,11 +84,15 @@ namespace Engine
                     }
 
                     GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.TheIsland);
-                    if (GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port))
-                        break;
-                    else
+                    try
                     {
-                        Console.WriteLine("Failed to start server");
+                        if (GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port))
+                            break;
+                        else throw new Exception("Failed to start server");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.ToString());
                         continue;
                     }
                 }

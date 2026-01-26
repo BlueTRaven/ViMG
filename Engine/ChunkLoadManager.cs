@@ -652,7 +652,7 @@ namespace ViMG
 			chunkMesher?.MarkChunkDirty(chunkPosition);
         }
 
-		public void Unload(ChunkPosition chunkPosition)
+		public void Unload(ChunkPosition chunkPosition, int forPlayer = -1)
 		{
             Util.ThreeDToOneD(new ValuePoint3D(chunkPosition.X, chunkPosition.Y, chunkPosition.Z), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
 
@@ -671,7 +671,8 @@ namespace ViMG
 
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
-                loadedChunks[i][j] = LoadingState.Unloaded;
+                if (forPlayer == -1 || i == forPlayer)
+                    loadedChunks[i][j] = LoadingState.Unloaded;
             }
 			//for (int j = 0; j < World.MAX_PLAYERS; j++)
 			//	loadedChunksAttribution[j][i] = false;
@@ -717,25 +718,22 @@ namespace ViMG
             
             for (int j = 0; j < chunkManager.SizeInChunksXZ; j++)
             {
-                bool anyLoaded = false;
-                for (int i = 0; i < World.MAX_PLAYERS; i++)
-                {
-                    if (i == playerIndex)
-                    {
-                        loadedChunks[i][j] = LoadingState.Unloaded;
-                    }
+                //bool anyLoaded = false;
+                //for (int i = 0; i < World.MAX_PLAYERS; i++)
+                //{
+                //    if (i == playerIndex)
+                //    {
+                //        loadedChunks[i][j] = LoadingState.Unloaded;
+                //    }
 
-                    if (loadedChunks[i][j] == LoadingState.Loaded)
-                    {
-                        anyLoaded = true;
-                    }
-                }
+                //    if (loadedChunks[i][j] == LoadingState.Loaded)
+                //    {
+                //        anyLoaded = true;
+                //    }
+                //}
 
-                if (!anyLoaded)
-                {
-                    Util.OneDToThreeD(j, new ValuePoint3D(chunkManager.SizeInChunksXZ), out var pos);
-                    Unload(new ChunkPosition(pos.x, pos.y, pos.z));
-                }
+                Util.OneDToThreeD(j, new ValuePoint3D(chunkManager.SizeInChunksXZ), out var pos);
+                Unload(new ChunkPosition(pos.x, pos.y, pos.z), playerIndex);
             }
             Array.Fill(loadedChunks[playerIndex], LoadingState.Unloaded);
         }

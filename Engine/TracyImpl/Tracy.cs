@@ -704,25 +704,24 @@ namespace ViMG.TracyImpl
         public static void FrameMark(string str)
         {
 #if !NOTRACY
-            CString cs = new CString(str);
+            using CString cs = new CString(str);
             TracyNative.PInvoke.TracyEmitFrameMark(cs);
-            cs.Dispose();
 #endif
         }
 
         public static void SetThreadName(string str)
         {
 #if !NOTRACY
-            CString cs = new CString(str);
+            using CString cs = new CString(str);
             TracyNative.PInvoke.TracySetThreadName(cs);
-            cs.Dispose();
 #endif
         }
 
         public static void EmitMessage(string str)
         {
 #if !NOTRACY
-            TracyNative.PInvoke.TracyEmitMessageL((CString)str, 0);
+            using CString cs = new CString(str);
+            TracyNative.PInvoke.TracyEmitMessageL(cs, 0);
 #endif
         }
 
@@ -754,10 +753,17 @@ namespace ViMG.TracyImpl
             return new Zone();
 #else
             ulong srcLoc;
-            
+
+            using CString filePathC = (CString)filePath;
+            using CString functionNameC = (CString)filePath;
+
             if (name == null)
-                srcLoc = TracyNative.PInvoke.TracyAllocSrcloc((uint)lineNumber, (CString)filePath, (ulong)filePath.Length, (CString)functionName, (ulong)functionName.Length);
-            else srcLoc = TracyNative.PInvoke.TracyAllocSrclocName((uint)lineNumber, (CString)filePath, (ulong)filePath.Length, (CString)functionName, (ulong)functionName.Length, (CString)name, (ulong)name.Length);
+                srcLoc = TracyNative.PInvoke.TracyAllocSrcloc((uint)lineNumber, filePathC, (ulong)filePath.Length, functionNameC, (ulong)functionName.Length);
+            else
+            {
+                using CString nameC = (CString)name;
+                srcLoc = TracyNative.PInvoke.TracyAllocSrclocName((uint)lineNumber, filePathC, (ulong)filePath.Length, functionNameC, (ulong)functionName.Length, nameC, (ulong)name.Length);
+            }
 
             var ctx = TracyNative.PInvoke.TracyEmitZoneBeginAlloc(srcLoc, 1);
 
