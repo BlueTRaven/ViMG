@@ -44,6 +44,7 @@
  * policies, either expressed or implied, of the copyright holders.
  */
 
+using BrUtility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -273,28 +274,28 @@ namespace SMAADemo
          * from this function (the render target, the input layout, the 
          * depth-stencil and blend states...)
          */
-        public void Go(Texture2D edges,
+        public void Go(Engine.Common.Camera camera, Texture2D edges,
                 Texture2D src,
                 RenderTarget2D dst,
                 Input input)
         {
             pixelSizeHandle.SetValue(Vector2.One / new Vector2(width, height));
 
-            edgesDetectionPass(edges, input);
+            edgesDetectionPass(camera, edges, input);
             blendingWeightsCalculationPass();
             neighborhoodBlendingPass(src, dst);
         }
 
 
 
-        private void edgesDetectionPass(Texture2D edges, Input input)
+        private void edgesDetectionPass(Engine.Common.Camera camera, Texture2D edges, Input input)
         {
             // Set the render target and clear both the color and the stencil buffers.
             device.SetRenderTarget(edgeTex);
             device.Clear(ClearOptions.Stencil | ClearOptions.Target, new Color(0, 0, 0, 0), 1.0f, 0);
 
             // Setup variables.
-            zplanesHandle.SetValue(new Vector2(Main.camera.Near, Main.camera.Far));
+            zplanesHandle.SetValue(new Vector2(camera.Near, camera.Far));
             thresholdHandle.SetValue(threshold);
             maxSearchStepsHandle.SetValue((float)maxSearchSteps);
 

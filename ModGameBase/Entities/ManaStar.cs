@@ -30,8 +30,6 @@ namespace ViMG.Entities
 
         public Vector2 yawPitch;
 
-        public Vector3 cameraPosition;
-
         public State state;
         public const float DIVINGINSKY_TIME = 8f;
         public const float DIVINGINWORLD_TIME = 4f;
@@ -78,8 +76,6 @@ namespace ViMG.Entities
                         CubePosition.FromWorldSpace(new Vector3(startXZ.X, world.sizeInCubes * Cube.CUBE_SCALE, startXZ.Y))).Get() +
                         new CubePosition(0, 1, 0);
                     Position = endPos.InWorldSpace();
-
-                    cameraPosition = Main.camera.Position;
                 }
             }
             else if (state == State.DivingInWorld)

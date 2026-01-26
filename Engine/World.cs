@@ -185,29 +185,6 @@ namespace ViMG
 			// -1 means singleplayer
 			if (localPlayerIndex == -1) localPlayerIndex = 0;
 
-			// TODO: do we need this?
-			//if (player.All(x => x == null))
-			//{
-			//	//If we didn't manage to find the player using the new method, fall back to the old method.
-			//	//This deserializes the player manually then loads the chunks around them.
-			//	//This relies on reading metadata while deserializing so I'm not a huge fan of it and will probably get rid of it later.
-			//	//TODO obsolete/deprecated
-			//	EntIO.DeserializePlayerChunk();
-			//             foreach (Player p in EntityManager.GetAll<Player>())
-			//             {
-			//                 player[p.playerIndex] = p;
-			//             }
-
-			//	if (GetLocalPlayer() != null)
-			//	{
-			//		ChunkLoadManager.LoadAroundTarget(this);
-			//		ChunkLoadManager.FlushLoadQueue(this);
-			//	}
-			//}
-
-			if (GetLocalPlayer() != null)
-				Main.camera.Position = GetLocalPlayer().Position;
-
 			Logic.FinishLoading(this, device);
 		}
 

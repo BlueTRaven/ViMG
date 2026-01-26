@@ -364,7 +364,7 @@ namespace ViMG.Entities
 					transitioned = true;
 
                     for (int i = 0; i < 8; i++)
-                        world.EntityManager.Add(new SkullheadEye(Position - Main.camera.Forward * Cube.CUBE_SCALE * 5f, this));
+                        world.EntityManager.Add(new SkullheadEye(Position - Vector3.Left * Cube.CUBE_SCALE * 5f, this));
                 }
 			}
 			else if (state == State.PostTransitionWait)

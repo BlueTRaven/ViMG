@@ -584,7 +584,8 @@ namespace ViMG.Entities.Renderers
                 Vector3 velXZ = new Vector3(entity.velocity.X, 0, entity.velocity.Z);
                 velXZ.Normalize();
 
-                float facingDotCamera = Vector3.Dot(velXZ, -Main.camera.Forward);
+                // TODO pass in camera? Don't like using global state like this
+                float facingDotCamera = Vector3.Dot(velXZ, -Main.gameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
 
                 //Facing within 45 degrees of the camera.
                 bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);

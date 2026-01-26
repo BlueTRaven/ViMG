@@ -88,41 +88,34 @@ namespace ViMG.Entities
 
 				checkLightTimer = CHECK_LIGHT_TIME;
 
-				if (Main.camera.GetFrustum().Intersects(sphere))
+				for (int i = 0; i < LightManager.LightsMax; i++)
 				{
-					for (int i = 0; i < LightManager.LightsMax; i++)
+					// TODO: we want to check all lights here to see if the ghoul is inside one.
+					// Unfortunately this doesn't work too terribly well with LightManager2, since it's immediate mode, and all Lights that are
+					// present in the world may not be added yet.
+					// Some sort of double-buffering will probably be necessary.
+					var light = world.LightManager2.Get(i);
+					//LightManager.Light light = world.LightManager.Get(i);
+
+					if (light.active)
 					{
-						// TODO: we want to check all lights here to see if the ghoul is inside one.
-						// Unfortunately this doesn't work too terribly well with LightManager2, since it's immediate mode, and all Lights that are
-						// present in the world may not be added yet.
-						// Some sort of double-buffering will probably be necessary.
-						var light = world.LightManager2.Get(i);
-                        //LightManager.Light light = world.LightManager.Get(i);
+						Vector3 distance = light.position - Position;
 
-						if (light.active)
+						if (distance.Length() < light.end)
 						{
-							Vector3 distance = light.position - Position;
+							float lightScale = 1 - Math.Clamp((distance.Length() - light.start) / (light.end - light.start), 0f, 1f);
+							accumLightScale += lightScale;
 
-							if (distance.Length() < light.end)
+							if (accumLightScale >= MAX_LIGHT_SCALE)
 							{
-								float lightScale = 1 - Math.Clamp((distance.Length() - light.start) / (light.end - light.start), 0f, 1f);
-								accumLightScale += lightScale;
-
-								if (accumLightScale >= MAX_LIGHT_SCALE)
-								{
-									if (!prevInLight)
-										inLightTimer = CHECK_LIGHT_TIME;
-									inLight = true;
-									break;
-								}
+								if (!prevInLight)
+									inLightTimer = CHECK_LIGHT_TIME;
+								inLight = true;
+								break;
 							}
 						}
 					}
 				}
-                else
-                {
-					inLight = false;
-                }
             }
 
 			prevInLight = inLight;

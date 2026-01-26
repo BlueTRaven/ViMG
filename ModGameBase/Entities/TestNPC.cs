@@ -115,6 +115,8 @@ namespace ViMG.Entities
 
         public override void Update(double deltaTime)
         {
+            // TODO this has some camera and client-side stuff in it, needs a refactor.
+
             base.Update(deltaTime);
 
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position)))
@@ -139,30 +141,30 @@ namespace ViMG.Entities
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
             }
 
-            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
-            {
-                Ray ray = new Ray(world.player[world.localPlayerIndex].Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
+            //if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+            //{
+            //    Ray ray = new Ray(world.player[world.localPlayerIndex].Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
 
-                BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
-                    Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
+            //    BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
+            //        Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
 
-                if (bb.Intersects(ray).HasValue)
-                {
-                    OnRightClick();
-                }
-            }
+            //    if (bb.Intersects(ray).HasValue)
+            //    {
+            //        OnRightClick();
+            //    }
+            //}
 
-            //When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
-            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
-            {
-                if (world.MenuDialogue.SelectedOption == 1)
-                {
-                    var player = world.player[world.localPlayerIndex];
-                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
-                }
+            ////When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
+            //if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
+            //{
+            //    if (world.MenuDialogue.SelectedOption == 1)
+            //    {
+            //        var player = world.player[world.localPlayerIndex];
+            //        Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
+            //    }
 
-                shouldFollowUpMenu = false;
-            }
+            //    shouldFollowUpMenu = false;
+            //}
         }
 
         public void OnRightClick()

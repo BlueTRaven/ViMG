@@ -46,7 +46,6 @@ namespace ViMG
 		public static GameStateManager gameStateManager;
 
 		public static Engine.Common.Camera camera;
-		public static Engine.Common.Camera debugCamera;
 
 		public static InputManager inputManager;
 		public static ViMGAssetsManager assetsManager;
@@ -79,7 +78,6 @@ namespace ViMG
 		public static bool DebugChunks;
 		public static string DEBUGPopupText = "";
 
-		public static WorldViewProjection WVP;
 		public static FogManager FogManager;
 		public static SessionInformation SessionInformation;
 		public static SessionIO SessionIO;
@@ -167,7 +165,6 @@ namespace ViMG
             Content.RootDirectory = "Content";
 
 			camera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
-			debugCamera = new CameraPerspective(new Vector3(0, 0, 0), new Vector3(0, 180, 0), new Vector3(1), FOV_DEGREES, NEAR, FAR);
 			assetsManager = new ViMGAssetsManager(Content);
 			inputManager = new InputManager(this);
 			frameCounter = new FrameCounter();
@@ -393,10 +390,6 @@ namespace ViMG
 
 			GraphicsDevice.Clear(Color.White);
 
-			Matrix view = camera.GetViewMatrix();
-
-			WVP.SetView(view);
-			
 			gameStateManager.Draw(GraphicsDevice, batch, gameTime.ElapsedGameTime.TotalSeconds);
 
             //if (WorldLoaded)
@@ -488,12 +481,13 @@ namespace ViMG
 					ImGui.Text(string.Format("Draw Calls: {0}", GraphicsDevice.Metrics.DrawCount));
 					ImGui.Text(string.Format("Point Lights: {0}", RendererDeferred.NumPointLightsRendered));
 
-					ImGui.Text(string.Format("Position: {0}", FormatPos()));
-                    var fwd = gameStateManager.TheIsland.GetClient()?.Current().camera.Forward ?? Vector3.Zero;
-					var pitchyaw = gameStateManager.TheIsland.GetClient()?.Current().camera.RotationEuler ?? Vector3.Zero;
+					Engine.Common.Camera? camera = gameStateManager.TheIsland.GetClient()?.Current().camera;
+                    ImGui.Text(string.Format("Position: {0}", camera?.Position));
+                    var fwd = camera?.Forward ?? Vector3.Zero;
+					var pitchyaw = camera?.RotationEuler ?? Vector3.Zero;
                     ImGui.Text(string.Format("Facing: {0:0.00} {1:0.00} {2:0.00}\n" +
 						"Yaw: {3:0.00} Pitch: {4:0.00}", fwd.X, fwd.Y, fwd.Z, pitchyaw.Y, pitchyaw.X));
-					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(gameStateManager.TheIsland.GetClient()?.Current().camera.Position ?? new()).ToString()));
+					ImGui.Text(string.Format("Chunk Pos: {0}", ChunkPosition.WorldSpaceChunk(camera?.Position ?? new()).ToString()));
 
 					if (gameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
 					{
@@ -534,15 +528,6 @@ namespace ViMG
 
             zone.End();
         }
-
-		private string FormatPos()
-		{
-			string x = String.Format("{0:0.00}", camera.Position.X);
-			string y = String.Format("{0:0.00}", camera.Position.Y);
-			string z = String.Format("{0:0.00}", camera.Position.Z);
-
-			return x + " " + y + " " + z;
-		}
 
         protected override void OnExiting(object sender, EventArgs args)
         {

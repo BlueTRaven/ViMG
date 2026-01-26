@@ -51,10 +51,12 @@ namespace Engine.Common
         /// <param name="lightIndex">The light reference.</param>
         /// <param name="lightIsShadowmapped">Whether or not the light is currently shadowmapped.</param>
         /// <param name="allowShadowmapped">Whether or not to allow the light to be shadowmapped. Shadowmapped lights are more expensive. Use as few of them as you can.</param>
+        [Obsolete]
         public static void UpdateLight(LightManager lightManager, LightInfo lightInfo, LightUpdateType update, BoundingSphere? sphere, ref int lightIndex, ref bool lightIsShadowmapped, bool allowShadowmapped)
         {
-            bool intersectsCamera = sphere.HasValue ? Main.camera.GetFrustum().Intersects(sphere.Value) : 
-                Main.camera.GetFrustum().Contains(lightInfo.Position) == ContainmentType.Contains;
+            bool intersectsCamera = false;
+            //bool intersectsCamera = sphere.HasValue ? Main.camera.GetFrustum().Intersects(sphere.Value) : 
+            //    Main.camera.GetFrustum().Contains(lightInfo.Position) == ContainmentType.Contains;
 
             //offscreen - delete light
             if (!intersectsCamera)
@@ -87,7 +89,7 @@ namespace Engine.Common
                     if (allowShadowmapped)
                     {
                         //Try to transition to a shadowmapped light or from one
-                        Vector3 dir = lightInfo.Position - Main.camera.Position;
+                        Vector3 dir = lightInfo.Position;
 
                         if (lightIsShadowmapped)
                         {

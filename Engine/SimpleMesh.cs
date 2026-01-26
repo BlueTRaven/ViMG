@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class SimpleMesh<TVert, TIndex> where TVert : struct, IVertexType where TIndex : struct
 	{
 		public VertexBuffer VBO;
@@ -154,11 +155,11 @@ namespace ViMG
 				device.Textures[i] = null;
 			}
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			effect.Parameters["World"].SetValue(transform);
-			effect.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(transform)));
-			effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//effect.Parameters["World"].SetValue(transform);
+			//effect.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(transform)));
+			//effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 			Texture2D useTexture = texture;
 
@@ -211,10 +212,10 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			vertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector4());
-			vertexPositionColorDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//vertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector4());
+			//vertexPositionColorDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 			foreach (var pass in vertexPositionColorDebugEffect.CurrentTechnique.Passes)
 			{
@@ -228,11 +229,11 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
-			vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
-			vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(overrideTexture == null ? texture : overrideTexture);
+			//vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
+			//vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(overrideTexture == null ? texture : overrideTexture);
 
 			foreach (var pass in vertexPositionTextureDebugEffect.CurrentTechnique.Passes)
 			{

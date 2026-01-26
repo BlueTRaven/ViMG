@@ -37,8 +37,8 @@ namespace ViMG.Spawners
 
         public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
-            //Don't spawn during the day, and don't spawn when the player is looking at the given position.
-            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight() || Main.camera.FrustumContains(position.InWorldSpace()))
+            //Don't spawn during the day
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight())
                 return false;
 
             if (position.Y < 181)

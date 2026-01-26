@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ViMG.Entities.EntityHelper;
 using ViMG.Cubes;
 using BrUtility;
 using ViMG.Rendering;
@@ -19,7 +18,7 @@ namespace ViMG.Entities.Renderers
     {
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
-        private static DirectionalSourceRect directionalSourceRect = new DirectionalSourceRect()
+        private static EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
         {
             front = new RectangleF(0, 0, 4, 4),
             back = new RectangleF(0, 0, 4, 4),
@@ -46,15 +45,14 @@ namespace ViMG.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                var entCurr = client.Current().entities.GetById(reference.id);
-                var entPrev = client.Previous(1).entities.GetById(reference.id);
+                var ent = client.currInterpState.entities.GetById(reference.id);
 
-                var position = entPrev.GetInterpPosition(entCurr, client.TimeC);
-                var timer = entPrev.GetInterpTimer(entCurr, 0, client.TimeC);
+                var position = ent.position;
+                var timer = ent.timers[0];
 
-                var yawPitch = new Vector2(entCurr.rotation.X, entCurr.rotation.Y);
+                var yawPitch = new Vector2(ent.rotation.X, ent.rotation.Y);
 
-                var state = (ManaStar.State)entCurr.state; //.GetInterpCounter(entCurr, 0);
+                var state = (ManaStar.State)ent.state; //.GetInterpCounter(entCurr, 0);
 
                 if (state == ManaStar.State.InSky || state == ManaStar.State.DivingInSky)
                 {
@@ -71,7 +69,7 @@ namespace ViMG.Entities.Renderers
                         Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
                         Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
-                    Matrix.CreateTranslation(Main.camera.Position),
+                    Matrix.CreateTranslation(client.currInterpState.camera.Position),
                         // TODO mult by time
                         directionalSourceRect.front, Color.White /** world.GetTimeOfNight()*/));
                 }
@@ -85,20 +83,20 @@ namespace ViMG.Entities.Renderers
                         Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y));
 
-                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                        Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
+                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-client.currInterpState.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                        Matrix.CreateRotationY(-client.currInterpState.camera.RotationEuler.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
                         Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
-                        Matrix.CreateTranslation(Main.camera.Position));
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position));
                     Vector3 lerpEndPos = position;
 
-                    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
+                    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(client.currInterpState.camera, Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
                     float sx = float.Abs(sourceRect.width / 4f);
                     Vector3 p = Vector3.Lerp(lerpStartPos, lerpEndPos, Easings.EaseInExpo(t));
 
-                    float sortVal = (Main.camera.Position - position).Length();
+                    float sortVal = (client.currInterpState.camera.Position - position).Length();
 
                     client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
                     material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p),

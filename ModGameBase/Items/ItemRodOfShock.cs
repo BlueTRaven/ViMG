@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,8 +36,8 @@ namespace ViMG.Items
             {
                 player.Magic -= magicStats.magicUse;
 
-                player.world.EntityManager.Add(new AimedLightning(player.Position - Main.camera.Forward * Cube.CUBE_SCALE / 4f + Main.camera.Right * Cube.CUBE_SCALE / 4f, 
-                    -Main.camera.Forward, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 10f, Cube.CUBE_SCALE,
+                player.world.EntityManager.Add(new AimedLightning(player.Position - (player as IRotatable).Forward * Cube.CUBE_SCALE / 4f + (player as IRotatable).Right * Cube.CUBE_SCALE / 4f, 
+                    -(player as IRotatable).Forward, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 10f, Cube.CUBE_SCALE,
                 new HitboxManager.HitboxStats()
                 {
                     damage = magicStats.attackStats.damage,

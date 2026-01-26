@@ -52,6 +52,7 @@ namespace ViMG
 		private struct QueuedChunk
 		{
             public int player;
+            public required Vector3 playerPos;
 			public ChunkPosition position;
             public CopiedChunkManager.CopiedChunkData? copyData;
 			//public Task<CopiedChunkData> copyTask;
@@ -59,7 +60,7 @@ namespace ViMG
 
 		private PriorityQueue<QueuedChunk> queue = new(true, (queuedChunk) =>
 		{
-			return (int)(Main.camera.Position - queuedChunk.position.InWorldSpace()).Length();
+			return (int)(queuedChunk.playerPos - queuedChunk.position.InWorldSpace()).Length();
 		});
 
 		private List<QueuedChunk> copyingChunks = new();
@@ -199,7 +200,7 @@ namespace ViMG
 
                 var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
 				chunkMesher?.RenderMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, queuedChunk.position, copy);
-                chunkMesher?.CollisionMesher?.AddToNextBatch(world, queuedChunk.position, copy);
+                chunkMesher?.CollisionMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, queuedChunk.position, copy);
             }
 
             chunkMesher?.RenderMesher?.BeginFlush();
@@ -320,7 +321,7 @@ namespace ViMG
                 // Only enqueue rendering mesh for local player
                 if (copyingChunk.player == world.localPlayerIndex)
                     chunkMesher?.RenderMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, copyingChunk.position, copy);
-                chunkMesher?.CollisionMesher?.AddToNextBatch(world, copyingChunk.position, copy);
+                chunkMesher?.CollisionMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks.Add(copyingChunk);
             }
@@ -416,8 +417,9 @@ namespace ViMG
             }
 		}
 
-		// Forcibly loads around the target.
-		// Always attributed to local player. Use for singleplayer and server only.
+        // Forcibly loads around the target.
+        // Always attributed to local player. Use for singleplayer and server only.
+        [Obsolete]
 		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
 			if (Main.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
@@ -460,6 +462,7 @@ namespace ViMG
                                 // NOTE: tasks are not immediately started.
                                 queue.EnqueueWithoutSorting(new QueuedChunk
                                 {
+                                    playerPos = Vector3.Zero,
                                     //copyTask = task,
                                     position = pos,
                                 });
@@ -549,6 +552,7 @@ namespace ViMG
                                     queue.EnqueueWithoutSorting(new QueuedChunk
                                     {
                                         player = player.playerIndex,
+                                        playerPos = player.Position,
                                         position = pos,
                                     });
 

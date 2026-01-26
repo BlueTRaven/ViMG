@@ -1099,7 +1099,7 @@ namespace ViMG.Rendering
 
                 //depth for depth,
                 //otherwise ldrOutputPing for lumi/color?
-                smaa.Go(depth, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
+                smaa.Go(camera, depth, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
 
                 outputRT = ldrOutputPong;
             }

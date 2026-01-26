@@ -88,7 +88,7 @@ namespace ViMG.Spawners
                 radMax = MathHelper.ToRadians(360f - camera.HalfFOV);
             }*/
 
-            Vector3 v = -Main.camera.Forward;
+            Vector3 v = Vector3.Left;
             v = Vector3.Transform(v,
                 Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
             v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);

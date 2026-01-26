@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,7 +35,7 @@ namespace ViMG.Items
 
             if (magicStats.CanUse(player))
             {
-                var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+                var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position - (player as IRotatable).Forward * Player.INTERACT_DISTANCE,
                 (Vector3 pos) =>
                 {
                     //TODO check solidity, not id != 0

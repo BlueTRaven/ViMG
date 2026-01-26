@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -36,7 +37,7 @@ namespace ViMG.Items
 			if (item.valid)
 			{
 				inventory.Remove(bulletIndex, 1);
-				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + Main.camera.Right * 4,
+				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + (player as IRotatable).Right * 4,
 					Vector3.Normalize(facing) * 100, 2, Main.Registry.ProjectileRegistry.Get("musketball").Id, projStats),
 					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
 

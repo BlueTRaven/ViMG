@@ -122,7 +122,7 @@ namespace Engine.ChunkStuff
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
             RenderMesher?.Update(cameraPos, copyManager, getEntity);
-            CollisionMesher?.Update(copyManager, getEntity);
+            CollisionMesher?.Update(cameraPos, copyManager, getEntity);
         }
     }
 }

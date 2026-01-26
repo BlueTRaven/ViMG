@@ -42,6 +42,8 @@ namespace ViMG.Entities
         {
             base.Update(deltaTime);
 
+			// TODO: this should work for each player
+
 			float worldRadius = world.sizeInCubes / 2f * Cube.CUBE_SCALE;
 			Vector2 worldCenter = new Vector2(worldRadius, worldRadius);
 			Vector2 dirWorldCenter = new Vector2(worldCenter.X - world.player[world.localPlayerIndex].Position.X, worldCenter.Y - world.player[world.localPlayerIndex].Position.Z);
@@ -53,7 +55,7 @@ namespace ViMG.Entities
             {
 				state = State.Enraged;
 
-				Position = world.player[world.localPlayerIndex].Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 8;
+				//Position = world.player[world.localPlayerIndex].Position - Main.camera.ForwardYawOnly * Cube.CUBE_SCALE * 8;
 
 				if (hitbox == -1)
 					hitbox = world.HitboxManager.Add(this, 

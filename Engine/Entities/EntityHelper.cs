@@ -21,10 +21,10 @@ namespace ViMG.Entities
             public RectangleF above;
         }
 
-        public static RectangleF GetEntityDirectionalSourceRect(Vector3 facing, DirectionalSourceRect directionalSourceRect)
+        public static RectangleF GetEntityDirectionalSourceRect(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
         {
             Vector2 facingXZ = Vector2.Normalize(facing.XZ());
-            Vector2 forwardXZ = Vector2.Normalize(Main.camera.Forward.XZ());
+            Vector2 forwardXZ = Vector2.Normalize(camera.Forward.XZ());
 
             float ang = float.Acos(Vector2.Dot(facingXZ, forwardXZ));
             
@@ -40,7 +40,7 @@ namespace ViMG.Entities
                 //sides
                 sourceRect = directionalSourceRect.sideRight;
 
-                float leftDot = Vector2.Dot(facing.XZ(), Main.camera.Right.XZ());
+                float leftDot = Vector2.Dot(facing.XZ(), camera.Right.XZ());
 
                 if (leftDot < 0)
                 {

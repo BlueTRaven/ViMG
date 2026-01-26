@@ -326,7 +326,7 @@ namespace ViMG
 		}
 
 		private static RendererDeferred.DrawMaterial healthbarMaterial = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel);
-		public static void DrawHealthbar(GraphicsDevice device, RendererDeferred renderer, int health, int maxHealth, Vector3 position)
+		public static void DrawHealthbar(GraphicsDevice device, RendererDeferred renderer, Engine.Common.Camera camera, int health, int maxHealth, Vector3 position)
         {
 			if (meshHealthbar.IBO == null)
 				MakeMeshHealthbar(device);
@@ -335,20 +335,20 @@ namespace ViMG
 				healthbarMaterial, meshHealthbar,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.RotationEuler.Y) *
+				Matrix.CreateRotationX(Math.Clamp(-camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-camera.RotationEuler.Y) *
 				Matrix.CreateTranslation(position), null));
 		}
 		
 		//Draws a line that is tiled along the vertical axis.
-		public static void DrawLineTiled(RendererDeferred renderer, Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
+		public static void DrawLineTiled(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
 			RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
 			Vector3 axis = endPosition - startPosition;
 			float distance = axis.Length();
 			axis.Normalize();
 
-			Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+			Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, camera.Position, axis, -camera.Forward, Vector3.Forward);
 
 			int tileTimes = (int)(distance / tileHeight);
 			float tileLastBit = distance % tileHeight;
@@ -375,14 +375,14 @@ namespace ViMG
 
 		//Draws a stretched texture along a line.
 		//If you want the texture to be tiled properly, use DrawLineTiled.
-		public static void DrawLine(RendererDeferred renderer, Vector3 startPosition, Vector3 endPosition, float width,
+		public static void DrawLine(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width,
             RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
 		{
             Vector3 axis = endPosition - startPosition;
             float distance = axis.Length();
             axis.Normalize();
 
-            Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+            Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, camera.Position, axis, -camera.Forward, Vector3.Forward);
 
             renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
                 Matrix.CreateScale(width, distance, width) * mat,

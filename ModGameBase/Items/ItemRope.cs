@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Common;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -32,7 +34,7 @@ namespace ViMG.Items
 			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			//TODO check touch not id != 0
-			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position - (player as IRotatable).Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
