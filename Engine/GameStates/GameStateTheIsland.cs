@@ -77,9 +77,16 @@ namespace ViMG.GameStates
             fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
-        public void BeginLoadWorld(string worldName)
+        public bool BeginLoadWorld(string worldName)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
+
+            var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+            if (string.IsNullOrWhiteSpace(worldName) || worldName.Any(c => invalidChars.Contains(c)))
+            {
+                Console.WriteLine("'{0}' is an invalid world file name.", worldName);
+                return false;
+            }
 
             Debug.Assert(!IsLoading);
 
@@ -136,6 +143,8 @@ namespace ViMG.GameStates
             if (GlobalState.MULTITHREAD_LOADING)
                 worldTask.Start();
             else worldTask.RunSynchronously();
+
+            return true;
         }
 
         public Task<World> BeginLoadLayer(string worldName, int layer)
@@ -235,17 +244,22 @@ namespace ViMG.GameStates
             SetMenu(null);
         }
 
-        public void StartSingleplayer(string worldName)
+        public bool StartSingleplayer(string worldName)
         {
-            BeginLoadWorld(worldName);
-            client = new ClientStates(device);
+            if (BeginLoadWorld(worldName))
+            {
+                client = new ClientStates(device);
+                return true;
+            }
+
+            return false;
         }
 
-        public void StartServer(string worldName, string ip, int port)
+        public bool StartServer(string worldName, string ip, int port)
         {
             netManagerServer!.Ip = ip;
             netManagerServer!.Port = port;
-            BeginLoadWorld(worldName);
+            return BeginLoadWorld(worldName);
         }
 
         public void StartClient(string ip, int port)

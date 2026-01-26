@@ -69,7 +69,7 @@ namespace Engine
                         if (!(answer.ToLower() == "y" || answer.ToLower() == "yes"))
                         {
                             // return to top, select a new file again
-                            break;
+                            continue;
                         }
                     }
                     int port = 9050;
@@ -84,8 +84,13 @@ namespace Engine
                     }
 
                     GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.TheIsland);
-                    GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port);
-                    break;
+                    if (GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port))
+                        break;
+                    else
+                    {
+                        Console.WriteLine("Failed to start server");
+                        continue;
+                    }
                 }
             }
 
