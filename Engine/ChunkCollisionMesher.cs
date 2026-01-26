@@ -198,17 +198,12 @@ namespace ViMG
             return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
         }
 
-        public void BeginFlush(World world)
+        public void BeginFlush()
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
             currentBatch = new CollisionMeshBatch(Vector3.Zero, new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
-
-            //while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
-            //{
-            //    StartActiveTasks(world);
-            //}
 
             while (meshBatchTasksQueue.Count > 0)
             {

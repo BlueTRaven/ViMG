@@ -201,7 +201,7 @@ namespace ViMG
             }
 
             chunkMesher?.RenderMesher?.BeginFlush();
-			chunkMesher?.CollisionMesher?.BeginFlush(world);
+			chunkMesher?.CollisionMesher?.BeginFlush();
 			chunkMesher?.RenderMesher?.FinishFlush();
             chunkMesher?.CollisionMesher?.FinishFlush();
 
@@ -210,10 +210,6 @@ namespace ViMG
 
 			while (queue.Count > 0)
 			{
-                //GameStateTheIsland.ProgressMin = max - queue.Count;
-
-				// TODO: sometimes there's stuff in the queue that apparently never gets meshed properly. Why is this?
-
 				QueuedChunk queuedChunk = queue.Dequeue();
 
                 entIO.Deserialize(world, queuedChunk.position);
@@ -225,8 +221,6 @@ namespace ViMG
 			}
 
 			waitingToFinishMeshingChunks.Clear();
-
-            CopiedChunkPool.Verify();
 
             if (hasChanged)
 			{
@@ -352,6 +346,9 @@ namespace ViMG
 
                 if (isDone)
                 {
+                    Debug.Assert(GlobalState.GameStateManager.TheIsland.netManagerServer.netManager.ConnectedPeersCount != 0);
+
+                    //Console.WriteLine("Chunk is done {0}", GlobalState.GameStateManager.TheIsland.netManagerServer?.netManager.ConnectedPeersCount);
                     Util.ThreeDToOneD(new ValuePoint3D(queuedChunk.position), new ValuePoint3D(chunkManager.SizeInChunksXZ), out int j);
 
                     loadedChunks[queuedChunk.player][j] = LoadingState.Loaded;
@@ -658,24 +655,17 @@ namespace ViMG
 
             for (int i = 0; i < World.MAX_PLAYERS; i++)
             {
-                if (loadedChunks[i][j] == LoadingState.Loaded)
+                if ((forPlayer == -1 || i == forPlayer) && loadedChunks[i][j] == LoadingState.Loaded)
                 {
                     //chunkIO.SerializeChunk(chunks, pos);
-                    //entIO.Serialize(chunkPosition);
+                    entIO.Serialize(chunkPosition);
 
                     entityManager.UnloadInChunk(chunkPosition);
                     chunkMesher?.Unload(chunkPosition);
-                    break;
+
+                    loadedChunks[i][j] = LoadingState.Unloaded;
                 }
             }
-
-            for (int i = 0; i < World.MAX_PLAYERS; i++)
-            {
-                if (forPlayer == -1 || i == forPlayer)
-                    loadedChunks[i][j] = LoadingState.Unloaded;
-            }
-			//for (int j = 0; j < World.MAX_PLAYERS; j++)
-			//	loadedChunksAttribution[j][i] = false;
 
             hasChanged = true;
 
@@ -696,13 +686,14 @@ namespace ViMG
 
             //TODO: there may still be meshes in the queue.
             chunkMesher?.RenderMesher?.FinishFlush();
-            chunkMesher?.CollisionMesher.FinishFlush();
+            chunkMesher?.CollisionMesher?.FinishFlush();
             CopiedChunkPool.Verify();
 
             chunkMesher?.RenderMesher?.UnloadAll();
-            chunkMesher?.CollisionMesher.UnloadAll();
-			
-			entityManager.UnloadAll();
+            chunkMesher?.CollisionMesher?.UnloadAll();
+
+            entIO.SerializeAll(chunkManager.SizeInChunksXZ);
+            entityManager.UnloadAll();
 
             for (int i = 0; i < World.MAX_PLAYERS; i++)
                 Array.Fill(loadedChunks[i], LoadingState.Unloaded);

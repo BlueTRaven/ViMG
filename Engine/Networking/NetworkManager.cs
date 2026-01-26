@@ -415,6 +415,8 @@ namespace Engine.Networking
 
         public void NewPlayer(NetPeer peer, string playerName)
         {
+            Console.WriteLine("NewPlayer");
+
             ViMG.TracyImpl.Tracy.EmitMessage("NewPlayer");
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
