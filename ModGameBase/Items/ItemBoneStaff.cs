@@ -32,7 +32,7 @@ namespace ViMG.Items
                 magicStats.attackStats.knockback, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE);
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(208, 124, 19, 20));
         }

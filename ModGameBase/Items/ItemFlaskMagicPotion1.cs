@@ -19,7 +19,7 @@ namespace ViMG.Items
             description = "A potion that restores magic power. It smells like chalk and tastes like it too.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 96, 16, 16));
         }

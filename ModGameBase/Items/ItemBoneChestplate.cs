@@ -20,7 +20,7 @@ namespace ViMG.Items
             Tags.Add("armor_body");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemBoneChestplate(this);
         }

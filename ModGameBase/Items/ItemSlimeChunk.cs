@@ -17,7 +17,7 @@ namespace ViMG.Items
 			description = "A gooey chunk of slime. Smells surprisingly nice.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(0, 112, 16, 16));
         }

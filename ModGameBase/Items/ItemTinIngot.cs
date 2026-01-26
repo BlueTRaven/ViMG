@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "A refined chunk of tin ore. Can be made into a variety of shapes and tools.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(96, 0, 16, 16));
         }

@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
 using ViMG.Rendering;
@@ -137,11 +138,16 @@ namespace ViMG.Items
 		public Item(string identifier)
 		{
 			this.Identifier = identifier;
-            if (!GlobalState.IsHeadless)
-                Client = ClientInit();
+            
 		}
 
-        public virtual ClientItem ClientInit()
+        public void DoClientInit()
+        {
+            Debug.Assert(!GlobalState.IsHeadless);
+            Client = ClientInit();
+        }
+
+        protected virtual ClientItem ClientInit()
         {
             return new ClientItem(null, new RectangleF(112, 112, 16, 16));
         }

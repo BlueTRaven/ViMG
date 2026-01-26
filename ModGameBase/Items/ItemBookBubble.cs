@@ -28,7 +28,7 @@ namespace ViMG.Items
                 "Creates a floating bubble. Enemies that touch this bubble will cause it to explode and deal heavy damage.\n";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(64, 48, 16, 16), flipXInHand: true);
         }

@@ -23,7 +23,7 @@ namespace ViMG.Items
             Tags.Add("gear_magic");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(176, 32, 16, 16));
         }

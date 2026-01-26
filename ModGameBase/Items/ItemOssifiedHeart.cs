@@ -21,7 +21,7 @@ namespace ViMG.Items
             Tags.Add("gear_heart");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(160, 43, 16, 21));
         }

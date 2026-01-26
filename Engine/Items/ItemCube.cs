@@ -28,7 +28,7 @@ namespace ViMG.Items
 			description = GlobalState.Registry.CubeRegistry.Get(cubeId).Description;
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemCube(this, cube.Client.GetHeldSourceRect());
         }

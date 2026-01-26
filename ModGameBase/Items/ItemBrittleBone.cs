@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "An ancient and brittle bone, so ancient it might dissolve in your hands. Drops from skeletons.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(166, 112, 16, 16));
         }

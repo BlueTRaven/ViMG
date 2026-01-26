@@ -36,7 +36,7 @@ namespace ViMG.Items
                 "Press shift+right click to reset at any point.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemDebugStructureCopier(this);
         }

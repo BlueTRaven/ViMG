@@ -29,7 +29,7 @@ namespace ViMG.Items
                 "Magic Cost: 2";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(80, 32, 16, 16), flipXInHand: true);
         }

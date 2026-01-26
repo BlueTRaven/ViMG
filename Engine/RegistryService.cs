@@ -1,4 +1,5 @@
-﻿using Engine.Entities;
+﻿using Engine;
+using Engine.Entities;
 using Engine.Entities.Renderers;
 using Engine.Mods;
 using Engine.Networking.Messages;
@@ -104,6 +105,8 @@ namespace ViMG
                 foreach (Item item in ItemRegistry.GetIterable())
                 {
                     (item as IRegisterable).LoadContent(device);
+                    if (!GlobalState.IsHeadless)
+                        item.DoClientInit();
                 }
             }
 

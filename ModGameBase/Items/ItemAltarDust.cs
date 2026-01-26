@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "Dust from an altar so ancient that merely touching it causes it to disintigrate. It is infused with a strange, otherworldly energy.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(0, 16, 16, 16));
         }

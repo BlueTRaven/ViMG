@@ -31,7 +31,7 @@ namespace ViMG.Items
 				Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true, effects: this);
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(128, 112, 32, 16), flipXInHand: true);
         }

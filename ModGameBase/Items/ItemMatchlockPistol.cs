@@ -28,7 +28,7 @@ namespace ViMG.Items
 				attackStats.GetTooltip();
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 128, 16, 16), flipXInHand: true);
         }

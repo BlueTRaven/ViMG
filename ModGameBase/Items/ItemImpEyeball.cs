@@ -20,7 +20,7 @@ namespace ViMG.Items
                 "+5% magic damage";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(32, 48, 16, 16));
         }

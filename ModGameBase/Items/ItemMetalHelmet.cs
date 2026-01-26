@@ -27,7 +27,7 @@ namespace ViMG.Items
             Tags.Add("armor_head");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemMetalHelmet(this, color);
         }

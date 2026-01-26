@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "A strange glowing dust that sticks to your fingers.\nIt's combustible and works as a great fuel source.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(16, 16, 16, 16));
         }

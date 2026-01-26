@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "A weighty chunk of copper ore. It's too raw to be used for anything.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(80, 16, 16, 16));
         }

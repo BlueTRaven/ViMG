@@ -26,7 +26,7 @@ namespace ViMG.Items
             this.rangedAttackStats = stats;
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemBow(this, color);
         }

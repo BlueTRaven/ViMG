@@ -17,7 +17,7 @@ namespace ViMG.Items
         {
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(0, 0, 16, 16));
         }

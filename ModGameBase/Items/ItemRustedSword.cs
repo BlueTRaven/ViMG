@@ -35,7 +35,7 @@ namespace ViMG.Items
                 "Hitting enemies applies bleed for 7 seconds.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(32, 128, 16, 16));
         }

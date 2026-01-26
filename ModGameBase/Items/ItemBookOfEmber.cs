@@ -24,7 +24,7 @@ namespace ViMG.Items
 				"This spell will light a small fire on any surface in front of you.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(64, 32, 16, 16), flipXInHand: true);
         }

@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "A brittle bone that has been infused with a strange red energy.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 112, 16, 16));
         }

@@ -22,7 +22,7 @@ namespace ViMG.Items
             Tags.Add("gear_run");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(96, 48, 16, 16));
         }

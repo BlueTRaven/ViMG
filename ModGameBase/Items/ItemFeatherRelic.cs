@@ -21,7 +21,7 @@ namespace ViMG.Items
             Tags.Add("gear_dj");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(112, 48, 16, 16));
         }

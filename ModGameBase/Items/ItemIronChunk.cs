@@ -16,7 +16,7 @@ namespace ViMG.Items
 			description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 16, 16, 16));
         }

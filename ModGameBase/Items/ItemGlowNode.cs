@@ -20,7 +20,7 @@ namespace ViMG.Items
 			description = "A chunk of wood coated in glowdust. It shimmers brightly, no matter the time of day.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(0, 0, 16, 16), material: new RendererDeferred.DrawMaterial("glow_node"));
         }

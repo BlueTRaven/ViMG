@@ -31,7 +31,7 @@ namespace ViMG.Items
 				"Musketballs are converted into gobs of poison, which inflict the poisoned debuff on enemies.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(112, 128, 16, 16), flipXInHand: true);
         }

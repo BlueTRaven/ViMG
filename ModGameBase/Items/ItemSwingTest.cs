@@ -19,7 +19,7 @@ namespace ViMG.Items
             name = "Swing Test";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 0, 16, 16));
         }

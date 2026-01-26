@@ -18,7 +18,7 @@ namespace ViMG.Items
             this.sourceRect = sourceRect;
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemMetaItem<T>(this, sourceRect);
         }

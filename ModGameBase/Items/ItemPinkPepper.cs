@@ -27,7 +27,7 @@ namespace ViMG.Items
                 "Grants Well Fed for 30 seconds and resistance to On Fire for 3 minutes.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(176, 80, 16, 16));
         }

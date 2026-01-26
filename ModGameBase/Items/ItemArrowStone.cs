@@ -14,7 +14,7 @@ namespace ViMG.Items
             Tags.Add("ammo_arrow");
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(16, 48, 16, 16));
         }

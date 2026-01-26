@@ -24,7 +24,7 @@ namespace ViMG.Items
                 "Grants Well Fed for 5 minutes.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(96, 96, 16, 16));
         }

@@ -17,7 +17,7 @@ namespace ViMG.Items
             description = "A simple piece of string extracted from Fibrous Plants.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(16, 32, 16, 16));
         }

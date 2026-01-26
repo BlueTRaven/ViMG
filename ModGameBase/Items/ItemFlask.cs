@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "An empty flask without substance to fill its void.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(0, 96, 16, 16));
         }

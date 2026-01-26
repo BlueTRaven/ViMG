@@ -17,7 +17,7 @@ namespace ViMG.Items
 			description = "A health potion. It smells surprisingly nice.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(16, 96, 16, 16));
         }

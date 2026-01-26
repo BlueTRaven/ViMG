@@ -33,7 +33,7 @@ namespace ViMG.Items
 			batchStats = new ProjectileManager.ProjectileBatchStats(2, new float[] { -7f, 7f }, null);
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(160, 128, 16, 16));
         }

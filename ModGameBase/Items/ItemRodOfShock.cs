@@ -26,7 +26,7 @@ namespace ViMG.Items
                 magicStats.GetTooltip();
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(112, 96, 16, 16));
         }

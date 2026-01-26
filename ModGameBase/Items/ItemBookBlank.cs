@@ -18,7 +18,7 @@ namespace ViMG.Items
                 "Record your journeys, your discoveries of foreign magics, or perhaps... long-lost love...";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(48, 32, 16, 16));
         }

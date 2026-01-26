@@ -41,7 +41,7 @@ namespace ViMG.Items
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(176, 112, 32, 32), scale: 2f);
         }

@@ -22,7 +22,7 @@ namespace ViMG.Items
                 "Consumed on use.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(112, 32, 16, 16));
         }

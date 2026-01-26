@@ -19,7 +19,7 @@ namespace ViMG.Items
             Tags.Add("ammo_bullet");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(96, 32, 16, 16));
         }

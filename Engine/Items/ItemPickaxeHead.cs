@@ -50,7 +50,7 @@ namespace ViMG.Items
             this.stats = stats;
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemPickaxeHead(this, color);
         }

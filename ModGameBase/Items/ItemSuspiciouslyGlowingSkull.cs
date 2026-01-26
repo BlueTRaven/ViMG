@@ -24,7 +24,7 @@ namespace ViMG.Items
                 "Right click on an altar and something will happen.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemSuspiciouslyGlowingSkull(this);
         }

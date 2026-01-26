@@ -23,7 +23,7 @@ namespace ViMG.Items
             Tags.Add("accessory");
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(80, 80, 16, 16));
         }

@@ -26,7 +26,7 @@ namespace ViMG.Items
             this.realResourceName = resource.Substring(0, 1).ToUpper() + resource.Substring(1, resource.Length - 1);
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemCoin(this, sourceRect);
         }

@@ -28,7 +28,7 @@ namespace ViMG.Items
 			cube = GlobalState.Registry.CubeRegistry.Get("rope");
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(112, 64, 16, 16), material: StaticMaterials.Cubes);
         }

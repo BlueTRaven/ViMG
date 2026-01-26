@@ -36,7 +36,7 @@ namespace ViMG.Items
 				"Consumes 4 ammo per shot.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(80, 128, 16, 16), flipXInHand: true);
         }

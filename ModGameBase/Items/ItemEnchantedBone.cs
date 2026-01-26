@@ -15,7 +15,7 @@ namespace ViMG.Items
 			description = "A brittle bone that has been enchanted with glow dust.";
 		}
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(32, 112, 16, 16));
         }

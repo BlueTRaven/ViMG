@@ -17,7 +17,7 @@ namespace ViMG.Items
             description = "A simple piece of parchment paper without anything written on it.";
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(128, 16, 16, 16));
         }

@@ -30,7 +30,7 @@ namespace ViMG.Items
                 meleeStats.GetTooltip();
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItem(this, new RectangleF(64, 128, 16, 16));
         }

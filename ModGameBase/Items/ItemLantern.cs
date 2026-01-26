@@ -28,7 +28,7 @@ namespace ViMG.Items
         {
         }
 
-        public override ClientItem ClientInit()
+        protected override ClientItem ClientInit()
         {
             return new ClientItemLantern(this);
         }
