@@ -385,11 +385,11 @@ namespace ViMG.GameStates
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player(0, PlayerManagerIO.GetHashCodeForName(GlobalState.GameStateManager.TheIsland.localPlayerName), true);
-            prototype.EntityManager.Add(player, true);
+            //var player = new Player(0, PlayerManagerIO.GetHashCodeForName(GlobalState.GameStateManager.TheIsland.localPlayerName), true);
+            //prototype.EntityManager.Add(player, true);
 
-            player.Position = playerSpawnPosition;
-            player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
+            //player.Position = playerSpawnPosition;
+            //player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             if (!GlobalState.IsHeadless)

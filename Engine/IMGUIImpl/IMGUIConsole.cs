@@ -80,8 +80,9 @@ namespace ViMG.IMGUIImpl
                 throw new Exception("Failed");
             }
         }
-        private class ConsoleTextWriter : TextWriter
+        public class ConsoleTextWriter : TextWriter
         {
+            public int TotalWritten = 0;
             private TextWriter originalConsoleOut;
             public override Encoding Encoding => originalConsoleOut.Encoding;
 
@@ -92,12 +93,14 @@ namespace ViMG.IMGUIImpl
 
             public override void Write(char value)
             {
+                TotalWritten += 1;
                 LogLine(new string(value, 1));
                 originalConsoleOut.Write(value);
             }
 
             public override void Write(string value)
             {
+                TotalWritten += value.Length;
                 LogLine(value);
                 originalConsoleOut.Write(value);
             }
@@ -105,6 +108,7 @@ namespace ViMG.IMGUIImpl
             // Override WriteLine methods as well
             public override void WriteLine(string value)
             {
+                TotalWritten += value.Length;
                 LogLine(value);
                 originalConsoleOut.WriteLine(value);
             }
@@ -137,18 +141,15 @@ namespace ViMG.IMGUIImpl
 
         static IMGUIConsole()
         {
-            if (textWriter == null)
-            {
-                textWriter = new ConsoleTextWriter(System.Console.Out);
-                System.Console.SetOut(textWriter);
-                Trace.Listeners.Clear();
-                Trace.AutoFlush = true;
-                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
-            }
+            ReplaceOut();
+
+            Trace.Listeners.Clear();
+            Trace.AutoFlush = true;
+            Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes()) 
+                foreach (Type type in assembly.GetTypes())
                 {
                     foreach (MethodInfo methodInfo in type.GetMethods())
                     {
@@ -179,6 +180,20 @@ namespace ViMG.IMGUIImpl
                     }
                 }
             }
+        }
+
+        public static ConsoleTextWriter ReplaceOut()
+        {
+            if (textWriter == null)
+            {
+                textWriter = new ConsoleTextWriter(System.Console.Out);
+                System.Console.SetOut(textWriter);
+                Trace.Listeners.Clear();
+                Trace.AutoFlush = true;
+                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
+            }
+
+            return textWriter;
         }
 
         [ConsoleCommand("help")]
@@ -361,6 +376,10 @@ namespace ViMG.IMGUIImpl
         public static FastList<string> GetHistory()
         {
             return lines;
+        }
+        public static FastList<string> GetCommandHistroy()
+        {
+            return commandHistory;
         }
 
         public static unsafe void Console()
@@ -580,7 +599,15 @@ namespace ViMG.IMGUIImpl
             historyPos = -1;
             if (commandHistory.Length == MAX_HISTORY)
                 commandHistory.RemoveAt(0);
-            commandHistory.Add(editingString);
+            StringBuilder sb = new StringBuilder();
+            sb.Append(commandName);
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                sb.Append(parameters[i]);
+                if (i != parameters.Length - 1)
+                    sb.Append(' ');
+            }
+            commandHistory.Add(sb.ToString());
 
             return new CommandReturn
             {

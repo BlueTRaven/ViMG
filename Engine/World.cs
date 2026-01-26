@@ -226,7 +226,7 @@ namespace ViMG
 
 			CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
 
-			ChatManager.Update(deltaTime);
+			//ChatManager.Update(deltaTime);
 			//DialogueManager.Update(deltaTime);
 
 			ChunkManager.Update(deltaTime, this);
