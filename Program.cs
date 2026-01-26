@@ -25,10 +25,16 @@ namespace ViMG
 
             try
             {
-                //HeadlessRunner runner = new HeadlessRunner();
-                //runner.Run();
-                using (var game = new Main(args))
-                    game.Run();
+                if (GlobalState.Args.dedicatedServer)
+                {
+                    HeadlessRunner runner = new HeadlessRunner();
+                    runner.Run();
+                }
+                else
+                {
+                    using (var game = new Main(args))
+                        game.Run();
+                }
             }
             catch (Exception e)
             {

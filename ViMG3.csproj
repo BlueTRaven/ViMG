@@ -26,6 +26,7 @@
     <Compile Remove="ModGameBase\**" />
     <Compile Remove="MonoGame.ImGuiNet\**" />
     <Compile Remove="MonoGame\**" />
+    <Compile Remove="ViMGHeadless\**" />
     <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
     <EmbeddedResource Remove="Engine\**" />
@@ -36,6 +37,7 @@
     <EmbeddedResource Remove="ModGameBase\**" />
     <EmbeddedResource Remove="MonoGame.ImGuiNet\**" />
     <EmbeddedResource Remove="MonoGame\**" />
+    <EmbeddedResource Remove="ViMGHeadless\**" />
     <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
     <None Remove="Engine\**" />
@@ -46,6 +48,7 @@
     <None Remove="ModGameBase\**" />
     <None Remove="MonoGame.ImGuiNet\**" />
     <None Remove="MonoGame\**" />
+    <None Remove="ViMGHeadless\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexa.NET.ImGui", "Hexa.NET.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexa.NET.ImPlot", "Hexa.NET.ImGui\Hexa.NET.ImPlot\Hexa.NET.ImPlot.csproj", "{1B4B80DC-8DAA-F85F-3B6F-579EB8D780AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViMGHeadless", "ViMGHeadless\ViMGHeadless.csproj", "{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -167,6 +169,14 @@ Global
 		{1B4B80DC-8DAA-F85F-3B6F-579EB8D780AE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1B4B80DC-8DAA-F85F-3B6F-579EB8D780AE}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
 		{1B4B80DC-8DAA-F85F-3B6F-579EB8D780AE}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.DebugNoTracy|Any CPU.ActiveCfg = Debug|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.DebugNoTracy|Any CPU.Build.0 = Debug|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.ReleaseNoProfiling|Any CPU.ActiveCfg = Release|Any CPU
+		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}.ReleaseNoProfiling|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
