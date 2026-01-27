@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.1.11304.174
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViMG3", "ViMG3.csproj", "{172B53B9-824D-4B4D-8502-737CC0A6FC16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViMG", "ViMG.csproj", "{172B53B9-824D-4B4D-8502-737CC0A6FC16}"
 	ProjectSection(ProjectDependencies) = postProject
 		{33DEA714-8BC8-40CA-817A-DF3BCA7635D7} = {33DEA714-8BC8-40CA-817A-DF3BCA7635D7}
 		{526DE860-2DA0-CC12-1FBB-36A5335EA1EE} = {526DE860-2DA0-CC12-1FBB-36A5335EA1EE}
@@ -40,7 +40,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexa.NET.ImGui", "Hexa.NET.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexa.NET.ImPlot", "Hexa.NET.ImGui\Hexa.NET.ImPlot\Hexa.NET.ImPlot.csproj", "{1B4B80DC-8DAA-F85F-3B6F-579EB8D780AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViMGHeadless", "ViMGHeadless\ViMGHeadless.csproj", "{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViMGDedicatedServer", "ViMGHeadless\ViMGDedicatedServer.csproj", "{526DE860-2DA0-CC12-1FBB-36A5335EA1EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
