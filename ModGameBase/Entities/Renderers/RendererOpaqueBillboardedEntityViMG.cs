@@ -808,6 +808,25 @@ namespace ViMG.Entities.Renderers
             }
         }
 
+        private class RenderedBonePillar : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedBonePillar() : base("bone_pillar", GlobalState.Registry.EntityRegistry.Get<BonePillar>().Id, new RendererDeferred.DrawMaterial("bone_pillar"))
+            {
+            }
+
+            private static RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[1];
+            public override RendererOpaqueBillboardedEntity.RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
+            {
+                cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    scale = new Vector2(1, 3),
+                    position = entity.position,
+                };
+
+                return cachedStats;
+            }
+        }
+
         private readonly RendererOpaqueBillboardedEntity renderer;
 
         public static void DoRegistration(RendererOpaqueBillboardedEntity renderer)
@@ -835,6 +854,7 @@ namespace ViMG.Entities.Renderers
             //renderer.registry.Register(new RenderedTestNPC(GlobalState.Registry.EntityRegistry.Get<Player>().Id));
             renderer.registry.Register(new RenderedLightStressTest());
             renderer.registry.Register(new RenderedWorm());
+            renderer.registry.Register(new RenderedBonePillar());
         }
     }
 }

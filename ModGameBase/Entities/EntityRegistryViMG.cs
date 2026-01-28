@@ -59,6 +59,7 @@ namespace ModGameBase.Entities
             Register(EntityType.New<TestNPC>());
             Register(EntityType.New<Tree>());
             Register(EntityType.New<Worm>());
+            Register(EntityType.New<BonePillar>());
         }
     }
 }

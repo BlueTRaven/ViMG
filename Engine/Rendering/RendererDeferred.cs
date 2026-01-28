@@ -68,7 +68,7 @@ namespace ViMG.Rendering
                 Emissive = GlobalState.AssetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
 
                 if (Diffuse == null)
-                    throw new Exception("AAAAA");
+                    throw new FileNotFoundException("No asset with name '{0}' found for material", name);
             }
 
             public DrawMaterial(string diffuseName, string? normalName, string? specularName, string? emissiveName)
@@ -77,6 +77,9 @@ namespace ViMG.Rendering
                 Normal = normalName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(normalName) : DrawHelper.NormalPixel;
                 Specular = specularName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(specularName) : DrawHelper.BlackPixel;
                 Emissive = emissiveName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(emissiveName) : DrawHelper.BlackPixel;
+
+                if (Diffuse == null)
+                    throw new FileNotFoundException("No asset with name '{0}' found for material", diffuseName);
             }
         }
 

@@ -1,0 +1,97 @@
+﻿using Engine;
+using Engine.Networking;
+using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ViMG;
+using ViMG.Buffs;
+using ViMG.Cubes;
+using ViMG.Entities;
+
+namespace ModGameBase.Entities
+{
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class BonePillar : Entity, IHasStats, ISyncBasicState
+    {
+        private NoticeHandler<Player> noticeHandler;
+        private BuffManager buffManager;
+
+        private int maxHealth = 20;
+
+        private AiFlierShooter ai;
+
+        public BonePillar() { }
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
+            ProjectileManager.ProjectileStats stats = new() 
+            {
+                damage = 1,
+                knockback = 0.25f,
+                pierce = 1,
+                gravityScale = 1,
+                dieOnCollision = true,
+                gravity = true,
+                
+                group = HitboxManager.Group.ENEMYHOSTILE_BOTH,
+                collisionRadius = Cube.CUBE_SCALE / 4f,
+                size = Cube.CUBE_SCALE,
+            };
+
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+            buffManager = new BuffManager(this);
+
+            ai = new AiFlierShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+                new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id);
+            ai.Acceleration = Cube.CUBE_SCALE / 16f;
+            ai.MaxVelocity = Cube.CUBE_SCALE;
+            ai.ShootSpeed = Cube.CUBE_SCALE * 4;
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+            ai.AttackTargetDistance = Cube.CUBE_SCALE * 5f;
+            ai.MoveTowardsTargetDistance = Cube.CUBE_SCALE * 4f;
+
+            AiFlierShooter.Funcs<BonePillar> funcs = new() { ai = ai, entity = this };
+            funcs.Update(deltaTime);
+        }
+
+        public Stats GetStats()
+        {
+            return new Stats
+            {
+                HP = ai.Health,
+                MaximumHP = ai.MaxHealth
+            };
+        }
+
+        public void SetStats(Stats stats)
+        {
+            ai.Health = stats.HP;
+            ai.MaxHealth = stats.MaximumHP;
+        }
+
+        public void Get(out BasicState state)
+        {
+            ai.Get(out state);
+            state = state with
+            {
+                position = Position,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

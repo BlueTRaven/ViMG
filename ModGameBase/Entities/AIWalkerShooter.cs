@@ -3,6 +3,7 @@ using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,11 +36,7 @@ namespace ViMG.Entities
 		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
         private readonly int shotProjectileVisStatsId;
-        private float idleTimer;
-		private float idleMoveTimer;
-		private int idleMovements;
-		private Vector2 idleDirection;
-		private Vector2 idleHome;
+		public IdleStats idle;
 
 		private State state;
 
@@ -66,8 +63,6 @@ namespace ViMG.Entities
 
 		private Rectangle3D bounds;
 		private int touchHitbox = -1;
-
-		private bool isInRangeOfTarget;
 
 		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
@@ -145,7 +140,7 @@ namespace ViMG.Entities
 
 					if (ai.noticeHandler.Noticed)
 					{
-						ai.idleMovements = 0;
+						ai.idle.idleMovements = 0;
 
 						if (ai.state == State.Normal)
 						{
@@ -166,8 +161,6 @@ namespace ViMG.Entities
 
 							if (distance < ai.AttackTargetDistance)
 							{
-								ai.isInRangeOfTarget = true;
-
 								ai.attackTimer -= (float)deltaTime;
 
 								if (ai.attackTimer <= 0)
@@ -179,8 +172,6 @@ namespace ViMG.Entities
 						}
 						else if (ai.state == State.Attack)
 						{
-							ai.isInRangeOfTarget = true;
-
 							ai.Velocity.X *= 0.95f;
 							ai.Velocity.Z *= 0.95f;
 
@@ -212,8 +203,6 @@ namespace ViMG.Entities
 						}
 						else if (ai.state == State.AttackStun)
 						{
-							ai.isInRangeOfTarget = true;
-
 							ai.Velocity.X *= 0.5f;
 							ai.Velocity.Z *= 0.5f;
 
@@ -231,40 +220,12 @@ namespace ViMG.Entities
 						ai.state = State.Normal;
 						ai.attackTimer = ai.AttackCooldownTime;
 
-						ai.idleTimer -= (float)deltaTime;
+						ai.idle.Update(entity.random, entity.Position, deltaTime);
 
-						if (ai.idleTimer <= 0)
-							ai.idleMoveTimer -= (float)deltaTime;
-
-						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
+						if (ai.idle.idleTimer <= 0)
 						{
-							ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
-
-							ai.idleTimer = entity.random.NextFloat(4f, 12f);
-							ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
-							ai.idleMovements = entity.random.Next(2, 6);
-
-							ai.idleDirection = entity.random.NextAngle();
-						}
-						else
-						{
-							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
-
-							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-								ai.idleDirection = -ai.idleDirection;
-
-							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-							{
-								ai.idleMovements--;
-								ai.idleDirection = entity.random.NextAngle();
-								ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
-							}
-						}
-
-						if (ai.idleTimer <= 0)
-						{
-							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
-							ai.Facing = Vector3.Normalize(new Vector3(ai.idleDirection.X, 0, ai.idleDirection.Y));
+							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idle.idleDirection, actualMaxVel);
+							ai.Facing = Vector3.Normalize(new Vector3(ai.idle.idleDirection.X, 0, ai.idle.idleDirection.Y));
 						}
 						else
 						{
@@ -438,8 +399,7 @@ namespace ViMG.Entities
             SaveHelper.SaveInt32(saveBytes, VERSION);
             SaveHelper.SaveInt32(saveBytes, MaxHealth);
 
-            SaveHelper.SaveVector2(saveBytes, idleDirection);
-            SaveHelper.SaveVector2(saveBytes, idleHome);
+			idle.OnSave(saveBytes);
         }
 
         public void OnLoad(byte[] loadBytes, ref int index)
@@ -448,8 +408,7 @@ namespace ViMG.Entities
 
             MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
 
-            idleDirection = SaveHelper.LoadVector2(loadBytes, ref index);
-            idleHome = SaveHelper.LoadVector2(loadBytes, ref index);
+			idle.OnLoad(loadBytes, ref index);
         }
 
         public void Get(out BasicState state)
@@ -461,8 +420,7 @@ namespace ViMG.Entities
                 position = Vector3.Zero,
                 rotation = Quaternion.CreateFromYawPitchRoll(Facing.Y, Facing.X, Facing.Z),
                 state = (int)this.state,
-                timers = { [0] = idleTimer, [1] = idleMoveTimer, [2] = attackTimer, [3] = InvulnTimer },
-                counters = { [0] = idleMovements },
+                timers = { [2] = attackTimer, [3] = InvulnTimer },
             };
         }
 
@@ -471,11 +429,8 @@ namespace ViMG.Entities
             Health = state.health;
             Velocity = state.velocity;
             this.state = (State)state.state;
-            idleTimer = state.timers[0];
-            idleMoveTimer = state.timers[1];
             attackTimer = state.timers[2];
             InvulnTimer = state.timers[3];
-            idleMovements = state.counters[0];
         }
     }
 }

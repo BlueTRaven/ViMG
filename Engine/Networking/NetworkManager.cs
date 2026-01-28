@@ -23,7 +23,7 @@ namespace Engine.Networking
     {
         public const double TIME_TRAVEL_DELAY = 0;//0.75;// Main.FIXED_STEP * 3;
 
-        [ConsoleCommand("list_players", "lists currently connected players")]
+        [ConsoleCommand("list_players", "lists currently connected players", ConsoleCommandRunSide.Server)]
         public static void ListPlayers(string[] parameters)
         {
             var networkManager = GlobalState.GameStateManager.TheIsland?.netManagerServer != null ? GlobalState.GameStateManager.TheIsland?.netManagerServer : GlobalState.GameStateManager.TheIsland?.netManagerClient;
@@ -33,11 +33,11 @@ namespace Engine.Networking
                 IMGUIConsole.LogLine(string.Format("{0} Players: ", players.Count()));
                 foreach (NetPlayer player in players)
                 {
-                    if (player.playerId == GlobalState.GameStateManager.TheIsland?.GetWorld()?.localPlayerIndex)
+                    if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetClient().LocalPlayerIndex == player.playerId)
                     {
-                        IMGUIConsole.LogLine(string.Format("\tId: {0} (local player)", player.playerId));
+                        IMGUIConsole.LogLine(string.Format("\t(You) Name: {0} Id: {1}", player.playerName, player.playerId));
                     }
-                    else IMGUIConsole.LogLine(string.Format("\tId: {0}", player.playerId));
+                    else IMGUIConsole.LogLine(string.Format("\tName: {0} Id: {1}", player.playerName, player.playerId));
                 }
             }
         }

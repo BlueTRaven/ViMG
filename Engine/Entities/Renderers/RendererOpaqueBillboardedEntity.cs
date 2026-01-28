@@ -51,6 +51,8 @@ namespace ViMG.Entities.Renderers
 
             public RenderedEntity(string identifier, int entityTypeId, RendererDeferred.DrawMaterial material)
             {
+                Debug.Assert(entityTypeId != 0, "Entity type id is invalid");
+
                 this.Identifier = identifier;
                 this.EntityTypeId = entityTypeId;
                 this.Material = material;

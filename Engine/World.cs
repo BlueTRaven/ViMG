@@ -1007,7 +1007,7 @@ namespace ViMG
 				{
 					World world = gsIsland.GetWorld();
 					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
-					Player? player = world.player.First(x => x != null && x.playerIndex == netPlayer.playerId);
+					Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
 					if (player == null)
 					{
 						ErrorPlayerDoesNotExist(parameters[0]);
@@ -1022,7 +1022,7 @@ namespace ViMG
 
 						string entityName = parameters[2];
 
-						Type entityType = GlobalState.Registry.EntityRegistry.Get(entityName).type;
+						Type? entityType = GlobalState.Registry.EntityRegistry.Get(entityName)?.type;
 
 						if (entityType == null)
 						{
