@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows7.0</TargetFrameworks>
 	<MonoGamePlatform>Windows</MonoGamePlatform>
 	<RootNamespace>ViMG</RootNamespace>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>

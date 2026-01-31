@@ -45,6 +45,8 @@ namespace Engine.ChunkStuff
             private readonly BasicState[]? entities;
             public readonly ChunkPosition ChunkPosition;
 
+            private ICubeGetter chunkManager;
+
             public readonly int generation;
 
             public CopiedChunkData(CopyChunkArr arr, BasicState[]? entities, ChunkPosition chunkPosition, int generation)
@@ -135,7 +137,6 @@ namespace Engine.ChunkStuff
                 return faces;
             }
 
-            //TODO: separate out visual stuff, not sure how yet
             private bool HasClearSide(int x, int y, int z, Cube currentCube)
             {
                 Cube adjacentCube = GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);

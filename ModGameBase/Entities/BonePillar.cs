@@ -45,7 +45,7 @@ namespace ModGameBase.Entities
                 size = Cube.CUBE_SCALE,
             };
 
-            ProjectileManager.ProjectileBatchStats bstats = new ProjectileManager.ProjectileBatchStats(32, new Vector2(-45, 45),
+            ProjectileManager.ProjectileBatchStats bstats = new ProjectileManager.ProjectileBatchStats(5, new Vector2(-45, 45),
                 new Vector2(0, 360));
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
@@ -61,7 +61,7 @@ namespace ModGameBase.Entities
                 });
             ai.Acceleration = Cube.CUBE_SCALE / 16f;
             ai.MaxVelocity = Cube.CUBE_SCALE;
-            ai.ShootSpeed = Cube.CUBE_SCALE * 1.5f;
+            ai.ShootSpeed = Cube.CUBE_SCALE * 4;
         }
 
         public override void Update(double deltaTime)

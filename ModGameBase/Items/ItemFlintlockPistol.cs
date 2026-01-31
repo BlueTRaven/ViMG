@@ -30,7 +30,7 @@ namespace ViMG.Items
 
         protected override ClientItem ClientInit()
         {
-            return new ClientItem(this, new RectangleF(144, 128, 16, 16), flipXInHand: true);
+            return new ClientItem(this, new RectangleF(144, 128, 16, 16), flipXInHand: false);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

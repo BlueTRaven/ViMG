@@ -40,13 +40,20 @@ namespace ViMG
             //}
             //else
             {
-                ReadOnlySpan<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
-
+                using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
                 var posInChunkSpace = position.InChunkSpace();
+
                 Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                var id = ids[i];
-                io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
+                var id = chunk.data[i];
+
                 return id;
+                //    ReadOnlySpan<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
+
+                //var posInChunkSpace = position.InChunkSpace();
+                //Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                //var id = ids[i];
+                //io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
+                //return id;
             }
         }
 
@@ -136,21 +143,26 @@ namespace ViMG
             using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsUnsorted");
 
             ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
-            ReadOnlySpan<ushort> cachedChunkData = null;
+            //ReadOnlySpan<ushort> cachedChunkData = ReadOnlySpan<ushort>.Empty;
+            ChunkManagerIO.CapturedChunk cachedChunk = ChunkManagerIO.CapturedChunk.Invalid;
 
             for (int i = 0; i < positions.Length; i++)
             {
                 CubePosition pos = positions[i];
                 ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-                if (cachedChunkData == null || chunkPos != cachedChunkPos)
+                if (cachedChunk.data.Length == 0 || chunkPos != cachedChunkPos)
                 {
+                    cachedChunk.Dispose();
                     cachedChunkPos = chunkPos;
-                    cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
+                    cachedChunk = io.GetChunk(chunkPos);
+                    //cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
                 }
 
                 Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                ids[i] = cachedChunkData[j];
+                ids[i] = cachedChunk.data[j];
             }
+
+            cachedChunk.Dispose();
         }
 
         public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)

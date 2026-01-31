@@ -96,8 +96,6 @@ namespace Engine.Clients
                     var visStats = client.currInterpState.projectiles.GetVisStats(i);
                     ProjectileHelper.Projectile projectile = client.currInterpState.projectiles.GetProjectile(i);
 
-                    //Console.WriteLine("{0}:{1}", projectile.position, i);
-
                     if (visStats.hasLight)
                     {
                         client.LightManager.AddShadowmapped(new LightManager2.LightConfig
@@ -134,7 +132,6 @@ namespace Engine.Clients
 
         public void Add(ProjectileManager.ProjectileReference reference, ProjectileHelper.Projectile projectile, ProjectileHelper.ProjectileStats stats, int visStatsId)
         {
-            Console.WriteLine("recv projectile {0}:{1}", GlobalState.Registry.ProjectileRegistry.Get(visStatsId).Identifier, reference.id);
             int index = reference.id;
             projectiles[index] = new ProjectileHolder
             {

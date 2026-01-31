@@ -15,7 +15,40 @@ namespace ViMG
 {
     public class ChunkManagerIO : WorldIO
     {
-        private enum LoadedState : byte
+		public ref struct CapturedChunk : IDisposable
+		{
+			private ref LoadedChunk ourChunk;
+			public ReadOnlySpan<ushort> data;
+
+			private bool valid;
+
+			public static CapturedChunk Invalid => new(0);
+			public CapturedChunk(ref LoadedChunk chunk)
+			{
+				Debug.Assert(chunk.LoadedState == LoadedState.Loaded);
+				Interlocked.Increment(ref chunk.refCount);
+				
+				ourChunk = ref chunk;
+				data = chunk.cubes;
+
+				valid = true;
+			}
+
+			private CapturedChunk(int a)
+			{
+				data = ReadOnlySpan<ushort>.Empty;
+
+				valid = false;
+			}
+
+            public void Dispose()
+            {
+				if (valid)
+					Interlocked.Decrement(ref ourChunk.refCount);
+            }
+        }
+
+        public enum LoadedState : byte
         {
             Unloaded,   // On disk
             Palettized, // Present in memory, but palettized
@@ -23,7 +56,7 @@ namespace ViMG
             Loaded,     // Fully decompressed in memory
         }
 
-        private struct LoadedChunk
+        public struct LoadedChunk
         {
 			public LoadedState LoadedState => (LoadedState)loadedState;
             public int loadedState;
@@ -34,6 +67,8 @@ namespace ViMG
             public ushort[]? cubes;
 
 			public object l;
+
+			public int refCount = 0;
 
 			public LoadedChunk()
 			{
@@ -150,30 +185,44 @@ namespace ViMG
 			ReadWrite = Read | Write,
 		}
 
+		private void DepalettizeOrWait(ref LoadedChunk chunk)
+		{
+            if (Interlocked.CompareExchange(ref chunk.loadedState, (int)LoadedState.Depalettizing, (int)LoadedState.Palettized) == (int)LoadedState.Palettized)
+            {
+                lock (chunk.l)
+                {
+                    chunk.cubes = PalettizedChunk.Depaletteize(chunk.palettizedChunk);
+                    chunk.loadedState = (int)LoadedState.Loaded;
+                    chunk.palettizedChunk = new PalettizedChunk();
+                }
+            }
+            else if (chunk.LoadedState == LoadedState.Depalettizing)
+            {
+                // Waits for above lock to be released on other thread
+                lock (chunk.l) { }
+                Debug.Assert(chunk.LoadedState == LoadedState.Loaded);
+            }
+        }
+
 		public Span<ushort> GetChunk(ChunkPosition position, GetMode mode)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
 			if (loadedChunks[i].LoadedState == LoadedState.Unloaded) return null;
 
-            if (Interlocked.CompareExchange(ref loadedChunks[i].loadedState, (int)LoadedState.Depalettizing, (int)LoadedState.Palettized) == (int)LoadedState.Palettized)
-			{
-				lock (loadedChunks[i].l)
-				{
-					loadedChunks[i].cubes = PalettizedChunk.Depaletteize(loadedChunks[i].palettizedChunk);
-					loadedChunks[i].loadedState = (int)LoadedState.Loaded;
-					loadedChunks[i].palettizedChunk = new PalettizedChunk();
-				}
-			}
-			else if (loadedChunks[i].LoadedState == LoadedState.Depalettizing)
-			{
-				// Waits for above lock to be released on other thread
-				lock (loadedChunks[i].l) { }
-				Debug.Assert(loadedChunks[i].LoadedState == LoadedState.Loaded);
-			}
+			DepalettizeOrWait(ref loadedChunks[i]);
 
-				Debug.Assert(loadedChunks[i].cubes != null);
+			Debug.Assert(loadedChunks[i].cubes != null);
 
 			return loadedChunks[i].cubes!;
+		}
+
+		public CapturedChunk GetChunk(ChunkPosition position)
+        {
+            Util.ThreeDToOneD(new ValuePoint3D(position.X, position.Y, position.Z), new ValuePoint3D(sizeInChunks), out int i);
+            if (loadedChunks[i].LoadedState == LoadedState.Unloaded) throw new Exception();
+            DepalettizeOrWait(ref loadedChunks[i]);
+
+            return new CapturedChunk(ref loadedChunks[i]);
 		}
 
 		public PalettizedChunk? GetPalettizedChunk(ChunkPosition position)
