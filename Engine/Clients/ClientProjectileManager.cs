@@ -33,7 +33,7 @@ namespace Engine.Clients
         }
 
         private double time;
-        private ProjectileHolder[] projectiles = new ProjectileHolder[ProjectileManager.PROJECTILES_MAX];
+        private ProjectileHolder[] projectiles = new ProjectileHolder[ProjectileManager.ProjMax];
 
         public ClientProjectileManager()
         {
@@ -69,7 +69,12 @@ namespace Engine.Clients
             return projectiles[id].projectile;
         }
 
-        public bool GetActive(int id)
+        public ProjectileManager.ProjectileReference GetReference(int id)
+        {
+            return projectiles[id].reference;
+        }
+
+        public bool IsActive(int id)
         {
             return projectiles[id].active;
         }
@@ -84,19 +89,12 @@ namespace Engine.Clients
             if (mesh.IBO == null)
                 mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
 
-            for (int i = 0; i < ProjectileManager.PROJECTILES_MAX; i++)
+            for (int i = 0; i < ProjectileManager.ProjMax; i++)
             {
-                if (client.Current().projectiles.GetActive(i))
+                if (client.Current().projectiles.IsActive(i))
                 {
-                    var visStats = client.Current().projectiles.GetVisStats(i);
-                    ProjectileHelper.Projectile pprev = client.Previous(1).projectiles.GetProjectile(i);
-                    ProjectileHelper.Projectile pcurr = client.Current().projectiles.GetProjectile(i);
-                    ProjectileHelper.Projectile projectile = new ProjectileHelper.Projectile 
-                    {
-                        position = Vector3.Lerp(pprev.position, pcurr.position, (float)client.TimeC),
-                        velocity = Vector3.Lerp(pprev.velocity, pcurr.velocity, (float)client.TimeC),
-                        timeLeft = float.Lerp(pprev.timeLeft, pcurr.timeLeft, (float)client.TimeC),
-                    };
+                    var visStats = client.currInterpState.projectiles.GetVisStats(i);
+                    ProjectileHelper.Projectile projectile = client.currInterpState.projectiles.GetProjectile(i);
 
                     if (visStats.hasLight)
                     {
@@ -142,6 +140,15 @@ namespace Engine.Clients
                 visStatsId = visStatsId,
                 reference = reference,
                 active = true,
+            };
+        }
+
+        public void Set(ProjectileManager.ProjectileReference reference, ProjectileHelper.Projectile projectile)
+        {
+            int index = reference.id;
+            projectiles[index] = projectiles[index] with
+            {
+                projectile = projectile,
             };
         }
 

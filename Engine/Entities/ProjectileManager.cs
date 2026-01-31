@@ -303,12 +303,12 @@ namespace ViMG.Entities
 		}
 
 		[ConsoleCommandVar("sv_projectiles_max", "maximum number of projectiles that can be active at a time. Default = 1024", true)]
-		public static int PROJECTILES_MAX = 1024;
+		public static int ProjMax = 1024;
 
 		//private static VerySimpleMesh mesh;
 		//private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
 
-		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
+		private Projectile[] projectiles = new Projectile[ProjMax];
 
 		private World world;
 
@@ -329,7 +329,7 @@ namespace ViMG.Entities
             Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
 			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
 
-			for (int i = 0; i < PROJECTILES_MAX; i++)
+			for (int i = 0; i < ProjMax; i++)
 			{
 				if (!projectiles[i].active)
 					continue;
@@ -509,7 +509,7 @@ namespace ViMG.Entities
 
 		public int Add(Projectile projectile)
 		{
-			for (int i = 0; i < PROJECTILES_MAX; i++)
+			for (int i = 0; i < ProjMax; i++)
 			{
 				if (!projectiles[i].active)
 				{

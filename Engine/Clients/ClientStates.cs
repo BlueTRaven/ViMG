@@ -203,6 +203,32 @@ namespace Engine.Clients
                     ent = GlobalState.Registry.EntityRegistry.Get(typeId)?.GetInterpolated(this, reference) ?? new();
                 }
 
+                for (int i = 0; i < ProjectileManager.ProjMax; i++)
+                {
+                    if (currInterpState.projectiles.IsActive(i))
+                    {
+                        var prev = Previous(1).projectiles.GetProjectile(i);
+                        var prevInterp = prevInterpState.projectiles.GetProjectile(i);
+                        var curr = Current().projectiles.GetProjectile(i);
+                        if (!prevInterpState.projectiles.IsActive(i) || !Previous(1).projectiles.IsActive(i))
+                        {
+                            prevInterp = curr;
+                            prev = curr;
+                        }
+                        if (!Current().projectiles.IsActive(i))
+                            curr = prevInterp;
+
+                        var interp = curr with
+                        {
+                            position = Vector3.Lerp(prevInterp.position, curr.position, (float)TimeC),
+                            velocity = Vector3.Lerp(prevInterp.velocity, curr.velocity, (float)TimeC),
+                            timeLeft = float.Lerp(prevInterp.timeLeft, curr.timeLeft, (float)TimeC),
+                        };
+
+                        currInterpState.projectiles.Set(Current().projectiles.GetReference(i), interp);
+                    }
+                }
+
                 currInterpState.time = (float)double.Lerp(prevInterpState.time, Current().time, TimeC);
             }
 

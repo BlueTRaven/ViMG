@@ -40,11 +40,6 @@ namespace Engine.Entities
 
         public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
-            if (client.currInterpState.entities.GetTypeById(reference.id) == GlobalState.Registry.EntityRegistry.Get<EntityItem>().Id)
-            {
-
-            }
-
             var prev = client.Previous(1).entities.GetByRef(ref reference);
             var prevInterp = client.prevInterpState.entities.GetByRef(ref reference);
             var curr = client.Current().entities.GetByRef(ref reference);
