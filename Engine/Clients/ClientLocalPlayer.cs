@@ -2,6 +2,7 @@
 using Engine.Common;
 using Engine.Networking;
 using Engine.Networking.Messages;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 using ViMG.Physics;
 using ViMG.UIs;
 
@@ -67,7 +69,7 @@ namespace Engine.Clients
 
             if (Main.inputManager.JustPressed(Keys.V))
             {
-
+                IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ModGameBase.Entities.BonePillar");
             }
 
             var current = client.Current();

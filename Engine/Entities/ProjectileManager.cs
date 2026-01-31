@@ -230,7 +230,7 @@ namespace ViMG.Entities
 			//public ProjectileVisStats visStats;
 			public ProjectileStats stats;
 
-			public readonly bool active;
+			public bool active;
 
 			public Rectangle3D bounds;
 			public int hitbox;
@@ -514,8 +514,9 @@ namespace ViMG.Entities
 				if (!projectiles[i].active)
 				{
 					projectiles[i] = projectile;
-					projectiles[i].reference = (projectiles[i].reference.id - 1 != i) ? new ProjectileReference(1, 0) : projectiles[i].reference.NextGeneration();
-					projectiles[i].bounds = Rectangle3D.FromCenterRadius(projectile.position, projectile.stats.size);
+					projectiles[i].reference = (projectiles[i].reference.id - 1 != i) ? new ProjectileReference((ushort)(i + 1), 0) : projectiles[i].reference.NextGeneration();
+					projectiles[i].bounds = Rectangle3D.FromCenterRadius(Vector3.Zero, projectile.stats.size);
+					projectiles[i].active = true;
 
 					SyncProjectile.Instance.Add(projectiles[i].reference, projectile.GetCommon(), projectile.stats.GetCommon(), projectile.visStatsId);
 					return i;

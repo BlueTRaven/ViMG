@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -936,7 +937,12 @@ namespace ViMG
 				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
 					World world = gsIsland.GetWorld();
-					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
+					var playerName = parameters[0];
+					if (playerName == "self") 
+					{
+						playerName = world.LoadedFolderName;
+					}
+					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(playerName) ?? new();
 					Player? player = world.player.First(x => x?.playerIndex == netPlayer.playerId);
 					if (player != null)
 					{
@@ -1007,7 +1013,12 @@ namespace ViMG
                 if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
                 {
                     World world = gsIsland.GetWorld();
-                    var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
+                    var playerName = parameters[0];
+                    if (playerName == "self")
+                    {
+                        playerName = world.LoadedFolderName;
+                    }
+                    var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(playerName) ?? new();
                     Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
                     if (player == null)
                     {
@@ -1063,8 +1074,13 @@ namespace ViMG
 				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
 				{
 					World world = gsIsland.GetWorld();
-					var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
-					Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
+                    var playerName = parameters[0];
+                    if (playerName == "self")
+                    {
+                        playerName = world.LoadedFolderName;
+                    }
+                    var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(playerName) ?? new();
+                    Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
 					if (player == null)
 					{
 						ErrorPlayerDoesNotExist(parameters[0]);
@@ -1104,10 +1120,12 @@ namespace ViMG
 							else if (location == "ray")
 							{
 								CubePosition lookAt = player.LookAtEnd;
-								ent.Position = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
+								ent.Position = lookAt.InWorldSpace();
 							}
 
 							gsIsland.GetWorld().EntityManager.Add(ent);
+
+							IMGUIConsole.LogLine(string.Format("Spawned entity {0} with id {1}", ent.GetType().FullName, ent.Id));
 						}
 					}
 				}

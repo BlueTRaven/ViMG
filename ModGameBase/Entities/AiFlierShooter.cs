@@ -10,11 +10,32 @@ using ViMG;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using static HexaGen.Runtime.MemoryPool;
 
 namespace ModGameBase.Entities
 {
     public class AiFlierShooter
     {
+        public struct ShootConfig
+        {
+            public bool shootsBatch;
+            public ProjectileManager.ProjectileStats stats;
+            public ProjectileManager.ProjectileBatchStats batchStats;
+            public int visStatsId;
+
+            public void Shoot(ProjectileManager manager, IHitboxOwner owner, Vector3 position, Vector3 velocity)
+            {
+                if (!shootsBatch)
+                {
+                    manager.Add(new ProjectileManager.Projectile(owner, position, velocity, 8, visStatsId, stats));
+                }
+                else
+                {
+                    manager.AddBatch(owner, position, velocity, 8, batchStats, visStatsId, stats);
+                }
+            }
+        }
+
         private const int VERSION = 0;
 
         public enum State
@@ -57,10 +78,7 @@ namespace ModGameBase.Entities
         private int touchHitbox = -1;
 
         public float ShootSpeed = Cube.CUBE_SCALE * 16;
-        private readonly bool projectileBatch;
-        private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
-        private readonly ProjectileManager.ProjectileStats shotProjectileStats;
-        private readonly int shotProjectileVisStatsId;
+        private readonly ShootConfig shootConfig;
 
         public Vector3 Facing;
 
@@ -69,8 +87,7 @@ namespace ModGameBase.Entities
         private readonly World world;
 
         public AiFlierShooter(World world, Rectangle3D touchHitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
-            ProjectileManager.ProjectileStats shotProjectileStats,
-            int shotProjectileVisStatsId)
+            ShootConfig shootConfig)
         {
             this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
@@ -79,6 +96,8 @@ namespace ModGameBase.Entities
 
             this.Health = maxHealth;
             this.MaxHealth = maxHealth;
+
+            this.shootConfig = shootConfig;
         }
 
         public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
@@ -171,18 +190,8 @@ namespace ModGameBase.Entities
                         {
                             Vector3 dir = (ai.noticeHandler.GetNoticedEntity().Position - new Vector3(0, Cube.CUBE_SCALE, 0)) - entity.Position;
 
-                            if (!ai.projectileBatch)
-                            {
-                                ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
-                                    Vector3.Normalize(dir) * ai.ShootSpeed,
-                                    8, ai.shotProjectileVisStatsId, ai.shotProjectileStats));
-                            }
-                            else
-                            {
-                                ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
-                                    ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats);
-                            }
-
+                            ai.shootConfig.Shoot(ai.world.ProjectileManager, this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed);
+                            
                             ai.Facing = Vector3.Normalize(dir);
 
                             ai.state = State.AttackStun;

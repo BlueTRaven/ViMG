@@ -36,23 +36,32 @@ namespace ModGameBase.Entities
                 damage = 1,
                 knockback = 0.25f,
                 pierce = 1,
-                gravityScale = 1,
+                gravityScale = 0.45f,
                 dieOnCollision = true,
                 gravity = true,
                 
-                group = HitboxManager.Group.ENEMYHOSTILE_BOTH,
+                group = HitboxManager.Group.ENEMYHOSTILE_DEAL,
                 collisionRadius = Cube.CUBE_SCALE / 4f,
                 size = Cube.CUBE_SCALE,
             };
+
+            ProjectileManager.ProjectileBatchStats bstats = new ProjectileManager.ProjectileBatchStats(32, new Vector2(-45, 45),
+                new Vector2(0, 360));
 
             noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
             buffManager = new BuffManager(this);
 
             ai = new AiFlierShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-                new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id);
+                new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, new AiFlierShooter.ShootConfig()
+                {
+                    shootsBatch = true,
+                    batchStats = bstats,
+                    stats = stats,
+                    visStatsId = GlobalState.Registry.ProjectileRegistry.Get("bone").Id,
+                });
             ai.Acceleration = Cube.CUBE_SCALE / 16f;
             ai.MaxVelocity = Cube.CUBE_SCALE;
-            ai.ShootSpeed = Cube.CUBE_SCALE * 4;
+            ai.ShootSpeed = Cube.CUBE_SCALE * 1.5f;
         }
 
         public override void Update(double deltaTime)
