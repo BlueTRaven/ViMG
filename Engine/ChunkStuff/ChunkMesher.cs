@@ -105,8 +105,13 @@ namespace Engine.ChunkStuff
         {
             //There may still be things in the queue, including active threads, so wait on those
             //TODO: maybe this isn't necessary? Mesh Resources aren't created anywhere but the main thread
+            RenderMesher?.BeginFlush();
+            CollisionMesher?.BeginFlush();
             RenderMesher?.FinishFlush();
             CollisionMesher?.FinishFlush();
+
+            Debug.Assert(RenderMesher?.WorkFinished() ?? true, "RenderMesher: Work was not finished after flush");
+            Debug.Assert(CollisionMesher?.WorkFinished() ?? true, "CollisionMesher: Work was not finished after flush");
 
             RenderMesher?.UnloadAll();
             CollisionMesher?.UnloadAll();

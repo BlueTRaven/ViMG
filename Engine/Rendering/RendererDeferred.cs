@@ -16,7 +16,7 @@ using ViMG.VertexDeclarations;
 
 namespace ViMG.Rendering
 {
-    public class RendererDeferred
+    public class RendererDeferred : IDisposable
     {
         public struct DrawSourceRectParameters
         {
@@ -302,6 +302,7 @@ namespace ViMG.Rendering
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
         public VerySimpleMesh DEBUGSphereMesh;
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
+        private bool disposedValue;
 
         public RendererDeferred(GraphicsDevice device)
         {
@@ -376,19 +377,19 @@ namespace ViMG.Rendering
 
             Main.WindowResizedEvent += ConstructRTs;
 
-            VertexPositionTexture[] vpt = new VertexPositionTexture[4]
-            {
+            VertexPositionTexture[] vpt =
+            [
                 new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0)),
                 new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0)),
                 new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1)),
                 new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)),
-            };
+            ];
 
-            uint[] indices = new uint[6]
-            {
+            uint[] indices =
+            [
                 0, 1, 2,
                 2, 3, 0,
-            };
+            ];
 
             vboQuad = new VertexBuffer(device, typeof(VertexPositionTexture), vpt.Length, BufferUsage.WriteOnly);
             vboQuad.SetData(vpt);
@@ -1170,6 +1171,125 @@ namespace ViMG.Rendering
             }
 
             DrawsTransparentPass.Add(draw);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                //             private RenderTarget2D diffuse;       //RGB albedo data; A specular data
+                //private RenderTarget2D lightAccum;  //RGB ambient + emissive to begin with. Light is accumulated after gbuffer pass.
+                //private RenderTarget2D depth;       //R depth data
+                //private RenderTarget2D position;    //RGB position data; A unused
+                //private RenderTarget2D normal;      //RGB normal data; A unused
+                //private RenderTarget2D ao;          //R AO data
+
+                //private RenderTarget2D skybox;
+
+                //private RenderTarget2D preTransparencyOutput;
+                //private RenderTarget2D ldrOutputPing;
+                //private RenderTarget2D ldrOutputPong;
+
+                //private RenderTarget2D outputRT;
+
+                diffuse.Dispose();
+                lightAccum.Dispose();
+                depth.Dispose();
+                position.Dispose();
+                normal.Dispose();
+                ao.Dispose();
+
+                skybox.Dispose();
+
+                preTransparencyOutput.Dispose();
+                ldrOutputPing.Dispose();
+                ldrOutputPong.Dispose();
+
+                outputRT.Dispose();
+
+                //                private RendererBloom bloom;
+                //private SMAA smaa;
+                //private RendererFXAA fxaa;
+
+                bloom.Dispose();
+                smaa?.Dispose();
+                fxaa?.Dispose();
+
+                //            private BasicEffect EffectCopy;
+                //private SamplerState shadowBorderClampSS;
+                //private SamplerState bilinearClampSS;
+                //private BlendState noAlphaBlendBS;
+                //private BlendState normalBS;
+                //private BlendState additiveBS;
+                //private RasterizerState cullCWRS;
+                //private RasterizerState cullCCWRS;
+                //private DepthStencilState depthReadNoWriteDSS;
+                //private DepthStencilState noDepthReadWriteDSS;
+
+                //private VertexBuffer vboQuad;
+                //private IndexBuffer iboQuad;
+                //private VertexBuffer vboUVSphere;
+                //private IndexBuffer iboUVSphere;
+
+                EffectCopy.Dispose();
+                shadowBorderClampSS.Dispose();
+                bilinearClampSS.Dispose();
+                noAlphaBlendBS.Dispose();
+                normalBS.Dispose();
+                additiveBS.Dispose();
+                cullCWRS.Dispose();
+                cullCCWRS.Dispose();
+                depthReadNoWriteDSS.Dispose();
+                noDepthReadWriteDSS.Dispose();
+                vboQuad.Dispose();
+                iboQuad.Dispose();
+                vboUVSphere.Dispose();
+                iboUVSphere.Dispose();
+
+                //            public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
+                //public VerySimpleMesh DEBUGSphereMesh;
+                //public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
+
+                DEBUGCubemapMesh.VBO.Dispose();
+                DEBUGCubemapMesh.IBO.Dispose();
+                DEBUGSphereMesh.Dispose();
+                DEBUGCubeMesh.VBO.Dispose();
+                DEBUGCubeMesh.IBO.Dispose();
+
+                Console.WriteLine("Counts:\n" +
+                    "{0} {1}\n" +
+                    "{2} {3}\n" +
+                    "{4} {5}\n" +
+                    "{6} {7}\n" +
+                    "{8} {9}\n" +
+                    "{10} {11}\n" +
+                    "{12} {13}\n",
+                    "GBuffer", DrawsPassGBuffer.Count,
+                    "GBuffer Instanced", DrawsPassGBufferInstanced.Count,
+                    "Point Light Volume", DrawsPointLightVolumePass.Count,
+                    "Shadowmapped Point Light Volume", DrawsShadowmappedPointLightVolumePass.Count,
+                    "Skybox", DrawsSkyboxPass.Count,
+                    "Transparent", DrawsTransparentPass.Count,
+                    "Empty", DrawsEmptyPass.Count);
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~RendererDeferred()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -326,6 +326,8 @@ namespace Engine.Clients
                     ChunkManager.PhysicsInfo.GlobalBufferPool.Clear();
 
                     bepuDebugRenderer.Dispose();
+
+                    Renderer.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

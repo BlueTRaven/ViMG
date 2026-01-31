@@ -276,7 +276,7 @@ namespace ViMG.Entities
 
 			if (ents[id].active)
 			{
-				Debug.Assert(ents[id].entity is not Player);
+				Debug.Assert(ents[id].entity is not Player, string.Format("Attempted to unload a player at id {0} to make room for {1}", id, entity.GetType().FullName));
 				Console.WriteLine("Unload {0}:{1} to make room for {2}", ents[id].entity.ToString(), id, entity.ToString());
 				ForceUnload(ents[id].entity);
 			}

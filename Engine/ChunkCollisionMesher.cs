@@ -130,7 +130,7 @@ namespace ViMG
             return (int)(x.batch.cameraPosition - avg).Length();
         });
         //The 'active' batch mesh tasks.
-        private Task<BatchCollisionMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchCollisionMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
+        private Task<BatchCollisionMeshTaskResult>?[] activeMeshBatchTasks = new Task<BatchCollisionMeshTaskResult>?[MAX_ACTIVE_MESH_BATCH_TASKS];
         private int numActiveChunkMeshBatchTasks;
 
         private CollisionMeshInfo[] meshes;
@@ -196,7 +196,7 @@ namespace ViMG
 
         public bool WorkFinished()
         {
-            return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
+            return !activeMeshBatchTasks.Any(x => x != null) && flushTaskQueue.Count == 0;
         }
 
         public void BeginFlush()
@@ -227,6 +227,8 @@ namespace ViMG
 
             int max = flushTaskQueue.Count;
             GameStateTheIsland.ProgressMax = max;
+
+            StartActiveTasks(true);
 
             while (flushTaskQueue.Count > 0)
             {
@@ -290,7 +292,7 @@ namespace ViMG
             }
         }
 
-        private void StartActiveTasks()
+        private void StartActiveTasks(bool blockUntilCompletion = false)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -298,6 +300,9 @@ namespace ViMG
             {
                 for (int i = 0; i < activeMeshBatchTasks.Length; i++)
                 {
+                    if (blockUntilCompletion && activeMeshBatchTasks[i] != null)
+                        activeMeshBatchTasks[i].Wait();
+
                     //First, check for complete tasks.
                     if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
                     {
@@ -623,12 +628,16 @@ namespace ViMG
                     meshes[j].collidableMesh = default;
 
                     meshes[j].hasMesh = false;
-                    meshes[j].bufferPool.AssertEmpty();
-                    meshes[j].bufferPool.Clear();
                 }
                 else if (meshes[j].collidableMesh.Triangles.Allocated)
                 {
                     Console.WriteLine("Leaked chunk collision mesh at {0}", meshes[j].position);
+                }
+
+                if (meshes[j].bufferPool != null)
+                {
+                    meshes[j].bufferPool.AssertEmpty();
+                    meshes[j].bufferPool.Clear();
                 }
             }
         }

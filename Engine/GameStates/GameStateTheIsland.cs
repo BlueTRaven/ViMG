@@ -448,6 +448,7 @@ namespace ViMG.GameStates
             //So we just call the raw Unload functions.
             world.isCreateWorldReloading = true;
             entityManager.UnloadAll();
+            entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
             Array.Fill(world.player, null);
             world.isCreateWorldReloading = false;
             //chunkLoadManager.UnloadAll();

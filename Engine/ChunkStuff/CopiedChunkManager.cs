@@ -63,7 +63,9 @@ namespace Engine.ChunkStuff
             {
                 IMGUIConsole.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
 
-                return chunkManager.GetId(position.InCubeSpace(ChunkPosition));
+                if (chunkManager.IsInBounds(position.InCubeSpace(ChunkPosition)))
+                    return chunkManager.GetId(position.InCubeSpace(ChunkPosition));
+                else return 0;
 
                 //accessing a different chunk
                 //if (position.X < 0 || position.Y < 0 || position.Z < 0 ||

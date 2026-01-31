@@ -203,7 +203,7 @@ namespace ViMG
 
 		public bool WorkFinished()
 		{
-            return activeMeshBatchTasks.Length == 0 && flushTaskQueue.Count == 0;
+            return !activeMeshBatchTasks.Any(x => x != null) && flushTaskQueue.Count == 0;
         }
 
 		public void BeginFlush()
@@ -240,6 +240,8 @@ namespace ViMG
 			
             int max = flushTaskQueue.Count;
 			GameStateTheIsland.ProgressMax = max;
+
+			StartActiveTasks(true);
 
 			while (flushTaskQueue.Count > 0)
 			{
@@ -282,14 +284,17 @@ namespace ViMG
 			}
 		}
 
-		private void StartActiveTasks()
-		{
-			using var zone = TracyImpl.Tracy.BeginZone();
+        private void StartActiveTasks(bool blockUntilCompletion = false)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone();
 
             //First, check for complete tasks.
             for (int i = 0; i < activeMeshBatchTasks.Length; i++)
 			{
-				if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
+                if (blockUntilCompletion && activeMeshBatchTasks[i] != null)
+                    activeMeshBatchTasks[i].Wait();
+
+                if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
 				{
                     using var zoneActive = TracyImpl.Tracy.BeginZone(name: "EndBatch");
 
