@@ -57,26 +57,22 @@ namespace Engine.ChunkStuff
 
         public readonly ChunkRenderMesher? RenderMesher;
         public readonly ChunkCollisionMesher? CollisionMesher;
-        public BufferPool bufferPool;
 
         // Creates a ChunkMesher with both a RenderMesher and a CollisionMesher.
         public ChunkMesher(int sizeInChunksXZ, PhysicsInfo physicsInfo, GraphicsDevice device)
         {
-            this.bufferPool = new BufferPool();
-            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ, bufferPool);
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunksXZ, bufferPool);
+            RenderMesher = new ChunkRenderMesher(device, sizeInChunksXZ);
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunksXZ);
         }
 
         private ChunkMesher(int sizeInChunks, GraphicsDevice device)
         {
-            bufferPool = new BufferPool();
-            RenderMesher = new ChunkRenderMesher(device, sizeInChunks, bufferPool);
+            RenderMesher = new ChunkRenderMesher(device, sizeInChunks);
         }
 
         private ChunkMesher(int sizeInChunks, PhysicsInfo physicsInfo)
         {
-            bufferPool = new BufferPool();
-            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunks, bufferPool);
+            CollisionMesher = new ChunkCollisionMesher(physicsInfo, sizeInChunks);
         }
 
         // Creates a ChunkMesher with a RenderMesher.
@@ -114,8 +110,6 @@ namespace Engine.ChunkStuff
 
             RenderMesher?.UnloadAll();
             CollisionMesher?.UnloadAll();
-
-            bufferPool.Clear();
         }
 
         public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)

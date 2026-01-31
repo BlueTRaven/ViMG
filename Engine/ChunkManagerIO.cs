@@ -18,7 +18,7 @@ namespace ViMG
 		public ref struct CapturedChunk : IDisposable
 		{
 			private ref LoadedChunk ourChunk;
-			public ReadOnlySpan<ushort> data;
+			public Span<ushort> data;
 
 			private bool valid;
 
@@ -36,7 +36,7 @@ namespace ViMG
 
 			private CapturedChunk(int a)
 			{
-				data = ReadOnlySpan<ushort>.Empty;
+				data = Span<ushort>.Empty;
 
 				valid = false;
 			}
@@ -256,6 +256,7 @@ namespace ViMG
 		public void SetChunk(ref readonly PalettizedChunk palettized)
 		{
             Util.ThreeDToOneD(new ValuePoint3D(palettized.position.X, palettized.position.Y, palettized.position.Z), new ValuePoint3D(sizeInChunks), out int i);
+			Debug.Assert(loadedChunks[i].refCount == 0);
 
 			loadedChunks[i] = new LoadedChunk()
 			{

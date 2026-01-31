@@ -169,19 +169,32 @@ namespace ViMG
         {
             IMGUIConsole.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);
 
-            CubePosition basePosition = chunkPosition.InCubeSpace();
-
-            var chunkData = io.GetChunk(chunkPosition, ChunkManagerIO.GetMode.Read);
-            if (chunkData == null || chunkData.Length == 0)
+            using var chunk = io.GetChunk(chunkPosition);
+            if (chunk.data.Length == 0)
             {
                 queryIds.Fill(0);
-                return;
+            }
+            else
+            {
+                for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+                {
+                    queryIds[i] = chunk.data[i];
+                }
             }
 
-            for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
-            {
-                queryIds[i] = chunkData[i];
-            }
+            //CubePosition basePosition = chunkPosition.InCubeSpace();
+
+            //var chunkData = io.GetChunk(chunkPosition, ChunkManagerIO.GetMode.Read);
+            //if (chunkData == null || chunkData.Length == 0)
+            //{
+            //    queryIds.Fill(0);
+            //    return;
+            //}
+
+            //for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+            //{
+            //    queryIds[i] = chunkData[i];
+            //}
         }
 
         public Optional<Cube> GetCube(CubePosition position)
@@ -230,7 +243,10 @@ namespace ViMG
 
         public void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
-            Span<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
+            using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
+            Span<ushort> ids = chunk.data;
+
+            //Span<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
 
             var posInChunkSpace = position.InChunkSpace();
             Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
@@ -247,15 +263,15 @@ namespace ViMG
 
         public void SetCube(CubePosition position, ushort id, Player player)
         {
-            Span<ushort> cubes = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
+            using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
+            Span<ushort> ids = chunk.data;
+            //Span<ushort> cubes = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
 
             var posInChunkSpace = position.InChunkSpace();
             Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
-            ushort oldId = cubes[i];
-            cubes[i] = id;
-
-            io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
+            ushort oldId = ids[i];
+            ids[i] = id;
 
             chunkManager.MarkCubeDirty(player, position, oldId, id);
             chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
@@ -264,53 +280,78 @@ namespace ViMG
         public void SetCubes(Span<CubePosition> positions, Span<ushort> ids)
         {
             ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
-            Span<ushort> cachedChunkBytes = null;
+            //Span<ushort> cachedChunkBytes = null;
+
+
+            ChunkManagerIO.CapturedChunk cachedChunk = ChunkManagerIO.CapturedChunk.Invalid;
 
             for (int i = 0; i < positions.Length; i++)
             {
                 CubePosition pos = positions[i];
                 ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+                if (cachedChunk.data.Length == 0 || chunkPos != cachedChunkPos)
                 {
-                    if (cachedChunkBytes != null)
-                        io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
-
+                    cachedChunk.Dispose();
                     cachedChunkPos = chunkPos;
-                    cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
+                    cachedChunk = io.GetChunk(chunkPos);
+                    //cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
                 }
 
                 Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                cachedChunkBytes[j] = ids[i];
+                cachedChunk.data[j] = ids[i];
             }
 
-            if (cachedChunkBytes != null)
-                io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+            cachedChunk.Dispose();
+
+            //for (int i = 0; i < positions.Length; i++)
+            //{
+            //    CubePosition pos = positions[i];
+            //    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+            //    if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+            //    {
+            //        if (cachedChunkBytes != null)
+            //            io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+
+            //        cachedChunkPos = chunkPos;
+            //        cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
+            //    }
+
+            //    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+            //    cachedChunkBytes[j] = ids[i];
+            //}
+
+            //if (cachedChunkBytes != null)
+            //    io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
         }
 
         public void SetCubes(Span<CubePosition> positions, ushort id)
         {
-            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
-            Span<ushort> cachedChunkBytes = null;
+            Span<ushort> ids = stackalloc ushort[positions.Length];
+            ids.Fill(id);
+            SetCubes(positions, ids);
 
-            for (int i = 0; i < positions.Length; i++)
-            {
-                CubePosition pos = positions[i];
-                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
-                if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
-                {
-                    if (cachedChunkBytes != null)
-                        io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+            //ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            //Span<ushort> cachedChunkBytes = null;
 
-                    cachedChunkPos = chunkPos;
-                    cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
-                }
+            //for (int i = 0; i < positions.Length; i++)
+            //{
+            //    CubePosition pos = positions[i];
+            //    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+            //    if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+            //    {
+            //        if (cachedChunkBytes != null)
+            //            io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
 
-                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-                cachedChunkBytes[j] = id;
-            }
+            //        cachedChunkPos = chunkPos;
+            //        cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
+            //    }
 
-            if (cachedChunkBytes != null)
-                io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+            //    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+            //    cachedChunkBytes[j] = id;
+            //}
+
+            //if (cachedChunkBytes != null)
+            //    io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
         }
 
         public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start)

@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -509,41 +511,39 @@ namespace ViMG
 		}
 
 		public Entity? DeserializeEntity(World world, EntityData entData, int overrideGeneration = -1)
-		{
-            Type entityType = Utility.GetType(entData.type);
+        {
+            using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (entityType == null)
-            {
-                Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
-            }
-            else
-            {
-				if (entityType.GetConstructor([]) != null)
+			EntityType entityType = GlobalState.Registry.EntityRegistry.Get(entData.type);
+
+			//Type entityType = Utility.GetType(entData.type);
+
+			if (entityType == null)
+			{
+				Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
+			}
+			else
+			{
+				var created = entityType.New();
+
+				if (created != null && created is Entity ent)
 				{
-					var created = Activator.CreateInstance(entityType);
-
-					if (created != null && created is Entity ent)
+					try
 					{
 						ent.OnLoad(world, entData.data, entData.version);
-						try
-						{
-							manager.ForceAdd(ent, entData.id, overrideGeneration);
-							return ent;
-						}
-						catch (Exception e)
-						{
-                            IMGUIConsole.Assert(false, string.Format("DeserializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString()));
-						}
+						manager.ForceAdd(ent, entData.id, overrideGeneration);
+						return ent;
 					}
-					else
+					catch (Exception e)
 					{
-						Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+						IMGUIConsole.Assert(false, string.Format("DeserializeEntity: Exception encountered while deserializing entity with type {0}\n{1}", entData.type, e.ToString()));
 					}
-				} else
-				{
-					Console.WriteLine("Could not deserialize an entity with type name {0}. Forgot to add a parameterless constructor.", entData.type);
 				}
-            }
+				else
+				{
+					Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+				}
+			}
 
 			return null;
         }

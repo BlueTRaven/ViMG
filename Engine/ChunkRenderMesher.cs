@@ -29,7 +29,7 @@ namespace ViMG
 	public class ChunkRenderMesher
 	{
 #if DEBUG
-		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 5;
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 5;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
@@ -142,11 +142,9 @@ namespace ViMG
 		private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
-		//private BufferPool bufferPool;
-
 		private RenderMeshInfo[] chunkMeshInfos;
 
-		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks, BufferPool bufferPool)
+		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks)
 		{
 			this.device = device;
 			this.sizeInChunks = sizeInChunks;
@@ -157,8 +155,6 @@ namespace ViMG
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out ValuePoint3D point);
 				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
-
-			//this.bufferPool = bufferPool;
 		}
 
 		public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)

@@ -26,8 +26,13 @@ namespace ViMG
 {
     public class ChunkCollisionMesher
     {
-        private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
-        private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
+#if DEBUG
+        private const int MAX_ACTIVE_MESH_BATCH_TASKS = 5;
+        private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 5;
+#else
+		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
+#endif
 
         //Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
         private struct CollisionMeshBatch
@@ -134,17 +139,13 @@ namespace ViMG
 
         private readonly Physics.PhysicsInfo physicsInfo;
 
-        private BufferPool bufferPool;
-
-        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, int sizeInChunks, BufferPool bufferPool)
+        public ChunkCollisionMesher(Physics.PhysicsInfo physicsInfo, int sizeInChunks)
         {
             //bufferPool = new BufferPool();
 
             this.physicsInfo = physicsInfo;
             meshes = new CollisionMeshInfo[sizeInChunks * sizeInChunks * sizeInChunks];
             this.sizeInChunks = sizeInChunks;
-
-            this.bufferPool = bufferPool;
         }
 
         public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)
@@ -521,7 +522,7 @@ namespace ViMG
 
             Buffer<Triangle> triangleBuffer;
 
-            //lock (bufferPool)
+            lock (bufferPool)
                 bufferPool.Take(indices.Count / 3, out triangleBuffer);
 
             for (int i = 0; i < indices.Count; i += 3)
@@ -534,12 +535,12 @@ namespace ViMG
                     vertices[c].Position.ToNumerics());
             }
 
-            //lock (bufferPool)
-            //{
+            lock (bufferPool)
+            {
                 var collidableMesh = new Mesh(triangleBuffer, System.Numerics.Vector3.One, bufferPool);
 
                 return collidableMesh;
-            //}
+            }
         }
 
         public ulong GetAllBufferPoolAllocatedMemory()
@@ -574,9 +575,12 @@ namespace ViMG
                     meshInfo.hasSimReferences = false;
                 }
 
-                // Can't assert empty here. Other threads may be using this buffer pool (though not actively)
-                // so the new mesh will be present in the buffer pool along with the old one we're disposing of here.
-                meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
+                lock (meshInfo.bufferPool)
+                {
+                    // Can't assert empty here. Other threads may be using this buffer pool (though not actively)
+                    // so the new mesh will be present in the buffer pool along with the old one we're disposing of here.
+                    meshInfo.collidableMesh.Dispose(meshInfo.bufferPool);
+                }
                 meshInfo.collidableMesh = default;
 
                 meshInfo.hasMesh = false;
@@ -613,8 +617,8 @@ namespace ViMG
                         meshes[j].hasSimReferences = false;
                     }
 
-                    //lock (meshes[j].bufferPool)
-                    meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
+                    lock (meshes[j].bufferPool)
+                        meshes[j].collidableMesh.Dispose(meshes[j].bufferPool);
 
                     meshes[j].collidableMesh = default;
 
@@ -627,9 +631,6 @@ namespace ViMG
                     Console.WriteLine("Leaked chunk collision mesh at {0}", meshes[j].position);
                 }
             }
-
-            bufferPool.AssertEmpty();
-            bufferPool.Clear();
         }
 
         public bool MarkDirty(ChunkPosition position)

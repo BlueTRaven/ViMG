@@ -40,7 +40,7 @@ namespace Engine.ChunkStuff
         // a copied chunk for actual use
         public struct CopiedChunkData
         {
-            private readonly CopyChunkArr arr;
+            //private readonly CopyChunkArr arr;
 
             private readonly BasicState[]? entities;
             public readonly ChunkPosition ChunkPosition;
@@ -49,9 +49,10 @@ namespace Engine.ChunkStuff
 
             public readonly int generation;
 
-            public CopiedChunkData(CopyChunkArr arr, BasicState[]? entities, ChunkPosition chunkPosition, int generation)
+            public CopiedChunkData(ICubeGetter chunkManager, BasicState[]? entities, ChunkPosition chunkPosition, int generation)
             {
-                this.arr = arr;
+                this.chunkManager = chunkManager;
+                //this.arr = arr;
                 this.entities = entities;
                 this.ChunkPosition = chunkPosition;
                 this.generation = generation;
@@ -62,29 +63,32 @@ namespace Engine.ChunkStuff
             {
                 IMGUIConsole.Assert(position.Coord == CubePosition.CoordinateSpace.ChunkSpace);
 
-                //accessing a different chunk
-                if (position.X < 0 || position.Y < 0 || position.Z < 0 ||
-                position.X >= Chunk.CHUNK_SIZE || position.Y >= Chunk.CHUNK_SIZE || position.Z >= Chunk.CHUNK_SIZE)
-                {
-                    int chx = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
-                    int chy = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
-                    int chz = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
+                return chunkManager.GetId(position.InCubeSpace(ChunkPosition));
 
-                    int cx = (position.X + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
-                    int cy = (position.Y + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
-                    int cz = (position.Z + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
-                    Util.ThreeDToOneD(new ValuePoint3D(cx, cy, cz), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                    var chunkData = arr.Get(new ChunkPosition(chx, chy, chz));
-                    if (chunkData == null) return 0;
+                //accessing a different chunk
+                //if (position.X < 0 || position.Y < 0 || position.Z < 0 ||
+                //position.X >= Chunk.CHUNK_SIZE || position.Y >= Chunk.CHUNK_SIZE || position.Z >= Chunk.CHUNK_SIZE)
+                //{
+                //    int chx = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
+                //    int chy = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
+                //    int chz = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
+
+                    //int cx = (position.X + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    //int cy = (position.Y + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    //int cz = (position.Z + Chunk.CHUNK_SIZE) % Chunk.CHUNK_SIZE;
+                    //Util.ThreeDToOneD(new ValuePoint3D(cx, cy, cz), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                    //var chunkData = arr.Get(new ChunkPosition(chx, chy, chz));
+                    //if (chunkData == null) return 0;
                     
-                    var val = chunkData[i];
-                    return val;
-                }
-                else
-                {
-                    Util.ThreeDToOneD(new ValuePoint3D(position), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
-                    return arr.Get(new ChunkPosition(0, 0, 0))?[i] ?? 0;
-                }
+                    //var val = chunkData[i];
+                    //return val;
+                //}
+                //else
+                //{
+                    //return chunkManager.GetId(position.InCubeSpace(ChunkPosition));
+                    //Util.ThreeDToOneD(new ValuePoint3D(position), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                    //return arr.Get(new ChunkPosition(0, 0, 0))?[i] ?? 0;
+                //}
             }
 
             public void GetIds(Span<CubePosition> positions, Span<ushort> ids)
@@ -98,7 +102,10 @@ namespace Engine.ChunkStuff
 
             public ushort[] GetAllIds()
             {
-                return arr.Get(new ChunkPosition());
+                var arr = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
+                chunkManager.GetIdsForChunk(ChunkPosition, arr.AsSpan());
+                return arr;
+                //return arr.Get(new ChunkPosition());
             }
 
             public Optional<Cube> GetCube(CubePosition position)
@@ -189,7 +196,6 @@ namespace Engine.ChunkStuff
             public ChunkPosition chunkPosition;
             public int generation;
             public int currentGeneration;
-            public ushort[]? data;
             public required BasicState[]? trackers;
         }
 
@@ -214,7 +220,7 @@ namespace Engine.ChunkStuff
         private struct CopyTaskResult
         {
             public ChunkPosition position;
-            public ushort[] data;
+            //public ushort[] data;
             public BasicState[]? trackers;
         }
 
@@ -284,7 +290,6 @@ namespace Engine.ChunkStuff
                     chunkPosition = chunkPosition,
                     currentGeneration = chunk?.generation ?? 0,
                     generation = chunk?.generation ?? 0,
-                    data = null,
                     trackers = null,
                 };
 
@@ -341,7 +346,7 @@ namespace Engine.ChunkStuff
                 //oldChunkPositionsHead += 1;
                 //oldChunkPositionsHead %= MaxCachedChunks;
 
-                copiedChunks[task.Result.position].data = task.Result.data;
+                //copiedChunks[task.Result.position].data = task.Result.data;
                 copiedChunks[task.Result.position].trackers = task.Result.trackers;
             }
 
@@ -352,21 +357,22 @@ namespace Engine.ChunkStuff
         {
             if (IsInWorldBounds(position))
             {
-                CopyChunkArr arr = new();
-                for (int i = 0; i < 3 * 3 * 3; i++)
-                {
-                    Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
-                    var realPos = position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
-                    //var realPos = position + chunkAdjacents[i];
-                    if (IsInWorldBounds(realPos))
-                    {
-                        Debug.Assert(copiedChunks[realPos].currentGeneration == copiedChunks[realPos].generation, "Generation mismatch. Make sure to call StartCopyChunk and FinishCopyChunks.");
-                        arr[i] = copiedChunks[realPos].data!;
-                    }
-                    else arr[i] = null;
-                }
+                return new CopiedChunkData(cubeView, copiedChunks[position].trackers, position, copiedChunks[position].generation);
+                //CopyChunkArr arr = new();
+                //for (int i = 0; i < 3 * 3 * 3; i++)
+                //{
+                //    Util.OneDToThreeD(i, new ValuePoint3D(3), out var point);
+                //    var realPos = position + new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
+                //    //var realPos = position + chunkAdjacents[i];
+                //    if (IsInWorldBounds(realPos))
+                //    {
+                //        Debug.Assert(copiedChunks[realPos].currentGeneration == copiedChunks[realPos].generation, "Generation mismatch. Make sure to call StartCopyChunk and FinishCopyChunks.");
+                //        arr[i] = copiedChunks[realPos].data!;
+                //    }
+                //    else arr[i] = null;
+                //}
 
-                return new CopiedChunkData(arr, copiedChunks[position].trackers, position, copiedChunks[position].generation);
+                //return new CopiedChunkData(cubeView, arr, copiedChunks[position].trackers, position, copiedChunks[position].generation);
             }
 
             return new CopiedChunkData();
@@ -378,8 +384,8 @@ namespace Engine.ChunkStuff
 
             CopyTaskParams args = (CopyTaskParams)state!;
 
-            ushort[] ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
-            args.view.GetIdsForChunk(args.chunkPosition, ids);
+            //ushort[] ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
+            //args.view.GetIdsForChunk(args.chunkPosition, ids);
             BasicState[]? trackers = null;
 
             var worldTrackers = args.cubeTrackers.Get(args.chunkPosition).cubeTrackers;
@@ -396,7 +402,7 @@ namespace Engine.ChunkStuff
             return new CopyTaskResult
             {
                 position = args.chunkPosition,
-                data = ids,
+                //data = null,
                 trackers = trackers,
             };
         }

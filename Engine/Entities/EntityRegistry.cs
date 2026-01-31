@@ -38,6 +38,11 @@ namespace Engine.Entities
             return new EntityType(typeof(T));
         }
 
+        public virtual Entity? New()
+        {
+            return Activator.CreateInstance(type) as Entity;
+        }
+
         public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
             var prev = client.Previous(1).entities.GetByRef(ref reference);
