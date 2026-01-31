@@ -50,8 +50,7 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 6f, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("bone_staff").Id, stats, index),
-                    new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 6f, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("bone_staff").Id, stats, index));
 
                 return true;
             }

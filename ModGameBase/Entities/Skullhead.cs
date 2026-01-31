@@ -312,7 +312,7 @@ namespace ViMG.Entities
 						stateTimer = Constants.ROTATE_TIME;
 
 						world.ProjectileManager.AddBatch(this, Position, Vector3.Normalize(targetPosition - Position) * Cube.CUBE_SCALE * 12f, 4f,
-							batchStats, visStatsId, stats, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
+							batchStats, visStatsId, stats);
                     }
 				}
 

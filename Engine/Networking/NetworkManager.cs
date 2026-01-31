@@ -403,6 +403,11 @@ namespace Engine.Networking
 
         public NetPlayer GetNetPlayerByName(string name)
         {
+            if (name == "self" && whoAmI != -1)
+            {
+                return netPlayers[whoAmI];
+            }
+
             foreach (var nplayer in netPlayers)
             {
                 if (nplayer.playerName == name)

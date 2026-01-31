@@ -128,6 +128,7 @@ namespace Engine.Networking.Messages
                     stats.size = reader.GetFloat();
 
                     visStatsId = reader.GetInt();
+                    //Console.WriteLine("Recv projectile with id {0}:{1}", GlobalState.Registry.ProjectileRegistry.Get(visStatsId).Identifier, visStatsId);
 
                     GS.GetClient().Current().projectiles.Add(reference, projectile, stats, visStatsId);
                 }

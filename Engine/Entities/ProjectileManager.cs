@@ -472,7 +472,7 @@ namespace ViMG.Entities
 		//}
 
 		public void AddBatch(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, 
-			ProjectileBatchStats batchStats, int visStatsId, ProjectileStats stats, Rectangle3D bounds, int inventorySlot = -1)
+			ProjectileBatchStats batchStats, int visStatsId, ProjectileStats stats, int inventorySlot = -1)
         {
 			for (int i = 0; i < batchStats.num; i++)
 			{
@@ -503,11 +503,11 @@ namespace ViMG.Entities
 
 				projectile.velocity = Vector3.Transform(direction, offset) * speed;
 
-				Add(projectile, bounds);
+				Add(projectile);
 			}
         }
 
-		public int Add(Projectile projectile, Rectangle3D bounds)
+		public int Add(Projectile projectile)
 		{
 			for (int i = 0; i < PROJECTILES_MAX; i++)
 			{
@@ -515,7 +515,7 @@ namespace ViMG.Entities
 				{
 					projectiles[i] = projectile;
 					projectiles[i].reference = (projectiles[i].reference.id - 1 != i) ? new ProjectileReference(1, 0) : projectiles[i].reference.NextGeneration();
-					projectiles[i].bounds = bounds;
+					projectiles[i].bounds = Rectangle3D.FromCenterRadius(projectile.position, projectile.stats.size);
 
 					SyncProjectile.Instance.Add(projectiles[i].reference, projectile.GetCommon(), projectile.stats.GetCommon(), projectile.visStatsId);
 					return i;

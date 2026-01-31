@@ -10,6 +10,7 @@ using ViMG;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
+using ViMG.IMGUIImpl;
 
 namespace ModGameBase.Entities
 {

@@ -153,8 +153,7 @@ namespace ViMG.Entities
 
 							world.ProjectileManager.Add(new ProjectileManager.Projectile(this, Position + new Vector3(0, Cube.CUBE_SCALE, 0), 
 								Vector3.Normalize(distance) * Cube.CUBE_SCALE * 16, 
-								8, visStatsId, stats), 
-								new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+								8, visStatsId, stats));
 
 							fireTimer = fireTime;
                         }

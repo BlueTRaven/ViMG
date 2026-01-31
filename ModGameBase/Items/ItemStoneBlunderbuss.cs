@@ -48,7 +48,6 @@ namespace ViMG.Items
 			if (ammo.valid && ammo.num >= 4)
 			{
 				Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
-				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
 				if (ammo.item == GlobalState.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
                 {
                     actionStats = new ActionStats(attackStatsWithMusketballs);
@@ -59,7 +58,7 @@ namespace ViMG.Items
 					statsWithMusketballs.knockback = knockback;
 
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
-						batchStatsWithMusketballs, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, statsWithMusketballs, bounds, index);
+						batchStatsWithMusketballs, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, statsWithMusketballs, index);
                 }
                 else
                 {
@@ -71,7 +70,7 @@ namespace ViMG.Items
 					stats.knockback = knockback;
 
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
-						batchStats, GlobalState.Registry.ProjectileRegistry.Get("shard").Id, stats, bounds, index);
+						batchStats, GlobalState.Registry.ProjectileRegistry.Get("shard").Id, stats, index);
 				}
 			
 				inventory.Remove(ammoIndex, 4);

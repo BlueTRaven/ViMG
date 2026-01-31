@@ -51,7 +51,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.AddBatch(player, player.Position, Vector3.Normalize(facing) * Cube.CUBE_SCALE * 32,
-					Cube.CUBE_SCALE * 10, batchStats, GlobalState.Registry.ProjectileRegistry.Get("arrow").Id, stats, new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)), index);
+					Cube.CUBE_SCALE * 10, batchStats, GlobalState.Registry.ProjectileRegistry.Get("arrow").Id, stats, index);
 				
 				inventory.Remove(ammoIndex, 2);
 				return true;

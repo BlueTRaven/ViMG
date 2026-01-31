@@ -42,8 +42,7 @@ namespace ViMG.Items
 			{
 				inventory.Remove(bulletIndex, 1);
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + (player as IRotatable).Right * 4,
-					Vector3.Normalize(facing) * 100, 2, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, projStats),
-					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE)));
+					Vector3.Normalize(facing) * 100, 2, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, projStats));
 
 				return true;
 			}

@@ -46,8 +46,7 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position + Vector3.Normalize(facing) * (Cube.CUBE_SCALE / 3f),
-                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("lava").Id, stats, index),
-                    new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+                    Vector3.Normalize(facing) * Cube.CUBE_SCALE * 15f, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("lava").Id, stats, index));
 
                 return true;
             }

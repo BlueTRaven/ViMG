@@ -65,6 +65,11 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            if (Main.inputManager.JustPressed(Keys.V))
+            {
+
+            }
+
             var current = client.Current();
             var previous = client.Previous(1);
 

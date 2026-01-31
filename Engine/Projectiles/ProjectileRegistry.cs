@@ -19,20 +19,29 @@ namespace Engine.Projectiles
         }
 
         public abstract ProjectileManager.ProjectileVisStats VisStats();
+
+        public abstract ProjectileManager.ProjectileStats DefaultStats();
     }
 
     public class ProjectilePresetGeneric : ProjectilePreset
     {
         private readonly ProjectileManager.ProjectileVisStats visStats;
+        private readonly ProjectileManager.ProjectileStats defaultStats;
 
-        public ProjectilePresetGeneric(string identifier, ProjectileManager.ProjectileVisStats visStats) : base(identifier)
+        public ProjectilePresetGeneric(string identifier, ProjectileManager.ProjectileVisStats visStats, ProjectileManager.ProjectileStats defaultStats) : base(identifier)
         {
             this.visStats = visStats;
+            this.defaultStats = defaultStats;
         }
 
         public override ProjectileManager.ProjectileVisStats VisStats()
         {
             return visStats;
+        }
+
+        public override ProjectileManager.ProjectileStats DefaultStats()
+        {
+            return defaultStats;
         }
     }
 
@@ -40,7 +49,7 @@ namespace Engine.Projectiles
     {
         public override void Register(ProjectilePreset obj)
         {
-            obj.Id = this.Count;
+            obj.Id = Count + 1;
             base.Register(obj);
         }
     }

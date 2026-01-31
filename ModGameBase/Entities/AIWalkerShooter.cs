@@ -185,14 +185,12 @@ namespace ViMG.Entities
 								{
                                     ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
 										Vector3.Normalize(dir) * ai.ShootSpeed,
-										8, ai.shotProjectileVisStatsId, ai.shotProjectileStats),
-										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+										8, ai.shotProjectileVisStatsId, ai.shotProjectileStats));
 								}
 								else
 								{
                                     ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
-										ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats,
-										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+										ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats);
 								}
 
 								ai.Facing = Vector3.Normalize(dir);

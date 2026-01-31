@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.GameStates;
@@ -997,6 +998,62 @@ namespace ViMG
 					IMGUIConsole.LogLine(entType.Identifier);
 			}
 		}
+
+        [ConsoleCommand("spawn_proj", "Spawns a projectile. Can be spawned on self or at the player's looking position.", ConsoleCommandRunSide.Server)]
+        public static void SpawnProjectile(string[] parameters) 
+		{
+            if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+            {
+                if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
+                {
+                    World world = gsIsland.GetWorld();
+                    var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(parameters[0]) ?? new();
+                    Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
+                    if (player == null)
+                    {
+                        ErrorPlayerDoesNotExist(parameters[0]);
+                        return;
+                    }
+
+					if (IMGUIConsole.RequireParam(parameters, 1, "location", ["self", "ray"]))
+					{
+						string location = parameters[1];
+
+						IMGUIConsole.RequireParam(parameters, 2, "projectile");
+
+						string projectileName = parameters[2];
+
+						var projectile = GlobalState.Registry.ProjectileRegistry.Get(projectileName);
+
+						if (projectile == null)
+						{
+							IMGUIConsole.LogLine("[error] Entity " + projectileName + " does not exist!");
+							return;
+						}
+
+						var projVisStats = projectile.VisStats();
+						var defaultStats = projectile.DefaultStats();
+
+						Vector3 createPos = player.Position;
+						if (location == "self")
+						{
+							createPos = player.Position;
+						}
+						else if (location == "ray")
+						{
+							CubePosition lookAt = player.LookAtEnd;
+							createPos = (lookAt + new CubePosition(0, 1, 0)).InWorldSpace();
+						}
+
+						world.ProjectileManager.Add(new ProjectileManager.Projectile(player, createPos, player.LookAtNormal, 1f, projectile.Id, defaultStats));
+                    }
+                }
+                else
+                {
+                    IMGUIConsole.LogLine("[error] spawn_entity can only be used from within the GameStateTheIsland state. Current state: " + GlobalState.GameStateManager.GetCurrentGameState().ToString());
+                }
+            }
+        }
 
 		[ConsoleCommand("spawn", "Spawns an entity. Can be spawned on self or at the player's looking position.", ConsoleCommandRunSide.Server)]
 		public static void SpawnEntity(string[] parameters)

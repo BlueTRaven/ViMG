@@ -68,8 +68,7 @@ namespace ViMG.Items
 
             player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Center.X,
                 otherHitbox.bounds.Top, otherHitbox.bounds.Center.Z), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
-                batchStats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id, stats,
-                new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+                batchStats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id, stats);
         }
     }
 }

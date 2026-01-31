@@ -77,6 +77,11 @@ namespace ViMG
             return new Rectangle3D(new Vector3(minX, minY, minZ), size);
 		}
 
+		public static Rectangle3D FromCenterRadius(Vector3 center, float radius)
+		{
+			return new Rectangle3D(center - new Vector3(radius), new Vector3(radius * 2));
+		}
+
 		public OrientedBoundingBox ToOBB()
 		{
 			return new OrientedBoundingBox(this);
