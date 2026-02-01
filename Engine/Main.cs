@@ -71,7 +71,6 @@ namespace ViMG
 		private double time;
 
 		public static double TimeP = 0;
-		//public static double TimeC = 0;
 
 		public static bool MouseControl;
 		public static bool DrawCursor;
@@ -88,10 +87,6 @@ namespace ViMG
 		public const bool DO_RENDER_MESHING = true;
 		public const bool DO_COLLISION_MESHING = true;
 		
-		//public static bool WorldLoaded = false;
-
-		//private MenuMain ui;
-
 		private ImGuiRenderer imguiRenderer;
 
 		private int numFrameTimes = 0;
