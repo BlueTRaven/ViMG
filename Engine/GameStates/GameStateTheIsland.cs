@@ -241,6 +241,7 @@ namespace ViMG.GameStates
                 client.Dispose();
                 client = null;
             }
+            IMGUINetworkDebug.ClearMessages();
             SetMenu(null);
         }
 
@@ -325,9 +326,6 @@ namespace ViMG.GameStates
                     if (client != null && !manager.Paused)
                     {
                         client.CurrentTime += deltaTime;
-                        //var expectedTime = client.LastFrameTime + World.SyncTime;
-                        //GlobalState.TimeC = Math.Clamp(1 - ((expectedTime - client.CurrentTime) / World.SyncTime), 0.0, 1.0);
-                        //GlobalState.TimeC = 1 - ((expectedTime - client.CurrentTime) / World.SyncTime);
 
                         client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
                         client.UpdatePlayer(deltaTime);

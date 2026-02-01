@@ -15,8 +15,28 @@ namespace Engine.IMGUIImpl
 {
     public static class IMGUINetworkDebug
     {
-        [ConsoleCommandVar("net_debug_show", "Show the network debug graph")]
-        public static bool ShowNetworkDebug = false;
+        [ConsoleCommandVar("net_debug_show", "Show the network debug menu")]
+        public static bool ShowNetworkDebug = true;
+
+        [ConsoleCommandVar("net_debug_graph_show", "Show the network debug graph")]
+        public static bool ShowNetworkDebugGraph = false;
+
+        private static bool showServerMessages = true;
+        private static bool showClientMessages = true;
+        private static bool scrollToBottom = false;
+
+        private const int MAX_MESSAGES = 4096;
+        private static NetworkDebugMessage[] messages = new NetworkDebugMessage[MAX_MESSAGES];
+        private static int messageHead;
+        private static int messagesNum;
+        private static int messagesTail = 0;
+
+        public struct NetworkDebugMessage
+        {
+            public required int messageType;
+            public required DateTime time;
+            public required bool isServer;
+        }
 
         public struct NetworkDebugFrame
         {
@@ -42,6 +62,27 @@ namespace Engine.IMGUIImpl
         private static int head = 0;
 
         private static TextHelper.FontInfo fi;
+
+        public static void AddMessage(NetworkDebugMessage message)
+        {
+            messages[messageHead] = message;
+            messageHead += 1;
+            messageHead %= MAX_MESSAGES;
+            messagesNum += 1;
+            if (messagesNum > MAX_MESSAGES)
+            {
+                messagesNum = MAX_MESSAGES;
+                messagesTail += 1;
+                messagesTail %= MAX_MESSAGES;
+            }
+        }
+
+        public static void ClearMessages()
+        {
+            messageHead = 0;
+            messagesNum = 0;
+            messagesTail = 0;
+        }
 
         public static void AddServerFrame(NetworkDebugFrame frame)
         {
@@ -88,7 +129,7 @@ namespace Engine.IMGUIImpl
 
         public static void Render(SpriteBatch batch)
         {
-            if (!ShowNetworkDebug)
+            if (!ShowNetworkDebugGraph)
                 return;
 
             float WIDTH = 256;
@@ -167,10 +208,53 @@ namespace Engine.IMGUIImpl
         // TODO: Hexa.Net.Implot is nonfunctional (segfaulting all over the place). Replace this native version with imgui eventually...
         public static void Show()
         {
-            //if (ImGui.Begin("Network Debug"))
-            //{
-                
-            //}
+            if (ShowNetworkDebug && ImGui.Begin("Network Debug", ref ShowNetworkDebug))
+            {
+                ImGui.Checkbox("Draw graph", ref ShowNetworkDebugGraph);
+
+                ImGui.BeginGroup();
+                ImGui.Checkbox("Show Server", ref showServerMessages);
+                ImGui.SameLine();
+                ImGui.Checkbox("Show Client", ref showClientMessages);
+                if (ImGui.Button("Scroll to bottom"))
+                {
+                    scrollToBottom = true;
+                }
+
+                if (ImGui.BeginTable("Messages", 3))
+                {
+                    ImGui.TableSetupColumn("Date");
+                    ImGui.TableSetupColumn("Side");
+                    ImGui.TableSetupColumn("Message Type");
+                    ImGui.TableHeadersRow();
+                    for (int i = 0; i < messagesNum; i++)
+                    {
+                        int cur = (messagesTail + i) % MAX_MESSAGES;
+                        if ((messages[cur].isServer && showServerMessages) || (!messages[cur].isServer && showClientMessages))
+                        {
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.TextUnformatted(string.Format("{0}", messages[cur].time));
+                            ImGui.TableSetColumnIndex(1);
+                            ImGui.TextUnformatted(string.Format("{0}", messages[cur].isServer ? "Server" : "Client"));
+                            ImGui.TableSetColumnIndex(2);
+                            ImGui.TextUnformatted(string.Format("{0}", GlobalState.Registry.MessageRegistry.Get(messages[cur].messageType)?.Identifier));
+                        }
+                    }
+                    ImGui.EndTable();
+                }
+
+                if (scrollToBottom)
+                {
+                    if (ImGui.GetIO().MouseWheel != 0.0f)
+                    {
+                        scrollToBottom = false;
+                    }
+                    ImGui.SetScrollHereY(1.0f);
+                }
+                ImGui.EndGroup();
+                ImGui.End();
+            }
         }
     }
 }

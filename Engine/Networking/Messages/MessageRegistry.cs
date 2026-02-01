@@ -1,4 +1,5 @@
-﻿using LiteNetLib;
+﻿using Engine.IMGUIImpl;
+using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Win32;
 using SharpDX.Direct3D11;
@@ -58,7 +59,14 @@ namespace Engine.Networking.Messages
             int position = reader.Position;
             int messageType = reader.GetInt();
 
-            if (GlobalState.GameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server && Get(messageType).Passthrough)
+            IMGUINetworkDebug.AddMessage(new IMGUINetworkDebug.NetworkDebugMessage
+            {
+                messageType = messageType,
+                time = DateTime.Now,
+                isServer = netManager.IsServer,
+            });
+            //Console.WriteLine("[{0}] Recv message {1} at {2}", netManager.IsServer ? "Server" : "Client", Get(messageType)?.Identifier, DateTime.Now);
+            if (netManager.IsServer && Get(messageType).Passthrough)
             {
                 reader.SetPosition(position);
                 var allBytes = reader.GetRemainingBytes();
