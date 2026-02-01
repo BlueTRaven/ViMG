@@ -47,9 +47,6 @@ namespace Engine.Networking.Messages
 
         private readonly FastList<ToSync> toSync;
 
-        private int serverSequence;
-        private int clientSequence;
-
         public SyncInventory()
         {
             Instance = this;
@@ -68,6 +65,22 @@ namespace Engine.Networking.Messages
             }
             for (int i = 0; i < EntityManager.EntMax; i++)
                 clientInventories[i] = new() { reference = InventoryManager.InventoryReference.INVALID, latestSequence = -1 };
+        }
+
+        public void ServerShutdown()
+        {
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                PlayerDisconnected(i);
+            }
+        }
+
+        public void PlayerDisconnected(int playerIndex)
+        {
+            for (int i = 0; i < InventoryManager.InvMax; i++)
+            {
+                serverInventories[playerIndex][i] = new() { reference = new((ushort)i, -1), latestSequence = -1 };
+            }
         }
 
         public void AddAck(SyncInventoryAck.Ack ack, int playerId, int sequence)
@@ -117,8 +130,6 @@ namespace Engine.Networking.Messages
                 GS.netManagerServer?.SendMessageToPeer(Instance, peer, player.playerIndex);
                 toSync.Clear();
             }
-
-            serverSequence += 1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
@@ -132,7 +143,7 @@ namespace Engine.Networking.Messages
 
             int playerId = addData as int? ?? throw new Exception();
 
-            netMessage.writer.Put(serverSequence);
+            netMessage.writer.Put(SyncWorldState.Instance.ServerSequence);
 
             var fragHelper = new FragHelper(netMessage, MAX_INVS_PER_SYNC);
 
@@ -166,9 +177,11 @@ namespace Engine.Networking.Messages
             base.ReceiveMessage(reader, peer);
 
             int seq = reader.GetInt();
-            // drop packet
-            if (seq < clientSequence) return;
-            clientSequence = seq;
+            if (seq < SyncWorldState.Instance.ClientSequence)
+            {
+                Console.WriteLine("Discarding SyncInventory - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
+                return;
+            }
 
             int num = reader.GetUShort();
 

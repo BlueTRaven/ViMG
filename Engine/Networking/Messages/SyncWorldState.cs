@@ -26,6 +26,15 @@ namespace Engine.Networking.Messages
         {
             Instance = this;
         }
+        
+        public void ServerShutdown()
+        {
+            ServerSequence = 0;
+            ClientSequence = 0;
+
+            SyncEntityState.Instance.ServerShutdown();
+            SyncInventory.Instance.ServerShutdown();
+        }
 
         public void DoSend()
         {

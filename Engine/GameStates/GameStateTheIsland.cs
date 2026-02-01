@@ -8,6 +8,7 @@ using Engine.Clients;
 using Engine.IMGUIImpl;
 using Engine.Items;
 using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -242,6 +243,7 @@ namespace ViMG.GameStates
                 client = null;
             }
             IMGUINetworkDebug.ClearMessages();
+            SyncWorldState.Instance.ServerShutdown();
             SetMenu(null);
         }
 

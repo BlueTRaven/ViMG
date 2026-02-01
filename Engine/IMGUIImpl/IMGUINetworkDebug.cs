@@ -16,7 +16,7 @@ namespace Engine.IMGUIImpl
     public static class IMGUINetworkDebug
     {
         [ConsoleCommandVar("net_debug_show", "Show the network debug menu")]
-        public static bool ShowNetworkDebug = true;
+        public static bool ShowNetworkDebug = false;
 
         [ConsoleCommandVar("net_debug_graph_show", "Show the network debug graph")]
         public static bool ShowNetworkDebugGraph = false;

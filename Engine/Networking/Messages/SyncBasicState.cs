@@ -25,6 +25,7 @@ using ViMG.IMGUIImpl;
 
 namespace Engine.Networking.Messages
 {
+    [Obsolete]
     public class SyncBasicState : Message
     {
         public enum SyncType
@@ -331,6 +332,14 @@ namespace Engine.Networking.Messages
             var counter = new NetDataWriter();
             AddEntBasics(counter, new EntityManager.EntityReference(), SyncStateType.Unload, 0);
             numBytesHeader = counter.Length;
+        }
+
+        public void ServerShutdown()
+        {
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                PlayerDisconnected(i);
+            }
         }
 
         public void PlayerDisconnected(int playerIndex)

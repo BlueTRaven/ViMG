@@ -59,17 +59,12 @@ namespace Engine.Entities.Renderers
                 var reference = client.Current().entities.GetReference(i);
                 if (client.Current().entities.GetTypeById(reference.id) != type) continue;
 
-                //var entType = GlobalState.Registry.EntityRegistry.Get(client.Current().entities.GetTypeById(reference.id));
-                var entity = client.currInterpState.entities.GetByRef(ref reference); //entType?.GetInterpolated(client, reference) ?? new();
+                var entity = client.currInterpState.entities.GetByRef(ref reference);
 
                 var extraState = entity.GetExtra<Player.PlayerExtraState>();
                 Inventory? inventory = client.inventoryManager.Get(extraState.inventory);
                 var highlightedItem = inventory?.Get(extraState.highlightIndex) ?? new();
-                //if (extraState.useAnimType == 64)
-                //    //if (extraState.useAnimTimer >= 0)
-                //    Console.WriteLine("{0}", extraState.useAnimTimer);
-                //else if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() is not MenuPause) 
-                //    Console.WriteLine("No");
+
 
                 highlightedItem.item?.Client?.DrawInHand(device, client.Renderer, highlightedItem, entity, -BasicState.Forward(ref entity));
 

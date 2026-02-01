@@ -347,6 +347,7 @@ namespace Engine.Networking
                 IMGUIConsole.Assert(world.player[playerIndex] != null);
                 Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 SyncEntityState.Instance.PlayerDisconnected(index);
+                SyncInventory.Instance.PlayerDisconnected(index);
                 GlobalState.GameStateManager.TheIsland.playerIO?.Serialize(world, playerIndex);
                 world.EntityManager.Unload(world.player[playerIndex]);
                 world.player[playerIndex] = null;
