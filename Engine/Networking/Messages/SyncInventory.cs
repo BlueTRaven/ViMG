@@ -189,7 +189,6 @@ namespace Engine.Networking.Messages
                     inv = Inventory.ClientLoad(bytes, ref index);
                 }
 
-                Console.WriteLine("Recv inventory {0}", reference.id);
                 GS.GetClient().inventoryManager.Set(reference, inv);
 
                 clientInventories[reference.id] = new()

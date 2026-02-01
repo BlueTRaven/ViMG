@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
-using static Engine.Networking.NetworkManager;
 
 namespace Engine.Networking.Messages
 {

@@ -410,7 +410,7 @@ namespace ViMG
 				isNew = false;
 			}
 
-			Console.WriteLine("{0} UUid: {1}", playerIndex, playerUuid);
+			Console.WriteLine("Player {0} id {1} spawned", GlobalState.GameStateManager.TheIsland.netManagerServer?.GetNetPlayer(playerIndex).playerName, playerIndex);
 
 			//IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
 			world.player[playerIndex] = this;

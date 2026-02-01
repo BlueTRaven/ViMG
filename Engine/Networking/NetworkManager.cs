@@ -391,6 +391,11 @@ namespace Engine.Networking
             return null;
         }
 
+        public NetPlayer GetNetPlayer(int id)
+        {
+            return netPlayers[id];
+        }
+
         public NetPlayer GetNetPlayer(NetPeer peer)
         {
             for (int i = 0; i < netPlayers.Length; i++)
@@ -420,9 +425,6 @@ namespace Engine.Networking
 
         public void NewPlayer(NetPeer peer, string playerName)
         {
-            Console.WriteLine("NewPlayer");
-
-            ViMG.TracyImpl.Tracy.EmitMessage("NewPlayer");
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
             var world = GlobalState.GameStateManager.TheIsland.GetWorld();
@@ -444,18 +446,14 @@ namespace Engine.Networking
             };
             uniqueNetPlayers += 1;
 
+            Console.WriteLine("New Player {0}: {1} connected from {2}", playerName, index, peer);
+            ViMG.TracyImpl.Tracy.EmitMessage(string.Format("NewPlayer {0}", playerName));
+
             SendMessageToPeer(WhoAmI.Instance, peer, index);
             GlobalState.GameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
             world.ChunkLoadManager.LoadAroundTarget(world);
             // Inform others of new player
             SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);
-            //var sync = new SyncChunk.ChunkToSync
-            //{
-            //    chunkPosition = ChunkPosition.WorldSpaceChunk(world.WorldInfo.spawnPosition),
-            //};
-            //SendMessageToPeer(SyncChunk.Instance, peer, sync);
-
-            Console.WriteLine("Peer connected from {0}. {1} {2} {3}", peer, netPlayers[index].playerId, netPlayers[index].playerName, netPlayers[index].playerName.GetHashCode());
         }
 
         public void SendMessageToPeer(Message message, NetPeer peer, object? addData)
