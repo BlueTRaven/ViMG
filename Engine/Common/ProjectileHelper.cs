@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -26,6 +27,7 @@ namespace Engine.Common
             public float size;
             public bool gravity;
             public float gravityScale;
+            public bool collides;
             public bool dieOnCollision;
         }
 
@@ -79,9 +81,26 @@ namespace Engine.Common
 
                 if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
                 {
-                    if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectile.position,
+                    if ((stats.collides || stats.dieOnCollision) && CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectile.position,
                                                         stats.collisionRadius, out Vector3 change))
                     {
+                        var xz = new Vector2(change.X, change.Z);
+                        if (xz.Length() > float.Abs(change.Y))
+                        {
+                            projectile.velocity *= new Vector3(0, 1, 0);
+                        }
+                        else
+                        {
+                            projectile.velocity *= new Vector3(1, 0, 1);
+                        }
+
+                        // on ground, apply some friction
+                        if (change.Y > 0)
+                        {
+                            projectile.velocity *= new Vector3(1.0f / 60.0f, 1, 1.0f / 60.0f);
+                        }
+
+                        projectile.position += change;
                         if (stats.dieOnCollision && change.Length() > 0)
                         {
                             return false;

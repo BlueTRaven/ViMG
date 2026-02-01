@@ -78,6 +78,7 @@ namespace Engine.Networking.Messages
                     netMessage.writer.Put(projectile.projectile.velocity.Z);
                     netMessage.writer.Put(projectile.projectile.timeLeft);
 
+                    netMessage.writer.Put(projectile.stats.collides);
                     netMessage.writer.Put(projectile.stats.collisionRadius);
                     netMessage.writer.Put(projectile.stats.dieOnCollision);
                     netMessage.writer.Put(projectile.stats.gravity);
@@ -121,6 +122,7 @@ namespace Engine.Networking.Messages
                     projectile.velocity.Z = reader.GetFloat();
                     projectile.timeLeft = reader.GetFloat();
 
+                    stats.collides = reader.GetBool();
                     stats.collisionRadius = reader.GetFloat();
                     stats.dieOnCollision = reader.GetBool();
                     stats.gravity = reader.GetBool();

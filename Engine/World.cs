@@ -253,7 +253,7 @@ namespace ViMG
 			}
 			PlayerRespawnedEvent.Clear();
 
-			SyncPlayerInputs.Instance.Apply(player);
+			SyncPlayerInputs.Instance.Apply(alive, player);
 
 			Logic.Update(this, deltaTime);
 

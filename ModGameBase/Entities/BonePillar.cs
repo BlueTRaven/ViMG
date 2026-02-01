@@ -37,12 +37,13 @@ namespace ModGameBase.Entities
                 knockback = 0.25f,
                 pierce = 1,
                 gravityScale = 0.45f,
-                dieOnCollision = true,
+                dieOnCollision = false,
+                collides = true,
                 gravity = true,
                 
                 group = HitboxManager.Group.ENEMYHOSTILE_DEAL,
                 collisionRadius = Cube.CUBE_SCALE / 4f,
-                size = Cube.CUBE_SCALE,
+                size = Cube.CUBE_SCALE / 4f,
             };
 
             ProjectileManager.ProjectileBatchStats bstats = new ProjectileManager.ProjectileBatchStats(5, new Vector2(-45, 45),

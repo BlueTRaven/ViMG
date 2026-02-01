@@ -84,7 +84,7 @@ namespace Engine.Networking.Messages
             if (currentInputs.Run.Pressed())  inputTypes |= InputTypes.Run;
             if (currentInputs.Throw.Pressed()) inputTypes |= InputTypes.Throw;
 
-            netMessage.writer.Put(GlobalState.Time);
+            netMessage.writer.Put(GS.GetClient().currInterpState.time);
             netMessage.writer.Put(Main.Frame);
             netMessage.writer.Put(GS.GetClient().Current().highlightIndex);
             netMessage.writer.Put(localPlayer.rotation.X);
@@ -144,7 +144,7 @@ namespace Engine.Networking.Messages
         }
 
         //private static double t = 0;
-        public void Apply(Player?[] players)
+        public void Apply(double time, Player?[] players)
         {
             var otherBuffer = queued == queued1 ? queued2 : queued1;
 
@@ -159,7 +159,7 @@ namespace Engine.Networking.Messages
 
             foreach (QueuedInput qinput in queued)
             {
-                if (GlobalState.Time >= qinput.time)
+                if (time >= qinput.time)
                 {
                     DoAction(qinput, players);
                 }

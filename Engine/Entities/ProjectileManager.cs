@@ -184,6 +184,7 @@ namespace ViMG.Entities
 			public float size;
 			public bool gravity;
             public float gravityScale;
+			public bool collides;
 			public bool dieOnCollision;
 			public int pierce;
 			public Buff.BuffInstance[] applyBuffs;
@@ -199,6 +200,7 @@ namespace ViMG.Entities
 				this.pierce = pierce;
 				this.gravity = gravity;
 				this.gravityScale = gravityScale;
+				this.collides = dieOnCollision;
 				this.dieOnCollision = dieOnCollision;
 
 				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
@@ -209,6 +211,7 @@ namespace ViMG.Entities
 			{
 				return new ProjectileHelper.ProjectileStats
 				{
+					collides = collides,
 					collisionRadius = collisionRadius,
 					dieOnCollision = dieOnCollision,
 					gravity = gravity,
