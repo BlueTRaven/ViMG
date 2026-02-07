@@ -94,19 +94,15 @@ namespace Engine.Clients
             }
         }
 
-        [ConsoleCommand("say", "say a message in chat", ConsoleCommandRunSide.Server)]
+        [ConsoleCommand("say", "say a message in chat", ConsoleCommandRunSide.Client)]
         public static void Say(string[] parameters)
         {
             if (IMGUIConsole.RequireParam(parameters, 0, "message") && GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland)
             {
-                if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+                SyncChatMessageClient.Instance.Send(new SyncChatMessageClient.ChatToSend
                 {
-                    SyncChatMessageClient.Instance.Send(new SyncChatMessageClient.ChatToSend
-                    {
-                        str = string.Join(' ', parameters),
-                    });
-                }
-                else throw new NotImplementedException();
+                    str = string.Join(' ', parameters),
+                });
             }
         }
     }
