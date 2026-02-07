@@ -52,6 +52,7 @@ namespace Engine.Clients
         public LightManager2 LightManager;
         private LightsRenderer lightRenderer;
         private PhysicsInfo physicsInfo;
+        public ClientChatManager ChatManager;
 
         public RendererDeferred Renderer;
 
@@ -72,8 +73,6 @@ namespace Engine.Clients
         public double RenderTime;
         public double LastFrameRenderTime;
         private bool disposedValue;
-
-        //public Camera InterpCamera = null;
 
         public double TimeC => 1 - (((LastFrameRenderTime + World.SyncTime) - RenderTime) / World.SyncTime);
 
@@ -104,6 +103,8 @@ namespace Engine.Clients
             // TODO how to support multiple layers?
             WorldLogic = Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.clientLogics[0], device) as ClientWorldLogic;
             worldRenderer = new WorldRenderer(device);
+
+            ChatManager = new ClientChatManager(device, new Vector2(8, Options.CurrentWindowResolution.Y - 256), GlobalState.GameStateManager.TheIsland.netManagerClient!);
 
             //LightManager = new LightManager(device);
             LightManager = new LightManager2();
@@ -310,6 +311,8 @@ namespace Engine.Clients
             if (LocalPlayer != null)
                 batch.Draw(GlobalState.AssetsManager.GetAsset<Texture2D>("crosshair"), new Vector2(Options.CurrentWindowResolution.X / 2 - 8,
                     Options.CurrentWindowResolution.Y / 2 - 8), Main.CrosshairSourceRect.ToRectangle(), Color.White);
+
+            ChatManager.Draw(batch);
         }
 
         protected virtual void Dispose(bool disposing)

@@ -580,7 +580,7 @@ namespace ViMG.IMGUIImpl
 
                 executingCommand = commandName;
                 if (originatingSide == NetworkManager.NetworkSide.Client && 
-                    (command.Item2.runSide == ConsoleCommandRunSide.Server || command.Item2.runSide == ConsoleCommandRunSide.ServerAndClient) && 
+                    (command.Item2.executionSide == ConsoleCommandRunSide.Server || command.Item2.executionSide == ConsoleCommandRunSide.ServerAndClient) && 
                     GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
                 {
                     // These commands are not run locally, but are instead sent to the server.

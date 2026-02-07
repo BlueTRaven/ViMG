@@ -21,13 +21,17 @@ namespace ViMG.IMGUIImpl
     {
         public readonly string name;
         public readonly string help;
-        public readonly ConsoleCommandRunSide runSide;
+        // Side on which the command gets executed.
+        public readonly ConsoleCommandRunSide executionSide;
+        // Side on which it is valid to input this command.
+        public readonly ConsoleCommandRunSide consoleSide;
 
-        public ConsoleCommandAttribute(string name, string? help = null, ConsoleCommandRunSide runSide = ConsoleCommandRunSide.Client)
+        public ConsoleCommandAttribute(string name, string? help = null, ConsoleCommandRunSide executionSide = ConsoleCommandRunSide.Client, ConsoleCommandRunSide consoleSide = ConsoleCommandRunSide.Client)
         {
             this.name = name;
             this.help = help ?? "";
-            this.runSide = runSide;
+            this.executionSide = executionSide;
+            this.consoleSide = consoleSide;
         }
     }
 

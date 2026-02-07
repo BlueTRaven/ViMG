@@ -5,31 +5,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ViMG;
 using ViMG.IMGUIImpl;
 
 namespace Engine.Networking.Messages
 {
-    public struct Command
+    public class SyncConsoleCommandServer : Message
     {
-        public string command;
-        public string[] parameters;
-    }
+        public static SyncConsoleCommandServer Instance;
 
-    public class SyncConsoleCommandClient : Message
-    {
-        public static SyncConsoleCommandClient Instance;
+        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
-        public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
-        
-        public SyncConsoleCommandClient()
+        public SyncConsoleCommandServer()
         {
             Instance = this;
         }
 
         public void SendCommand(string command, string[] parameters)
         {
-            GS.netManagerClient?.SendMessageToAll(Instance, GS.netManagerClient.netManager, new Command
+            GS.netManagerServer?.SendMessageToAll(Instance, GS.netManagerServer.netManager, new Command
             {
                 command = command,
                 parameters = parameters,
@@ -39,7 +32,6 @@ namespace Engine.Networking.Messages
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
-
             netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
 
             Command parameters = addData as Command? ?? throw new ArgumentException("Must be a Command", "addData");
@@ -68,14 +60,6 @@ namespace Engine.Networking.Messages
             }
 
             IMGUIConsole.CommandReturn output = IMGUIConsole.RunCommand(commandName, NetworkManager.NetworkSide.Server, parameters.Slice());
-            if (output.valid && IMGUIConsole.GetCommandByName(commandName)?.executionSide != ConsoleCommandRunSide.Server)
-            {
-                SyncConsoleCommandServer.Instance.SendCommand(commandName, parameters.Slice().ToArray());
-            }
-            else
-            {
-                SyncConsoleOutput.Instance.SendOutput(output.output);
-            }
         }
     }
 }

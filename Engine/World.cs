@@ -164,12 +164,13 @@ namespace ViMG
 
 			LightManager2 = new LightManager2();
 
-			startTime = DateTime.Now;
+            ChatManager = new ChatManager(GlobalState.GameStateManager.TheIsland.netManagerServer!);
+
+            startTime = DateTime.Now;
 		}
 
 		public void InitMeshes(GraphicsDevice device)
 		{
-			ChatManager = new ChatManager(new Vector2(8, Options.CurrentWindowResolution.Y - 256));
 			//MenuDialogue = new MenuDialogue(GlobalState.GameStateManager);
 
 			//LightManager = new LightManager(device);
@@ -541,8 +542,6 @@ namespace ViMG
 			using var zone = TracyImpl.Tracy.BeginZone();
 
 			GetLocalPlayer()?.DrawUI(batch);
-
-			ChatManager.Draw(batch);
 			//DialogueManager.Draw(batch);
 		}
 

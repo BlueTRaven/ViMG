@@ -1,96 +1,101 @@
 ﻿using BrUtility;
 using Engine;
+using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.GameStates;
 using ViMG.IMGUIImpl;
+using static Engine.Networking.NetworkManager;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace ViMG.UIs
 {
     public class ChatManager
     {
-        private const int MAX_CHAT_MESSAGES_TO_DISPLAY = 8;
+        private const int SYSTEM_MESSAGE = -1;
         private struct ChatMessage
         {
             public string message;
             public Color color;
-            public float timer;
 
             public ChatMessage(string message, Color color)
             {
                 this.message = message;
                 this.color = color;
-
-                timer = 0;
             }
         }
 
         private FastList<ChatMessage> messages = new FastList<ChatMessage>();
-        private int latestChatMessage;
+        
+        private readonly NetworkManager netManager;
 
-        private TextHelper.FontInfo fi;
-
-        private Vector2 position;
-
-        public ChatManager(Vector2 position)
+        public ChatManager(NetworkManager netManager)
         {
-            this.position = position;
+            Debug.Assert(netManager != null);
+            this.netManager = netManager;
         }
 
-        public void Update(double deltaTime)
+        private void AddChatMessageInternal(string message, Color? color = null, int playerId = SYSTEM_MESSAGE)
         {
-            for (int i = Math.Max(0, latestChatMessage - MAX_CHAT_MESSAGES_TO_DISPLAY); i < latestChatMessage; i++)
+            if (netManager.IsServer)
             {
-                float timer = messages.Buffer[i].timer;
-                timer += (float)deltaTime;
-                messages.Buffer[i].timer = timer;
+                string prefixed = GetMessagePrefixedWithPlayerName(message, playerId);
+
+                IMGUIConsole.LogLine(string.Format("<color({0})> {1}", color.GetValueOrDefault(Color.White).PackedValue.ToString("X"), prefixed));
+                messages.Add(new ChatMessage(prefixed, color ?? Color.White));
+            }
+            else
+            {
+                IMGUIConsole.LogLine(string.Format("<color({0})> {1}", color.GetValueOrDefault(Color.White).PackedValue.ToString("X"), message));
+                messages.Add(new ChatMessage(message, color ?? Color.White));
             }
         }
 
-        public void Draw(SpriteBatch batch)
+        public void AddPlayerMessage(DateTime time, string message, int playerId)
         {
-            if (fi.font == null)
+            string prefixed = GetMessagePrefixedWithPlayerName(message, playerId);
+
+            IMGUIConsole.LogLine(prefixed);
+            messages.Add(new ChatMessage(message, Color.White));
+
+            SyncChatMessageServer.Instance.Send(new SyncChatMessageServer.ChatToSend
             {
-                fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
-            }
-
-            float yPos = 0;
-            for (int i = latestChatMessage - 1; i >= Math.Max(0, latestChatMessage - MAX_CHAT_MESSAGES_TO_DISPLAY); i--)
-            {
-                float timer = messages.Buffer[i].timer;
-
-                Color color = messages.Buffer[i].color;
-
-                if (timer > 8f)
-                {
-                    if (timer > 10f)
-                        color = Color.Transparent;
-                    else
-                    {
-                        float p = (timer - 8f) / 2f;
-                        color *= 1 - p;
-                    }
-                }
-
-                Rectangle bounds = new Rectangle((int)position.X, (int)(Options.CurrentWindowResolution.Y - yPos), 512, 512);
-                TextHelper.WrappedText wrappedText = TextHelper.GetWrappedText(fi, messages[i].message, 512);
-                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(fi, messages[i].message, 0, messages[i].message.Length, bounds, Enums.Alignment.TopLeft);
-                yPos += fi.StringHeight(wrappedText.text);
-                bounds.Y = (int)(Options.CurrentWindowResolution.Y - yPos);
-
-                TextHelper.DrawText(batch, fi, wrappedText, alignmentOffset, color, bounds, 1, TextHelper.OverFlowAction.None);
-            }
+                str = prefixed,
+                time = time,
+                color = Color.White,
+            });
         }
 
         public void AddChatMessage(string message, Color? color = null)
         {
-            IMGUIConsole.LogLine("<color(" + color.Value.PackedValue.ToString("X") + ")> " + message);
+            IMGUIConsole.LogLine(string.Format("<color({0})> {1}", (color ?? Color.White).PackedValue.ToString("X"), message));
             messages.Add(new ChatMessage(message, color ?? Color.White));
-            latestChatMessage++;
+
+            SyncChatMessageServer.Instance.Send(new SyncChatMessageServer.ChatToSend
+            {
+                time = DateTime.Now,
+                str = message,
+                color = color ?? Color.White,
+            });
+        }
+
+        public string GetMessagePrefixedWithPlayerName(string message, int playerId)
+        {
+            Debug.Assert(netManager.IsServer, "Must be a server to get player prefix");
+            string playerName = "";
+            if (playerId != SYSTEM_MESSAGE)
+            {
+                playerName = string.Format("{0}: ", netManager.GetNetPlayer(playerId).playerName);
+            }
+
+            return string.Format("{0}{1}", playerName, message);
         }
     }
 }
