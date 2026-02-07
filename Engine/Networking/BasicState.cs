@@ -23,7 +23,7 @@ namespace Engine.Networking
         private const int MAX_EXTRA_STATE_INTS = MAX_EXTRA_STATE_BYTES / sizeof(int);
 
         [Flags]
-        private enum Fields : uint
+        public enum Fields : uint
         {
             None = 0,
             PosX = 1 << 0,

@@ -54,42 +54,43 @@ namespace ViMG.Entities.Renderers
                 var yawPitch = new Vector2(ent.rotation.X, ent.rotation.Y);
 
                 var state = (ManaStar.State)ent.state; //.GetInterpCounter(entCurr, 0);
+                //if (state != ManaStar.State.InSky) Console.WriteLine("{0}", state.ToString());
 
-                if (state == ManaStar.State.InSky || state == ManaStar.State.DivingInSky)
+                if (state == ManaStar.State.InSky || state == ManaStar.State.FallingInSky)
                 {
                     const float FAR_DISTANCE = 70;
                     const float NEAR_DISTANCE = 32;
                     float distance = FAR_DISTANCE;
 
-                    if (state == ManaStar.State.DivingInSky)
-                        distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / ManaStar.DIVINGINSKY_TIME));
+                    if (state == ManaStar.State.FallingInSky)
+                        distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / ManaStar.FALLINGINSKY_TIME));
 
                     client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
                         material, mesh,
                         Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                         Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
-                    Matrix.CreateTranslation(client.currInterpState.camera.Position),
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X) *
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position),
                         // TODO mult by time
                         directionalSourceRect.front, Color.White /** world.GetTimeOfNight()*/));
                 }
-                else if (state == ManaStar.State.DivingInWorld)
+                else if (state == ManaStar.State.FallingInWorld)
                 {
                     const float FAR_DISTANCE = 32;
 
-                    float t = 1 - timer / ManaStar.DIVINGINWORLD_TIME;
+                    float t = 1 - timer / ManaStar.FALLINGINWORLD_TIME;
 
                     Matrix lerpStartRotMat = Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y));
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X);
 
                     Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-client.currInterpState.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
                         Matrix.CreateRotationY(-client.currInterpState.camera.RotationEuler.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(yawPitch.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(yawPitch.Y)) *
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X) *
                         Matrix.CreateTranslation(client.currInterpState.camera.Position));
                     Vector3 lerpEndPos = position;
 

@@ -523,7 +523,7 @@ namespace Engine.Networking.Messages
 
                         uint bits = state.GetDeltaBits(ref prevState);
                         ulong extraBits = state.GetExtraBytesBits(ref prevState);
-                        
+
                         //ulong numBytes = state.GetNumBytesFromBits(bits, extraBits);
 
                         // We haven't changed at all, don't bother syncing

@@ -5,6 +5,7 @@ using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using ModGameBase.Spawners;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +71,8 @@ namespace ViMG.WorldLogics
 			world.PassiveSpawnerManager?.AddPassiveSpawner(new PSCaveSlime(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager?.AddPassiveSpawner(new PSSnake(world.PassiveSpawnerManager, world.EntityManager));
 			world.PassiveSpawnerManager?.AddPassiveSpawner(new PSStoneBeetle(world.PassiveSpawnerManager, world.EntityManager));
-		}
+            world.PassiveSpawnerManager?.AddPassiveSpawner(new PSStar(world.PassiveSpawnerManager));
+        }
 
 		public override void Update(World world, double deltaTime)
 		{

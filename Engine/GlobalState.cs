@@ -40,6 +40,8 @@ namespace Engine
 
         [ConsoleCommandVar("random_spawns", "enable random entity spawning")]
         public static bool ENABLE_ENT_SPAWNING = true;
+        [ConsoleCommandVar("sv_can_notice", "Whether or not enemies can notice the player")]
+        public static bool ENABLE_ENT_NOTICE = true;
         public const float RANDOM_UPDATES_TIME = 8f / 60f;
         [ConsoleCommandVar("random_cube_updates", "enable random cube updates (grass spreading, etc)")]
         public static bool ENABLE_RANDOM_UPDATES = false;

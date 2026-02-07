@@ -12,11 +12,15 @@ namespace ViMG.Spawners
 {
     public abstract class PassiveSpawner
     {
+        // Chance to spawn each check time
         protected float spawnChance;
         private readonly Rectangle3D spawnBounds;
+        // Minimum distance from a player
         protected readonly float spawnRadiusMin;
+        // Maximum distance from a player
         protected readonly float spawnRadiusMax;
         protected readonly PassiveSpawnerManager manager;
+        // How long before checking to spawn again
         private readonly float checkTime;
         private float checkTimer;
 
@@ -50,7 +54,7 @@ namespace ViMG.Spawners
 
             if (checkTimer <= 0)
             {
-                checkTimer = checkTime;
+                checkTimer += checkTime;
 
                 DoSpawnCheck(world);
             }

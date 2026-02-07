@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Engine;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.Entities
 {
+
 	public class NoticeHandler<TDetect> where TDetect : Entity
 	{
 		public bool Noticed;
@@ -29,6 +32,9 @@ namespace ViMG.Entities
 
 		public void Update(double deltaTime)
 		{
+			if (!GlobalState.ENABLE_ENT_NOTICE)
+				return;
+
 			var detectables = entity.world.EntityManager.GetAll<TDetect>();
 
 			foreach (Entity ent in detectables)

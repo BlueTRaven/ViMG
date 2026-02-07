@@ -1,6 +1,7 @@
 ﻿using Engine.Clients;
 using Engine.Common;
 using Engine.Networking;
+using Microsoft.Xna.Framework;
 using SharpDX.Diagnostics;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,9 @@ namespace Engine.Entities
 
             for (int i = 0; i < 4; i++)
                 interp.counters[i] = prevInterp.GetInterpCounter(curr, i, t);
+
+            interp.state = curr.state;
+            interp.health = (int)MathHelper.Lerp(prevInterp.health, curr.health, (float)t);
 
             interp.aliveTime = float.Lerp(prevInterp.aliveTime, curr.aliveTime, (float)t);
 
