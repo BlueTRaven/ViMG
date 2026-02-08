@@ -284,7 +284,6 @@ namespace ViMG.GameStates
                     world = worldTask.Result;
                     worldTask = null;
 
-                    // This works great for singleplayer and servers. However it causes issues for clients since they (obviously) never have a world
                     ConnectLocal();
                 }
             }

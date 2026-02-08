@@ -141,14 +141,7 @@ namespace Engine.Networking
             if (IsServer)
             {
                 netManager.Start(Port);
-                //netPlayers[0] = new NetPlayer
-                //{
-                //    playerId = 0,
-                //    peerId = -1,
-                //    playerName = GlobalState.gameStateManager.TheIsland.localPlayerName,
-                //};
-                //uniqueNetPlayers += 1;
-                Console.WriteLine("Started server on port 9050");
+                Console.WriteLine("Started server on port {0}", Port);
             }
             else if (IsClient)
             {

@@ -505,10 +505,6 @@ namespace Engine.Networking.Messages
                             }
                             else
                             {
-                                //if (ent.reference.id == 1251)
-                                //{
-                                //    Console.WriteLine("Slime 1251 diff: {0} {1} = {2}", serverSequence, latestSeq, serverSequence - latestSeq);
-                                //}
                                 prevState = GS.GetWorld().EntityManager.GetPrevStateAbs(ent.reference.id, latestSeq);
                             }
                         }
