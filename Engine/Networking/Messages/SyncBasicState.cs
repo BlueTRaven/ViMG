@@ -9,6 +9,7 @@ using SharpDX.MediaFoundation.DirectX;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
@@ -263,6 +264,7 @@ namespace Engine.Networking.Messages
 
     public class SyncEntityState : Message
     {
+        private Logger Logger = Logger.InitLogger("SyncBasicState", true, Logger.LogLevel.Warn);
         public const int MAX_ENTS_PER_SYNC = 256;
 
         public static SyncEntityState Instance { get; private set; }
@@ -382,6 +384,7 @@ namespace Engine.Networking.Messages
 
                 if (peer == null)
                 {
+                    Logger.Log(Logger.LogLevel.Warn, "Peer null");
                     Console.WriteLine("Peer null");
                     continue;
                 }
@@ -414,6 +417,7 @@ namespace Engine.Networking.Messages
                                             trackedPositions[j] = mtracker.TrackedPositions.ElementAt(j);
                                     }
 
+                                    Logger.Log(Logger.LogLevel.Info, "send create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
                                     //Console.WriteLine("Server sent create ent {0} {1} ({2}) {3}", ent.Id, ent.ToString(), regId, reference.id);
                                     toSync.AddAssumeCapacity(new()
                                     {
@@ -432,6 +436,8 @@ namespace Engine.Networking.Messages
                             // Client never had it loaded in the first place
                             if (serverEntities[player.playerIndex][i].reference.generation != -1)
                             {
+                                Logger.Log(Logger.LogLevel.Warn, "send unload ent {0}", reference.id);
+
                                 //Console.WriteLine("Server sent unload ent {0}", reference.id);
 
                                 toSync.AddAssumeCapacity(new()
@@ -499,7 +505,8 @@ namespace Engine.Networking.Messages
                             {
                                 // Too old - do a major sync
                                 var entType = GlobalState.Registry.EntityRegistry.Get(ent.typeNameMapping);
-                                Console.WriteLine("Ent {0}:{1} sync timeout", entType.Identifier, ent.reference.id);
+                                Logger.Log(Logger.LogLevel.Warn, "ent {0} {1} sync timeout", entType.Identifier, ent.reference.id);
+                                //Console.WriteLine("Ent {0}:{1} sync timeout", entType.Identifier, ent.reference.id);
                                 prevState = new();
                                 useType = (byte)SyncStateType.MajorSync;
                             }
@@ -630,7 +637,9 @@ namespace Engine.Networking.Messages
             int seq = reader.GetInt();
             if (seq < SyncWorldState.Instance.ClientSequence)
             {
-                Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
+                Logger.Log(Logger.LogLevel.Warn, "Discarding SyncEntityState seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
+
+                //Console.WriteLine("Discarding SyncBasicState - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
                 return;
             }
 
@@ -682,6 +691,7 @@ namespace Engine.Networking.Messages
                     }
 
                     var typeName = GlobalState.Registry.EntityRegistry.Get((int)typeId)?.Identifier;
+                    Logger.Log(Logger.LogLevel.Info, "recv ent {0} {1}", reference.id, typeName);
                     //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)
                     {

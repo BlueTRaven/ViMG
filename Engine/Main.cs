@@ -358,6 +358,7 @@ namespace ViMG
             //world.Draw(GraphicsDevice, CubeLitEffect);
             IMGUIEntIODebug.Show();
             IMGUINetworkDebug.Show();
+			Engine.Logger.DoImgui();
 
             //Renderer.Draw(batch);
 
