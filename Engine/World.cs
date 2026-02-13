@@ -39,7 +39,9 @@ namespace ViMG
 {
 	public class World
 	{
-		[ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("World", true, Engine.Logger.LogLevel.Warn);
+
+        [ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
 		public static float SyncTime = 1.0f / 20.0f;
 		[ConsoleCommandVar("sv_time_mult", "Time multiplier. Default = 1")]
 		public static float TimeMult = 1f;
@@ -345,7 +347,7 @@ namespace ViMG
 					{
 						player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y + Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);
 
-						ProfilingHelper.Start("Copying Layer");
+						ProfilingHelper.Start(Logger, "Copying Layer");
 						for (int x = 0; x < sizeInCubes; x++)
 						{
 							for (int z = 0; z < sizeInCubes; z++)
@@ -358,7 +360,7 @@ namespace ViMG
 								}
 							}
 						}
-						ProfilingHelper.End("Done");
+						ProfilingHelper.End(Logger, "Done");
 					}
 					else if (nextLayer == Layer - 1)
 						player[localPlayerIndex].Position.Y = player[localPlayerIndex].Position.Y - Cube.CUBE_SCALE * (512 - Chunk.CHUNK_SIZE);

@@ -18,6 +18,8 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventoryUpdate : Message
     {
+        private Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventoryUpdate", true, Engine.Logger.LogLevel.Warn);
+
         public static SyncInventoryUpdate Instance { get; private set; }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
@@ -101,7 +103,7 @@ namespace Engine.Networking.Messages
                     var inventory = inventoryManager.Get(action.inventory);
                     inventory.DoEvent(action);
 
-                    Console.WriteLine("Recv Inventory Update: {0:02} {1} {2} -> {3}", GlobalState.Time, action.inventory.id, action.oldInstance.item, action.newInstance.item);
+                    Logger.Log(Engine.Logger.LogLevel.Info, "Recv Inventory Update: {0:02} {1} {2} -> {3}", GlobalState.Time, action.inventory.id, action.oldInstance.item, action.newInstance.item);
                     //Console.WriteLine("Remote Inventory update: {0} {1} -> {2}", action.time, action.oldInstance.item, action.newInstance.item);
                 }
                 else

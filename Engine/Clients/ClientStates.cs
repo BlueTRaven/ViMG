@@ -184,10 +184,7 @@ namespace Engine.Clients
             {
                 var prevCamera = prevInterpState.camera;
                 var currCamera = Current().camera;
-                if (float.IsNaN(prevCamera.Position.X) || float.IsNaN(currCamera.Position.X))
-                {
-                    Console.Write("");
-                }
+
                 currInterpState.camera.Position = Vector3.Lerp(prevCamera.Position, currCamera.Position, (float)TimeC);
                 //currInterpState.camera.Rotation = Quaternion.Lerp(prevCamera.Rotation, currCamera.Rotation, (float)TimeC);
                 currInterpState.camera.Scale = Vector3.Lerp(prevCamera.Scale, currCamera.Scale, (float)TimeC);

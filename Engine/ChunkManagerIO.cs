@@ -15,7 +15,9 @@ namespace ViMG
 {
     public class ChunkManagerIO : WorldIO
     {
-		public ref struct CapturedChunk : IDisposable
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkManagerIO", true, Engine.Logger.LogLevel.Warn);
+
+        public ref struct CapturedChunk : IDisposable
 		{
 			private ref LoadedChunk ourChunk;
 			public Span<ushort> data;
@@ -369,7 +371,8 @@ namespace ViMG
 			//stream.Write(allBytes);
 
 			watch.Stop();
-			Console.WriteLine("Wrote {0} bytes {1:.02}s", stream.Length, watch.Elapsed.TotalSeconds);
+			
+			Logger.Log(Engine.Logger.LogLevel.Info, "Wrote {0} bytes {1:.02}s", stream.Length, watch.Elapsed.TotalSeconds);
         }
 
 		private void LoadChunk(int index)
@@ -410,7 +413,7 @@ namespace ViMG
         {
             Stopwatch watch = Stopwatch.StartNew();
 
-            Console.WriteLine("Reading {0} bytes...", stream.Length);
+            Logger.Log(Engine.Logger.LogLevel.Info, "Reading {0} bytes...", stream.Length);
 
 			var allBytes = new byte[numChunks * SIZEOF_CHUNK];
 
@@ -459,7 +462,7 @@ namespace ViMG
 			}
 
 			watch.Stop();
-            Console.WriteLine("Done. {0:.02}s", watch.Elapsed.TotalSeconds);
+            Logger.Log(Engine.Logger.LogLevel.Info, "Done. {0:.02}s", watch.Elapsed.TotalSeconds);
 
             return LoadError.Success;
 		}
@@ -498,7 +501,7 @@ namespace ViMG
             //}
 
             //Console.WriteLine("Done. {0}", watch.Elapsed.TotalSeconds);
-            Console.WriteLine("Transform 2:");
+            Logger.Log(Engine.Logger.LogLevel.Info, "Transform 2:");
             watch.Restart();
             for (int chz = 0; chz < sizeInChunks; chz++)
             {
@@ -532,7 +535,7 @@ namespace ViMG
                     }
                 }
             }
-            Console.WriteLine("Done. {0}", watch.Elapsed.TotalSeconds);
+            Logger.Log(Engine.Logger.LogLevel.Info, "Done. {0}", watch.Elapsed.TotalSeconds);
         }
 
 		private string GetSaveName(string folderName)
@@ -552,13 +555,13 @@ namespace ViMG
             switch (error)
             {
                 case LoadError.InvalidVersion:
-                    Console.WriteLine("Chunk file could not be loaded. The current file version ({0}) is not supported.", Version);
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Chunk file could not be loaded. The current file version ({0}) is not supported.", Version);
                     return true;
                 case LoadError.FileDoesntExist:
-                    Console.WriteLine("Chunk file does not exist.", GetLoadName(folderName));
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Chunk file does not exist.", GetLoadName(folderName));
                     return true;
                 case LoadError.Other:
-                    Console.WriteLine(OtherError);
+                    Logger.Log(Engine.Logger.LogLevel.Error, OtherError);
                     return true;
                 case LoadError.Success:
                     return false;

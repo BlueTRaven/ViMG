@@ -17,6 +17,8 @@ namespace Engine.Items
 {
     public class InventoryManager
     {
+        private Engine.Logger Logger = Engine.Logger.InitLogger("InventoryManager", true, Engine.Logger.LogLevel.Warn);
+
         [ConsoleCommandVar("inv_max", "Maximum number of inventories")]
         public static int InvMax = 4096;
 
@@ -119,7 +121,7 @@ namespace Engine.Items
         {
             if (reference.generation != inventories[reference.id - 1].generation)
             {
-                Console.WriteLine("Tried to unload inventory but generation was wrong");
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Tried to unload inventory but generation was wrong");
                 return;
             }
 

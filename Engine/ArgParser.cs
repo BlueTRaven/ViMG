@@ -12,6 +12,8 @@ namespace Engine
 {
     public class ArgParser
     {
+        private static Logger Logger = Logger.InitLogger("ArgParser", true, Logger.LogLevel.Warn);
+
         public string startMode = "MainMenu";
         public string sessionFile = "session.ses";
         public string networkingMode = "Singleplayer";
@@ -66,7 +68,7 @@ namespace Engine
                 }
                 else
                 {
-                    Console.WriteLine("Invalid switch: {0}", currentArg);
+                    Logger.Log(Logger.LogLevel.Warn, "Invalid switch: {0}", currentArg);
                 }
 
                 currentArgI += 1;

@@ -26,7 +26,9 @@ namespace ViMG.Generation
 	// to place (parallel for?)
     public class ChunkGeneratorIsland : ChunkGenerator
     {
-		private static ushort[] BlacklistOre = new ushort[] 
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorIsland", true, Engine.Logger.LogLevel.Warn);
+
+        private static ushort[] BlacklistOre = new ushort[] 
 		{
 			0, 
 			GlobalState.Registry.CubeRegistry.Get("water").Id,
@@ -315,7 +317,7 @@ namespace ViMG.Generation
 
 			List<Rectangle3DI> cavePositions = new List<Rectangle3DI>();
 
-			ProfilingHelper.Start("Generating Caves...");
+			ProfilingHelper.Start(Logger, "Generating Caves...");
 			const int MAX_GOL_CAVES = 132;
 			const int MAX_GOL_MCAVES = 128;
 			GameStateTheIsland.ProgressMax = MAX_GOL_CAVES + MAX_GOL_MCAVES;
@@ -345,7 +347,7 @@ namespace ViMG.Generation
 
                 GameStateTheIsland.ProgressMin++;
             }
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
 			/*ProfilingHelper.Start("Generating water caves and flood filling...");
 			for (int i = 0; i < 216; i++)
@@ -361,7 +363,7 @@ namespace ViMG.Generation
 
 			if (GlobalState.GEN_CAVES)
 			{
-				ProfilingHelper.Start("Generating cave connections...");
+				ProfilingHelper.Start(Logger, "Generating cave connections...");
 				const int MAX_CAVES = 800;
 				GameStateTheIsland.ProgressMax = MAX_CAVES;
 				GameStateTheIsland.ProgressMin = 0;
@@ -370,11 +372,11 @@ namespace ViMG.Generation
 					GenerateCaveConnection(world.ChunkManager, cavePositions);
 					GameStateTheIsland.ProgressMin++;
 				}
-				ProfilingHelper.End("Done.");
+				ProfilingHelper.End(Logger, "Done.");
 			}
 
-			ProfilingHelper.Start("Generating ores...");
-			ProfilingHelper.Start("Copper...");
+			ProfilingHelper.Start(Logger, "Generating ores...");
+			ProfilingHelper.Start(Logger, "Copper...");
 			//copper: 82037
 			for (int i = 0; i < 80000; i++) 
 			{
@@ -384,9 +386,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structureBatchesOreCopper.Get(GetRandom().Next(0, structureBatchesOreCopper.num)), pos,
 					BlacklistOre, BlacklistAir, false);
 			}
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
-			ProfilingHelper.Start("Tin...");
+			ProfilingHelper.Start(Logger, "Tin...");
 			//tin: 87799
 			for (int i = 0; i < 90000; i++)
             {
@@ -396,9 +398,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structureBatchesOreTin.Get(GetRandom().Next(0, structureBatchesOreTin.num)), pos,
 					BlacklistOre, BlacklistAir, false);
 			}
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
-			ProfilingHelper.Start("Glow...");
+			ProfilingHelper.Start(Logger, "Glow...");
 			//glow: 114338
 			for (int i = 0; i < 116000; i++)
             {
@@ -408,9 +410,9 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structureBatchesOreGlow.Get(GetRandom().Next(0, structureBatchesOreGlow.num)), pos,
 					BlacklistOre, BlacklistAir, false);
 			}
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
-			ProfilingHelper.Start("Iron...");
+			ProfilingHelper.Start(Logger, "Iron...");
 			//iron: 76813
 			for (int i = 0; i < 75000; i++)
             {
@@ -420,8 +422,8 @@ namespace ViMG.Generation
 				ChunkHelper.PlaceStructureWithBlacklist(world.ChunkManager, structureBatchesOreIron.Get(GetRandom().Next(0, structureBatchesOreIron.num)), pos,
 					BlacklistOre, BlacklistAir, false);
 			}
-			ProfilingHelper.End("Done.");
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
 			const int NUM_CAVE_CHESTS = 300;
 			int spawnNum = NUM_CAVE_CHESTS;
@@ -458,7 +460,7 @@ namespace ViMG.Generation
 				}
 			}
 
-			ProfilingHelper.Start("Generating Dungeons...");
+			ProfilingHelper.Start(Logger, "Generating Dungeons...");
 			const int NUM_DUNGEONS = 800;
 			spawnNum = NUM_DUNGEONS;
 			lastPosition = 0;
@@ -485,7 +487,7 @@ namespace ViMG.Generation
 					}
 				}
 			}
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
 			const int NUM_GRAVES = 400;
 			spawnNum = NUM_GRAVES;
@@ -493,7 +495,7 @@ namespace ViMG.Generation
 
 			positions = stackalloc CubePosition[NUM_GRAVES];
 
-			ProfilingHelper.Start("Generating Graves...");
+			ProfilingHelper.Start(Logger, "Generating Graves...");
             while (spawnNum > 0)
             {
                 CubePosition pos = new CubePosition(GetRandom().Next(0, world.ChunkManager.SizeInCubes),
@@ -527,7 +529,7 @@ namespace ViMG.Generation
                     }
                 }
             }
-			ProfilingHelper.End("Done.");
+			ProfilingHelper.End(Logger, "Done.");
 
             const int NUM_SHRINES = 300;
 			spawnNum = NUM_SHRINES;

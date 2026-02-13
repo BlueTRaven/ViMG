@@ -385,7 +385,6 @@ namespace Engine.Networking.Messages
                 if (peer == null)
                 {
                     Logger.Log(Logger.LogLevel.Warn, "Peer null");
-                    Console.WriteLine("Peer null");
                     continue;
                 }
 

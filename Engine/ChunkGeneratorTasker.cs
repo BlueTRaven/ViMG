@@ -15,7 +15,9 @@ namespace ViMG
 {
     public static class ChunkGeneratorTasker
     {
-		private readonly struct BroadChunkTaskState
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorTasker", true, Engine.Logger.LogLevel.Warn);
+
+        private readonly struct BroadChunkTaskState
 		{
 			public readonly WorldPrototype world;
 			public readonly int chunkStart;
@@ -58,12 +60,12 @@ namespace ViMG
 			int total = world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ;
 			int offset = 0;
 
-			ProfilingHelper.Start("Beginning world generation...");
+			ProfilingHelper.Start(Logger, "Beginning world generation...");
             GameStateTheIsland.LoadMessage = "Beginning world generation...";
 
 			generator.Initialize(world.ChunkManager.SizeInCubes, world.ChunkManager.SizeInChunksXZ);
 
-			ProfilingHelper.Start("Broad phase generation...");
+			ProfilingHelper.Start(Logger, "Broad phase generation...");
             GameStateTheIsland.LoadMessage = "Beginning broad phase generation...";
 
 			ChunkPosition[] positions = new ChunkPosition[total];
@@ -113,9 +115,9 @@ namespace ViMG
 
 			broadPhaseTasks = null;
 
-			ProfilingHelper.End("Broad phase generation done.");
+			ProfilingHelper.End(Logger, "Broad phase generation done.");
 
-			ProfilingHelper.Start("Beginning detail phase generation...");
+			ProfilingHelper.Start(Logger, "Beginning detail phase generation...");
 			if (GlobalState.GEN_DETAIL)
 			{
                 GameStateTheIsland.LoadMessage = "Detail phase generation...";
@@ -148,7 +150,7 @@ namespace ViMG
 			if (GlobalState.GEN_CUBE_POST_DETAIL)
 			{
 				GameStateTheIsland.LoadMessage = "Post generation...";
-				ProfilingHelper.Start("Beginning post generation...");
+				ProfilingHelper.Start(Logger, "Beginning post generation...");
 
 				GameStateTheIsland.ProgressMax = total;
 				GameStateTheIsland.ProgressMin = 0;
@@ -162,17 +164,17 @@ namespace ViMG
 					GameStateTheIsland.ProgressMin++;
 					num++;
 				}
-				ProfilingHelper.End("Post generation done.");
+				ProfilingHelper.End(Logger, "Post generation done.");
 			}
 
-			ProfilingHelper.End("Detail phase generation done.");
+			ProfilingHelper.End(Logger, "Detail phase generation done.");
 
 			/*Console.WriteLine("Finished Detail Phase. Generated {0} total chunks in {1} seconds. ({2} seconds elapsed since start.)",
 				total, detailWatch.Elapsed.Seconds, totalWatch.Elapsed.TotalSeconds);*/
 
 			//chunksToMeshQueue.Sort();
 
-			ProfilingHelper.End("World generation done.");
+			ProfilingHelper.End(Logger, "World generation done.");
 		}
 
 		private static void PostChunkGen(WorldPrototype world, ChunkPosition position)

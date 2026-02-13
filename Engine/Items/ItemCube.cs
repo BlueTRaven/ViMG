@@ -16,7 +16,9 @@ namespace ViMG.Items
 {
     public class ItemCube : Item
 	{
-		public readonly ushort CubeId;
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ItemCube", true, Engine.Logger.LogLevel.Warn);
+
+        public readonly ushort CubeId;
         private readonly Cube cube;
 
 		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier)
@@ -41,7 +43,7 @@ namespace ViMG.Items
 			{
 				if (player.world.PlaceCube(player, player.PlaceAtPos, CubeId))
 				{
-					Console.WriteLine("placed at {0} - chunk pos {1}", player.PlaceAtPos, ChunkPosition.CubeChunk(player.PlaceAtPos));
+                    Logger.Log(Engine.Logger.LogLevel.Info, "placed at {0} - chunk pos {1}", player.PlaceAtPos, ChunkPosition.CubeChunk(player.PlaceAtPos));
                     inventory.Remove(index, 1);
 
                     actionStats.useTime = 0.25f;

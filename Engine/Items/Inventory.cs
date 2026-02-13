@@ -13,7 +13,9 @@ namespace Engine.Items
 {
 	public class Inventory
 	{
-		public const int VERSION = 1;
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Inventory", true, Engine.Logger.LogLevel.Warn);
+
+        public const int VERSION = 1;
 
 		private enum InventoryEventType
 		{
@@ -123,7 +125,7 @@ namespace Engine.Items
 		{
 			foreach (var action in events)
 			{
-				Console.WriteLine("Inventory action: {0:02} {1} {2} {3} {4} -> {5}", GlobalState.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
+                Logger.Log(Engine.Logger.LogLevel.Info, "Inventory action: {0:02} {1} {2} {3} {4} -> {5}", GlobalState.Time, owner.ToString(), id, action.type.ToString(), action.oldInstance.item, action.newInstance.item);
 				var invUpdate = new SyncInventoryUpdate.QueuedInventoryUpdate
 				{
 					inventory = new InventoryManager.InventoryReference((ushort)id, (short)generation),

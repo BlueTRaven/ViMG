@@ -21,6 +21,8 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     public class ManaStar : Entity, ISyncBasicState
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ManaStar", true, Engine.Logger.LogLevel.Warn);
+
         public enum State
         {
             InSky,
@@ -81,7 +83,7 @@ namespace ViMG.Entities
 
                             if (dot > 0.8f && timer <= 0)
                             {
-                                Console.WriteLine("Started falling to {0}:{1}!", GlobalState.GameStateManager.TheIsland.netManagerServer.GetNetPlayer(player.playerIndex).playerName, player.playerIndex);
+                                Logger.Log(Engine.Logger.LogLevel.Debug, "Started falling to {0}:{1}!", GlobalState.GameStateManager.TheIsland.netManagerServer.GetNetPlayer(player.playerIndex).playerName, player.playerIndex);
                                 playerThatLookedAtStar = player.playerIndex;
                                 timer = FALLINGINSKY_TIME;
                                 state = State.FallingInSky;
@@ -117,7 +119,7 @@ namespace ViMG.Entities
             {
                 if (timer <= 0)
                 {
-                    Console.WriteLine("Finished");
+                    Logger.Log(Engine.Logger.LogLevel.Debug, "Finished");
                     state = State.Finished;
                 }
             }

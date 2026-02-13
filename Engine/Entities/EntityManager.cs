@@ -22,7 +22,9 @@ namespace ViMG.Entities
 {
 	public class EntityManager : IGetEntity
 	{
-		[ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManager", true, Engine.Logger.LogLevel.Warn);
+
+        [ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
 			"Changes to this variable require a restart.")]
 		public static int EntMax = 4096;
 
@@ -277,7 +279,7 @@ namespace ViMG.Entities
 			if (ents[id].active)
 			{
 				Debug.Assert(ents[id].entity is not Player, string.Format("Attempted to unload a player at id {0} to make room for {1}", id, entity.GetType().FullName));
-				Console.WriteLine("Unload {0}:{1} to make room for {2}", ents[id].entity.ToString(), id, entity.ToString());
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Unload {0}:{1} to make room for {2}", ents[id].entity.ToString(), id, entity.ToString());
 				ForceUnload(ents[id].entity);
 			}
 			else freeList.Remove((int)id);
@@ -297,7 +299,7 @@ namespace ViMG.Entities
 			int id = GetUniqueId();
 			if (id == -1)
 			{
-				Console.WriteLine("Entity free list empty. Could not create entity {0}", entity);
+                Logger.Log(Engine.Logger.LogLevel.Error, "Entity free list empty. Could not create entity {0}", entity);
 				entity.OnUnload();
 				return;
 			}
@@ -309,20 +311,10 @@ namespace ViMG.Entities
 
         public void Add(Entity entity, bool delayAdding = false)
 		{
-			// Shouldn't add entities if not server or singleplayer?
-			// What about player entities...?
-			//Debug.Assert(GlobalState.gameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client, "Created entity on client", "Tried to create entity {0} on client", entity.ToString());
-			if (GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
-			{
-				Console.WriteLine("Tried to create entity {0} on client", entity.ToString());
-
-                return;
-			}
-
             int id = GetUniqueId();
             if (id == -1)
             {
-                Console.WriteLine("Entity free list empty. Could not create entity {0}", entity);
+                Logger.Log(Engine.Logger.LogLevel.Error, "Entity free list empty. Could not create entity {0}", entity);
                 entity.OnUnload();
                 return;
             }
@@ -552,10 +544,10 @@ namespace ViMG.Entities
             if (entity == null)
                 return;
 
-			//if ((entity is Player && !world.isDisposed && !world.isCreateWorldReloading))
-			//	return;
+            //if ((entity is Player && !world.isDisposed && !world.isCreateWorldReloading))
+            //	return;
 
-			Console.WriteLine("Unload {0}", entity.ToString());
+            Logger.Log(Engine.Logger.LogLevel.Info, "Unload {0}", entity.ToString());
 
             Debug.Assert(!iteratingUpdate, "Cannot remove entity while iterating");
 
@@ -627,7 +619,7 @@ namespace ViMG.Entities
 					}
 					catch (Exception e)
 					{
-						Console.WriteLine("Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", ents[i].entity, ents[i].id, e.ToString());
+						Logger.Log(Engine.Logger.LogLevel.Error, "Entity {0} (id {1}) caused an error during Update. It has been removed.\n{2}", ents[i].entity, ents[i].id, e.ToString());
 						Unload(ents[i].entity);
 					}
 				}

@@ -32,6 +32,8 @@ namespace ViMG
 	[EntityMeta(19, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
 	{
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Warn);
+
         private struct HitboxToSpawnLater
         {
             public int inventorySlot;
@@ -410,7 +412,7 @@ namespace ViMG
 				isNew = false;
 			}
 
-			Console.WriteLine("Player {0} id {1} spawned", GlobalState.GameStateManager.TheIsland.netManagerServer?.GetNetPlayer(playerIndex).playerName, playerIndex);
+            Logger.Log(Engine.Logger.LogLevel.Info, "Player {0} id {1} spawned", GlobalState.GameStateManager.TheIsland.netManagerServer?.GetNetPlayer(playerIndex).playerName, playerIndex);
 
 			//IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
 			world.player[playerIndex] = this;
@@ -442,9 +444,6 @@ namespace ViMG
 			//	new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
 
 			//world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
-
-			Console.WriteLine("Local id: {0} our id: {1}", world.localPlayerIndex, playerIndex);
-
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)

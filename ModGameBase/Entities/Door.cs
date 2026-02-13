@@ -19,6 +19,8 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     public class Door : Entity, IMultiCubeTracker, ISyncBasicState
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Door", true, Engine.Logger.LogLevel.Warn);
+
         private static VerySimpleMesh mountMesh;
         private static VerySimpleMesh doorMesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
@@ -43,7 +45,7 @@ namespace ViMG.Entities
         {
             if (facing == MeshHelper.CubeFace.UP || facing == MeshHelper.CubeFace.DOWN)
             {
-                Console.WriteLine("Can't facce up or down! Defaulting to LEFT");
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Can't face up or down! Defaulting to LEFT");
                 facing = MeshHelper.CubeFace.LEFT;
             }
 

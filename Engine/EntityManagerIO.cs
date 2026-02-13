@@ -19,6 +19,8 @@ namespace ViMG
 {
     public class EntityManagerIO : WorldIO
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManagerIO", true, Engine.Logger.LogLevel.Warn);
+
         public const string FILE_NAME_ENTITIES = "entities";
 		public const string EXT_ENTITIES = ".vis";
 
@@ -39,7 +41,7 @@ namespace ViMG
 			{
                 numEntities = 0;
 
-                Console.WriteLine("Loading Entity Datas...");
+                Logger.Log(Engine.Logger.LogLevel.Info, "Loading Entity Datas...");
 
                 if (!File.Exists(GetLoadName(folderName, layer)))
                     return LoadError.FileDoesntExist;
@@ -96,7 +98,7 @@ namespace ViMG
 
                             if (entBody.Length != entDataSize)
                             {
-                                Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+                                Logger.Log(Engine.Logger.LogLevel.Error, "Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
                                 continue;
                             }
 
@@ -106,7 +108,7 @@ namespace ViMG
 
                             if (entChksum != chksum)
                             {
-                                Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+                                Logger.Log(Engine.Logger.LogLevel.Error, "Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
                             }
                             else
                             {
@@ -210,9 +212,9 @@ namespace ViMG
 					version = meta.Version;
 				}
 				else
-				{	
-					Console.WriteLine("entity id " + entity.Id + " type " + entity.GetType().ToString() + " lacks a meta attribute. " +
-						"This is likely not a fatal error, but all serializable entities should have a meta attribute.");
+				{
+                    Logger.Log(Engine.Logger.LogLevel.Warn, "entity id {0} type {1} lacks a meta attribute. " +
+						"This is likely not a fatal error, but all serializable entities should have a meta attribute.", entity.Id, entity.GetType().ToString());
 					SaveHelper.SaveInt32(headerBlock, -1);				//h-v
 					version = -1;
 				}
@@ -266,7 +268,7 @@ namespace ViMG
 
                 if (entBody.Length != entDataSize)
                 {
-                    Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Could not load entity id " + entId + " type " + entType + "; read size was invalid. Is the data corrupt?");
                 }
 
                 int chksum = 0;
@@ -275,7 +277,7 @@ namespace ViMG
 
                 if (entChksum != chksum)
                 {
-                    Console.WriteLine("Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Could not load entity id " + entId + " type " + entType + "; chksum was invalid.");
                 }
                 else
                 {
@@ -482,7 +484,7 @@ namespace ViMG
 				freeList.Remove(usedIds[i]);
 			}
 
-			Console.WriteLine("Removed {0} ids from freelist. There are {1} ids remaining", usedIds.Length, freeList.Count);
+            Logger.Log(Engine.Logger.LogLevel.Info, "Removed {0} ids from freelist. There are {1} ids remaining", usedIds.Length, freeList.Count);
 		}
 
         public LoadError Load(string folderName)
@@ -520,7 +522,7 @@ namespace ViMG
 
 			if (entityType == null)
 			{
-				Console.WriteLine("Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Could not deserialize an entity with type name {0}. Has the name changed in code?\nThis is not fatal! Entity will not load.", entData.type);
 			}
 			else
 			{
@@ -541,7 +543,7 @@ namespace ViMG
 				}
 				else
 				{
-					Console.WriteLine("Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
+                    Logger.Log(Engine.Logger.LogLevel.Warn, "Deserialized an entity with type name {0}, but could not cast it. Does the type extend Entity?\nThis is not fatal! Entity will not load.", entData.type);
 				}
 			}
 
@@ -565,13 +567,13 @@ namespace ViMG
 			switch (error)
 			{
 				case LoadError.InvalidVersion:
-					Console.WriteLine("Entity file could not be loaded. The current file version ({0}) is not supported.", datas.Version);
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Entity file could not be loaded. The current file version ({0}) is not supported.", datas.Version);
 					return true;
 				case LoadError.FileDoesntExist:
-					Console.WriteLine("Entity file does not exist.", GetLoadName(folderName, layer));
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Entity file does not exist.", GetLoadName(folderName, layer));
 					return true;
 				case LoadError.Other:
-					Console.WriteLine(OtherError);
+                    Logger.Log(Engine.Logger.LogLevel.Error, OtherError);
 					return true;
 				case LoadError.Success:
 					return false;

@@ -17,6 +17,8 @@ namespace Engine.ChunkStuff
 {
     public class CopiedChunkManager
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("CopiedChunkManager", true, Engine.Logger.LogLevel.Warn);
+
         [InlineArray(3 * 3 * 3)]
         public struct CopyChunkArr
         {
@@ -312,7 +314,7 @@ namespace Engine.ChunkStuff
         {
             if (MaxCachedChunks < tasks.Count)
             {
-                Console.WriteLine("Didn't have enough room to copy all chunks - some would be evicted before we could make use of them! {0} / {1}\n" +
+                Logger.Log(Logger.LogLevel.Info, "Didn't have enough room to copy all chunks - some would be evicted before we could make use of them! {0} / {1}\n" +
                     "MaxCachedChunks has been set to {1}.", MaxCachedChunks, tasks.Count);
                 MaxCachedChunks = tasks.Count;
             }

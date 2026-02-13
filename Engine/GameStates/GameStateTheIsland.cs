@@ -31,6 +31,8 @@ namespace ViMG.GameStates
 {
     public class GameStateTheIsland : GameState
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("GameStateTheIsland", true, Engine.Logger.LogLevel.Warn);
+
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
         private Task<World>? worldTask;
@@ -85,18 +87,18 @@ namespace ViMG.GameStates
             var invalidChars = System.IO.Path.GetInvalidFileNameChars();
             if (string.IsNullOrWhiteSpace(worldName) || worldName.Any(c => invalidChars.Contains(c)))
             {
-                Console.WriteLine("'{0}' is an invalid world file name.", worldName);
+                Logger.Log(Engine.Logger.LogLevel.Error, "'{0}' is an invalid world file name.", worldName);
                 return false;
             }
 
             Debug.Assert(!IsLoading);
 
-            Console.WriteLine("BeginLoadWorld");
+            Logger.Log(Engine.Logger.LogLevel.Info, "BeginLoadWorld");
 
             IsLoading = true;
             worldTask = new Task<World>(() =>
             {
-                ProfilingHelper.Start("Loading and Flushing World...");
+                ProfilingHelper.Start(Logger, "Loading and Flushing World...");
 
                 World world;
                 if (!Directory.Exists("./saves/" + worldName + "/"))
@@ -118,7 +120,7 @@ namespace ViMG.GameStates
                 if (world == null) throw new Exception("Errored while loading world");
 
                 LoadMessage = "Loading World...";
-                ProfilingHelper.Start("Building Meshes...");
+                ProfilingHelper.Start(Logger, "Building Meshes...");
                 //if (!GlobalState.Args.dedicatedServer)
                 //{
                     //Now we can tell the ChunkLoadManager what should be loaded.
@@ -130,13 +132,13 @@ namespace ViMG.GameStates
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
                 world.ChunkLoadManager.FlushLoadQueue(world);
-                ProfilingHelper.End("Done Building Meshes.");
+                ProfilingHelper.End(Logger, "Done Building Meshes.");
 
                 LoadMessage = "Loading World...\nFinishing...";
                 world.FinishLoading(device);
 
                 IsLoading = false;
-                ProfilingHelper.End("Finished Loading and Flushing World.");
+                ProfilingHelper.End(Logger, "Finished Loading and Flushing World.");
 
                 return world;
             });
@@ -154,7 +156,7 @@ namespace ViMG.GameStates
 
             if (!LayerExists(layer))
             {
-                Console.WriteLine("Tried to load layer {0} but this layer was not yet implemented.", layer);
+                Logger.Log(Engine.Logger.LogLevel.Error, "Tried to load layer {0} but this layer was not yet implemented.", layer);
                 return null;
             }
 
@@ -407,10 +409,10 @@ namespace ViMG.GameStates
             prototype.WorldInfo.spawnPosition = playerSpawnPosition;
             prototype.WorldInfo.spawnLayer = 0;
 
-            ProfilingHelper.Start("Saving Chunks...");
+            ProfilingHelper.Start(Logger, "Saving Chunks...");
             chunkIO.Save(worldName);
 
-            ProfilingHelper.End("Done.");
+            ProfilingHelper.End(Logger, "Done.");
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
@@ -426,7 +428,7 @@ namespace ViMG.GameStates
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
 
-            ProfilingHelper.Start("Saving Entities...");
+            ProfilingHelper.Start(Logger, "Saving Entities...");
             entIO.SerializeAll(SIZE_IN_CHUNKS);
             entIO.Save(worldName);
 
@@ -434,9 +436,9 @@ namespace ViMG.GameStates
             playerIO.SerializeAll(world);
             playerIO.Save(worldName);
 
-            ProfilingHelper.End("Done.");
+            ProfilingHelper.End(Logger, "Done.");
 
-            ProfilingHelper.Start("Reloading...");
+            ProfilingHelper.Start(Logger, "Reloading...");
 
             //The way world creation is set up is that it creates everything - the entire world - at the same time.
             //That means we'd have entirely too much stuff in memory after we're done. We're not going to be near half of that stuff.
@@ -455,7 +457,7 @@ namespace ViMG.GameStates
             worldInfoIO.Save(worldName, world.WorldInfo);
             GlobalState.SessionIO?.Save();
 
-            ProfilingHelper.End("Done.");
+            ProfilingHelper.End(Logger, "Done.");
 
             return world;
         }
@@ -476,7 +478,7 @@ namespace ViMG.GameStates
             defaultPlayerSpawnLocation.Z = spawnZ;
             defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
 
-            ProfilingHelper.Start("Loading world...");
+            ProfilingHelper.Start(Logger, "Loading world...");
             LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
             var inventoryManager = new InventoryManager();
@@ -501,7 +503,7 @@ namespace ViMG.GameStates
             LoadMessage = "Loading World...\n" +
                 "Deserializing...";
 
-            ProfilingHelper.End("World loading done.");
+            ProfilingHelper.End(Logger, "World loading done.");
 
             World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             world.InitMeshes(device);
@@ -529,7 +531,7 @@ namespace ViMG.GameStates
             defaultPlayerSpawnLocation.Z = spawnZ;
             defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
 
-            ProfilingHelper.Start("Loading world...");
+            ProfilingHelper.Start(Logger, "Loading world...");
             LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
             var inventoryManager = new InventoryManager();
@@ -570,7 +572,7 @@ namespace ViMG.GameStates
             LoadMessage = "Loading World...\n" +
                 "Deserializing...";
 
-            ProfilingHelper.End("World loading done.");
+            ProfilingHelper.End(Logger, "World loading done.");
 
             World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
             world.InitMeshes(device);
@@ -608,7 +610,7 @@ namespace ViMG.GameStates
 
             if (worldInfo.furthestLayer < layer)
             {
-                ProfilingHelper.Start("Creating Unvisited Layer...");
+                ProfilingHelper.Start(Logger, "Creating Unvisited Layer...");
 
                 worldInfo.furthestLayer = layer;
 
@@ -633,10 +635,10 @@ namespace ViMG.GameStates
 
                 ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
-                ProfilingHelper.Start("Saving Chunks...");
+                ProfilingHelper.Start(Logger, "Saving Chunks...");
                 chunkIO.Save(worldName);
 
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
                 var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
@@ -644,12 +646,12 @@ namespace ViMG.GameStates
                 prototype.Logic.Initialize(world);
                 entityManager.AddLaterEntities();
 
-                ProfilingHelper.Start("Saving Entities...");
+                ProfilingHelper.Start(Logger, "Saving Entities...");
                 entIO.SerializeAll(SIZE_IN_CHUNKS);
                 entIO.Save(worldName);
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
-                ProfilingHelper.Start("Reloading...");
+                ProfilingHelper.Start(Logger, "Reloading...");
                 //The way world creation is set up is that it creates everything - the entire world - at the same time.
                 //That means we'd have entirely too much stuff in memory after we're done. We're not going to be near half of that stuff.
                 //Instead of letting that sit in memory, we just unload EVERYTHING
@@ -662,13 +664,13 @@ namespace ViMG.GameStates
 
                 worldInfoIO.Save(worldName, world.WorldInfo);
 
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
                 return world;
             }
             else
             {
-                ProfilingHelper.Start("Loading Layer...");
+                ProfilingHelper.Start(Logger, "Loading Layer...");
 
                 var entityManager = new EntityManager();
                 var inventoryManager = new InventoryManager();
@@ -704,7 +706,7 @@ namespace ViMG.GameStates
                 LoadMessage = "Loading World...\n" +
                     "Deserializing...";
 
-                ProfilingHelper.End("World loading done.");
+                ProfilingHelper.End(Logger, "World loading done.");
 
                 World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
                 world.InitMeshes(device);

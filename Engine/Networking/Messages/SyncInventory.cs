@@ -17,6 +17,8 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventory : Message
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventory", true, Engine.Logger.LogLevel.Warn);
+
         public const int MAX_INVS_PER_SYNC = 256;
 
         public static SyncInventory Instance;
@@ -105,7 +107,7 @@ namespace Engine.Networking.Messages
 
                 if (peer == null)
                 {
-                    Console.WriteLine("Peer null");
+                    Logger.Log(Engine.Logger.LogLevel.Warn, "Peer null");
                     continue;
                 }
 
@@ -179,7 +181,7 @@ namespace Engine.Networking.Messages
             int seq = reader.GetInt();
             if (seq < SyncWorldState.Instance.ClientSequence)
             {
-                Console.WriteLine("Discarding SyncInventory - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
+                Logger.Log(Engine.Logger.LogLevel.Info, "Discarding SyncInventory - seq was old {0} - {1}", seq, SyncWorldState.Instance.ClientSequence);
                 return;
             }
 

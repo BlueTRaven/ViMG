@@ -14,6 +14,8 @@ namespace Engine
 {
     public class PlayerManagerIO : WorldIO
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("PlayerManagerIO", true, Engine.Logger.LogLevel.Warn);
+
         private const int VERSION = 0;
         private const int MIN_VERSION = -1;
         public const string FILE_NAME_PLAYERS = "players";
@@ -80,7 +82,7 @@ namespace Engine
 
         public LoadError Load(string folderName)
         {
-            Console.WriteLine("Loading Player Datas...");
+            Logger.Log(Engine.Logger.LogLevel.Info, "Loading Player Datas...");
 
             if (!File.Exists(GetPath(folderName)))
                 return LoadError.FileDoesntExist;

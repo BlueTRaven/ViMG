@@ -26,6 +26,8 @@ namespace ViMG
 {
     public class ChunkCollisionMesher
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkCollisionMesher", true, Engine.Logger.LogLevel.Warn);
+
 #if DEBUG
         private const int MAX_ACTIVE_MESH_BATCH_TASKS = 5;
         private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 5;
@@ -593,7 +595,7 @@ namespace ViMG
             else if (meshInfo.collidableMesh.Triangles.Allocated)
             {
                 //hasMesh is false but triangles are allocated?
-                Console.WriteLine("Leaked chunk collision mesh at {0}", meshInfo.position.ToString());
+                Logger.Log(Engine.Logger.LogLevel.Error, "Leaked chunk collision mesh at {0}", meshInfo.position.ToString());
             }
         }
 
@@ -631,7 +633,7 @@ namespace ViMG
                 }
                 else if (meshes[j].collidableMesh.Triangles.Allocated)
                 {
-                    Console.WriteLine("Leaked chunk collision mesh at {0}", meshes[j].position);
+                    Logger.Log(Engine.Logger.LogLevel.Error, "Leaked chunk collision mesh at {0}", meshes[j].position);
                 }
 
                 if (meshes[j].bufferPool != null)

@@ -10,6 +10,8 @@ namespace ViMG.Generation
     //A pre-made or pre-generated layout of cubes, fit to be overlaid at any given point in the world.
     public class Structure
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Structure", true, Engine.Logger.LogLevel.Warn);
+
         public Point3D size;
         public ushort[] data;
 
@@ -68,6 +70,8 @@ namespace ViMG.Generation
 
     public abstract class StructureGenerator
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("StructureGenerator", true, Engine.Logger.LogLevel.Warn);
+
         public class StructureGeneratorBatchCollection
         {
             public readonly StructureGeneratorBatch[] batches;
@@ -222,7 +226,7 @@ namespace ViMG.Generation
 
                 watch.Stop();
 
-                Console.WriteLine("Finished {0} Structure Generation. Generated {1} structures in {2} batches ({3} each) in {4} seconds.",
+                Logger.Log(Engine.Logger.LogLevel.Info, "Finished {0} Structure Generation. Generated {1} structures in {2} batches ({3} each) in {4} seconds.",
                     Name, num, numBatches, num / numBatches, watch.Elapsed.TotalSeconds);
             }, batches);
 

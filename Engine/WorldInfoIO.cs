@@ -12,6 +12,8 @@ namespace ViMG
 {
     public class WorldInfoIO : WorldIO
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WorldInfoIO", true, Engine.Logger.LogLevel.Warn);
+
         public struct WorldInfo : INetSerializable
         {
             public int version;
@@ -277,7 +279,7 @@ namespace ViMG
 
             if (!File.Exists(loadName))
             {
-                Console.WriteLine("Could not load world info. The file " + FILE_NAME_WINFO + EXT_WINFO + " does not exist!");
+                Logger.Log(Engine.Logger.LogLevel.Error, "Could not load world info. The file " + FILE_NAME_WINFO + EXT_WINFO + " does not exist!");
                 return LoadError.FileDoesntExist;
             }
 
@@ -422,13 +424,13 @@ namespace ViMG
             switch (error)
             {
                 case LoadError.InvalidVersion:
-                    Console.WriteLine("World Info file could not be loaded. The current file version ({0}) is not supported.", Version);
+                    Logger.Log(Engine.Logger.LogLevel.Error, "World Info file could not be loaded. The current file version ({0}) is not supported.", Version);
                     return true;
                 case LoadError.FileDoesntExist:
-                    Console.WriteLine("World Info file does not exist.", GetFullName(folderName));
+                    Logger.Log(Engine.Logger.LogLevel.Error, "World Info file does not exist.", GetFullName(folderName));
                     return true;
                 case LoadError.Other:
-                    Console.WriteLine(OtherError);
+                    Logger.Log(Engine.Logger.LogLevel.Error, OtherError);
                     return true;
                 case LoadError.Success:
                     return false;

@@ -18,6 +18,8 @@ namespace ViMG.Rendering
 {
     public class RendererDeferred : IDisposable
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("RendererDeferred", true, Engine.Logger.LogLevel.Warn);
+
         public struct DrawSourceRectParameters
         {
             public bool UseSourceRect;
@@ -1166,7 +1168,7 @@ namespace ViMG.Rendering
         {
             if (draw.Material.Diffuse == null)
             {
-                Console.WriteLine("Cannot add draw without diffuse material.");
+                Logger.Log(Engine.Logger.LogLevel.Error, "Cannot add draw without diffuse material.");
                 return;
             }
 
@@ -1256,7 +1258,7 @@ namespace ViMG.Rendering
                 DEBUGCubeMesh.VBO.Dispose();
                 DEBUGCubeMesh.IBO.Dispose();
 
-                Console.WriteLine("Counts:\n" +
+                Logger.Log(Engine.Logger.LogLevel.Debug, "Counts:\n" +
                     "{0} {1}\n" +
                     "{2} {3}\n" +
                     "{4} {5}\n" +

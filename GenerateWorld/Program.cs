@@ -9,8 +9,6 @@ using ViMG;
 using ViMG.GameStates;
 using ViMG.UIs;
 
-Console.WriteLine("Hello, World!");
-
 SessionInformation ses = new SessionInformation();
 // TODO this is hardcoded...
 ses.ModsFolder = "C:\\Users\\taylo\\Documents\\programming\\CS\\ViMG2\\bin\\Debug\\mods\\net8.0-windows";

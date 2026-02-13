@@ -21,6 +21,8 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener, INatPunchListener
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("NetworkManager", true, Engine.Logger.LogLevel.Warn);
+
         public const double TIME_TRAVEL_DELAY = 0;//0.75;// Main.FIXED_STEP * 3;
 
         [ConsoleCommand("list_players", "lists currently connected players", ConsoleCommandRunSide.Server)]
@@ -141,7 +143,7 @@ namespace Engine.Networking
             if (IsServer)
             {
                 netManager.Start(Port);
-                Console.WriteLine("Started server on port {0}", Port);
+                Logger.Log(Engine.Logger.LogLevel.Info, "Started server on port {0}", Port);
             }
             else if (IsClient)
             {
@@ -160,32 +162,6 @@ namespace Engine.Networking
             if (!startedConnecting) return false;
 
             return whoAmI != -1;
-
-            if (whoAmI == -1)
-            {
-                netManager.TriggerUpdate();
-                netManager.PollEvents();
-
-                if ((DateTime.Now - clientDCTime).TotalSeconds > 5)
-                {
-                    Disconnect();
-                    GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.MainMenu);
-                    Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
-                    return false;
-                }
-
-                if (whoAmI != -1)
-                {
-                    Console.WriteLine("Connected to server. Our id: {0}", whoAmI);
-                    return true;
-                }
-
-                return false;
-            }
-            else
-            {
-                return true;
-            }
         }
 
         public void CheckConnected()
@@ -202,7 +178,7 @@ namespace Engine.Networking
                 Disconnect();
                 GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.MainMenu);
                 GlobalState.GameStateManager.GetCurrentGameState().PushMenu(new MenuFailedToConnect(GlobalState.GameStateManager, MenuFailedToConnect.ConnectionFailureReason.Refused, Ip, Port));
-                Console.WriteLine("Client failed to receive whoami after 5 seconds. Could not connect.");
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Client failed to receive whoami after 5 seconds. Could not connect.");
             }
         }
 
@@ -216,7 +192,7 @@ namespace Engine.Networking
             netManager.Stop();
 
             if (wasConnected)
-                Console.WriteLine("Disconnected");
+                Logger.Log(Engine.Logger.LogLevel.Info, "Disconnected");
         }
 
         public void PollEvents()
@@ -310,7 +286,7 @@ namespace Engine.Networking
                 }
                 else
                 {
-                    Console.WriteLine("Connected to server at {0}.", peer);
+                    Logger.Log(Engine.Logger.LogLevel.Info, "Connected to server at {0}.", peer);
                     SendMessageToAll(WhoAmIRequest.Instance, netManager, null);
                 }
             }
@@ -338,7 +314,7 @@ namespace Engine.Networking
                 // This just asserts that the local player has not disconnected - not necessary
                 //IMGUIConsole.Assert(world.localPlayerIndex != playerIndex);
                 IMGUIConsole.Assert(world.player[playerIndex] != null);
-                Console.WriteLine("Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
+                Logger.Log(Engine.Logger.LogLevel.Info, "Peer {0} disconnected. Player id: {1}\nReason: {2}", peer, playerIndex, disconnectInfo.Reason.ToString());
                 SyncEntityState.Instance.PlayerDisconnected(index);
                 SyncInventory.Instance.PlayerDisconnected(index);
                 GlobalState.GameStateManager.TheIsland.playerIO?.Serialize(world, playerIndex);
@@ -352,7 +328,7 @@ namespace Engine.Networking
             else
             {
                 // Server has disconnected from us? We should go back to main menu.
-                Console.WriteLine("Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.Reason.ToString());
+                Logger.Log(Engine.Logger.LogLevel.Error, "Lost connection to server (Peer {0}).\nReason: {1}", peer, disconnectInfo.Reason.ToString());
                 GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.MainMenu);
             }
         }
@@ -440,7 +416,7 @@ namespace Engine.Networking
             };
             uniqueNetPlayers += 1;
 
-            Console.WriteLine("New Player {0}: {1} connected from {2}", playerName, index, peer);
+            Logger.Log(Engine.Logger.LogLevel.Info, "New Player {0}: {1} connected from {2}", playerName, index, peer);
             ViMG.TracyImpl.Tracy.EmitMessage(string.Format("NewPlayer {0}", playerName));
 
             SendMessageToPeer(WhoAmI.Instance, peer, index);

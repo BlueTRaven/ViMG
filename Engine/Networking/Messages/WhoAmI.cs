@@ -12,6 +12,8 @@ namespace Engine.Networking.Messages
 {
     public class WhoAmIRequest : Message
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmIRequest", true, Engine.Logger.LogLevel.Warn);
+
         public static WhoAmIRequest Instance { get; private set; }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Client;
@@ -41,7 +43,7 @@ namespace Engine.Networking.Messages
 
             if (playerName == "" || GS.netManagerServer.GetNetPlayerByName(playerName).playerId != -1)
             {
-                Console.WriteLine("Invalid player name ({0}) recieved from {1}", playerName, peer.ToString());
+                Logger.Log(Engine.Logger.LogLevel.Error, "Invalid player name ({0}) recieved from {1}", playerName, peer.ToString());
                 peer.Disconnect();
                 return;
             }
@@ -52,6 +54,8 @@ namespace Engine.Networking.Messages
 
     public class WhoAmI : Message
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmI", true, Engine.Logger.LogLevel.Warn);
+
         public static WhoAmI Instance { get; private set; }
 
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
@@ -87,7 +91,7 @@ namespace Engine.Networking.Messages
             if (whoAmI != -1)
             {
                 GS.netManagerClient.whoAmI = whoAmI;
-                Console.WriteLine("Our player id: {0}\nTime: {1}", whoAmI, GlobalState.Time);
+                Logger.Log(Engine.Logger.LogLevel.Info, "Our player id: {0}\nTime: {1}", whoAmI, GlobalState.Time);
             } else
             {
                 //Console.WriteLine("Fix time: {0:0.02}", GlobalState.Time - oldTime);

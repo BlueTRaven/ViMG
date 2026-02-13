@@ -175,7 +175,6 @@ namespace ViMG.UIs
                     }
                     else
                     {
-                        Console.WriteLine("finishing");
                         instance.currentLineCharacter = currentText.lines[instance.currentLine].Length - 1;
                     }
                 }

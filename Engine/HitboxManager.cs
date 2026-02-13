@@ -19,7 +19,9 @@ namespace ViMG
 {
     public class HitboxManager
 	{
-		public enum Group
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("HitboxManager", true, Engine.Logger.LogLevel.Warn);
+
+        public enum Group
         {
 			INVALID,
 			/*TAKE = 1 << 0,
@@ -294,7 +296,8 @@ namespace ViMG
 			}
             else
             {
-				Console.WriteLine("Tried to update hitbox id {0}, which was inactive.", index);
+
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Tried to update hitbox id {0}, which was inactive.", index);
             }
 		}
 
