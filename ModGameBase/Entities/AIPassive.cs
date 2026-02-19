@@ -279,16 +279,7 @@ namespace ViMG.Entities
 					{
 						EntityHelper.CalculateKnockback(ref ai.Velocity, other);
 
-                        ai.Health -= other.damage;
-
-						if (ai.Health <= 0)
-						{
-                            ai.Health = 0;
-							entity.world.EntityManager.Kill(entity);
-
-							if (ai.touchHitbox != -1)
-								entity.world.HitboxManager.Remove(ai.touchHitbox);
-						}
+						EntityHelper.TakeDamage(entity, other.damage);
 
                         ai.shouldJumpLockTimer = 1f;
                         ai.buffManager.AddBuffs(other.applyBuffs);

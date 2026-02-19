@@ -44,6 +44,21 @@ namespace Engine.Networking
             }
         }
 
+        [ConsoleCommandVar("net_client_sim_latency", "Simulate latency on client. Use net_client_latency_min and net_client_latency_max to configure. Default: false.")]
+        public static bool ClientSimLatency = false;
+
+        [ConsoleCommandVar("net_server_sim_latency", "Simulate latency on server. Use net_server_latency_min and net_server_latency_max to configure. Default: false.")]
+        public static bool ServerSimLatency = false;
+
+        [ConsoleCommandVar("net_client_latency_min", "Minimum simulated client latency, in milliseconds. Default: 0.")]
+        public static int ClientLatencyMin = 0;
+        [ConsoleCommandVar("net_client_latency_max", "Maximum simulated client latency, in milliseconds. Default: 0.")]
+        public static int ClientLatencyMax = 0;
+        [ConsoleCommandVar("net_server_latency_min", "Minimum simulated server latency, in milliseconds. Default: 0.")]
+        public static int ServerLatencyMin = 50;
+        [ConsoleCommandVar("net_server_latency_max", "Maximum simulated server latency, in milliseconds. Default: 0.")]
+        public static int ServerLatencyMax = 100;
+
         [Flags]
         public enum NetworkSide
         {
@@ -197,6 +212,31 @@ namespace Engine.Networking
 
         public void PollEvents()
         {
+            if (IsServer)
+            {
+                if (ServerLatencyMin > ServerLatencyMax)
+                    ServerLatencyMax = ServerLatencyMin;
+
+                if (ServerLatencyMax < ServerLatencyMin)
+                    ServerLatencyMin = ServerLatencyMax;
+
+                netManager.SimulateLatency = ServerSimLatency;
+                netManager.SimulationMinLatency = ServerLatencyMin;
+                netManager.SimulationMaxLatency = ServerLatencyMax;
+            }
+            else
+            {
+                if (ClientLatencyMin > ClientLatencyMax)
+                    ClientLatencyMax = ClientLatencyMin;
+
+                if (ClientLatencyMax < ClientLatencyMin)
+                    ClientLatencyMin = ClientLatencyMax;
+
+                netManager.SimulateLatency = ClientSimLatency;
+                netManager.SimulationMinLatency = ClientLatencyMin;
+                netManager.SimulationMaxLatency = ClientLatencyMax;
+            }
+            
             netManager.TriggerUpdate();
             netManager.PollEvents();
             if (netManager.NatPunchEnabled)

@@ -40,6 +40,7 @@ namespace ViMG.Entities
 
 		public float AttackTimer => attackTimer;
 
+		public float TakeDamageTimer;
 		public float InvulnTimer;
 
 		private bool onGround;
@@ -388,19 +389,11 @@ namespace ViMG.Entities
 
 			public void Hurt(int damage)
 			{
-                ai.Health -= damage;
-
-				if (ai.Health <= 0)
-				{
-                    ai.Health = 0;
-					entity.world.EntityManager.Kill(entity);
-
-					if (ai.touchHitbox != -1)
-						entity.world.HitboxManager.Remove(ai.touchHitbox);
-				}
+				EntityHelper.TakeDamage(entity, damage);
 
                 ai.shouldJumpLockTimer = 1f;
                 ai.InvulnTimer = 0.25f;
+				ai.TakeDamageTimer = 0.125f;
 
 				//interrupt current attack
 				if (ai.state == State.Attack || ai.state == State.AttackStun)
@@ -453,7 +446,7 @@ namespace ViMG.Entities
 				position = Vector3.Zero,
 				rotation = Quaternion.Identity,
 				state = (int)this.state,
-				timers = { [0] = idleTimer, [1] = idleMoveTimer, [2] = attackTimer, [3] = InvulnTimer },
+				timers = { [0] = attackTimer, [3] = InvulnTimer },
 				counters = { [0] = idleMovements },
 			};
         }

@@ -28,6 +28,8 @@ namespace Engine.Clients
 {
     public class ClientStates : IDisposable
     {
+        private static Logger Logger = Logger.InitLogger("ClientStates", true, Logger.LogLevel.Info);
+
         [ConsoleCommandVar("r_render_client_ents")]
         public static bool RenderClientEnts = true;
         [ConsoleCommandVar("r_render_projectiles")]
@@ -39,6 +41,9 @@ namespace Engine.Clients
 
         [ConsoleCommandVar("rsv_render_debug_physics")]
         public static bool RenderDebugPhysics = false;
+
+        [ConsoleCommandVar("cl_buffer_frames", "Number of buffer frames. Higher frames may result in increased input delay, but should improve interpolation at higher ping.")]
+        public static int BufferFrames = 0;
 
         private GraphicsDevice device;
         public ClientWorld[] states;
@@ -132,9 +137,19 @@ namespace Engine.Clients
 
             //Console.WriteLine("New frame {0} time {1:.0000}s expected {2:.0000}s variance {3:.0000}s {4}", frame, time, expectedArrivalTime, double.Abs(Variance), Variance > 0 ? "early" : "late");
 
-            ClientWorld prev = Current();
+            if (BufferFrames < 0)
+            {
+                Logger.Log(Logger.LogLevel.Error, "cl_buffer_frames must be > 0");
+                BufferFrames = 0;
+            }
+            ClientWorld oldCurrent = Current();
+            ClientWorld prev;
+            if (BufferFrames == 0)
+                prev = oldCurrent;
+            else prev = Previous(BufferFrames);
+
             head = (head + 1) % ViMG.Entities.EntityManager.EntPrevSrv;
-            Current().NewFrame(prev, time);
+            Current().NewFrame(oldCurrent, time);
             prevInterpState.NewFrame(currInterpState, currInterpState.time);
             currInterpState.NewFrame(prev, time);
 

@@ -286,7 +286,7 @@ namespace ViMG.Entities
 				velocity = Velocity,
 				health = Health,
 				state = 0,
-				timers = { [0] = JumpTimer, [1] = JumpTime },
+				timers = { [0] = JumpTimer, [1] = JumpTime, [2] = InvulnTimer },
 				counters = { [0] = numJumps, [1] = noticeHandler.Noticed ? 1 : 0},
 			};
         }

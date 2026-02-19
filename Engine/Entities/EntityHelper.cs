@@ -1,16 +1,82 @@
 ﻿using BrUtility;
 using Microsoft.Xna.Framework;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
     public static class EntityHelper
     {
+        public static bool DieIfDaytime(Entity entity)
+        {
+            if (entity.world.IsDay())
+            {
+                entity.world.EntityManager.Kill(entity);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool UnloadIfDaytime(Entity entity)
+        {
+            if (entity.world.IsDay())
+            {
+                entity.world.EntityManager.Unload(entity);
+                return true;
+            }
+            return false;
+        }
+
+        public struct DamageTimeOfDayConfig
+        {
+            public float MinTime;
+            public float MaxTime;
+            public int DamageAmt;
+            public float DamageTime;
+            // TODO: debuff
+        }
+
+        // NOTE: time is in time-of-day, meaning 0 to 0.5 = day, 0.5 to 1 = night
+        // TODO: correctly handle wrapping
+        public static bool TakeDamageIfTimeOfDay<T>(T entity, DamageTimeOfDayConfig config, ref float timer, double deltaTime) where T : Entity, IHasStats
+        {
+            if (timer > 0)
+                timer -= (float)deltaTime;
+
+            float normTime = entity.world.GetNormalizedTime();
+
+            if (normTime > config.MinTime && normTime < config.MaxTime)
+            {
+                if (timer <= 0)
+                {
+                    TakeDamage(entity, config.DamageAmt);
+                    timer += config.DamageTime;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static void TakeDamage<T>(T entity, int damage) where T : Entity, IHasStats
+        {
+            var stats = entity.GetStats();
+            stats.HP -= damage;
+
+            if (stats.HP <= 0)
+            {
+                stats.HP = 0;
+                entity.world.EntityManager.Kill(entity);
+            }
+            
+            entity.SetStats(stats);
+        }
+
         public struct DirectionalSourceRect
         {
             public RectangleF front;

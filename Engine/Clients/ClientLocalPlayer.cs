@@ -69,7 +69,7 @@ namespace Engine.Clients
 
             if (Main.inputManager.JustPressed(Keys.V))
             {
-                IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ModGameBase.Entities.BonePillar");
+                IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ViMG.Entities.StoneBeetle");
             }
 
             var current = client.Current();

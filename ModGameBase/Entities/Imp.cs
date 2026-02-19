@@ -76,7 +76,10 @@ namespace ViMG.Entities
 			NoticeHandler<Player> realNoticeHandler = noticeHandlerNight;
 
 			if (!world.IsNight())
+			{
+				noticeHandlerNight.Target = null;
 				realNoticeHandler = noticeHandlerDay;
+			}
 
 			if (hitbox == -1)
 				hitbox = world.HitboxManager.Add(this, Bounds, Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1f, invulnTimer <= 0);

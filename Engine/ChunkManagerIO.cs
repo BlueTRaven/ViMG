@@ -200,9 +200,11 @@ namespace ViMG
             }
             else if (chunk.LoadedState == LoadedState.Depalettizing)
             {
-                // Waits for above lock to be released on other thread
-                lock (chunk.l) { }
-                Debug.Assert(chunk.LoadedState == LoadedState.Loaded);
+				// Waits for above lock to be released on other thread
+				lock (chunk.l)
+				{
+					Debug.Assert(chunk.LoadedState == LoadedState.Loaded);
+				}
             }
         }
 

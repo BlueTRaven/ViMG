@@ -2,17 +2,18 @@
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ModGameBase.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.Rendering;
 
-namespace ViMG.Entities
+namespace ModGameBase.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
     [EntityMeta(0)]
@@ -25,6 +26,7 @@ namespace ViMG.Entities
 
         private float alive;
 
+        private float dayDamageTimer;
         public Skeleton2()
         {
 
@@ -74,6 +76,8 @@ namespace ViMG.Entities
 
             var funcs = new AIWalkerMelee.Funcs<Skeleton2> { ai = ai, entity = this };
             funcs.Update(deltaTime);
+
+            EntityHelper.TakeDamageIfTimeOfDay(this, new EntityHelper.DamageTimeOfDayConfig { MinTime = 0.5f, MaxTime = 1, DamageAmt = 1, DamageTime = 2 }, ref dayDamageTimer, deltaTime);
         }
 
         public Stats GetStats()

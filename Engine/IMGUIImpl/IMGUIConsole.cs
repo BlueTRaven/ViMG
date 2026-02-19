@@ -19,6 +19,8 @@ namespace ViMG.IMGUIImpl
 {
     public static class IMGUIConsole
     {
+        public const string AUTO_FILE_NAME = "auto.txt";
+
         public class ConsoleParamException : Exception
         {
             private readonly string executingCommand;
@@ -202,6 +204,8 @@ namespace ViMG.IMGUIImpl
                     }
                 }
             }
+
+            LoadScript([AUTO_FILE_NAME]);
         }
 
         [ConsoleCommand("help")]
@@ -235,19 +239,45 @@ namespace ViMG.IMGUIImpl
             commandHistory.Clear();
         }
 
+        private static HashSet<string> runScripts = new();
         [ConsoleCommand("run_script", "Runs a script, which is a collection of commands stored in plain-text, newline-separated format.")]
         public static void LoadScript(string[] parameters)
         {
             RequireParam(parameters, 0, "script_name");
 
+            int depth = 0;
+            if (parameters.Length > 1 && int.TryParse(parameters[1], out int setDepth)) 
+            {
+                depth = setDepth;
+            } 
+
+            if (depth == 0)
+            {
+                runScripts.Clear();
+                if (!runScripts.Contains(parameters[0]))
+                {
+                    runScripts.Add(parameters[0]);
+                }
+                else
+                {
+                    LogError("LoadScript: recursion detected.");
+                    return;
+                }
+            }
+
             string scriptName = parameters[0];
+
+            if (!File.Exists(parameters[0]))
+            {
+                LogError(string.Format("LoadScript: File {0} does not exist", parameters[0]));
+                return;
+            }
 
             string[] allLines = File.ReadAllLines(scriptName);
 
             foreach (string line in allLines)
             {
-                // running scripts in scripts not supported because we can EASILY deadlock ourselves...
-                if (!line.StartsWith("run_script") && line != "")
+                if (line != "" && !line.StartsWith('#'))
                     HandleCommand(line);
             }
         }
@@ -319,6 +349,52 @@ namespace ViMG.IMGUIImpl
             else
             {
                 LogLine("[error] Could not find variable with name " + nameParam);
+            }
+        }
+
+        [ConsoleCommand("search", "Searches for the given command or variable.")]
+        public static void Search(string[] parameters)
+        {
+            if (RequireParam(parameters, 0, "search_var"))
+            {
+                var commandNames = commandsByName.Keys;
+                var varNames = varsByName.Keys;
+
+                var commandMatches = commandNames.Where(x => x.IndexOf(parameters[0]) != -1);
+                var varMatches = varNames.Where(x => x.IndexOf(parameters[0]) != -1);
+
+                if (commandMatches.Count() == 0 && varMatches.Count() == 0)
+                {
+                    LogLine(string.Format("No commands or variables found that match {0}", parameters[0]));
+                }
+                else
+                {
+                    if (commandMatches.Count() != 0)
+                    {
+                        LogLine(string.Format("Found {0} commands:", commandMatches.Count()));
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < commandMatches.Count() - 1; i++)
+                        {
+                            sb.Append(commandMatches.ElementAt(i));
+                            sb.Append("\n");
+                        }
+                        sb.Append(commandMatches.ElementAt(commandMatches.Count() - 1));
+                        LogLine(sb.ToString());
+                    }
+                    
+                    if (varMatches.Count() != 0)
+                    {
+                        LogLine(string.Format("Found {0} variables:", varMatches.Count()));
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < varMatches.Count() - 1; i++)
+                        {
+                            sb.Append(varMatches.ElementAt(i));
+                            sb.Append("\n");
+                        }
+                        sb.Append(varMatches.ElementAt(varMatches.Count() - 1));
+                        LogLine(sb.ToString());
+                    }
+                }
             }
         }
 

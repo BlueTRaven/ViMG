@@ -842,7 +842,7 @@ namespace ViMG.WorldLogics
                 return;
 
             float time = 0;
-            if (parameters.Length >= 1)
+            if (parameters.Length >= 2)
             {
                 if (!float.TryParse(parameters[1], out time))
                     time = 1;

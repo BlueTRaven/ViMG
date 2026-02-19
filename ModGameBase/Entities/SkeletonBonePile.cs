@@ -14,7 +14,9 @@ using ViMG.Entities;
 
 namespace ModGameBase.Entities
 {
-    public class SkeletonBonePile : Entity, IHasStats
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class SkeletonBonePile : Entity, IHasStats, ISyncBasicState
     {
         private CubePosition? trackBoneBlockPosition;
         private float resurrectTimer;
@@ -38,7 +40,7 @@ namespace ModGameBase.Entities
             resurrectTimer = this.random.NextFloat(15, 25);
             buffManager = new BuffManager(this);
 
-            ai = new AiImmobile(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f), new Vector3(Cube.CUBE_SCALE * 0.70f)), buffManager, 2);
+            ai = new AiImmobile(new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f), new Vector3(Cube.CUBE_SCALE * 0.70f)), buffManager, 2);
             SearchForNearbyBoneBlocks();
         }
 
@@ -130,6 +132,7 @@ namespace ModGameBase.Entities
         {
             BasicState aiState = new BasicState();
             ai?.Get(out aiState);
+            aiState.timers[1] = resurrectTimer;
             aiState.position = Position;
             aiState.rotation = Quaternion.Identity;
             state = aiState;
@@ -169,6 +172,5 @@ namespace ModGameBase.Entities
 
             return false;
         }
-
     }
 }

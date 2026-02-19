@@ -61,10 +61,7 @@ namespace ViMG.Entities.Renderers
 
             public virtual void OnRender(ClientStates client, ref readonly BasicState entity) { }
 
-            public virtual RenderedEntityDrawStats[] GetDrawStats(ref readonly BasicState entity)
-            {
-                return Array.Empty<RenderedEntityDrawStats>();
-            }
+            public virtual void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RenderedEntityDrawStats> renderedEntity) { }
         }
 
         public ObjRegistry<RenderedEntity> registry;
@@ -122,8 +119,12 @@ namespace ViMG.Entities.Renderers
                 TintColor = Color.White.ToVector3(),
             };
 
+            FastList<RenderedEntityDrawStats> drawStats = new FastList<RenderedEntityDrawStats>();
+
             for (int i = 0; i < current.entities.MaxEnts; i++)
             {
+                drawStats.Clear();
+
                 var reference = current.entities.GetReference(i);
                 // TODO get rid of str compare
                 if (current.entities.GetTypeById(reference.id) != type) continue;
@@ -132,10 +133,10 @@ namespace ViMG.Entities.Renderers
                 //var entCurr = client.Current().entities.GetById(reference.id);
                 //var entPrev = client.Previous(1).entities.GetById(reference.id);
 
-                renderer.OnRender(client, entInterp);
-                var drawStats = renderer.GetDrawStats(entInterp);
+                renderer.OnRender(client, ref entInterp);
+                renderer.GetDrawStats(client, ref entInterp, drawStats);
 
-                foreach (RenderedEntityDrawStats drawStat in drawStats)
+                foreach (RenderedEntityDrawStats drawStat in drawStats.Slice())
                 {
                     Vector2 scale = drawStat.scale ?? new Vector2(1);
                     Color color = drawStat.color ?? Color.White;

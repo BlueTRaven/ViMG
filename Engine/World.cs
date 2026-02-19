@@ -55,7 +55,8 @@ namespace ViMG
 		public readonly int Layer;
 
 		public const float GRAVITY = -9.8f / 20f * Cube.CUBE_SCALE;
-		public const float DAY_CYCLE_TIME = 60f * 10f;
+		// The total amount of time a day-night cycle takes, in seconds.
+		public const float DAY_CYCLE_TIME = 60f * 10f; // 10 minutes
 
 		public readonly int sizeInChunks;
 		public readonly int sizeInCubes;
@@ -580,6 +581,11 @@ namespace ViMG
 			alive += time;
 		}
 
+		public float GetNormalizedTime()
+		{
+			return ((float)alive % DAY_CYCLE_TIME) / DAY_CYCLE_TIME;
+        }
+
 		public float GetTimeOfDay(float dawnStartOffsetScale = 1f, float dawnEndOffsetScale = 1f, float duskStartOffsetScale = 1, float duskEndOffsetScale = 1, float timeOffset = 0)
 		{
 			//values here are in % of day cycle time;
@@ -921,8 +927,10 @@ namespace ViMG
 						else if (parameters[0] == "midnight")
 							gsIsland.GetWorld().alive = DAY_CYCLE_TIME / 4 * 3;
 						else IMGUIConsole.LogLine("[error] Time not recognized.");
-					}
-				}
+
+                        Console.WriteLine("Set time to {0:0.00}", gsIsland.GetWorld().alive);
+                    }
+                }
 			}
 			else
 			{

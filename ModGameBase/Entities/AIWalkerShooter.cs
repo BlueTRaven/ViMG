@@ -365,16 +365,7 @@ namespace ViMG.Entities
 
 			public void Hurt(int damage)
 			{
-                ai.Health -= damage;
-
-				if (ai.Health <= 0)
-				{
-                    ai.Health = 0;
-                    ai.world.EntityManager.Kill(entity);
-
-					if (ai.touchHitbox != -1)
-                        ai.world.HitboxManager.Remove(ai.touchHitbox);
-				}
+                EntityHelper.TakeDamage(entity, damage);
 
                 ai.shouldJumpLockTimer = 1f;
 				ai.InvulnTimer = 0.25f;

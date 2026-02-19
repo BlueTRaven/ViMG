@@ -18,6 +18,7 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class StoneBeetle : Entity, IHasStats, ISyncBasicState
     {
+        public const float MOVE_TOWARDS_TARGET_DIST = Cube.CUBE_SCALE * 5f;
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
 
@@ -58,8 +59,8 @@ namespace ViMG.Entities
             ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
                 new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, batchStats, stats, GlobalState.Registry.ProjectileRegistry.Get("shard").Id);
             ai.ShootSpeed = Cube.CUBE_SCALE * 8;
-            ai.MoveTowardsTargetDistance = Cube.CUBE_SCALE * 5f;
-            ai.AttackTargetDistance = Cube.CUBE_SCALE * 5f;
+            ai.MoveTowardsTargetDistance = MOVE_TOWARDS_TARGET_DIST;
+            ai.AttackTargetDistance = MOVE_TOWARDS_TARGET_DIST;
             ai.AttackCooldownTime = 0.75f;
         }
 
@@ -113,7 +114,13 @@ namespace ViMG.Entities
             BasicState aiState = new BasicState();
             ai?.Get(out aiState);
             aiState.position = Position;
-            aiState.rotation = Quaternion.Identity;
+            if (noticeHandler.Noticed)
+            {
+                float distance = world.DistanceFromPlayer(noticeHandler.Target, Position);
+                aiState.counters[0] = distance < MOVE_TOWARDS_TARGET_DIST ? 1 : 0;
+            }
+            else aiState.counters[0] = 0;
+
             state = aiState;
         }
 

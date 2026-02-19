@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Microsoft.Xna.Framework;
+using ModGameBase.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
