@@ -340,12 +340,20 @@ namespace ViMG
 				Matrix.CreateRotationY(-camera.RotationEuler.Y) *
 				Matrix.CreateTranslation(position), null));
 		}
+
+		private static bool lineMeshInit = false;
+		private static VerySimpleMesh lineMesh;
 		
 		//Draws a line that is tiled along the vertical axis.
 		public static void DrawLineTiled(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
-			RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
+			RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color)
 		{
-			Vector3 axis = endPosition - startPosition;
+			if (!lineMeshInit)
+			{
+				lineMesh = MeshHelper.MakeQuad(renderer.Device, 1, 1, Enums.Alignment.Bottom);
+				lineMeshInit = true;
+            }
+            Vector3 axis = endPosition - startPosition;
 			float distance = axis.Length();
 			axis.Normalize();
 
@@ -356,7 +364,7 @@ namespace ViMG
 
 			for (int i = 0; i < tileTimes; i++)
 			{
-				renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+				renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
 					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
 					sourceRectangle, color.ToVector3()));
 			}
@@ -368,7 +376,7 @@ namespace ViMG
 			Vector2 fixedPosition = sourceRectangle.Position;
 			fixedPosition.Y += sourceRectangle.height - fixedHeight;
 
-			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
 				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
 				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
 				color.ToVector3()));
@@ -377,15 +385,21 @@ namespace ViMG
 		//Draws a stretched texture along a line.
 		//If you want the texture to be tiled properly, use DrawLineTiled.
 		public static void DrawLine(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width,
-            RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
+            RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color)
 		{
+            if (!lineMeshInit)
+            {
+                lineMesh = MeshHelper.MakeQuad(renderer.Device, 1, 1, Enums.Alignment.Bottom);
+                lineMeshInit = true;
+            }
+
             Vector3 axis = endPosition - startPosition;
             float distance = axis.Length();
             axis.Normalize();
 
             Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, camera.Position, axis, -camera.Forward, Vector3.Forward);
 
-            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
                 Matrix.CreateScale(width, distance, width) * mat,
                 sourceRectangle, color.ToVector3()));
         }

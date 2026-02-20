@@ -2,6 +2,7 @@
 using BepuPhysics.Collidables;
 using BrUtility;
 using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,8 +17,8 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
     [EntityMeta(0)]
-    [EntitySerializable(EntitySerializableAttribute.SerializationType.World)]
-    public class TestNPC : Entity
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    public class TestNPC : Entity, ISyncBasicState
     {
         private static string firstTimeRightClick = "Well, I'll be. Someone came to save me.\r\n" +
             "I'm soaked to the bone and exhausted. You wouldn't happen to have a place to stay, " +
@@ -209,6 +210,19 @@ namespace ViMG.Entities
 
             int index = 0;
             Position = SaveHelper.LoadVector3(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

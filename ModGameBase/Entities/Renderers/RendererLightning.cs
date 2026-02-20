@@ -18,10 +18,8 @@ namespace ViMG.Entities.Renderers
     public class RendererLightning : EntityRenderer
     {
         private static Color LightningColor = new Color(255, 253, 141);
-        private VerySimpleMesh mesh;
         public RendererLightning(GraphicsDevice device) : base("lightning", device)
         {
-            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
         }
 
         private static int[]? types = null;
@@ -83,7 +81,7 @@ namespace ViMG.Entities.Renderers
                         Vector3 prev = positions[j - 1];
                         Vector3 current = positions[j];
 
-                        DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh, RectangleF.Empty, LightningColor);
+                        DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty, LightningColor);
                     }
                 }
                 if (type == GlobalState.Registry.EntityRegistry.Get<AimedLightning>().Id)
@@ -132,8 +130,7 @@ namespace ViMG.Entities.Renderers
                         Vector3 prev = positions[j - 1];
                         Vector3 current = positions[j];
 
-                        DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
-                            mesh, RectangleF.Empty, LightningColor);
+                        DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, prev, current, Cube.CUBE_SCALE / 4f, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty, LightningColor);
                     }
                 }
             }

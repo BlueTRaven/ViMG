@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Common;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation;
 using System;
@@ -87,28 +88,61 @@ namespace ViMG.Entities
             public RectangleF above;
         }
 
-        public static RectangleF GetEntityDirectionalSourceRect(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
+        public enum DirectionalSide
+        {
+            Front,
+            Back,
+            Left,
+            Right,
+            Top,
+            Bottom,
+        }
+
+        public static DirectionalSide GetEntityDirectionalSide(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
         {
             Vector2 facingXZ = Vector2.Normalize(facing.XZ());
             Vector2 forwardXZ = Vector2.Normalize(camera.Forward.XZ());
 
             float ang = float.Acos(Vector2.Dot(facingXZ, forwardXZ));
-            
-            RectangleF sourceRect = directionalSourceRect.front;
+
+            DirectionalSide side = DirectionalSide.Back;
 
             if (ang > MathHelper.ToRadians(180 - 45))
             {
                 //back
-                sourceRect = directionalSourceRect.back;
+                side = DirectionalSide.Back;
             }
             else if (ang > MathHelper.ToRadians(45))
             {
                 //sides
-                sourceRect = directionalSourceRect.sideRight;
+                side = DirectionalSide.Right;
 
                 float leftDot = Vector2.Dot(facing.XZ(), camera.Right.XZ());
 
                 if (leftDot < 0)
+                {
+                    side = DirectionalSide.Left;
+                }
+            }
+
+            return side;
+        }
+
+        public static RectangleF GetEntityDirectionalSourceRect(DirectionalSide side, DirectionalSourceRect directionalSourceRect)
+        {
+            RectangleF sourceRect = directionalSourceRect.front;
+
+            if (side == DirectionalSide.Back)
+            {
+                //back
+                sourceRect = directionalSourceRect.back;
+            }
+            else if (side == DirectionalSide.Left || side == DirectionalSide.Right)
+            {
+                //sides
+                sourceRect = directionalSourceRect.sideRight;
+
+                if (side == DirectionalSide.Left)
                 {
                     if (directionalSourceRect.sideLeft == RectangleF.Empty)
                     {
@@ -122,8 +156,18 @@ namespace ViMG.Entities
                     }
                 }
             }
+            else
+            {
+                // TODO top and bottom
+            }
 
             return sourceRect;
+        }
+
+        public static RectangleF GetEntityDirectionalSourceRect(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
+        {
+            var side = GetEntityDirectionalSide(camera, facing, directionalSourceRect);
+            return GetEntityDirectionalSourceRect(side, directionalSourceRect);
         }
 
         //adds velocity if it would not put the velocity over the velocity cap.

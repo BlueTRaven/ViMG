@@ -34,6 +34,9 @@ namespace ViMG
 	{
         private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Warn);
 
+		private static bool god;
+		
+
         private struct HitboxToSpawnLater
         {
             public int inventorySlot;
@@ -214,6 +217,8 @@ namespace ViMG
 		private float inputLockupTimer;
 		private float damageTime;
 		public const float DAMAGE_ANIM_TIME = 15f / 60f;
+
+		public bool GodMode;
 
 		private int hitbox = -1;
 		
@@ -1776,7 +1781,7 @@ namespace ViMG
 
 		private void Damage(int amt)
         {
-			if (state == State.Noclip)
+			if (state == State.Noclip || GodMode)
 				return;
 
 			damageTime = world.GetTime();

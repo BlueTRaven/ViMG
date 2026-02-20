@@ -407,7 +407,7 @@ namespace ViMG.Entities
                 health = Health,
                 velocity = Velocity,
                 position = Vector3.Zero,
-                rotation = Quaternion.CreateFromYawPitchRoll(Facing.Y, Facing.X, Facing.Z),
+                rotation = EngineMathHelper.LookRotation(-Facing, Vector3.Up),
                 state = (int)this.state,
                 timers = { [2] = attackTimer, [3] = InvulnTimer },
             };

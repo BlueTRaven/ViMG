@@ -1145,6 +1145,66 @@ namespace ViMG
 			}
 		}
 
+        [ConsoleCommand("god", "Enables god mode. Pass in 'all' to set value for all players.", ConsoleCommandRunSide.Server)]
+        public static void GodModeEnable(string[] parameters)
+		{
+			if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland gsIsland)
+			{
+				if (IMGUIConsole.RequireParam(parameters, 0, "player_name"))
+				{
+					World world = gsIsland.GetWorld();
+					bool allPlayers = false;
+					var playerName = parameters[0];
+					if (playerName == "self")
+					{
+						playerName = world.LoadedFolderName;
+					}
+					else if (playerName == "all" || playerName == "*")
+					{
+						allPlayers = true;
+					}
+
+					bool setTo = false;
+					if (IMGUIConsole.RequireParam(parameters, 1, "value"))
+					{
+						if (!bool.TryParse(parameters[1], out setTo))
+						{
+							IMGUIConsole.LogError("value must be true or false");
+							return;
+						}
+					}
+					
+					if (allPlayers)
+					{
+						foreach (Player? p in gsIsland.GetWorld().player)
+						{
+							if (p != null)
+							{
+								p.GodMode = setTo;
+								IMGUIConsole.LogLine(string.Format("Set god mode to {0} for {1}", setTo.ToString(), gsIsland.netManagerServer?.GetNetPlayer(p.playerIndex).playerName));
+							}
+						}
+					}
+					else
+					{
+                        var netPlayer = gsIsland.netManagerServer?.GetNetPlayerByName(playerName) ?? new();
+                        Player? player = world.player.FirstOrDefault(x => x != null && x.playerIndex == netPlayer.playerId, null);
+                        if (player == null)
+                        {
+                            ErrorPlayerDoesNotExist(parameters[0]);
+                            return;
+                        }
+						else
+						{
+							player.GodMode = setTo;
+                            IMGUIConsole.LogLine(string.Format("Set god mode to {0} for {1}", setTo.ToString(), playerName));
+                        }
+                    }
+				}
+			}
+		}
+
+
 		public static void ErrorPlayerDoesNotExist(string playerName)
 		{
             IMGUIConsole.LogError(string.Format("Tried to get player with name {0}, but a player by that name did not exist.", playerName));

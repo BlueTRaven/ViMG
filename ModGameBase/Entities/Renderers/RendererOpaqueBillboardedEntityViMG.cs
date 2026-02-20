@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Engine;
 using Engine.Clients;
+using Engine.Common;
 using Engine.Entities.Renderers;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -559,28 +560,43 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedSnake : RendererOpaqueBillboardedEntity.RenderedEntity
         {
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 16, 16, 16),
+                sideRight = new RectangleF(0, 0, 32, 16),
+                back = new RectangleF(32, 16, 16, 16)
+            };
+
             public RenderedSnake() : base("snake", GlobalState.Registry.EntityRegistry.Get<Snake>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Vector3 velXZ = new Vector3(entity.velocity.X, 0, entity.velocity.Z);
-                velXZ.Normalize();
+                //Vector3 velXZ = new Vector3(entity.velocity.X, 0, entity.velocity.Z);
+                //velXZ.Normalize();
 
-                // TODO pass in camera? Don't like using global state like this
-                float facingDotCamera = Vector3.Dot(velXZ, -GlobalState.GameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
-
-                //Facing within 45 degrees of the camera.
-                bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);
-
-                RectangleF sourceRect = new RectangleF(0, 0, 32, 16);
                 Vector2 scale = Vector2.One;
 
-                if (isFacingCamera)
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                if (side == EntityHelper.DirectionalSide.Left || side == EntityHelper.DirectionalSide.Right)
                 {
-                    sourceRect = new RectangleF(0, 16, 16, 16);
+                    scale = new Vector2(2, 1);
                 }
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
+
+                // TODO pass in camera? Don't like using global state like this
+                //float facingDotCamera = Vector3.Dot(velXZ, -GlobalState.GameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
+
+                //Facing within 45 degrees of the camera.
+                //bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);
+
+                //RectangleF sourceRect = new RectangleF(0, 0, 32, 16);
+
+                //if (isFacingCamera)
+                //{
+                //    sourceRect = new RectangleF(0, 16, 16, 16);
+                //}
 
                 if (entity.state == (int)AIWalkerMelee.State.Normal)
                 {
@@ -602,7 +618,7 @@ namespace ViMG.Entities.Renderers
                     const int NUM_FRAMES = 4;
 
                     // TODO hardcoded 0.25 - "AttackLockTime"
-                    int frame = (int)((1 - (entity.timers[2] / 0.25f)) * NUM_FRAMES);
+                    int frame = (int)((1 - (entity.timers[0] / 0.25f)) * NUM_FRAMES);
 
                     sourceRect.x = 32 * frame;
                 }
@@ -679,7 +695,8 @@ namespace ViMG.Entities.Renderers
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                var camera = GlobalState.GameStateManager.TheIsland.GetClient().currInterpState.camera;
+                //DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, entity.position, entity.position + Vector3.Transform(Vector3.Forward, entity.rotation) * 3, Cube.CUBE_SCALE * 0.25f, StaticMaterials.FlatColor, RectangleF.Empty, Color.White);
+                var camera = client.currInterpState.camera;
                 RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
 
                 if (entity.state == (int)AIWalkerShooter.State.Normal)
@@ -770,20 +787,21 @@ namespace ViMG.Entities.Renderers
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
-                
-                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
-                //{
-                //    position = entity.position,
-                //    sourceRect = new RectangleF(0, 0, 16, 16),
-                //};
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position,
+                    sourceRect = new RectangleF(0, 0, 16, 16),
+                });
+
 
                 //for (int i = 0; i < 8; i++)
                 //{
-                //    cachedStats[i + 1] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //    renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 //    {
                 //        position = worm.trainPositions[i],
                 //        sourceRect = new RectangleF(16, 0, 16, 16),
-                //    };
+                //    });
                 //}
 
                 //return cachedStats;
