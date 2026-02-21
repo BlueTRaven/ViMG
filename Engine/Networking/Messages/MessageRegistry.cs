@@ -23,7 +23,6 @@ namespace Engine.Networking.Messages
 
             Register(new SyncPlayerConnected());
             Register(new SyncChunk());
-            Register(new SyncBasicState());
             Register(new SyncEntityState());
             Register(new SyncEntityStateAck());
             Register(new WhoAmI());

@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,13 +15,14 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0)]
-    public class Heart : Entity, IHitboxOwner
+    public class Heart : Entity, IHitboxOwner, ISyncBasicState
     {
+		public const int MaxHealth = 20;
+
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("heart");
 
         public int Health;
-		public int MaxHealth = 20;
 
 		private float invulnTimer;
 
@@ -31,14 +33,10 @@ namespace ViMG.Entities
 
         public Heart()
         {
-            DoesSync = false;
-            DoesMajorSync = false;
         }
 
         public Heart(Vector3 position) 
         {
-            DoesSync = false;
-            DoesMajorSync = false;
             this.Position = position;
         }
 
@@ -114,37 +112,6 @@ namespace ViMG.Entities
 			}
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
-
-		//	if (mesh.IBO == null)
-  //              mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-  //          //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-
-  //          float healthPercent = (float)Health / (float)MaxHealth;
-
-		//	float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
-
-		//	float t = (alive % interval) / interval;
-
-		//	float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
-
-		//	float scale = MathHelper.Lerp(0.75f, 1.15f, s);
-
-		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
-
-		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-		//		Matrix.CreateTranslation(-new Vector3(0, Cube.CUBE_SCALE / 2f, 0)) *
-		//		Matrix.CreateScale(scale) *
-		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 21), tintColor));
-
-		//	if (Health < MaxHealth)
-		//		DrawHelper3D.DrawHealthbar(device, Health, MaxHealth, Position);
-		//}
-
         public override void OnSave(List<byte> saveBytes)
         {
             base.OnSave(saveBytes);
@@ -162,6 +129,21 @@ namespace ViMG.Entities
 			Position = SaveHelper.LoadVector3(loadBytes, ref index);
 
 			Health = SaveHelper.LoadInt32(loadBytes, ref index);
+        }
+
+        public void Get(out BasicState state)
+        {
+			state = new BasicState
+			{
+				position = Position,
+				health = Health,
+				timers = { [3] = invulnTimer },
+			};
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -18,34 +18,33 @@ namespace ViMG.Entities
     [EntityMeta(0)]
     public class Cultist : Entity, IHasStats, ISyncBasicState
     {
+        private const int MaxHealth = 20;
         private NoticeHandler<Player> noticeHandler;
 		private BuffManager buffManager;
 
-		private int maxHealth = 20;
-
 		public AIWalkerShooter ai;
 
-		public Cultist()
+		public Cultist() : this(Vector3.Zero)
         {
         }
 
 		public Cultist(Vector3 position)
         {
 			this.Position = position;
+
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+            buffManager = new BuffManager(this);
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
 
-			ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
-									HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, 1, false, 0, true); ;
+            ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(
+                                    HitboxManager.Group.ENEMYHOSTILE_BOTH, 1, 1, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE, 1, false, 0, true);
 
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
-			buffManager = new BuffManager(this);
-
-			ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth, stats, GlobalState.Registry.ProjectileRegistry.Get("cultist_ball").Id);
+            ai = new AIWalkerShooter(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+				new Vector3(Cube.CUBE_SCALE * 0.70f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, MaxHealth, stats, GlobalState.Registry.ProjectileRegistry.Get("cultist_ball").Id);
 			ai.ShootSpeed = Cube.CUBE_SCALE * 4;
 		}
 
@@ -62,7 +61,7 @@ namespace ViMG.Entities
 			return new Stats
 			{
 				HP = ai.Health,
-				MaximumHP = ai.MaxHealth
+				MaximumHP = MaxHealth,
 			};
         }
 

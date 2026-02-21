@@ -29,6 +29,7 @@ namespace ViMG.Entities
 
 		private State state;
 
+		public bool Invulnerable = false;
 		public float InvulnTimer;
 
 		public Vector3 Velocity;
@@ -96,8 +97,8 @@ namespace ViMG.Entities
 				ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
-					ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
-				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
+					ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0 && !ai.Invulnerable);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0 && !ai.Invulnerable);
 
 				ai.buffManager.Update(deltaTime);
 				ai.noticeHandler.Update(deltaTime);
@@ -296,7 +297,7 @@ namespace ViMG.Entities
 
 			public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 			{
-				if (ai.InvulnTimer <= 0)
+				if (ai.InvulnTimer <= 0 && !ai.Invulnerable)
 				{
 					if (other.group == HitboxManager.Group.PLAYER_DEAL)
 					{

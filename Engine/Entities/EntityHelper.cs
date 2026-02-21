@@ -275,6 +275,7 @@ namespace ViMG.Entities
         public static void CalculateKnockback(ref Vector3 velocity, HitboxManager.Hitbox other, float kbMod = 1)
         {
             Vector3 direction = Vector3.Zero;
+            // Fix NaNSplosion
             if (other.direction != Vector3.Zero)
                 direction = Vector3.Normalize(other.direction);
 

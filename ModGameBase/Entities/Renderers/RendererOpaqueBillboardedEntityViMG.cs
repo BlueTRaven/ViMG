@@ -251,6 +251,13 @@ namespace ViMG.Entities.Renderers
 
         private class RenderedGhost : RendererOpaqueBillboardedEntity.RenderedEntity
         {
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 32, 32),
+                sideRight = new RectangleF(0, 32, 32, 32),
+                back = new RectangleF(0, 64, 32, 32)
+            };
+
             public RenderedGhost() : base("ghost", GlobalState.Registry.EntityRegistry.Get<Ghost>().Id, new RendererDeferred.DrawMaterial("grave_ghost"))
             {
             }
@@ -258,71 +265,46 @@ namespace ViMG.Entities.Renderers
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
-                //Ghost ghost = (Ghost)entity;
+                if ((AIFlierMelee.State)entity.state == AIFlierMelee.State.Attack)
+                    sourceRect = new RectangleF(0, 96, 32, 32);
+                else if ((AIFlierMelee.State)entity.state == AIFlierMelee.State.AttackStun)
+                    sourceRect = new RectangleF(32, 96, 32, 32);
 
-                //RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+                Vector3 offset = Vector3.Zero;
 
-                //Vector3 velXZ = new Vector3(ghost.ai.Facing.X, 0, ghost.ai.Facing.Z);
-                //velXZ.Normalize();
+                offset.Y = MathF.Sin(MathF.PI * 2 * (entity.aliveTime % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
 
-                //int direction = 0;
-                //float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-                //bool flipX = false;
-
-                //if (facingDotCamera < -0.3f)
-                //{
-                //    direction = 2;
-                //    sourceRect.y = 64;
-                //}
-                //else if (facingDotCamera < 0.2f)
-                //{
-                //    direction = 1;
-                //    sourceRect.y = 32;
-
-                //    float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
-
-                //    if (facing < 0)
-                //    {
-                //        flipX = true;
-                //    }
-                //}
-
-                //if (flipX)
-                //{
-                //    sourceRect.x += 32;
-                //    sourceRect.width = -32;
-                //}
-
-                //AIFlierMelee.Funcs<Ghost> funcs = new AIFlierMelee.Funcs<Ghost> { ai = ghost.ai, entity = ghost };
-                //if (funcs.GetState() == AIFlierMelee.State.Attack)
-                //    sourceRect = new RectangleF(0, 96, 32, 32);
-                //else if (funcs.GetState() == AIFlierMelee.State.AttackStun)
-                //    sourceRect = new RectangleF(32, 96, 32, 32);
-
-                //Vector3 offset = Vector3.Zero;
-
-                //offset.Y = MathF.Sin(MathF.PI * 2 * (entity.Alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
-
-                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
-                //{
-                //    position = entity.Position + offset,
-                //    sourceRect = sourceRect,
-                //    scale = new Vector2(2),
-                //};
-                //return cachedStats;
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerMelee.INVULN_TIMER_INDEX);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position + offset,
+                    sourceRect = sourceRect,
+                    scale = new Vector2(2),
+                    color = c,
+                });
             }
         }
 
         private class RenderedCultist : RendererOpaqueBillboardedEntity.RenderedEntity
         {
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 22, 32),
+                sideRight = new RectangleF(0, 32, 22, 32),
+                back = new RectangleF(0, 64, 22, 32)
+            };
+
             public RenderedCultist() : base("cultist", GlobalState.Registry.EntityRegistry.Get<Cultist>().Id, new RendererDeferred.DrawMaterial("cultist"))
             {
             }
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
                 if (entity.state == (int)AIWalkerShooter.State.Normal)
                 {
@@ -337,27 +319,69 @@ namespace ViMG.Entities.Renderers
                 }
                 else if (entity.state == (int)AIWalkerShooter.State.Attack)
                 {
-                    sourceRect = new RectangleF(65, 0, 19, 32);
+                    sourceRect.x = 65;
                 }
+
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerShooter.ATTACK_TIMER_INDEX);
 
                 renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
+                    position = entity.position,
                     sourceRect = sourceRect,
                     scale = new Vector2(19f / 16f, 32f / 16f),
+                    color = c,
                 });
             }
         }
 
         private class RenderedDucken : RendererOpaqueBillboardedEntity.RenderedEntity
         {
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 32, 32),
+                sideRight = new RectangleF(0, 32, 32, 32),
+                back = new RectangleF(0, 64, 32, 32)
+            };
+
             public RenderedDucken() : base("ducken", GlobalState.Registry.EntityRegistry.Get<Ducken>().Id, new RendererDeferred.DrawMaterial("ducken"))
             {
             }
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                // TODO
+                Vector2 scale = Vector2.One;
 
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
+
+                if ((AIPassive.State)entity.state == AIPassive.State.Normal) 
+                {
+                    if (entity.velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    {
+                        int numFrames;
+
+                        if (side == EntityHelper.DirectionalSide.Front || side == EntityHelper.DirectionalSide.Back)
+                            numFrames = 4;
+                        else if (side == EntityHelper.DirectionalSide.Left || side == EntityHelper.DirectionalSide.Right)
+                            numFrames = 2;
+                        else numFrames = 0;
+
+                        float animP = (entity.aliveTime % 0.75f) / 0.75f;
+
+                        int frame = (int)(animP * numFrames);
+
+                        sourceRect.x += 32 * frame;
+                    }
+                }
+
+                Color c = EntityRendererHelper.GetHurtColor(entity, 3);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position,
+                    sourceRect = sourceRect,
+                    scale = new Vector2(2),
+                    color = c,
+                });
                 //Ducken ducken = (Ducken)entity;
 
                 //RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
@@ -511,25 +535,22 @@ namespace ViMG.Entities.Renderers
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                // TODO
-                
-                //float healthPercent = (float)entity.health / (float)heart.MaxHealth;
+                float healthPercent = (float)entity.health / (float)Heart.MaxHealth;
 
-                //float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
+                float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
 
-                //float t = (entity.aliveTime % interval) / interval;
+                float t = (entity.aliveTime % interval) / interval;
 
-                //float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
+                float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
 
-                //float scale = MathHelper.Lerp(0.75f, 1.15f, s);
+                float scale = MathHelper.Lerp(0.75f, 1.15f, s);
 
-                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
-                //{
-                //    sourceRect = new RectangleF(0, 0, 16, 21),
-                //    scale = new Vector2(scale),
-                //};
-
-                //return cachedStats;
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position,
+                    sourceRect = new RectangleF(0, 0, 16, 21),
+                    scale = new Vector2(scale),
+                });
             }
         }
 

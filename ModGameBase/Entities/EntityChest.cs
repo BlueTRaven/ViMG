@@ -25,15 +25,10 @@ namespace ViMG.Entities
 
         public EntityChest()
         {
-			//DoesSync = false;
-			MajorSyncInterval = 5;
         }
 
 		public EntityChest(CubePosition position, int rows, int columns, MeshHelper.CubeFace facing)
 		{
-            //DoesSync = false;
-            MajorSyncInterval = 5;
-
             this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
 			this.rows = rows;

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +13,9 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Ducken : Entity, IHasStats, IHitboxOwner
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class Ducken : Entity, IHasStats, ISyncBasicState
     {
         private const int MAX_HEALTH = 8;
         private static VerySimpleMesh mesh;
@@ -60,92 +63,32 @@ namespace ViMG.Entities
             funcs.OnUnload();
         }
 
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
-
-        //    if (mesh.IBO == null)
-        //    {
-        //        //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-        //        mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-        //    }
-
-        //    RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
-
-        //    Vector3 velXZ = new Vector3(ai.Facing.X, 0, ai.Facing.Z);
-        //    velXZ.Normalize();
-
-        //    int direction = 0;
-        //    float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-        //    bool flipX = false;
-
-        //    if (facingDotCamera < -0.3f)
-        //    {
-        //        direction = 2;
-        //        sourceRect.y = 64;
-        //    }
-        //    else if (facingDotCamera < 0.2f)
-        //    {
-        //        direction = 1;
-        //        sourceRect.y = 32;
-
-        //        float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
-
-        //        if (facing < 0)
-        //        {
-        //            flipX = true;
-        //        }
-        //    }
-
-        //    if (ai.GetState() == AIPassive<Ducken>.State.Normal)
-        //    {
-        //        if (ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
-        //        {
-        //            int numFrames;
-
-        //            if (direction == 0 || direction == 2)
-        //                numFrames = 4;
-        //            else if (direction == 1)
-        //                numFrames = 2;
-        //            else numFrames = 0;
-
-        //            float animP = (alive % 0.75f) / 0.75f;
-
-        //            int frame = (int)(animP * numFrames);
-
-        //            sourceRect.x += 32 * frame;
-
-        //            if (flipX)
-        //            {
-        //                sourceRect.x += 32;
-        //                sourceRect.width = -32;
-        //            }
-        //        }
-        //    }
-
-        //    Vector3 tintColor = ai.InvulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
-
-        //    Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-        //        Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-        //        Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-        //        Matrix.CreateTranslation(Position), sourceRect, tintColor));
-
-        //    if (ai.Health < MAX_HEALTH)
-        //        DrawHelper3D.DrawHealthbar(device, ai.Health, MAX_HEALTH, Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0));
-        //}
-
         public Stats GetStats()
         {
-            throw new NotImplementedException();
+            return new Stats
+            {
+                MaximumHP = MAX_HEALTH,
+                HP = ai.Health,
+            };
         }
 
         public void SetStats(Stats stats)
         {
-            throw new NotImplementedException();
+            ai.MaxHealth = stats.MaximumHP;
+            ai.Health = stats.HP;
         }
 
-        public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
+        public void Get(out BasicState state)
         {
+            BasicState aiState = new BasicState();
+            ai?.Get(out aiState);
+            aiState.position = Position;
+            state = aiState;
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

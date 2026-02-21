@@ -42,19 +42,12 @@ namespace ViMG.Entities
         public double TimeInitialized = 0;
 		public bool IsInitialized => TimeInitialized != 0;
 
-		public bool DoesSync = true;
-		public bool DoesMajorSync = true;
-		public double TimeSynced;
-		public double TimeMajorSynced;
-		public double SyncInterval {get; protected set; } = 0.25;
-		public double MajorSyncInterval { get; protected set; } = 5;
-
 		public bool Enabled = true;
 		public float DisableDistance = Cube.CUBE_SCALE * 128;
 
-		public bool NetEntity = false;
-		// Enabled/disabled by network - run when client attempts to delete an entity. Clients cannot (normally) delete entities
-		public bool NetEnable = true;
+		// Entity is network synchronized.
+		// Disable to make an entity server-side only.
+		public bool NetEntity = true;
 
         public void SetId(ulong id)
 		{

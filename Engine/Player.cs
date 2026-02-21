@@ -344,7 +344,6 @@ namespace ViMG
 			this.playerUuid = uuid;
 			this.isNew = isNew;
 
-			SyncInterval = 1;
 			AlwaysRender = true;
 
 			//TODO serialize this maybe?
@@ -357,7 +356,6 @@ namespace ViMG
 			playerIndex = deadPlayer.playerIndex;
 			playerUuid = deadPlayer.playerUuid;
 
-            SyncInterval = 1;
             AlwaysRender = true;
 
 			//TODO serialize this maybe?

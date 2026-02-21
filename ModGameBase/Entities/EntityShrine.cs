@@ -32,15 +32,10 @@ namespace ViMG.Entities
 
         public EntityShrine()
         {
-            DoesSync = false;
-            DoesMajorSync = false;
         }
 
         public EntityShrine(CubePosition position, Buff buff)
         {
-            DoesSync = false;
-            DoesMajorSync = false;
-
             this.TrackedPosition = position;
             this.buff = buff;
             this.Position = position.InWorldSpace();

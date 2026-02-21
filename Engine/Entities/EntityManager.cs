@@ -412,13 +412,6 @@ namespace ViMG.Entities
 
 		public void Unload(Entity entity, bool delay = false)
         {
-            if (entity.NetEntity && GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Client)
-            {
-                // Force entity to be disabled
-                entity.NetEnable = false;
-                return;
-            }
-
             if (iteratingUpdate || delay)
 				toDeleteLater.Add(entity);
 			else ReallyUnload(entity);
@@ -614,7 +607,7 @@ namespace ViMG.Entities
 				{
 					try
 					{
-						if (ents[i].entity.Enabled && (ents[i].entity.NetEnable || !ents[i].entity.NetEntity))
+						if (ents[i].entity.Enabled)
 							ents[i].entity.Update(deltaTime);
 					}
 					catch (Exception e)

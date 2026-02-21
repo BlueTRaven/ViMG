@@ -17,7 +17,7 @@ namespace ViMG.Items
 {
     public class ItemBookBubble : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 8, 8), 5);
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 8, Cube.CUBE_SCALE), 5);
 
         public ItemBookBubble() : base("book_spell_bubble")
         {
