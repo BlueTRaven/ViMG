@@ -274,9 +274,12 @@ namespace ViMG.Entities
 
         public static void CalculateKnockback(ref Vector3 velocity, HitboxManager.Hitbox other, float kbMod = 1)
         {
-            Vector3 direction = Vector3.Normalize(other.direction);
+            Vector3 direction = Vector3.Zero;
+            if (other.direction != Vector3.Zero)
+                direction = Vector3.Normalize(other.direction);
+
             //knockback shouldn't be allowed to hit enemies down
-            if (direction.Y < 0)
+            if (direction.Y <= 0)
                 direction.Y = 1;
 
             Vector3 scaledKnockback = direction * new Vector3(Cube.CUBE_SCALE * 3.2f, Cube.CUBE_SCALE * 6.4f, Cube.CUBE_SCALE * 3.2f);

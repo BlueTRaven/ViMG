@@ -552,8 +552,7 @@ namespace ViMG.Entities.Renderers
                 renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     scale = new Vector2(scaleX, scaleY),
-                    shouldDraw = entity.state != 1,
-                    sourceRect = new RectangleF(0, 0, 64, 64),
+                    sourceRect = entity.counters[0] == 0 ? new RectangleF(0, 0, 64, 64) : new RectangleF(0, 64, 64, 64),
                 });
             }
         }
