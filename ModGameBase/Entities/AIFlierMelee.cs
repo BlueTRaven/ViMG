@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Constraints;
+using BrUtility;
 using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -15,8 +16,10 @@ namespace ViMG.Entities
     public class AIFlierMelee
     {
 		private const int VERSION = 0;
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
 
-		public enum State
+        public enum State
 		{
 			Normal,			//walking/idling/moving towards player/etc
 			Attack,			//attacking player
@@ -215,7 +218,6 @@ namespace ViMG.Entities
 				if (ai.CollidesWithWorld)
                     UpdateCollision();
 
-                // TODO MULTIPLAYER REFACTOR
                 if (entity.world.DistanceFromPlayer(entity.Position) > 128 * Cube.CUBE_SCALE)
                     entity.world.EntityManager.Kill(entity);
             }
@@ -353,9 +355,9 @@ namespace ViMG.Entities
                 health = Health,
                 velocity = Velocity,
                 position = Vector3.Zero,
-                rotation = Quaternion.Identity,
+                rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
                 state = (int)this.state,
-                timers = { [2] = attackTimer, [3] = InvulnTimer },
+                timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
             };
         }
 

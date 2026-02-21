@@ -105,7 +105,7 @@ namespace ViMG.Entities
 
             float ang = float.Acos(Vector2.Dot(facingXZ, forwardXZ));
 
-            DirectionalSide side = DirectionalSide.Back;
+            DirectionalSide side = DirectionalSide.Front;
 
             if (ang > MathHelper.ToRadians(180 - 45))
             {

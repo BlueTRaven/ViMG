@@ -19,6 +19,9 @@ namespace ViMG.Entities
     {
 		private const int VERSION = 0;
 
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
+
         public enum State
         {
             Normal,
@@ -407,9 +410,9 @@ namespace ViMG.Entities
                 health = Health,
                 velocity = Velocity,
                 position = Vector3.Zero,
-                rotation = EngineMathHelper.LookRotation(-Facing, Vector3.Up),
+                rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
                 state = (int)this.state,
-                timers = { [2] = attackTimer, [3] = InvulnTimer },
+                timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
             };
         }
 

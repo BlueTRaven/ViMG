@@ -573,9 +573,6 @@ namespace ViMG.Entities.Renderers
 
             public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                //Vector3 velXZ = new Vector3(entity.velocity.X, 0, entity.velocity.Z);
-                //velXZ.Normalize();
-
                 Vector2 scale = Vector2.One;
 
                 var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
@@ -584,19 +581,6 @@ namespace ViMG.Entities.Renderers
                     scale = new Vector2(2, 1);
                 }
                 RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
-
-                // TODO pass in camera? Don't like using global state like this
-                //float facingDotCamera = Vector3.Dot(velXZ, -GlobalState.GameStateManager.TheIsland.GetClient().currInterpState.camera.Forward);
-
-                //Facing within 45 degrees of the camera.
-                //bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);
-
-                //RectangleF sourceRect = new RectangleF(0, 0, 32, 16);
-
-                //if (isFacingCamera)
-                //{
-                //    sourceRect = new RectangleF(0, 16, 16, 16);
-                //}
 
                 if (entity.state == (int)AIWalkerMelee.State.Normal)
                 {
@@ -618,12 +602,12 @@ namespace ViMG.Entities.Renderers
                     const int NUM_FRAMES = 4;
 
                     // TODO hardcoded 0.25 - "AttackLockTime"
-                    int frame = (int)((1 - (entity.timers[0] / 0.25f)) * NUM_FRAMES);
+                    int frame = (int)((1 - (entity.timers[AIWalkerMelee.ATTACK_TIMER_INDEX] / 0.25f)) * NUM_FRAMES);
 
                     sourceRect.x = 32 * frame;
                 }
 
-                Color c = EntityRendererHelper.GetHurtColor(entity, 0);
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerMelee.INVULN_TIMER_INDEX);
 
                 renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {

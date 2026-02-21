@@ -24,26 +24,26 @@ namespace ViMG.Entities
 		private BuffManager buffManager;
 		private NoticeHandler<Player> noticeHandler;
 
-		public SnakeFlying()
+		public SnakeFlying() : this(Vector3.Zero)
         {
         }
 
         public SnakeFlying(Vector3 position)
         {
             this.Position = position;
+
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
+            buffManager = new BuffManager(this);
+
+            ai = new AIFlierMelee(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
+                new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
+                new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
+                noticeHandler, buffManager, MaxHealth);
         }
 
         public override void Initialize(World world)
         {
             base.Initialize(world);
-
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 16, false);
-			buffManager = new BuffManager(this);
-
-			ai = new AIFlierMelee(world, new Rectangle3D(-new Vector3(Cube.CUBE_SCALE * 0.35f, 0, Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.7f, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.7f)),
-				new Rectangle3D(-new Vector3(Cube.CUBE_SCALE), new Vector3(Cube.CUBE_SCALE * 2f)),
-				noticeHandler, buffManager, MaxHealth);
 		}
 
 		public override void OnUnload()
@@ -110,7 +110,6 @@ namespace ViMG.Entities
             BasicState aiState = new BasicState();
             ai?.Get(out aiState);
             aiState.position = Position;
-            aiState.rotation = Quaternion.Identity;
             state = aiState;
         }
 

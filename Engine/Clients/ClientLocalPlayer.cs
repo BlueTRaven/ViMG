@@ -69,7 +69,8 @@ namespace Engine.Clients
 
             if (Main.inputManager.JustPressed(Keys.V))
             {
-                IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ViMG.Entities.Snake");
+                //IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ViMG.Entities.SnakeFlying");
+                IMGUIConsole.RunCommand("give", NetworkManager.NetworkSide.Client, "self", "book_spell_bubble", "1");
             }
 
             var current = client.Current();

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,7 +12,9 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class PlayerBubble : Entity, IHitboxOwner
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class PlayerBubble : Entity, IHitboxOwner, ISyncBasicState
     {
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("bubble");
@@ -105,6 +108,21 @@ namespace ViMG.Entities
                     bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 2.5f), new Vector3(Cube.CUBE_SCALE * 5f));
                 }
             }
+        }
+
+        public void Get(out BasicState state)
+        {
+            state = new BasicState
+            {
+                position = Position,
+                timers = { [0] = explodingTime },
+                counters = { [0] = exploding ? 1 : 0 }
+            };
+        }
+
+        public void Set(ref readonly BasicState state)
+        {
+            throw new NotImplementedException();
         }
     }
 }

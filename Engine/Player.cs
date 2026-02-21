@@ -1485,7 +1485,7 @@ namespace ViMG
             hitboxOffset = toSpawnLater.direction * offset;
 
             this.hitboxSize = toSpawnLater.hitboxSize;
-			var quat = EngineMathHelper.LookRotation(toSpawnLater.direction, Vector3.Up);
+			var quat = EngineMathHelper.DirectionToQuaternion(toSpawnLater.direction, Vector3.Up);
 			var obb = new Engine.Physics.OrientedBoundingBox(Position + hitboxOffset, new(hitboxSize / 2f), quat);
             // TODO use rotation
             world.HitboxManager.Add(new HitboxManager.HitboxParameters

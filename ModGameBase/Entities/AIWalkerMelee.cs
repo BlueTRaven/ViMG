@@ -9,12 +9,17 @@ using ViMG.Cubes;
 using BrUtility;
 using Engine.Networking;
 using Engine;
+using ModGameBase.Entities;
+using System.Data;
 
 namespace ViMG.Entities
 {
     public class AIWalkerMelee : ISyncBasicState
     {
-        public const int VERSION = 0;
+        public const int VERSION = 1;
+
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
 
         public enum State
 		{
@@ -26,13 +31,10 @@ namespace ViMG.Entities
 
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
+		public Vector3 Facing;
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-		private float idleTimer;
-		private float idleMoveTimer;
-		private int idleMovements;
-		private Vector2 idleDirection;
-		private Vector2 idleHome;
+		private IdleStats idle;
 
 		private State state;
 
@@ -128,7 +130,7 @@ namespace ViMG.Entities
 
 					if (ai.noticeHandler.Noticed)
 					{
-                        ai.idleMovements = 0;
+						ai.idle.idleMovements = 0;
 
 						if (ai.state == State.Paused)
 						{
@@ -149,8 +151,9 @@ namespace ViMG.Entities
 							if (distance > ai.MoveTowardsTargetDistance)
 							{
 								EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, dir, actualMaxVel);
-							}
-							else
+                                ai.Facing = Vector3.Normalize(dir);
+                            }
+                            else
 							{
                                 ai.Velocity.X *= 0.95f;
                                 ai.Velocity.Z *= 0.95f;
@@ -184,6 +187,8 @@ namespace ViMG.Entities
 								if (ai.attackHitbox == -1)
                                     ai.attackHitbox = entity.world.HitboxManager.Add(this, ai.attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
 										Vector3.Normalize(ai.Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.AttackDamage, 1);
+
+                                ai.Facing = Vector3.Normalize(dir);
 
                                 ai.state = State.AttackStun;
                                 ai.attackTimer = ai.AttackStunTime;
@@ -219,46 +224,19 @@ namespace ViMG.Entities
                         ai.state = State.Normal;
                         ai.attackTimer = ai.AttackCooldownTime;
 
-                        ai.idleTimer -= (float)deltaTime;
-
-						if (ai.idleTimer <= 0)
-                            ai.idleMoveTimer -= (float)deltaTime;
-
-						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-						{
-                            ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
-
-                            ai.idleTimer = entity.random.NextFloat(4f, 12f);
-                            ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
-                            ai.idleMovements = entity.random.Next(2, 6);
-
-                            ai.idleDirection = entity.random.NextAngle();
-						}
-						else
-						{
-							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
-
-							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-                                ai.idleDirection = -ai.idleDirection;
-
-							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-							{
-                                ai.idleMovements--;
-                                ai.idleDirection = entity.random.NextAngle();
-                                ai.idleMoveTimer = entity.random.NextFloat(0.25f, 2f);
-							}
-						}
-
-						if (ai.idleTimer <= 0)
-						{
-							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
-						}
-						else
-						{
+						ai.idle.Update(entity.random, entity.Position, deltaTime);
+                        
+						if (ai.idle.idleTimer <= 0)
+                        {
+                            EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idle.idleDirection, actualMaxVel);
+                            ai.Facing = Vector3.Normalize(new Vector3(ai.idle.idleDirection.X, 0, ai.idle.idleDirection.Y));
+                        }
+                        else
+                        {
                             ai.Velocity.X *= 0.85f;
                             ai.Velocity.Z *= 0.85f;
-						}
-					}
+                        }
+                    }
 				}
 
 				if (ai.Velocity.Y < -actualMaxVel.Y)
@@ -422,9 +400,6 @@ namespace ViMG.Entities
 		{
 			SaveHelper.SaveInt32(saveBytes, VERSION);
 			SaveHelper.SaveInt32(saveBytes, MaxHealth);
-
-			SaveHelper.SaveVector2(saveBytes, idleDirection);
-            SaveHelper.SaveVector2(saveBytes, idleHome);
         }
 
 		public void OnLoad(byte[] loadBytes, ref int index)
@@ -433,8 +408,11 @@ namespace ViMG.Entities
 
 			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
 
-			idleDirection = SaveHelper.LoadVector2(loadBytes, ref index);
-            idleHome = SaveHelper.LoadVector2(loadBytes, ref index);
+			if (version == 0)
+			{
+				SaveHelper.LoadVector2(loadBytes, ref index);
+				SaveHelper.LoadVector2(loadBytes, ref index);
+			}
         }
 
 		public void Get(out BasicState state)
@@ -444,10 +422,9 @@ namespace ViMG.Entities
 				health = Health,
 				velocity = Velocity,
 				position = Vector3.Zero,
-				rotation = Quaternion.Identity,
+				rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
 				state = (int)this.state,
-				timers = { [0] = attackTimer, [3] = InvulnTimer },
-				counters = { [0] = idleMovements },
+				timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
 			};
         }
 
@@ -456,11 +433,8 @@ namespace ViMG.Entities
 			Health = state.health;
 			Velocity = state.velocity;
 			this.state = (State)state.state;
-			idleTimer = state.timers[0];
-            idleMoveTimer = state.timers[1];
             attackTimer = state.timers[2];
             InvulnTimer = state.timers[3];
-			idleMovements = state.counters[0];
         }
     }
 }
