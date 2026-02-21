@@ -13,7 +13,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Lightning : Entity, ISyncBasicState
+    public class Lightning : Entity, ISyncedEntity
     {
         public const float SPLIT_DISTANCE = Cube.CUBE_SCALE * 4f;
         public static Color LightningColor = new Color(255, 253, 141);
@@ -83,23 +83,15 @@ namespace ViMG.Entities
                 world.EntityManager.Kill(this);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 velocity = bottomPosition,
                 timers = { [0] = timer },
                 counters = { [0] = seed },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            bottomPosition = state.velocity;
-            timer = state.timers[0];
-            seed = state.counters[0];
         }
     }
 }

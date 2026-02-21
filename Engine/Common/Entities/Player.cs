@@ -18,7 +18,7 @@ namespace Engine.Common.Entities
         {
         }
 
-        protected override BasicState GetInterpolated(ref readonly BasicState prev, ref readonly BasicState prevInterp, ref readonly BasicState curr, double t)
+        protected override SyncedEntity GetInterpolated(ref readonly SyncedEntity prev, ref readonly SyncedEntity prevInterp, ref readonly SyncedEntity curr, double t)
         {
             var interp = base.GetInterpolated(in prev, in prevInterp, in curr, t);
             var extraPrev = prev.GetExtra<ViMG.Player.PlayerExtraState>();

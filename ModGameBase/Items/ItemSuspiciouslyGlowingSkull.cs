@@ -86,7 +86,7 @@ namespace ViMG.Items
         {
         }
 
-        public override void Hold(ClientStates client, BasicState player, Inventory inventory, int index)
+        public override void Hold(ClientStates client, SyncedEntity player, Inventory inventory, int index)
         {
             base.Hold(client, player, inventory, index);
 

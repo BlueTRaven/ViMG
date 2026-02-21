@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 0)]
-	public class Tree : Entity, IMultiCubeTracker, ISyncBasicState
+	public class Tree : Entity, IMultiCubeTracker, ISyncedEntity
 	{
 		private int baseSize;
 		private int size;
@@ -161,20 +161,13 @@ namespace ViMG.Entities
             }
 		}
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				counters = { [0] = size, [1] = baseSize },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			Position = state.position;
-			size = state.counters[0];
-			baseSize = state.counters[1];
         }
     }
 }

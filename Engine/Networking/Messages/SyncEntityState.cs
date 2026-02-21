@@ -55,7 +55,7 @@ namespace Engine.Networking.Messages
 
             public required SyncStateType type;
             public CubePosition[]? trackedPositions;
-            public ISyncBasicState? basicSyncState;
+            public ISyncedEntity? basicSyncState;
             public int typeNameMapping;
             public EntityManagerIO.EntityData? majorSyncState;
         }
@@ -159,7 +159,7 @@ namespace Engine.Networking.Messages
 
                     if (serverEntities[player.playerIndex][i].reference.generation != reference.generation)
                     {
-                        if (ent != null && ent.NetEntity && ent is ISyncBasicState syncsBasicState)
+                        if (ent != null && ent.NetEntity && ent is ISyncedEntity syncsBasicState)
                         {
                             var entSerializableAttr = ent.GetType().GetCustomAttribute<EntitySerializableAttribute>();
                             if (entSerializableAttr != null)
@@ -212,7 +212,7 @@ namespace Engine.Networking.Messages
                             }
                         }
                     }
-                    else if (ent != null && ent.NetEntity && ent is ISyncBasicState syncsBasicState)
+                    else if (ent != null && ent.NetEntity && ent is ISyncedEntity syncsBasicState)
                     {
                         toSync.AddAssumeCapacity(new()
                         {
@@ -258,9 +258,9 @@ namespace Engine.Networking.Messages
                     {
                         var useType = (byte)ent.type;
 
-                        ent.basicSyncState.Get(out BasicState state);
+                        ent.basicSyncState.GetSyncedEntity(out Networking.SyncedEntity state);
 
-                        BasicState prevState;
+                        Networking.SyncedEntity prevState;
                         if (ent.type == SyncStateType.MinorSync)
                         {
                             var latestSeq = serverEntities[ent.playerId][ent.reference.id].latestSequence;

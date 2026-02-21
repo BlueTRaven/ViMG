@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace Engine.Networking
 {
-    public interface ISyncBasicState
+    public interface ISyncedEntity
     {
-        void Get(out BasicState state);
-
-        void Set(ref readonly BasicState state);
+        void GetSyncedEntity(out SyncedEntity state);
     }
 }

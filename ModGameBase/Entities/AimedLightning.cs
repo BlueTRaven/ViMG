@@ -14,7 +14,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class AimedLightning : Entity, IHitboxOwner, ISyncBasicState
+    public class AimedLightning : Entity, IHitboxOwner, ISyncedEntity
     {
         private static VerySimpleMesh mesh;
         private const float ADVANCE_TIME = 3f / 60f;
@@ -163,27 +163,15 @@ namespace ViMG.Entities
             }
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 velocity = advanceDirection,
                 timers = { [0] = timer, [1] = advanceLength, [2] = maxLength, [3] = advanceVariance },
                 counters = { [0] = advanceNum, [1] = seed },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            advanceDirection = state.velocity;
-            timer = state.timers[0];
-            advanceLength = state.timers[1];
-            maxLength = state.timers[2];
-            advanceVariance = state.timers[3];
-            advanceNum = state.counters[0];
-            seed = state.counters[1];
         }
     }
 }

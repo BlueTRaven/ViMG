@@ -12,7 +12,7 @@ using Engine;
 
 namespace ViMG.Entities
 {
-    public class AiImmobile : ISyncBasicState
+    public class AiImmobile : ISyncedEntity
     {
         public const int VERSION = 0;
 
@@ -210,9 +210,9 @@ namespace ViMG.Entities
             MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 health = Health,
                 velocity = Velocity,
@@ -221,13 +221,6 @@ namespace ViMG.Entities
                 state = 0,
                 timers = { [0] = InvulnTimer, },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Health = state.health;
-            Velocity = state.velocity;
-            InvulnTimer = state.timers[0];
         }
     }
 }

@@ -16,7 +16,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 0)]
-    public class Sapling : Entity, ICubeTracker, ISyncBasicState
+    public class Sapling : Entity, ICubeTracker, ISyncedEntity
     {
 		private static VerySimpleMesh mesh;
 
@@ -141,20 +141,13 @@ namespace ViMG.Entities
                 throw new Exception();
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 timers = { [0] = toGrowTime, [1] = startTime },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            toGrowTime = state.timers[0];
-            startTime = state.timers[1];
         }
     }
 }

@@ -13,7 +13,7 @@ using Engine;
 
 namespace ViMG.Entities
 {
-	public class AISlime : ISyncBasicState
+	public class AISlime : ISyncedEntity
 	{
 		public const int VERSION = 0;
 
@@ -147,8 +147,7 @@ namespace ViMG.Entities
                 ai.onGround = false;
 				UpdateCollision();
 
-				if (entity.world.DistanceFromPlayer(entity.Position) > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Kill(entity);
+				EntityHelper.UnloadIfDistanceFromPlayers(entity);
 			}
 
 			private void UpdateCollision()
@@ -279,9 +278,9 @@ namespace ViMG.Entities
             jumpDir = SaveHelper.LoadVector3(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				velocity = Velocity,
 				health = Health,
@@ -289,16 +288,6 @@ namespace ViMG.Entities
 				timers = { [0] = JumpTimer, [1] = JumpTime, [2] = InvulnTimer },
 				counters = { [0] = numJumps, [1] = noticeHandler.Noticed ? 1 : 0},
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Velocity = state.velocity;
-            Health = state.health;
-            jumpTimer = state.timers[0];
-			jumpTime = state.timers[1];
-			numJumps = state.counters[0];
-			noticeHandler.Noticed = state.counters[1] > 0;
         }
     }
 }

@@ -61,7 +61,7 @@ namespace ViMG.Items
             color.W = 1.5f;
         }
 
-        public override void Hold(ClientStates client, BasicState player, Inventory inventory, int index)
+        public override void Hold(ClientStates client, SyncedEntity player, Inventory inventory, int index)
         {
             base.Hold(client, player, inventory, index);
 

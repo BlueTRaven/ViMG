@@ -58,7 +58,7 @@ namespace ViMG.Entities
 			public bool active;
 			public Entity? entity;
 
-			public BasicState[] prevState;
+			public SyncedEntity[] prevState;
 
 			public static EntityHolder DEFAULT = new()
 			{
@@ -343,7 +343,9 @@ namespace ViMG.Entities
 				entitiesByType.Add(entity.GetType(), new List<Entity>());
 			entitiesByType[entity.GetType()].Add(entity);
 
-            entity.Initialize(world);
+			if (!entity.IsInitialized)
+				entity.Initialize(world);
+
             if (!GlobalState.IsHeadless)
             {
                 entity.LoadContent(world);
@@ -392,14 +394,14 @@ namespace ViMG.Entities
 
             OnEntityAdded?.Invoke(entity);
 
-			if (entity is ISyncBasicState basicState)
+			if (entity is ISyncedEntity basicState)
 			{
                 if (ents[entity.Id].prevState == null)
                 {
-                    ents[entity.Id].prevState = new BasicState[EntPrevSrv];
+                    ents[entity.Id].prevState = new SyncedEntity[EntPrevSrv];
                 }
 
-                basicState.Get(out var state);
+                basicState.GetSyncedEntity(out var state);
 				ents[entity.Id].prevState[Main.Frame % EntPrevSrv] = state;
 			}
         }
@@ -660,9 +662,9 @@ namespace ViMG.Entities
 
                 if (ents[i].active && !ents[i].entity.Dead)
                 {
-                    if (ents[i].entity is ISyncBasicState basicState)
+                    if (ents[i].entity is ISyncedEntity basicState)
                     {
-                        basicState.Get(out var state);
+                        basicState.GetSyncedEntity(out var state);
 
                         ents[i].prevState[SyncWorldState.Instance.ServerSequence % EntPrevSrv] = state;
                     }
@@ -673,7 +675,7 @@ namespace ViMG.Entities
                 if (clear)
                 {
                     if (ents[i].prevState != null)
-                        ents[i].prevState[SyncWorldState.Instance.ServerSequence % EntPrevSrv] = new BasicState();
+                        ents[i].prevState[SyncWorldState.Instance.ServerSequence % EntPrevSrv] = new SyncedEntity();
                 }
             }
 
@@ -685,7 +687,7 @@ namespace ViMG.Entities
 			return (int)(time * (float)Main.FIXED_FPS);
 		}
 
-		public BasicState GetPrevState(int id, int prev)
+		public SyncedEntity GetPrevState(int id, int prev)
 		{
             // negative numbers would be in the future, big nono
             Debug.Assert(prev >= 0 && prev < EntPrevSrv);
@@ -696,7 +698,7 @@ namespace ViMG.Entities
             return ents[id].prevState?[which] ?? new();
 		}
 
-		public BasicState GetPrevStateAbs(int id, int frame)
+		public SyncedEntity GetPrevStateAbs(int id, int frame)
 		{
 			var diff = SyncWorldState.Instance.ServerSequence - frame;
 
@@ -952,7 +954,7 @@ namespace ViMG.Entities
 			}
         }
 
-		public BasicState GetByRef(ref readonly EntityReference reference)
+		public SyncedEntity GetByRef(ref readonly EntityReference reference)
 		{
 			if (ents[reference.id].generation != reference.generation) return new();
 			else return GetPrevState(reference.id, 0); ;

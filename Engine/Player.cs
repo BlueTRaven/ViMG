@@ -30,7 +30,7 @@ namespace ViMG
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.AllWithServer)]
 	[EntityMeta(19, 0)]
-	public class Player : Entity, IHitboxOwner, ISyncBasicState, IRotatable, IHasInventory
+	public class Player : Entity, IHitboxOwner, ISyncedEntity, IRotatable, IHasInventory
 	{
         private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Warn);
 
@@ -418,7 +418,6 @@ namespace ViMG
             Logger.Log(Engine.Logger.LogLevel.Info, "Player {0} id {1} spawned", GlobalState.GameStateManager.TheIsland.netManagerServer?.GetNetPlayer(playerIndex).playerName, playerIndex);
 
 			//IMGUIConsole.Assert(world.player[playerIndex] == null || world.player[playerIndex].Dead);
-			world.player[playerIndex] = this;
             invulnTimer = 6f;   //6 seconds of invuln after respawning
 
 			var inventory = world.InventoryManager.Get(this.inventory)!;
@@ -522,7 +521,7 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
-			Get(out var get);
+			GetSyncedEntity(out var get);
 			CurrMovement.Update(ref get, deltaTime);
 			//Position = get.position;
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity = get.velocity.ToNumerics();
@@ -1509,97 +1508,6 @@ namespace ViMG
             hitboxTimer = HITBOX_TIME;
         }
 
-		public override void Draw(GraphicsDevice device, Effect effect)
-		{
-   //         var inventory = world.InventoryManager.Get(this.inventory);
-
-   //         lookAtMaterial = StaticMaterials.Cubes;
-
-   ////         if (inventory.Get(highlightIndex).item != null)
-			////{
-			////	// TODO use Rotation
-			////	inventory.Get(highlightIndex).item.DrawInHand(device, inventory.Get(highlightIndex), this, -(this as IRotatable).Forward);
-			////}
-
-			//if (mesh.IBO == null)
-			//	mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f, Enums.Alignment.Center);
-			//	//mesh = MeshHelper.MakeCenteredQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 0.98f * 2f);
-
-			//if (lookAtMesh.IBO == null)
-			//{
-   //             FastList<VertexCube> vertices = new FastList<VertexCube>();
-   //             List<int> indices = new List<int>();
-			//	MeshHelper.MakeCubeVertsVertexPositionColorTextureNormal(Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, vertices, indices);
-			//	lookAtMesh = VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
-			//	//lookAtMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);//MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-			//	//lookAtMesh = MeshHelper.MakeCubeVertexPositionColor(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
-			//	//lookAtMesh.Name = "Look At Mesh";
-			//}
-
-			//if (currentThirdPersonDistance > THIRDPERSON_FADEOUT_START)
-			//{
-			//	float p = ((currentThirdPersonDistance - THIRDPERSON_FADEOUT_START) / 
-			//		(THIRDPERSON_FADEOUT_END - THIRDPERSON_FADEOUT_START));
-
-			//	Color color = Color.White * p;
-
-			//	// TODO use local Rotation
-			//	Matrix worldMat = Matrix.CreateRotationX(Math.Clamp(-Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-			//		Matrix.CreateRotationY(-Rotation.Y) *
-			//		Matrix.CreateTranslation(world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position);
-
-   //             /*if (currentThirdPersonDistance < THIRDPERSON_FADEOUT_END) 
-			//	{
-			//		Main.Renderer.DrawsTransparentPass.Add(new Rendering.RendererDeferred.TransparentDraw(currentThirdPersonDistance,
-   //                     worldMat, DrawHelper.WhitePixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, null, color));
-			//	}
-			//	else
-			//	{
-			//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(DrawHelper.WhitePixel,
-			//			DrawHelper.BlackPixel, DrawHelper.BlackPixel, mesh.VBO, mesh.IBO, worldMat, null, color.ToVector3()));
-			//	}*/
-   //         }
-
-			//if (IsLocalPlayer && lookAtResult.hasHit && world.ChunkManager.IsInWorldBounds(lookAtResult.hit))
-			//{
-			//	float s = MathF.Sin(MathF.PI * 2f * (alive % 2f)) * 0.5f + 0.5f;
-			//	Color color = Color.Lerp(Color.White, Color.Black, s);
-
-			//	if (ExpandedMineState && 
-			//		inventory.Get(highlightIndex).valid && inventory.Get(highlightIndex).item is IHasAreaEffect pickStats)
-			//	{
-			//		CubePosition[] positions = pickStats.GetAffectedPositions(world.ChunkManager.CubeView, inventory.Get(highlightIndex), Position, LookAtPos.InWorldSpace(), lookAtResult.normal, out _);
-			//		Span<ushort> ids = stackalloc ushort[positions.Length];
-
-			//		world.ChunkManager.CubeView.GetIds(positions.AsSpan(), ids);
-
-			//		for (int i = 0; i < positions.Length; i++)
-			//		{
-			//			if (pickStats.CanPredictAir() || GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air).Touchable)
-			//			{
-			//				Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-   //                             lookAtMesh,
-   //                             Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-			//					Matrix.CreateScale(1.126f) *
-			//					Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-			//					Matrix.CreateTranslation(positions[i].InWorldSpace()),
-			//					new RectangleF(0, 1008, 16, 16), color));
-			//			}
-			//		}
-			//	}
-			//	else 
-			//	{
-			//		Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw((int)lookAtResult.end.Length(), lookAtMaterial,
-   //                     lookAtMesh,
-   //                     Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f)) *
-			//			Matrix.CreateScale(1.126f) *
-			//			Matrix.CreateTranslation(new Vector3(Cube.CUBE_SCALE / 2f)) *
-			//			Matrix.CreateTranslation(LookAtPos.InWorldSpace()),
-			//			new RectangleF(0, 1008, 16, 16), color));
-			//	}
-			//}
-		}
-
 		public void DrawUI(SpriteBatch batch)
 		{
 			if (deadTime > 0 && state == State.Dead)
@@ -1629,7 +1537,7 @@ namespace ViMG
 			}
 		}
 
-		public static Matrix GetHeldMatrix(BasicState player, Vector2 origin, Vector3 scale)
+		public static Matrix GetHeldMatrix(SyncedEntity player, Vector2 origin, Vector3 scale)
 		{
 			var extraState = player.GetExtra<PlayerExtraState>();
 			float percent = extraState.useAnimTimer / extraState.useAnimTime;
@@ -1659,8 +1567,8 @@ namespace ViMG
 							Matrix.CreateRotationY(MathHelper.ToRadians(-245 - ang)) *
 							Matrix.CreateFromQuaternion(player.rotation) *
 							Matrix.CreateTranslation(player.position) *
-							Matrix.CreateTranslation(-BasicState.Forward(ref player) * Cube.CUBE_SCALE / 4f) *
-							Matrix.CreateTranslation(-BasicState.Up(ref player) * Cube.CUBE_SCALE / 4f);
+							Matrix.CreateTranslation(-SyncedEntity.Forward(ref player) * Cube.CUBE_SCALE / 4f) *
+							Matrix.CreateTranslation(-SyncedEntity.Up(ref player) * Cube.CUBE_SCALE / 4f);
 						// TODO rework
 							//Matrix.CreateRotationX(-Rotation.X) *
 							//Matrix.CreateRotationY(-Rotation.Y) *
@@ -1693,9 +1601,9 @@ namespace ViMG
 						Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) *
 						Matrix.CreateFromQuaternion(player.rotation) *
 						Matrix.CreateTranslation(player.position) *
-						Matrix.CreateTranslation(-BasicState.Forward(ref player) * Cube.CUBE_SCALE / 3f) *
-						Matrix.CreateTranslation(BasicState.Right(ref player) * Cube.CUBE_SCALE / 4f) *
-						Matrix.CreateTranslation(-BasicState.Up(ref player) * Cube.CUBE_SCALE / 6f);
+						Matrix.CreateTranslation(-SyncedEntity.Forward(ref player) * Cube.CUBE_SCALE / 3f) *
+						Matrix.CreateTranslation(SyncedEntity.Right(ref player) * Cube.CUBE_SCALE / 4f) *
+						Matrix.CreateTranslation(-SyncedEntity.Up(ref player) * Cube.CUBE_SCALE / 6f);
 			}
 		}
 
@@ -1767,6 +1675,8 @@ namespace ViMG
         {
 			if (state == State.Noclip || state == State.Dead)
 				return;
+
+			Logger.Log(Engine.Logger.LogLevel.Info, "Kill player");
 
 			deadTime = world.GetTime();
 			state = State.Dead;
@@ -1908,7 +1818,6 @@ namespace ViMG
         public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
             base.OnLoad(world, loadBytes, version);
-			Initialize(world);
 
             int index = 0;
 
@@ -1935,7 +1844,11 @@ namespace ViMG
 				MaxMagic = SaveHelper.LoadInt32(loadBytes, ref index);
             }
 
-			world.InventoryManager.Get(inventory)!.Load(loadBytes, ref index);
+			// NOTE: careful when moving this around, it's kinda position sensitive
+			// Put this too early and the body gets created at the wrong position
+            Initialize(world);
+
+            world.InventoryManager.Get(inventory)!.Load(loadBytes, ref index);
 	
 			if (version >= 6)
 			{
@@ -1962,10 +1875,8 @@ namespace ViMG
 
 			if (version >= 11 && version < 19)
 			{
-				var basicState = new BasicState();
+				var basicState = new SyncedEntity();
 				basicState.OnLoad(loadBytes, ref index);
-				if (world != null && TimeInitialized != 0)
-					Set(ref basicState);
 			}
 
 			if (version >= 16)
@@ -1977,9 +1888,9 @@ namespace ViMG
 			}
 		}
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
@@ -2027,29 +1938,6 @@ namespace ViMG
 
 			pstate = state.GetExtra<PlayerExtraState>();
 			Debug.Assert(pstate.useAnimType == (int)useAnimType);
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			if (!IsLocalPlayer)
-			{
-                //var quat = state.rotation;
-                //var roll = float.Atan2(2 * (quat.W * quat.X + quat.Y * quat.Z), 1 - 2 * (quat.X * quat.X + quat.Y * quat.Y));
-                //var pitch = float.Asin(2 * (quat.W * quat.Y - quat.Z * quat.X));
-                //var yaw = float.Atan2(2 * (quat.W * quat.Z + quat.X * quat.Y), 1 - 2 * (quat.Y * quat.Y + quat.Z * quat.Z));
-
-                SetPositionWithOffset(state.position);
-				world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
-				world.PhysicsInfo.Simulation.Awakener.AwakenBody(physicsHandle);
-				//this.Rotation = new Vector3(roll, pitch, yaw);
-				this.Rotation = state.rotation;
-				this.Health = state.health;
-				this.state = (State)state.state;
-				this.useTimer = state.timers[0];
-				this.preUseTimer = state.timers[1];
-				this.invulnTimer = state.timers[2];
-				this.inputLockupTimer = state.timers[3];
-			}
         }
 
 		public void SetPositionWithOffset(Vector3 position)

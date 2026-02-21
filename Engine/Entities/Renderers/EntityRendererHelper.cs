@@ -10,7 +10,7 @@ namespace Engine.Entities.Renderers
 {
     public static class EntityRendererHelper
     {
-        public static Color GetHurtColor(in BasicState entity, int timer)
+        public static Color GetHurtColor(in SyncedEntity entity, int timer)
         {
             float p = 0;
             if (entity.aliveTime > 0.5f)

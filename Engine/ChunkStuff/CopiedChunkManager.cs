@@ -44,14 +44,14 @@ namespace Engine.ChunkStuff
         {
             //private readonly CopyChunkArr arr;
 
-            private readonly BasicState[]? entities;
+            private readonly SyncedEntity[]? entities;
             public readonly ChunkPosition ChunkPosition;
 
             private ICubeGetter chunkManager;
 
             public readonly int generation;
 
-            public CopiedChunkData(ICubeGetter chunkManager, BasicState[]? entities, ChunkPosition chunkPosition, int generation)
+            public CopiedChunkData(ICubeGetter chunkManager, SyncedEntity[]? entities, ChunkPosition chunkPosition, int generation)
             {
                 this.chunkManager = chunkManager;
                 //this.arr = arr;
@@ -184,7 +184,7 @@ namespace Engine.ChunkStuff
                 }
             }
 
-            public BasicState GetEntity(CubePosition position)
+            public SyncedEntity GetEntity(CubePosition position)
             {
                 if (entities != null)
                 {
@@ -200,7 +200,7 @@ namespace Engine.ChunkStuff
             public ChunkPosition chunkPosition;
             public int generation;
             public int currentGeneration;
-            public required BasicState[]? trackers;
+            public required SyncedEntity[]? trackers;
         }
 
         private struct CopyTaskParams
@@ -225,7 +225,7 @@ namespace Engine.ChunkStuff
         {
             public ChunkPosition position;
             //public ushort[] data;
-            public BasicState[]? trackers;
+            public SyncedEntity[]? trackers;
         }
 
         private struct CopyMultiTaskResult
@@ -390,13 +390,13 @@ namespace Engine.ChunkStuff
 
             //ushort[] ids = new ushort[Chunk.NUM_CUBES_IN_CHUNK];
             //args.view.GetIdsForChunk(args.chunkPosition, ids);
-            BasicState[]? trackers = null;
+            SyncedEntity[]? trackers = null;
 
             var worldTrackers = args.cubeTrackers.Get(args.chunkPosition).cubeTrackers;
             if (worldTrackers != null) {
                 // Might need some sort of interface that allows us to take EntityReference -> return BasicState
                 // This needs to be an interface because this will be used on both client/server
-                trackers = new BasicState[Chunk.NUM_CUBES_IN_CHUNK];
+                trackers = new SyncedEntity[Chunk.NUM_CUBES_IN_CHUNK];
                 for (int i = 0; i < trackers.Length; i++)
                 {
                     trackers[i] = args.getEntity.GetByRef(ref worldTrackers[i]);

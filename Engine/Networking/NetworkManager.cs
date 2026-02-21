@@ -460,7 +460,8 @@ namespace Engine.Networking
             ViMG.TracyImpl.Tracy.EmitMessage(string.Format("NewPlayer {0}", playerName));
 
             SendMessageToPeer(WhoAmI.Instance, peer, index);
-            GlobalState.GameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
+            Player p = GlobalState.GameStateManager.TheIsland.playerIO?.Deserialize(world, PlayerManagerIO.GetHashCodeForName(playerName), index);
+            world.player[index] = p;
             world.ChunkLoadManager.LoadAroundTarget(world);
             // Inform others of new player
             SendMessageToAll(SyncPlayerConnected.Instance, netManager, null);

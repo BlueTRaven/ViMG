@@ -273,9 +273,9 @@ namespace ViMG.Entities
 			}
 		}
 
-		public void Get(out BasicState state)
+		public void Get(out SyncedEntity state)
 		{
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				state = (int)this.state,
 				health = Health,

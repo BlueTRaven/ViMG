@@ -12,7 +12,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Line : Entity, ISyncBasicState
+    public class Line : Entity, ISyncedEntity
     {
         public Vector3 endPosition;
         public float width;
@@ -79,10 +79,10 @@ namespace ViMG.Entities
             else return color;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
 
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 rotation = new Quaternion(endPosition.X, endPosition.Y, endPosition.Z, 1),
@@ -90,30 +90,5 @@ namespace ViMG.Entities
                 counters = { [0] = (int)color.PackedValue, [1] = materialSet }
             };
         }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            endPosition = state.rotation.ToVector4().ToVector3();
-            time = state.timers[0];
-            width = state.timers[1];
-            tileHeight = state.timers[2];
-            alive = state.timers[3];
-            color = new Color((uint)state.counters[0]);
-            materialSet = state.counters[1];
-        }
-
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
-
-        //    if (mesh.IBO == null)
-        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-        //    //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-
-        //    if (tileHeight != -1)
-        //        DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
-        //    else DrawHelper3D.DrawLine(Position, endPosition, width, material, mesh, sourceRectangle, color);
-        //}
     }
 }

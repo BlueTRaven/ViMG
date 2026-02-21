@@ -15,7 +15,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-    public class AncientAltar : Entity, ICubeTracker, ISyncBasicState
+    public class AncientAltar : Entity, ICubeTracker, ISyncedEntity
 	{
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
@@ -134,19 +134,13 @@ namespace ViMG.Entities
 			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				timers = { [0] = radius },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			Position = state.position;
-			radius = state.timers[0];
         }
     }
 }

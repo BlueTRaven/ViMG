@@ -39,6 +39,7 @@ namespace ViMG.Entities
 		public ulong Id => id;
 
 		public float Alive;
+
         public double TimeInitialized = 0;
 		public bool IsInitialized => TimeInitialized != 0;
 

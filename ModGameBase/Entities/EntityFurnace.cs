@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(2, 0)]
-	public class EntityFurnace : Entity, ICubeTracker, IHasInventory, ISyncBasicState
+	public class EntityFurnace : Entity, ICubeTracker, IHasInventory, ISyncedEntity
 	{
         private static MenuHelper.IWhiteList?[] whitelists = [null, null, new MenuHelper.WhiteListOneName("glowdust"), null, null];
 
@@ -214,9 +214,9 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 state = (int)MeshingDataInstance.facing,
@@ -224,11 +224,6 @@ namespace ViMG.Entities
                 timers = { [0] = craftTimer},
                 counters = { [0] = inventory.id, [1] = inventory.generation },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

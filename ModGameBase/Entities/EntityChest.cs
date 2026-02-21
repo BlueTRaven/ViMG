@@ -10,7 +10,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(3, 1)]
-	public class EntityChest : Entity, ICubeTracker, IHasInventory, ISyncBasicState
+	public class EntityChest : Entity, ICubeTracker, IHasInventory, ISyncedEntity
 	{
 		public struct MeshingData
 		{
@@ -137,20 +137,14 @@ namespace ViMG.Entities
 			return false;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				state = (int)meshingData.facing,
 				counters = { [0] = rows, [1] = columns, [2] = inventory.id, [3] = inventory.generation },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			Position = state.position;
-			meshingData.facing = (MeshHelper.CubeFace)state.state;
         }
     }
 }

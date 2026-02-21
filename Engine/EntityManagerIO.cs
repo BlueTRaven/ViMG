@@ -512,6 +512,8 @@ namespace ViMG
 			}
 		}
 
+		// NOTE: OnLoad is called before Initialize.
+		// TODO: document why
 		public Entity? DeserializeEntity(World world, EntityData entData, int overrideGeneration = -1)
         {
             using var zone = TracyImpl.Tracy.BeginZone();

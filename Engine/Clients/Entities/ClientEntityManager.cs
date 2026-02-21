@@ -21,7 +21,7 @@ namespace Engine.Clients.Entities
             public bool active;
             public string entityType;
             public int entityTypeId;
-            public BasicState state;
+            public SyncedEntity state;
 
             public static EntityHolder DEFAULT = new()
             {
@@ -138,13 +138,13 @@ namespace Engine.Clients.Entities
             return entities[reference.id].generation == reference.generation;
         }
 
-        public BasicState GetByRef(ref readonly EntityManager.EntityReference reference)
+        public SyncedEntity GetByRef(ref readonly EntityManager.EntityReference reference)
         {
             if (entities[reference.id].generation != reference.generation) return new();
             else return entities[reference.id].state;
         }
 
-        public ref BasicState GetByRefPtr(ref readonly EntityManager.EntityReference reference)
+        public ref SyncedEntity GetByRefPtr(ref readonly EntityManager.EntityReference reference)
         {
 
             if (entities[reference.id].generation != reference.generation)
@@ -154,9 +154,9 @@ namespace Engine.Clients.Entities
             return ref entities[reference.id].state;
         }
 
-        public BasicState GetById(int id)
+        public SyncedEntity GetById(int id)
         {
-            if (id < 0) return new BasicState();
+            if (id < 0) return new SyncedEntity();
             return entities[id].state;
         }
 
@@ -175,7 +175,7 @@ namespace Engine.Clients.Entities
             return entities[id].entityTypeId;
         }
 
-        public void Set(ViMG.Entities.EntityManager.EntityReference reference, string type, BasicState state) 
+        public void Set(ViMG.Entities.EntityManager.EntityReference reference, string type, SyncedEntity state) 
         {
             var oldGen = entities[reference.id].generation;
             entities[reference.id] = new()

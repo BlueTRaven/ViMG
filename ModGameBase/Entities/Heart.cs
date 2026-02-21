@@ -15,7 +15,7 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0)]
-    public class Heart : Entity, IHitboxOwner, ISyncBasicState
+    public class Heart : Entity, IHitboxOwner, ISyncedEntity
     {
 		public const int MaxHealth = 20;
 
@@ -131,19 +131,14 @@ namespace ViMG.Entities
 			Health = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				health = Health,
 				timers = { [3] = invulnTimer },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

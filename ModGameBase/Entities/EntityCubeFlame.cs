@@ -12,7 +12,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(1)]
-    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner, ISyncBasicState
+    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner, ISyncedEntity
     {
         //Store time as the point in world time after which this entity will be destroyed.
         //We do it this way so that the timer technically keeps ticking even if we unload the chunk with this cube.
@@ -155,18 +155,13 @@ namespace ViMG.Entities
         {
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 timers = { [0] = time }
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

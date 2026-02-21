@@ -15,7 +15,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-	public class GlowNode : Entity, ICubeTracker, ISyncBasicState
+	public class GlowNode : Entity, ICubeTracker, ISyncedEntity
 	{
 		private float radius;
 		private float fade;
@@ -115,19 +115,14 @@ namespace ViMG.Entities
 			this.Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
 		}
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				position = Position,
 				velocity = new Vector3(color.X, color.Y, color.Z),
 				timers = { [0] = radius, [1] = fade, [2] = color.W, },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

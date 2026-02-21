@@ -19,7 +19,7 @@ namespace ViMG.Entities
 {
     [EntityMeta(0)]
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-    public class ManaStar : Entity, ISyncBasicState
+    public class ManaStar : Entity, ISyncedEntity
     {
         private static Engine.Logger Logger = Engine.Logger.InitLogger("ManaStar", true, Engine.Logger.LogLevel.Warn);
 
@@ -141,23 +141,15 @@ namespace ViMG.Entities
             //}
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 rotation = new Quaternion(yawPitch.X, yawPitch.Y, 0, 1),
                 state = (int)this.state,
                 timers = { [0] = timer, },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            yawPitch = new(state.rotation.X, state.rotation.Y);
-            timer = state.timers[0];
-            this.state = (State)state.state;
         }
     }
 }

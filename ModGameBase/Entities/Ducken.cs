@@ -15,7 +15,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
     [EntityMeta(0)]
-    public class Ducken : Entity, IHasStats, ISyncBasicState
+    public class Ducken : Entity, IHasStats, ISyncedEntity
     {
         private const int MAX_HEALTH = 8;
         private static VerySimpleMesh mesh;
@@ -78,17 +78,12 @@ namespace ViMG.Entities
             ai.Health = stats.HP;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            BasicState aiState = new BasicState();
+            SyncedEntity aiState = new SyncedEntity();
             ai?.Get(out aiState);
             aiState.position = Position;
             state = aiState;
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

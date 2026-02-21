@@ -10,6 +10,6 @@ namespace Engine.Common.Entities
 {
     public interface IGetEntity
     {
-        BasicState GetByRef(ref readonly EntityManager.EntityReference reference);
+        SyncedEntity GetByRef(ref readonly EntityManager.EntityReference reference);
     }
 }

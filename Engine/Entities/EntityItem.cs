@@ -16,7 +16,7 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
 	[EntityMeta(0)]
-	public class EntityItem : Entity, ISyncBasicState
+	public class EntityItem : Entity, ISyncedEntity
 	{
 		//public Vector3 Velocity;
 		public readonly Vector3 InitialVelocity;
@@ -119,7 +119,7 @@ namespace ViMG.Entities
 
 			SaveHelper.SaveItemInstance(saveBytes, ItemInstance);
 
-			Get(out var state);
+			GetSyncedEntity(out var state);
 			state.OnSave(saveBytes);
         }
 
@@ -130,31 +130,20 @@ namespace ViMG.Entities
             int index = 0;
 			ItemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
 
-			var state = new BasicState();
+			var state = new SyncedEntity();
 			state.OnLoad(loadBytes, ref index);
-			this.world = world;
-			if (world != null)
-				Set(ref state);
+			Position = state.position;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position,
                 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
                 rotation = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation,
 				counters = { [0] = ItemInstance.item.Id, [1] = ItemInstance.num, [2] = ItemInstance.damage },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position = state.position.ToNumerics();
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = state.velocity.ToNumerics();
-            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation = state.rotation.ToNumerics();
-
-			ItemInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(state.counters[0]), state.counters[1], state.counters[2]);
         }
     }
 }

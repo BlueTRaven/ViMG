@@ -23,7 +23,7 @@ namespace ViMG.ChunkStuff
         public ushort[] Ids;
         public Buffer<byte>[] EntityMeshingDatas;
         private int[] entityMeshingDatas2Mapping;
-        private FastList<BasicState> entityMeshingDatas2;
+        private FastList<SyncedEntity> entityMeshingDatas2;
         //public BasicState[] EntityMeshingDatas2;
 
         //Note that this represents the topleftfront of the Chunk. It does NOT include the padding.
@@ -114,7 +114,7 @@ namespace ViMG.ChunkStuff
             else return *EntityMeshingDatas[i].As<T>().Memory;
         }
 
-        public BasicState GetEntityMeshingData2(CubePosition position)
+        public SyncedEntity GetEntityMeshingData2(CubePosition position)
         {
             Util.ThreeDToOneD(new ValuePoint3D(position.X + 1, position.Y + 1, position.Z + 1), new ValuePoint3D(WHD), out int i);
             int mdi = entityMeshingDatas2Mapping[i];

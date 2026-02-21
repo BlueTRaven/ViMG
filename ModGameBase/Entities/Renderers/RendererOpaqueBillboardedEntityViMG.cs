@@ -37,7 +37,7 @@ namespace ViMG.Entities.Renderers
                 this.sourceRect = sourceRect;
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 RendererOpaqueBillboardedEntity.RenderedEntityDrawStats stats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
@@ -58,7 +58,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void OnRender(ClientStates client, ref readonly BasicState entity)
+            public override void OnRender(ClientStates client, ref readonly SyncedEntity entity)
             {
                 base.OnRender(client, in entity);
 
@@ -74,7 +74,7 @@ namespace ViMG.Entities.Renderers
                 });
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
 
@@ -95,7 +95,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 //Skeleton skeleton = (Skeleton)entity;
 
@@ -119,7 +119,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
 
@@ -140,7 +140,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 RectangleF sourceRect = new RectangleF(16, 0, 16, 32);
 
@@ -158,7 +158,7 @@ namespace ViMG.Entities.Renderers
         {
             public RenderedBigSlime() : base("slime_big", GlobalState.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -191,7 +191,7 @@ namespace ViMG.Entities.Renderers
         {
             public RenderedSlime() : base(typeof(Slime).FullName, GlobalState.Registry.EntityRegistry.Get<Slime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -222,7 +222,7 @@ namespace ViMG.Entities.Renderers
         {
             public RenderedCaveSlime() : base("slime_cave", GlobalState.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
@@ -262,7 +262,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
                 var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
@@ -301,7 +301,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
                 RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
@@ -347,7 +347,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 Vector2 scale = Vector2.One;
 
@@ -453,7 +453,7 @@ namespace ViMG.Entities.Renderers
 
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
 
@@ -477,7 +477,7 @@ namespace ViMG.Entities.Renderers
                 Material.Emissive = DrawHelper.WhitePixel;
             }
 
-            public override void OnRender(ClientStates client, ref readonly BasicState entity)
+            public override void OnRender(ClientStates client, ref readonly SyncedEntity entity)
             {
                 base.OnRender(client, in entity);
 
@@ -495,7 +495,7 @@ namespace ViMG.Entities.Renderers
                 });
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
@@ -512,7 +512,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
 
@@ -533,7 +533,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 float healthPercent = (float)entity.health / (float)Heart.MaxHealth;
 
@@ -560,7 +560,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 float t0 = (entity.aliveTime % 1.75f) / 1.75f;
                 float t1 = ((entity.aliveTime + 0.45f) % 2.05f) / 2.05f;
@@ -591,7 +591,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 Vector2 scale = Vector2.One;
 
@@ -644,7 +644,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
 
@@ -697,7 +697,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 //DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, entity.position, entity.position + Vector3.Transform(Vector3.Forward, entity.rotation) * 3, Cube.CUBE_SCALE * 0.25f, StaticMaterials.FlatColor, RectangleF.Empty, Color.White);
                 var camera = client.currInterpState.camera;
@@ -737,7 +737,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 var drawPos = entity.position - new Vector3(0, Cube.CUBE_SCALE * 1.5f, 0);
 
@@ -759,7 +759,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
                 //for (int i = 0; i < 64; i++)
@@ -788,7 +788,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 // TODO
 
@@ -818,7 +818,7 @@ namespace ViMG.Entities.Renderers
             {
             }
 
-            public override void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
                 renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {

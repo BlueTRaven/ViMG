@@ -66,7 +66,7 @@ namespace Engine.Entities.Renderers
                 var highlightedItem = inventory?.Get(extraState.highlightIndex) ?? new();
 
 
-                highlightedItem.item?.Client?.DrawInHand(device, client.Renderer, highlightedItem, entity, -BasicState.Forward(ref entity));
+                highlightedItem.item?.Client?.DrawInHand(device, client.Renderer, highlightedItem, entity, -SyncedEntity.Forward(ref entity));
 
                 Vector3 ypr = EngineMathHelper.QuaternionToYawPitchRoll(entity.rotation.ToNumerics());
 
@@ -88,7 +88,7 @@ namespace Engine.Entities.Renderers
                 client.Renderer.AddTransparentDraw(new RendererDeferred.TransparentDraw(distFromCam, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel),
                     mesh, worldMat, null, color));
 
-                var fwd = BasicState.Forward(ref entity);
+                var fwd = SyncedEntity.Forward(ref entity);
                 var lookAtResult = CubeView.Raycast(entity.position, entity.position - fwd * Player.INTERACT_DISTANCE, CubeView.RaycastCallbackTouchable, client.ChunkManager.CubeView);
 
                 float s = MathF.Sin(MathF.PI * 2f * ((float)GlobalState.Time % 2f)) * 0.5f + 0.5f;

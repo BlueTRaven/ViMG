@@ -44,7 +44,7 @@ namespace Engine.Entities
             return Activator.CreateInstance(type) as Entity;
         }
 
-        public virtual BasicState GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
+        public virtual SyncedEntity GetInterpolated(ClientStates client, EntityManager.EntityReference reference)
         {
             var prev = client.Previous(1).entities.GetByRef(ref reference);
             var prevInterp = client.prevInterpState.entities.GetByRef(ref reference);
@@ -60,7 +60,7 @@ namespace Engine.Entities
             return GetInterpolated(ref prev, ref prevInterp, ref curr, client.TimeC);
         }
 
-        protected virtual BasicState GetInterpolated(ref readonly BasicState prev, ref readonly BasicState prevInterp, ref readonly BasicState curr, double t)
+        protected virtual SyncedEntity GetInterpolated(ref readonly SyncedEntity prev, ref readonly SyncedEntity prevInterp, ref readonly SyncedEntity curr, double t)
         {
             var interp = prevInterp;
             interp.position = prevInterp.GetInterpPosition(curr, t);

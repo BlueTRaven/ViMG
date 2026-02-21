@@ -349,9 +349,9 @@ namespace ViMG.Entities
             MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void Get(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 health = Health,
                 velocity = Velocity,
@@ -360,15 +360,6 @@ namespace ViMG.Entities
                 state = (int)this.state,
                 timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Health = state.health;
-            Velocity = state.velocity;
-            this.state = (State)state.state;
-            attackTimer = state.timers[2];
-            InvulnTimer = state.timers[3];
         }
     }
 }

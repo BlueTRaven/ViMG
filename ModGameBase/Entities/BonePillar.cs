@@ -16,7 +16,7 @@ namespace ModGameBase.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
     [EntityMeta(0)]
-    public class BonePillar : Entity, IHasStats, ISyncBasicState
+    public class BonePillar : Entity, IHasStats, ISyncedEntity
     {
         private NoticeHandler<Player> noticeHandler;
         private BuffManager buffManager;
@@ -31,7 +31,7 @@ namespace ModGameBase.Entities
         {
             base.Initialize(world);
 
-            ProjectileManager.ProjectileStats stats = new() 
+            ProjectileManager.ProjectileStats stats = new()
             {
                 damage = 1,
                 knockback = 0.25f,
@@ -40,7 +40,7 @@ namespace ModGameBase.Entities
                 dieOnCollision = false,
                 collides = true,
                 gravity = true,
-                
+
                 group = HitboxManager.Group.ENEMYHOSTILE_DEAL,
                 collisionRadius = Cube.CUBE_SCALE / 4f,
                 size = Cube.CUBE_SCALE / 4f,
@@ -91,18 +91,13 @@ namespace ModGameBase.Entities
             ai.MaxHealth = stats.MaximumHP;
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
             ai.Get(out state);
             state = state with
             {
                 position = Position,
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

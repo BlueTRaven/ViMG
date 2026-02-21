@@ -17,7 +17,7 @@ namespace ViMG.Entities
 {
     [EntityMeta(0)]
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-    public class Door : Entity, IMultiCubeTracker, ISyncBasicState
+    public class Door : Entity, IMultiCubeTracker, ISyncedEntity
     {
         private static Engine.Logger Logger = Engine.Logger.InitLogger("Door", true, Engine.Logger.LogLevel.Warn);
 
@@ -235,18 +235,13 @@ namespace ViMG.Entities
             Position = TrackedPositions.ElementAt(0).InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position,
                 rotation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation,
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

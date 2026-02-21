@@ -14,7 +14,7 @@ using System.Data;
 
 namespace ViMG.Entities
 {
-    public class AIWalkerMelee : ISyncBasicState
+    public class AIWalkerMelee : ISyncedEntity
     {
         public const int VERSION = 1;
 
@@ -415,9 +415,9 @@ namespace ViMG.Entities
 			}
         }
 
-		public void Get(out BasicState state)
+		public void GetSyncedEntity(out SyncedEntity state)
         {
-			state = new BasicState
+			state = new SyncedEntity
 			{
 				health = Health,
 				velocity = Velocity,
@@ -426,15 +426,6 @@ namespace ViMG.Entities
 				state = (int)this.state,
 				timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
 			};
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			Health = state.health;
-			Velocity = state.velocity;
-			this.state = (State)state.state;
-            attackTimer = state.timers[2];
-            InvulnTimer = state.timers[3];
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Engine.Clients
 
         private MenuPlayer menuPlayer;
 
-        public ClientLocalPlayer(ref readonly EntityManager.EntityReference reference, ref readonly BasicState entity)
+        public ClientLocalPlayer(ref readonly EntityManager.EntityReference reference, ref readonly SyncedEntity entity)
         {
             CurrMovement = new PlayerMovement(reference, entity.counters[3], true);
             PrevMovement = new PlayerMovement();
@@ -48,7 +48,7 @@ namespace Engine.Clients
             GlobalState.GameStateManager.GetCurrentGameState().PushMenu(menuPlayer);
         }
 
-        public void MakeNew(ref BasicState player, PhysicsInfo physicsInfo)
+        public void MakeNew(ref SyncedEntity player, PhysicsInfo physicsInfo)
         {
             if (physicsInfo.Simulation.Bodies.BodyExists(Body))
                 physicsInfo.Simulation.Bodies.Remove(Body);

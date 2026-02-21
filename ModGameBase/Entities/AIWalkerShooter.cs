@@ -4,6 +4,7 @@ using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ModGameBase.Entities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,6 @@ namespace ViMG.Entities
 		public Vector3 Facing;
         private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-        private readonly World world;
 		private readonly bool projectileBatch;
 		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
@@ -67,13 +67,12 @@ namespace ViMG.Entities
 		private Rectangle3D bounds;
 		private int touchHitbox = -1;
 
-		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
+		public AIWalkerShooter(Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
 			int shotProjectileVisStatsId)
         {
             this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
-            this.world = world;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -85,14 +84,13 @@ namespace ViMG.Entities
 			this.bounds = hitboxBounds;
         }
 
-		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
+		public AIWalkerShooter(Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
 			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
 			ProjectileManager.ProjectileStats shotProjectileStats,
 			int shotProjectileVisStatsId)
 		{
 			this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
-            this.world = world;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -108,8 +106,9 @@ namespace ViMG.Entities
 
 		public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
 		{
-			public T entity;
-			public AIWalkerShooter ai;
+			public required World world;
+			public required T entity;
+			public required AIWalkerShooter ai;
 			public void OnUnload()
 			{
 				if (ai.touchHitbox != -1)
@@ -121,8 +120,8 @@ namespace ViMG.Entities
                 ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
-                    ai.touchHitbox = ai.world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
-				else ai.world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
+                    ai.touchHitbox = world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
+				else world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
 
 				Vector3 actualMaxVel = ai.MaxVelocity;
 
@@ -186,13 +185,13 @@ namespace ViMG.Entities
 
 								if (!ai.projectileBatch)
 								{
-                                    ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
+                                    world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
 										Vector3.Normalize(dir) * ai.ShootSpeed,
 										8, ai.shotProjectileVisStatsId, ai.shotProjectileStats));
 								}
 								else
 								{
-                                    ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
+                                    world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
 										ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats);
 								}
 
@@ -246,8 +245,8 @@ namespace ViMG.Entities
 				UpdateCollision();
 
                 var ent = this.entity;
-                if (entity.world.player.All(x => x == null || (x.Position - ent.Position).Length() > 128 * Cube.CUBE_SCALE))
-                    ai.world.EntityManager.Kill(entity);
+
+				EntityHelper.UnloadIfDistanceFromPlayers(entity);
 			}
 
 			private void UpdateCollision()
@@ -314,10 +313,11 @@ namespace ViMG.Entities
 					if (ai.Velocity.Length() > Cube.CUBE_SCALE / 4f)
 					{
 						var ai = this.ai;
-						var ray = ai.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
+						var world = this.world;
+						var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
 							(Vector3 pos) =>
 							{
-								Cube cube = ai.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+								Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 								return cube.Collision != Cube.CollisionValue.None;
 							});
@@ -329,7 +329,7 @@ namespace ViMG.Entities
 					}
 				}
 
-				foreach (T otherEntity in ai.world.EntityManager.GetAll<T>())
+				foreach (T otherEntity in world.EntityManager.GetAll<T>())
 				{
 					if (otherEntity != entity)
 					{
@@ -403,9 +403,9 @@ namespace ViMG.Entities
 			idle.OnLoad(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void Get(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 health = Health,
                 velocity = Velocity,
@@ -414,15 +414,6 @@ namespace ViMG.Entities
                 state = (int)this.state,
                 timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Health = state.health;
-            Velocity = state.velocity;
-            this.state = (State)state.state;
-            attackTimer = state.timers[2];
-            InvulnTimer = state.timers[3];
         }
     }
 }

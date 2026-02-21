@@ -16,7 +16,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(1, 0)]
-    public class Ghost : Entity, Buffs.IHasStats, ISyncBasicState
+    public class Ghost : Entity, Buffs.IHasStats, ISyncedEntity
     {
         private const int MAX_HEALTH = 30;
         //private static VerySimpleMesh mesh;
@@ -146,17 +146,12 @@ namespace ViMG.Entities
                 world.EntityManager.Kill(this);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            BasicState aiState = new();
+            SyncedEntity aiState = new();
             ai?.Get(out aiState);
             aiState.position = Position;
             state = aiState;
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -12,7 +12,7 @@ namespace ViMG.Entities
     //For cubes that don't want a fully-fledged cube entity, but want a light.
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0, 0)]
-    public class CubeLight : Entity, ICubeTracker, ISyncBasicState
+    public class CubeLight : Entity, ICubeTracker, ISyncedEntity
     {
         private CubePosition trackedPosition;
         public CubePosition TrackedPosition => trackedPosition;
@@ -83,17 +83,12 @@ namespace ViMG.Entities
             lightExtents = SaveHelper.LoadVector2(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
         }
     }
 }

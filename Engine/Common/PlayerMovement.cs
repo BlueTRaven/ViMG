@@ -100,7 +100,7 @@ namespace Engine.Common
         // What's our granularity here? 
         // Per-frame or per-sync?
         // per-sync is bad, drop lots of inputs at 20hz...
-        public void Update(ref BasicState player, double deltaTime, bool doSim = true)
+        public void Update(ref SyncedEntity player, double deltaTime, bool doSim = true)
         {
             const float MIN_NOCLIP_SPEED = Cube.CUBE_SCALE / 4f;
             const float MAX_NOCLIP_SPEED = MIN_NOCLIP_SPEED * 8;
@@ -120,8 +120,8 @@ namespace Engine.Common
                 return;
 
             var state = (Player.State)player.state;
-            Vector3 fwdYO = BasicState.ForwardYawOnly(ref player);
-            Vector3 right = BasicState.Right(ref player);
+            Vector3 fwdYO = SyncedEntity.ForwardYawOnly(ref player);
+            Vector3 right = SyncedEntity.Right(ref player);
 
             if (state == Player.State.Noclip)
             {
@@ -157,10 +157,10 @@ namespace Engine.Common
             }
         }
 
-        public void UpdateMovement(ref BasicState player, double deltaTime)
+        public void UpdateMovement(ref SyncedEntity player, double deltaTime)
         {
-            Vector3 fwdYO = BasicState.ForwardYawOnly(ref player);
-            Vector3 right = BasicState.Right(ref player);
+            Vector3 fwdYO = SyncedEntity.ForwardYawOnly(ref player);
+            Vector3 right = SyncedEntity.Right(ref player);
 
             var playerExtra = player.GetExtra<Player.PlayerExtraState>();
 
@@ -255,11 +255,11 @@ namespace Engine.Common
             player.velocity = velocity;
         }
 
-        private bool UpdateMovementWater(ref BasicState player, double deltaTime)
+        private bool UpdateMovementWater(ref SyncedEntity player, double deltaTime)
         {
             var playerExtra = player.GetExtra<Player.PlayerExtraState>();
-            Vector3 fwd = BasicState.Forward(ref player);
-            Vector3 right = BasicState.Right(ref player);
+            Vector3 fwd = SyncedEntity.Forward(ref player);
+            Vector3 right = SyncedEntity.Right(ref player);
 
             Vector3 actualMaxVel = MAX_VEL_SWIMMING;
 

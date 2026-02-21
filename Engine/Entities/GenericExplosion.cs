@@ -12,7 +12,7 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class GenericExplosion : Entity, IHitboxOwner, ISyncBasicState
+    public class GenericExplosion : Entity, IHitboxOwner, ISyncedEntity
     {
         //private VerySimpleMesh mesh;
 
@@ -96,20 +96,13 @@ namespace ViMG.Entities
         {
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 timers = { [0] = timer, [1] = radius }
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            timer = state.timers[0];
-            radius = state.timers[1];
         }
     }
 }

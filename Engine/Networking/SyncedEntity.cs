@@ -17,7 +17,7 @@ using ViMG;
 
 namespace Engine.Networking
 {
-    public struct BasicState : INetSerializable
+    public struct SyncedEntity : INetSerializable
     {
         private const int MAX_EXTRA_STATE_BYTES = 256;
         private const int MAX_EXTRA_STATE_INTS = MAX_EXTRA_STATE_BYTES / sizeof(int);
@@ -185,7 +185,7 @@ namespace Engine.Networking
             writer.Put((ReadOnlySpan<byte>)extraBytes);
         }
 
-        public uint GetDeltaBits(ref readonly BasicState prevState)
+        public uint GetDeltaBits(ref readonly SyncedEntity prevState)
         {
             Fields bits = Fields.None;
             if (position.X != prevState.position.X)
@@ -293,7 +293,7 @@ namespace Engine.Networking
         }
 
         // NOTE: even if MAX_EXTRA_STATE_BYTES != 256 (64 int chunks) right now, we still use a ulong for extra bits.
-        public ulong GetExtraBytesBits(ref readonly BasicState prevState)
+        public ulong GetExtraBytesBits(ref readonly SyncedEntity prevState)
         {
             ulong bits = 0;
             for (int i = 0; i < MAX_EXTRA_STATE_INTS; i++)
@@ -511,27 +511,27 @@ namespace Engine.Networking
             return MemoryMarshal.Cast<byte, T>(bytes)[0];
         }
 
-        public Vector3 GetInterpPosition(BasicState other, double t)
+        public Vector3 GetInterpPosition(SyncedEntity other, double t)
         {
             return Vector3.Lerp(position, other.position, (float)t);
         }
         
-        public Vector3 GetInterpVelocity(BasicState other, double t)
+        public Vector3 GetInterpVelocity(SyncedEntity other, double t)
         {
             return Vector3.Lerp(velocity, other.velocity, (float)t);
         }
 
-        public Quaternion GetInterpRotation(BasicState other, double t)
+        public Quaternion GetInterpRotation(SyncedEntity other, double t)
         {
             return Quaternion.Lerp(rotation, other.rotation, (float)t);
         }
 
-        public float GetInterpTimer(BasicState other, int timer, double t)
+        public float GetInterpTimer(SyncedEntity other, int timer, double t)
         {
             return MathHelper.Lerp(timers[timer], other.timers[timer], (float)t);
         }
 
-        public int GetInterpCounter(BasicState other, int counter, double t)
+        public int GetInterpCounter(SyncedEntity other, int counter, double t)
         {
             return (int)MathHelper.Lerp(counters[counter], other.counters[counter], (float)t);
         }
@@ -563,14 +563,14 @@ namespace Engine.Networking
                 counters[i] = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public static Vector3 Forward(ref readonly BasicState state)
+        public static Vector3 Forward(ref readonly SyncedEntity state)
         {
             Matrix mat = Matrix.CreateFromQuaternion(state.rotation);
 
             return Vector3.Transform(new Vector3(0, 0, 1), mat);
         }
 
-        public static Vector3 ForwardYawOnly(ref readonly BasicState state)
+        public static Vector3 ForwardYawOnly(ref readonly SyncedEntity state)
         {
             var newQuat = state.rotation;
             newQuat.X = 0;
@@ -583,14 +583,14 @@ namespace Engine.Networking
             return Vector3.Transform(new Vector3(0, 0, 1), mat);
         }
 
-        public static Vector3 Up(ref readonly BasicState state)
+        public static Vector3 Up(ref readonly SyncedEntity state)
         {
             Matrix mat = Matrix.CreateFromQuaternion(state.rotation);
 
             return Vector3.Transform(new Vector3(0, 1, 0), mat);
         }
 
-        public static Vector3 Right(ref readonly BasicState state)
+        public static Vector3 Right(ref readonly SyncedEntity state)
         {
             Matrix mat = Matrix.CreateFromQuaternion(state.rotation);
 

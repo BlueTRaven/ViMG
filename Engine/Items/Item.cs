@@ -228,13 +228,13 @@ namespace ViMG.Items
             return Material.Value;
         }
 
-        public virtual void StartHold(ClientStates client, BasicState player, Inventory inventory, int index) { }
+        public virtual void StartHold(ClientStates client, SyncedEntity player, Inventory inventory, int index) { }
 
-        public virtual void EndHold(ClientStates client, BasicState player, Inventory inventory, int newIndex) { }
+        public virtual void EndHold(ClientStates client, SyncedEntity player, Inventory inventory, int newIndex) { }
 
-        public virtual void Hold(ClientStates client, BasicState player, Inventory inventory, int index) { }
+        public virtual void Hold(ClientStates client, SyncedEntity player, Inventory inventory, int index) { }
 
-        public void DrawInHand(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, BasicState player, Vector3 facing)
+        public void DrawInHand(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, SyncedEntity player, Vector3 facing)
         {
             float widthScale = 1;
             float heightScale = 1;

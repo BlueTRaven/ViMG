@@ -16,7 +16,7 @@ namespace ModGameBase.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
     [EntityMeta(0)]
-    public class SkeletonBonePile : Entity, IHasStats, ISyncBasicState
+    public class SkeletonBonePile : Entity, IHasStats, ISyncedEntity
     {
         private CubePosition? trackBoneBlockPosition;
         private float resurrectTimer;
@@ -110,7 +110,7 @@ namespace ModGameBase.Entities
         {
             base.OnSave(saveBytes);
 
-            Get(out var state);
+            GetSyncedEntity(out var state);
             state.OnSave(saveBytes);
 
             ai?.OnSave(saveBytes);
@@ -121,28 +121,23 @@ namespace ModGameBase.Entities
             base.OnLoad(world, loadBytes, version);
 
             int index = 0;
-            var bs = new BasicState();
+            var bs = new SyncedEntity();
             bs.OnLoad(loadBytes, ref index);
-            Set(ref bs);
+            Position = bs.position;
+            ai.Velocity = bs.velocity;
+            ai.Health = bs.health;
 
             ai?.OnLoad(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            BasicState aiState = new BasicState();
-            ai?.Get(out aiState);
+            SyncedEntity aiState = new SyncedEntity();
+            ai?.GetSyncedEntity(out aiState);
             aiState.timers[1] = resurrectTimer;
             aiState.position = Position;
             aiState.rotation = Quaternion.Identity;
             state = aiState;
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-
-            ai?.Set(in state);
         }
 
         private bool SearchForNearbyBoneBlocks()

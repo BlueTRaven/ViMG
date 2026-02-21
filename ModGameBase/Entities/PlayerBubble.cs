@@ -14,7 +14,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
     [EntityMeta(0)]
-    public class PlayerBubble : Entity, IHitboxOwner, ISyncBasicState
+    public class PlayerBubble : Entity, IHitboxOwner, ISyncedEntity
     {
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("bubble");
@@ -83,19 +83,14 @@ namespace ViMG.Entities
             }
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 timers = { [0] = explodingTime },
                 counters = { [0] = exploding ? 1 : 0 }
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0)]
-    public class EntityShrine : Entity, ICubeTracker, ISyncBasicState
+    public class EntityShrine : Entity, ICubeTracker, ISyncedEntity
     {
         public struct MeshingData
         {
@@ -109,19 +109,13 @@ namespace ViMG.Entities
             return md.As<byte>();
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
                 timers = { [0] = cooldownTimer },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Position = state.position;
-            cooldownTimer = state.timers[0];
         }
     }
 }

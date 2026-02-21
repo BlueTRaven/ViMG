@@ -18,7 +18,7 @@ namespace ViMG.Entities
 {
     [EntityMeta(0)]
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-    public class TestNPC : Entity, ISyncBasicState
+    public class TestNPC : Entity, ISyncedEntity
     {
         private static string firstTimeRightClick = "Well, I'll be. Someone came to save me.\r\n" +
             "I'm soaked to the bone and exhausted. You wouldn't happen to have a place to stay, " +
@@ -212,17 +212,12 @@ namespace ViMG.Entities
             Position = SaveHelper.LoadVector3(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 position = Position,
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

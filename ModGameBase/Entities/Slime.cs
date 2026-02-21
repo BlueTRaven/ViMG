@@ -3,6 +3,7 @@ using Engine;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D11;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
 	[EntityMeta(0)]
-    public class Slime : Entity, IHasStats, ISyncBasicState
+    public class Slime : Entity, IHasStats, ISyncedEntity
 	{
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
@@ -106,7 +107,7 @@ namespace ViMG.Entities
         {
             base.OnSave(saveBytes);
 
-            Get(out var state);
+            GetSyncedEntity(out var state);
             state.OnSave(saveBytes);
 
             ai?.OnSave(saveBytes);
@@ -118,28 +119,22 @@ namespace ViMG.Entities
             base.OnLoad(world, loadBytes, version);
 
             int index = 0;
-            var bs = new BasicState();
+            var bs = new SyncedEntity();
             bs.OnLoad(loadBytes, ref index);
-            Set(ref bs);
+			Position = bs.position;
+			ai.Velocity = bs.velocity;
+			ai.Health = bs.health;
 
             ai?.OnLoad(loadBytes, ref index);
             maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void GetSyncedEntity(out SyncedEntity state)
         {
-			BasicState aiState = new BasicState();
-			ai?.Get(out aiState);
+			SyncedEntity aiState = new SyncedEntity();
+			ai?.GetSyncedEntity(out aiState);
 			aiState.position = Position;
-			aiState.rotation = Quaternion.Identity;
 			state = aiState;
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-			Position = state.position;
-
-			ai?.Set(in state);
         }
     }
 }

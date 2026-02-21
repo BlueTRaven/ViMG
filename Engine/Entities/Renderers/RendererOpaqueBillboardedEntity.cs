@@ -59,9 +59,9 @@ namespace ViMG.Entities.Renderers
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
-            public virtual void OnRender(ClientStates client, ref readonly BasicState entity) { }
+            public virtual void OnRender(ClientStates client, ref readonly SyncedEntity entity) { }
 
-            public virtual void GetDrawStats(ClientStates client, ref readonly BasicState entity, FastList<RenderedEntityDrawStats> renderedEntity) { }
+            public virtual void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RenderedEntityDrawStats> renderedEntity) { }
         }
 
         public ObjRegistry<RenderedEntity> registry;

@@ -377,9 +377,9 @@ namespace ModGameBase.Entities
             MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
         }
 
-        public void Get(out BasicState state)
+        public void Get(out SyncedEntity state)
         {
-            state = new BasicState
+            state = new SyncedEntity
             {
                 health = Health,
                 velocity = Velocity,
@@ -388,15 +388,6 @@ namespace ModGameBase.Entities
                 state = (int)this.state,
                 timers = { [2] = attackTimer, [3] = InvulnTimer },
             };
-        }
-
-        public void Set(ref readonly BasicState state)
-        {
-            Health = state.health;
-            Velocity = state.velocity;
-            this.state = (State)state.state;
-            attackTimer = state.timers[2];
-            InvulnTimer = state.timers[3];
         }
     }
 }

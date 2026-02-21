@@ -1,4 +1,5 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
 using Engine.Common;
 using Microsoft.Xna.Framework;
 using SharpDX.MediaFoundation;
@@ -14,6 +15,18 @@ namespace ViMG.Entities
 {
     public static class EntityHelper
     {
+        public static bool UnloadIfDistanceFromPlayers(Entity entity, float distance = 128 * Cube.CUBE_SCALE)
+        {
+            if (entity.world.player.All(x => x == null || (x.Position - entity.Position).Length() > distance))
+            {
+                entity.world.EntityManager.Unload(entity);
+                return true;
+            }
+
+            return false;
+        }
+
+
         public static bool DieIfDaytime(Entity entity)
         {
             if (entity.world.IsDay())
