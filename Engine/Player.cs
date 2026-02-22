@@ -548,24 +548,13 @@ namespace ViMG
 			accessoryInventory?.ProcessEventsServer(this);
 			heldInventory?.ProcessEventsServer(this);
 
-			if (IsLocalPlayer)
+			// Check to make sure we're still alive
+			// This is the case if our playerIndex is present in the netPlayer array
+			if (GlobalState.GameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
 			{
-				//if (Main.inputManager.JustPressed(Keys.G))
-				//{
-				//	if (state == State.Noclip)
-				//		state = State.Normal;
-				//	else state = State.Noclip;
-				//}
-			}
-			else
-			{
-				// Check to make sure we're still alive
-				// This is the case if our playerIndex is present in the netPlayer array
-				if (GlobalState.GameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
-				{
-					world.EntityManager.Kill(this);
-					return;
-				}
+				Logger.Warn("Kill player id {0} {1} - disconnect desync", playerIndex, Id);
+				world.EntityManager.Kill(this);
+				return;
 			}
 
 			var bh = world.PhysicsInfo.Simulation.Bodies[physicsHandle];

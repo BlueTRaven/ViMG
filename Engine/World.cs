@@ -257,8 +257,6 @@ namespace ViMG
 			}
 			PlayerRespawnedEvent.Clear();
 
-			SyncPlayerInputs.Instance.Apply(alive, player);
-
 			Logic.Update(this, deltaTime);
 
 			if (GlobalState.ENABLE_RANDOM_UPDATES)

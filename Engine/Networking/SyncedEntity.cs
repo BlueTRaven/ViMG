@@ -19,7 +19,7 @@ namespace Engine.Networking
 {
     public struct SyncedEntity : INetSerializable
     {
-        private const int MAX_EXTRA_STATE_BYTES = 256;
+        private const int MAX_EXTRA_STATE_BYTES = 128;
         private const int MAX_EXTRA_STATE_INTS = MAX_EXTRA_STATE_BYTES / sizeof(int);
 
         [Flags]
@@ -29,15 +29,18 @@ namespace Engine.Networking
             PosX = 1 << 0,
             PosY = 1 << 1,
             PosZ = 1 << 2,
+            AnyPosition = PosX | PosY | PosZ,
             
             RotX = 1 << 3,
             RotY = 1 << 4,
             RotZ = 1 << 5,
             RotW = 1 << 6,
+            AnyRotation = RotX | RotY | RotZ | RotW,
             
             VelX = 1 << 7,
             VelY = 1 << 8,
             VelZ = 1 << 9,
+            AnyVelocity = VelX | VelY | VelZ,
 
             Health = 1 << 10,
             State = 1 << 11,
@@ -46,11 +49,13 @@ namespace Engine.Networking
             Timer1 = 1 << 13,
             Timer2 = 1 << 14,
             Timer3 = 1 << 15,
+            AnyTimer = Timer0 | Timer1 | Timer2 | Timer3,
 
             Counter0 = 1 << 16,
             Counter1 = 1 << 17,
             Counter2 = 1 << 18,
             Counter3 = 1 << 19,
+            AnyCounter = Counter0 | Counter1 | Counter2 | Counter3,
 
             ExtraFields = 1 << 20,
         }

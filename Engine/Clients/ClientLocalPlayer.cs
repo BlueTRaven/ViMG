@@ -1,4 +1,5 @@
 ﻿using BepuPhysics;
+using BepuPhysics.Constraints;
 using Engine.Common;
 using Engine.Networking;
 using Engine.Networking.Messages;
@@ -20,6 +21,8 @@ namespace Engine.Clients
 {
     public class ClientLocalPlayer
     {
+        private static Logger Logger = Logger.InitLogger("ClientLocalPlayer", true, Logger.LogLevel.Info);
+
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
         public BodyHandle Body;
@@ -33,7 +36,7 @@ namespace Engine.Clients
         public ClientLocalPlayer(ref readonly EntityManager.EntityReference reference, ref readonly SyncedEntity entity)
         {
             CurrMovement = new PlayerMovement(reference, entity.counters[3], true);
-            PrevMovement = new PlayerMovement();
+            PrevMovement = new PlayerMovement(reference, entity.counters[3], true);
             Body = new(); // invalid
             ContactChecker = new ContactChecker();
             currMS = Main.inputManager.currentMouseState;
@@ -54,6 +57,11 @@ namespace Engine.Clients
                 physicsInfo.Simulation.Bodies.Remove(Body);
 
             (Body, _) = CurrMovement.MakeBody(player.position, physicsInfo);
+        }
+
+        public void Set(ref SyncedEntity player)
+        {
+
         }
 
         public void Unload(PhysicsInfo physicsInfo)
@@ -143,10 +151,18 @@ namespace Engine.Clients
                 }
 
                 PrevMovement = CurrMovement;
-                ref var localPlayer = ref current.entities.GetByRefPtr(localPlayerRef);
+                ref var localPlayer = ref current.entities.GetByRefPtr(ref localPlayerRef);
                 var extra = localPlayer.GetExtra<Player.PlayerExtraState>();
                 extra.highlightIndex = current.highlightIndex;
+
                 CurrMovement.Update(ref localPlayer, deltaTime);
+
+                client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear = localPlayer.velocity.ToNumerics();
+                if (localPlayer.velocity.Length() > 0 && !client.PhysicsInfo.Simulation.Bodies[Body].Awake)
+                    client.PhysicsInfo.Simulation.Awakener.AwakenBody(Body);
+                localPlayer.position = client.PhysicsInfo.Simulation.Bodies[Body].Pose.Position + Player.BODY_OFFSET;
+
+                client.Current().camera.Position = localPlayer.position;
 
                 if (menuPlayer == null)
                 {

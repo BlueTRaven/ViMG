@@ -358,6 +358,7 @@ namespace ViMG
             //world.Draw(GraphicsDevice, CubeLitEffect);
             IMGUIEntIODebug.Show();
             IMGUINetworkDebug.Show();
+			IMGUIClientEntityInspector.Show();
 			Engine.Logger.DoImgui();
 
             //Renderer.Draw(batch);
@@ -423,6 +424,7 @@ namespace ViMG
 						ImGui.MenuItem("Settings Menu", (string)null, ref IMGUISettings.Show);
 						ImGui.MenuItem("Debug Info Menu", (string)null, ref IMGUISettings.ShowDebugInfo);
 						ImGui.MenuItem("Console", (string)null, ref Options.ShowConsole);
+						ImGui.MenuItem("Log Settings", (string)null, ref Engine.Logger.ShowLogSettings);
                         ImGui.EndMenu();
 					}
 					

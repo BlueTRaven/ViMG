@@ -39,7 +39,7 @@ namespace Engine.Networking.Messages
         private struct QueuedInput
         {
             public byte playerIndex;
-            public double time;
+            public DateTime time;
             public InputTypes inputs;
             public int highlightIndex;
             public Quaternion rotation;
@@ -47,31 +47,21 @@ namespace Engine.Networking.Messages
             public bool hasMenuOpen;
         }
 
-        private List<QueuedInput> queued1 = new List<QueuedInput>();
-        private List<QueuedInput> queued2 = new List<QueuedInput>();
-        private List<QueuedInput> queued;
-
         public SyncPlayerInputs()
         {
-            //Passthrough = true;
             Instance = this;
-
-            queued = queued1;
         }
 
         public override void SendMessage(NetworkMessage netMessage, object? addData)
         {
             base.SendMessage(netMessage, addData);
-            netMessage.deliveryMethod = DeliveryMethod.ReliableOrdered;
+            netMessage.deliveryMethod = DeliveryMethod.Unreliable;
             netMessage.channel = (int)NetworkMessage.Channels.Inputs;
 
             var currentInputs = GS.GetClient().LocalPlayer?.CurrMovement ?? new();
             var localPlayerRef = GS.GetClient().Current().entities.GetLocalPlayerRef();
             var localPlayer = GS.GetClient().Current().entities.GetByRef(localPlayerRef);
-            //var player = GS.GetWorld().GetLocalPlayer();
-            //if (player == null || player.TimeInitialized == 0) return;
-
-            //currentInputs.GetInputBitSet(GS.GetClient().PrevMovement);
+            
             InputTypes inputTypes = InputTypes.None;
             if (currentInputs.Jump.Pressed()) inputTypes |= InputTypes.Jump;
             if (currentInputs.LeftClick.Pressed()) inputTypes |= InputTypes.LeftClick;
@@ -84,8 +74,7 @@ namespace Engine.Networking.Messages
             if (currentInputs.Run.Pressed())  inputTypes |= InputTypes.Run;
             if (currentInputs.Throw.Pressed()) inputTypes |= InputTypes.Throw;
 
-            netMessage.writer.Put(GS.GetClient().currInterpState.time);
-            netMessage.writer.Put(Main.Frame);
+            netMessage.writer.Put(DateTime.Now.Ticks);
             netMessage.writer.Put(GS.GetClient().Current().highlightIndex);
             netMessage.writer.Put(localPlayer.rotation.X);
             netMessage.writer.Put(localPlayer.rotation.Y);
@@ -104,10 +93,9 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
-            double time = reader.GetDouble();
-            int frame = reader.GetInt();
-            //Console.WriteLine("Receive with time: {0:.02} (our time: {1:.02} delta {2:.02})", time, GlobalState.Time + NetworkManager.TIME_TRAVEL_DELAY, time - (GlobalState.Time + NetworkManager.TIME_TRAVEL_DELAY));
-            //Console.WriteLine("Frame: {0} (our frame: {1} delta {2})", frame, Main.Frame, frame - Main.Frame);
+            long time = reader.GetLong();
+            DateTime now = new DateTime(time);
+
             int highlightIndex = reader.GetInt();
             Quaternion rotation = Quaternion.Identity;
             rotation.X = reader.GetFloat();
@@ -131,46 +119,14 @@ namespace Engine.Networking.Messages
                 {
                     inputs = inp,
                     playerIndex = whoami,
-                    time = time,
+                    time = now,
                     highlightIndex = highlightIndex,
                     rotation = rotation,
                     position = position,
                 };
                 
-                //if (GlobalState.gameStateManager.netMode == ViMG.GameStates.GameStateManager.NetworkingMode.Server)
-                    DoAction(qaction, GS.GetWorld().player);
-                //else queued.Add(qaction);
+                DoAction(qaction, GS.GetWorld().player);
             }
-        }
-
-        //private static double t = 0;
-        public void Apply(double time, Player?[] players)
-        {
-            var otherBuffer = queued == queued1 ? queued2 : queued1;
-
-            //if (GlobalState.Time - t > 1)
-            //{
-            //    t = GlobalState.Time;
-
-            //    Console.WriteLine("{0}", int.Max(queued1.Count, queued2.Count));
-            //}
-
-            //queued.OrderBy(x => x.time);
-
-            foreach (QueuedInput qinput in queued)
-            {
-                if (time >= qinput.time)
-                {
-                    DoAction(qinput, players);
-                }
-                else
-                {
-                    otherBuffer.Add(qinput);
-                }
-            }
-
-            queued.Clear();
-            queued = otherBuffer;
         }
 
         private void DoAction(QueuedInput qinput, Player[] players)

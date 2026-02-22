@@ -455,11 +455,12 @@ namespace Engine.Networking.Messages
 
                     var typeName = GlobalState.Registry.EntityRegistry.Get((int)typeId)?.Identifier;
                     Logger.Log(Logger.LogLevel.Info, "recv ent {0} {1}", reference.id, typeName);
-                    //Console.WriteLine("Recv {0} {1}", reference.id, typeName);
                     if (typeName != null)
                     {
+                        // If entity is player
                         if (typeId == playerTypeId)
                         {
+                            // If player is the local player
                             if (state.counters[3] == client.LocalPlayerIndex)
                             {
                                 if (client.Current().entities.IsActive(ref reference) && client.LocalPlayer != null)
@@ -468,11 +469,9 @@ namespace Engine.Networking.Messages
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
                                     ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
                                     // Always keep client's rotation
+                                    state.position = player.position;
                                     state.rotation = player.rotation;
-                                    player = state;
-                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Pose.Position = state.position.ToNumerics();
-                                    client.ChunkManager.PhysicsInfo.Simulation.Bodies[client.LocalPlayer.Body].Velocity.Linear = state.velocity.ToNumerics();
-                                    client.Current().camera.Position = state.position;
+                                    client.Current().entities.Set(reference, typeName, state);
                                 }
                                 else
                                 {
@@ -481,10 +480,11 @@ namespace Engine.Networking.Messages
                                     client.LocalPlayer = new Clients.ClientLocalPlayer(ref reference, ref state);
                                     client.LocalPlayer.MakeNew(ref state, client.ChunkManager.PhysicsInfo);
                                     client.Current().camera.Rotation = state.rotation;
+                                    client.Current().camera.Position = state.position;
                                 }
                             }
-                            else
-                                client.Current().entities.Set(reference, typeName, state);
+                            else client.Current().entities.Set(reference, typeName, state);
+
                             client.Current().entities.AddPlayer(reference, state.counters[2], state.counters[3]);
                         } 
                         else

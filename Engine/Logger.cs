@@ -4,6 +4,7 @@ using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.IMGUIImpl;
@@ -217,6 +218,36 @@ namespace Engine
 
             sbuilder = new StringBuilder();
             totalLog = new List<string>(512);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Debug(string format, params object?[] args)
+        {
+            Log(LogLevel.Debug, format, args);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Info(string format, params object?[] args)
+        {
+            Log(LogLevel.Info, format, args);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Warn(string format, params object?[] args)
+        {
+            Log(LogLevel.Warn, format, args);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Error(string format, params object?[] args)
+        {
+            Log(LogLevel.Error, format, args);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Fatal(string format, params object?[] args)
+        {
+            Log(LogLevel.Fatal, format, args);
         }
 
         public void Log(LogLevel level, string format, params object?[] args)

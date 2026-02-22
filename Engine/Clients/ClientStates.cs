@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG;
@@ -56,7 +57,7 @@ namespace Engine.Clients
         //public LightManager LightManager;
         public LightManager2 LightManager;
         private LightsRenderer lightRenderer;
-        private PhysicsInfo physicsInfo;
+        public PhysicsInfo PhysicsInfo;
         public ClientChatManager ChatManager;
 
         public RendererDeferred Renderer;
@@ -89,19 +90,20 @@ namespace Engine.Clients
 
             this.device = device;
 
-            physicsInfo = new PhysicsInfo();
+            PhysicsInfo = new PhysicsInfo();
 
-            ChunkManager = new ClientChunkManager(device, physicsInfo);
+            ChunkManager = new ClientChunkManager(device, PhysicsInfo);
 
             states = new ClientWorld[ViMG.Entities.EntityManager.EntPrevSrv];
             for (int i = 0; i < states.Length; i++)
             {
                 states[i] = new ClientWorld();
             }
+
+            Logger.Log(Logger.LogLevel.Info, "Entities size: {0} bytes", Marshal.SizeOf<SyncedEntity>() * EntityManager.EntMax * EntityManager.EntPrevSrv);
+
             currInterpState = new ClientWorld();
             prevInterpState = new ClientWorld();
-
-            //InterpCamera = new CameraPerspective(states[0].camera.Position, states[0].camera.RotationEuler, states[0].camera.Scale, Main.FOV_DEGREES, Main.NEAR, Main.FAR);
 
             inventoryManager = new ClientInventoryManager();
 
@@ -111,7 +113,6 @@ namespace Engine.Clients
 
             ChatManager = new ClientChatManager(device, new Vector2(8, Options.CurrentWindowResolution.Y - 256), GlobalState.GameStateManager.TheIsland.netManagerClient!);
 
-            //LightManager = new LightManager(device);
             LightManager = new LightManager2();
             lightRenderer = new LightsRenderer(device);
 
@@ -176,7 +177,7 @@ namespace Engine.Clients
 
             ChunkManager.PhysicsInfo.Simulation.Timestep((float)deltaTime);
             ChunkManager.CubeProgressTracker.Update(ChunkManager.CubeView, deltaTime);
-
+             
             WorldLogic.UpdateSimulation(deltaTime, this);
 
             var current = Current();

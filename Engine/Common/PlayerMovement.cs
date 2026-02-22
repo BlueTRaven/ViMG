@@ -37,7 +37,7 @@ namespace Engine.Common
         [ConsoleCommandVar("sv_max_vel", "maximum player velocity")]
         public static Vector3 MAX_VEL = Cube.CUBE_SCALE * new Vector3(3.2f, 17, 3.2f);
 
-
+        public readonly bool IsLocal;
         public bool valid;
         public PlayerInput MoveLeft;
         public PlayerInput MoveRight;
@@ -55,6 +55,7 @@ namespace Engine.Common
 
         public PlayerMovement(EntityManager.EntityReference reference, int playerIndex, bool isLocal)
         {
+            IsLocal = isLocal;
             valid = true;
             if (isLocal)
             {
@@ -194,6 +195,10 @@ namespace Engine.Common
                 Vector3 toAddToVelocity = Vector3.Zero;
                 if (MoveForward.Pressed())
                 {
+                    if(IsLocal)
+                    {
+                        Console.Write("");
+                    }
                     toAddToVelocity -= Vector3.Normalize(fwdYO) * actualAcceleration;
                     movementPressed = true;
                 }
