@@ -20,6 +20,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ViMG;
+using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Entities.Renderers;
 using ViMG.IMGUIImpl;
@@ -468,9 +469,26 @@ namespace Engine.Networking.Messages
                                     // Update player
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
                                     ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
-                                    // Always keep client's rotation
-                                    state.position = player.position;
+                                    bool keepLocalPosition = true;
+
+                                    if (((Networking.SyncedEntity.Fields)bits & Networking.SyncedEntity.Fields.AnyPosition) != Networking.SyncedEntity.Fields.None)
+                                    {
+                                        Vector3 dist = player.position - state.position;
+                                        if (dist.Length() > Cube.CUBE_SCALE)
+                                        {
+                                            Logger.Warn("Player {0} position desync by {1}", client.LocalPlayerIndex, dist.Length());
+                                            keepLocalPosition = false;
+                                        }
+                                    } 
+
                                     state.rotation = player.rotation;
+                                    if (keepLocalPosition)
+                                        state.position = player.position;
+                                    else
+                                    {
+                                        client.LocalPlayer.SyncBodyWith(ref state, client.PhysicsInfo);
+                                    }
+                                    // Always keep client's rotation
                                     client.Current().entities.Set(reference, typeName, state);
                                 }
                                 else

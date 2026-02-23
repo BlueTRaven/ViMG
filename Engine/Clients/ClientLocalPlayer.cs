@@ -59,9 +59,11 @@ namespace Engine.Clients
             (Body, _) = CurrMovement.MakeBody(player.position, physicsInfo);
         }
 
-        public void Set(ref SyncedEntity player)
+        public void SyncBodyWith(ref readonly SyncedEntity player, PhysicsInfo physicsInfo)
         {
-
+            physicsInfo.Simulation.Bodies[Body].Pose.Position = (player.position - Player.BODY_OFFSET).ToNumerics();
+            physicsInfo.Simulation.Bodies[Body].Velocity.Linear = player.velocity.ToNumerics();
+            physicsInfo.Simulation.Bodies[Body].Pose.Orientation = player.rotation.ToNumerics();
         }
 
         public void Unload(PhysicsInfo physicsInfo)
@@ -155,6 +157,7 @@ namespace Engine.Clients
                 var extra = localPlayer.GetExtra<Player.PlayerExtraState>();
                 extra.highlightIndex = current.highlightIndex;
 
+                localPlayer.velocity = client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear;
                 CurrMovement.Update(ref localPlayer, deltaTime);
 
                 client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear = localPlayer.velocity.ToNumerics();

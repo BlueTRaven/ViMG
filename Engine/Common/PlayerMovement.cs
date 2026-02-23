@@ -91,7 +91,7 @@ namespace Engine.Common
             var physicsShapeIndex = physicsInfo.Simulation.Shapes.Add(physicsShape);
 
             var handle = physicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
-                new RigidPose(position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
+                new RigidPose((position + Player.BODY_OFFSET).ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
 
             physicsInfo.Properties[handle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
@@ -195,10 +195,6 @@ namespace Engine.Common
                 Vector3 toAddToVelocity = Vector3.Zero;
                 if (MoveForward.Pressed())
                 {
-                    if(IsLocal)
-                    {
-                        Console.Write("");
-                    }
                     toAddToVelocity -= Vector3.Normalize(fwdYO) * actualAcceleration;
                     movementPressed = true;
                 }
@@ -255,6 +251,11 @@ namespace Engine.Common
                 {
                     velocity += toAddToVelocity;
                 }
+            }
+
+            if (velocity.Y > Cube.CUBE_SCALE * 3.2f && !Jump.Pressed())
+            {
+                velocity.Y = Cube.CUBE_SCALE * 3.2f;
             }
 
             player.velocity = velocity;

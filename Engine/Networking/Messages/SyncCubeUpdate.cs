@@ -123,7 +123,7 @@ namespace Engine.Networking.Messages
                     ChunkPosition cpos = ChunkPosition.CubeChunk(update.position);
                     cpos += new ChunkPosition(point.x - 1, point.y - 1, point.z - 1);
                     if (chunkManager.IsInWorldBounds(cpos))
-                        chunkManager.ChunkMesher.RenderMesher?.MarkDirty(cpos);
+                        chunkManager.ChunkMesher.MarkChunkDirty(cpos);
                 }
             }
         }

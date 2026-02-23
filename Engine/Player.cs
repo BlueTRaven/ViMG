@@ -34,9 +34,6 @@ namespace ViMG
 	{
         private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Warn);
 
-		private static bool god;
-		
-
         private struct HitboxToSpawnLater
         {
             public int inventorySlot;
@@ -521,6 +518,7 @@ namespace ViMG
 
         public override void Update(double deltaTime)
 		{
+			
 			GetSyncedEntity(out var get);
 			CurrMovement.Update(ref get, deltaTime);
 			//Position = get.position;
@@ -623,7 +621,7 @@ namespace ViMG
 				{
 					if (inRope)
 					{
-						UpdateMovementRope(deltaTime);
+						// TODO
 					}
 					else
 					{
@@ -886,155 +884,15 @@ namespace ViMG
 			buffManager.Update(deltaTime, ref stats);
 		}
 
-		private void UpdateMovementRope(double deltaTime)
-        {
-			/*Vector3 actualMaxVel = MaxVelocity;
-
-			bool movementPressed = false;
-			Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-
-			if (inputLockupTimer <= 0 && world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer && !menuPlayer.IsOpened)
-			{
-				actualMaxVel *= new Vector3(1 + stats.Speed, 1, 1 + stats.Speed);
-
-				float actualAcceleration = moveSpeed + stats.Acceleration;
-
-				if (Main.inputManager.IsPressed(Keys.W))
-				{
-					Velocity -= Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.S))
-				{
-					Velocity += Vector3.Normalize(Main.camera.ForwardYawOnly) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.A))
-				{
-					Velocity -= Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-				if (Main.inputManager.IsPressed(Keys.D))
-				{
-					Velocity += Vector3.Normalize(Main.camera.Right) * actualAcceleration;
-					movementPressed = true;
-				}
-
-				if (Main.inputManager.IsPressed(Keys.Space))
-                {
-					Velocity.Y -= World.GRAVITY;
-					movementPressed = true;
-                }
-
-				if (Main.inputManager.IsPressed(Keys.LeftControl))
-                {
-					Velocity.Y += World.GRAVITY;
-					movementPressed = true;
-				}
-
-				Vector2 clampXY = new Vector2(actualMaxVel.X, actualMaxVel.Z);
-				velXY = new Vector2(Velocity.X, Velocity.Z);
-
-				if (velXY.Length() > clampXY.Length())
-				{
-					velXY.Normalize();
-					velXY *= clampXY.Length();
-				}
-
-				if (world.GameStateManager.GetCurrentGameState().GetCurrentMenu() == menuPlayer &&
-					!menuPlayer.IsOpened && itemUseCooldownTimer <= 0 && (useTimer <= 0 ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton) ||
-					Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton)))
-				{
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.LeftButton))
-					{
-						if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.LeftClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-
-					if (Main.inputManager.IsPressed(A1r.Input.MouseInput.RightButton))
-					{
-						var tracker = world.EntityManager.GetEntityTrackingPosition(LookAtPos);
-						if (tracker.HasValue() && tracker.Get().OnInteract(this))
-							PerformAction();
-						else if (inventory.Get(menuPlayer.HighlightIndex).item != null && inventory.Get(menuPlayer.HighlightIndex).item.RightClick(this, inventory, menuPlayer.HighlightIndex, -Main.camera.Forward, out itemUseCooldownTimer))
-							PerformAction();
-					}
-				}
-
-				if (Main.inputManager.JustPressed(Keys.Q))
-				{
-					if (inventory.Get(menuPlayer.HighlightIndex).valid)
-					{
-						int num = 1;
-						if (Main.inputManager.IsPressed(Keys.LeftControl))
-							num = inventory.Get(menuPlayer.HighlightIndex).num;
-
-						ThrowItem(inventory, menuPlayer.HighlightIndex, num);
-					}
-				}
-			}
-
-			if (!movementPressed)
-			{
-				if (velXY.Length() > 0)
-				{
-					float decel = Cube.CUBE_SCALE / 2f;
-
-					if (!onGround)
-						decel = Cube.CUBE_SCALE / 8f;
-
-					velXY = Vector2.Normalize(velXY) * MathF.Max(velXY.Length() - decel, 0);
-				}
-
-				if (MathF.Abs(Velocity.Y) > 0)
-                {
-					float decel = Cube.CUBE_SCALE / 2f;
-					float signedDecel = decel * -MathF.Sign(Velocity.Y);
-
-					if (MathF.Abs(Velocity.Y) - decel < 0)
-						Velocity.Y = 0;
-					else Velocity.Y += signedDecel;
-                }
-			}
-
-			Velocity = new Vector3(velXY.X, Velocity.Y, velXY.Y);
-
-			if (Velocity.Length() > float.Epsilon)
-				hasMoved = true;
-
-			if (Velocity.Y < -actualMaxVel.Y)
-				Velocity.Y = -actualMaxVel.Y;
-			if (Velocity.Y > actualMaxVel.Y / 4f)
-				Velocity.Y = actualMaxVel.Y / 4f;*/
-		}
-
 		private void UpdateMovementWater(double deltaTime)
 		{
-			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear;
+            if (IsInControl)
+            {
+                UpdateJump();
 
-            if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
-			{
-				hasMoved = true;
-				if (!contactChecker.OnGround)
-				{
-					stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
-
-					currentJumps--;
-				}
-				else
-				{
-					velocity.Y = JumpSpeed + stats.JumpSpeed;
-				}
-			}
-
-			if (velocity.Length() > float.Epsilon)
-				hasMoved = true;
-
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
-
-			UpdatePerformAction();
-		}
+                UpdatePerformAction();
+            }
+        }
 
 		private void UpdateMovementNoclip(double deltaTime)
 		{
@@ -1056,65 +914,39 @@ namespace ViMG
 
 		private void UpdateMovement(double deltaTime)
 		{
-			bool movementPressed = false;
-			//Vector2 velXY = new Vector2(Velocity.X, Velocity.Z);
-			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear;
-
 			if (IsInControl)
 			{
-				if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
-				{
-					hasMoved = true;
-					if (!contactChecker.OnGround)
-					{
-						stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
-
-						currentJumps--;
-					}
-					else
-					{
-						velocity.Y = JumpSpeed + stats.JumpSpeed;
-					}
-				}
+				UpdateJump();
 
 				UpdatePerformAction();
 			}
 
-			if (movementPressed || velocity.Length() > float.Epsilon)
-			{
-				hasMoved = true;
-				Facing = Vector3.Normalize(velocity);
-			}
+            //UpdateMaybeDash(deltaTime);
+        }
 
-			if (velocity.Y > Cube.CUBE_SCALE * 3.2f && !CurrMovement.Jump.Pressed())
-			{
-				velocity.Y = Cube.CUBE_SCALE * 3.2f;
-			}
+		private void UpdateJump()
+		{
+			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear;
+            if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
+            {
+                hasMoved = true;
+                if (!contactChecker.OnGround)
+                {
+                    stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
 
-			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Dynamics.Motion.Velocity.Linear = velocity.ToNumerics();
+                    currentJumps--;
+                }
+                else
+                {
+                    velocity.Y = JumpSpeed + stats.JumpSpeed;
+                }
+            }
 
-			//UpdateMaybeDash(deltaTime);
+            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear = velocity.ToNumerics();
 
-			DEBUGTimeSkipHeldTime += (float)deltaTime;
+        }
 
-			//if (Main.inputManager.JustPressed(Keys.T))
-			//{
-			//	DEBUGTimeSkipHeldTime = 0;
-			//	world.TimeScale = 2f;
-			//}
-
-			//if (Main.inputManager.JustReleased(Keys.T))
-			//{
-			//	world.TimeScale = 1f;
-
-			//	if (DEBUGTimeSkipHeldTime <= 0.25f)
-			//		world.AddTime(World.DAY_CYCLE_TIME * 0.25f);
-
-			//	DEBUGTimeSkipHeldTime = 0;
-			//}
-		}
-
-		private void UpdatePerformAction()
+        private void UpdatePerformAction()
 		{
 			var inventory = world.InventoryManager.Get(this.inventory);
 
