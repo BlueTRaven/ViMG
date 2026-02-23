@@ -52,6 +52,7 @@ namespace Engine.Common
         public PlayerInput RightClick;
         public PlayerInput Throw;
 
+        public int currentJumps;
         private ContactChecker contactChecker;
 
         public EntityManager.EntityReference playerReference;
@@ -224,13 +225,23 @@ namespace Engine.Common
                     toAddToVelocity += Vector3.Normalize(right) * actualAcceleration;
                     movementPressed = true;
                 }
-                // TODO contact checker
-                if (contactChecker.OnGround && Jump.JustPressed(prevMovement.Jump))
+
+                if (contactChecker.OnGround)
                 {
-                    velocity.Y = Player.JUMP_SPEED + stats.JumpSpeed;
+                    currentJumps = stats.JumpNum;
+                    if (Jump.JustPressed(prevMovement.Jump))
+                    {
+                        velocity.Y = Player.JUMP_SPEED + stats.JumpSpeed;
+                    }
+                } 
+                else if (currentJumps > 0) 
+                {
+                    stats.JumpEffects[stats.JumpNum - currentJumps].DoJumpCommon(Player.JUMP_SPEED + stats.JumpSpeed, ref velocity);
+
+                    currentJumps--;
                 }
 
-                Vector2 velXZ = new Vector2(velocity.X, velocity.Z);
+                    Vector2 velXZ = new Vector2(velocity.X, velocity.Z);
                 float maxVelXZ = new Vector2(actualMaxVel.X, actualMaxVel.Z).Length();
 
                 if (velXZ.Length() > maxVelXZ)

@@ -119,7 +119,6 @@ namespace ViMG
 
 		private TypedIndex physicsShapeIndex;
 		private BodyHandle physicsHandle;
-		private ContactChecker contactChecker;
 
 		private Rectangle3D Bounds => new Rectangle3D(Position + new Vector3(-Cube.CUBE_SCALE * 0.85f / 2f, -Cube.CUBE_SCALE * 2f, -Cube.CUBE_SCALE * 0.85f / 2f),
 			new Vector3(Cube.CUBE_SCALE * 0.85f, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 0.85f));
@@ -351,13 +350,6 @@ namespace ViMG
             CurrMovement = new PlayerMovement(world.EntityManager.GetReference(this), playerIndex, false);
 
 			(physicsHandle, physicsShapeIndex) = CurrMovement.MakeBody(Position, world.PhysicsInfo);
-			contactChecker = new ContactChecker();
-   //         var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
-			//physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
-			//physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
-			//	new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
-
-			//world.PhysicsInfo.Properties[physicsHandle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
 			//If we loaded the time of day, set the world's time of day to it.
 			if (loadedTimeOfDay > 0)
@@ -590,8 +582,6 @@ namespace ViMG
 					state = State.Normal;
 			}
 
-            contactChecker.Update(world.PhysicsInfo, physicsHandle);
-
 			if (world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear.Length() > float.Epsilon)
 				hasMoved = true;
 
@@ -803,8 +793,6 @@ namespace ViMG
 		{
             if (IsInControl)
             {
-                UpdateJump();
-
                 UpdatePerformAction();
             }
         }
@@ -831,29 +819,10 @@ namespace ViMG
 		{
 			if (IsInControl)
 			{
-				UpdateJump();
-
 				UpdatePerformAction();
 			}
 
             //UpdateMaybeDash(deltaTime);
-        }
-
-		private void UpdateJump()
-		{
-			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear;
-            if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
-            {
-                if (!contactChecker.OnGround)
-                {
-                    stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JUMP_SPEED + stats.JumpSpeed, ref velocity);
-
-                    currentJumps--;
-                }
-            }
-
-            world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear = velocity.ToNumerics();
-
         }
 
         private void UpdatePerformAction()

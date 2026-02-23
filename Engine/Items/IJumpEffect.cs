@@ -9,7 +9,8 @@ namespace ViMG.Items
 {
     public interface IJumpEffect
     {
-        void DoJump(Player player, float jumpSpeed, ref Vector3 velocity);
+        void DoJumpCommon(float jumpSpeed, ref Vector3 velocity);
+        void DoJumpServer(Player player, float jumpSpeed, ref Vector3 velocity);
     }
 
     public class DefaultJumpEffect : IJumpEffect
@@ -26,9 +27,13 @@ namespace ViMG.Items
             }
         }
 
-        public void DoJump(Player player, float jumpSpeed, ref Vector3 velocity)
+        public void DoJumpCommon(float jumpSpeed, ref Vector3 velocity)
         {
             velocity.Y = jumpSpeed;
+        }
+
+        public void DoJumpServer(Player player, float jumpSpeed, ref Vector3 velocity)
+        {
         }
     }
 
@@ -46,9 +51,18 @@ namespace ViMG.Items
             }
         }
 
-        public void DoJump(Player player, float jumpSpeed, ref Vector3 velocity)
+        public void DoJumpCommon(Player player, float jumpSpeed, ref Vector3 velocity)
         {
             velocity.Y = jumpSpeed * 8;
+        }
+
+        public void DoJumpCommon(float jumpSpeed, ref Vector3 velocity)
+        {
+            velocity.Y = jumpSpeed * 8;
+        }
+
+        public void DoJumpServer(Player player, float jumpSpeed, ref Vector3 velocity)
+        {
         }
     }
 }
