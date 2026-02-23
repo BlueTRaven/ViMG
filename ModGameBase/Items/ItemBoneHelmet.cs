@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,7 +18,7 @@ namespace ViMG.Items
         {
             public static SetBonusBoneArmor Instance = new SetBonusBoneArmor();
 
-            public override void AccumulateStats(Player player, ref Player.AccumulatedStats stats)
+            public override void AccumulateStats(Player player, ref PlayerAccumulatedStats stats)
             {
                 base.AccumulateStats(player, ref stats);
 
@@ -44,7 +45,7 @@ namespace ViMG.Items
             return new ClientItemBoneHelmet(this);
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

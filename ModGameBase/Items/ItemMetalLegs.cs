@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,10 +16,10 @@ namespace ViMG.Items
     {
         private readonly string material;
         private readonly Color color;
-        private readonly Player.AccumulatedStats stats;
+        private readonly PlayerAccumulatedStats stats;
         private readonly SetBonus setBonus;
 
-        public ItemMetalLegs(string material, Color color, Player.AccumulatedStats stats, SetBonus setBonus) : base("legs_" + material)
+        public ItemMetalLegs(string material, Color color, PlayerAccumulatedStats stats, SetBonus setBonus) : base("legs_" + material)
         {
             this.material = char.ToUpper(material[0]) + material.Substring(1);
             this.color = color;
@@ -37,7 +38,7 @@ namespace ViMG.Items
             return material + " Leggings";
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

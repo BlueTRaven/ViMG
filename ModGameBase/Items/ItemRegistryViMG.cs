@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Entities;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +21,13 @@ namespace ViMG.Items
             Color colorBone = new Color(191, 191, 139);
             Color colorOldIron = new Color(104, 76, 84);
 
-            SetBonusMaterial setBonusIron = new SetBonusMaterial("iron", new Player.AccumulatedStats() { DefenseFlat = 3 });
-            SetBonusMaterial setBonusTin = new SetBonusMaterial("tin", new Player.AccumulatedStats() { DefenseFlat = 1 });
-            SetBonusMaterial setBonusCopper = new SetBonusMaterial("copper", new Player.AccumulatedStats() { DefenseFlat = 1 });
-            SetBonusMaterial setBonusBronze = new SetBonusMaterial("bronze", new Player.AccumulatedStats() { DefenseFlat = 2 });
+            SetBonusMaterial setBonusIron = new SetBonusMaterial("iron", new PlayerAccumulatedStats() { DefenseFlat = 3 });
+            SetBonusMaterial setBonusTin = new SetBonusMaterial("tin", new PlayerAccumulatedStats() { DefenseFlat = 1 });
+            SetBonusMaterial setBonusCopper = new SetBonusMaterial("copper", new PlayerAccumulatedStats() { DefenseFlat = 1 });
+            SetBonusMaterial setBonusBronze = new SetBonusMaterial("bronze", new PlayerAccumulatedStats() { DefenseFlat = 2 });
 
-            SetBonusMaterial setBonusBone = new SetBonusMaterial("bone", new Player.AccumulatedStats() { MeleeAtkScale = 0.05f });
-            SetBonusMaterial setBonusOldIron = new SetBonusMaterial("oldiron", new Player.AccumulatedStats() { RangeAtkScale = 0.15f });
+            SetBonusMaterial setBonusBone = new SetBonusMaterial("bone", new PlayerAccumulatedStats() { MeleeAtkScale = 0.05f });
+            SetBonusMaterial setBonusOldIron = new SetBonusMaterial("oldiron", new PlayerAccumulatedStats() { RangeAtkScale = 0.15f });
 
             Register(new ItemSwordBase());
             Register(new ItemPickaxeBase());
@@ -91,18 +92,18 @@ namespace ViMG.Items
             Register(new ItemInfusedBone());
             Register(new ItemString());
             Register(new ItemLantern());
-            Register(new ItemMetalHelmet("iron", colorIron, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusIron));
-            Register(new ItemMetalChestplate("iron", colorIron, new Player.AccumulatedStats() { DefenseFlat = 3 }, setBonusIron));
-            Register(new ItemMetalLegs("iron", colorIron, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusIron));
-            Register(new ItemMetalHelmet("tin", colorTin, new Player.AccumulatedStats() { DefenseFlat = 1 }, setBonusTin));
-            Register(new ItemMetalChestplate("tin", colorTin, new Player.AccumulatedStats() { DefenseFlat = 1 }, setBonusTin));
-            Register(new ItemMetalLegs("tin", colorTin, new Player.AccumulatedStats() { DefenseFlat = 0 }, setBonusTin));
-            Register(new ItemMetalHelmet("copper", colorCopper, new Player.AccumulatedStats() { DefenseFlat = 1 }, setBonusCopper));
-            Register(new ItemMetalChestplate("copper", colorCopper, new Player.AccumulatedStats() { DefenseFlat = 1 }, setBonusCopper));
-            Register(new ItemMetalLegs("copper", colorCopper, new Player.AccumulatedStats() { DefenseFlat = 0 }, setBonusCopper));
-            Register(new ItemMetalHelmet("bronze", colorBronze, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
-            Register(new ItemMetalChestplate("bronze", colorBronze, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
-            Register(new ItemMetalLegs("bronze", colorBronze, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
+            Register(new ItemMetalHelmet("iron", colorIron, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusIron));
+            Register(new ItemMetalChestplate("iron", colorIron, new PlayerAccumulatedStats() { DefenseFlat = 3 }, setBonusIron));
+            Register(new ItemMetalLegs("iron", colorIron, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusIron));
+            Register(new ItemMetalHelmet("tin", colorTin, new PlayerAccumulatedStats() { DefenseFlat = 1 }, setBonusTin));
+            Register(new ItemMetalChestplate("tin", colorTin, new PlayerAccumulatedStats() { DefenseFlat = 1 }, setBonusTin));
+            Register(new ItemMetalLegs("tin", colorTin, new PlayerAccumulatedStats() { DefenseFlat = 0 }, setBonusTin));
+            Register(new ItemMetalHelmet("copper", colorCopper, new PlayerAccumulatedStats() { DefenseFlat = 1 }, setBonusCopper));
+            Register(new ItemMetalChestplate("copper", colorCopper, new PlayerAccumulatedStats() { DefenseFlat = 1 }, setBonusCopper));
+            Register(new ItemMetalLegs("copper", colorCopper, new PlayerAccumulatedStats() { DefenseFlat = 0 }, setBonusCopper));
+            Register(new ItemMetalHelmet("bronze", colorBronze, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
+            Register(new ItemMetalChestplate("bronze", colorBronze, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
+            Register(new ItemMetalLegs("bronze", colorBronze, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusBronze));
             Register(new ItemTinderbox());
             Register(new ItemBookOfEmber());
             Register(new ItemBoneHelmet());
@@ -145,9 +146,9 @@ namespace ViMG.Items
             Register(new ItemCoin("bronze", 10, new BrUtility.RectangleF(128 + 16, 0, 16, 16)));
             Register(new ItemCoin("silver", 100, new BrUtility.RectangleF(128 + 32, 0, 16, 16)));
             Register(new ItemCoin("gold", 1000, new BrUtility.RectangleF(128 + 48, 0, 16, 16)));
-            Register(new ItemMetalHelmet("oldiron", colorOldIron, new Player.AccumulatedStats() { RangeAtkScale = 0.05f, DefenseFlat = 0 }, setBonusOldIron));
-            Register(new ItemMetalChestplate("oldiron", colorOldIron, new Player.AccumulatedStats() { RangeAtkScale = 0.02f, DefenseFlat = 2 }, setBonusOldIron));
-            Register(new ItemMetalLegs("oldiron", colorOldIron, new Player.AccumulatedStats() { DefenseFlat = 2 }, setBonusOldIron));
+            Register(new ItemMetalHelmet("oldiron", colorOldIron, new PlayerAccumulatedStats() { RangeAtkScale = 0.05f, DefenseFlat = 0 }, setBonusOldIron));
+            Register(new ItemMetalChestplate("oldiron", colorOldIron, new PlayerAccumulatedStats() { RangeAtkScale = 0.02f, DefenseFlat = 2 }, setBonusOldIron));
+            Register(new ItemMetalLegs("oldiron", colorOldIron, new PlayerAccumulatedStats() { DefenseFlat = 2 }, setBonusOldIron));
             Register(new ItemSwingTest());
             Register(new ItemLoreIsland1());
             Register(new ItemBread());

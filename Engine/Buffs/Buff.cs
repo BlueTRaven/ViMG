@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -79,7 +80,7 @@ namespace ViMG.Buffs
 
         }
 
-        public virtual void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public virtual void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref PlayerAccumulatedStats stats)
         {
             buffInstance.duration -= (float)deltaTime;
             buffInstance.tickInterval -= (float)deltaTime;
@@ -97,7 +98,7 @@ namespace ViMG.Buffs
             }
         }
 
-        public virtual void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public virtual void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref PlayerAccumulatedStats stats)
         {
 
         }

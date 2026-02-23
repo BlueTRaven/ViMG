@@ -3,6 +3,7 @@ using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.Constraints;
 using Engine.Entities;
+using Engine.Items;
 using Engine.Networking;
 using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
@@ -17,7 +18,9 @@ using ViMG.Buffs;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.IMGUIImpl;
+using ViMG.Items;
 using ViMG.Physics;
+using static ViMG.Player;
 
 namespace Engine.Common
 {
@@ -49,6 +52,8 @@ namespace Engine.Common
         public PlayerInput LeftClick;
         public PlayerInput RightClick;
         public PlayerInput Throw;
+
+        private ContactChecker contactChecker;
 
         public EntityManager.EntityReference playerReference;
         public int playerIndex;
@@ -83,6 +88,8 @@ namespace Engine.Common
                 RightClick = PlayerInput.NonLocalInput(MouseInput.RightButton, true);
                 Throw = PlayerInput.NonLocalInput(Keys.Q, false);
             }
+
+            contactChecker = new ContactChecker();
         }
 
         public (BodyHandle, TypedIndex) MakeBody(Vector3 position, PhysicsInfo physicsInfo)
@@ -101,7 +108,7 @@ namespace Engine.Common
         // What's our granularity here? 
         // Per-frame or per-sync?
         // per-sync is bad, drop lots of inputs at 20hz...
-        public void Update(ref SyncedEntity player, double deltaTime, bool doSim = true)
+        public void Update(ref readonly PlayerMovement prevMovement, ref SyncedEntity player, double deltaTime, bool doSim = true)
         {
             const float MIN_NOCLIP_SPEED = Cube.CUBE_SCALE / 4f;
             const float MAX_NOCLIP_SPEED = MIN_NOCLIP_SPEED * 8;
@@ -150,15 +157,15 @@ namespace Engine.Common
             }
             else if (state == Player.State.Normal)
             {
-                UpdateMovement(ref player, deltaTime);
+                UpdateMovement(in prevMovement, ref player, deltaTime);
             }
             else if (state == Player.State.Attack)
             {
-                UpdateMovement(ref player, deltaTime);
+                UpdateMovement(in prevMovement, ref player, deltaTime);
             }
         }
 
-        public void UpdateMovement(ref SyncedEntity player, double deltaTime)
+        public void UpdateMovement(ref readonly PlayerMovement prevMovement, ref SyncedEntity player, double deltaTime)
         {
             Vector3 fwdYO = SyncedEntity.ForwardYawOnly(ref player);
             Vector3 right = SyncedEntity.Right(ref player);
@@ -214,20 +221,10 @@ namespace Engine.Common
                     movementPressed = true;
                 }
                 // TODO contact checker
-                //if ((contactChecker.OnGround || currentJumps > 0) && Jump.JustPressed(prevJump))
-                //{
-                //    hasMoved = true;
-                //    if (!contactChecker.OnGround)
-                //    {
-                //        stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
-
-                //        currentJumps--;
-                //    }
-                //    else
-                //    {
-                //        velocity.Y = JumpSpeed + stats.JumpSpeed;
-                //    }
-                //}
+                if (contactChecker.OnGround && Jump.JustPressed(prevMovement.Jump))
+                {
+                    //velocity.Y = JumpSpeed + stats.JumpSpeed;
+                }
 
                 Vector2 velXZ = new Vector2(velocity.X, velocity.Z);
                 float maxVelXZ = new Vector2(actualMaxVel.X, actualMaxVel.Z).Length();

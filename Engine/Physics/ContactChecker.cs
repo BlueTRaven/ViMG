@@ -10,7 +10,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Physics
 {
-    public class ContactChecker
+    public struct ContactChecker
     {
         public bool WasOnGround;
         public bool OnGround;

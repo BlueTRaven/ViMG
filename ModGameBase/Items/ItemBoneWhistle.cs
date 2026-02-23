@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine;
+using Engine.Entities;
 using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -28,7 +29,7 @@ namespace ViMG.Items
             return new ClientItem(this, new RectangleF(80, 80, 16, 16));
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

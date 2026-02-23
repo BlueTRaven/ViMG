@@ -158,7 +158,7 @@ namespace Engine.Clients
                 extra.highlightIndex = current.highlightIndex;
 
                 localPlayer.velocity = client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear;
-                CurrMovement.Update(ref localPlayer, deltaTime);
+                CurrMovement.Update(ref PrevMovement, ref localPlayer, deltaTime);
 
                 client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear = localPlayer.velocity.ToNumerics();
                 if (localPlayer.velocity.Length() > 0 && !client.PhysicsInfo.Simulation.Bodies[Body].Awake)

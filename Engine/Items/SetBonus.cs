@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ namespace ViMG.Items
             public int Count;
         }
 
-        public virtual void AccumulateStats(Player player, ref Player.AccumulatedStats stats)
+        public virtual void AccumulateStats(Player player, ref PlayerAccumulatedStats stats)
         {
 
         }
@@ -28,15 +29,15 @@ namespace ViMG.Items
     public class SetBonusMaterial : SetBonus
     {
         private readonly string material;
-        private readonly Player.AccumulatedStats stats;
+        private readonly PlayerAccumulatedStats stats;
 
-        public SetBonusMaterial(string material, Player.AccumulatedStats stats)
+        public SetBonusMaterial(string material, PlayerAccumulatedStats stats)
         {
             this.material = material;
             this.stats = stats;
         }
 
-        public override void AccumulateStats(Player player, ref Player.AccumulatedStats stats)
+        public override void AccumulateStats(Player player, ref PlayerAccumulatedStats stats)
         {
             base.AccumulateStats(player, ref stats);
 

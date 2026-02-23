@@ -1,6 +1,7 @@
 ﻿using BrUtility;
 using Engine;
 using Engine.Clients;
+using Engine.Entities;
 using Engine.Items;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
@@ -193,7 +194,7 @@ namespace ViMG.Items
 
 		public virtual void Hold(Player player, Inventory inventory, int index) { }
 
-		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus) { }
+		public virtual void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus) { }
 
 		public virtual void OnAttack(Player player, Inventory inventory, int index) { }
 

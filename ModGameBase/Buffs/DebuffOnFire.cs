@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine;
+using Engine.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace ViMG.Buffs
             else stats.HP -= 1;
         }
 
-        public override void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref PlayerAccumulatedStats stats)
         {
             base.Tick(deltaTime, manager, player, ref buffInstance, ref stats);
             

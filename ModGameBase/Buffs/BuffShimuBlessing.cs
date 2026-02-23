@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,7 @@ namespace ViMG.Buffs
             Tags.Add("emissive_ores");
         }
 
-        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Update(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref PlayerAccumulatedStats stats)
         {
             base.Update(deltaTime, manager, player, ref buffInstance, ref stats);
 
