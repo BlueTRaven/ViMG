@@ -1,5 +1,6 @@
 ﻿using Engine.Clients.Entities;
 using Engine.Common;
+using Engine.Entities;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace Engine.Clients
         public ClientProjectileManager projectiles;
         public WorldFlags flags;
         public Camera camera;
+
+        public PlayerAccumulatedStats localPlayerStats;
 
         public double time;
         public int sequence;
@@ -38,6 +41,7 @@ namespace Engine.Clients
             camera.Scale = prev.camera.Scale;
             highlightIndex = prev.highlightIndex;
             flags.Flags = prev.flags.Flags;
+            localPlayerStats = prev.localPlayerStats;
 
             double delta = time - prev.time;
             

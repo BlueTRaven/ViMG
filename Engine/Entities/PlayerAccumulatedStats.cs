@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LiteNetLib.Utils;
+using SharpDX.Direct2D1.Effects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +9,7 @@ using ViMG.Items;
 
 namespace Engine.Entities
 {
-    public struct PlayerAccumulatedStats
+    public struct PlayerAccumulatedStats : INetSerializable
     {
         public float HPScale;           //% hp increase.
         public int HPFlat;          //flat hp increase. Applied AFTER, unmodified by scale.
@@ -51,6 +53,74 @@ namespace Engine.Entities
                 return;
 
             JumpEffects[currentJumpEffectIndex++] = effect;
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+            HPScale = reader.GetFloat();
+            HPFlat = reader.GetInt();
+            MPScale = reader.GetFloat();
+            MPFlat = reader.GetInt();
+            HPRegenTime = reader.GetFloat();
+            HPRegenAmt = reader.GetInt();
+            MPRegenTime = reader.GetFloat();
+            MPRegenAmt = reader.GetInt();
+            MeleeAtkScale = reader.GetFloat();
+            RangeAtkScale = reader.GetFloat();
+            MagicAtkScale = reader.GetFloat();
+            MeleeAtkFlat = reader.GetFloat();
+            RangeAtkFlat = reader.GetFloat();
+            MagicAtkFlat = reader.GetFloat();
+            MeleeSpdScale = reader.GetFloat();
+            RangeSpdScale = reader.GetFloat();
+            MagicSpdScale = reader.GetFloat();
+            MiningScale = reader.GetFloat();
+            DefenseScale = reader.GetFloat();
+            DefenseFlat = reader.GetInt();
+            KnockbackResist = reader.GetFloat();
+            Speed = reader.GetFloat();
+            RunSpeed = reader.GetFloat();
+            Acceleration = reader.GetFloat();
+            JumpSpeed = reader.GetFloat();
+            JumpNum = reader.GetInt();
+            InvulnTime = reader.GetFloat();
+            UseSpeed = reader.GetFloat();
+            DashNum = reader.GetInt();
+            DashSpeed = reader.GetFloat();
+        }
+
+        public void Serialize(NetDataWriter writer)
+        {
+            writer.Put(HPScale);
+            writer.Put(HPFlat);
+            writer.Put(MPScale);
+            writer.Put(MPFlat);
+            writer.Put(HPRegenTime);
+            writer.Put(HPRegenAmt);
+            writer.Put(MPRegenTime);
+            writer.Put(MPRegenAmt);
+            writer.Put(MeleeAtkScale);
+            writer.Put(RangeAtkScale);
+            writer.Put(MagicAtkScale);
+            writer.Put(MeleeAtkFlat);
+            writer.Put(RangeAtkFlat);
+            writer.Put(MagicAtkFlat);
+            writer.Put(MeleeSpdScale);
+            writer.Put(RangeSpdScale);
+            writer.Put(MagicSpdScale);
+            writer.Put(MiningScale);
+            writer.Put(DefenseScale);
+            writer.Put(DefenseFlat);
+            writer.Put(KnockbackResist);
+            writer.Put(Speed);
+            writer.Put(RunSpeed);
+            writer.Put(Acceleration);
+            writer.Put(JumpSpeed);
+            writer.Put(JumpNum);
+            writer.Put(InvulnTime);
+            writer.Put(UseSpeed);
+            writer.Put(DashNum);
+            writer.Put(DashSpeed);
         }
 
         public static PlayerAccumulatedStats operator +(PlayerAccumulatedStats a, PlayerAccumulatedStats b)

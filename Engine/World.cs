@@ -210,6 +210,7 @@ namespace ViMG
 				InventoryManager.UpdateNetwork(player);
 				SyncProjectile.Instance.DoSend();
 				SyncCubeAction.Instance.DoSend();
+				SyncPlayerStats.Instance.SendMessage(this);
 				lastSyncTime = alive;
 			}
 

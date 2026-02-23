@@ -433,7 +433,7 @@ namespace ViMG
         public override void Update(double deltaTime)
 		{
 			GetSyncedEntity(out var get);
-			CurrMovement.Update(ref PrevMovement, ref get, deltaTime);
+			CurrMovement.Update(ref GetStats(), ref PrevMovement, ref get, deltaTime);
 			//Position = get.position;
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity = get.velocity.ToNumerics();
 

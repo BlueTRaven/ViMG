@@ -45,6 +45,7 @@ namespace Engine.Networking.Messages
             Register(new SyncConsoleOutput());
             Register(new SyncChatMessageClient());
             Register(new SyncChatMessageServer());
+            Register(new SyncPlayerStats());
         }
 
         public override void Register(Message obj)

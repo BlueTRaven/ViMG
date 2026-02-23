@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Engine.Entities;
+using LiteNetLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +11,8 @@ namespace Engine.Networking.Messages
 {
     public class SyncPlayerStats : Message
     {
-        public SyncPlayerStats Instance;
+        public static Logger Logger = Logger.InitLogger("SyncPlayerStats", true, Logger.LogLevel.Info);
+        public static SyncPlayerStats Instance;
         public override NetworkManager.NetworkSide SendableFrom => NetworkManager.NetworkSide.Server;
 
         public SyncPlayerStats()
@@ -25,8 +28,7 @@ namespace Engine.Networking.Messages
 
                 if (player != null)
                 {
-                    GS.netManagerServer?.SendMessageToPeer(Instance, GS.netManagerServer.GetPeer(player.playerIndex), null);
-                    var accumulatedStats = player.GetStats();
+                    GS.netManagerServer?.SendMessageToPeer(Instance, GS.netManagerServer.GetPeer(player.playerIndex), player.GetStats());
                 }
             }
         }
@@ -37,7 +39,26 @@ namespace Engine.Networking.Messages
 
             netMessage.deliveryMethod = LiteNetLib.DeliveryMethod.ReliableUnordered;
 
-            
+            var accumulatedStats = addData as PlayerAccumulatedStats? ?? throw new Exception();
+
+            netMessage.writer.Put(SyncWorldState.Instance.ServerSequence);
+            netMessage.writer.Put(accumulatedStats);
+        }
+
+        public override void ReceiveMessage(NetPacketReader reader, NetPeer peer)
+        {
+            base.ReceiveMessage(reader, peer);
+
+            int sequence = reader.GetInt();
+            if (sequence < SyncWorldState.Instance.ClientSequence)
+            {
+                Logger.Warn("SyncPlayerStats arrived old");
+                return;
+            }
+
+            var stats = reader.Get<PlayerAccumulatedStats>();
+
+            GS.GetClient().Current().localPlayerStats = stats;
         }
     }
 }
