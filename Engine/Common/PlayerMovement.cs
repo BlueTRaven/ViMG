@@ -20,7 +20,6 @@ using ViMG.Entities;
 using ViMG.IMGUIImpl;
 using ViMG.Items;
 using ViMG.Physics;
-using static ViMG.Player;
 
 namespace Engine.Common
 {
@@ -103,6 +102,11 @@ namespace Engine.Common
             physicsInfo.Properties[handle] = new PhysicsProperties(new SubgroupCollisionFilter(FilterGroups.GROUP_PLAYER, 0), 1f);
 
             return (handle, physicsShapeIndex);
+        }
+
+        public void UpdateBody(PhysicsInfo physicsInfo, BodyHandle bodyHandle)
+        {
+            contactChecker.Update(physicsInfo, bodyHandle);
         }
 
         // What's our granularity here? 
@@ -223,7 +227,7 @@ namespace Engine.Common
                 // TODO contact checker
                 if (contactChecker.OnGround && Jump.JustPressed(prevMovement.Jump))
                 {
-                    //velocity.Y = JumpSpeed + stats.JumpSpeed;
+                    velocity.Y = Player.JUMP_SPEED + stats.JumpSpeed;
                 }
 
                 Vector2 velXZ = new Vector2(velocity.X, velocity.Z);

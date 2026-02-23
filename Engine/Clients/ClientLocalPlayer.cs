@@ -159,6 +159,7 @@ namespace Engine.Clients
 
                 localPlayer.velocity = client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear;
                 CurrMovement.Update(ref current.localPlayerStats, ref PrevMovement, ref localPlayer, deltaTime);
+                CurrMovement.UpdateBody(client.PhysicsInfo, Body);
 
                 client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear = localPlayer.velocity.ToNumerics();
                 if (localPlayer.velocity.Length() > 0 && !client.PhysicsInfo.Simulation.Bodies[Body].Awake)

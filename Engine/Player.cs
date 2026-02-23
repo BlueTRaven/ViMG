@@ -87,6 +87,8 @@ namespace ViMG
 
 		public static Vector3 BODY_OFFSET = new Vector3(0, Cube.CUBE_SCALE * 0.6f, 0);
 
+        public const float JUMP_SPEED = 10f * Cube.CUBE_SCALE;
+
         public CubePosition SpawnPosition;
 		private float loadedTimeOfDay = -1;
 
@@ -100,7 +102,6 @@ namespace ViMG
 		private const float FALL_HEIGHT_FATAL = Cube.CUBE_SCALE * 18;
 
 		private int currentJumps;
-		public float JumpSpeed = 10f * Cube.CUBE_SCALE;
 		public bool IsRunning;
 
 		private MouseState currentMS;
@@ -434,6 +435,7 @@ namespace ViMG
 		{
 			GetSyncedEntity(out var get);
 			CurrMovement.Update(ref GetStats(), ref PrevMovement, ref get, deltaTime);
+			CurrMovement.UpdateBody(world.PhysicsInfo, physicsHandle);
 			//Position = get.position;
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity = get.velocity.ToNumerics();
 
@@ -842,16 +844,11 @@ namespace ViMG
 			Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Velocity.Linear;
             if ((contactChecker.OnGround || currentJumps > 0) && CurrMovement.Jump.JustPressed(PrevMovement.Jump))
             {
-                hasMoved = true;
                 if (!contactChecker.OnGround)
                 {
-                    stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JumpSpeed + stats.JumpSpeed, ref velocity);
+                    stats.JumpEffects[stats.JumpNum - currentJumps].DoJump(this, JUMP_SPEED + stats.JumpSpeed, ref velocity);
 
                     currentJumps--;
-                }
-                else
-                {
-                    velocity.Y = JumpSpeed + stats.JumpSpeed;
                 }
             }
 
