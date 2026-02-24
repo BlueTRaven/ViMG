@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Remove="bepuphysics2\**" />
     <Compile Remove="BrUtility\**" />
+    <Compile Remove="EngineTests\**" />
     <Compile Remove="Engine\**" />
     <Compile Remove="GenerateWorld\**" />
     <Compile Remove="Hexa.NET.ImGui\**" />
@@ -29,6 +30,7 @@
     <Compile Remove="ViMGHeadless\**" />
     <EmbeddedResource Remove="bepuphysics2\**" />
     <EmbeddedResource Remove="BrUtility\**" />
+    <EmbeddedResource Remove="EngineTests\**" />
     <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="GenerateWorld\**" />
     <EmbeddedResource Remove="Hexa.NET.ImGui\**" />
@@ -40,6 +42,7 @@
     <EmbeddedResource Remove="ViMGHeadless\**" />
     <None Remove="bepuphysics2\**" />
     <None Remove="BrUtility\**" />
+    <None Remove="EngineTests\**" />
     <None Remove="Engine\**" />
     <None Remove="GenerateWorld\**" />
     <None Remove="Hexa.NET.ImGui\**" />
