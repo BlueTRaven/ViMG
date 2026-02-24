@@ -153,10 +153,8 @@ namespace Engine.Networking
             health = reader.GetInt();
             state = reader.GetInt();
 
-            var timersA = reader.GetArray<float>(sizeof(byte));
-            for (int i = 0; i < 4; i++) timers[i] = timersA[i];
-            var countersA = reader.GetArray<int>(sizeof(byte));
-            for (int i = 0; i < 4; i++) counters[i] = countersA[i];
+            for (int i = 0; i < 4; i++) timers[i] = reader.GetFloat();
+            for (int i = 0; i < 4; i++) counters[i] = reader.GetInt();
 
             if (version >= 2)
             {
@@ -182,10 +180,8 @@ namespace Engine.Networking
             writer.Put(health);
             writer.Put(state);
 
-            Span<float> t = timers;
-            writer.PutSpan(t);
-            Span<int> i = counters;
-            writer.PutSpan(i);
+            for (int i = 0; i < 4; i++) writer.Put(timers[i]);
+            for (int i = 0; i < 4; i++) writer.Put(counters[i]);
 
             writer.Put((ReadOnlySpan<byte>)extraBytes);
         }
