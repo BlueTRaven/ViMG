@@ -68,6 +68,8 @@ namespace Engine.Networking
             Both = Client | Server
         };
 
+        private List<NetPeer> peersCache = new(4);
+
         private bool isServer;
         public bool IsServer => isServer;
         public bool IsClient => !isServer;
@@ -377,7 +379,8 @@ namespace Engine.Networking
         {
             if (player.peerId == -1) return null;
 
-            foreach (var peer in netManager.ConnectedPeerList)
+            netManager.GetConnectedPeers(peersCache);
+            foreach (var peer in peersCache)
             {
                 if (peer.Id == player.peerId)
                 {
@@ -390,7 +393,8 @@ namespace Engine.Networking
 
         public NetPeer? GetPeer(int playerId)
         {
-            foreach (var peer in netManager.ConnectedPeerList)
+            netManager.GetConnectedPeers(peersCache);
+            foreach (var peer in peersCache)
             {
                 if (peer.Id == netPlayers[playerId].peerId)
                 {
