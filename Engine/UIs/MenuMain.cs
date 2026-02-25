@@ -280,8 +280,8 @@ namespace ViMG.UIs
         {
             string[] strings;
 
-            if (Directory.Exists(WorldIO.SAVE_FOLDER))
-                strings = Directory.GetDirectories(WorldIO.SAVE_FOLDER);
+            if (Directory.Exists(WorldIO.SaveFolder))
+                strings = Directory.GetDirectories(WorldIO.SaveFolder);
             else strings = Array.Empty<string>();
 
             for (int i = 0; i < strings.Length; i++)
@@ -297,8 +297,8 @@ namespace ViMG.UIs
         {
             string[] strings;
 
-            if (Directory.Exists(WorldIO.SAVE_FOLDER))
-                strings = Directory.GetDirectories(WorldIO.SAVE_FOLDER);
+            if (Directory.Exists(WorldIO.SaveFolder))
+                strings = Directory.GetDirectories(WorldIO.SaveFolder);
             else strings = Array.Empty<string>();
 
             return strings;

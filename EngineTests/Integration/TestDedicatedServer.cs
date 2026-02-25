@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG;
 using ViMG.UIs;
 
 namespace EngineTests.Integration
@@ -12,16 +13,27 @@ namespace EngineTests.Integration
     public sealed class TestDedicatedServer
     {
         private const string WORLD_NAME = "___test_world";
+
+        private string tempFolderName;
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            tempFolderName = Path.GetTempPath() + "/saves/";
+            WorldIO.SaveFolder = tempFolderName;
+        }
+
         [TestMethod]
         public void TestRun()
         {
+            Logger.SetAllLogLevels(Logger.LogLevel.Debug);
             HeadlessRunner runner = new HeadlessRunner();
             Thread t = new Thread(Run);
             t.Start(runner);
-            Thread.Sleep(5 * 1000);
             var tracked = runner.PostCommand("print hello");
             tracked.waiter.Wait();
             Console.WriteLine("From tracked command: {0}", tracked.output);
+            GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
             GlobalState.Exit = true;
 
             if (!t.Join(5 * 1000))
@@ -48,14 +60,7 @@ namespace EngineTests.Integration
         [TestCleanup]
         public void Cleanup()
         {
-            string[] paths = MenuMain.GetWorldSaveDirectoriesFull();
-            foreach (string str in paths)
-            {
-                if (str.StartsWith(WORLD_NAME))
-                {
-                    File.Delete(str);
-                }
-            }
+            Directory.Delete(tempFolderName, true);
         }
     }
 }

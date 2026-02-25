@@ -13,7 +13,7 @@ namespace Engine.Items
 {
 	public class Inventory
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("Inventory", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Inventory", true, Engine.Logger.LogLevel.Info);
 
         public const int VERSION = 1;
 

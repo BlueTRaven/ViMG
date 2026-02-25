@@ -17,7 +17,7 @@ namespace Engine.ChunkStuff
 {
     public class CopiedChunkManager
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("CopiedChunkManager", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("CopiedChunkManager", true, Engine.Logger.LogLevel.Info);
 
         [InlineArray(3 * 3 * 3)]
         public struct CopyChunkArr

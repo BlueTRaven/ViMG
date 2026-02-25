@@ -15,7 +15,7 @@ namespace ViMG
 {
     public static class ChunkGeneratorTasker
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorTasker", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorTasker", true, Engine.Logger.LogLevel.Info);
 
         private readonly struct BroadChunkTaskState
 		{

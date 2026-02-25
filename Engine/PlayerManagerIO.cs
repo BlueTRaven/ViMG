@@ -14,7 +14,7 @@ namespace Engine
 {
     public class PlayerManagerIO : WorldIO
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("PlayerManagerIO", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("PlayerManagerIO", true, Engine.Logger.LogLevel.Info);
 
         private const int VERSION = 0;
         private const int MIN_VERSION = -1;
@@ -250,7 +250,7 @@ namespace Engine
 
         private string GetPath(string folderName)
         {
-            return SAVE_FOLDER + folderName + "/" + FILE_NAME_PLAYERS + EXT_PLAYERS;
+            return SaveFolder + folderName + "/" + FILE_NAME_PLAYERS + EXT_PLAYERS;
         }
 
         public static int GetHashCodeForName(string name)

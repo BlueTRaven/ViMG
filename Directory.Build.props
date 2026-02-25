@@ -2,4 +2,7 @@
   <PropertyGroup>
     <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>$(DefineConstants);NOTRACY</DefineConstants>
+  </PropertyGroup>
 </Project>

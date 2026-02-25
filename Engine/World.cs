@@ -39,7 +39,7 @@ namespace ViMG
 {
 	public class World
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("World", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("World", true, Engine.Logger.LogLevel.Info);
 
         [ConsoleCommandVar("sv_sync_time", "Amount of time between state syncs. Default = 1 / 20")]
 		public static float SyncTime = 1.0f / 20.0f;

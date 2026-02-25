@@ -12,7 +12,7 @@ namespace ViMG
 {
     public class WorldInfoIO : WorldIO
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("WorldInfoIO", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WorldInfoIO", true, Engine.Logger.LogLevel.Info);
 
         public struct WorldInfo : INetSerializable
         {
@@ -193,8 +193,8 @@ namespace ViMG
             //      h: housing data blocks
             //          See HousingTasker.cs for serialization info
 
-            if (!Directory.Exists(SAVE_FOLDER + folderName))
-                Directory.CreateDirectory(SAVE_FOLDER + folderName);
+            if (!Directory.Exists(SaveFolder + folderName))
+                Directory.CreateDirectory(SaveFolder + folderName);
 
             //FileStream is probably unnecessary since we're saving the everything all at once
             using (FileStream fs = new FileStream(GetFullName(folderName), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
@@ -408,15 +408,15 @@ namespace ViMG
 
         private string GetLoadFileName(string folderName)
         {
-            string name = SAVE_FOLDER + folderName + "/" + FILE_NAME_WINFO + EXT_WINFO;
+            string name = SaveFolder + folderName + "/" + FILE_NAME_WINFO + EXT_WINFO;
             if (File.Exists(name))
                 return name;
-            else return SAVE_FOLDER + folderName + "/" + FILE_NAME_WINFO_OLD + EXT_WINFO;
+            else return SaveFolder + folderName + "/" + FILE_NAME_WINFO_OLD + EXT_WINFO;
         }
 
         private string GetFullName(string folderName)
         {
-            return SAVE_FOLDER + folderName + "/" + FILE_NAME_WINFO + EXT_WINFO;
+            return SaveFolder + folderName + "/" + FILE_NAME_WINFO + EXT_WINFO;
         }
 
         public override bool HandleError(LoadError error, string folderName)

@@ -22,7 +22,7 @@ namespace ViMG.Entities
 {
 	public class EntityManager : IGetEntity
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManager", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManager", true, Engine.Logger.LogLevel.Info);
 
         [ConsoleCommandVar("ent_max", "Maximum numbere of entities the server can have active at once. Entities allocated in excess of this number will be immediately destroyed.\n" +
 			"Changes to this variable require a restart.")]

@@ -26,7 +26,7 @@ namespace ViMG.Generation
 	// to place (parallel for?)
     public class ChunkGeneratorIsland : ChunkGenerator
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorIsland", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkGeneratorIsland", true, Engine.Logger.LogLevel.Info);
 
         private static ushort[] BlacklistOre = new ushort[] 
 		{

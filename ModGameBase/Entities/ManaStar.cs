@@ -21,7 +21,7 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     public class ManaStar : Entity, ISyncedEntity
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ManaStar", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ManaStar", true, Engine.Logger.LogLevel.Info);
 
         public enum State
         {

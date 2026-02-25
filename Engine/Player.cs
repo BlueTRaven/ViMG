@@ -32,7 +32,7 @@ namespace ViMG
 	[EntityMeta(19, 0)]
 	public class Player : Entity, IHitboxOwner, ISyncedEntity, IRotatable, IHasInventory
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Player", true, Engine.Logger.LogLevel.Info);
 
         private struct HitboxToSpawnLater
         {

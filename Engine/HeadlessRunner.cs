@@ -25,14 +25,15 @@ namespace Engine
         };
 
         private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
-        private Runner runner;
+        public Runner runner;
 
         private ReaderWriterLock rwLock = new ReaderWriterLock();
         private List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
 
         public void Run()
         {
-            ViMG.TracyImpl.Tracy.SetThreadName("Main Thread");
+            Thread.CurrentThread.Name = "Headless Runner Thread";
+            ViMG.TracyImpl.Tracy.SetThreadName("Headless Runner Thread");
 
             GlobalState.IsHeadless = true;
 
@@ -187,6 +188,7 @@ namespace Engine
         {
             Logger.Debug("Begin loop");
 
+            Thread.CurrentThread.Name = "Game Thread";
             ViMG.TracyImpl.Tracy.SetThreadName("Game Thread");
             DateTime prevTime = DateTime.Now;
             while (!GlobalState.Exit)

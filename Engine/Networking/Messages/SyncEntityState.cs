@@ -29,7 +29,7 @@ namespace Engine.Networking.Messages
 {
     public class SyncEntityState : Message
     {
-        private Logger Logger = Logger.InitLogger("SyncEntityState", true, Logger.LogLevel.Warn);
+        private Logger Logger = Logger.InitLogger("SyncEntityState", true, Logger.LogLevel.Info);
         public const int MAX_ENTS_PER_SYNC = 256;
 
         public static SyncEntityState Instance { get; private set; }

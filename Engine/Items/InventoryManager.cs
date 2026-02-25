@@ -17,7 +17,7 @@ namespace Engine.Items
 {
     public class InventoryManager
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("InventoryManager", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("InventoryManager", true, Engine.Logger.LogLevel.Info);
 
         [ConsoleCommandVar("inv_max", "Maximum number of inventories")]
         public static int InvMax = 4096;

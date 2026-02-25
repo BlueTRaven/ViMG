@@ -21,7 +21,7 @@ namespace Engine.Networking
 {
     public class NetworkManager : INetEventListener, INatPunchListener
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("NetworkManager", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("NetworkManager", true, Engine.Logger.LogLevel.Info);
 
         public const double TIME_TRAVEL_DELAY = 0;//0.75;// Main.FIXED_STEP * 3;
 

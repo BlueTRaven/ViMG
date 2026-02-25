@@ -15,7 +15,7 @@ namespace ViMG
 {
     public class ChunkManagerIO : WorldIO
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkManagerIO", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkManagerIO", true, Engine.Logger.LogLevel.Info);
 
         public ref struct CapturedChunk : IDisposable
 		{
@@ -308,8 +308,8 @@ namespace ViMG
 		//Saves the contents of allBytes to disk.
 		public void Save(string folderName)
         {
-			if (!Directory.Exists(SAVE_FOLDER + folderName))
-				Directory.CreateDirectory(SAVE_FOLDER + folderName);
+			if (!Directory.Exists(SaveFolder + folderName))
+				Directory.CreateDirectory(SaveFolder + folderName);
 
 			// NOTE: we write everything to memory, then we write it to disk. This allows us to use regionFile stream
 			using (MemoryStream stream = new MemoryStream())
@@ -542,14 +542,14 @@ namespace ViMG
 
 		private string GetSaveName(string folderName)
         {
-			return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
+			return SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
 		}
 
 		private string GetLoadName(string folderName)
         {
-			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK))
-				return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK_OLD + managerName + EXT_CHUNK;
-			else return SAVE_FOLDER + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
+			if (!File.Exists(SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK))
+				return SaveFolder + folderName + "/" + FILE_NAME_CHUNK_OLD + managerName + EXT_CHUNK;
+			else return SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
 		}
 
 		public override bool HandleError(LoadError error, string folderName)

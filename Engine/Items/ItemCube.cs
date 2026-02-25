@@ -16,7 +16,7 @@ namespace ViMG.Items
 {
     public class ItemCube : Item
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ItemCube", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ItemCube", true, Engine.Logger.LogLevel.Info);
 
         public readonly ushort CubeId;
         private readonly Cube cube;

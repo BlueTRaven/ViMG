@@ -22,10 +22,10 @@ namespace ViMG
 
         public void Save()
         {
-            if (!Directory.Exists(SAVE_FOLDER))
-                Directory.CreateDirectory(SAVE_FOLDER);
+            if (!Directory.Exists(SaveFolder))
+                Directory.CreateDirectory(SaveFolder);
 
-            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+            using (FileStream fs = new FileStream(SaveFolder + FILE_NAME_SESSION + EXT_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
             {
                 using (StreamWriter sw = new StreamWriter(fs))
                 {
@@ -38,10 +38,10 @@ namespace ViMG
 
         public void Load()
         {
-            if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION))
+            if (!File.Exists(SaveFolder + FILE_NAME_SESSION + EXT_SESSION))
                 return;
 
-            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream fs = new FileStream(SaveFolder + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (StreamReader reader = new StreamReader(fs))
                 {

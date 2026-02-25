@@ -13,7 +13,7 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventoryInput : Message
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventoryInput", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventoryInput", true, Engine.Logger.LogLevel.Info);
 
         public static SyncInventoryInput Instance { get; private set; }
 

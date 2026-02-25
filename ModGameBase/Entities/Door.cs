@@ -19,7 +19,7 @@ namespace ViMG.Entities
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     public class Door : Entity, IMultiCubeTracker, ISyncedEntity
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("Door", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Door", true, Engine.Logger.LogLevel.Info);
 
         private static VerySimpleMesh mountMesh;
         private static VerySimpleMesh doorMesh;

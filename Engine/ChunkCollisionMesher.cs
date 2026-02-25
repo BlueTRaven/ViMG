@@ -26,7 +26,7 @@ namespace ViMG
 {
     public class ChunkCollisionMesher
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkCollisionMesher", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkCollisionMesher", true, Engine.Logger.LogLevel.Info);
 
 #if DEBUG
         private const int MAX_ACTIVE_MESH_BATCH_TASKS = 5;

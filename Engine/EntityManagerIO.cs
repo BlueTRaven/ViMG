@@ -19,7 +19,7 @@ namespace ViMG
 {
     public class EntityManagerIO : WorldIO
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManagerIO", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("EntityManagerIO", true, Engine.Logger.LogLevel.Info);
 
         public const string FILE_NAME_ENTITIES = "entities";
 		public const string EXT_ENTITIES = ".vis";
@@ -554,14 +554,14 @@ namespace ViMG
 
 		private static string GetSaveName(string folderName, int layer)
         {
-			return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
+			return SaveFolder + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
 		}
 
 		private static string GetLoadName(string folderName, int layer)
         {
-			if (!File.Exists(SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES))
-				return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + EXT_ENTITIES;
-			else return SAVE_FOLDER + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
+			if (!File.Exists(SaveFolder + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES))
+				return SaveFolder + folderName + "/" + FILE_NAME_ENTITIES + EXT_ENTITIES;
+			else return SaveFolder + folderName + "/" + FILE_NAME_ENTITIES + layer + EXT_ENTITIES;
 		}
 
 		public override bool HandleError(LoadError error, string folderName)

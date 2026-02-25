@@ -18,7 +18,7 @@ namespace ViMG.Rendering
 {
     public class RendererDeferred : IDisposable
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("RendererDeferred", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("RendererDeferred", true, Engine.Logger.LogLevel.Info);
 
         public struct DrawSourceRectParameters
         {

@@ -19,7 +19,7 @@ namespace ViMG
 {
     public class HitboxManager
 	{
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("HitboxManager", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("HitboxManager", true, Engine.Logger.LogLevel.Info);
 
         public enum Group
         {

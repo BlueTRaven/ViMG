@@ -56,8 +56,8 @@ namespace ViMG.IMGUIImpl
                 {
                     if (folders == null)
                     {
-                        if (Directory.Exists(WorldIO.SAVE_FOLDER))
-                            folders = Directory.GetDirectories(WorldIO.SAVE_FOLDER);
+                        if (Directory.Exists(WorldIO.SaveFolder))
+                            folders = Directory.GetDirectories(WorldIO.SaveFolder);
                         else folders = null;
 
                         for (int i = 0; i < folders.Length; i++)

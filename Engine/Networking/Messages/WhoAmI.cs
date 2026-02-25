@@ -12,7 +12,7 @@ namespace Engine.Networking.Messages
 {
     public class WhoAmIRequest : Message
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmIRequest", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmIRequest", true, Engine.Logger.LogLevel.Info);
 
         public static WhoAmIRequest Instance { get; private set; }
 
@@ -54,7 +54,7 @@ namespace Engine.Networking.Messages
 
     public class WhoAmI : Message
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmI", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("WhoAmI", true, Engine.Logger.LogLevel.Info);
 
         public static WhoAmI Instance { get; private set; }
 

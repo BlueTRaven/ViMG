@@ -17,7 +17,7 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventory : Message
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventory", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventory", true, Engine.Logger.LogLevel.Info);
 
         public const int MAX_INVS_PER_SYNC = 256;
 

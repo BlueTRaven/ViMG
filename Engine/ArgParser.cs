@@ -12,7 +12,7 @@ namespace Engine
 {
     public class ArgParser
     {
-        private static Logger Logger = Logger.InitLogger("ArgParser", true, Logger.LogLevel.Warn);
+        private static Logger Logger = Logger.InitLogger("ArgParser", true, Logger.LogLevel.Info);
 
         public string startMode = "MainMenu";
         public string sessionFile = "session.ses";

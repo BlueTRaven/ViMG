@@ -100,7 +100,6 @@ namespace Engine
                 }
             }
         }
-
         private static Dictionary<string, LogLevel> settingLevels = [];
         private static Dictionary<string, Logger> loggers = [];
         public static Logger InitLogger(string name, bool defaultEnabled = true, LogLevel defaultLogLevel = LogLevel.Debug)
@@ -127,6 +126,20 @@ namespace Engine
         public static Logger GetLogger(string name)
         {
             return loggers[name];
+        }
+
+        public static void SetAllLogLevels(LogLevel logLevel)
+        {
+            GlobalLogLevel = logLevel;
+            foreach (string key in settingLevels.Keys)
+            {
+                settingLevels[key] = logLevel;
+            }
+
+            foreach (string key in loggers.Keys)
+            {
+                loggers[key].level = logLevel;
+            }
         }
 
         private static void RecalcFormatStr()

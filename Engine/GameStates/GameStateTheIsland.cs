@@ -31,7 +31,7 @@ namespace ViMG.GameStates
 {
     public class GameStateTheIsland : GameState
     {
-        private static Engine.Logger Logger = Engine.Logger.InitLogger("GameStateTheIsland", true, Engine.Logger.LogLevel.Warn);
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("GameStateTheIsland", true, Engine.Logger.LogLevel.Info);
 
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
@@ -66,10 +66,14 @@ namespace ViMG.GameStates
         public NetworkManager? netManagerServer;
         public NetworkManager? netManagerClient;
 
+        // Set when world is loaded
+        public ManualResetEventSlim waiterWorld;
+
         public string? localPlayerName;
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
+            waiterWorld = new ManualResetEventSlim(false);
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -101,7 +105,7 @@ namespace ViMG.GameStates
                 ProfilingHelper.Start(Logger, "Loading and Flushing World...");
 
                 World world;
-                if (!Directory.Exists("./saves/" + worldName + "/"))
+                if (!Directory.Exists(WorldIO.SaveFolder + worldName + "/"))
                 {
                     world = CreateWorld(device, worldName);
                     playerIO = new PlayerManagerIO(); 
@@ -285,6 +289,7 @@ namespace ViMG.GameStates
                 {
                     world = worldTask.Result;
                     worldTask = null;
+                    waiterWorld.Set();
 
                     ConnectLocal();
                 }
@@ -789,7 +794,7 @@ namespace ViMG.GameStates
                     Directory.CreateDirectory(dir);
                     using (FileStream fs = new FileStream(string.Format("{0}/{1}-{2}.zip", dir, world.LoadedFolderName, DateTime.Now.ToString("hh-mm-ss")), FileMode.Create, FileAccess.Write))
                     {
-                        ZipFile.CreateFromDirectory(string.Format("saves/{0}", world.LoadedFolderName), fs);
+                        ZipFile.CreateFromDirectory(string.Format("{0}{1}", WorldIO.SaveFolder, world.LoadedFolderName), fs);
                     }
                 }
                 world.SaveWorld();

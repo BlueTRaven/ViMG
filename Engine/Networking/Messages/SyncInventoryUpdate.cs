@@ -18,7 +18,7 @@ namespace Engine.Networking.Messages
 {
     public class SyncInventoryUpdate : Message
     {
-        private Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventoryUpdate", true, Engine.Logger.LogLevel.Warn);
+        private Engine.Logger Logger = Engine.Logger.InitLogger("SyncInventoryUpdate", true, Engine.Logger.LogLevel.Info);
 
         public static SyncInventoryUpdate Instance { get; private set; }
 
