@@ -41,7 +41,7 @@ namespace ViMG
             if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION))
                 return;
 
-            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (StreamReader reader = new StreamReader(fs))
                 {

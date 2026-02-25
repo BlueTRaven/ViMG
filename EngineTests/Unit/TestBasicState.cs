@@ -4,7 +4,7 @@ using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 
-namespace EngineTests
+namespace EngineTests.Unit
 {
     [TestClass]
     public sealed class TestBasicState

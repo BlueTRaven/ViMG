@@ -16,8 +16,12 @@ namespace Engine
 
         public string startMode = "MainMenu";
         public string sessionFile = "session.ses";
+        public string? saveName = null;
+        public bool createSave = false;
         public string networkingMode = "Singleplayer";
         public bool startPaused = false;
+        public int defaultPort = 9050;
+        public bool defaultPortSpecified = false;
         public Point? windowPosition = null;
 
         public bool dedicatedServer = false;
@@ -65,6 +69,20 @@ namespace Engine
                 else if (currentArg == "--playerName")
                 {
                     playerName = NextArg(args, ref currentArgI);
+                }
+                else if (currentArg == "--saveName")
+                {
+                    saveName = NextArg(args, ref currentArgI);
+                }
+                else if (currentArg == "--createSave")
+                {
+                    createSave = true;
+                }
+                else if (currentArg == "--defaultPort")
+                {
+                    var portS = NextArg(args, ref currentArgI);
+                    defaultPort = int.Parse(portS);
+                    defaultPortSpecified = true;
                 }
                 else
                 {

@@ -292,5 +292,16 @@ namespace ViMG.UIs
 
             return strings;
         }
+
+        public static string[] GetWorldSaveDirectoriesFull()
+        {
+            string[] strings;
+
+            if (Directory.Exists(WorldIO.SAVE_FOLDER))
+                strings = Directory.GetDirectories(WorldIO.SAVE_FOLDER);
+            else strings = Array.Empty<string>();
+
+            return strings;
+        }
     }
 }

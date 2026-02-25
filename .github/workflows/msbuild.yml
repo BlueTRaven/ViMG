@@ -52,4 +52,4 @@ jobs:
       
     - name: Run Tests
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: dotnet test --no-build ViMG3.sln --verbosity normal
+      run: dotnet test ViMG3.sln --verbosity normal

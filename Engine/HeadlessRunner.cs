@@ -17,7 +17,18 @@ namespace Engine
 {
     public class HeadlessRunner
     {
+        public class TrackedCommand
+        {
+            public string command;
+            public string output;
+            public ManualResetEventSlim waiter;
+        };
+
+        private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
         private Runner runner;
+
+        private ReaderWriterLock rwLock = new ReaderWriterLock();
+        private List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
 
         public void Run()
         {
@@ -42,38 +53,46 @@ namespace Engine
 
             while (!GlobalState.Exit)
             {
-                Console.WriteLine("Enter a Save Name or * to list available saves:");
-                var saveName = Console.ReadLine();
-
-                if (saveName == "*")
+                string? saveName = GlobalState.Args.saveName;
+                if (saveName == null)
                 {
-                    var saveNames = MenuMain.GetWorldSaveDirectories();
-                    foreach (string name in saveNames)
+                    Console.WriteLine("Enter a Save Name or * to list available saves:");
+                    saveName = Console.ReadLine();
+
+                    if (saveName == "*")
                     {
-                        Console.WriteLine(name);
-                    }
+                        var saveNames = MenuMain.GetWorldSaveDirectories();
+                        foreach (string name in saveNames)
+                        {
+                            Console.WriteLine(name);
+                        }
 
-                    saveName = null;
-                }
-                else if (saveName == ">")
-                {
-                    saveName = GlobalState.SessionInformation.LastLoadedSave;
+                        saveName = null;
+                    }
+                    else if (saveName == ">")
+                    {
+                        saveName = GlobalState.SessionInformation.LastLoadedSave;
+                    }
                 }
 
                 if (saveName != null)
                 {
                     if (!MenuMain.GetWorldSaveDirectories().Contains(saveName))
                     {
-                        Console.WriteLine("No save with this name exists. Create a new one?");
-                        var answer = Console.ReadLine();
-                        if (!(answer.ToLower() == "y" || answer.ToLower() == "yes"))
+                        // createSave overrides these options
+                        if (!GlobalState.Args.createSave)
                         {
-                            // return to top, select a new file again
-                            continue;
+                            Console.WriteLine("No save with this name exists. Create a new one?");
+                            var answer = Console.ReadLine();
+                            if (!(answer.ToLower() == "y" || answer.ToLower() == "yes"))
+                            {
+                                // return to top, select a new file again
+                                continue;
+                            }
                         }
                     }
-                    int port = 9050;
-                    while (!GlobalState.Exit)
+                    int port = GlobalState.Args.defaultPort;
+                    while (!GlobalState.Args.defaultPortSpecified && !GlobalState.Exit)
                     {
                         Console.WriteLine("Enter port (or press enter for the default port, {0})", port);
                         var portStr = Console.ReadLine();
@@ -138,21 +157,36 @@ namespace Engine
                     if (key.Key == ConsoleKey.Enter)
                     {
                         Console.WriteLine(builder.ToString());
-                        rwLock.AcquireWriterLock(0);
-                        commandsToRunInGameThread.Add(builder.ToString());
-                        rwLock.ReleaseWriterLock();
-               
+                        PostCommand(builder.ToString());
                         builder.Clear();
                     }
                 }
             }
+
+            Logger.Info("Shutting down HeadlessRunner Thread...");
+            t.Join();
+            Logger.Info("Done.");
         }
 
-        private ReaderWriterLock rwLock = new ReaderWriterLock();
-        private List<string> commandsToRunInGameThread = new List<string>();
+        public TrackedCommand PostCommand(string command)
+        {
+            TrackedCommand tracked = new TrackedCommand()
+            {
+                command = command,
+                waiter = new ManualResetEventSlim(false),
+            };
+
+            rwLock.AcquireWriterLock(0);
+            commandsToRunInGameThread.Add(tracked);
+            rwLock.ReleaseWriterLock();
+
+            return tracked;
+        }
 
         private void Loop(object? param)
         {
+            Logger.Debug("Begin loop");
+
             ViMG.TracyImpl.Tracy.SetThreadName("Game Thread");
             DateTime prevTime = DateTime.Now;
             while (!GlobalState.Exit)
@@ -162,15 +196,17 @@ namespace Engine
                 rwLock.AcquireReaderLock(0);
                 if (commandsToRunInGameThread.Count > 0)
                 {
-                    foreach (string command in commandsToRunInGameThread)
+                    foreach (TrackedCommand command in commandsToRunInGameThread)
                     {
-                        var str = command.TrimEnd();
+                        var str = command.command.TrimEnd();
                         var splits = str.Split(' ');
                         var runOut = IMGUIConsole.RunCommand(splits[0], Networking.NetworkManager.NetworkSide.Server, splits[1..]);
                         for (int i = 0; i < runOut.output.Length; i++)
                         {
                             Console.WriteLine(runOut.output[i]);
+                            command.output = string.Join('\n', runOut.output);
                         }
+                        command.waiter.Set();
                     }
                     rwLock.UpgradeToWriterLock(0);
                     commandsToRunInGameThread.Clear();
@@ -188,6 +224,8 @@ namespace Engine
 
                 prevTime = now;
             }
+
+            Logger.Info("Shutting down Game Thread...");    
         }
     }
 }
