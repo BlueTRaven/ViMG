@@ -899,6 +899,8 @@ namespace ViMG
 			PhysicsInfo.Simulation.Dispose();
 			PhysicsInfo.Properties.Dispose();
 			PhysicsInfo.GlobalBufferPool.Clear();
+
+			ChunkIO.Dispose();
 		}
 
 		[ConsoleCommand("set_time", "Sets the world's time. Param 0: time to set to, between 0 and 600 (wraps around), 0 being dawn, 300 being dusk. " +

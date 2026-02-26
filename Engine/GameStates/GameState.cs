@@ -8,7 +8,7 @@ using ViMG.UIs;
 
 namespace ViMG.GameStates
 {
-    public abstract class GameState
+    public abstract class GameState : IDisposable
     {
         private Stack<Menu> menuStack = new Stack<Menu>();
         private Menu currentMenu;
@@ -101,6 +101,11 @@ namespace ViMG.GameStates
         public Menu GetCurrentMenu()
         {
             return currentMenu;
+        }
+
+        public virtual void Dispose()
+        {
+
         }
     }
 }

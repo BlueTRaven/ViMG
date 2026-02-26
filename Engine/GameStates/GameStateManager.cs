@@ -10,7 +10,7 @@ using ViMG.UIs;
 
 namespace ViMG.GameStates
 {
-    public class GameStateManager
+    public class GameStateManager : IDisposable
     {
         public enum NetworkingMode
         {
@@ -113,6 +113,14 @@ namespace ViMG.GameStates
                 {
                     TheIsland.StartClient(ip, port);
                 }
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (GameState gs in gameStates) 
+            {
+                gs.Dispose();
             }
         }
     }

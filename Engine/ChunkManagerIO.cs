@@ -13,7 +13,7 @@ using ViMG.Cubes;
 
 namespace ViMG
 {
-    public class ChunkManagerIO : WorldIO
+    public class ChunkManagerIO : WorldIO, IDisposable
     {
         private static Engine.Logger Logger = Engine.Logger.InitLogger("ChunkManagerIO", true, Engine.Logger.LogLevel.Info);
 
@@ -571,5 +571,10 @@ namespace ViMG
                     return true;
             }
         }
-	}
+
+        public void Dispose()
+        {
+			regionFile?.Dispose();
+        }
+    }
 }

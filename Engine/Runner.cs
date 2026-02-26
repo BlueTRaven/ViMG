@@ -14,7 +14,7 @@ using ViMG.IMGUIImpl;
 
 namespace Engine
 {
-    public class Runner
+    public class Runner : IDisposable
     {
         private ModManager modManager;
 
@@ -70,6 +70,11 @@ namespace Engine
         public void FixedUpdate(double deltaTime)
         {
             GlobalState.GameStateManager.Update(deltaTime);
+        }
+
+        public void Dispose()
+        {
+            GlobalState.GameStateManager.Dispose();
         }
     }
 }

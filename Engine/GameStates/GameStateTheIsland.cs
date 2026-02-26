@@ -884,5 +884,13 @@ namespace ViMG.GameStates
                     new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
                     Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 1);
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            client?.Dispose();
+            world?.Dispose();
+        }
     }
 }

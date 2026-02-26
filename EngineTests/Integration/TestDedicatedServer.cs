@@ -30,9 +30,9 @@ namespace EngineTests.Integration
             HeadlessRunner runner = new HeadlessRunner();
             Thread t = new Thread(Run);
             t.Start(runner);
-            var tracked = runner.PostCommand("print hello");
+            // Not an actual command, but if we process this command then we have moved far enough along that we can wait for the world
+            var tracked = runner.PostCommand("wait");
             tracked.waiter.Wait();
-            Console.WriteLine("From tracked command: {0}", tracked.output);
             GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
             GlobalState.Exit = true;
 
@@ -60,6 +60,8 @@ namespace EngineTests.Integration
         [TestCleanup]
         public void Cleanup()
         {
+            Console.WriteLine("Clean up {0}", tempFolderName);
+            Thread.Sleep(5 * 1000);
             Directory.Delete(tempFolderName, true);
         }
     }

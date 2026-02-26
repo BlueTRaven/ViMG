@@ -25,7 +25,7 @@ namespace Engine
         };
 
         private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
-        public Runner runner;
+        private Runner runner;
 
         private ReaderWriterLock rwLock = new ReaderWriterLock();
         private List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
@@ -227,7 +227,9 @@ namespace Engine
                 prevTime = now;
             }
 
-            Logger.Info("Shutting down Game Thread...");    
+            Logger.Info("Shutting down Game Thread...");
+            runner.Dispose();
+            Logger.Info("Done.");
         }
     }
 }
