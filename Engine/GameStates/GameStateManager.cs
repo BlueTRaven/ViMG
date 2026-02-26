@@ -58,16 +58,6 @@ namespace ViMG.GameStates
         private static bool parsedArgs = false;
         public void Update(double deltaTime)
         {
-            //if (!parsedArgs && GlobalState.Args.startMode == "TheIsland")
-            //{
-            //    var netMode = Enum.Parse<NetworkingMode>(GlobalState.Args.networkingMode);
-            //    if ((netMode == NetworkingMode.Client && GlobalState.Time > 1) || netMode != NetworkingMode.Client)
-            //    {
-            //        Continue(netMode);
-            //        parsedArgs = true;
-            //    }
-            //}
-
             currentGameState?.Update(deltaTime);
         }
 

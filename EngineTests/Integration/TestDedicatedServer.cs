@@ -10,6 +10,8 @@ using ViMG.UIs;
 namespace EngineTests.Integration
 {
     [TestClass]
+    // Dedicated server cannot, at the moment, be parallelized due to its heavy reliance on global state (GlobalState class)
+    [DoNotParallelize]
     public sealed class TestDedicatedServer
     {
         private const string WORLD_NAME = "___test_world";
@@ -30,10 +32,12 @@ namespace EngineTests.Integration
             HeadlessRunner runner = new HeadlessRunner();
             Thread t = new Thread(Run);
             t.Start(runner);
-            // Not an actual command, but if we process this command then we have moved far enough along that we can wait for the world
-            var tracked = runner.PostCommand("wait");
-            tracked.waiter.Wait();
+            runner.PauseUpdating();
+            PostCommandAndWait(runner, "aaa");
             GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
+
+            var waiter = runner.UpdateNTimes(1);
+            waiter.Wait();
             GlobalState.Exit = true;
 
             if (!t.Join(5 * 1000))
@@ -44,6 +48,12 @@ namespace EngineTests.Integration
             {
                 Assert.IsFalse(t.IsAlive);
             }
+        }
+
+        private void PostCommandAndWait(HeadlessRunner runner, string command) 
+        {
+            var tracked = runner.PostCommand(command);
+            tracked.waiter.Wait();
         }
 
         private void Run(object? o)

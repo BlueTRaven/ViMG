@@ -4,6 +4,7 @@ using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices.Marshalling;
 using System.Text;
@@ -25,6 +26,21 @@ namespace Engine
         };
 
         private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
+
+        //[ConsoleCommandVar("updating_paused", "Pauses updating")]
+        //public static bool UpdatingPaused = false;
+
+        //[ConsoleCommandVar("paused_do_updates", "While updating_paused is true, update for the specified number of updates. Has no effect while unpaused.")]
+        //public static int NumUpdates = 0;
+
+        //[ConsoleCommandVar("paused_do_fixed_updates", "While updating_paused is true, fixed update for the specified number of updates. Has no effect while unpaused. Note that unfixed updates will occur too.")]
+        //public static int NumFixedUpdates = 0;
+
+        private ManualResetEventSlim? currentUpdateWaiter = null;
+        private bool updatingPaused = false;
+        private int numUpdates = 0;
+        private int numFixedUpdates = 0;
+
         private Runner runner;
 
         private ReaderWriterLock rwLock = new ReaderWriterLock();
@@ -218,10 +234,44 @@ namespace Engine
                 DateTime now = DateTime.Now;
                 TimeSpan delta = now - prevTime;
 
-                int numFixedUpdates = runner.UnfixedUpdate(delta);
-                for (int i = 0; i < numFixedUpdates; i++)
+                if (GlobalState.GameStateManager.TheIsland.PollWorldLoaded())
                 {
-                    runner.FixedUpdate(Main.FIXED_STEP * Options.DEBUGTimescale);
+                    if (!updatingPaused || (numUpdates > 0 || numFixedUpdates > 0))
+                    {
+                        var oldPaused = false;
+                        if (numUpdates > 0 || numFixedUpdates > 0)
+                        {
+                            oldPaused = GlobalState.GameStateManager.Paused;
+                            GlobalState.GameStateManager.Paused = false;
+                        }
+
+                        int unfixedUpdatesInThisTimestep = runner.UnfixedUpdate(delta);
+                        for (int i = 0; i < unfixedUpdatesInThisTimestep; i++)
+                        {
+                            runner.FixedUpdate(Main.FIXED_STEP * Options.DEBUGTimescale);
+                            if (numFixedUpdates > 0)
+                                numFixedUpdates -= 1;
+
+                            if (numFixedUpdates <= 0)
+                            {
+                                Logger.Info("Ran {0} fixed upates as requested", numFixedUpdates);
+                                currentUpdateWaiter?.Set();
+                                currentUpdateWaiter = null;
+                            }
+                        }
+
+                        if (numUpdates > 0 || numFixedUpdates > 0)
+                            GlobalState.GameStateManager.Paused = oldPaused;
+
+                        if (numUpdates > 0)
+                            numUpdates -= 1;
+                        if (numUpdates <= 0)
+                        {
+                            Logger.Info("Ran {0} upates as requested", numFixedUpdates);
+                            currentUpdateWaiter?.Set();
+                            currentUpdateWaiter = null;
+                        }
+                    }
                 }
 
                 prevTime = now;
@@ -230,6 +280,38 @@ namespace Engine
             Logger.Info("Shutting down Game Thread...");
             runner.Dispose();
             Logger.Info("Done.");
+        }
+
+        // Returns an event that can be waited upon; when the number of updates is completed, the event is set.
+        public ManualResetEventSlim UpdateNTimes(int numTimes)
+        {
+            currentUpdateWaiter = new ManualResetEventSlim(false);
+            updatingPaused = true;
+            numUpdates = numTimes;
+            return currentUpdateWaiter;
+        }
+        
+        // Returns an event that can be waited upon; when the number of updates is completed, the event is set.
+        public ManualResetEventSlim FixedUpdateNTimes(int numTimes)
+        {
+            currentUpdateWaiter = new ManualResetEventSlim(false);
+            updatingPaused = true;
+            numFixedUpdates = numTimes;
+            return currentUpdateWaiter;
+        }
+
+        // Thread safe. Pauses updating on the game thread.
+        public void PauseUpdating()
+        {
+            Debug.Assert(!updatingPaused);
+            updatingPaused = true;
+        }
+
+        // Thread safe. Resumes updating on the game thread.
+        public void ResumeUpdating()
+        {
+            Debug.Assert(updatingPaused);
+            updatingPaused = false;
         }
     }
 }

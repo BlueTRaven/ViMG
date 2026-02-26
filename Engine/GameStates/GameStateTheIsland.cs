@@ -33,6 +33,9 @@ namespace ViMG.GameStates
     {
         private static Engine.Logger Logger = Engine.Logger.InitLogger("GameStateTheIsland", true, Engine.Logger.LogLevel.Info);
 
+        [ConsoleCommandVar("pause_when_world_loaded", "Set GameStateManager.Paused to true when the current world is done loading.")]
+        public static bool PauseWhenWorldLoaded = false;
+
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
         private Task<World>? worldTask;
@@ -279,10 +282,8 @@ namespace ViMG.GameStates
             ConnectLocal();
         }
 
-        public override void UnfixedUpdate(double deltaTime)
+        public bool PollWorldLoaded()
         {
-            base.UnfixedUpdate(deltaTime);
-
             if (world == null)
             {
                 if (worldTask != null && worldTask.IsCompleted)
@@ -292,8 +293,25 @@ namespace ViMG.GameStates
                     waiterWorld.Set();
 
                     ConnectLocal();
+
+                    if (PauseWhenWorldLoaded)
+                    {
+                        manager.Paused = true;
+                        // Shoud we continue to execute here or just return?
+                    }
+
+                    return true;
                 }
             }
+
+            return world != null;
+        }
+
+        public override void UnfixedUpdate(double deltaTime)
+        {
+            base.UnfixedUpdate(deltaTime);
+
+            PollWorldLoaded();
 
             if (world != null)
             {
