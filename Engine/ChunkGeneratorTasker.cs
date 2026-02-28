@@ -60,7 +60,7 @@ namespace ViMG
 			int total = world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ * world.ChunkManager.SizeInChunksXZ;
 			int offset = 0;
 
-			ProfilingHelper.Start(Logger, "Beginning world generation...");
+			ProfilingHelper.Start(Logger, string.Format("Beginning world generation with generator {0}...", generator.ToString()));
             GameStateTheIsland.LoadMessage = "Beginning world generation...";
 
 			generator.Initialize(world.ChunkManager.SizeInCubes, world.ChunkManager.SizeInChunksXZ);

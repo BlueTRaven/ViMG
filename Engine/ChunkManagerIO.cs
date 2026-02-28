@@ -100,8 +100,6 @@ namespace ViMG
 
 		public int Version;
 
-		//private readonly ChunkManager manager;
-		private readonly string managerName;
         private readonly int sizeInChunks;
         private int layer;
 		private readonly long numChunks;
@@ -120,9 +118,8 @@ namespace ViMG
 		//private int offset;
 		//private FileStream fs;
 
-		public ChunkManagerIO(int sizeInChunks, string chunkManagerName, int layer)
+		public ChunkManagerIO(int sizeInChunks, int layer)
         {
-			this.managerName = chunkManagerName;
             this.layer = layer;
             this.sizeInChunks = sizeInChunks;
 			numChunks = sizeInChunks * sizeInChunks * sizeInChunks;
@@ -547,9 +544,7 @@ namespace ViMG
 
 		private string GetLoadName(string folderName)
         {
-			if (!File.Exists(SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK))
-				return SaveFolder + folderName + "/" + FILE_NAME_CHUNK_OLD + managerName + EXT_CHUNK;
-			else return SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
+			return SaveFolder + folderName + "/" + FILE_NAME_CHUNK + layer + EXT_CHUNK;
 		}
 
 		public override bool HandleError(LoadError error, string folderName)

@@ -70,13 +70,14 @@ namespace ViMG.GameStates
         public NetworkManager? netManagerClient;
 
         // Set when world is loaded
-        public ManualResetEventSlim waiterWorld;
+        public ManualResetEventSlim waiterWorld = new ManualResetEventSlim();
+        public ManualResetEventSlim waiterReset = new ManualResetEventSlim();
 
-        public string? localPlayerName;
+        public string? localPlayerName = null;
+
 
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
-            waiterWorld = new ManualResetEventSlim(false);
         }
 
         public override void LoadContent(GraphicsDevice device)
@@ -87,9 +88,13 @@ namespace ViMG.GameStates
             fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
-        public bool BeginLoadWorld(string worldName)
+        // Loads or creates a world.
+        public bool BeginLoadWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
+
+            waiterReset.Reset();
+            waiterWorld.Reset();
 
             var invalidChars = System.IO.Path.GetInvalidFileNameChars();
             if (string.IsNullOrWhiteSpace(worldName) || worldName.Any(c => invalidChars.Contains(c)))
@@ -100,39 +105,31 @@ namespace ViMG.GameStates
 
             Debug.Assert(!IsLoading);
 
-            Logger.Log(Engine.Logger.LogLevel.Info, "BeginLoadWorld");
-
             IsLoading = true;
             worldTask = new Task<World>(() =>
             {
                 ProfilingHelper.Start(Logger, "Loading and Flushing World...");
 
-                World world;
+                World? world;
                 if (!Directory.Exists(WorldIO.SaveFolder + worldName + "/"))
                 {
-                    world = CreateWorld(device, worldName);
-                    playerIO = new PlayerManagerIO(); 
+                    Logger.Info("Creating world {0} layer {1}", worldName, layer);
+                    world = CreateWorld(device, worldName, layer);
+                    playerIO = new PlayerManagerIO();
                     playerIO.Load(worldName);
                 }
                 else
                 {
-                    world = LoadWorld(device, worldName);
+                    Logger.Info("Loading world {0} layer {1}", worldName, layer);
+                    world = LoadWorld(device, worldName, layer);
                     playerIO = new PlayerManagerIO();
                     playerIO.Load(worldName);
                 }
-
-                //if (!GlobalState.Args.dedicatedServer)
-                //    playerIO.DeserializeLocal(world);
 
                 if (world == null) throw new Exception("Errored while loading world");
 
                 LoadMessage = "Loading World...";
                 ProfilingHelper.Start(Logger, "Building Meshes...");
-                //if (!GlobalState.Args.dedicatedServer)
-                //{
-                    //Now we can tell the ChunkLoadManager what should be loaded.
-                    //world.ChunkLoadManager.LoadAroundTarget(world, ChunkPosition.WorldSpaceChunk(world.WorldInfo.playerPositions[world.localPlayerIndex]), tempRenderDistance: 1);
-                //}
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
@@ -155,34 +152,6 @@ namespace ViMG.GameStates
             else worldTask.RunSynchronously();
 
             return true;
-        }
-
-        public Task<World> BeginLoadLayer(string worldName, int layer)
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
-
-            if (!LayerExists(layer))
-            {
-                Logger.Log(Engine.Logger.LogLevel.Error, "Tried to load layer {0} but this layer was not yet implemented.", layer);
-                return null;
-            }
-
-            //Note that this version assumes the world exists.
-            IsLoading = true;
-            var layerTask = new Task<World>(() =>
-            {
-                World world = LoadLayer(worldName, layer);
-                world.FinishLoading(device);
-
-                IsLoading = false;
-                return world;
-            });
-
-            if (GlobalState.MULTITHREAD_LOADING)
-                layerTask.Start();
-            else layerTask.RunSynchronously();
-
-            return layerTask;
         }
 
         public void Connect(string ip, int port, bool delay = false)
@@ -218,47 +187,18 @@ namespace ViMG.GameStates
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
-
-            if (manager.netMode == GameStateManager.NetworkingMode.Singleplayer)
-            {
-                netManagerClient = new();
-                netManagerServer = new();
-            }
-            else if (manager.netMode == GameStateManager.NetworkingMode.Server)
-            {
-                netManagerServer = new();
-            }
-            else if (manager.netMode == GameStateManager.NetworkingMode.Client)
-            {
-                netManagerClient = new();
-            }
+            Reset();
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
-            Disconnect();
-            netManagerServer = null;
-            netManagerClient = null;
-
-            if (world != null)
-            {
-                world.Dispose();
-                world = null;
-            }
-            if (client != null)
-            {
-                client.Dispose();
-                client = null;
-            }
-            IMGUINetworkDebug.ClearMessages();
-            SyncWorldState.Instance.ServerShutdown();
-            SetMenu(null);
+            Reset();
         }
 
         public bool StartSingleplayer(string worldName)
         {
-            if (BeginLoadWorld(worldName))
+            if (BeginLoadWorld(worldName, 0))
             {
                 client = new ClientStates(device);
                 return true;
@@ -271,7 +211,7 @@ namespace ViMG.GameStates
         {
             netManagerServer!.Ip = ip;
             netManagerServer!.Port = port;
-            return BeginLoadWorld(worldName);
+            return BeginLoadWorld(worldName, GlobalState.Args.createLayer);
         }
 
         public void StartClient(string ip, int port)
@@ -282,7 +222,7 @@ namespace ViMG.GameStates
             ConnectLocal();
         }
 
-        public bool PollWorldLoaded()
+        public bool NetPoll()
         {
             if (world == null)
             {
@@ -311,7 +251,7 @@ namespace ViMG.GameStates
         {
             base.UnfixedUpdate(deltaTime);
 
-            PollWorldLoaded();
+            NetPoll();
 
             if (world != null)
             {
@@ -377,7 +317,44 @@ namespace ViMG.GameStates
             this.world = world;
         }
 
-        public static World CreateWorld(GraphicsDevice? device, string worldName)
+        public void Reset()
+        {
+            Disconnect();
+            netManagerServer = null;
+            netManagerClient = null;
+
+            if (world != null)
+            {
+                world.Dispose();
+                world = null;
+            }
+            if (client != null)
+            {
+                client.Dispose();
+                client = null;
+            }
+            IMGUINetworkDebug.ClearMessages();
+            SyncWorldState.Instance.ServerShutdown();
+            SetMenu(null);
+
+            if (manager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            {
+                netManagerClient = new();
+                netManagerServer = new();
+            }
+            else if (manager.netMode == GameStateManager.NetworkingMode.Server)
+            {
+                netManagerServer = new();
+            }
+            else if (manager.netMode == GameStateManager.NetworkingMode.Client)
+            {
+                netManagerClient = new();
+            }
+
+            waiterReset.Set();
+        }
+
+        public static World CreateWorld(GraphicsDevice? device, string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -388,8 +365,8 @@ namespace ViMG.GameStates
             var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
             var entityManager = new EntityManager();
             var inventoryManager = new InventoryManager();
-            var entIO = new EntityManagerIO(entityManager, 0);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
+            var entIO = new EntityManagerIO(entityManager, layer);
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
             WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
@@ -414,8 +391,8 @@ namespace ViMG.GameStates
             // pressing "Continue" will just try to load the same world that caused the error instead of staying the same.
             GlobalState.SessionInformation.LastLoadedSave = worldName;
 
-            var generator = CreateLayerGenerator(0);
-            var logic = CreateLayerLogic(0);
+            var generator = CreateLayerGenerator(layer);
+            var logic = CreateLayerLogic(layer);
 
             chunkIO.CreateAll();
 
@@ -485,60 +462,7 @@ namespace ViMG.GameStates
             return world;
         }
 
-        public void LoadNone()
-        {
-            using var zone = TracyImpl.Tracy.BeginZone();
-
-            const int SIZE_IN_CHUNKS = 32;
-            const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
-
-            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-
-            CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
-                new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
-            defaultPlayerSpawnLocation.X = spawnX;
-            defaultPlayerSpawnLocation.Z = spawnZ;
-            defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
-
-            ProfilingHelper.Start(Logger, "Loading world...");
-            LoadMessage = "Loading World...";
-            var entityManager = new EntityManager();
-            var inventoryManager = new InventoryManager();
-            var worldInfoIO = new WorldInfoIO();
-
-            LoadMessage = "Loading World...\n" +
-                "Reading from disk...";
-            var physicsInfo = new PhysicsInfo();
-
-            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);// new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var entIO = new EntityManagerIO(entityManager, 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
-            var housingManager = new HousingManager();
-
-            var logic = CreateLayerLogic(0);
-
-            WorldPrototype prototype = new WorldPrototype(null, 0, entityManager, inventoryManager, chunkManager, WorldInfoIO.WorldInfo.Empty, logic, new Skybox(), physicsInfo, housingManager);
-
-            var ChunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
-
-            LoadMessage = "Loading World...\n" +
-                "Deserializing...";
-
-            ProfilingHelper.End(Logger, "World loading done.");
-
-            World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            world.InitMeshes(device);
-            prototype.Logic.Initialize(world);
-
-            this.world = world;
-            world.FinishLoading(device);
-
-            IsLoading = false;
-        }
-
-        public World LoadWorld(GraphicsDevice device, string worldName)
+        public static World? LoadWorld(GraphicsDevice device, string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -569,23 +493,23 @@ namespace ViMG.GameStates
             var physicsInfo = new PhysicsInfo();
 
             var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayers[0]);
-            var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayers[0]);
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
+            var entIO = new EntityManagerIO(entityManager, layer);
             var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
             GlobalState.SessionInformation.LastLoadedSave = worldName;
 
-            var logic = CreateLayerLogic(worldInfo.playerLayers[0]);
+            var logic = CreateLayerLogic(layer);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayers[0], entityManager, inventoryManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
+            WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
                 return null;
 
-            error = entIO.Load(worldName);//saver.Load(device, this, folderName);
+            error = entIO.Load(worldName);
             entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
             if (entIO.HandleError(error, worldName))
                 return null;
@@ -601,8 +525,6 @@ namespace ViMG.GameStates
             world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             return world;
-
-            //EntityManager.Add(new EntityLeviathan());
         }
 
         public World LoadLayer(string worldName, int layer)
@@ -643,7 +565,7 @@ namespace ViMG.GameStates
                 var physicsInfo = new PhysicsInfo();
 
                 var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
-                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
+                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
@@ -701,7 +623,7 @@ namespace ViMG.GameStates
                 var physicsInfo = new PhysicsInfo();
 
                 var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
-                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
+                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
                 var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
@@ -738,42 +660,15 @@ namespace ViMG.GameStates
             }
         }
 
-        private bool LayerExists(int layer)
-        {
-            switch (layer)
-            {
-                case 0:
-                    return true;
-                case 1:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         private static ChunkGenerator CreateLayerGenerator(int layer)
         {
             if (GlobalState.Registry.WorldLogicRegistry.generators == null || GlobalState.Registry.WorldLogicRegistry.generators.Length < layer || GlobalState.Registry.WorldLogicRegistry.generators[layer] == null) 
                 throw new Exception(string.Format("No LayerGenerator defined for layer {0}", layer));
             ChunkGenerator generator = (ChunkGenerator)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.generators[layer], layer, 0);
 
-            //switch (layer)
-            //{
-            //    case 0:
-            //        generator = new ChunkGeneratorIsland(layer);
-            //        break;
-            //    case 1:
-            //        generator = new ChunkGeneratorCatacombs();
-            //        break;
-            //    default:
-            //        Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
-            //        generator = null;
-            //        break;
-            //}
-
             return generator;
         }
-
+            
         private static WorldLogics.WorldLogic CreateLayerLogic(int layer)
         {
             if (GlobalState.Registry.WorldLogicRegistry.logics == null || GlobalState.Registry.WorldLogicRegistry.logics.Length < layer || GlobalState.Registry.WorldLogicRegistry.logics[layer] == null)

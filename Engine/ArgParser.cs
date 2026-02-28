@@ -19,6 +19,7 @@ namespace Engine
         public string? saveName = null;
         public bool createSave = false;
         public string networkingMode = "Singleplayer";
+        public int createLayer = 0;
         public bool startPaused = false;
         public int defaultPort = 9050;
         public bool defaultPortSpecified = false;
@@ -83,6 +84,11 @@ namespace Engine
                     var portS = NextArg(args, ref currentArgI);
                     defaultPort = int.Parse(portS);
                     defaultPortSpecified = true;
+                }
+                else if (currentArg == "--createLayer")
+                {
+                    var layer = NextArg(args, ref currentArgI);
+                    createLayer = int.Parse(layer);
                 }
                 else
                 {

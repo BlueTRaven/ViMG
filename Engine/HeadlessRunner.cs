@@ -16,7 +16,7 @@ using ViMG.UIs;
 
 namespace Engine
 {
-    public class HeadlessRunner
+    public class HeadlessRunner : IDisposable
     {
         public class TrackedCommand
         {
@@ -27,38 +27,35 @@ namespace Engine
 
         private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
 
-        //[ConsoleCommandVar("updating_paused", "Pauses updating")]
-        //public static bool UpdatingPaused = false;
-
-        //[ConsoleCommandVar("paused_do_updates", "While updating_paused is true, update for the specified number of updates. Has no effect while unpaused.")]
-        //public static int NumUpdates = 0;
-
-        //[ConsoleCommandVar("paused_do_fixed_updates", "While updating_paused is true, fixed update for the specified number of updates. Has no effect while unpaused. Note that unfixed updates will occur too.")]
-        //public static int NumFixedUpdates = 0;
-
         private ManualResetEventSlim? currentUpdateWaiter = null;
+        private ManualResetEventSlim? currentFixedUpdateWaiter = null;
         private bool updatingPaused = false;
+        private int numUpdatesCurrent = 0;
         private int numUpdates = 0;
+        private int numFixedUpdatesCurrent = 0;
         private int numFixedUpdates = 0;
 
-        private Runner runner;
+        private ManualResetEventSlim waiterGameStateInit = new ManualResetEventSlim();
 
-        private ReaderWriterLock rwLock = new ReaderWriterLock();
-        private List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
+        private readonly Runner runner;
 
-        public void Run()
+        private readonly ReaderWriterLock rwLock = new ReaderWriterLock();
+        private readonly List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
+
+        private readonly IMGUIConsole.ConsoleTextWriter outWriter;
+
+        private Thread loopThread;
+
+        public HeadlessRunner()
         {
-            Thread.CurrentThread.Name = "Headless Runner Thread";
-            ViMG.TracyImpl.Tracy.SetThreadName("Headless Runner Thread");
-
             GlobalState.IsHeadless = true;
 
-            this.runner = new Runner();
+            runner = new Runner();
             var _services = new GameServiceContainer();
             var _content = new ContentManager(_services);
             _content.RootDirectory = "Content";
 
-            var outWriter = IMGUIConsole.ReplaceOut();
+            outWriter = IMGUIConsole.ReplaceOut();
 
             runner.Initialize(_content);
 
@@ -67,6 +64,18 @@ namespace Engine
             runner.Register(null);
 
             GlobalState.GameStateManager.netMode = GameStateManager.NetworkingMode.Server;
+
+            waiterGameStateInit.Set();
+        }
+
+        public void Run()
+        {
+            GlobalState.MainThread = Thread.CurrentThread;
+
+            Thread.CurrentThread.Name = "Headless Runner Thread";
+            ViMG.TracyImpl.Tracy.SetThreadName("Headless Runner Thread");
+
+            GlobalState.GameStateManager.TheIsland.Reset();
 
             while (!GlobalState.Exit)
             {
@@ -120,6 +129,7 @@ namespace Engine
                     }
 
                     GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.TheIsland);
+
                     try
                     {
                         if (GlobalState.GameStateManager.TheIsland.StartServer(saveName, "localhost", port))
@@ -134,8 +144,8 @@ namespace Engine
                 }
             }
 
-            Thread t = new Thread(new ParameterizedThreadStart(Loop));
-            t.Start();
+            loopThread = new Thread(new ParameterizedThreadStart(Loop));
+            loopThread.Start();
 
             string[] history = [];
             int currHistory = 0;
@@ -181,23 +191,8 @@ namespace Engine
             }
 
             Logger.Info("Shutting down HeadlessRunner Thread...");
-            t.Join();
+            loopThread.Join();
             Logger.Info("Done.");
-        }
-
-        public TrackedCommand PostCommand(string command)
-        {
-            TrackedCommand tracked = new TrackedCommand()
-            {
-                command = command,
-                waiter = new ManualResetEventSlim(false),
-            };
-
-            rwLock.AcquireWriterLock(0);
-            commandsToRunInGameThread.Add(tracked);
-            rwLock.ReleaseWriterLock();
-
-            return tracked;
         }
 
         private void Loop(object? param)
@@ -234,12 +229,12 @@ namespace Engine
                 DateTime now = DateTime.Now;
                 TimeSpan delta = now - prevTime;
 
-                if (GlobalState.GameStateManager.TheIsland.PollWorldLoaded())
+                if (GlobalState.GameStateManager.TheIsland.NetPoll())
                 {
-                    if (!updatingPaused || (numUpdates > 0 || numFixedUpdates > 0))
+                    if (!updatingPaused || (numUpdatesCurrent > 0 || numFixedUpdatesCurrent > 0))
                     {
                         var oldPaused = false;
-                        if (numUpdates > 0 || numFixedUpdates > 0)
+                        if (numUpdatesCurrent > 0 || numFixedUpdatesCurrent > 0)
                         {
                             oldPaused = GlobalState.GameStateManager.Paused;
                             GlobalState.GameStateManager.Paused = false;
@@ -249,25 +244,24 @@ namespace Engine
                         for (int i = 0; i < unfixedUpdatesInThisTimestep; i++)
                         {
                             runner.FixedUpdate(Main.FIXED_STEP * Options.DEBUGTimescale);
-                            if (numFixedUpdates > 0)
-                                numFixedUpdates -= 1;
-
-                            if (numFixedUpdates <= 0)
+                            if (numFixedUpdatesCurrent > 0)
+                                numFixedUpdatesCurrent -= 1;
+                            if (currentFixedUpdateWaiter != null && numFixedUpdatesCurrent <= 0)
                             {
                                 Logger.Info("Ran {0} fixed upates as requested", numFixedUpdates);
-                                currentUpdateWaiter?.Set();
-                                currentUpdateWaiter = null;
+                                currentFixedUpdateWaiter?.Set();
+                                currentFixedUpdateWaiter = null;
                             }
                         }
 
-                        if (numUpdates > 0 || numFixedUpdates > 0)
+                        if (numUpdatesCurrent > 0 || numFixedUpdatesCurrent > 0)
                             GlobalState.GameStateManager.Paused = oldPaused;
 
-                        if (numUpdates > 0)
-                            numUpdates -= 1;
-                        if (numUpdates <= 0)
+                        if (numUpdatesCurrent > 0)
+                            numUpdatesCurrent -= 1;
+                        if (currentUpdateWaiter != null && numUpdatesCurrent <= 0)
                         {
-                            Logger.Info("Ran {0} upates as requested", numFixedUpdates);
+                            Logger.Info("Ran {0} upates as requested", numUpdates);
                             currentUpdateWaiter?.Set();
                             currentUpdateWaiter = null;
                         }
@@ -278,7 +272,6 @@ namespace Engine
             }
 
             Logger.Info("Shutting down Game Thread...");
-            runner.Dispose();
             Logger.Info("Done.");
         }
 
@@ -288,16 +281,18 @@ namespace Engine
             currentUpdateWaiter = new ManualResetEventSlim(false);
             updatingPaused = true;
             numUpdates = numTimes;
+            numUpdatesCurrent = numTimes;
             return currentUpdateWaiter;
         }
         
         // Returns an event that can be waited upon; when the number of updates is completed, the event is set.
         public ManualResetEventSlim FixedUpdateNTimes(int numTimes)
         {
-            currentUpdateWaiter = new ManualResetEventSlim(false);
+            currentFixedUpdateWaiter = new ManualResetEventSlim(false);
             updatingPaused = true;
             numFixedUpdates = numTimes;
-            return currentUpdateWaiter;
+            numFixedUpdatesCurrent = numTimes;
+            return currentFixedUpdateWaiter;
         }
 
         // Thread safe. Pauses updating on the game thread.
@@ -312,6 +307,49 @@ namespace Engine
         {
             Debug.Assert(updatingPaused);
             updatingPaused = false;
+        }
+
+        public TrackedCommand PostCommand(string command)
+        {
+            TrackedCommand tracked = new TrackedCommand()
+            {
+                command = command,
+                waiter = new ManualResetEventSlim(false),
+            };
+
+            rwLock.AcquireWriterLock(0);
+            commandsToRunInGameThread.Add(tracked);
+            rwLock.ReleaseWriterLock();
+
+            return tracked;
+        }
+
+        public TrackedCommand PostCommandAndWait(string command)
+        {
+            var com = PostCommand(command);
+            com.waiter.Wait();
+            return com;
+        }
+
+        public void WaitUntilGameStateInit()
+        {
+            waiterGameStateInit.Wait();
+            Debug.Assert(GlobalState.GameStateManager != null);
+        }
+
+        public void WaitUntilWorldLoaded()
+        {
+            waiterGameStateInit.Wait();
+            Debug.Assert(GlobalState.GameStateManager != null);
+            Debug.Assert(GlobalState.GameStateManager.TheIsland != null);
+            GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
+        }
+
+        public void Dispose()
+        {
+            GlobalState.Exit = true;
+            loopThread?.Join();
+            runner.Dispose();
         }
     }
 }

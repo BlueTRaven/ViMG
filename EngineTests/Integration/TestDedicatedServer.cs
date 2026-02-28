@@ -16,55 +16,97 @@ namespace EngineTests.Integration
     {
         private const string WORLD_NAME = "___test_world";
 
+        private struct RunParams
+        {
+            public string[] args;
+            public HeadlessRunner runner;
+        }
+
         private string tempFolderName;
 
         [TestInitialize]
         public void Initialize()
         {
-            tempFolderName = Path.GetTempPath() + "/saves/";
+            Logger.SetAllLogLevels(Logger.LogLevel.Debug);
+
+            tempFolderName = Path.GetTempPath() + "/vimg/saves/";
             WorldIO.SaveFolder = tempFolderName;
+
+            // Clean up directory if it already exists - sometimes the case with errored-out tests
+            if (Directory.Exists(tempFolderName))
+                Directory.Delete(tempFolderName, true);
         }
 
         [TestMethod]
         public void TestRun()
         {
-            Logger.SetAllLogLevels(Logger.LogLevel.Debug);
             HeadlessRunner runner = new HeadlessRunner();
-            Thread t = new Thread(Run);
-            t.Start(runner);
+            RunParams p = new RunParams
+            {
+                runner = runner,
+                args = [
+                    "--defaultPort", "9050",
+                    "--saveName", WORLD_NAME + Thread.CurrentThread.ManagedThreadId.ToString(),
+                    "--createSave",
+                    "--createLayer", "255",
+                ],
+            };
+            Thread t = new(Run);
+            t.Start(p);
             runner.PauseUpdating();
-            PostCommandAndWait(runner, "aaa");
-            GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
+            runner.WaitUntilWorldLoaded();
 
             var waiter = runner.UpdateNTimes(1);
             waiter.Wait();
             GlobalState.Exit = true;
 
-            if (!t.Join(5 * 1000))
-            {
-                Assert.Fail();
-            }
-            else
-            {
-                Assert.IsFalse(t.IsAlive);
-            }
+            Assert.IsTrue(t.Join(5 * 1000));
         }
 
-        private void PostCommandAndWait(HeadlessRunner runner, string command) 
+        [TestMethod]
+        public void TestAllGenerators()
         {
-            var tracked = runner.PostCommand(command);
-            tracked.waiter.Wait();
+            HeadlessRunner runner = new HeadlessRunner();
+            int maxLayers = GlobalState.Registry.WorldLogicRegistry.maxLayers;
+
+            for (int i = 0; i < maxLayers; i++)
+            {
+                GlobalState.Exit = false;
+
+                if (GlobalState.Registry.WorldLogicRegistry.generators[i] != null)
+                {
+                    RunParams p = new RunParams
+                    {
+                        runner = runner,
+                        args = [
+                            "--defaultPort", "9050",
+                            "--saveName", WORLD_NAME + Thread.CurrentThread.ManagedThreadId.ToString() + "_" + i.ToString(),
+                            "--createSave",
+                            "--createLayer", i.ToString(),
+                       ],
+                    };
+                    Thread t = new(Run);
+                    t.Start(p);
+                    runner.PauseUpdating();
+                    runner.WaitUntilWorldLoaded();
+
+                    var waiter = runner.UpdateNTimes(1);
+                    waiter.Wait();
+
+                    GlobalState.Exit = true;
+                    Assert.IsTrue(t.Join(5 * 1000));
+                    runner.ResumeUpdating();
+                }
+            }
+
+            runner.Dispose();
         }
 
         private void Run(object? o)
         {
-            HeadlessRunner runner = o as HeadlessRunner ?? throw new Exception();
-            GlobalState.Args.ParseArgs([
-                "--defaultPort", "9050",
-                "--saveName", WORLD_NAME + Thread.CurrentThread.ManagedThreadId.ToString(),
-                "--createSave",
-                ]);
-            runner.Run();
+            RunParams p = o as RunParams? ?? throw new Exception();
+            GlobalState.Args.ParseArgs(p.args);
+            p.runner.Run();
         }
 
         [TestCleanup]

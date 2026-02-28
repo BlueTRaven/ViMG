@@ -33,7 +33,7 @@ namespace Engine.Clients
             this.device = device;
             this.PhysicsInfo = physicsInfo;
             CubeTrackers = new CubeTrackers();
-            ChunkIO = new ChunkManagerIO(SizeInChunks, "", 0);
+            ChunkIO = new ChunkManagerIO(SizeInChunks, 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
             ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
             ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);

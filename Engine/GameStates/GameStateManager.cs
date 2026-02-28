@@ -78,10 +78,14 @@ namespace ViMG.GameStates
 
         public void SetGameState(GameState state)
         {
-            GameState oldState = currentGameState;
-            currentGameState?.OnClose(state);
-            currentGameState = state;
-            currentGameState?.OnOpen(oldState);
+            // No-op to change state to current state
+            if (currentGameState != state)
+            {
+                GameState oldState = currentGameState;
+                currentGameState?.OnClose(state);
+                currentGameState = state;
+                currentGameState?.OnOpen(oldState);
+            }
         }
 
         public void Continue(NetworkingMode netMode, string ip, int port)

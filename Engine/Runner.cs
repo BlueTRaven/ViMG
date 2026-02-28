@@ -22,8 +22,6 @@ namespace Engine
 
         public void Initialize(ContentManager content)
         {
-            GlobalState.MainThread = Thread.CurrentThread;
-
             GlobalState.SessionInformation = new SessionInformation();
             GlobalState.SessionIO = new SessionIO();
             GlobalState.SessionIO.Load();

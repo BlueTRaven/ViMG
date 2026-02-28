@@ -12,7 +12,7 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorFlat : ChunkGenerator
     {
-        public ChunkGeneratorFlat(int layer) : base(layer)
+        public ChunkGeneratorFlat(int layer, int seed = 1337) : base(layer, seed)
         {
 
         }
@@ -28,7 +28,6 @@ namespace ViMG.Generation
             playerPos.Z = z;
             playerPos.Y = chunkManager.SizeInCubes;
 
-            //TODO this should use initializer view
             return chunkManager.CubeView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
         }
 
@@ -47,7 +46,7 @@ namespace ViMG.Generation
                         if (pos.Y < 256)
                             id = 1;
 
-                        state.world.ChunkManager.CubeView.SetCube(pos, id);
+                        state.world.ChunkManager.CubeView.SetCube(pos, id, false);
                     }
                 }
             }

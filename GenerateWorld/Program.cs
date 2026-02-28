@@ -31,4 +31,4 @@ RegistryService registry = new RegistryService(null);
 GlobalState.Registry = registry;
 registry.Register();
 
-GameStateTheIsland.CreateWorld(null, "thing");
+GameStateTheIsland.CreateWorld(null, "generated_world", 0);
