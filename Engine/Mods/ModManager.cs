@@ -11,7 +11,7 @@ namespace Engine.Mods
     public class ModManager
     {
         private List<Assembly> loadedAssemblies = new List<Assembly>();
-        
+
         public void LoadModDlls()
         {
             foreach (string str in GlobalState.SessionInformation.LoadedMods)

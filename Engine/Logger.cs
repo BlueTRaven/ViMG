@@ -104,23 +104,25 @@ namespace Engine
         private static Dictionary<string, Logger> loggers = [];
         public static Logger InitLogger(string name, bool defaultEnabled = true, LogLevel defaultLogLevel = LogLevel.Debug)
         {
-            Logger logger = new Logger(name);
+            Logger logger = GetOrCreate(name);
             logger.enabled = defaultEnabled;
             logger.level = defaultLogLevel;
 
             if (settingLevels.TryGetValue(name, out LogLevel settingLevel))
                 logger.level = settingLevel;
 
-            loggers.Add(name, logger);
-
-            return loggers[name];
+            return logger;
         }
 
-        public static Logger GetOrCreate(string name)
+        private static Logger GetOrCreate(string name)
         {
-            if (loggers.ContainsKey(name))
-                return loggers[name];
-            else return InitLogger(name);
+            if (!loggers.TryGetValue(name, out var existingLogger))
+            {
+                existingLogger = new Logger(name);
+                loggers.Add(name, existingLogger);
+            }
+
+            return existingLogger;
         }
 
         public static Logger GetLogger(string name)

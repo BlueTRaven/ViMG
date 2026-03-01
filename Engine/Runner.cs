@@ -73,6 +73,9 @@ namespace Engine
         public void Dispose()
         {
             GlobalState.GameStateManager.Dispose();
+            GlobalState.AssetsManager = null;
+            GlobalState.GameStateManager = null;
+            GlobalState.Registry = null;
         }
     }
 }

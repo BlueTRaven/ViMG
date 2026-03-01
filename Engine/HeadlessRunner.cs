@@ -49,6 +49,7 @@ namespace Engine
         public HeadlessRunner()
         {
             GlobalState.IsHeadless = true;
+            GlobalState.Exit = false;
 
             runner = new Runner();
             var _services = new GameServiceContainer();

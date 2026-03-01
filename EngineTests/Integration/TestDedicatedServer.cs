@@ -27,6 +27,7 @@ namespace EngineTests.Integration
         [TestInitialize]
         public void Initialize()
         {
+            Console.WriteLine("Test start {0}", DateTime.Now);
             Logger.SetAllLogLevels(Logger.LogLevel.Debug);
 
             tempFolderName = Path.GetTempPath() + "/vimg/saves/";
@@ -40,7 +41,7 @@ namespace EngineTests.Integration
         [TestMethod]
         public void TestRun()
         {
-            HeadlessRunner runner = new HeadlessRunner();
+            using HeadlessRunner runner = new HeadlessRunner();
             RunParams p = new RunParams
             {
                 runner = runner,
@@ -66,7 +67,7 @@ namespace EngineTests.Integration
         [TestMethod]
         public void TestAllGenerators()
         {
-            HeadlessRunner runner = new HeadlessRunner();
+            using HeadlessRunner runner = new HeadlessRunner();
             int maxLayers = GlobalState.Registry.WorldLogicRegistry.maxLayers;
 
             for (int i = 0; i < maxLayers; i++)
@@ -98,8 +99,6 @@ namespace EngineTests.Integration
                     runner.ResumeUpdating();
                 }
             }
-
-            runner.Dispose();
         }
 
         private void Run(object? o)
@@ -112,7 +111,7 @@ namespace EngineTests.Integration
         [TestCleanup]
         public void Cleanup()
         {
-            Console.WriteLine("Clean up {0}", tempFolderName);
+            Console.WriteLine("Clean up {0} {1} ", DateTime.Now, tempFolderName);
             Thread.Sleep(5 * 1000);
             Directory.Delete(tempFolderName, true);
         }

@@ -801,7 +801,8 @@ namespace ViMG.GameStates
         public override void Dispose()
         {
             base.Dispose();
-
+            
+            Disconnect();
             client?.Dispose();
             world?.Dispose();
         }
