@@ -65,6 +65,14 @@ namespace ModGameBase.Entities
             ai.ShootSpeed = Cube.CUBE_SCALE * 4;
         }
 
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+            AiFlierShooter.Funcs<BonePillar> funcs = new() { ai = ai, entity = this };
+            funcs.OnUnload();
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);

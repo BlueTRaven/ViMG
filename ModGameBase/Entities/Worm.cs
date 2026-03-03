@@ -54,30 +54,34 @@ namespace ViMG.Entities
             if (cubeBounds.Contains(Position))
             {
                 // TODO MULTIPLAYER REFACTOR
-                Vector3 playerDir = world.player[world.localPlayerIndex].Position - Position;
-                playerDir.Normalize();
-
-                if (Velocity.Length() > 0)
+                var closestPlayer = world.GetClosestPlayer(Position);
+                if (closestPlayer != null)
                 {
-                    Vector3 velocityDir = Vector3.Normalize(Velocity);
-                    float velocityLen = Velocity.Length();
+                    Vector3 playerDir = closestPlayer.Position - Position;
+                    playerDir.Normalize();
 
-                    Vector3 cross = Vector3.Cross(velocityDir, playerDir);
-                    Matrix mat = Matrix.CreateFromAxisAngle(cross, MathHelper.ToRadians(5));
+                    if (Velocity.Length() > 0)
+                    {
+                        Vector3 velocityDir = Vector3.Normalize(Velocity);
+                        float velocityLen = Velocity.Length();
 
-                    Vector3 rotated = Vector3.Normalize(Vector3.Transform(velocityDir, mat));
-                    Velocity = rotated * (velocityLen + Cube.CUBE_SCALE);
+                        Vector3 cross = Vector3.Cross(velocityDir, playerDir);
+                        Matrix mat = Matrix.CreateFromAxisAngle(cross, MathHelper.ToRadians(5));
+
+                        Vector3 rotated = Vector3.Normalize(Vector3.Transform(velocityDir, mat));
+                        Velocity = rotated * (velocityLen + Cube.CUBE_SCALE);
+                    }
+                    else
+                    {
+                        //Initial first acceleration (we start with 0 velocity, and that results in NaNs, so we kinda have to seed it)
+                        Velocity += playerDir * Cube.CUBE_SCALE;
+                    }
+
+                    Vector3 realMaxVel = maxVelTunneling;
+
+                    if (Velocity.Length() > realMaxVel.Length())
+                        Velocity = Vector3.Normalize(Velocity) * realMaxVel.Length();
                 }
-                else
-                {
-                    //Initial first acceleration (we start with 0 velocity, and that results in NaNs, so we kinda have to seed it)
-                    Velocity += playerDir * Cube.CUBE_SCALE;
-                }
-                
-                Vector3 realMaxVel = maxVelTunneling;
-
-                if (Velocity.Length() > realMaxVel.Length())
-                    Velocity = Vector3.Normalize(Velocity) * realMaxVel.Length();
             }
             else
             {
@@ -111,27 +115,5 @@ namespace ViMG.Entities
 
 			health = maxHealth;
         }
-
-  //      public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	if (mesh.IBO == null)
-  //              mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-  //          //mesh = MeshHelper.MakeEnemyQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE);
-
-  //          Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), new RectangleF(0, 0, 16, 16)));
-
-  //          for (int i = 0; i < trainPositions.Length; i++)
-  //          {
-  //              Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-  //                  Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-  //                  Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-  //                  Matrix.CreateTranslation(trainPositions[i]), new RectangleF(16, 0, 16, 16)));
-  //          }
-
-  //          DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
-		//}
 	}
 }

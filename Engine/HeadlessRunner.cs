@@ -18,12 +18,27 @@ namespace Engine
 {
     public class HeadlessRunner : IDisposable
     {
+        public class Output
+        {
+            public Exception? runnerThreadException;
+            public Exception? gameThreadException;
+        }
+
         public class TrackedCommand
         {
-            public string command;
-            public string output;
-            public ManualResetEventSlim waiter;
+            public required string command;
+            public string? output;
+            public required ManualResetEventSlim waiter;
         };
+
+        public delegate object? GameThreadFn(HeadlessRunner runner, object? addData);
+        public class TrackedGameThreadFn
+        {
+            public required GameThreadFn func;
+            public object? addData;
+            public object? output;
+            public required ManualResetEventSlim waiter;
+        }
 
         private static Logger Logger = Logger.InitLogger("HeadlessRunner", true, Logger.LogLevel.Info);
 
@@ -39,15 +54,28 @@ namespace Engine
 
         private readonly Runner runner;
 
-        private readonly ReaderWriterLock rwLock = new ReaderWriterLock();
+        private readonly ReaderWriterLock commandsLock = new ReaderWriterLock();
         private readonly List<TrackedCommand> commandsToRunInGameThread = new List<TrackedCommand>();
+        private readonly ReaderWriterLock gameFnsLock = new ReaderWriterLock();
+        private readonly List<TrackedGameThreadFn> funcsToRunInGameThread = new List<TrackedGameThreadFn>();
 
         private readonly IMGUIConsole.ConsoleTextWriter outWriter;
 
+        public readonly CancellationTokenSource cts;
+        private readonly CancellationToken ct;
+
         private Thread loopThread;
+
+        public Output output = new();
+
+        public HeadlessRunner(CancellationToken ct) : this()
+        {
+            this.ct = ct;
+        }
 
         public HeadlessRunner()
         {
+            cts = new CancellationTokenSource();
             GlobalState.IsHeadless = true;
             GlobalState.Exit = false;
 
@@ -66,10 +94,25 @@ namespace Engine
 
             GlobalState.GameStateManager.netMode = GameStateManager.NetworkingMode.Server;
 
+            loopThread = new Thread(ThreadFunc);
+
             waiterGameStateInit.Set();
         }
 
         public void Run()
+        {
+            try
+            {
+                DoRun();
+            }
+            catch (Exception e)
+            {
+                output.runnerThreadException = e;
+                cts.Cancel();
+            }
+        }
+
+        private void DoRun()
         {
             GlobalState.MainThread = Thread.CurrentThread;
 
@@ -145,8 +188,7 @@ namespace Engine
                 }
             }
 
-            loopThread = new Thread(new ParameterizedThreadStart(Loop));
-            loopThread.Start();
+            loopThread.Start(output);
 
             string[] history = [];
             int currHistory = 0;
@@ -196,7 +238,21 @@ namespace Engine
             Logger.Info("Done.");
         }
 
-        private void Loop(object? param)
+        private void ThreadFunc(object? param)
+        {
+            Output output = param as Output;
+            try
+            {
+                Loop();
+            }
+            catch (Exception e)
+            {
+                output.gameThreadException = e;
+                cts.Cancel();
+            }
+        }
+
+        private void Loop()
         {
             Logger.Debug("Begin loop");
 
@@ -207,7 +263,7 @@ namespace Engine
             {
                 ViMG.TracyImpl.Tracy.FrameMark();
 
-                rwLock.AcquireReaderLock(0);
+                commandsLock.AcquireReaderLock(0);
                 if (commandsToRunInGameThread.Count > 0)
                 {
                     foreach (TrackedCommand command in commandsToRunInGameThread)
@@ -222,10 +278,24 @@ namespace Engine
                         }
                         command.waiter.Set();
                     }
-                    rwLock.UpgradeToWriterLock(0);
+                    commandsLock.UpgradeToWriterLock(0);
                     commandsToRunInGameThread.Clear();
                 }
-                rwLock.ReleaseLock();
+                commandsLock.ReleaseLock();
+
+                gameFnsLock.AcquireReaderLock(0);
+                if (funcsToRunInGameThread.Count > 0)
+                {
+                    foreach (TrackedGameThreadFn func in funcsToRunInGameThread)
+                    {
+                        object? output = func.func(this, func.addData);
+                        func.output = output;
+                        func.waiter.Set();
+                    }
+                    gameFnsLock.UpgradeToWriterLock(0);
+                    funcsToRunInGameThread.Clear();
+                }
+                gameFnsLock.ReleaseLock();
 
                 DateTime now = DateTime.Now;
                 TimeSpan delta = now - prevTime;
@@ -318,39 +388,76 @@ namespace Engine
                 waiter = new ManualResetEventSlim(false),
             };
 
-            rwLock.AcquireWriterLock(0);
+            commandsLock.AcquireWriterLock(0);
             commandsToRunInGameThread.Add(tracked);
-            rwLock.ReleaseWriterLock();
+            commandsLock.ReleaseWriterLock();
 
             return tracked;
         }
 
-        public TrackedCommand PostCommandAndWait(string command)
+        public TrackedCommand PostCommandAndWait(CancellationToken ct, string command)
         {
-            var com = PostCommand(command);
-            com.waiter.Wait();
-            return com;
+            var tracked = PostCommand(command);
+            tracked.waiter.Wait(ct);
+            if (ct.IsCancellationRequested)
+            {
+                if (output.runnerThreadException != null) throw output.runnerThreadException;
+                if (output.gameThreadException != null) throw output.gameThreadException;
+            }
+            return tracked;
         }
 
-        public void WaitUntilGameStateInit()
+        public TrackedGameThreadFn PostFn(GameThreadFn func, object? addData = null)
         {
-            waiterGameStateInit.Wait();
+            TrackedGameThreadFn tracked = new()
+            {
+                func = func,
+                addData = addData,
+                waiter = new ManualResetEventSlim(false),
+            };
+
+            gameFnsLock.AcquireWriterLock(0);
+            funcsToRunInGameThread.Add(tracked);
+            gameFnsLock.ReleaseWriterLock();
+            return tracked;
+        }
+
+        public TrackedGameThreadFn PostFnAndWait(CancellationToken ct, GameThreadFn func, object? addData = null)
+        {
+            var tracked = PostFn(func, addData);
+            tracked.waiter.Wait(ct);
+            if (ct.IsCancellationRequested)
+            {
+                if (output.runnerThreadException != null) throw output.runnerThreadException;
+                if (output.gameThreadException != null) throw output.gameThreadException;
+            }
+            return tracked;
+        }
+
+        public void WaitUntilGameStateInit(CancellationToken ct)
+        {
+            waiterGameStateInit.Wait(ct);
             Debug.Assert(GlobalState.GameStateManager != null);
         }
 
-        public void WaitUntilWorldLoaded()
+        public void WaitUntilWorldLoaded(CancellationToken ct)
         {
-            waiterGameStateInit.Wait();
+            waiterGameStateInit.Wait(ct);
             Debug.Assert(GlobalState.GameStateManager != null);
             Debug.Assert(GlobalState.GameStateManager.TheIsland != null);
-            GlobalState.GameStateManager.TheIsland.waiterWorld.Wait();
+            GlobalState.GameStateManager.TheIsland.waiterWorld.Wait(ct);
         }
 
         public void Dispose()
         {
             GlobalState.Exit = true;
+            cts.Cancel();
+
             loopThread?.Join();
             runner.Dispose();
+            
+            if (output.runnerThreadException != null) throw output.runnerThreadException;
+            if (output.gameThreadException != null) throw output.gameThreadException;
         }
     }
 }

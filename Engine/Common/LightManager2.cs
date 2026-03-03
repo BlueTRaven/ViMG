@@ -170,6 +170,16 @@ namespace Engine.Common
             return lightsShadowmapped[index].light;
         }
 
+        public IReadOnlyCollection<Light> GetAll()
+        {
+            return lights;
+        }
+
+        public IReadOnlyCollection<ShadowmappedLight> GetAllShadowmapped()
+        {
+            return lightsShadowmapped;
+        }
+
         public bool GetShadowmappedLightDirty(int index)
         {
             var dirty = lightsShadowmapped[index].dirty;

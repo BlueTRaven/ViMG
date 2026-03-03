@@ -395,6 +395,7 @@ namespace ViMG
 
 			world.InventoryManager.Unload(inventory);
             world.InventoryManager.Unload(heldInventory);
+			world.InventoryManager.Unload(craftInventory);
             world.InventoryManager.Unload(gearInventory);
             world.InventoryManager.Unload(accessoryInventory);
 
@@ -455,12 +456,12 @@ namespace ViMG
 
 			// Check to make sure we're still alive
 			// This is the case if our playerIndex is present in the netPlayer array
-			if (GlobalState.GameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
-			{
-				Logger.Warn("Kill player id {0} {1} - disconnect desync", playerIndex, Id);
-				world.EntityManager.Kill(this);
-				return;
-			}
+			//if (GlobalState.GameStateManager.TheIsland.netManagerServer?.netPlayers[playerIndex].playerId != playerIndex)
+			//{
+			//	Logger.Warn("Kill player id {0} {1} - disconnect desync", playerIndex, Id);
+			//	world.EntityManager.Unload(this);
+			//	return;
+			//}
 
 			var bh = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
 			if (state != State.Noclip && (!world.ChunkManager.IsInWorldBounds(Position) ||

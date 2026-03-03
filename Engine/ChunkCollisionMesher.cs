@@ -437,7 +437,7 @@ namespace ViMG
             meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
         }
 
-        public void ImmediatelyMesh(World world, ChunkPosition position, CopiedChunkManager copyManager, IGetEntity getEntity)
+        public void ImmediatelyMesh(ChunkPosition position, CopiedChunkManager copyManager, IGetEntity getEntity)
         {
             copyManager.StartCopyChunk(position, getEntity);
             copyManager.FinishCopyChunks();
@@ -445,9 +445,7 @@ namespace ViMG
             var copy = copyManager.GetCopy(position);
             var batch = new CollisionMeshBatch(Vector3.Zero, new CopiedChunkManager.CopiedChunkData[1]);
             ref CollisionMeshInfo meshInfo = ref GetChunkMeshInfo(position);
-            batch.copies[0] = copy;// CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks * Chunk.CHUNK_SIZE, bufferPool, position);
-            //batch.copies[0].refcount += 1;
-            //batch.copies[0].collision = true;
+            batch.copies[0] = copy;
             batch.pools[0] = meshInfo.bufferPool;
             batch.num = 1;
 
@@ -475,8 +473,6 @@ namespace ViMG
                 meshInfo.hasSimReferences = true;
                 meshInfo.hasMesh = true;
             }
-
-            //batch.copies[0].Return(bufferPool);
         }
 
         private static BatchCollisionMeshTaskResult MeshBatchFn(object obj)

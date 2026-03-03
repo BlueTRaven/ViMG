@@ -22,6 +22,7 @@ namespace Engine.Entities
         public int Id;
         public readonly Type type;
 
+        public EntityCtorUsageAttribute ctorUsage;
         public EntityMetaAttribute? meta;
         public EntitySerializableAttribute? serializable;
 
@@ -30,6 +31,22 @@ namespace Engine.Entities
             this.identifier = type.FullName;
             this.type = type;
 
+            EntityCtorUsageAttribute? ctorUsage = type.GetConstructor([])?.GetCustomAttribute<EntityCtorUsageAttribute>();
+            if (ctorUsage == null) 
+            {
+                // If the entity is a cube tracker, then we do not allow New
+                if (type.IsAssignableTo(typeof(ICubeTracker)) || type.IsAssignableTo(typeof(IMultiCubeTracker)))
+                    ctorUsage = new EntityCtorUsageAttribute(EntityCtorUsageType.Serialization);
+                else ctorUsage = new EntityCtorUsageAttribute(EntityCtorUsageType.All);
+            }
+            // TODO: is this actually a good restriction? Are there going to be any entities that track cubes that SHOULD allow New?
+            if ((ctorUsage.usage & EntityCtorUsageType.New) == EntityCtorUsageType.New &&
+                (type.IsAssignableTo(typeof(ICubeTracker)) || type.IsAssignableTo(typeof(IMultiCubeTracker))))
+            {
+                throw new Exception("ICubeTracker may not have a New constructor. These entities may only be constructed by placing a corresponding block, or by deserialization.");
+            }
+            this.ctorUsage = ctorUsage;
+
             meta = type.GetCustomAttribute<EntityMetaAttribute>();
             serializable = type.GetCustomAttribute<EntitySerializableAttribute>();
         }
@@ -37,6 +54,11 @@ namespace Engine.Entities
         public static EntityType New<T>() where T : Entity
         {
             return new EntityType(typeof(T));
+        }
+
+        public bool CanNew()
+        {
+            return type.GetConstructor(Type.EmptyTypes) != null && (ctorUsage.usage & EntityCtorUsageType.New) == EntityCtorUsageType.New;
         }
 
         public virtual Entity? New()

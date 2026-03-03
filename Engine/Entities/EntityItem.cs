@@ -2,6 +2,7 @@
 using BepuPhysics.Collidables;
 using BrUtility;
 using Engine;
+using Engine.Entities;
 using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,6 +36,7 @@ namespace ViMG.Entities
 		private TypedIndex physicsShapeIndex;
 		public BodyHandle physicsHandle;
 
+		[EntityCtorUsage(EntityCtorUsageType.Serialization)]
 		public EntityItem() { }
 
 		public EntityItem(Vector3 position, Vector3 initialVelocity, ItemInstance item)

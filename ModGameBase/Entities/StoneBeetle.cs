@@ -57,6 +57,14 @@ namespace ViMG.Entities
             base.Initialize(world);
         }
 
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+            AIWalkerShooter.Funcs<StoneBeetle> funcs = new AIWalkerShooter.Funcs<StoneBeetle> { world = world, ai = ai, entity = this };
+            funcs.OnUnload();
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
