@@ -16,6 +16,81 @@ namespace EngineTests.Integration
     public static class Common
     {
         public static Logger Logger = Logger.InitLogger("TestCommon", true, Logger.LogLevel.Debug);
+
+        public struct CreateCubeParams
+        {
+            public int id;
+            public CubePosition position;
+            public EntityManager.EntityReference playerRef;
+        }
+
+        public static void CreateCube(CancellationToken ct, HeadlessRunner runner, CreateCubeParams parameters)
+        {
+            runner.PostFnAndWait(ct, CreateCubeFn, parameters);
+        }
+
+        private static object? CreateCubeFn(HeadlessRunner runner, object? o)
+        {
+            Assert.IsNotNull(o);
+            Assert.IsInstanceOfType<CreateCubeParams>(o);
+            CreateCubeParams ps = (CreateCubeParams)o;
+
+            var world = GlobalState.GameStateManager.TheIsland.GetWorld();
+            Assert.IsNotNull(world);
+
+            var cube = GlobalState.Registry.CubeRegistry.Get(ps.id);
+            world.ChunkManager.CubeView.SetCube(ps.position, (ushort)ps.id, true);
+
+            return null;
+        }
+
+        public static void PlaceCube(CancellationToken ct, HeadlessRunner runner, CreateCubeParams parameters)
+        {
+            runner.PostFnAndWait(ct, PlaceCubeFn, parameters);
+        }
+
+        private static object? PlaceCubeFn(HeadlessRunner runner, object? o)
+        {
+            Assert.IsNotNull(o);
+            Assert.IsInstanceOfType<CreateCubeParams>(o);
+            CreateCubeParams ps = (CreateCubeParams)o;
+            Assert.AreNotEqual(ps.playerRef, new EntityManager.EntityReference { id = -1, generation = -1 });
+
+            var world = GlobalState.GameStateManager.TheIsland.GetWorld();
+            Assert.IsNotNull(world);
+
+            Player? player = (Player?)world.EntityManager.GetByRefServer(ref ps.playerRef);
+            Assert.IsNotNull(player);
+
+            world.PlaceCube(player, ps.position, (ushort)ps.id);
+            
+            return null;
+        }
+
+        public static bool MineCube(CancellationToken ct, HeadlessRunner runner, CreateCubeParams parameters)
+        {
+            object? ret = runner.PostFnAndWait(ct, MineCubeFn, parameters).output;
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType<bool>(ret);
+            return (bool)ret;
+        }
+
+        private static object? MineCubeFn(HeadlessRunner runner, object? o)
+        {
+            Assert.IsNotNull(o);
+            Assert.IsInstanceOfType<CreateCubeParams>(o);
+            CreateCubeParams ps = (CreateCubeParams)o;
+            Assert.AreNotEqual(ps.playerRef, new EntityManager.EntityReference { id = -1, generation = -1 });
+
+            var world = GlobalState.GameStateManager.TheIsland.GetWorld();
+            Assert.IsNotNull(world);
+
+            Player? player = (Player?)world.EntityManager.GetByRefServer(ref ps.playerRef);
+            Assert.IsNotNull(player);
+
+            return world.TryMineCube(player, ps.position, 999, 999, false);
+        }
+
         public static EntityManager.EntityReference CreateEntity(CancellationToken ct, HeadlessRunner runner, CreateEntityParams parameters)
         {
             var ret = runner.PostFnAndWait(ct, CreateEntityFn, parameters).output;

@@ -614,7 +614,7 @@ namespace ViMG
 			return false;
 		}
 
-		private void DoMineCube(CubePosition position, Player player, bool doDrops = true)
+		private void DoMineCube(CubePosition position, Player? player, bool doDrops = true)
 		{
 			Cube cube = ChunkManager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
@@ -640,26 +640,18 @@ namespace ViMG
 
 		public bool PlaceCube(Player? player, CubePosition position, ushort id)
 		{
-			if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
+			if (ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)))
 			{
 				ushort oldId = ChunkManager.CubeView.GetId(position);
-				ChunkManager.CubeView.SetCube(player.PlaceAtPos, id, player);
-				Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
-				cube.OnPlayerPlaced(player, player.PlaceAtPos);
-
-				//if (player != null && player.IsLocalPlayer && GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-				//{
-				//    var action = new SyncCubeUpdateAuditRequest.AuditedCubeUpdate
-				//    {
-				//        position = player.PlaceAtPos,
-				//        newId = id,
-				//        oldId = oldId,
-				//        player = (byte)player.playerIndex,
-				//        time = GlobalState.Time,
-				//    };
-
-				//    GlobalState.gameStateManager.TheIsland.netManagerServer?.SendMessageToAll(SyncCubeUpdateAuditRequest.Instance, GlobalState.gameStateManager.TheIsland.netManagerServer?.netManager, action);
-				//}
+				if (player != null)
+					ChunkManager.CubeView.SetCube(position, id, player);
+				else ChunkManager.CubeView.SetCube(position, id, true);
+				
+				if (player != null)
+				{
+					Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
+					cube.OnPlayerPlaced(player, position);
+				}
 
 				return true;
 			}

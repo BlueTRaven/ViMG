@@ -49,6 +49,7 @@ namespace Engine
         private int numUpdates = 0;
         private int numFixedUpdatesCurrent = 0;
         private int numFixedUpdates = 0;
+        private readonly ReaderWriterLock updatingLock = new ReaderWriterLock();
 
         private ManualResetEventSlim waiterGameStateInit = new ManualResetEventSlim();
 
@@ -304,6 +305,7 @@ namespace Engine
                 {
                     if (!updatingPaused || (numUpdatesCurrent > 0 || numFixedUpdatesCurrent > 0))
                     {
+                        updatingLock.AcquireWriterLock(0);
                         var oldPaused = false;
                         if (numUpdatesCurrent > 0 || numFixedUpdatesCurrent > 0)
                         {
@@ -336,6 +338,7 @@ namespace Engine
                             currentUpdateWaiter?.Set();
                             currentUpdateWaiter = null;
                         }
+                        updatingLock.ReleaseWriterLock();
                     }
                 }
 
@@ -349,20 +352,24 @@ namespace Engine
         // Returns an event that can be waited upon; when the number of updates is completed, the event is set.
         public ManualResetEventSlim UpdateNTimes(int numTimes)
         {
+            updatingLock.AcquireWriterLock(0);
             currentUpdateWaiter = new ManualResetEventSlim(false);
             updatingPaused = true;
             numUpdates = numTimes;
             numUpdatesCurrent = numTimes;
+            updatingLock.ReleaseWriterLock();
             return currentUpdateWaiter;
         }
         
         // Returns an event that can be waited upon; when the number of updates is completed, the event is set.
         public ManualResetEventSlim FixedUpdateNTimes(int numTimes)
         {
+            updatingLock.AcquireWriterLock(0);
             currentFixedUpdateWaiter = new ManualResetEventSlim(false);
             updatingPaused = true;
             numFixedUpdates = numTimes;
             numFixedUpdatesCurrent = numTimes;
+            updatingLock.ReleaseWriterLock();
             return currentFixedUpdateWaiter;
         }
 

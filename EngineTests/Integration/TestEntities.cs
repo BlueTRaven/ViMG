@@ -19,7 +19,7 @@ namespace EngineTests.Integration
     {
         private const string WORLD_NAME = "___test_world";
 
-        private static Logger Logger = Logger.InitLogger("TestGenerateWorld", true, Logger.LogLevel.Debug);
+        private static Logger Logger = Logger.InitLogger("TestEntities", true, Logger.LogLevel.Debug);
 
         private static string tempFolderName;
         private static HeadlessRunner runner;
@@ -112,6 +112,7 @@ namespace EngineTests.Integration
         }
 
         [TestMethod]
+        // Tests creating all entities all at once, and updates them for 5 seconds.
         public void CreateAllEntities()
         {
             ChunkPosition spawnChunk = Common.GetSpawnChunk(cts.Token, runner);
@@ -133,7 +134,8 @@ namespace EngineTests.Integration
                 }
             }
 
-            var waiter = runner.FixedUpdateNTimes(1);
+            // 5 seconds of updates
+            var waiter = runner.FixedUpdateNTimes(Main.FIXED_FPS * 5);
             waiter.Wait(cts.Token);
 
             Logger.Info("Done");

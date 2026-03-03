@@ -1,5 +1,6 @@
 ﻿using BrUtility;
 using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +17,9 @@ namespace ViMG.Entities
 {
 	// TODO refactor multiplayer
 	// Add some sort of targeting mechanism. Right now targets only player index 0
-    public class Skullhead : Entity, IHitboxOwner, IHasStats
+	[EntityMeta(0)]
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    public class Skullhead : Entity, IHitboxOwner, IHasStats, ISyncedEntity
     {
 		public enum State
         {
@@ -44,10 +47,6 @@ namespace ViMG.Entities
             public const float SLOWCHASE_DISTANCE = Cube.CUBE_SCALE * 1.5f;
         }
 
-        private static VerySimpleMesh meshHead;
-        private static VerySimpleMesh meshVertibrae;
-        private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("skullhead");
-
         public Color tintColor = Color.White;
 
 		public float invulnTimer;
@@ -72,6 +71,7 @@ namespace ViMG.Entities
 
 		public bool transitioned = false;
 
+		private NoticeHandler<Player> notice;
 		private Vector3 targetOffset;
 		private Vector3 targetPosition;
 
@@ -81,20 +81,9 @@ namespace ViMG.Entities
 		private ProjectileManager.ProjectileStats stats;
 		private int visStatsId;
 
-		public Skullhead() { }
-
-		public Skullhead(Vector3 position)
-        {
-			this.Position = position;
-        }
-
-        public override void Initialize(World world)
-        {
-            base.Initialize(world);
-
-            AlwaysRender = true;
-
-            Array.Fill(trainPositions, Position);
+		public Skullhead() 
+		{
+			notice = new NoticeHandler<Player>(this, float.MaxValue, false);
 
             health = maxHealth;
 
@@ -107,8 +96,18 @@ namespace ViMG.Entities
             batchStats = new ProjectileManager.ProjectileBatchStats(3, new float[3] { -15f, 0, 15f }, null);
             stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.ENEMYHOSTILE_DEAL, 3, 1f, Cube.CUBE_SCALE / 4, Cube.CUBE_SCALE);
             visStatsId = GlobalState.Registry.ProjectileRegistry.Get("skullhead_skull").Id;
+        }
 
-            //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+		public Skullhead(Vector3 position) : this()
+        {
+			this.Position = position;
+            Array.Fill(trainPositions, Position);
+        }
+
+        public override void Initialize(World world)
+        {
+            base.Initialize(world);
+
             world.ChatManager.AddChatMessage("Skullhead has awoken!", Color.Orange);
 		}
 
@@ -421,56 +420,6 @@ namespace ViMG.Entities
 				velocity = Vector3.Normalize(velocity) * maxVel;
 		}
 
-  //      public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
-
-		//	if (meshHead.IBO == null)
-		//		meshHead = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128, Enums.Alignment.Bottom);
-		//		//meshHead = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 128, Cube.PIXEL_SCALE * 128);
-
-		//	if (meshVertibrae.IBO == null)
-  //              meshVertibrae = MeshHelper.MakeQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16, Enums.Alignment.Bottom);
-  //          //meshVertibrae = MeshHelper.MakeEnemyQuad(device, Cube.PIXEL_SCALE * 16 * 3, Cube.PIXEL_SCALE * 16);
-
-		//	RectangleF sourceRect = new RectangleF(0, 0, 128, 128);
-		//	Vector3 scale = Vector3.One;
-
-		//	if (state == State.Dash || (state == State.Rotate && stateTimer >= Constants.ROTATE_TIME - Main.FIXED_STEP * 10f))
-		//	{
-		//		sourceRect = new RectangleF(128, 0, 128, 160);
-		//		scale = new Vector3(1, 160f / 128f, 1);
-		//	}
-
-		//	if (transitioned)
-		//		sourceRect.x += 256f;
-
-		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : this.tintColor.ToVector3();
-
-		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshHead,
-		//		Matrix.CreateTranslation(-new Vector3(0, Cube.PIXEL_SCALE * 64, 0)) *
-		//		Matrix.CreateScale(scale) *
-		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));
-
-		//	for (int i = 0; i < trainPositions.Length; i++)
-  //          {
-		//		float ioff = (float)i * 0.63f;
-		//		float t = ((alive + ioff) % 2f) / 2f;
-
-		//		float s = MathF.Sin(MathF.PI * 2 * t) * MathHelper.Lerp(Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 2f, 1 - ((float)i / 12f));
-
-		//		Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, meshVertibrae,
-		//			Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//			Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//			Matrix.CreateTranslation(trainPositions[i] + Main.camera.Right * s), new RectangleF(0, 128, 48, 16), Color.White.ToVector3()));
-		//	}
-
-		//	if (health < maxHealth)
-		//		DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position + new Vector3(0, Cube.CUBE_SCALE * 4, 0));
-		//}
-
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
 			if (invulnTimer <= 0)
@@ -529,5 +478,14 @@ namespace ViMG.Entities
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
 				world.EntityManager.Kill(this);
 		}
-	}
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				position = Position,
+				velocity = velocity,
+			};
+        }
+    }
 }
