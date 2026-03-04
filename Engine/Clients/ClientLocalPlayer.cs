@@ -16,12 +16,22 @@ using ViMG.Entities;
 using ViMG.IMGUIImpl;
 using ViMG.Physics;
 using ViMG.UIs;
+using static Engine.Entities.PlayerInput;
 
 namespace Engine.Clients
 {
     public class ClientLocalPlayer
     {
         private static Logger Logger = Logger.InitLogger("ClientLocalPlayer", true, Logger.LogLevel.Info);
+
+        [ConsoleCommandVar("cl_sim_player", "Simulate/predict player movement client side. Player becomes more spesponsive but may suffer stuttering if lag is too high.")]
+        public static bool SimPlayer = true;
+
+        [ConsoleCommandVar("cl_desync_lerp_enable", "If false/disabled: when desynced, player will immediately snap to server position. If true/enabled, the player will be interpolated to the server position instead.")]
+        public static bool DesyncLerpEnable = true;
+
+        [ConsoleCommandVar("cl_desync_lerp_time", "Time it takes for desync lerp to finish.")]
+        public static float DesyncLerpTime = 0.35f;
 
         public PlayerMovement CurrMovement;
         public PlayerMovement PrevMovement;
@@ -32,6 +42,10 @@ namespace Engine.Clients
         private MouseState prevMS;
 
         private MenuPlayer menuPlayer;
+
+        public SyncedEntity ServerPlayer;
+        private bool doDesyncLerp;
+        private float desyncLerpTimer;
 
         public ClientLocalPlayer(ref readonly EntityManager.EntityReference reference, ref readonly SyncedEntity entity)
         {
@@ -66,6 +80,26 @@ namespace Engine.Clients
             physicsInfo.Simulation.Bodies[Body].Pose.Orientation = player.rotation.ToNumerics();
         }
 
+        public void OnDesync(ref readonly SyncedEntity serverPlayer, ref SyncedEntity clientPlayer, PhysicsInfo physicsInfo)
+        {
+            if (!SimPlayer)
+                return;
+
+            if (DesyncLerpEnable)
+            {
+                if (!doDesyncLerp)
+                {
+                    doDesyncLerp = true;
+                    desyncLerpTimer = DesyncLerpTime;
+                }
+            }
+            else
+            {
+                clientPlayer.position = serverPlayer.position;
+                SyncBodyWith(ref clientPlayer, physicsInfo);
+            }
+        }
+
         public void Unload(PhysicsInfo physicsInfo)
         {
             physicsInfo.Simulation.Bodies.Remove(Body);
@@ -77,6 +111,7 @@ namespace Engine.Clients
         {
             using var zone = ViMG.TracyImpl.Tracy.BeginZone();
 
+            // For debugging
             if (Main.inputManager.JustPressed(Keys.V))
             {
                 IMGUIConsole.RunCommand("spawn", NetworkManager.NetworkSide.Client, "self", "ray", "ViMG.Entities.Ghost");
@@ -158,7 +193,7 @@ namespace Engine.Clients
                 extra.highlightIndex = current.highlightIndex;
 
                 localPlayer.velocity = client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear;
-                CurrMovement.Update(ref current.localPlayerStats, ref PrevMovement, ref localPlayer, deltaTime);
+                CurrMovement.Update(ref current.localPlayerStats, ref PrevMovement, ref localPlayer, deltaTime, SimPlayer);
                 CurrMovement.UpdateBody(client.PhysicsInfo, Body);
 
                 client.PhysicsInfo.Simulation.Bodies[Body].Velocity.Linear = localPlayer.velocity.ToNumerics();
@@ -207,8 +242,6 @@ namespace Engine.Clients
                     GlobalState.GameStateManager.TheIsland.netManagerClient.SendMessageToAll(SyncPlayerInputs.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, null);
                 }
 
-                current.camera.Position = localPlayer.position;
-
                 if (!menuPlayer.IsOpened && !Main.MouseControl)
                 {
                     currMS = Mouse.GetState();
@@ -240,6 +273,21 @@ namespace Engine.Clients
                     }
                 }
 
+                if (doDesyncLerp)
+                {
+                    localPlayer.position = Vector3.Lerp(localPlayer.position, ServerPlayer.position, 1 - (desyncLerpTimer / DesyncLerpTime));
+
+                    if (desyncLerpTimer > 0)
+                        desyncLerpTimer -= (float)deltaTime;
+                    else
+                    {
+                        doDesyncLerp = false;
+                        localPlayer.position = ServerPlayer.position;
+                        SyncBodyWith(ref localPlayer, client.PhysicsInfo);
+                    }
+                }
+
+                current.camera.Position = localPlayer.position;
                 localPlayer.SetExtra(ref extra);
             }
         }

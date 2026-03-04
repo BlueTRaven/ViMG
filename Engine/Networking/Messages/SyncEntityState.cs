@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Clients;
 using Engine.IMGUIImpl;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -30,6 +31,10 @@ namespace Engine.Networking.Messages
     public class SyncEntityState : Message
     {
         private Logger Logger = Logger.InitLogger("SyncEntityState", true, Logger.LogLevel.Info);
+
+        [ConsoleCommandVar("cl_player_desync_leniency", "Lieniency with regard to player desync. If the client and server disagree this much, the player will be snapped to the server position, resulting in a client-side jerk. Can't go higher than 1.6.")]
+        public static float PlayerDesyncLeniency = Cube.CUBE_SCALE * 4;
+
         public const int MAX_ENTS_PER_SYNC = 256;
 
         public static SyncEntityState Instance { get; private set; }
@@ -122,15 +127,9 @@ namespace Engine.Networking.Messages
             IMGUINetworkDebug.AddClientEntAck(sequence, (DateTime.Now - ack.initialSend).TotalSeconds);
 
             TimeSpan delay = DateTime.Now - ack.initialRecv;
-            //Console.WriteLine("seq {0} now {1}", sequence, serverSequence);
-            //if (SyncWorldState.Instance.ServerSequence - sequence > 1)
-            //{
-            //    Console.WriteLine("Late {0} {1:0.00}", SyncWorldState.Instance.ServerSequence - sequence, delay.TotalSeconds);
-            //}
 
             for (int i = 0; i < ack.numAckd; i++)
             {
-                //Console.WriteLine("Ack for {0} {1} {2}", playerId, ack.ackdEntities[i].id, sequence);
                 serverEntities[playerId][ack.ackdEntities[i].id].reference.generation = ack.ackdEntities[i].generation;
                 // Note we blindly set the sequence here; earlier we discard sequences that are not the latest, so this should work fine
                 serverEntities[playerId][ack.ackdEntities[i].id].latestSequence = sequence;
@@ -200,7 +199,7 @@ namespace Engine.Networking.Messages
                             // Client never had it loaded in the first place
                             if (serverEntities[player.playerIndex][i].reference.generation != -1)
                             {
-                                Logger.Log(Logger.LogLevel.Warn, "send unload ent {0}", reference.id);
+                                Logger.Log(Logger.LogLevel.Info, "send unload ent {0}", reference.id);
 
                                 //Console.WriteLine("Server sent unload ent {0}", reference.id);
 
@@ -297,14 +296,7 @@ namespace Engine.Networking.Messages
                         if (bits != 0)
                         {
                             var subwriter = new NetDataWriter();
-
-                            //if (netMessage.writer.Length + subwriter.Length + numBytesHeader + (int)numBytes > netMessage.peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable))
-                            //{
-                            //    netMessage.writer.Put(subwriter.AsReadOnlySpan());
-                            //    netMessage.Send();
-                            //    subwriter = new NetDataWriter();
-                            //}
-
+                            
                             subwriter.Put(ent.reference);
 
                             subwriter.Put(useType);
@@ -386,6 +378,17 @@ namespace Engine.Networking.Messages
         {
             base.ReceiveMessage(reader, peer);
 
+            if (PlayerDesyncLeniency > Chunk.CHUNK_SIZE * Cube.CUBE_SCALE)
+            {
+                PlayerDesyncLeniency = Chunk.CHUNK_SIZE * Cube.CUBE_SCALE;
+                Logger.Warn("cl_player_desync_leniency out of range, clamped to {0}", PlayerDesyncLeniency);
+            }
+            if (PlayerDesyncLeniency < 0)
+            {
+                PlayerDesyncLeniency = 0;
+                Logger.Warn("cl_player_desync_leniency out of range, clamped to {0}", PlayerDesyncLeniency);
+            }
+
             var client = GS.GetClient();
 
             long ticks = reader.GetLong();
@@ -466,28 +469,23 @@ namespace Engine.Networking.Messages
                             {
                                 if (client.Current().entities.IsActive(ref reference) && client.LocalPlayer != null)
                                 {
+                                    client.LocalPlayer.ServerPlayer = state;
+
                                     // Update player
                                     // we do this slightly differently since the player entity has some stuff we don't want to overwrite
                                     ref var player = ref client.Current().entities.GetByRefPtr(ref reference);
-                                    bool keepLocalPosition = true;
-
                                     if (((Networking.SyncedEntity.Fields)bits & Networking.SyncedEntity.Fields.AnyPosition) != Networking.SyncedEntity.Fields.None)
                                     {
                                         Vector3 dist = player.position - state.position;
-                                        if (dist.Length() > Cube.CUBE_SCALE)
+                                        if (dist.Length() > PlayerDesyncLeniency)
                                         {
                                             Logger.Warn("Player {0} position desync by {1}", client.LocalPlayerIndex, dist.Length());
-                                            keepLocalPosition = false;
+                                            client.LocalPlayer.OnDesync(ref state, ref player, client.PhysicsInfo);
+                                            state.position = player.position;
                                         }
-                                    } 
+                                    }
 
                                     state.rotation = player.rotation;
-                                    if (keepLocalPosition)
-                                        state.position = player.position;
-                                    else
-                                    {
-                                        client.LocalPlayer.SyncBodyWith(ref state, client.PhysicsInfo);
-                                    }
                                     // Always keep client's rotation
                                     client.Current().entities.Set(reference, typeName, state);
                                 }
