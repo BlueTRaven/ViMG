@@ -79,7 +79,7 @@ namespace ViMG.Items
             Matrix scaled = Matrix.CreateScale(0.35f) * transform;
             if (mesh.IBO != null)
                 renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-                    mesh, scaled, cube.Client.GetHeldSourceRect()));
+                    mesh, scaled));
         }
     }
 }

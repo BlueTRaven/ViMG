@@ -87,8 +87,8 @@ namespace ViMG
 
         public static void CenterMouse()
         {
-            if (Thread.CurrentThread == GlobalState.MainThread)
-                Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
+            //if (Thread.CurrentThread == GlobalState.MainThread)
+            Mouse.SetPosition(CurrentWindowResolution.X / 2, CurrentWindowResolution.Y / 2);
         }
 
         public static void OnSave(List<byte> saveBytes)
