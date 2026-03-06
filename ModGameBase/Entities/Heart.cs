@@ -67,7 +67,7 @@ namespace ViMG.Entities
 					if ((player.Position - Position).Length() < Cube.CUBE_SCALE * 32)
 					{
 						// TODO there are better ways to do this behavior. Entities should generally not have to be aware of networking
-						if (GlobalState.GameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+						if (GlobalState.NetMode != NetworkingMode.Client)
 						{
 							world.PassiveSpawnerManager.SpawnCapMultiplier = 2f;
 							world.PassiveSpawnerManager.SpawnChanceMultipler = 2f;
@@ -86,7 +86,7 @@ namespace ViMG.Entities
 				world.HitboxManager.Remove(hitbox);
 
 			// TODO there are better ways to do this behavior. Entities should generally not have to be aware of networking
-			if (GlobalState.GameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
+			if (GlobalState.NetMode != NetworkingMode.Client)
 			{
 				world.PassiveSpawnerManager.SpawnCapMultiplier = 1f;
 				world.PassiveSpawnerManager.SpawnChanceMultipler = 1f;

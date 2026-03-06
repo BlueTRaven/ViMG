@@ -66,10 +66,10 @@ namespace ViMG.UIs
 
         public static string GetDefaultPlayerName(GameStateManager gsManager)
         {
-            if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
                 return GlobalState.SessionInformation.LastLoadedSave;
             else
-                return GlobalState.Args.playerName ?? gsManager.netMode.ToString();
+                return GlobalState.Args.playerName ?? GlobalState.NetMode.ToString();
         }
 
         public override void Update(double deltaTime)
@@ -98,7 +98,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Singleplayer, serverIp, serverPort);
+                    gsManager.Continue(NetworkingMode.Singleplayer, serverIp, serverPort);
                 }
                 ypos++;
 
@@ -106,14 +106,14 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Continue (Server)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Server, serverIp, serverPort);
+                    gsManager.Continue(NetworkingMode.Server, serverIp, serverPort);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(128 + 16, 48 * ypos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
                     new UI.LabelConstructionParameters("Continue (Client)", fi, 128, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.Continue(GameStateManager.NetworkingMode.Client, serverIp, serverPort);
+                    gsManager.Continue(NetworkingMode.Client, serverIp, serverPort);
                 }
 
                 if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 48 * ypos, 128, 32), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons"),
@@ -160,8 +160,8 @@ namespace ViMG.UIs
                             new UI.LabelConstructionParameters("Load " + directories[i], fi, 128, Vector2.Zero),
                             new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                         {
-                            gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
-                            if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                            GlobalState.NetMode = startAsServer ? NetworkingMode.Server : NetworkingMode.Singleplayer;
+                            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
                                 gsManager.TheIsland.localPlayerName = directories[i];
 
                             gsManager.SetGameState(gsManager.TheIsland);
@@ -203,11 +203,11 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Create World", fi, 196, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.netMode = startAsServer ? GameStateManager.NetworkingMode.Server : GameStateManager.NetworkingMode.Singleplayer;
+                    GlobalState.NetMode = startAsServer ? NetworkingMode.Server : NetworkingMode.Singleplayer;
 
                     if (worldName == "")
                         worldName = "new" + directories.Length;
-                    if (gsManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+                    if (GlobalState.NetMode == NetworkingMode.Singleplayer)
                         gsManager.TheIsland.localPlayerName = worldName;
 
                     gsManager.SetGameState(gsManager.TheIsland);
@@ -261,7 +261,7 @@ namespace ViMG.UIs
                     new UI.LabelConstructionParameters("Connect", fi, 196, Vector2.Zero),
                     new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
                 {
-                    gsManager.netMode = GameStateManager.NetworkingMode.Client;
+                    GlobalState.NetMode = NetworkingMode.Client;
                     gsManager.TheIsland.localPlayerName = playerName;
                     gsManager.SetGameState(gsManager.TheIsland);
                     gsManager.TheIsland.StartClient(serverIp, serverPort);

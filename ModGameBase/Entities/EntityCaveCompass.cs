@@ -82,11 +82,6 @@ namespace ViMG.Entities
 
             Vector3 dir = center - Position;
 
-            //if (c != null && ChunkPosition.WorldSpaceChunk(world.player.Position) == c.Position)
-            {
-                dir = world.player[world.localPlayerIndex].Position - Position;
-            }
-
             if (CubePosition.FromWorldSpace(Position).Y > 180f)
             {
                 //z to prevent gymbal lock

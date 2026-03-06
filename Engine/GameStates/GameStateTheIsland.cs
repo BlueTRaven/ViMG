@@ -167,15 +167,15 @@ namespace ViMG.GameStates
                 netManagerClient.Port = port;
             }
 
-            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client)
+            if (GlobalState.NetMode == NetworkingMode.Client)
                 ConnectLocal();
         }
 
         public void ConnectLocal()
         {
             // NetworkManager defaults are already set up to connect locally, so we don't really need to do anything
-            netManagerServer?.Connect(GameStateManager.NetworkingMode.Server);
-            netManagerClient?.Connect(GameStateManager.NetworkingMode.Client);
+            netManagerServer?.Connect(NetworkingMode.Server);
+            netManagerClient?.Connect(NetworkingMode.Client);
         }
 
         public void Disconnect()
@@ -260,7 +260,7 @@ namespace ViMG.GameStates
                 netManagerServer?.PollEvents();
             }
 
-            if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+            if (GlobalState.NetMode != NetworkingMode.Server)
             {
                 // If world takes longer than client whoami timeout, this might fail?
                 if (netManagerClient.ClientHasConnected())
@@ -284,7 +284,7 @@ namespace ViMG.GameStates
                     world.Update(deltaTime);
             }
 
-            if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server) 
+            if (GlobalState.NetMode != NetworkingMode.Server) 
             {
                 // If world takes longer than client whoami timeout, this might fail?
                 if (netManagerClient.ClientHasConnected())
@@ -337,16 +337,16 @@ namespace ViMG.GameStates
             SyncWorldState.Instance.ServerShutdown();
             SetMenu(null);
 
-            if (manager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
             {
                 netManagerClient = new();
                 netManagerServer = new();
             }
-            else if (manager.netMode == GameStateManager.NetworkingMode.Server)
+            else if (GlobalState.NetMode == NetworkingMode.Server)
             {
                 netManagerServer = new();
             }
-            else if (manager.netMode == GameStateManager.NetworkingMode.Client)
+            else if (GlobalState.NetMode == NetworkingMode.Client)
             {
                 netManagerClient = new();
             }
@@ -762,7 +762,7 @@ namespace ViMG.GameStates
                     Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
 
-            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
+            if (GlobalState.NetMode == NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
             {
                 TextHelper.DrawText(batch, fi, string.Format("Connecting to {0}:{1}...", netManagerClient.Ip, netManagerClient.Port), Color.White,
                     new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
@@ -771,19 +771,19 @@ namespace ViMG.GameStates
 
             StringBuilder sb = new StringBuilder();
             sb.Append("This is a ");
-            switch (GlobalState.GameStateManager.netMode)
+            switch (GlobalState.NetMode)
             {
-                case GameStateManager.NetworkingMode.Client:
+                case NetworkingMode.Client:
                     sb.Append("Client session. Connected to: ");
                     sb.Append(netManagerClient?.netManager.FirstPeer?.ToString());
                     sb.Append(".");
                     break;
-                case GameStateManager.NetworkingMode.Server:
+                case NetworkingMode.Server:
                     sb.Append("Server session. There are ");
                     sb.Append(netManagerServer?.uniqueNetPlayers);
                     sb.Append(" connected players.");
                     break;
-                case GameStateManager.NetworkingMode.Singleplayer:
+                case NetworkingMode.Singleplayer:
                     sb.Append("Singleplayer session.");
                     break;
             }

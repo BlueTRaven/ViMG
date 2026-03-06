@@ -38,7 +38,7 @@ namespace ViMG.UIs
         {
             base.OnOpen();
 
-            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
                 gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
@@ -48,7 +48,7 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer)
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
                 gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;
@@ -77,7 +77,7 @@ namespace ViMG.UIs
 
             y += 32 + MARGIN;
 
-            if (gsManager.netMode != GameStateManager.NetworkingMode.Client)
+            if (GlobalState.NetMode != NetworkingMode.Client)
             {
                 if (UI.MakeButton(buttonParams with 
                 {

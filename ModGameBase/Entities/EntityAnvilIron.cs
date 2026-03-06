@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Engine.Items;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +10,7 @@ namespace ViMG.Entities
 {
 	[EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(1, 0)]
-	public class EntityAnvilIron : Entity, ICubeTracker
+    public class EntityAnvilIron : Entity, ICubeTracker, ISyncedEntity
 	{
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -44,15 +45,10 @@ namespace ViMG.Entities
 			world.EntityManager.Kill(this);
 		}
 
-		public bool OnInteract(Player player)
-		{
-			if (player.IsLocalPlayer)
-			{
-				GlobalState.GameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(GlobalState.GameStateManager, world.EntityManager.GetReference(player), world.EntityManager.GetReference(this), player.inventory, player.heldInventory, inventory));
-			}
-
-			return true;
-		}
+        public bool OnInteract(Player player)
+        {
+            return false;
+        }
 
 		public override void OnSave(List<byte> saveBytes)
 		{
@@ -73,5 +69,14 @@ namespace ViMG.Entities
 
 			world.InventoryManager.Get(inventory).Load(loadBytes, ref index);
 		}
-	}
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = Position,
+                counters = { [0] = inventory.id, [1] = inventory.generation },
+            };
+        }
+    }
 }

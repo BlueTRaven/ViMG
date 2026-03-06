@@ -31,6 +31,9 @@ namespace ViMG.Entities
 		[ConsoleCommandVar("ent_prev_copies_srv", "Number of previous copies of an entity to keep (for interpolation and networking. Includes current state.) Default = 10")]
 		public static int EntPrevSrv = 10;
 
+		[ConsoleCommandVar("sv_ent_disable_distance", "Should entities be disabled when outside of a player's range. Default: true")]
+		public static bool DisableDistance = true;
+
 		public struct EntityReference : INetSerializable
 		{
 			public int id;
@@ -618,23 +621,35 @@ namespace ViMG.Entities
 				}
 			}
 
-			for (int i = 0; i < EntMax; i++)
+			if (DisableDistance)
 			{
-				if (ents[i].active && !ents[i].entity.Dead)
+				for (int i = 0; i < EntMax; i++)
 				{
-					if (ents[i].entity.CanBeDisabled && !(ents[i].entity is ICubeTracker || ents[i].entity is IMultiCubeTracker))
-					{
-						var localPlayer = world.GetLocalPlayer();
+					Entity? entity = ents[i].entity;
 
-						if (localPlayer != null)
+					if (ents[i].active && entity != null && !entity.Dead)
+					{
+						if (entity.CanBeDisabled && !(entity is ICubeTracker || entity is IMultiCubeTracker))
 						{
-							var dist = world.DistanceFromPlayer(localPlayer, ents[i].entity.Position);
-							if (dist >= ents[i].entity.DisableDistance)
+							bool closeToAny = false;
+							foreach (Player? player in world.player)
 							{
-								ents[i].entity.Enabled = false;
-								if (ents[i].entity.DestroyOnDisabled)
+								if (player != null)
 								{
-									Unload(ents[i].entity);
+									var dist = world.DistanceFromPlayer(player, entity.Position);
+									if (dist <= entity.DisableDistance)
+									{
+										closeToAny = true;
+									}
+								}
+							}
+
+							if (!closeToAny)
+							{
+								entity.Enabled = false;
+								if (entity.DestroyOnDisabled)
+								{
+									Unload(entity);
 								}
 							}
 						}

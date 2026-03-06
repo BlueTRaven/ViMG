@@ -69,9 +69,6 @@ namespace ViMG
 
 		public const int MAX_PLAYERS = 4;
 		public Player?[] player = new Player[4];
-		// TODO: get rid of localPlayerIndex
-		// Client will be handled with the dumb client, therefore the server will have no concept of a "local player"
-		public int localPlayerIndex;
 
 		public int DrawDistanceHoriz = 6;   //radius in chunks that we should be able to see
 		public int DrawDistanceVert = 6;
@@ -162,8 +159,7 @@ namespace ViMG
 			ProjectileManager = new ProjectileManager(this);
 			EntityManager.Initialize(this);
 
-			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client)
-				PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
+			PassiveSpawnerManager = new PassiveSpawnerManager(EntityManager);
 
 			LightManager2 = new LightManager2();
 
@@ -188,10 +184,6 @@ namespace ViMG
 			{
 				player[p.playerIndex] = p;
 			}
-			localPlayerIndex = GlobalState.GameStateManager.TheIsland.netManagerClient?.whoAmI ?? 0;
-			// -1 means singleplayer
-			if (localPlayerIndex == -1) localPlayerIndex = 0;
-
 			Logic.FinishLoading(this, device);
 		}
 
@@ -249,12 +241,9 @@ namespace ViMG
 			// and this bullshit when a player respawns.
 			foreach (Player player in PlayerRespawnedEvent)
 			{
-				if (GlobalState.GameStateManager.netMode != GameStates.GameStateManager.NetworkingMode.Client)
-				{
-					Player p = new Player(player);
-					EntityManager.ForceAdd(p);
-					this.player[player.playerIndex] = p;
-				}
+				Player p = new Player(player);
+				EntityManager.ForceAdd(p);
+				this.player[player.playerIndex] = p;
 			}
 			PlayerRespawnedEvent.Clear();
 
@@ -305,8 +294,6 @@ namespace ViMG
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();
 
-			IMGUIConsole.Assert(GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client);
-
 			//Flush the load queue so we don't end up not saving chunks that are currently loading in.
 			//This is probably unnecessary (why would data in newly loaded chunks change ever?) but it's best to be on the safe side.
 			ChunkLoadManager.FlushLoadQueue(this);
@@ -328,15 +315,6 @@ namespace ViMG
 			}
 
 			worldInfoIO.Save(LoadedFolderName, WorldInfo);
-		}
-
-		public Player? GetLocalPlayer()
-		{
-			if (localPlayerIndex >= 0 && localPlayerIndex < MAX_PLAYERS)
-			{
-				return player[localPlayerIndex];
-			}
-			else return null;
 		}
 
 		private static List<int> validIndices = new List<int>();
@@ -435,14 +413,6 @@ namespace ViMG
 
 			drawTime.Stop();
 			ChunkDrawTime = drawTime.Elapsed.TotalSeconds;
-		}
-
-		public void DrawUI(SpriteBatch batch)
-		{
-			using var zone = TracyImpl.Tracy.BeginZone();
-
-			GetLocalPlayer()?.DrawUI(batch);
-			//DialogueManager.Draw(batch);
 		}
 
 		public void OnCubeUpdate(CubePosition updating, ushort updatedId)
@@ -602,7 +572,7 @@ namespace ViMG
 
 				if (CubeProgressTracker.AddProgress(ChunkManager.CubeView, position, num))
 				{
-					DoMineCube(position, player, GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Client);
+					DoMineCube(position, player, true);
 
 					return true;
 				}

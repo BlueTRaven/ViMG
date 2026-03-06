@@ -145,32 +145,8 @@ namespace Engine
                 entity = data,
                 layer = world.Layer,
                 uuid = world.player[playerIndex].playerUuid,
-                isLocal = world.player[playerIndex].IsLocalPlayer,
+                isLocal = false,
             });
-        }
-
-        public Player DeserializeLocal(World world)
-        {
-            int index = -1;
-            for (int i = 0; i < playerDatas.Count; i++)
-            {
-                PlayerData pdata = playerDatas[i];
-                if (pdata.isLocal)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            if (index != -1)
-            {
-                return Deserialize(world, playerDatas[index].uuid, 0);
-            }
-            else
-            {
-                IMGUIConsole.Assert(false);
-                throw new Exception();
-            }
         }
 
         /// <summary>

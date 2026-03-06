@@ -1,5 +1,9 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
+using Engine.Clients;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -23,7 +27,7 @@ namespace ViMG.Cubes
 
         public override ClientCube ClientInit()
         {
-            return new(this, new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White);
+			return new ClientCubeAnvilIron(this);
         }
 
 		public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -81,6 +85,30 @@ namespace ViMG.Cubes
 
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
             DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
+        }
+    }
+
+    public class ClientCubeAnvilIron : ClientCube
+    {
+        public ClientCubeAnvilIron(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(144, 48, 16, 16), new RectangleF(160, 48, 16, 16), new RectangleF(176, 48, 16, 16)), Color.White)
+        {
+        }
+
+        public override void OnRightClick(ClientStates client, int playerId, CubePosition position)
+        {
+            base.OnRightClick(client, playerId, position);
+
+            var tracker = client.ChunkManager.CubeTrackers.Get(ChunkPosition.CubeChunk(position)).Get(position.InChunkSpace());
+            if (playerId == client.LocalPlayerIndex)
+            {
+                var ent = client.Current().entities.GetByRef(ref tracker);
+                var invRef = new InventoryManager.InventoryReference((ushort)ent.counters[0], (short)ent.counters[1]);
+
+                var playerRef = client.Current().entities.GetPlayerRef(playerId);
+                var player = client.Current().entities.GetByRef(playerRef);
+                var playerExtra = player.GetExtra<Player.PlayerExtraState>();
+                GlobalState.GameStateManager.GetCurrentGameState().PushMenu(new MenuAnvil(GlobalState.GameStateManager, playerRef, tracker, playerExtra.inventory, playerExtra.heldInventory, invRef));
+            }
         }
     }
 }

@@ -516,7 +516,7 @@ namespace ViMG.UIs
 
 		public static void InventoryActionClient(EntityManager.EntityReference entity, InventoryManager.InventoryReference inventory, int activatingPlayer, int action)
 		{
-			Debug.Assert(GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server);
+			Debug.Assert(GlobalState.NetMode != NetworkingMode.Server);
 
             GlobalState.GameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
             {

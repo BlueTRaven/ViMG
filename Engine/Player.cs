@@ -232,8 +232,6 @@ namespace ViMG
 
 		public int playerUuid;
 		public int playerIndex;
-		public bool IsLocalPlayer =>
-            GlobalState.GameStateManager.netMode == GameStates.GameStateManager.NetworkingMode.Singleplayer || playerIndex == world.localPlayerIndex;
 
 		public bool IsInControl => inputLockupTimer <= 0;
 
@@ -637,43 +635,23 @@ namespace ViMG
 				}
 			}
 
-			if (IsLocalPlayer)
+			if (useTimer <= 0)
 			{
-				//if (Main.inputManager.JustPressed(Keys.F3))
-				//{
-				//	Main.DebugChunks = !Main.DebugChunks;
-				//}
-
-				//if (Main.inputManager.JustPressed(Keys.E))
-				//{
-				//	if (GlobalState.gameStateManager.GetCurrentGameState().GetCurrentMenu() != menuPlayer)
-				//		GlobalState.gameStateManager.GetCurrentGameState().PopMenu();
-				//	else menuPlayer.Toggle();
-				//}
-
-				if (useTimer <= 0)
+				if (oldHighlight != highlightIndex)
 				{
-					if (oldHighlight != highlightIndex)
+					if (oldHighlight != -1 && inventory.Get(oldHighlight).valid)
 					{
-						if (oldHighlight != -1 && inventory.Get(oldHighlight).valid)
-						{
-							inventory.Get(oldHighlight).item?.EndHold(this, inventory, highlightIndex);
+						inventory.Get(oldHighlight).item?.EndHold(this, inventory, highlightIndex);
 
-							if (inventory.Get(highlightIndex).valid)
-								inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
-						}
+						if (inventory.Get(highlightIndex).valid)
+							inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
+					}
 
-                        if (inventory.Get(highlightIndex).valid)
-                            inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
-                    }
-					oldHighlight = highlightIndex;
+					if (inventory.Get(highlightIndex).valid)
+						inventory.Get(highlightIndex).item?.StartHold(this, inventory, highlightIndex);
 				}
+				oldHighlight = highlightIndex;
 			}
-
-			/*if (Main.inputManager.JustPressed(Keys.Escape))
-            {
-				world.GameStateManager.GetCurrentGameState().PushMenu(new MenuPause(world.GameStateManager, world));
-			}*/
 
 			if (inventory.Get(highlightIndex).valid)
 				inventory.Get(highlightIndex).item.Hold(this, inventory, highlightIndex);

@@ -152,9 +152,9 @@ namespace Engine.Networking
             //netManager.SimulationMinLatency = 200;
         }
 
-        public void Connect(GameStateManager.NetworkingMode netMode)
+        public void Connect(NetworkingMode netMode)
         {
-            isServer = netMode == GameStateManager.NetworkingMode.Server;
+            isServer = netMode == NetworkingMode.Server;
 
             StartTime = GlobalState.Time;
             if (IsServer)

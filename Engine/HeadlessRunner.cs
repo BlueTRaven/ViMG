@@ -93,7 +93,7 @@ namespace Engine
 
             runner.Register(null);
 
-            GlobalState.GameStateManager.netMode = GameStateManager.NetworkingMode.Server;
+            GlobalState.NetMode = NetworkingMode.Server;
 
             loopThread = new Thread(ThreadFunc);
 

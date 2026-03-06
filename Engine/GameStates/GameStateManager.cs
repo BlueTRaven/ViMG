@@ -12,12 +12,7 @@ namespace ViMG.GameStates
 {
     public class GameStateManager : IDisposable
     {
-        public enum NetworkingMode
-        {
-            Server, // Acting as host. Can play
-            Client, // Acting as client
-            Singleplayer, // Singleplayer. 
-        }
+     
 
         private List<GameState> gameStates = new List<GameState>();
 
@@ -27,8 +22,6 @@ namespace ViMG.GameStates
         public bool Paused;
 
         private GameState currentGameState = null;
-
-        public NetworkingMode netMode = NetworkingMode.Singleplayer;
 
         public virtual void Initialize()
         {
@@ -92,7 +85,7 @@ namespace ViMG.GameStates
         {
             if (GlobalState.SessionInformation.LastLoadedSave != null)
             {
-                this.netMode = netMode;
+                GlobalState.NetMode = netMode;
                 TheIsland.localPlayerName = MenuMain.GetDefaultPlayerName(this);
                 SetGameState(TheIsland);
                 if (netMode == NetworkingMode.Singleplayer)

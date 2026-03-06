@@ -196,8 +196,8 @@ namespace ViMG
                 //queuedChunk.copyTask.Wait();
 
                 var copy = chunkManager.CopyManager.GetCopy(queuedChunk.position);
-				chunkMesher?.RenderMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, queuedChunk.position, copy);
-                chunkMesher?.CollisionMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, queuedChunk.position, copy);
+				chunkMesher?.RenderMesher?.AddToNextBatch(Vector3.Zero, queuedChunk.position, copy);
+                chunkMesher?.CollisionMesher?.AddToNextBatch(Vector3.Zero, queuedChunk.position, copy);
             }
 
             chunkMesher?.RenderMesher?.BeginFlush();
@@ -313,7 +313,7 @@ namespace ViMG
                     loadedChunks[i].state = LoadingState.Loaded;
                 loadedChunksByPlayer[copyingChunk.player][i] = LoadingState.Loading;
 
-                chunkMesher?.CollisionMesher?.AddToNextBatch(world.GetLocalPlayer()?.Position ?? Vector3.Zero, copyingChunk.position, copy);
+                chunkMesher?.CollisionMesher?.AddToNextBatch(world.player[copyingChunk.player]?.Position ?? Vector3.Zero, copyingChunk.position, copy);
 
 				waitingToFinishMeshingChunks.Add(copyingChunk);
             }
@@ -372,9 +372,6 @@ namespace ViMG
         [Obsolete]
 		public void LoadAroundTarget(World world, ChunkPosition target, int? tempRenderDistance = null) 
 		{
-			if (GlobalState.GameStateManager.netMode == GameStateManager.NetworkingMode.Client)
-                IMGUIConsole.Assert(false);
-
             int useRenderDistance = tempRenderDistance.GetValueOrDefault(Options.RenderDistance);
 
             int minx = -useRenderDistance;

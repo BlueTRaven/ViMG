@@ -264,7 +264,7 @@ namespace ViMG
 				FixedUpdate(FIXED_STEP * Options.DEBUGTimescale);
 			}
 
-			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.NetMode != NetworkingMode.Server)
 			{
 				IsMouseVisible = DrawCursor;
 			}
@@ -315,13 +315,9 @@ namespace ViMG
 			{
 				if (inputManager.JustPressed(Keys.O))
 					Options.CenterMouse();
-
-                //GlobalState.GameStateManager.Update(deltaTime);
-				//if (WorldLoaded)
-					//world.Update(deltaTime);
 			}
 
-			if (GlobalState.GameStateManager.netMode != GameStateManager.NetworkingMode.Server)
+			if (GlobalState.NetMode != NetworkingMode.Server)
 			{
 				if (IsActive && !paused && !MouseControl)
 					Options.CenterMouse();
@@ -456,8 +452,6 @@ namespace ViMG
 
 					if (GlobalState.GameStateManager.GetCurrentGameState() is GameStateTheIsland theIsland && theIsland.GetWorld() != null)
 					{
-						ImGui.Text(string.Format("Local player: {0}", theIsland.GetWorld().localPlayerIndex));
-
 						if (theIsland.netManagerServer != null)
 						{
 							theIsland.netManagerServer.IMGUIDebug();

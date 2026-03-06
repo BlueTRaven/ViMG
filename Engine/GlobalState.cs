@@ -9,6 +9,13 @@ using ViMG.IMGUIImpl;
 
 namespace Engine
 {
+    public enum NetworkingMode
+    {
+        Server, // Acting as host. Can play
+        Client, // Acting as client
+        Singleplayer, // Singleplayer. 
+    }
+
     public static class GlobalState
     {
         public static ArgParser Args = new ArgParser();
@@ -32,6 +39,8 @@ namespace Engine
         public static SessionIO SessionIO;
 
         public static Thread MainThread;
+
+        public static NetworkingMode NetMode = NetworkingMode.Singleplayer;
 
         public const bool GEN_BROAD = true;
         public const bool GEN_DETAIL = true;
