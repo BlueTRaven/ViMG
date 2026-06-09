@@ -75,7 +75,6 @@ namespace ViMG.GameStates
 
         public string? localPlayerName = null;
 
-
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
         }
@@ -114,14 +113,14 @@ namespace ViMG.GameStates
                 if (!Directory.Exists(WorldIO.SaveFolder + worldName + "/"))
                 {
                     Logger.Info("Creating world {0} layer {1}", worldName, layer);
-                    world = CreateWorld(device, worldName, layer);
+                    world = CreateWorld(worldName, layer);
                     playerIO = new PlayerManagerIO();
                     playerIO.Load(worldName);
                 }
                 else
                 {
                     Logger.Info("Loading world {0} layer {1}", worldName, layer);
-                    world = LoadWorld(device, worldName, layer);
+                    world = LoadWorld(worldName, layer);
                     playerIO = new PlayerManagerIO();
                     playerIO.Load(worldName);
                 }
@@ -139,7 +138,7 @@ namespace ViMG.GameStates
                 ProfilingHelper.End(Logger, "Done Building Meshes.");
 
                 LoadMessage = "Loading World...\nFinishing...";
-                world.FinishLoading(device);
+                world.FinishLoading();
 
                 IsLoading = false;
                 ProfilingHelper.End(Logger, "Finished Loading and Flushing World.");
@@ -354,7 +353,7 @@ namespace ViMG.GameStates
             waiterReset.Set();
         }
 
-        public static World CreateWorld(GraphicsDevice? device, string worldName, int layer)
+        public static World CreateWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -384,8 +383,6 @@ namespace ViMG.GameStates
 
             var worldInfoIO = new WorldInfoIO();
                
-            Skybox? skybox = device != null ? new Skybox() : null;
-
             // This is up here so we can use this information when loading a world (coconut easter egg)
             // but it also might present a problem; if we error at any point during the creation/loading process,
             // pressing "Continue" will just try to load the same world that caused the error instead of staying the same.
@@ -396,7 +393,7 @@ namespace ViMG.GameStates
 
             chunkIO.CreateAll();
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, inventoryManager, chunkManager, worldInfo, logic, null, physicsInfo, new HousingManager());
 
             ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
@@ -417,8 +414,6 @@ namespace ViMG.GameStates
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            if (!GlobalState.IsHeadless)
-                world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
 
@@ -456,7 +451,7 @@ namespace ViMG.GameStates
             return world;
         }
 
-        public static World? LoadWorld(GraphicsDevice device, string worldName, int layer)
+        public static World? LoadWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -516,7 +511,6 @@ namespace ViMG.GameStates
             ProfilingHelper.End(Logger, "World loading done.");
 
             World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             return world;
         }
@@ -648,7 +642,6 @@ namespace ViMG.GameStates
                 ProfilingHelper.End(Logger, "World loading done.");
 
                 World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-                world.InitMeshes(device);
                 prototype.Logic.Initialize(world);
                 return world;
             }
@@ -669,20 +662,6 @@ namespace ViMG.GameStates
                 throw new Exception(string.Format("No WorldLogic defined for layer {0}", layer));
 
             WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.logics[layer]);
-
-            //switch (layer)
-            //{
-            //    case 0:
-            //        logic = new WorldLogics.WorldLogicIsland(worldName, device);
-            //        break;
-            //    case 1:
-            //        logic = new WorldLogics.WorldLogicCatacombs(device);
-            //        break;
-            //    default:
-            //        Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
-            //        logic = null;
-            //        break;
-            //}
 
             return logic;
         }

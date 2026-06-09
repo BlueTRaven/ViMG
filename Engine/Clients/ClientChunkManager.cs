@@ -36,7 +36,8 @@ namespace Engine.Clients
             ChunkIO = new ChunkManagerIO(SizeInChunks, 0);
             CubeView = new ClientCubeView(ChunkIO, SizeInChunks);
             ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
-            ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
+            //ChunkMesher = ChunkMesher.RenderOnly(SizeInChunks, device);
+            ChunkMesher = new ChunkMesher(SizeInChunks, physicsInfo, device);
             CopyManager = new CopiedChunkManager(CubeView, ChunkIO, CubeTrackers, SizeInChunks);
 
             CubeProgressTracker = new();

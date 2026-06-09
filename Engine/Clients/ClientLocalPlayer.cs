@@ -24,7 +24,7 @@ namespace Engine.Clients
     {
         private static Logger Logger = Logger.InitLogger("ClientLocalPlayer", true, Logger.LogLevel.Info);
 
-        [ConsoleCommandVar("cl_sim_player", "Simulate/predict player movement client side. Player becomes more spesponsive but may suffer stuttering if lag is too high.")]
+        [ConsoleCommandVar("cl_sim_player", "Simulate/predict player movement client side. Player becomes more responsive but may suffer stuttering if lag is too high.")]
         public static bool SimPlayer = true;
 
         [ConsoleCommandVar("cl_desync_lerp_enable", "If false/disabled: when desynced, player will immediately snap to server position. If true/enabled, the player will be interpolated to the server position instead.")]

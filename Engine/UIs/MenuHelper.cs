@@ -287,7 +287,7 @@ namespace ViMG.UIs
 			if (itemSlot.button.clickLeft || itemSlot.button.clickRight)
 			{
 				// TODO
-				// playerIndex will always be the local player index (this is only called for handling menus, after all!
+				// playerIndex will always be the local player index (this is only called for handling menus, after all!)
 				GlobalState.GameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
 				{
 					playerId = (byte)0,

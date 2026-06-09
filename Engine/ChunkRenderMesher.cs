@@ -301,9 +301,11 @@ namespace ViMG
 					var task = activeMeshBatchTasks[i];
 
 					if (!task.IsCompletedSuccessfully)
-						throw new Exception("???");
+					{
+						throw task.Exception ?? new Exception("Task did not complete successfully, but did not throw an exception?");
+                    }
 
-					var batchResult = task.Result;
+                    var batchResult = task.Result;
 					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)

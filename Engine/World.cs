@@ -168,14 +168,7 @@ namespace ViMG
             startTime = DateTime.Now;
 		}
 
-		public void InitMeshes(GraphicsDevice device)
-		{
-			//MenuDialogue = new MenuDialogue(GlobalState.GameStateManager);
-
-			//LightManager = new LightManager(device);
-		}
-
-		public void FinishLoading(GraphicsDevice device)
+		public void FinishLoading()
 		{
 			using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -184,7 +177,7 @@ namespace ViMG
 			{
 				player[p.playerIndex] = p;
 			}
-			Logic.FinishLoading(this, device);
+			Logic.FinishLoading(this);
 		}
 
 		public void Update(double deltaTime)

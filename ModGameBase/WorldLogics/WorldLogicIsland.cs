@@ -53,9 +53,9 @@ namespace ViMG.WorldLogics
 			
         }
 
-        public override void FinishLoading(World world, GraphicsDevice device)
+        public override void FinishLoading(World world)
         {
-            base.FinishLoading(world, device);
+            base.FinishLoading(world);
 
             WeatherManager = new WeatherManager();
         }
