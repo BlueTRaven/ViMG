@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -21,30 +22,30 @@ namespace ViMG
 
         public void Save()
         {
-            if (!Directory.Exists(SAVE_FOLDER))
-                Directory.CreateDirectory(SAVE_FOLDER);
+            if (!Directory.Exists(SaveFolder))
+                Directory.CreateDirectory(SaveFolder);
 
-            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+            using (FileStream fs = new FileStream(SaveFolder + FILE_NAME_SESSION + EXT_SESSION, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
             {
                 using (StreamWriter sw = new StreamWriter(fs))
                 {
-                    sw.WriteLine("save " + Main.SessionInformation.LastLoadedSave);
-                    sw.WriteLine("loaded_mods " + string.Join(',', Main.SessionInformation.LoadedMods));
+                    sw.WriteLine("save " + GlobalState.SessionInformation.LastLoadedSave);
+                    sw.WriteLine("loaded_mods " + string.Join(',', GlobalState.SessionInformation.LoadedMods));
                     Options.OnSave(sw);
                 }
             }
         }
 
-        public void Load(GraphicsDeviceManager graphics)
+        public void Load()
         {
-            if (!File.Exists(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION))
+            if (!File.Exists(SaveFolder + FILE_NAME_SESSION + EXT_SESSION))
                 return;
 
-            using (FileStream fs = new FileStream(SAVE_FOLDER + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (FileStream fs = new FileStream(SaveFolder + FILE_NAME_SESSION + EXT_SESSION, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (StreamReader reader = new StreamReader(fs))
                 {
-                    //Main.SessionInformation.LastLoadedSave = reader.ReadLine().Substring(5);
+                    //GlobalState.SessionInformation.LastLoadedSave = reader.ReadLine().Substring(5);
 
                     List<string> lines = new List<string>();
                     string? line = reader.ReadLine();
@@ -59,15 +60,15 @@ namespace ViMG
                         string[] split = l.Split(' ');
                         if (split[0] == "save")
                         {
-                            Main.SessionInformation.LastLoadedSave = split[1];
+                            GlobalState.SessionInformation.LastLoadedSave = split[1];
                         } 
                         else if (split[0] == "loaded_mods")
                         {
-                            Main.SessionInformation.LoadedMods = split[1].Split(',');
+                            GlobalState.SessionInformation.LoadedMods = split[1].Split(',');
                         }
                     }
 
-                    Options.OnLoad(lines, graphics);
+                    Options.OnLoad(lines);
                 }
             }
         }

@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemMetalHeart : Item
     {
-        public ItemMetalHeart() : base("heart_metal", new RectangleF(144, 43, 16, 21))
+        public ItemMetalHeart() : base("heart_metal")
         {
             name = "Metal Heart";
             description = "An intricately carved block of solid steel in the shape of a heart. Makes you feel uneasy.\n" +
@@ -20,7 +22,12 @@ namespace ViMG.Items
             Tags.Add("gear_heart");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(144, 43, 16, 21));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

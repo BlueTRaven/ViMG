@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -20,7 +22,7 @@ namespace ViMG.Buffs
         public override void LoadContent(GraphicsDevice device)
         {
             base.LoadContent(device);
-            this.texture = Main.assetsManager.GetAsset<Texture2D>("skill");
+            this.texture = GlobalState.AssetsManager.GetAsset<Texture2D>("skill");
         }
 
         public override void Tick(double deltaTime, IBuffManager manager, ref BuffInstance buffInstance, ref Stats stats)
@@ -28,19 +30,19 @@ namespace ViMG.Buffs
             base.Tick(deltaTime, manager, ref buffInstance, ref stats);
 
             if (fireResist == null)
-                fireResist = Main.Registry.BuffRegistry.Get("fire_resist");
+                fireResist = GlobalState.Registry.BuffRegistry.Get("fire_resist");
 
             if (manager.HasBuff(fireResist))
                 stats.HP -= int.Max(1, (int)(buffInstance.stack * 0.8f));
             else stats.HP -= 1;
         }
 
-        public override void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref Player.AccumulatedStats stats)
+        public override void Tick(double deltaTime, IBuffManager manager, Player player, ref BuffInstance buffInstance, ref PlayerAccumulatedStats stats)
         {
             base.Tick(deltaTime, manager, player, ref buffInstance, ref stats);
             
             if (fireResist == null)
-                fireResist = Main.Registry.BuffRegistry.Get("fire_resist");
+                fireResist = GlobalState.Registry.BuffRegistry.Get("fire_resist");
 
             if (manager.HasBuff(fireResist))
                 player.Health -= int.Max(1, (int)(buffInstance.stack * 0.8f));

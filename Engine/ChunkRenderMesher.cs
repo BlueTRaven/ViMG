@@ -1,6 +1,9 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
 using BrUtility.Ported;
+using Engine;
+using Engine.ChunkStuff;
+using Engine.Common.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,13 +13,14 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.Cubes;
-using ViMG.Entities;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -26,7 +30,7 @@ namespace ViMG
 	{
 #if DEBUG
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
-		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 20;
+		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 5;
 #else
 		private const int MAX_ACTIVE_MESH_BATCH_TASKS = 20;
 		private const int MAX_CHUNKS_TO_MESH_PER_BATCH_TASK = 4;
@@ -36,14 +40,16 @@ namespace ViMG
 		//Represents a chunk mesh batch, including everything about a chunk that is necessary to mesh it, or to get the info required to do so.
 		private struct RenderMeshBatch
 		{
+			public Vector3 cameraPosition;
 			public RenderMeshInfo[] meshInfos;
-			public CopiedChunkData[] copies;
+			public CopiedChunkManager.CopiedChunkData[] copies;
 			public int num;
 
 			public readonly bool isUsed;
 
-			public RenderMeshBatch(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies)
+			public RenderMeshBatch(Vector3 cameraPos, RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies)
 			{
+				this.cameraPosition = cameraPos;
 				this.meshInfos = meshInfos;
 				this.copies = copies;
 				this.num = 0;
@@ -69,11 +75,11 @@ namespace ViMG
 		private readonly struct BatchRenderMeshTaskResult
 		{
 			public readonly RenderMeshInfo[] meshInfos;
-			public readonly CopiedChunkData[] copies;
+			public readonly CopiedChunkManager.CopiedChunkData[] copies;
 			//number of meshes included in the batch
 			public readonly int num;
 
-			public BatchRenderMeshTaskResult(RenderMeshInfo[] meshInfos, CopiedChunkData[] copies, int num)
+			public BatchRenderMeshTaskResult(RenderMeshInfo[] meshInfos, CopiedChunkManager.CopiedChunkData[] copies, int num)
 			{
 				this.meshInfos = meshInfos;
 				this.copies = copies;
@@ -88,19 +94,12 @@ namespace ViMG
 			public byte meshVersion; //mesh version; if different from version, needs to be re-meshed
 			public byte version;
 
-			//There's a difference between having existing meshes and needing to be remeshed (being dirty) and not having meshes at all.
-			//Therefore this bool exists to determine if the given chunk has a mesh. If it doesn't, it isn't necessarily marked dirty,
-			//it just needs a mesh to be created in the first place.
-			public bool hasMeshes;
-
 			public RenderMeshInfo(ChunkPosition position)
 			{
 				this.position = position;
 				meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
 				meshVersion = 0;
 				version = 1;
-
-				hasMeshes = false;
 			}
 
 			public int GetMeshVersionCode()
@@ -137,17 +136,15 @@ namespace ViMG
 
 			avg /= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK;
 
-			return (int)(Main.camera.Position - avg).Length();
+			return (int)(x.batch.cameraPosition - avg).Length();
 		});
 		//The 'active' batch mesh tasks.
 		private Task<BatchRenderMeshTaskResult>[] activeMeshBatchTasks = new Task<BatchRenderMeshTaskResult>[MAX_ACTIVE_MESH_BATCH_TASKS];
 		private int numActiveChunkMeshBatchTasks;
 
-		private BufferPool bufferPool;
-
 		private RenderMeshInfo[] chunkMeshInfos;
 
-		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks, BufferPool bufferPool)
+		public ChunkRenderMesher(GraphicsDevice device, int sizeInChunks)
 		{
 			this.device = device;
 			this.sizeInChunks = sizeInChunks;
@@ -158,21 +155,19 @@ namespace ViMG
 				Util.OneDToThreeD(i, new ValuePoint3D(sizeInChunks), out ValuePoint3D point);
 				chunkMeshInfos[i] = new RenderMeshInfo(new ChunkPosition(point.x, point.y, point.z));
 			}
-
-			this.bufferPool = bufferPool;
 		}
 
-		public void Update(World world)
+		public void Update(Vector3 cameraPos, CopiedChunkManager copyManager, IGetEntity getEntity)
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
             if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			//Note that we only attempt to enqueue one batch per frame regardless of what MAX_MESH_PER_FRAME is.
@@ -181,14 +176,17 @@ namespace ViMG
 				ChunkPosition position = dirtyChunkPositions.Dequeue();
 				dirtyChunkKnown.Remove(position);
 
+				copyManager.StartCopyChunk(position, getEntity);
+				copyManager.FinishCopyChunks();
+
 				ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
-				if (c.version != c.meshVersion || !c.hasMeshes)
+				if (c.version != c.meshVersion)
 				{
 					//place into the current batch to be meshed later.
 					currentBatch.meshInfos[currentBatch.num] = c;
-					currentBatch.copies[currentBatch.num] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
-					currentBatch.num++;
+					currentBatch.copies[currentBatch.num] = copyManager.GetCopy(position);
+                    currentBatch.num++;
 				}
 			}
 
@@ -197,18 +195,28 @@ namespace ViMG
 			if (currentBatch.num > 0)
 			{
 				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
-			StartActiveTasks(world);
-		}
+			StartActiveTasks();
+        }
+
+		public bool WorkFinished()
+		{
+            return !activeMeshBatchTasks.Any(x => x != null) && flushTaskQueue.Count == 0;
+        }
 
 		public void BeginFlush()
 		{
             using var zone = TracyImpl.Tracy.BeginZone();
 
             EnqueueBatch(ref currentBatch);
-			currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			currentBatch = new RenderMeshBatch(Vector3.Zero, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+
+			//while (meshBatchTasksQueue.Count > 0 || numActiveChunkMeshBatchTasks > 0)
+			//{
+			//	StartActiveTasks(world);
+			//}
 
 			while (meshBatchTasksQueue.Count > 0)
 			{
@@ -216,7 +224,7 @@ namespace ViMG
 
 				if (task.Status == TaskStatus.Created)
 				{
-					if (Main.MULTITHREAD_MESHING)
+					if (GlobalState.MULTITHREAD_MESHING)
 						task.Start();
 					else task.RunSynchronously();
 				}
@@ -227,10 +235,13 @@ namespace ViMG
 		//Flushes all actively enqueued chunks, blocking until they have all been meshed.
 		public void FinishFlush()
 		{
+			//return;
             using var zone = TracyImpl.Tracy.BeginZone();
-
+			
             int max = flushTaskQueue.Count;
 			GameStateTheIsland.ProgressMax = max;
+
+			StartActiveTasks(true);
 
 			while (flushTaskQueue.Count > 0)
 			{
@@ -240,16 +251,16 @@ namespace ViMG
 
 				if (task.IsCompleted)
 				{
-					if (!task.IsCompletedSuccessfully)
-						throw new Exception("???");
+                    if (!task.IsCompletedSuccessfully)
+                    {
+                        throw task.Exception ?? new Exception("Task did not complete successfully, but did not throw an exception?");
+                    }
 
-					BatchRenderMeshTaskResult batchResult = task.Result;
+                    BatchRenderMeshTaskResult batchResult = task.Result;
+					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						lock (bufferPool)
-							batchResult.copies[j].Return(bufferPool);
-
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
 						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -275,34 +286,32 @@ namespace ViMG
 			}
 		}
 
-		private void StartActiveTasks(World world)
-		{
-			using var zone = TracyImpl.Tracy.BeginZone();
+        private void StartActiveTasks(bool blockUntilCompletion = false)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone();
 
             //First, check for complete tasks.
             for (int i = 0; i < activeMeshBatchTasks.Length; i++)
 			{
-				if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
+                if (blockUntilCompletion && activeMeshBatchTasks[i] != null)
+                    activeMeshBatchTasks[i].Wait();
+
+                if (activeMeshBatchTasks[i] != null && activeMeshBatchTasks[i].IsCompleted)
 				{
                     using var zoneActive = TracyImpl.Tracy.BeginZone(name: "EndBatch");
-
-                    numActiveChunkMeshBatchTasks--;
 
 					var task = activeMeshBatchTasks[i];
 
 					if (!task.IsCompletedSuccessfully)
-						throw new Exception("???");
+					{
+						throw task.Exception ?? new Exception("Task did not complete successfully, but did not throw an exception?");
+                    }
 
-					var batchResult = task.Result;
+                    var batchResult = task.Result;
+					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)
 					{
-						lock (bufferPool)
-						{
-                            //using var zoneLock = TracyImpl.Tracy.BeginZone(name: "Lock");
-                            batchResult.copies[j].Return(bufferPool);
-						}
-
 						RenderMeshInfo meshResult = batchResult.meshInfos[j];
 
 						ref RenderMeshInfo c = ref GetChunkMeshInfo(meshResult.position);
@@ -322,50 +331,58 @@ namespace ViMG
 							Unload(ref meshResult);
 						}
 					}
-
-					activeMeshBatchTasks[i] = null;
+                    
+					numActiveChunkMeshBatchTasks--;
+                    activeMeshBatchTasks[i] = null;
 				}
 
 				if (activeMeshBatchTasks[i] == null && meshBatchTasksQueue.Count > 0)
 				{
-                    using var zoneStart = TracyImpl.Tracy.BeginZone(name: "StartBatch");
+					using var zoneStart = TracyImpl.Tracy.BeginZone(name: "StartBatch");
 
-                    meshBatchTasksQueue.Sort();
-                    var task = meshBatchTasksQueue.Dequeue();
-                    activeMeshBatchTasks[i] = task.task;
-                    numActiveChunkMeshBatchTasks++;
+					meshBatchTasksQueue.Sort();
+					var task = meshBatchTasksQueue.Dequeue();
+					activeMeshBatchTasks[i] = task.task;
+					numActiveChunkMeshBatchTasks++;
 
-                    if (task.task.Status == TaskStatus.Created)
-                    {
-                        if (Main.MULTITHREAD_MESHING)
-                            task.task.Start();
-                        else task.task.RunSynchronously();
-                    }
-                }
+                    IMGUIConsole.Assert(task.task.Status == TaskStatus.Created);
+
+					if (GlobalState.MULTITHREAD_MESHING)
+						task.task.Start();
+					else task.task.RunSynchronously();
+				}
 			}
 		}
 
 		//Adds a position in the current batch. 
-		public void AddToNextBatch(World world, ChunkPosition position, CopiedChunkData copy)
+		public bool AddToNextBatch(Vector3 cameraPos, ChunkPosition position, CopiedChunkManager.CopiedChunkData copy)
 		{
-			using var zone = TracyImpl.Tracy.BeginZone();
+            using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (!currentBatch.isUsed)
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+			//copy.refcount += 1;
+			//copy.render = true;
+
+			if (!currentBatch.isUsed)
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 
 			if (currentBatch.num >= MAX_CHUNKS_TO_MESH_PER_BATCH_TASK)
 			{
-				EnqueueBatch(ref currentBatch);
-				currentBatch = new RenderMeshBatch(new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
+                EnqueueBatch(ref currentBatch);
+				currentBatch = new RenderMeshBatch(cameraPos, new RenderMeshInfo[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK], new CopiedChunkManager.CopiedChunkData[MAX_CHUNKS_TO_MESH_PER_BATCH_TASK]);
 			}
 
 			ref RenderMeshInfo c = ref GetChunkMeshInfo(position);
 
-			if (c.version != c.meshVersion || !c.hasMeshes)
+			if (c.version != c.meshVersion)
 			{
 				currentBatch.meshInfos[currentBatch.num] = c;
 				currentBatch.copies[currentBatch.num] = copy;//CopiedChunkPool.MakeCopy(world, bufferPool, position);
-				currentBatch.num++;
+                currentBatch.num++;
+				return true;
+			} 
+			else
+			{
+				return false;
 			}
 		}
 
@@ -376,12 +393,18 @@ namespace ViMG
 			meshBatchTasksQueue.EnqueueWithoutSorting((batch, task));
 		}
 
-		public void ImmediatelyMesh(World world, ChunkPosition position)
+		public void ImmediatelyMesh(ChunkPosition position, CopiedChunkManager copyManager, IGetEntity getEntity)
 		{
-			var batch = new RenderMeshBatch(new RenderMeshInfo[1], new CopiedChunkData[1]);
+			copyManager.StartCopyChunk(position, getEntity);
+			copyManager.FinishCopyChunks();
+
+			CopiedChunkManager.CopiedChunkData copy = copyManager.GetCopy(position);
+            var batch = new RenderMeshBatch(Vector3.Zero, new RenderMeshInfo[1], new CopiedChunkManager.CopiedChunkData[1]);
             ref RenderMeshInfo meshInfo = ref GetChunkMeshInfo(position);
 			batch.meshInfos[0] = meshInfo;
-			batch.copies[0] = CopiedChunkPool.MakeCopy(world, bufferPool, position);
+			batch.copies[0] = copy; // CopiedChunkPool.MakeCopy(world.ChunkManager.CubeView, world.EntityManager, sizeInChunks, bufferPool, position);
+			//batch.copies[0].refcount += 1;
+			//batch.copies[0].render = true;
 			batch.num = 1;
 
             var batchState = new BatchRenderMeshTaskState(batch, this);
@@ -391,6 +414,8 @@ namespace ViMG
             meshInfo.meshVersion = result.meshInfos[0].meshVersion;
 
             meshInfo.meshes = result.meshInfos[0].meshes;
+
+			//batch.copies[0].Return(bufferPool);
         }
 
 		private static unsafe BatchRenderMeshTaskResult MeshBatchFn(object obj)
@@ -399,57 +424,49 @@ namespace ViMG
 
             BatchRenderMeshTaskState state = (BatchRenderMeshTaskState)obj;
 
-			Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-			Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
-
-			for (int i = 0; i < state.batch.num; i++)
+			if (Main.DO_RENDER_MESHING)
 			{
-				RenderMeshInfo cmi = state.batch.meshInfos[i];
+				Span<CubePosition> positions = stackalloc CubePosition[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
+				Span<MeshHelper.CubeFace> faces = stackalloc MeshHelper.CubeFace[Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE];
 
-				for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+				for (int i = 0; i < state.batch.num; i++)
 				{
-					for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-					{
-						for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-						{
-							CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
-							Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
-							//pos = pos.InCubeSpace(cmi.position);
+					RenderMeshInfo cmi = state.batch.meshInfos[i];
 
-							positions[j] = pos;
+					for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+					{
+						for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+						{
+							for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+							{
+								CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
+								Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+								//pos = pos.InCubeSpace(cmi.position);
+
+								positions[j] = pos;
+							}
 						}
 					}
+					state.batch.copies[i].GetFaces(positions, faces);
+
+					cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
+
+					VertexAttributes opaques = state.mesher.GenerateChunk(in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Opaque, 0);
+					VertexAttributes transparents = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent, 0);
+					VertexAttributes shadows = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly, 0);
+					VertexAttributes empties = state.mesher.GenerateChunk(
+						in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
+
+                    cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
+					cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
+					cmi.meshes[(int)Cube.RenderPass.DepthOnly] = VerySimpleMesh.Shadow(state.mesher.device, shadows);
+					cmi.meshes[(int)Cube.RenderPass.Fluid] = new VerySimpleMesh();
+					cmi.meshes[(int)Cube.RenderPass.Air] = VerySimpleMesh.SolidColor(state.mesher.device, empties);
+
+					state.batch.meshInfos[i] = cmi;
 				}
-
-				state.batch.copies[i].GetFaces(positions, faces);
-
-				cmi.meshes = new VerySimpleMesh[NUM_CHUNK_MESH_PASSES];
-
-                VertexAttributes opaques = state.mesher.GenerateChunk(in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Opaque, 0);
-                VertexAttributes transparents = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Transparent, 0);
-                VertexAttributes shadows = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.DepthOnly, 0);
-                VertexAttributes empties = state.mesher.GenerateChunk(
-					in state.batch.copies[i], faces, cmi.position, Cube.RenderPass.Air, 0);
-
-				cmi.meshes[(int)Cube.RenderPass.Opaque] = VerySimpleMesh.Opaque(state.mesher.device, opaques, false);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//opaques.verts.ToVertexOpaquePass(), opaques.indices, false);    //opaque meshes bake their own tangents
-				cmi.meshes[(int)Cube.RenderPass.Transparent] = VerySimpleMesh.Transparent(state.mesher.device, transparents);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//transparents.verts.ToVertexTransparentPass(), transparents.indices);
-				cmi.meshes[(int)Cube.RenderPass.DepthOnly] = VerySimpleMesh.Shadow(state.mesher.device, shadows);
-				//MeshHelper.MakeSimplerMesh(state.mesher.device,
-				//shadows.verts.ToVertexShadowPass(), shadows.indices);
-				cmi.meshes[(int)Cube.RenderPass.Fluid] = new VerySimpleMesh();
-				// (null, null);   //TODO fluids?
-				cmi.meshes[(int)Cube.RenderPass.Air] = VerySimpleMesh.SolidColor(state.mesher.device, empties);
-					//MeshHelper.MakeSimplerMesh(state.mesher.device,
-					//empties.verts.ToVertexEmptyPass(), empties.indices);
-
-				state.batch.meshInfos[i] = cmi;
-				state.batch.meshInfos[i].hasMeshes = true;
 			}
 
 			return new BatchRenderMeshTaskResult(state.batch.meshInfos, state.batch.copies, state.batch.num);
@@ -461,17 +478,7 @@ namespace ViMG
 			{
 				c.meshes[i].Dispose();
 				c.meshes[i] = new VerySimpleMesh();
-				//if (c.meshes[i].VBO != null)
-				//{
-				//	c.meshes[i].VBO.Dispose();
-				//	c.meshes[i].IBO.Dispose();
-
-				//	c.meshes[i] = (null, null);
-				//}
-
 			}
-
-			c.hasMeshes = false;
 		}
 
 		public void Unload(ChunkPosition position)
@@ -488,35 +495,49 @@ namespace ViMG
 					VerySimpleMesh mesh = chunkMeshInfos[j].meshes[k];
                     chunkMeshInfos[j].meshes[k].Dispose();
 					chunkMeshInfos[j].meshes[k] = new VerySimpleMesh();
-
-					//if (mesh.VBO != null)
-					//{
-					//	mesh.VBO.Dispose();
-					//	mesh.IBO.Dispose();
-
-					//	chunkMeshInfos[j].meshes[k] = (null, null);
-					//}
 				}
-
-				chunkMeshInfos[j].hasMeshes = false;
 			}
 
-			bufferPool.AssertEmpty();
-			bufferPool.Clear();
+			//bufferPool.AssertEmpty();
+			//bufferPool.Clear();
 		}
 
-		public void MarkDirty(ChunkPosition position)
+		public void MarkAllDirty()
 		{
+			for (int j = 0; j < sizeInChunks * sizeInChunks * sizeInChunks; j++)
+			{
+				Util.OneDToThreeD(j, new ValuePoint3D(sizeInChunks), out var point);
+				MarkDirty(new ChunkPosition(point.x, point.y, point.z));
+			}
+			UnloadAll();
+		}
+
+		public bool MarkDirty(ChunkPosition position)
+		{
+			if (!IsInWorldBounds(position))
+				return false;
+
 			GetChunkMeshInfo(position).version++;
 
 			if (!dirtyChunkKnown.Contains(position))
 			{
 				dirtyChunkPositions.Enqueue(position);
 				dirtyChunkKnown.Add(position);
+
+				return true;
 			}
+
+			return false;
 		}
 
-		public bool IsMeshed(ChunkPosition position)
+        private bool IsInWorldBounds(ChunkPosition position)
+        {
+            return position.X >= 0 && position.X < sizeInChunks &&
+                    position.Y >= 0 && position.Y < sizeInChunks &&
+                    position.Z >= 0 && position.Z < sizeInChunks;
+        }
+
+        public bool IsMeshed(ChunkPosition position)
 		{
 			//we know we're not meshing this chunk currently if meshVersion is equal to version.
 			return GetChunkMeshInfo(position).meshVersion == GetChunkMeshInfo(position).version;
@@ -532,6 +553,22 @@ namespace ViMG
 			return mesh;
 		}
 
+		public bool TryGetMesh(ChunkPosition position, Cube.RenderPass pass, out VerySimpleMesh mesh) 
+		{
+            ref VerySimpleMesh ourMesh = ref GetChunkMeshInfo(position).meshes[(int)pass];
+			if (ourMesh.IBO == null)
+			{
+				mesh = new();
+				return false;
+			}
+			else
+			{
+				mesh = ourMesh;
+				return true;
+			}
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ref RenderMeshInfo GetChunkMeshInfo(ChunkPosition pos)
 		{
 			Util.ThreeDToOneD(new ValuePoint3D(pos.X, pos.Y, pos.Z), new ValuePoint3D(sizeInChunks), out int i);
@@ -579,11 +616,25 @@ namespace ViMG
 			public MeshHelper.CubeFace faces;
 		}
 
+		public struct VertexTexCoord
+		{
+			public Half U;
+			public Half V;
+
+			public VertexTexCoord(Vector2 uv)
+			{
+				U = (Half)uv.X;
+				V = (Half)uv.Y;
+				//U = (short)(uv.X * (float)short.MaxValue);
+                //V = (short)(uv.Y * (float)short.MaxValue);
+            }
+		}
+
 		public ref struct VertexAttributes
 		{
 			public Optional<FastList<Vector3>> position;
 			public Optional<FastList<Color>> color;
-			public Optional<FastList<Vector2>> texCoord;
+			public Optional<FastList<VertexTexCoord>> texCoord;
 			public Optional<FastList<VertexNormal>> normal;
 			public Optional<FastList<float>> ao;
 
@@ -595,7 +646,7 @@ namespace ViMG
 			{
                 FastList<Vector3> positions = new FastList<Vector3>(vertices.Length);
                 FastList<Color> colors = new FastList<Color>(vertices.Length);
-                FastList<Vector2> texCoords = new FastList<Vector2>(vertices.Length);
+                FastList<VertexTexCoord> texCoords = new FastList<VertexTexCoord>(vertices.Length);
 
 				for (int i = 0; i < vertices.Length; i++)
 				{
@@ -603,7 +654,7 @@ namespace ViMG
 
 					positions.Add(vertex.Position);
 					colors.Add(vertex.Color);
-					texCoords.Add(vertex.TextureCoordinate);
+					texCoords.Add(new (vertex.TextureCoordinate));
 				}
 
 				return new VertexAttributes
@@ -619,7 +670,7 @@ namespace ViMG
 			{
 				FastList<Vector3> positions = new FastList<Vector3>(vertices.Length);
 				FastList<Color> colors = new FastList<Color>(vertices.Length);
-				FastList<Vector2> texCoords = new FastList<Vector2>(vertices.Length);
+				FastList<VertexTexCoord> texCoords = new FastList<VertexTexCoord>(vertices.Length);
                 FastList<VertexNormal> normals = new FastList<VertexNormal>(vertices.Length);
                 FastList<float> aos = new FastList<float>(vertices.Length);
                 FastList<VertexAnimated> animations = new FastList<VertexAnimated>(vertices.Length);
@@ -630,20 +681,10 @@ namespace ViMG
 
 					positions.Add(vertex.Position);
 					colors.Add(vertex.Color);
-					texCoords.Add(vertex.TextureCoordinate);
-					normals.Add(new VertexNormal()
-					{
-						Normal = vertex.Normal,
-						Tangent = vertex.Tangent,
-						Bitangent = vertex.Bitangent,
-					});
+					texCoords.Add(new (vertex.TextureCoordinate));
+					normals.Add(new VertexNormal(vertex.Normal, vertex.Tangent, vertex.Bitangent));
 					aos.Add(vertex.AO);
-					animations.Add(new VertexAnimated
-					{
-						AnimFrameSize = vertex.AnimFrameSize,
-						AnimFrameTime = vertex.AnimFrameTime,
-						NumAnimFrames = vertex.NumAnimFrames,
-					});
+					animations.Add(new VertexAnimated(vertex.AnimFrameTime, vertex.AnimFrameSize, vertex.NumAnimFrames));
 				}
 
 				position = new(positions);
@@ -656,9 +697,9 @@ namespace ViMG
 			}
 		}
 
-		public VertexAttributes GenerateChunk(in CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass, int dummy)
+		public VertexAttributes GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass, int dummy)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Vector3 n = new Vector3(0);
             Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -676,7 +717,7 @@ namespace ViMG
 				case Cube.RenderPass.Fluid:
 					attributes.position = new(new FastList<Vector3>());
 					attributes.color = new(new FastList<Color>());
-					attributes.texCoord = new(new FastList<Vector2>());
+					attributes.texCoord = new(new FastList<VertexTexCoord>());
 					attributes.normal = new(new FastList<VertexNormal>());
 					attributes.ao = new(new FastList<float>());
 
@@ -684,7 +725,7 @@ namespace ViMG
 					break;
 				case Cube.RenderPass.DepthOnly:
 					attributes.position = new(new FastList<Vector3>());
-					attributes.texCoord = new(new FastList<Vector2>());
+					attributes.texCoord = new(new FastList<VertexTexCoord>());
 					break;
 
 				default:
@@ -699,7 +740,7 @@ namespace ViMG
                 {
                     for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                     {
-                        CubePosition cubePosition = new CubePosition(x, y, z);
+                        CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
                         Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
                         ushort id = data.GetId(cubePosition);
@@ -713,16 +754,17 @@ namespace ViMG
                             if (id == 0 || renderingFaces == MeshHelper.CubeFace.NONE)
                                 continue;
 
-                            Cube cube = Main.Registry.CubeRegistry.Get(id);
+                            Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
 
                             if (cube.ShouldMeshPass(pass))
                             {
+								CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                                 CubeMeshingParameters parameters = new CubeMeshingParameters()
                                 {
                                     cube = cube,
                                     id = id,
-                                    positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-                                    positionCS = data.BasePosition + cubePosition,
+                                    positionWS = positionCS.InWorldSpace(),
+                                    positionCS = positionCS,
                                     position = cubePosition,
                                     faces = renderingFaces
                                 };
@@ -743,21 +785,22 @@ namespace ViMG
                             if (id != 0 || renderingFaces == MeshHelper.CubeFace.NONE)
                                 continue;
 
+                            CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
                             CubeMeshingParameters parameters = new CubeMeshingParameters()
                             {
-                                cube = Main.Registry.CubeRegistry.Air,
+                                cube = GlobalState.Registry.CubeRegistry.Air,
                                 id = id,
-                                positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-                                positionCS = data.BasePosition + cubePosition,
+                                positionWS = positionCS.InWorldSpace(),
+                                positionCS = positionCS,
                                 position = cubePosition,
                                 faces = renderingFaces
                             };
 
-                            Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices, vertexCount);
+                            GlobalState.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices, vertexCount);
                         }
 
-						using (var zoneCopy = TracyImpl.Tracy.BeginZone(name: "Copy")) 
-						{
+						//using (var zoneCopy = TracyImpl.Tracy.BeginZone(name: "Copy")) 
+						//{
 							for (int j = 0; j < vertices.Length; j++)
 							{
 								if (attributes.position.GetOut(out var positions))
@@ -765,25 +808,15 @@ namespace ViMG
 								if (attributes.color.GetOut(out var colors))
 									colors.Add(vertices[j].Color);
 								if (attributes.texCoord.GetOut(out var texCoords))
-									texCoords.Add(vertices[j].TextureCoordinate);
+									texCoords.Add(new(vertices[j].TextureCoordinate));
 								if (attributes.normal.GetOut(out var normals))
-									normals.Add(new VertexNormal
-									{
-										Normal = vertices[j].Normal,
-										Tangent = vertices[j].Tangent,
-										Bitangent = vertices[j].Bitangent,
-									});
+									normals.Add(new VertexNormal(vertices[j].Normal, vertices[j].Tangent, vertices[j].Bitangent));
 								if (attributes.ao.GetOut(out var aos))
 									aos.Add(vertices[j].AO);
 								if (attributes.animation.GetOut(out var animations))
-									animations.Add(new VertexAnimated()
-									{
-										AnimFrameSize = vertices[j].AnimFrameSize,
-										AnimFrameTime = vertices[j].AnimFrameTime,
-										NumAnimFrames = vertices[j].NumAnimFrames,
-									});
+									animations.Add(new VertexAnimated(vertices[j].AnimFrameTime, vertices[j].AnimFrameSize, vertices[j].NumAnimFrames));
 							}
-						}
+						//}
 
                         vertexCount += vertices.Length;
                         iter++;
@@ -798,7 +831,7 @@ namespace ViMG
 			return attributes;
         }
 
-		public (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
+		public static (FastList<VertexCube> vertices, List<int> indices) GenerateChunk(in CopiedChunkManager.CopiedChunkData data, Span<MeshHelper.CubeFace> faces, ChunkPosition position, Cube.RenderPass pass)
 		{
 			Vector3 n = new Vector3(0);
 			Vector3 f = new Vector3(Cube.CUBE_SCALE);
@@ -812,7 +845,7 @@ namespace ViMG
 				{
 					for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
 					{
-						CubePosition cubePosition = new CubePosition(x, y, z);
+						CubePosition cubePosition = new CubePosition(x, y, z, CubePosition.CoordinateSpace.ChunkSpace);
 						Util.ThreeDToOneD(new ValuePoint3D(x, y, z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
 						ushort id = data.GetId(cubePosition);
@@ -824,16 +857,18 @@ namespace ViMG
 							if (id == 0 || renderingFaces == MeshHelper.CubeFace.NONE)
 								continue;
 
-							Cube cube = Main.Registry.CubeRegistry.Get(id);
+							Cube cube = GlobalState.Registry.CubeRegistry.Get(id);
 
 							if (cube.ShouldMeshPass(pass))
 							{
-								CubeMeshingParameters parameters = new CubeMeshingParameters()
+                                CubePosition positionCS = data.ChunkPosition.InCubeSpace() + new CubePosition(cubePosition, CubePosition.CoordinateSpace.CubeSpace);
+
+                                CubeMeshingParameters parameters = new CubeMeshingParameters()
 								{
 									cube = cube,
 									id = id,
-									positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-									positionCS = data.BasePosition + cubePosition,
+									positionWS = positionCS.InWorldSpace(),
+									positionCS = positionCS,
 									position = cubePosition,
 									faces = renderingFaces
 								};
@@ -859,15 +894,15 @@ namespace ViMG
 
 							CubeMeshingParameters parameters = new CubeMeshingParameters()
 							{
-								cube = Main.Registry.CubeRegistry.Air,
+								cube = GlobalState.Registry.CubeRegistry.Air,
 								id = id,
-								positionWS = (data.BasePosition + cubePosition).InWorldSpace(),
-								positionCS = data.BasePosition + cubePosition,
+								positionWS = (data.ChunkPosition.InCubeSpace() + cubePosition).InWorldSpace(),
+								positionCS = data.ChunkPosition.InCubeSpace() + cubePosition,
 								position = cubePosition,
 								faces = renderingFaces
 							};
 
-							Main.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices);
+							GlobalState.Registry.CubeRegistry.Air.MakeCubeVerts(pass, data, parameters, vertices, indices);
 						}
 					}
 				}
@@ -876,9 +911,9 @@ namespace ViMG
 			return (vertices, indices);
 		}
 
-		private static unsafe void BakeAO(CopiedChunkData data, CubePosition cubePosition, int start, int end, FastList<VertexCube> vertices)
+		private static unsafe void BakeAO(CopiedChunkManager.CopiedChunkData data, CubePosition cubePosition, int start, int end, FastList<VertexCube> vertices)
 		{
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
             Span<CubePosition> checkPositions = stackalloc CubePosition[4];
 			Span<ushort> checkIds = stackalloc ushort[4];
@@ -894,29 +929,29 @@ namespace ViMG
 
 					CubePosition nrm = new CubePosition(cubePosition.X + (int)vertex.Normal.X,
 						cubePosition.Y + (int)vertex.Normal.Y,
-						cubePosition.Z + (int)vertex.Normal.Z);
+						cubePosition.Z + (int)vertex.Normal.Z, CubePosition.CoordinateSpace.ChunkSpace);
 
 					CubePosition t = new CubePosition();
 					CubePosition bt = new CubePosition();
 
-					int sX = vertCubePos.X == cubePosition.X ? -1 : 1;
+                    int sX = vertCubePos.X == cubePosition.X ? -1 : 1;
 					int sY = vertCubePos.Y == cubePosition.Y ? -1 : 1;
 					int sZ = vertCubePos.Z == cubePosition.Z ? -1 : 1;
 
 					if (vertex.Normal.X != 0)
 					{
-						t = new CubePosition(0, sY, 0);
-						bt = new CubePosition(0, 0, sZ);
+						t = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 					else if (vertex.Normal.Y != 0)
 					{
-						t = new CubePosition(sX, 0, 0);
-						bt = new CubePosition(0, 0, sZ);
+						t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, 0, sZ, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 					else if (vertex.Normal.Z != 0)
 					{
-						t = new CubePosition(sX, 0, 0);
-						bt = new CubePosition(0, sY, 0);
+						t = new CubePosition(sX, 0, 0, CubePosition.CoordinateSpace.ChunkSpace);
+						bt = new CubePosition(0, sY, 0, CubePosition.CoordinateSpace.ChunkSpace);
 					}
 
 					checkPositions[0] = nrm;

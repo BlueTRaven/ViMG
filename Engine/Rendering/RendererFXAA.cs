@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -145,13 +146,13 @@ namespace ViMG.Rendering
             switch (Options.CurrentFXAAQuality)
             {
                 case Options.FXAAQuality.FXAA_LOW:
-                    effect = Main.assetsManager.GetAsset<Effect>("FXAAGreenLumaLow");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaLow");
                     break;
                 case Options.FXAAQuality.FXAA_MEDIUM:
-                    effect = Main.assetsManager.GetAsset<Effect>("FXAAGreenLumaMedium");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaMedium");
                     break;
                 case Options.FXAAQuality.FXAA_HIGH:
-                    effect = Main.assetsManager.GetAsset<Effect>("FXAAGreenLumaHigh");
+                    effect = GlobalState.AssetsManager.GetAsset<Effect>("FXAAGreenLumaHigh");
                     break;
             }
 

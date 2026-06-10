@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,15 +10,15 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.GameStates;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeChainLight : Cube
     {
-        private Cube chains;
         private Vector4 color;
 
-        public CubeChainLight() : base("ceiling_chain_light", new RectangleF(80, 80, 16, 16), Color.White, 10)
+        public CubeChainLight() : base("ceiling_chain_light", 10)
         {
             Transparency = TransparencyValue.Transparent;
             Collision = CollisionValue.Rope;
@@ -25,6 +27,11 @@ namespace ViMG.Cubes
 
             color = Color.CornflowerBlue.ToVector4();
             color.W = 0.5f;
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeChainLight(this);
         }
 
         public override void PostChunkGen(WorldPrototype world, CubePosition position)
@@ -41,31 +48,40 @@ namespace ViMG.Cubes
             player.world.EntityManager.Add(new Entities.CubeLight(position, color, new Vector2(Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 2.5f)));
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
+        public override bool ShouldMeshPass(RenderPass pass)
         {
-            chains ??= Main.Registry.CubeRegistry.Get("ceiling_chains");
+            return pass == RenderPass.Opaque;
+        }
 
-            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
+        }
+    }
+
+    public class ClientCubeChainLight : ClientCube
+    {
+        private Cube? chains = null;
+
+        public ClientCubeChainLight(Cube cube) : base(cube, new RectangleF(80, 80, 16, 16), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters)
+        {
+            chains ??= GlobalState.Registry.CubeRegistry.Get("ceiling_chains");
+
+            Cube aboveCube = data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            //Cube belowCube = world.ChunkManager2.GetCube(pos - new CubePosition(0, 1, 0)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
             //if it's solid, we're hanging from the ceiling. Use the top-attached sourceRect.
-            if (aboveCube != this)
+            if (aboveCube != cube)
             {
                 if (aboveCube != chains && aboveCube.Solid)
                     return new RectangleF(80, 80, 16, 16);
                 else return new RectangleF(96, 80, 16, 16);
             }
             else return base.GetSourceRect(pass, data, parameters);
-        }
-
-        public override bool ShouldMeshPass(RenderPass pass)
-        {
-            return pass == RenderPass.Opaque;
-        }
-
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
-        {
-            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -21,13 +23,16 @@ namespace ViMG.Items
         private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
             Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-        public ItemHandmadeAutoGun() : base("handmade_autogun", new RectangleF(96, 128, 16, 16))
+        public ItemHandmadeAutoGun() : base("handmade_autogun")
         {
             name = "Handmade Automatic Gun";
             description = "May or may not blow up in your face. But hey, it fires pretty fast. Consumes two ammo per shot.\n" +
                 attackStats.GetTooltip();
+        }
 
-            flipXInHand = true;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 128, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -44,11 +49,10 @@ namespace ViMG.Items
                 stats.knockback = knockback;
 
                 Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
-                Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
-                batchStats.spacingYaw = Main.random.NextFloat(-15, 15);
-                batchStats.spacingPitch = Main.random.NextFloat(-7.5f, 7.5f);
+                batchStats.spacingYaw = GlobalState.random.NextFloat(-15, 15);
+                batchStats.spacingPitch = GlobalState.random.NextFloat(-7.5f, 7.5f);
 
-                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, visStats, stats, bounds, index);
+                player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, batchStats, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, stats, index);
 
                 inventory.Remove(ammoIndex, 2);
                 return true;

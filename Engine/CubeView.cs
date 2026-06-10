@@ -1,18 +1,25 @@
-﻿using SharpDX.MediaFoundation;
+﻿using Engine;
+using Engine.ChunkStuff;
+using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
+using static Engine.Networking.Messages.SyncChunk;
+using static ViMG.World;
 
 namespace ViMG
 {
-    //A cube view intended for initialization of the world.
-    //This view does not support any multithreading.
-    //Therefore it should only be used on contexts where multithreading may not be running or where threads cannot overlap.
-    public class CubeView
+    public class CubeView : ICubeGetter
     {
         private readonly ChunkManager chunkManager;
         private readonly ChunkManagerIO io;
@@ -25,33 +32,169 @@ namespace ViMG
 
         public ushort GetId(CubePosition position)
         {
-            byte[] bytes = io.GetBytes();
+            //var palChunk = io.GetPalettizedChunk(ChunkPosition.CubeChunk(position));
+            //if (palChunk != null)
+            //{
+            //    // If the chunk is still palettized, don't force it to be unpalettized
+            //    return palChunk.Value.GetId(position);
+            //}
+            //else
+            {
+                using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
+                var posInChunkSpace = position.InChunkSpace();
 
-            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+                Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                var id = chunk.data[i];
 
-            ushort id = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
+                return id;
+                //    ReadOnlySpan<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
 
-            //BitConverter is apparently faster than fixed cast of bytes to ushort
-            return id;
+                //var posInChunkSpace = position.InChunkSpace();
+                //Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
+                //var id = ids[i];
+                //io.ReleaseChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Read);
+                //return id;
+            }
         }
 
-        public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
+        private struct SortedCubePos
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
-
-            if (count == -1)
-                count = positions.Length;
-
-            byte[] idBytes = io.GetBytes();
-
-            fixed (ushort* idsPtr = ids) 
+            public int originalIndex;
+            public CubePosition cubePos;
+        }
+        private struct Comparer : IComparer<SortedCubePos>
+        {
+            public int Compare(SortedCubePos a, SortedCubePos b)
             {
-                for (int i = offset; i < offset + count; i++)
+                var chunkPosA = ChunkPosition.CubeChunk(a.cubePos);
+                var chunkPosB = ChunkPosition.CubeChunk(b.cubePos);
+                if (chunkPosA == chunkPosB) return 0;
+                if (chunkPosA.X > chunkPosB.X) return -1;
+                return 1;
+            }
+        }
+
+        private enum GetIdsMethod
+        {
+            Sorted,
+            Unsorted,
+            Dict
+        };
+        private const GetIdsMethod getIdsMethod = GetIdsMethod.Dict;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe void GetIds(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            //GetIdsSorted(positions, ids);
+            GetIdsUnsorted(positions, ids);
+            //GetIdsDict(positions, ids);
+        }
+
+        private unsafe void GetIdsSorted(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted");
+
+            Span<SortedCubePos> sortedPositions = stackalloc SortedCubePos[positions.Length];
+            using (var zsort = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted: Sort"))
+            {
+                for (int i = 0; i < positions.Length; i++)
                 {
-                    int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                    idsPtr[i] = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
+                    sortedPositions[i] = new SortedCubePos
+                    {
+                        cubePos = positions[i],
+                        originalIndex = i,
+                    };
+                }
+
+                // Positions is sorted before hand to make things more optimal
+                // Need to keep track of original index as sometimes that's important, so that's why we copy
+                MemoryExtensions.Sort(sortedPositions, new Comparer());
+            }
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            ReadOnlySpan<ushort> cachedChunkData = null;
+
+            using (var zsort = TracyImpl.Tracy.BeginZone(name: "GetIdsSorted: Get"))
+            {
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    CubePosition pos = sortedPositions[i].cubePos;
+                    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                    if (cachedChunkData == null || chunkPos != cachedChunkPos)
+                    {
+                        if (cachedChunkData != null)
+                            io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Read);
+
+                        cachedChunkPos = chunkPos;
+                        cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
+                    }
+
+                    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                    ids[sortedPositions[i].originalIndex] = cachedChunkData[j];
+                }
+
+                if (cachedChunkData != null)
+                    io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Read);
+            }
+        }
+
+        private unsafe void GetIdsUnsorted(Span<CubePosition> positions, Span<ushort> ids)
+        {
+            using var zone = TracyImpl.Tracy.BeginZone(name: "GetIdsUnsorted");
+
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            //ReadOnlySpan<ushort> cachedChunkData = ReadOnlySpan<ushort>.Empty;
+            ChunkManagerIO.CapturedChunk cachedChunk = ChunkManagerIO.CapturedChunk.Invalid;
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                CubePosition pos = positions[i];
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunk.data.Length == 0 || chunkPos != cachedChunkPos)
+                {
+                    cachedChunk.Dispose();
+                    cachedChunkPos = chunkPos;
+                    cachedChunk = io.GetChunk(chunkPos);
+                    //cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
+                }
+
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                ids[i] = cachedChunk.data[j];
+            }
+
+            cachedChunk.Dispose();
+        }
+
+        public unsafe void GetIdsForChunk(ChunkPosition chunkPosition, Span<ushort> queryIds)
+        {
+            IMGUIConsole.Assert(queryIds.Length == Chunk.NUM_CUBES_IN_CHUNK);
+
+            using var chunk = io.GetChunk(chunkPosition);
+            if (chunk.data.Length == 0)
+            {
+                queryIds.Fill(0);
+            }
+            else
+            {
+                for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+                {
+                    queryIds[i] = chunk.data[i];
                 }
             }
+
+            //CubePosition basePosition = chunkPosition.InCubeSpace();
+
+            //var chunkData = io.GetChunk(chunkPosition, ChunkManagerIO.GetMode.Read);
+            //if (chunkData == null || chunkData.Length == 0)
+            //{
+            //    queryIds.Fill(0);
+            //    return;
+            //}
+
+            //for (int i = 0; i < Chunk.NUM_CUBES_IN_CHUNK; i++)
+            //{
+            //    queryIds[i] = chunkData[i];
+            //}
         }
 
         public Optional<Cube> GetCube(CubePosition position)
@@ -61,25 +204,20 @@ namespace ViMG
 
             ushort id = GetId(position);
 
-            return new Optional<Cube>(Main.Registry.CubeRegistry.Get(id));
+            return new Optional<Cube>(GlobalState.Registry.CubeRegistry.Get(id));
         }
 
-        public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def, int offset = 0, int count = -1)
+        public void GetCubes(Span<CubePosition> positions, Span<Cube> cubes, Cube def)
         {
-            if (count == -1)
-                count = positions.Length;
+            Span<ushort> ids = stackalloc ushort[positions.Length];
+            GetIds(positions, ids);
 
-            byte[] idBytes = io.GetBytes();
-            var registry = Main.Registry.CubeRegistry.GetIterable();
+            var registry = GlobalState.Registry.CubeRegistry.GetIterable();
 
-            for (int i = offset; i < offset + count; i++)
+            for (int i = 0; i < positions.Length; i++) 
             {
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(positions[i]);
-                ushort id = Unsafe.ReadUnaligned<ushort>(ref idBytes[cubeOffset * sizeof(ushort)]);
-
-                if (id - 1 < 0)
-                    cubes[i] = def;
-                else cubes[i] = registry[id - 1];
+                if (ids[i] - 1 < 0) cubes[i] = def;
+                else cubes[i] = registry[ids[i] - 1];
             }
         }
 
@@ -105,54 +243,115 @@ namespace ViMG
 
         public void SetCube(CubePosition position, ushort id, bool markDirty = true)
         {
-            byte[] bytes = io.GetBytes();
+            using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
+            Span<ushort> ids = chunk.data;
 
-            ChunkPosition chunkPos = ChunkPosition.CubeChunk(position);
-            CubePosition positionChS = position.InChunkSpace(chunkPos);
-            Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+            //Span<ushort> ids = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
 
-            int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
-            ushort oldId = Unsafe.ReadUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)]);
-            Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+            ushort oldId = ids[i];
+            ids[i] = id;
 
             if (markDirty)
             {
-                chunkManager.MarkCubeMeshInfoDirty(position, oldId, id);
-                chunkManager.ChunkMesher?.MarkChunkDirty(chunkPos);
+                chunkManager.MarkCubeDirty(null, position, oldId, id);
+                chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
             }
         }
 
-        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids, int offset = 0, int count = -1)
+        public void SetCube(CubePosition position, ushort id, Player player)
         {
-            byte[] bytes = io.GetBytes();
+            using var chunk = io.GetChunk(ChunkPosition.CubeChunk(position));
+            Span<ushort> ids = chunk.data;
+            //Span<ushort> cubes = io.GetChunk(ChunkPosition.CubeChunk(position), ChunkManagerIO.GetMode.Write);
 
-            for (int i = 0; i < positions.Length; i++)
-            {
-                var position = positions[i];
-                CubePosition positionChS = position.InChunkSpace();
-                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+            var posInChunkSpace = position.InChunkSpace();
+            Util.ThreeDToOneD(new ValuePoint3D(posInChunkSpace), new ValuePoint3D(Chunk.CHUNK_SIZE), out int i);
 
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
+            ushort oldId = ids[i];
+            ids[i] = id;
 
-                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], ids[i]);
-            } 
+            chunkManager.MarkCubeDirty(player, position, oldId, id);
+            chunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(position));
         }
 
-        public void SetCubes(Span<CubePosition> positions, ushort id, int offset = 0, int count = -1)
+        public void SetCubes(Span<CubePosition> positions, Span<ushort> ids)
         {
-            byte[] bytes = io.GetBytes();
+            ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            //Span<ushort> cachedChunkBytes = null;
+
+
+            ChunkManagerIO.CapturedChunk cachedChunk = ChunkManagerIO.CapturedChunk.Invalid;
 
             for (int i = 0; i < positions.Length; i++)
             {
-                var position = positions[i];
-                CubePosition positionChS = position.InChunkSpace();
-                Util.ThreeDToOneD(new ValuePoint3D(positionChS.X, positionChS.Y, positionChS.Z), new ValuePoint3D(Chunk.CHUNK_SIZE), out int ci);
+                CubePosition pos = positions[i];
+                ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+                if (cachedChunk.data.Length == 0 || chunkPos != cachedChunkPos)
+                {
+                    cachedChunk.Dispose();
+                    cachedChunkPos = chunkPos;
+                    cachedChunk = io.GetChunk(chunkPos);
+                    //cachedChunkData = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Read);
+                }
 
-                int cubeOffset = ChunkManagerIO.GetCubeOffset(position);
-
-                Unsafe.WriteUnaligned<ushort>(ref bytes[cubeOffset * sizeof(ushort)], id);
+                Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+                cachedChunk.data[j] = ids[i];
             }
+
+            cachedChunk.Dispose();
+
+            //for (int i = 0; i < positions.Length; i++)
+            //{
+            //    CubePosition pos = positions[i];
+            //    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+            //    if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+            //    {
+            //        if (cachedChunkBytes != null)
+            //            io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+
+            //        cachedChunkPos = chunkPos;
+            //        cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
+            //    }
+
+            //    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+            //    cachedChunkBytes[j] = ids[i];
+            //}
+
+            //if (cachedChunkBytes != null)
+            //    io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+        }
+
+        public void SetCubes(Span<CubePosition> positions, ushort id)
+        {
+            Span<ushort> ids = stackalloc ushort[positions.Length];
+            ids.Fill(id);
+            SetCubes(positions, ids);
+
+            //ChunkPosition cachedChunkPos = new ChunkPosition(-1, -1, -1);
+            //Span<ushort> cachedChunkBytes = null;
+
+            //for (int i = 0; i < positions.Length; i++)
+            //{
+            //    CubePosition pos = positions[i];
+            //    ChunkPosition chunkPos = ChunkPosition.CubeChunk(pos);
+            //    if (cachedChunkBytes == null || chunkPos != cachedChunkPos)
+            //    {
+            //        if (cachedChunkBytes != null)
+            //            io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
+
+            //        cachedChunkPos = chunkPos;
+            //        cachedChunkBytes = io.GetChunk(chunkPos, ChunkManagerIO.GetMode.Write);
+            //    }
+
+            //    Util.ThreeDToOneD(new ValuePoint3D(pos.InChunkSpace()), new ValuePoint3D(Chunk.CHUNK_SIZE), out int j);
+            //    cachedChunkBytes[j] = id;
+            //}
+
+            //if (cachedChunkBytes != null)
+            //    io.ReleaseChunk(cachedChunkPos, ChunkManagerIO.GetMode.Write);
         }
 
         public OptionalValue<CubePosition> GetFirstSolidDown(CubePosition start)
@@ -168,6 +367,134 @@ namespace ViMG
             }
 
             return new OptionalValue<CubePosition>();
+        }
+
+        public bool IsInBounds(CubePosition position)
+        {
+            return chunkManager.IsInWorldBounds(position);
+        }
+
+        public static bool RaycastCallbackTouchable(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
+        }
+
+        public static bool RaycastCallbackSolid(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            return cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
+        }
+
+        public static bool RaycastCallbackSolidNoRope(Vector3 position, object? ctx)
+        {
+            ICubeGetter cubeView = ctx as ICubeGetter ?? throw new Exception();
+            var cube = cubeView.GetCube(CubePosition.FromWorldSpace(position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            return cube.Solid && cube.Collision != Cube.CollisionValue.Rope;
+        }
+
+        // Basically an impl of Bresenham's. Works in world space.
+        public static RaycastResult Raycast(Vector3 start, Vector3 end, Func<Vector3, object?, bool> callback, object? ctx)
+        {
+            if (float.IsNaN(end.X) || float.IsNaN(end.Y) || float.IsNaN(end.Z))
+                return new RaycastResult();
+
+            RaycastResult result = new RaycastResult();
+
+            const float ONE_CUBE = Cube.CUBE_SCALE;
+
+            result.start = start;
+            result.end = end;
+
+            float x1 = start.X / ONE_CUBE;
+            float y1 = start.Y / ONE_CUBE;
+            float z1 = start.Z / ONE_CUBE;
+            float x2 = end.X / ONE_CUBE;
+            float y2 = end.Y / ONE_CUBE;
+            float z2 = end.Z / ONE_CUBE;
+
+            int i = (int)x1;
+            int j = (int)y1;
+            int k = (int)z1;
+
+            int iend = (int)x2;
+            int jend = (int)y2;
+            int kend = (int)z2;
+
+            int di = ((x1 < x2) ? 1 : ((x1 > x2) ? -1 : 0));
+            int dj = ((y1 < y2) ? 1 : ((y1 > y2) ? -1 : 0));
+            int dk = ((z1 < z2) ? 1 : ((z1 > z2) ? -1 : 0));
+
+            float deltatx = 1.0f / Math.Abs(x2 - x1);
+            float deltaty = 1.0f / Math.Abs(y2 - y1);
+            float deltatz = 1.0f / Math.Abs(z2 - z1);
+
+            float minx = (int)x1, maxx = minx + 1;
+            float tx = ((x1 > x2) ? (x1 - minx) : (maxx - x1)) * deltatx;
+            float miny = (int)y1, maxy = miny + 1;
+            float ty = ((y1 > y2) ? (y1 - miny) : (maxy - y1)) * deltaty;
+            float minz = (int)z1, maxz = minz + 1;
+            float tz = ((z1 > z2) ? (z1 - minz) : (maxz - z1)) * deltatz;
+
+            Vector3 hitPos = new Vector3(x1 * ONE_CUBE, y1 * ONE_CUBE, z1 * ONE_CUBE);
+
+            while (true)
+            {
+                if (callback(hitPos, ctx))
+                {
+                    result.hasHit = true;
+                    result.hit = hitPos;
+                    return result;
+                }
+
+                if (tx <= ty && tx <= tz)
+                {
+                    if (i == iend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    tx += deltatx;
+                    i += di;
+
+                    if (di == 1) hitPos.X += ONE_CUBE;
+                    if (di == -1) hitPos.X -= ONE_CUBE;
+
+                    result.normal = new Vector3(-di, 0, 0);
+                }
+                else if (ty <= tz)
+                {
+                    if (j == jend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    ty += deltaty;
+                    j += dj;
+
+                    if (dj == 1) hitPos.Y += ONE_CUBE;
+                    if (dj == -1) hitPos.Y -= ONE_CUBE;
+
+                    result.normal = new Vector3(0, -dj, 0);
+                }
+                else
+                {
+                    if (k == kend)
+                    {
+                        result.hit = result.end;
+                        break;
+                    }
+                    tz += deltatz;
+                    k += dk;
+
+                    if (dk == 1) hitPos.Z += ONE_CUBE;
+                    if (dk == -1) hitPos.Z -= ONE_CUBE;
+
+                    result.normal = new Vector3(0, 0, -dk);
+                }
+            }
+
+            return result;
         }
     }
 }

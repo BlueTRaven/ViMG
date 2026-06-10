@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -26,8 +27,8 @@ namespace ViMG.Items
 
         private void RegisterItemCubes()
 		{
-			Span<Cube> cubes = Main.Registry.CubeRegistry.GetIterable();
-			for (int i = 0; i < Main.Registry.CubeRegistry.Count; i++)
+			Span<Cube> cubes = GlobalState.Registry.CubeRegistry.GetIterable();
+			for (int i = 0; i < GlobalState.Registry.CubeRegistry.Count; i++)
 			{
 				ItemCube itemCube = new ItemCube(cubes[i], (ushort)(i + 1));
 				Register(itemCube);

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 using static ViMG.HitboxManager;
@@ -124,7 +126,7 @@ namespace ViMG
                 //If this is the case just choose a random block I guess...
                 //TODO make this more robust
                 if (housing.homePosition == position)
-                    checkPos = housing.interiorPositions[Main.random.Next(0, housing.interiorPositions.Length)];
+                    checkPos = housing.interiorPositions[GlobalState.random.Next(0, housing.interiorPositions.Length)];
 
                 HousingValidity valid = DetermineIfValidHousing(world, checkPos, out Housing newHousing);
 
@@ -198,7 +200,7 @@ namespace ViMG
 
                 CubePosition fillPosition = floodFills.Dequeue();
 
-                Cube cube = world.ChunkManager.CubeView.GetCube(fillPosition).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube cube = world.ChunkManager.CubeView.GetCube(fillPosition).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
                 bool isWall = cube.Solid || cube.Collision == Cube.CollisionValue.Door;
                 bool isAir = !cube.Solid;
@@ -239,8 +241,14 @@ namespace ViMG
 
         private static VerySimpleMesh debugMesh;
 
-        public void DrawDebug(World world, GraphicsDevice device)
+        [ConsoleCommandVar("rsv_housing_draw", "Singleplayer only. Draws housing. Default = false")]
+        public static bool DoDebugDraw = false;
+
+        // TODO
+        public void DrawDebug(GraphicsDevice device, RendererDeferred renderer)
         {
+            if (!DoDebugDraw) return;
+
             if (debugMesh.IBO == null)
             {
                 FastList<VertexCube> vertices = new FastList<VertexCube>();
@@ -251,21 +259,24 @@ namespace ViMG
                 //debugMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices);
             }
 
-            foreach (Housing housing in world.WorldInfo.housings)
-            {
-                foreach (CubePosition pos in housing.interiorPositions)
-                {
-                    Vector3 worldPos = pos.InWorldSpace();
-                    float distance = (worldPos - Main.camera.Position).Length();
-                    Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
-                        Matrix.CreateTranslation(worldPos);
+            //if (world.WorldInfo.housings != null)
+            //{
+            //    foreach (Housing housing in world.WorldInfo.housings)
+            //    {
+            //        foreach (CubePosition pos in housing.interiorPositions)
+            //        {
+            //            Vector3 worldPos = pos.InWorldSpace();
+            //            float distance = (worldPos - Main.camera.Position).Length();
+            //            Matrix transform = Matrix.CreateScale(Cube.CUBE_SCALE) *
+            //                Matrix.CreateTranslation(worldPos);
 
-                    //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
-                        new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
-                        tintColor: Color.Green * 0.125f));
-                }
-            }
+            //            //private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
+            //            Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(distance,
+            //                new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), debugMesh, transform,
+            //                tintColor: Color.Green * 0.125f));
+            //        }
+            //    }
+            //}
         }
     }
 }

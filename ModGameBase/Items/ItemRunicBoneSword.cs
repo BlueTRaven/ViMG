@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -25,20 +28,22 @@ namespace ViMG.Items
                 preUseTime = 12f / 60f
             }, 16, Cube.CUBE_SCALE * 1.25f), Cube.CUBE_SCALE * 1.75f);
 
-        public ItemRunicBoneSword() : base("sword_runic_bone", new RectangleF(176, 112, 32, 32))
+        public ItemRunicBoneSword() : base("sword_runic_bone")
         {
             name = "Runic Bone Sword";
             description = "A massive sword intricately carved in bone. Despite being made of such a brittle material, it cuts just as well as any other sword - perhaps even better.\n" +
                 meleeStats.GetTooltip() +
                 "Hitting enemies results in a small explosion of bones.";
 
-            scale = 2f;
-
             batchStats = new ProjectileManager.ProjectileBatchStats(4, new Vector2(-180, 180), new Vector2(-45, 45));
 
             stats = new ProjectileManager.ProjectileStats(
                 HitboxManager.Group.PLAYER_DEAL, 4, 1f, Cube.CUBE_SCALE / 8, Cube.CUBE_SCALE, 1, true, 1f, true);
-            visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(48, 0, 16, 16), Cube.CUBE_SCALE / 3f);
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(176, 112, 32, 32), scale: 2f);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -50,7 +55,7 @@ namespace ViMG.Items
             float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range);
+            player.SpawnHitboxLater(index, damage, DamageType.Melee, -(player as IRotatable).Forward, knockback, meleeStats.range);
 
             actionStats.animationType = UseAnimationType.SwingHorizontal;
 
@@ -61,10 +66,9 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, otherHitbox);
 
-            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Position.X + otherHitbox.bounds.Size.X / 2f,
-                otherHitbox.bounds.Top, otherHitbox.bounds.Position.Z + otherHitbox.bounds.Size.Z / 2f), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
-                batchStats, visStats, stats,
-                new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+            player.world.ProjectileManager.AddBatch(player, new Vector3(otherHitbox.bounds.Center.X,
+                otherHitbox.bounds.Top, otherHitbox.bounds.Center.Z), Vector3.Up * Cube.CUBE_SCALE * 8, 4,
+                batchStats, GlobalState.Registry.ProjectileRegistry.Get("bone").Id, stats);
         }
     }
 }

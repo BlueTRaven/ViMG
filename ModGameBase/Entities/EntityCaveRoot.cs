@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using ViMG.VertexDeclarations;
 using ViMG.Rendering;
+using Engine;
 
 namespace ViMG.Entities
 {
@@ -52,7 +53,7 @@ namespace ViMG.Entities
 
         private static float GetGrownTime(World world)
         {
-            return world.GetTime() + Main.random.NextFloat(6, 8); //TODO actual growth time
+            return world.GetTime() + GlobalState.random.NextFloat(6, 8); //TODO actual growth time
         }
 
         public bool OnInteract(Player player)
@@ -65,15 +66,15 @@ namespace ViMG.Entities
                     grownTime = GetGrownTime(world)
                 };
 
-                world.EntityManager.Add(new EntityItem(player.Position, Vector3.Zero, new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_root1"), 1, 1)));
+                world.EntityManager.Add(new EntityItem(player.Position, Vector3.Zero, new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("food_root1"), 1, 1)));
                 return true;
             }
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         //public override void Draw(GraphicsDevice device, Effect effect)
@@ -118,9 +119,9 @@ namespace ViMG.Entities
             SaveHelper.SaveCubePosition(saveBytes, save.trackedPosition);
         }
 
-        public unsafe override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int offset = 0;
             save.creationTime = SaveHelper.LoadFloat32(loadBytes, ref offset);

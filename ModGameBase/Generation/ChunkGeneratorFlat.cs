@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +12,15 @@ namespace ViMG.Generation
 {
     public class ChunkGeneratorFlat : ChunkGenerator
     {
-        public ChunkGeneratorFlat(int layer) : base(layer)
+        public ChunkGeneratorFlat(int layer, int seed = 1337) : base(layer, seed)
         {
 
         }
 
         public override Vector3 GetPlayerPosition(ChunkManager chunkManager)
         {
-            int x = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
-            int z = Main.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
+            int x = GlobalState.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
+            int z = GlobalState.random.Next(chunkManager.SizeInCubes / 2 - 4, chunkManager.SizeInCubes / 2 + 4);
 
             CubePosition playerPos = CubePosition.FromWorldSpace(new Vector3(chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f,
                 chunkManager.SizeInCubes * Cube.CUBE_SCALE, chunkManager.SizeInCubes * Cube.CUBE_SCALE / 2f));
@@ -27,7 +28,6 @@ namespace ViMG.Generation
             playerPos.Z = z;
             playerPos.Y = chunkManager.SizeInCubes;
 
-            //TODO this should use initializer view
             return chunkManager.CubeView.GetFirstSolidDown(playerPos + new CubePosition(0, 3, 0)).GetOrDefault(playerPos).InWorldSpace();
         }
 
@@ -46,7 +46,7 @@ namespace ViMG.Generation
                         if (pos.Y < 256)
                             id = 1;
 
-                        state.world.ChunkManager.CubeView.SetCube(pos, id);
+                        state.world.ChunkManager.CubeView.SetCube(pos, id, false);
                     }
                 }
             }

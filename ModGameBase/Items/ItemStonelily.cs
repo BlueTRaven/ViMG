@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemStonelily : Item
     {
-        public ItemStonelily() : base("stone_lily", new RectangleF(0, 80, 16, 16))
+        public ItemStonelily() : base("stone_lily")
         {
             name = "Stone Lily";
             description = "A lily made of solid stone. Despite its cold exterior, its beautiful appearance warms your heart.\n" +
@@ -21,7 +23,12 @@ namespace ViMG.Items
             Tags.Add("accessory");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 80, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

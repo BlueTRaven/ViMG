@@ -1,10 +1,15 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Common;
+using Engine.Networking.Messages;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -12,7 +17,41 @@ namespace ViMG.Entities
 {
     public class ProjectileManager : IHitboxOwner
 	{
-		public struct ProjectileBatchStats
+        public readonly struct ProjectileReference
+        {
+            public readonly ushort id;
+            // NOTE: negative values are always invalid.
+            public readonly short generation;
+
+            public ProjectileReference(ushort id, short generation)
+            {
+                this.id = id;
+                this.generation = generation;
+            }
+
+            public ProjectileReference NextGeneration()
+            {
+                return new ProjectileReference(id, (short)((generation + 1) % short.MaxValue));
+            }
+
+            public static ProjectileReference INVALID = new ProjectileReference(0, -1);
+
+            public void Serialize(NetDataWriter writer)
+            {
+                writer.Put(id);
+                writer.Put(generation);
+            }
+
+            public static ProjectileReference Deserialize(NetDataReader reader)
+            {
+                ushort id = reader.GetUShort();
+                short generation = reader.GetShort();
+
+                return new ProjectileReference(id, generation);
+            }
+        }
+
+        public struct ProjectileBatchStats
         {
 			internal enum BatchingType
             {
@@ -145,6 +184,7 @@ namespace ViMG.Entities
 			public float size;
 			public bool gravity;
             public float gravityScale;
+			public bool collides;
 			public bool dieOnCollision;
 			public int pierce;
 			public Buff.BuffInstance[] applyBuffs;
@@ -160,10 +200,24 @@ namespace ViMG.Entities
 				this.pierce = pierce;
 				this.gravity = gravity;
 				this.gravityScale = gravityScale;
+				this.collides = dieOnCollision;
 				this.dieOnCollision = dieOnCollision;
 
 				this.applyBuffs = applyBuffs ?? Array.Empty<Buff.BuffInstance>();
 				this.effects = effects;
+			}
+
+			public ProjectileHelper.ProjectileStats GetCommon()
+			{
+				return new ProjectileHelper.ProjectileStats
+				{
+					collides = collides,
+					collisionRadius = collisionRadius,
+					dieOnCollision = dieOnCollision,
+					gravity = gravity,
+					gravityScale = gravityScale,
+					size = size,
+				};
 			}
 		}
 
@@ -175,10 +229,11 @@ namespace ViMG.Entities
 			public Vector3 velocity;
 			public float timeLeft;
 
-			public ProjectileVisStats visStats;
+			public int visStatsId;
+			//public ProjectileVisStats visStats;
 			public ProjectileStats stats;
 
-			public readonly bool active;
+			public bool active;
 
 			public Rectangle3D bounds;
 			public int hitbox;
@@ -188,16 +243,18 @@ namespace ViMG.Entities
 
 			public int currentPierce;
 
-			public int index;
+			public ProjectileReference reference;
 
-			public Projectile(int index)
+			public Projectile(ProjectileReference reference)
             {
-				this.index = index;
+				this.reference = reference;
+
 				owner = null;
 				position = Vector3.Zero;
 				velocity = Vector3.Zero;
 				timeLeft = 0;
-				visStats = new ProjectileVisStats();
+				visStatsId = 0;
+				//visStats = new ProjectileVisStats();
 				stats = new ProjectileStats();
 
 				bounds = new Rectangle3D();
@@ -210,14 +267,14 @@ namespace ViMG.Entities
 				active = false;
 			}
 
-			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, ProjectileVisStats visStats, ProjectileStats stats, int inventorySlot = -1)
+			public Projectile(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, int visStatsId, ProjectileStats stats, int inventorySlot = -1)
 			{
-				index = -1;
+				reference = new ProjectileReference(0, 0);
 				this.owner = owner;
 				this.position = position;
 				this.velocity = velocity;
 				this.timeLeft = timeLeft;
-				this.visStats = visStats;
+				this.visStatsId = visStatsId;
 				this.stats = stats;
 
 				bounds = new Rectangle3D();
@@ -229,13 +286,32 @@ namespace ViMG.Entities
 
 				active = true;
 			}
+
+			public ProjectileHelper.Projectile GetCommon()
+			{
+				return new ProjectileHelper.Projectile
+				{
+					position = position,
+					velocity = velocity,
+					timeLeft = timeLeft,
+				};
+			}
+
+			public void SetCommon(ref readonly ProjectileHelper.Projectile projectile)
+			{
+				position = projectile.position;
+				velocity = projectile.velocity;
+				timeLeft = projectile.timeLeft;
+			}
 		}
 
-		public const int PROJECTILES_MAX = 1024;
-		private static VerySimpleMesh mesh;
-		private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
+		[ConsoleCommandVar("sv_projectiles_max", "maximum number of projectiles that can be active at a time. Default = 1024", true)]
+		public static int ProjMax = 1024;
 
-		private Projectile[] projectiles = new Projectile[PROJECTILES_MAX];
+		//private static VerySimpleMesh mesh;
+		//private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("projectiles");
+
+		private Projectile[] projectiles = new Projectile[ProjMax];
 
 		private World world;
 
@@ -244,11 +320,10 @@ namespace ViMG.Entities
             this.world = world;
         }
 
-		public void InitMeshes(GraphicsDevice device)
-		{
-            mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
-        }
-
+		//public void InitMeshes(GraphicsDevice device)
+		//{
+  //          mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Center);
+  //      }
 
 		public void Update(double deltaTime)
 		{
@@ -257,7 +332,7 @@ namespace ViMG.Entities
             Span<CubePosition> positions = stackalloc CubePosition[3 * 3 * 3];
 			Span<ushort> ids = stackalloc ushort[3 * 3 * 3];
 
-			for (int i = 0; i < PROJECTILES_MAX; i++)
+			for (int i = 0; i < ProjMax; i++)
 			{
 				if (!projectiles[i].active)
 					continue;
@@ -274,129 +349,137 @@ namespace ViMG.Entities
 						throw new Exception("???????");
 				}
 
-				if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
-                {
-					projectiles[i].light = world.LightManager.Add(projectiles[i].position, 
-						projectiles[i].visStats.lightExtents.X, 
-						projectiles[i].visStats.lightExtents.Y, 
-						projectiles[i].visStats.lightColor);
-                }
-
-				projectiles[i].timeLeft -= (float)deltaTime;
-
-				if (projectiles[i].timeLeft <= 0)
+				ProjectileHelper.Projectile p = projectiles[i].GetCommon();
+                ProjectileHelper.ProjectileStats stats = projectiles[i].stats.GetCommon();
+				if (!ProjectileHelper.UpdateProjectile(ref p, ref stats, world.ChunkManager.CubeView, deltaTime))
 				{
-					Kill(i);
+					Unload(i);
+					continue;
 				}
+				projectiles[i].SetCommon(ref p);
 
-				if (projectiles[i].stats.gravity)
-				{
-					projectiles[i].velocity.Y += World.GRAVITY * projectiles[i].stats.gravityScale;
+                if (projectiles[i].hitbox != -1)
+                    world.HitboxManager.Update(projectiles[i].hitbox, new(projectiles[i].bounds.Offset(projectiles[i].position)));
+                //if (projectiles[i].visStats.hasLight && projectiles[i].light == -1)
+                //            {
+                //	projectiles[i].light = world.LightManager.Add(projectiles[i].position, 
+                //		projectiles[i].visStats.lightExtents.X, 
+                //		projectiles[i].visStats.lightExtents.Y, 
+                //		projectiles[i].visStats.lightColor);
+                //            }
 
-					if (projectiles[i].velocity.Y < -340)
-						projectiles[i].velocity.Y = -340;
-				}
+    //            projectiles[i].timeLeft -= (float)deltaTime;
 
-				projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
+				//if (projectiles[i].timeLeft <= 0)
+				//{
+				//	Unload(i);
+				//}
 
-				if (projectiles[i].hitbox != -1)
-					world.HitboxManager.Update(projectiles[i].hitbox, projectiles[i].bounds.Offset(projectiles[i].position));
+				//if (projectiles[i].stats.gravity)
+				//{
+				//	projectiles[i].velocity.Y += World.GRAVITY * projectiles[i].stats.gravityScale;
+
+				//	if (projectiles[i].velocity.Y < -340)
+				//		projectiles[i].velocity.Y = -340;
+				//}
+
+				//projectiles[i].position += projectiles[i].velocity * (float)deltaTime;
+
 				
-				if (projectiles[i].light != -1)
-					world.LightManager.Update(projectiles[i].light, projectiles[i].position, 
-						projectiles[i].visStats.lightExtents.X, projectiles[i].visStats.lightExtents.Y, 
-						projectiles[i].visStats.lightColor);
+				
+				//if (projectiles[i].light != -1)
+				//	world.LightManager.Update(projectiles[i].light, projectiles[i].position, 
+				//		projectiles[i].visStats.lightExtents.X, projectiles[i].visStats.lightExtents.Y, 
+				//		projectiles[i].visStats.lightColor);
 
-				int pi = 0;
+				//int pi = 0;
 
-				for (int x = -1; x <= 1; x++)
-				{
-					for (int y = -1; y <= 1; y++)
-					{
-						for (int z = -1; z <= 1; z++)
-						{
-							CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) +
-								new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
+				//for (int x = -1; x <= 1; x++)
+				//{
+				//	for (int y = -1; y <= 1; y++)
+				//	{
+				//		for (int z = -1; z <= 1; z++)
+				//		{
+				//			CubePosition pos = CubePosition.FromWorldSpace(projectiles[i].position) +
+				//				new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-							if (world.ChunkManager.IsInWorldBounds(pos))
-							{
-								positions[pi] = pos;
-								pi++;
-							}
-						}
-					}
-				}
+				//			if (world.ChunkManager.IsInWorldBounds(pos))
+				//			{
+				//				positions[pi] = pos;
+				//				pi++;
+				//			}
+				//		}
+				//	}
+				//}
 
-				world.ChunkManager.CubeView.GetIds(positions[..pi], ids[..pi]);
+				//world.ChunkManager.CubeView.GetIds(positions[..pi], ids[..pi]);
 
-				for (int j = 0; j < 3 * 3 * 3; j++)
-                {
-					CubePosition pos = positions[j];
-					ushort id = ids[j];
+				//for (int j = 0; j < 3 * 3 * 3; j++)
+    //            {
+				//	CubePosition pos = positions[j];
+				//	ushort id = ids[j];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
-                    {
-						if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position,
-															projectiles[i].stats.collisionRadius, out Vector3 change))
-						{
-							if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
-							{
-								Kill(i);
-							}
-						}
-					}
-                }
+				//	if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
+    //                {
+				//		if (CollisionHelper.CheckCollision(CubePosition.BoundsWorldSpace(pos), projectiles[i].position,
+				//											projectiles[i].stats.collisionRadius, out Vector3 change))
+				//		{
+				//			if (projectiles[i].stats.dieOnCollision && change.Length() > 0)
+				//			{
+				//				Unload(i);
+				//			}
+				//		}
+				//	}
+    //            }
 			}
 		}
 
-		private void Kill(int index)
+		private void Unload(int index)
         {
 			projectiles[index].stats.effects?.OnProjectileDeath(world, index);
 
 			if (projectiles[index].hitbox != -1)
 				world.HitboxManager.Remove(projectiles[index].hitbox);
 
-			if (projectiles[index].light != -1)
-				world.LightManager.Remove(projectiles[index].light);
-
-			projectiles[index] = new Projectile(index);
+			SyncProjectile.Instance.Unload(projectiles[index].reference);
+			projectiles[index] = new Projectile(projectiles[index].reference.NextGeneration());
 		}
 
-		public void Draw(GraphicsDevice device)
-		{
-			for (int i = 0; i < PROJECTILES_MAX; i++)
-			{
-				if (projectiles[i].active)
-				{
-					if (!projectiles[i].visStats.rollFollowsVelocity)
-					{
-						Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-							Matrix.CreateScale(projectiles[i].visStats.scale) *
-							Matrix.CreateFromYawPitchRoll(-Main.camera.Rotation.Y, -Main.camera.Rotation.X, 0) *
-							Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
-					}
-					else
-					{
-                        Vector3 axis = projectiles[i].velocity;
-                        axis.Normalize();
+		//public void Draw(GraphicsDevice device)
+		//{
+		//	for (int i = 0; i < PROJECTILES_MAX; i++)
+		//	{
+		//		if (projectiles[i].active)
+		//		{
+		//			if (!projectiles[i].visStats.rollFollowsVelocity)
+		//			{
+		//				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+		//					Matrix.CreateScale(projectiles[i].visStats.scale) *
+		//					Matrix.CreateFromYawPitchRoll(-Main.camera.RotationEuler.Y, -Main.camera.RotationEuler.X, 0) *
+		//					Matrix.CreateTranslation(projectiles[i].position), projectiles[i].visStats.sourceRect));
+		//			}
+		//			else
+		//			{
+  //                      Vector3 axis = projectiles[i].velocity;
+  //                      axis.Normalize();
 
-                        Matrix mat = Matrix.CreateConstrainedBillboard(projectiles[i].position, 
-							Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+  //                      Matrix mat = Matrix.CreateConstrainedBillboard(projectiles[i].position, 
+		//					Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
 
-                        Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-                            Matrix.CreateScale(projectiles[i].visStats.scale) *
-                            mat, projectiles[i].visStats.sourceRect));
-                    }
-				}
-			}
-		}
+  //                      Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+  //                          Matrix.CreateScale(projectiles[i].visStats.scale) *
+  //                          mat, projectiles[i].visStats.sourceRect));
+  //                  }
+		//		}
+		//	}
+		//}
 
 		public void AddBatch(IHitboxOwner owner, Vector3 position, Vector3 velocity, float timeLeft, 
-			ProjectileBatchStats batchStats, ProjectileVisStats visStats, ProjectileStats stats, Rectangle3D bounds, int inventorySlot = -1)
+			ProjectileBatchStats batchStats, int visStatsId, ProjectileStats stats, int inventorySlot = -1)
         {
 			for (int i = 0; i < batchStats.num; i++)
 			{
-				Projectile projectile = new Projectile(owner, position, velocity, timeLeft, visStats, stats, inventorySlot);
+				Projectile projectile = new Projectile(owner, position, velocity, timeLeft, visStatsId, stats, inventorySlot);
 				Vector3 direction = Vector3.Normalize(projectile.velocity);
 				float speed = projectile.velocity.Length();
 
@@ -410,8 +493,8 @@ namespace ViMG.Entities
                 }
 				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.RandomOffsetInRange)
                 {
-					yawOffset = Main.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
-					pitchOffset = Main.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
+					yawOffset = GlobalState.random.NextFloat(batchStats.yawRandomOffsetRange.X, batchStats.yawRandomOffsetRange.Y);
+					pitchOffset = GlobalState.random.NextFloat(batchStats.pitchRandomOffsetRange.X, batchStats.pitchRandomOffsetRange.Y);
 				}
 				else if (batchStats.batchingType == ProjectileBatchStats.BatchingType.ManualSpacing)
                 {
@@ -423,19 +506,22 @@ namespace ViMG.Entities
 
 				projectile.velocity = Vector3.Transform(direction, offset) * speed;
 
-				Add(projectile, bounds);
+				Add(projectile);
 			}
         }
 
-		public int Add(Projectile projectile, Rectangle3D bounds)
+		public int Add(Projectile projectile)
 		{
-			for (int i = 0; i < PROJECTILES_MAX; i++)
+			for (int i = 0; i < ProjMax; i++)
 			{
 				if (!projectiles[i].active)
 				{
 					projectiles[i] = projectile;
-					projectiles[i].index = i;
-					projectiles[i].bounds = bounds;
+					projectiles[i].reference = (projectiles[i].reference.id - 1 != i) ? new ProjectileReference((ushort)(i + 1), 0) : projectiles[i].reference.NextGeneration();
+					projectiles[i].bounds = Rectangle3D.FromCenterRadius(Vector3.Zero, projectile.stats.size);
+					projectiles[i].active = true;
+
+					SyncProjectile.Instance.Add(projectiles[i].reference, projectile.GetCommon(), projectile.stats.GetCommon(), projectile.visStatsId);
 					return i;
 				}
 			}
@@ -462,7 +548,7 @@ namespace ViMG.Entities
 
 					if (projectiles[index].currentPierce <= 0)
 					{
-						Kill(index);
+						Unload(index);
 					}
 				}
 			}

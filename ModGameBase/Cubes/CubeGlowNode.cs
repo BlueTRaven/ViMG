@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,18 +12,23 @@ namespace ViMG.Cubes
 {
 	public class CubeGlowNode : Cube
 	{
-		public CubeGlowNode() : base("glow_node", RectangleF.Empty, Color.White, 1)
+		public CubeGlowNode() : base("glow_node", 1)
 		{
 			Transparency = TransparencyValue.Invisible;
 			Collision = CollisionValue.None;
-		}
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, RectangleF.Empty, Color.White);
+        }
 
 		public override void PostChunkGen(WorldPrototype world, CubePosition position)
 		{
 			base.PostChunkGen(world, position);
 
 			world.AddEntity(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4,
-				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+				new Vector4(GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), 200)));
 		}
 
         public override void OnPlayerPlaced(Player player, CubePosition position)
@@ -31,7 +37,7 @@ namespace ViMG.Cubes
 
 			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, Color.White));
 			player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE * 4, 
-				new Vector4(Main.random.NextFloat(), Main.random.NextFloat(), Main.random.NextFloat(), 200)));
+				new Vector4(GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), GlobalState.random.NextFloat(), 200)));
 			//player.GetWorld().EntityManager.Add(new GlowNode(position, CUBE_SCALE * 5, CUBE_SCALE, new Color(Color.Red, 100)));
 		}
 
@@ -39,7 +45,7 @@ namespace ViMG.Cubes
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("glow_node"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("glow_node"), 1, 1));
 		}
 	}
 }

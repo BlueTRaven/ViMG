@@ -43,7 +43,7 @@ namespace ViMG
 			}
 		}
 
-		public T Get(int index)
+		public T? Get(int index)
 		{
 			if (index <= 0)
 				return null;
@@ -65,7 +65,7 @@ namespace ViMG
 				return Get(registryByName[name]);
 			else
 			{
-				Console.WriteLine("Tried to get item with identifier {0} which does not exist.", name);
+				//Console.WriteLine("Tried to get item with identifier {0} which does not exist.", name);
 				return null;
 			}
 		}

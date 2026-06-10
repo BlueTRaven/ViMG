@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,18 +15,21 @@ namespace ViMG.Items
 {
     public class ItemBow : Item
 	{
-		private Color color;
-		private string materialName;
+		private readonly string materialName;
+        private readonly Color color;
+        private readonly RangedAttackStats rangedAttackStats;
 
-		private readonly RangedAttackStats rangedAttackStats;
-
-		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material, new RectangleF(96, 64, 16, 16))
+		public ItemBow(string material, Color color, RangedAttackStats stats) : base("bow_" + material)
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
-
-			this.color = color;
-			this.rangedAttackStats = stats;
+            this.color = color;
+            this.rangedAttackStats = stats;
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemBow(this, color);
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
@@ -42,8 +47,7 @@ namespace ViMG.Items
 
 				//CUBE_SCALE * 15
 				var projectile = player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position, 
-					Vector3.Normalize(facing) * rangedAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, visStats, stats, index),
-					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+					Vector3.Normalize(facing) * rangedAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("arrow").Id, stats, index));
 				if (projectile != -1)
 				{
 					inventory.Remove(ammoIndex, 1);
@@ -74,22 +78,32 @@ namespace ViMG.Items
 		{
 			return GetStats().GetTooltip();
 		}
-
-		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
-		{
-			if (meshItemQuadInWorld.IBO == null)
-				MakeMesh(device);
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
-		}
-
-		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			//base.DrawInInventory(batch, position, scale);
-
-			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-			batch.Draw(GetMaterial().Diffuse, position, new Rectangle(112, 64, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
 	}
+
+    public class ClientItemBow : ClientItem
+    {
+        private readonly Color color;
+
+        public ClientItemBow(Item item, Color color) : base(item, new RectangleF(96, 64, 16, 16))
+        {
+            this.color = color;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
+        {
+            if (meshItemQuadInWorld.IBO == null)
+                MakeMesh(device);
+
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(), meshItemQuadInWorld, transform, new RectangleF(112, 64, 16, 16)));
+        }
+
+        public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            //base.DrawInInventory(batch, position, scale);
+
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+            batch.Draw(GetMaterial().Diffuse, position, new Rectangle(112, 64, 16, 16), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+    }
 }

@@ -8,11 +8,15 @@ using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
 using BepuPhysics.CollisionDetection;
+using Engine.Networking;
+using Engine;
 
 namespace ViMG.Entities
 {
-	public class AISlime
+	public class AISlime : ISyncedEntity
 	{
+		public const int VERSION = 0;
+
 		public float InvulnTimer;
 
 		public float Acceleration = Cube.CUBE_SCALE / 2f;
@@ -60,16 +64,18 @@ namespace ViMG.Entities
 
 			public void OnUnload()
 			{
-				if (ai.touchHitbox != -1)
+				if (ai != null && ai.touchHitbox != -1)
 					entity.world.HitboxManager.Remove(ai.touchHitbox);
 			}
 			public void Update(double deltaTime)
 			{
+				var randNum = entity.random.Next();
+
 				ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
                     ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
-				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
 
 				Vector3 actualMaxVel = ai.MaxVelocity;
 
@@ -84,26 +90,26 @@ namespace ViMG.Entities
 
 					if (ai.jumpTimer <= 0)
 					{
-                        ai.jumpTime = Main.random.NextFloat(0.25f, 3);
+                        ai.jumpTime = entity.random.NextFloat(0.25f, 3);
                         ai.jumpTimer = ai.jumpTime;
 
 						if (!ai.noticeHandler.Noticed)
 						{
 							if (ai.numJumps == 0)
 							{
-                                ai.numJumps = Main.random.Next(1, 6);
-                                ai.jumpTime = Main.random.NextFloat(2, 6);
+                                ai.numJumps = entity.random.Next(1, 6);
+                                ai.jumpTime = entity.random.NextFloat(2, 6);
                                 ai.jumpTimer = ai.jumpTime;
 
 								if (ai.ShouldJumpAwayFromPlayer)
 								{
-                                    ai.jumpDir = entity.Position - entity.world.player.Position;
+                                    ai.jumpDir = entity.Position - (entity.world.GetClosestPlayer(entity.Position)?.Position ?? Vector3.Zero);
                                     ai.jumpDir.Normalize();
 								}
 								else
 								{
                                     //During the day time, jump in random directions
-                                    ai.jumpDir = new Vector3(Main.random.NextFloat(-1, 1), 0, Main.random.NextFloat(-1, 1));
+                                    ai.jumpDir = new Vector3(entity.random.NextFloat(-1, 1), 0, entity.random.NextFloat(-1, 1));
                                     ai.jumpDir.Normalize();
 								}
 							}
@@ -141,8 +147,7 @@ namespace ViMG.Entities
                 ai.onGround = false;
 				UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Remove(entity);
+				EntityHelper.UnloadIfDistanceFromPlayers(entity);
 			}
 
 			private void UpdateCollision()
@@ -178,7 +183,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -244,7 +249,7 @@ namespace ViMG.Entities
 				if (ai.Health <= 0)
 				{
                     ai.Health = 0;
-					entity.world.EntityManager.Remove(entity);
+					entity.world.EntityManager.Kill(entity);
 
 					if (ai.touchHitbox != -1)
 						entity.world.HitboxManager.Remove(ai.touchHitbox);
@@ -252,6 +257,37 @@ namespace ViMG.Entities
 
                 ai.InvulnTimer = 0.25f;
 			}
-		}
-	}
+        }
+
+        public void OnSave(List<byte> saveBytes)
+        {
+			SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+            SaveHelper.SaveFloat32(saveBytes, JumpTimer);
+            SaveHelper.SaveFloat32(saveBytes, JumpTime);
+            SaveHelper.SaveVector3(saveBytes, jumpDir);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+			int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+            jumpTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
+            jumpTime = SaveHelper.LoadFloat32(loadBytes, ref index);
+            jumpDir = SaveHelper.LoadVector3(loadBytes, ref index);
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				velocity = Velocity,
+				health = Health,
+				state = 0,
+				timers = { [0] = JumpTimer, [1] = JumpTime, [2] = InvulnTimer },
+				counters = { [0] = numJumps, [1] = noticeHandler.Noticed ? 1 : 0},
+			};
+        }
+    }
 }

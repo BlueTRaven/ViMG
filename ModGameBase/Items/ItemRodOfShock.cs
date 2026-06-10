@@ -1,5 +1,7 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,11 +19,16 @@ namespace ViMG.Items
     {
         private MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 6, 1f), 3);  //TODO 3 magic use
 
-        public ItemRodOfShock() : base("staff_spell_shock", new RectangleF(112, 96, 16, 16))
+        public ItemRodOfShock() : base("staff_spell_shock")
         {
             name = "Staff of Shock";
             description = "Delivers a brief shock in a line in front of you. Ouch.\n" +
                 magicStats.GetTooltip();
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 96, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -32,8 +39,8 @@ namespace ViMG.Items
             {
                 player.Magic -= magicStats.magicUse;
 
-                player.world.EntityManager.Add(new AimedLightning(player.Position - Main.camera.Forward * Cube.CUBE_SCALE / 4f + Main.camera.Right * Cube.CUBE_SCALE / 4f, 
-                    -Main.camera.Forward, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 10f, Cube.CUBE_SCALE,
+                player.world.EntityManager.Add(new AimedLightning(player.Position - (player as IRotatable).Forward * Cube.CUBE_SCALE / 4f + (player as IRotatable).Right * Cube.CUBE_SCALE / 4f, 
+                    -(player as IRotatable).Forward, Cube.CUBE_SCALE * 2f, Cube.CUBE_SCALE * 10f, Cube.CUBE_SCALE,
                 new HitboxManager.HitboxStats()
                 {
                     damage = magicStats.attackStats.damage,

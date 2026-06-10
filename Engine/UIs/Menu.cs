@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using ViMG.GameStates;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.UIs
 {
@@ -20,6 +22,9 @@ namespace ViMG.UIs
 
 		protected readonly GameStateManager gsManager;
 
+		public bool RespondToInput => GlobalState.Time - timeOpened > 0.125;
+		protected double timeOpened = 0;
+
 		public Menu(GameStateManager gsManager)
         {
 			this.gsManager = gsManager;
@@ -27,13 +32,15 @@ namespace ViMG.UIs
 
 		public virtual void LoadContent()
 		{
-			// It is invalid to call LoadContent while headless
-			Debug.Assert(!Main.IsHeadless);
+            // It is invalid to call LoadContent while headless
+			// ... this was before I separated out client and server stuff, and now the server shouldn't ever 
+			// be able to run menus. This check is kinda unnecessary...
+            IMGUIConsole.Assert(!GlobalState.IsHeadless);
 		}
 
 		public virtual void OnOpen()
         {
-
+			timeOpened = GlobalState.Time;
         }
 
 		public virtual void OnClose()

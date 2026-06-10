@@ -8,6 +8,7 @@ namespace ViMG.Items
 {
     public enum UseAnimationType
     {
+        None,
         Use,
         SwingHorizontal,
         SwingVertical,

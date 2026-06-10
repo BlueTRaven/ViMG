@@ -15,12 +15,20 @@ namespace ViMG.Items
         public readonly int Value;
 
         private readonly string realResourceName;
+        private readonly RectangleF sourceRect;
+
         public ItemCoin(string resource, int value, RectangleF sourceRect) : 
-            base("coin_" + resource, sourceRect)
+            base("coin_" + resource)
         {
             this.resource = resource;
             this.Value = value;
+            this.sourceRect = sourceRect;
             this.realResourceName = resource.Substring(0, 1).ToUpper() + resource.Substring(1, resource.Length - 1);
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemCoin(this, sourceRect);
         }
 
         public override string GetName(ItemInstance item)
@@ -34,6 +42,13 @@ namespace ViMG.Items
         {
             return "A " + realResourceName + " Assarius coin.\n" +
                 "It is worth " + Value + " copper Assarii.";
+        }
+    }
+
+    public class ClientItemCoin : ClientItem
+    {
+        public ClientItemCoin(Item item, RectangleF sourceRect) : base(item, sourceRect)
+        {
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,9 +14,14 @@ namespace ViMG.Items
 {
     public class ItemSwingTest : Item
     {
-        public ItemSwingTest() : base("swing_test", new RectangleF(48, 0, 16, 16))
+        public ItemSwingTest() : base("swing_test")
         {
             name = "Swing Test";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 0, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

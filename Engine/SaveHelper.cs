@@ -1,6 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ViMG.Items;
@@ -9,6 +11,51 @@ namespace ViMG
 {
 	public static class SaveHelper
 	{
+		public enum SaveContext
+		{
+			World, // Save when serializing the world
+			Network, // Save when sending over the network
+		}
+		public class SaveFieldAttribute : Attribute
+		{
+            public readonly SaveContext context;
+
+            public SaveFieldAttribute(SaveContext saveType)
+			{
+                this.context = saveType;
+            }
+		}
+
+		public static void SaveStructFieldsWithAttr<T>(SaveContext context, List<byte> data, T obj)
+		{
+			foreach (var field in obj.GetType().GetFields())
+			{
+				var attr = field.GetCustomAttribute<SaveFieldAttribute>();
+				if (attr != null)
+				{
+					if (attr.context == context)
+					{
+						switch (field.GetValue(obj))
+						{
+							case int i:
+								SaveInt32(data, i);
+								break;
+							case bool b:
+								SaveBool(data, b);
+								break;
+							case float f:
+								SaveFloat32(data, f);
+								break;
+							case string str:
+								SaveString(data, str);
+								break;
+						}
+					}
+				}
+			}
+		}
+		
+
 		//Saves a struct.
 		//I don't really recommend using this method. Manually saving/loading is a better approach
 		//since you can manually handle error cases. For instance, if you add a new float in the middle of a struct,
@@ -28,7 +75,7 @@ namespace ViMG
 
 		public static void SaveBool(List<byte> data, bool b)
         {
-			data.Add((byte)(b ? 0 : 1));
+			data.Add((byte)(b ? 1 : 0));
         }
 
 		public static void SaveString(List<byte> data, string str)
@@ -107,13 +154,21 @@ namespace ViMG
 			SaveFloat32(data, vec.W);
 		}
 
-		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from data2 into data1.
+		public static void SaveQuaternion(List<byte> data, Quaternion quat)
+		{
+            SaveFloat32(data, quat.X);
+            SaveFloat32(data, quat.Y);
+            SaveFloat32(data, quat.Z);
+            SaveFloat32(data, quat.W);
+        }
+
+		//Saves bytes "flat" (without overhead, as raw bytes - unnassociated with any array) from source into dest.
 		//This doesn't need a load variation.
-		public static void SaveBytesFlat(List<byte> data1, List<byte> data2)
+		public static void SaveBytesFlat(List<byte> dest, List<byte> source)
         {
-			for (int i = 0; i < data2.Count; i++)
+			for (int i = 0; i < source.Count; i++)
             {
-				data1.Add(data2[i]);
+				dest.Add(source[i]);
             }
         }
 
@@ -169,13 +224,13 @@ namespace ViMG
 			return obj;
         }
 
-		public static bool LoadBool(byte[] data, ref int index)
+		public static bool LoadBool(Span<byte> data, ref int index)
         {
 			byte b = data[index++];
 			return b >= 1;
         }
 
-		public static string LoadString(byte[] data, ref int index)
+		public static string LoadString(Span<byte> data, ref int index)
 		{
 			int len = LoadInt32(data, ref index);
 
@@ -190,7 +245,7 @@ namespace ViMG
 			return new string(chars);
 		}
 
-		public static char LoadChar(byte[] data, ref int index)
+		public static char LoadChar(Span<byte> data, ref int index)
 		{
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -198,7 +253,7 @@ namespace ViMG
 			return (char)(first | second);
 		}
 
-		public static int LoadInt32(byte[] data, ref int index)
+		public static int LoadInt32(Span<byte> data, ref int index)
 		{
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -208,7 +263,7 @@ namespace ViMG
 			return first | second | third | fourth;
 		}
 
-		public static ushort LoadUInt16(byte[] data, ref int index)
+		public static ushort LoadUInt16(Span<byte> data, ref int index)
         {
 			int first = data[index++];
 			int second = data[index++] << 8;
@@ -216,7 +271,7 @@ namespace ViMG
 			return (ushort)(first | second);
 		}
 
-		public static ulong LoadUInt64(byte[] data, ref int index)
+		public static ulong LoadUInt64(Span<byte> data, ref int index)
 		{
 			unchecked
 			{
@@ -226,24 +281,24 @@ namespace ViMG
 			}
 		}
 
-		public static float LoadFloat32(byte[] data, ref int index)
+		public static float LoadFloat32(Span<byte> data, ref int index)
 		{
-			float f = BitConverter.ToSingle(data, index);
+			float f = BitConverter.ToSingle(data[index..(index + 4)]);
 			index += 4;
 
 			return f;
 		}
 
-		public static byte[] LoadBytes(byte[] data, int length, ref int index)
+		public static Span<byte> LoadBytes(Span<byte> data, int length, ref int index)
         {
 			int end = index + length;
-			byte[] rval = data[index..end];
+            Span<byte> rval = data[index..end];
 			index = end;
 
 			return rval;
         }
 
-		public static Vector2 LoadVector2(byte[] data, ref int index)
+		public static Vector2 LoadVector2(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -251,7 +306,7 @@ namespace ViMG
 			return new Vector2(x, y);
 		}
 
-		public static Vector3 LoadVector3(byte[] data, ref int index)
+		public static Vector3 LoadVector3(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -260,7 +315,7 @@ namespace ViMG
 			return new Vector3(x, y, z);
 		}
 
-		public static Vector4 LoadVector4(byte[] data, ref int index)
+		public static Vector4 LoadVector4(Span<byte> data, ref int index)
 		{
 			float x = LoadFloat32(data, ref index);
 			float y = LoadFloat32(data, ref index);
@@ -270,7 +325,17 @@ namespace ViMG
 			return new Vector4(x, y, z, w);
 		}
 
-		public static CubePosition LoadCubePosition(byte[] data, ref int index)
+		public static Quaternion LoadQuat(Span<byte> data, ref int index)
+		{
+            float x = LoadFloat32(data, ref index);
+            float y = LoadFloat32(data, ref index);
+            float z = LoadFloat32(data, ref index);
+            float w = LoadFloat32(data, ref index);
+
+            return new Quaternion(x, y, z, w);
+        }
+
+		public static CubePosition LoadCubePosition(Span<byte> data, ref int index)
 		{
 			CubePosition position = new CubePosition(0, 0, 0, CubePosition.CoordinateSpace.CubeSpace);
 
@@ -281,10 +346,10 @@ namespace ViMG
 			return position;
 		}
 
-		public static ItemInstance LoadItemInstance(byte[] data, ref int index)
+		public static ItemInstance LoadItemInstance(Span<byte> data, ref int index)
 		{
 			string identifier = LoadString(data, ref index);
-			Item item = Main.Registry.ItemRegistry.Get(identifier);
+			Item item = GlobalState.Registry.ItemRegistry.Get(identifier);
 
 			int num = LoadInt32(data, ref index);
 			int damage = LoadInt32(data, ref index);

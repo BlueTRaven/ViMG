@@ -2,6 +2,7 @@
 using BepuPhysics.Collidables;
 using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,8 +17,10 @@ namespace ViMG.Entities
 {
     [EntityMeta(0)]
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-    public class Door : Entity, IMultiCubeTracker
+    public class Door : Entity, IMultiCubeTracker, ISyncedEntity
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("Door", true, Engine.Logger.LogLevel.Info);
+
         private static VerySimpleMesh mountMesh;
         private static VerySimpleMesh doorMesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
@@ -42,7 +45,7 @@ namespace ViMG.Entities
         {
             if (facing == MeshHelper.CubeFace.UP || facing == MeshHelper.CubeFace.DOWN)
             {
-                Console.WriteLine("Can't facce up or down! Defaulting to LEFT");
+                Logger.Log(Engine.Logger.LogLevel.Warn, "Can't face up or down! Defaulting to LEFT");
                 facing = MeshHelper.CubeFace.LEFT;
             }
 
@@ -192,7 +195,7 @@ namespace ViMG.Entities
             return true;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition position, ushort updatedId, double timeUpdated)
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? player, CubePosition position, ushort updatedId, double timeUpdated)
         {
             if (timeUpdated > TimeInitialized)
             {
@@ -201,7 +204,7 @@ namespace ViMG.Entities
                     cm.CubeView.SetCube(TrackedPositions.ElementAt(i), 0);
                 }
 
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
             }
         }
 
@@ -215,9 +218,9 @@ namespace ViMG.Entities
             SaveHelper.SaveInt32(saveBytes, (int)facing);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int offset = 0;
 
@@ -230,6 +233,15 @@ namespace ViMG.Entities
             facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref offset);
 
             Position = TrackedPositions.ElementAt(0).InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Position,
+                rotation = world.PhysicsInfo.Simulation.Bodies[doorHandle].Pose.Orientation,
+            };
         }
     }
 }

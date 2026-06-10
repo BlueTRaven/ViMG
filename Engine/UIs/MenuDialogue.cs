@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -60,7 +61,7 @@ namespace ViMG.UIs
 
         public MenuDialogue(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
         public override void OnOpen()
@@ -174,7 +175,6 @@ namespace ViMG.UIs
                     }
                     else
                     {
-                        Console.WriteLine("finishing");
                         instance.currentLineCharacter = currentText.lines[instance.currentLine].Length - 1;
                     }
                 }

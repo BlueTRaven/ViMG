@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Engine;
+using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Collections.Specialized.BitVector32;
 
 namespace ViMG.Items
 {
-	public readonly struct ItemInstance
+    public readonly struct ItemInstance
 	{
-		public readonly Item item;
+		public readonly Item? item;
 		public readonly int num;
 
 		public readonly int damage;
@@ -23,21 +26,37 @@ namespace ViMG.Items
 			this.num = num;
 			damage = other.damage;
 
-			valid = true;
+			valid = other.item != null;
 		}
 
-		public ItemInstance(Item item, int num, int damage)
+		public ItemInstance(Item? item, int num, int damage)
 		{
 			this.item = item;
 			this.num = num;
 			this.damage = damage;
 
-			valid = true;
+			valid = item != null;
 		}
 
 		public ItemInstance Copy()
 		{
 			return new ItemInstance(item, num, damage);
 		}
-	}
+
+        public void Serialize(NetDataWriter writer)
+        {
+            writer.Put(item?.Id ?? 0);
+            writer.Put(num);
+            writer.Put(damage);
+        }
+
+        public static ItemInstance Deserialize(NetDataReader reader)
+        {
+			int id = reader.GetInt();
+			int num = reader.GetInt();
+			int dam = reader.GetInt();
+
+			return new ItemInstance(GlobalState.Registry.ItemRegistry.Get(id), num, dam);
+        }
+    }
 }

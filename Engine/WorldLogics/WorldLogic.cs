@@ -19,7 +19,7 @@ namespace ViMG.WorldLogics
 
         }
 
-        public virtual void FinishLoading(World world, GraphicsDevice device) 
+        public virtual void FinishLoading(World world) 
         {
 
         }

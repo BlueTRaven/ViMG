@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,17 +18,19 @@ namespace ViMG.Items
     {
 		private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 1.25f, 1, 1f);
 
-		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true);
 
-		public ItemMatchlockPistol() : base("matchlock_pistol", new RectangleF(48, 128, 16, 16))
+		public ItemMatchlockPistol() : base("matchlock_pistol")
         {
             name = "Matchlock Pistol";
             description = "A matchlock pistol of simple make.\n" +
 				attackStats.GetTooltip();
+        }
 
-			flipXInHand = true;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 128, 16, 16), flipXInHand: true);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -41,8 +45,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 25, Cube.CUBE_SCALE * 10, visStats, stats, index),
-					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+					Vector3.Normalize(facing) * Cube.CUBE_SCALE * 25, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, stats, index));
 				
 				inventory.Remove(ammoIndex, 1);
 				return true;

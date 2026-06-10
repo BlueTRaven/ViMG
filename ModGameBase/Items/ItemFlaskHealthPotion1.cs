@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,11 +11,16 @@ namespace ViMG.Items
 {
     public class ItemFlaskHealthPotion1 : Item
 	{
-		public ItemFlaskHealthPotion1() : base("flask_healthpotion1", new RectangleF(16, 96, 16, 16))
+		public ItemFlaskHealthPotion1() : base("flask_healthpotion1")
 		{
-			name = "Health Potion 1";
+            name = "Health Potion 1";
 			description = "A health potion. It smells surprisingly nice.";
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 96, 16, 16));
+        }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {

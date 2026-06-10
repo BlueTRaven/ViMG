@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,25 +17,28 @@ namespace ViMG.Items
 {
     public class ItemDebugStructureCopier : Item
     {
-        private enum State
+        public enum State
         {
             None,
             FirstClick,
             SecondClick,
         }
 
-        private State state;
-        private CubePosition first;
-        private CubePosition second;
+        public State state;
+        public CubePosition first;
+        public CubePosition second;
 
-        private VerySimpleMesh meshWireframeCube;
-
-        public ItemDebugStructureCopier() : base("DEBUGStructureCopier", new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructureCopier() : base("DEBUGStructureCopier")
         {
             name = "DEBUG STRUCTURE COPIER";
             description = "Right click to begin selecting.\n" +
                 "Select two points, then press shift+left click to save to file.\n" +
                 "Press shift+right click to reset at any point.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemDebugStructureCopier(this);
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -103,7 +107,7 @@ namespace ViMG.Items
                     {
                         for (int z = minZ; z < maxZ; z++)
                         {
-                            ushort id = player.GetWorld().ChunkManager2.GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace)).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+                            ushort id = player.GetWorld().ChunkManager2.GetCube(new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
                             Util.ThreeDToOneD(new ValuePoint3D(x - minX, y - minY, z - minZ), new ValuePoint3D(width, height, depth), out int i);
 
@@ -120,10 +124,21 @@ namespace ViMG.Items
 
             return base.LeftClick(player, inventory, index, facing, out actionStats);
         }
+    }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+    public class ClientItemDebugStructureCopier : ClientItem
+    {
+        private VerySimpleMesh meshWireframeCube;
+     
+        public ClientItemDebugStructureCopier(Item item) : base(item, new RectangleF(112, 112, 16, 16))
         {
-            base.DrawInWorld(device, world, item, transform);
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
+        {
+            base.DrawInWorld(device, renderer, item, transform);
+
+            var copier = this.item as ItemDebugStructureCopier;
 
             if (meshWireframeCube.IBO == null)
             {
@@ -134,10 +149,10 @@ namespace ViMG.Items
                 //meshWireframeCube = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexTransparentPass(), indices); //MeshHelper.MakeCubeVertexPositionColorTextureNormal(device, Vector3.Zero, new Vector3(Cube.CUBE_SCALE), MeshHelper.CubeFace.ALL, Color.White, DrawHelper.WhitePixel);
             }
 
-            if (state != State.None)
+            if (copier.state != ItemDebugStructureCopier.State.None)
             {
-                Vector3 start = first.InWorldSpace(out bool ok) + new Vector3(Cube.CUBE_SCALE);
-                Vector3 scale = (second - first).InWorldSpace(out ok);
+                Vector3 start = copier.first.InWorldSpace(out bool ok) + new Vector3(Cube.CUBE_SCALE);
+                Vector3 scale = (copier.second - copier.first).InWorldSpace(out ok);
 
                 if (scale.X > 0)
                 {
@@ -158,9 +173,9 @@ namespace ViMG.Items
                 }
                 else scale.Z -= Cube.CUBE_SCALE;
 
-                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
-                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube, 
-                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start), 
+                renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(0,
+                    new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), meshWireframeCube,
+                    Matrix.CreateScale(scale / Cube.CUBE_SCALE) * Matrix.CreateTranslation(start),
                     tintColor: Color.White * 0.5f));
             }
         }

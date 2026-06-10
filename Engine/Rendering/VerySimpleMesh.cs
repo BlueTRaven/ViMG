@@ -6,12 +6,21 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Rendering
 {
     public struct VerySimpleMesh : IDisposable
     {
+        public enum Pass
+        {
+            Opaque,
+            Transparent,
+            Shadow,
+            SolidColor,
+        }
+
         public VertexBuffer VBOPosition;
         public VertexBuffer VBOColor;
         public VertexBuffer VBOTexCoord;
@@ -21,16 +30,37 @@ namespace ViMG.Rendering
 
         public IndexBuffer IBO;
 
+        public Pass pass;
+
         public VertexBufferBinding[] Bindings;
+
+        public static HashSet<VerySimpleMesh> refs = new HashSet<VerySimpleMesh>();
 
         static class OpaqueVertexDeclarations
         {
             public static VertexDeclaration Position = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0));
             public static VertexDeclaration Color = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Color, VertexElementUsage.Color, 0));
-            public static VertexDeclaration TexCoord = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0));
-            public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(0);
-            public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1));
-            public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(2);
+            public static VertexDeclaration TexCoord = new VertexDeclaration(new VertexElement(0, VertexElementFormat.HalfVector2, VertexElementUsage.TextureCoordinate, 0));
+            public static VertexDeclaration Normal = VertexNormal.NewVertexDeclaration(1);
+            public static VertexDeclaration AO = new VertexDeclaration(new VertexElement(0, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2));
+            public static VertexDeclaration Animation = VertexAnimated.NewVertexDeclaration(3);
+        }
+
+        public static VerySimpleMesh New(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, Pass pass)
+        {
+            switch (pass)
+            {
+                case Pass.Opaque:
+                    return Opaque(device, attributes);
+                case Pass.Transparent:
+                    return Transparent(device, attributes);
+                case Pass.Shadow:
+                    return Shadow(device, attributes);
+                case Pass.SolidColor:
+                    return SolidColor(device, attributes);
+                default:
+                    return default;
+            }
         }
 
         public static VerySimpleMesh Opaque(GraphicsDevice device, ChunkRenderMesher.VertexAttributes attributes, bool bakeTangents = true)
@@ -62,16 +92,16 @@ namespace ViMG.Rendering
             {
                 if (bakeTangents)
                 {
-                    Debug.Assert(attributes.position.HasValue() && attributes.texCoord.HasValue());
+                    IMGUIConsole.Assert(attributes.position.HasValue() && attributes.texCoord.HasValue());
 
                     for (int i = 0; i < normals.Length; i += 4)
                     {
-                        Vector3 tangent = positions[i + 0] - positions[i + 1]; // vert1.GetPosition() - vert2.GetPosition();
+                        //Vector3 tangent = positions[i + 0] - positions[i + 1]; // vert1.GetPosition() - vert2.GetPosition();
 
-                        Vector3 bitangent = Vector3.Cross(positions[i + 0], tangent); // vert1.GetNormal(), tangent);
+                        //Vector3 bitangent = Vector3.Cross(positions[i + 0], tangent); // vert1.GetNormal(), tangent);
                         VertexNormal vertex = normals[i];
-                        vertex.Tangent = tangent;
-                        vertex.Bitangent = bitangent;
+                        //vertex.Tangent = tangent;
+                        //vertex.Bitangent = bitangent;
                         normals.Buffer[i + 0] = vertex;
                         normals.Buffer[i + 1] = vertex;
                         normals.Buffer[i + 2] = vertex;
@@ -95,16 +125,20 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, typeof(int), attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
                
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
                 new VertexBufferBinding(mesh.VBONormal, 0),
                 new VertexBufferBinding(mesh.VBOAO, 0),
                 new VertexBufferBinding(mesh.VBOAnim, 0),
-            };
+            ];
 
+            lock (refs)
+                refs.Add(mesh);
+
+            mesh.pass = Pass.Opaque;
             return mesh;
         }
 
@@ -120,6 +154,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.Transparent;
+
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
             if (attributes.position.GetOut(out var positions))
@@ -141,12 +177,14 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -162,6 +200,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.Shadow;
+
             if (attributes.indices == null || attributes.indices.Count == 0) return mesh;
 
             if (attributes.position.GetOut(out var positions))
@@ -178,11 +218,13 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOTexCoord, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -198,6 +240,8 @@ namespace ViMG.Rendering
             using var zone = TracyImpl.Tracy.BeginZone();
 
             VerySimpleMesh mesh = new VerySimpleMesh();
+            mesh.pass = Pass.SolidColor;
+
             // FIXME: for some reason, air meshes are getting passed in with some indices, but no vertices. The attributes.position.Get()== null is to catch that.
             // This is a bug, it should be fixed at the root eventually.
             if (attributes.indices == null || attributes.indices.Count == 0 || attributes.position.Get() == null) return mesh;
@@ -216,11 +260,13 @@ namespace ViMG.Rendering
             mesh.IBO = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, attributes.indices.Count, BufferUsage.WriteOnly);
             mesh.IBO.SetData(attributes.indices.ToArray());
 
-            mesh.Bindings = new VertexBufferBinding[]
-            {
+            mesh.Bindings =
+            [
                 new VertexBufferBinding(mesh.VBOPosition, 0),
                 new VertexBufferBinding(mesh.VBOColor, 0),
-            };
+            ];
+            lock (refs)
+                refs.Add(mesh);
 
             return mesh;
         }
@@ -234,6 +280,9 @@ namespace ViMG.Rendering
             VBOAO?.Dispose();
             VBOAnim?.Dispose();
             IBO?.Dispose();
+
+            lock (refs)
+                refs.Remove(this);
         }
     }
 }

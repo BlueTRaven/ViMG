@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,7 +23,7 @@ namespace ViMG.Items
 
 			if (meta != null)
 			{
-				return meta.GetMaterial() + " Sword";
+				return meta.GetName(item) + " Sword";
 			}
 			else return base.GetName(item);
 		}
@@ -48,7 +51,7 @@ namespace ViMG.Items
 			float knockback = meta.GetStats().attackStats.knockback;
 			player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-			player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meta.GetStats().range);
+			player.SpawnHitboxLater(index, damage, DamageType.Melee, -(player as IRotatable).Forward, knockback, meta.GetStats().range);
 
 			actionStats.animationType = UseAnimationType.SwingHorizontal;
 
@@ -57,7 +60,7 @@ namespace ViMG.Items
 
 		public static ItemInstance CreateSword(ItemInstance itemBlade)
 		{
-			return new ItemInstance(Main.Registry.ItemRegistry.Get("sword"), 1, itemBlade.item.Id);
+			return new ItemInstance(GlobalState.Registry.ItemRegistry.Get("sword"), 1, itemBlade.item.Id);
 		}
 	}
 }

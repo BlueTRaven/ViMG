@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Common;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +15,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-	public class AncientAltar : Entity, ICubeTracker
+    public class AncientAltar : Entity, ICubeTracker, ISyncedEntity
 	{
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("cubes_textures");
@@ -21,18 +24,15 @@ namespace ViMG.Entities
 
 		public CubePosition TrackedPosition { get; private set; }
 
-		private int light = -1;
-		private bool isShadowmapped;
 		private float breatheOffset;
 
 		public AncientAltar()
         {
-
         }
 
 		public AncientAltar(CubePosition position, float radius)
 		{
-			TrackedPosition = position;
+            TrackedPosition = position;
 			this.radius = radius;
 			this.Position = position.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, 0, Cube.CUBE_SCALE / 2f);
 		}
@@ -41,7 +41,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			breatheOffset = Main.random.NextFloat(0, 10f);
+			breatheOffset = GlobalState.random.NextFloat(0, 10f);
         }
 
         public bool OnInteract(Player player)
@@ -49,11 +49,9 @@ namespace ViMG.Entities
 			return false;
 		}
 
-		public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
-			if (light != -1)
-				world.LightManager.Remove(light);
+			world.EntityManager.Kill(this);
 		}
 
 		public override void Update(double deltaTime)
@@ -81,9 +79,13 @@ namespace ViMG.Entities
 			float p0 = ((world.GetTime() + breatheOffset) % 7f) / 7f;
 			float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 3;
 
-			LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-				0, MathF.Max(Cube.CUBE_SCALE, radius + s0), Color.Red.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
-				sphere, ref light, ref isShadowmapped, true);
+			world.LightManager2.AddShadowmapped(new LightManager2.LightConfig
+			{
+				position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+				min = 0,
+				max = MathF.Max(Cube.CUBE_SCALE, radius + s0),
+				color = Color.Red.ToVector4(),
+			});
 		}
 
 		//public override void Draw(GraphicsDevice device, Effect effect)
@@ -95,7 +97,7 @@ namespace ViMG.Entities
 
 		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
 		//		Matrix.CreateTranslation(Position - new Vector3(0, Cube.CUBE_SCALE / 2f, 0)), new RectangleF(112, 16, 16, 16)));
-		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(Main.assetsManager.GetAsset<Texture2D>("cubes_textures"),
+		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures"),
 		//		DrawHelper.BlackPixel, DrawHelper.WhitePixel, mesh.VBO, mesh.IBO,
 		//		Matrix.CreateRotationY(MathHelper.ToRadians(-45f)) * 
 		//		Matrix.CreateTranslation(Position + new Vector3(0, Cube.CUBE_SCALE, 0)), new RectangleF(112, 16, 16, 16)));*/
@@ -109,11 +111,11 @@ namespace ViMG.Entities
 			SaveHelper.SaveFloat32(saveBytes, radius);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE / 2f);
@@ -131,5 +133,14 @@ namespace ViMG.Entities
 			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
 			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
 		}
-	}
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				position = Position,
+				timers = { [0] = radius },
+			};
+        }
+    }
 }

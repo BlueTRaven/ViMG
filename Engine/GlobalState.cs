@@ -1,0 +1,69 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ViMG;
+using ViMG.GameStates;
+using ViMG.IMGUIImpl;
+
+namespace Engine
+{
+    public enum NetworkingMode
+    {
+        Server, // Acting as host. Can play
+        Client, // Acting as client
+        Singleplayer, // Singleplayer. 
+    }
+
+    public static class GlobalState
+    {
+        public static ArgParser Args = new ArgParser();
+        public static bool IsHeadless = false;
+
+        public static GameStateManager GameStateManager;
+
+        public static ViMGAssetsManager AssetsManager;
+        public static RegistryService Registry;
+
+        public const int SEED = 1338;
+        public static Random random = new Random(SEED);
+
+#if DEBUG
+		public static bool Debug = true;
+#else
+        public static bool Debug = false;
+#endif
+
+        public static SessionInformation SessionInformation;
+        public static SessionIO SessionIO;
+
+        public static Thread MainThread;
+
+        public static NetworkingMode NetMode = NetworkingMode.Singleplayer;
+
+        public const bool GEN_BROAD = true;
+        public const bool GEN_DETAIL = true;
+        public const bool GEN_CAVES = true;
+        public const bool GEN_CUBE_POST_DETAIL = true;
+
+        [ConsoleCommandVar("random_spawns", "enable random entity spawning")]
+        public static bool ENABLE_ENT_SPAWNING = true;
+        [ConsoleCommandVar("sv_can_notice", "Whether or not enemies can notice the player")]
+        public static bool ENABLE_ENT_NOTICE = true;
+        public const float RANDOM_UPDATES_TIME = 8f / 60f;
+        [ConsoleCommandVar("random_cube_updates", "enable random cube updates (grass spreading, etc)")]
+        public static bool ENABLE_RANDOM_UPDATES = false;
+        public const int RANDOM_UPDATES_PER_CHUNK = 1;
+
+        public const bool MULTITHREADING = true;
+        public const bool MULTITHREAD_BROAD_PHASE = MULTITHREADING && true;
+        public const bool MULTITHREAD_LOADING = MULTITHREADING && true;
+        public const bool MULTITHREAD_MESHING = MULTITHREADING && true;
+        public const bool MULTITHREAD_UPLOADMESH = MULTITHREADING && true;
+
+        public static double Time;
+
+        public static bool Exit = false;
+    }
+}

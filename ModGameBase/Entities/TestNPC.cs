@@ -1,6 +1,8 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,8 +17,8 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
     [EntityMeta(0)]
-    [EntitySerializable(EntitySerializableAttribute.SerializationType.World)]
-    public class TestNPC : Entity
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
+    public class TestNPC : Entity, ISyncedEntity
     {
         private static string firstTimeRightClick = "Well, I'll be. Someone came to save me.\r\n" +
             "I'm soaked to the bone and exhausted. You wouldn't happen to have a place to stay, " +
@@ -48,32 +50,32 @@ namespace ViMG.Entities
         {
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_healthpotion1"), -1, 0),
                 value = 50,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("flask_magicpotion1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("flask_magicpotion1"), -1, 0),
                 value = 50,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_blank"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_blank"), -1, 0),
                 value = 120,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("rope"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("rope"), -1, 0),
                 value = 25,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("book_lore_island1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("book_lore_island1"), -1, 0),
                 value = 500,
             },
             new MenuShop.ShopStockedItem()
             {
-                item = new Items.ItemInstance(Main.Registry.ItemRegistry.Get("food_bread1"), -1, 0),
+                item = new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("food_bread1"), -1, 0),
                 value = 235,
             },
         };
@@ -99,11 +101,10 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-            var shape = new Sphere(Cube.CUBE_SCALE / 2f);
-            physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(shape);
-            physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(
-                BodyDescription.CreateDynamic(new RigidPose(Position.ToNumerics()), 
-                new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
+            var physicsShape = new Capsule(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 0.98f);
+            physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(physicsShape);
+            physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(BodyDescription.CreateDynamic(
+                new RigidPose(Position.ToNumerics()), new BodyInertia() { InverseMass = 1f / 20f }, physicsShapeIndex, 0.001f));
         }
 
         public override void OnUnload()
@@ -116,6 +117,8 @@ namespace ViMG.Entities
 
         public override void Update(double deltaTime)
         {
+            // TODO this has some camera and client-side stuff in it, needs a refactor.
+
             base.Update(deltaTime);
 
             if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(Position)))
@@ -129,7 +132,7 @@ namespace ViMG.Entities
             Position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position;
 
             if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position))
-                .GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Get("water"))
+                .GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Get("water"))
             {
                 Vector3 velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear;
                 velocity -= new Vector3(0, Physics.PhysicsInfo.SIM_GRAVITY * 1.01f, 0);
@@ -140,27 +143,30 @@ namespace ViMG.Entities
                 world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
             }
 
-            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
-            {
-                Ray ray = new Ray(world.player.Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
+            //if (GlobalState.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer mp && !mp.IsOpened && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+            //{
+            //    Ray ray = new Ray(world.player[world.localPlayerIndex].Position, -Main.camera.Forward * Cube.CUBE_SCALE * 4f);
 
-                BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
-                    Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
+            //    BoundingBox bb = new BoundingBox(Position - new Vector3(Cube.CUBE_SCALE / 2),
+            //        Position + new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, Cube.CUBE_SCALE / 2f));
 
-                if (bb.Intersects(ray).HasValue)
-                {
-                    OnRightClick();
-                }
-            }
+            //    if (bb.Intersects(ray).HasValue)
+            //    {
+            //        OnRightClick();
+            //    }
+            //}
 
-            //When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
-            if (Main.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
-            {
-                if (world.MenuDialogue.SelectedOption == 1)
-                    Main.gameStateManager.TheIsland.PushMenu(new MenuShop(Main.gameStateManager, world.player, stockedItems));
+            ////When the dialogue stops, check what option we selected. If it's 1 (shop option) then open the shop.
+            //if (GlobalState.gameStateManager.TheIsland.GetCurrentMenu() is MenuPlayer && shouldFollowUpMenu) 
+            //{
+            //    if (world.MenuDialogue.SelectedOption == 1)
+            //    {
+            //        var player = world.player[world.localPlayerIndex];
+            //        GlobalState.gameStateManager.TheIsland.PushMenu(new MenuShop(GlobalState.gameStateManager, world.EntityManager.GetReference(player), player.inventory, player.heldInventory, stockedItems));
+            //    }
 
-                shouldFollowUpMenu = false;
-            }
+            //    shouldFollowUpMenu = false;
+            //}
         }
 
         public void OnRightClick()
@@ -172,7 +178,7 @@ namespace ViMG.Entities
             }
             else world.MenuDialogue.StartOptions(options);
 
-            Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            GlobalState.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
             shouldFollowUpMenu = true;
         }
@@ -198,12 +204,20 @@ namespace ViMG.Entities
             SaveHelper.SaveVector3(saveBytes, Position + new Vector3(0, Cube.CUBE_SCALE * 4, 0));
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             Position = SaveHelper.LoadVector3(loadBytes, ref index);
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = Position,
+            };
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,14 +17,17 @@ namespace ViMG.Items
 	{
 		private ItemPickaxeHead.PickaxeStats stats = new ItemPickaxeHead.PickaxeStats(0.55f, 1, 2, 1, 1, 0);
 
-		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal", new RectangleF(32, 144, 16, 16))
+		public ItemLavaCrystalPickaxe() : base("pickaxe_lavacrystal")
 		{
-			name = "Lavacrystal Pickaxe";
+            name = "Lavacrystal Pickaxe";
 			description = "A pickaxe made of enchanted bones and lava crystal.\n" +
 				stats.GetTooltip();
-
-			flipXInHand = true;
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 144, 16, 16), flipXInHand: true);
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
@@ -31,14 +37,14 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.world.ChunkManager.IsInWorldBounds(pos) &&
-					player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+					player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
 			});
 
 			if (lookAtResult.hasHit)
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = GetAffectedPositions(player, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
+					CubePosition[] affectedPositions = GetAffectedPositions(player.world.ChunkManager.CubeView, inventory.Get(index), player.Position, lookAtResult.hit, lookAtResult.normal, out _);
 					Span<ushort> ids = stackalloc ushort[affectedPositions.Length];
 
 					player.world.ChunkManager.CubeView.GetIds(affectedPositions.AsSpan(), ids);
@@ -51,16 +57,16 @@ namespace ViMG.Items
 
 					for (int i = 0; i < affectedPositions.Length; i++)
 					{
-						if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
-							player.GetWorld().TryMineCube(affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
+						if (GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air).Touchable)
+							player.GetWorld().TryMineCube(player, affectedPositions[i], GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 				else
 				{
 					if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 					{
-						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-							player.GetWorld().TryMineCube(CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
+						if (player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable)
+							player.GetWorld().TryMineCube(player, CubePosition.FromWorldSpace(lookAtResult.hit), GetStats(inventory.Get(index)).mineLevel, GetStats(inventory.Get(index)).mineRate);
 					}
 				}
 			}
@@ -69,7 +75,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+		public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
@@ -183,11 +189,8 @@ namespace ViMG.Items
 						minePos.Y += y;
 						minePos.Z += z;
 
-						if (player.world.ChunkManager.IsInWorldBounds(minePos))
-						{
-							cachedAffectedPositions[i] = minePos;
-							i++;
-						}
+						cachedAffectedPositions[i] = minePos;
+						i++;
 					}
 				}
 			}

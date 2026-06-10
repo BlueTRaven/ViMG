@@ -1,5 +1,8 @@
 ﻿using BrUtility;
-using ImGuiNET;
+using Engine;
+using Engine.Networking;
+using Engine.Networking.Messages;
+using Hexa.NET.ImGui;
 using Microsoft.Xna.Framework;
 using SharpDX.Direct3D9;
 using System;
@@ -16,6 +19,8 @@ namespace ViMG.IMGUIImpl
 {
     public static class IMGUIConsole
     {
+        public const string AUTO_FILE_NAME = "auto.txt";
+
         public class ConsoleParamException : Exception
         {
             private readonly string executingCommand;
@@ -52,12 +57,70 @@ namespace ViMG.IMGUIImpl
             }
         }
 
-        public static bool Show = true;
+        private class ConsoleTraceListener : TraceListener
+        {
+            private readonly ConsoleTextWriter writer;
+
+            public ConsoleTraceListener(ConsoleTextWriter writer)
+            {
+                this.writer = writer;
+            }
+
+            public override void Write(string? message)
+            {
+                writer.Write(message);
+            }
+
+            public override void WriteLine(string? message)
+            {
+                writer.WriteLine(message);
+            }
+
+            public override void Fail(string? message, string? detailMessage)
+            {
+                base.Fail(message, detailMessage);
+                throw new Exception("Failed");
+            }
+        }
+        public class ConsoleTextWriter : TextWriter
+        {
+            public int TotalWritten = 0;
+            private TextWriter originalConsoleOut;
+            public override Encoding Encoding => originalConsoleOut.Encoding;
+
+            public ConsoleTextWriter(TextWriter originalConsoleOut)
+            {
+                this.originalConsoleOut = originalConsoleOut;
+            }
+
+            public override void Write(char value)
+            {
+                TotalWritten += 1;
+                LogLine(new string(value, 1));
+                originalConsoleOut.Write(value);
+            }
+
+            public override void Write(string value)
+            {
+                TotalWritten += value.Length;
+                LogLine(value);
+                originalConsoleOut.Write(value);
+            }
+
+            // Override WriteLine methods as well
+            public override void WriteLine(string value)
+            {
+                TotalWritten += value.Length;
+                LogLine(value);
+                originalConsoleOut.WriteLine(value);
+            }
+        }
+        private static ConsoleTextWriter textWriter;
 
         private const int MAX_LINES = 500;
         private const int MAX_HISTORY = 500;
         private static FastList<string> lines = new(MAX_LINES);
-        private static FastList<string> commandHistory = new(MAX_HISTORY);
+        private static FastList<string> commandHistory = new(MAX_HISTORY); 
 
         private static string editingString = "";
         private static string executingCommand = "";
@@ -80,9 +143,33 @@ namespace ViMG.IMGUIImpl
 
         static IMGUIConsole()
         {
+            ReplaceOut();
+        }
+
+        public static ConsoleTextWriter ReplaceOut()
+        {
+            if (textWriter == null)
+            {
+                textWriter = new ConsoleTextWriter(System.Console.Out);
+                System.Console.SetOut(textWriter);
+                Trace.Listeners.Clear();
+                Trace.AutoFlush = true;
+                Trace.Listeners.Add(new ConsoleTraceListener(textWriter));
+            }
+
+            return textWriter;
+        }
+
+        public static void CollectCommands()
+        {
+            commands.Clear();
+            commandsByName.Clear();
+            vars.Clear();
+            varsByName.Clear();
+
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes()) 
+                foreach (Type type in assembly.GetTypes())
                 {
                     foreach (MethodInfo methodInfo in type.GetMethods())
                     {
@@ -92,6 +179,10 @@ namespace ViMG.IMGUIImpl
 
                             if (consoleCommandAttr != null)
                             {
+                                var parameters = methodInfo.GetParameters();
+                                Debug.Assert(parameters.Length == 1, "ConsoleCommands must have one parameter");
+                                Debug.Assert(parameters[0].ParameterType == typeof(string[]), "ConsoleCommands must have a string[] parameter");
+
                                 commands.Add((methodInfo, consoleCommandAttr));
                                 commandsByName.Add(consoleCommandAttr.name, (methodInfo, consoleCommandAttr));
                             }
@@ -113,6 +204,8 @@ namespace ViMG.IMGUIImpl
                     }
                 }
             }
+
+            LoadScript([AUTO_FILE_NAME]);
         }
 
         [ConsoleCommand("help")]
@@ -146,24 +239,60 @@ namespace ViMG.IMGUIImpl
             commandHistory.Clear();
         }
 
+        private static HashSet<string> runScripts = new();
         [ConsoleCommand("run_script", "Runs a script, which is a collection of commands stored in plain-text, newline-separated format.")]
         public static void LoadScript(string[] parameters)
         {
             RequireParam(parameters, 0, "script_name");
 
+            int depth = 0;
+            if (parameters.Length > 1 && int.TryParse(parameters[1], out int setDepth)) 
+            {
+                depth = setDepth;
+            } 
+
+            if (depth == 0)
+            {
+                runScripts.Clear();
+                if (!runScripts.Contains(parameters[0]))
+                {
+                    runScripts.Add(parameters[0]);
+                }
+                else
+                {
+                    LogError("LoadScript: recursion detected.");
+                    return;
+                }
+            }
+
             string scriptName = parameters[0];
+
+            if (!File.Exists(parameters[0]))
+            {
+                LogError(string.Format("LoadScript: File {0} does not exist", parameters[0]));
+                return;
+            }
 
             string[] allLines = File.ReadAllLines(scriptName);
 
             foreach (string line in allLines)
             {
-                // running scripts in scripts not supported because we can EASILY deadlock ourselves...
-                if (!line.StartsWith("run_script") && line != "")
+                if (line != "" && !line.StartsWith('#'))
                     HandleCommand(line);
             }
         }
 
-        [ConsoleCommand("get", "Get the value of a console variable.")]
+        [ConsoleCommand("list_vars", "List console variables.")]
+        public static void ListVars(string[] parameters)
+        {
+            foreach (var v in vars)
+            {
+                LogLine(v.Item2.name);
+                LogLine("\t" + v.Item2.description);
+            }
+        }
+
+        [ConsoleCommand("get", "Get the value of a console variable.", ConsoleCommandRunSide.Server)]
         public static void Get(string[] parameters)
         {
             RequireParam(parameters, 0, "name");
@@ -180,7 +309,7 @@ namespace ViMG.IMGUIImpl
             }
         }
 
-        [ConsoleCommand("set", "Set the value of a console variable.")]
+        [ConsoleCommand("set", "Set the value of a console variable.", ConsoleCommandRunSide.ServerAndClient)]
         public static void Set(string[] parameters)
         {
             RequireParam(parameters, 0, "name");
@@ -223,6 +352,52 @@ namespace ViMG.IMGUIImpl
             }
         }
 
+        [ConsoleCommand("search", "Searches for the given command or variable.")]
+        public static void Search(string[] parameters)
+        {
+            if (RequireParam(parameters, 0, "search_var"))
+            {
+                var commandNames = commandsByName.Keys;
+                var varNames = varsByName.Keys;
+
+                var commandMatches = commandNames.Where(x => x.IndexOf(parameters[0]) != -1);
+                var varMatches = varNames.Where(x => x.IndexOf(parameters[0]) != -1);
+
+                if (commandMatches.Count() == 0 && varMatches.Count() == 0)
+                {
+                    LogLine(string.Format("No commands or variables found that match {0}", parameters[0]));
+                }
+                else
+                {
+                    if (commandMatches.Count() != 0)
+                    {
+                        LogLine(string.Format("Found {0} commands:", commandMatches.Count()));
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < commandMatches.Count() - 1; i++)
+                        {
+                            sb.Append(commandMatches.ElementAt(i));
+                            sb.Append("\n");
+                        }
+                        sb.Append(commandMatches.ElementAt(commandMatches.Count() - 1));
+                        LogLine(sb.ToString());
+                    }
+                    
+                    if (varMatches.Count() != 0)
+                    {
+                        LogLine(string.Format("Found {0} variables:", varMatches.Count()));
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < varMatches.Count() - 1; i++)
+                        {
+                            sb.Append(varMatches.ElementAt(i));
+                            sb.Append("\n");
+                        }
+                        sb.Append(varMatches.ElementAt(varMatches.Count() - 1));
+                        LogLine(sb.ToString());
+                    }
+                }
+            }
+        }
+
         [ConsoleCommand("print", "Prints a line to the console.")]
         public static void Print(string[] parameters)
         {
@@ -235,13 +410,13 @@ namespace ViMG.IMGUIImpl
         [ConsoleCommand("quit", "Exits the program.")]
         public static void QuitCommand(string[] parameters)
         {
-            Main.Exit = true;
+            GlobalState.Exit = true;
         }
 
         [ConsoleCommand("exit", "Exits the program.")]
         public static void ExitCommand(string[] parameters)
         {
-            Main.Exit = true;
+            GlobalState.Exit = true;
         }
 
         public static bool RequireParam(string[] parameters, int index, string paramName, string[] options = null)
@@ -282,26 +457,35 @@ namespace ViMG.IMGUIImpl
                 File.Copy("current_run.txt", "previous_run.txt", true);
         }
 
+        public static FastList<string> GetHistory()
+        {
+            return lines;
+        }
+        public static FastList<string> GetCommandHistroy()
+        {
+            return commandHistory;
+        }
+
         public static unsafe void Console()
         {
-            if (Main.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
+            if (GlobalState.Time > lastRunTime + 1 && lastRunLines1 != lastRunLines)
             {
-                lastRunTime = (float)Main.Time;
+                lastRunTime = (float)GlobalState.Time;
                 File.WriteAllLines("current_run.txt", commandHistory.Buffer[0..commandHistory.Length]);
 
                 lastRunLines1 = lastRunLines;
             }
 
             bool shouldFocus = false;
-            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde)) 
+            if (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.OemTilde))
             {
-                Show = true;
+                Options.ShowConsole = true;
                 shouldFocus = true;
             }
 
-            if (Show)
+            if (Options.ShowConsole)
             {
-                if (ImGui.Begin("Console", ref Show))
+                if (ImGui.Begin("Console", ref Options.ShowConsole))
                 {
                     float footer_height_to_reserve = ImGui.GetStyle().ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing();
 
@@ -410,7 +594,7 @@ namespace ViMG.IMGUIImpl
                     {
                         ImGui.SetKeyboardFocusHere(0);
                     }
-                    if (ImGui.InputText("Input", ref editingString, (uint)500, input_text_flags, Callback, (nint)null))
+                    if (ImGui.InputText("Input", ref editingString, (nuint)500, input_text_flags, Callback, (void*)null))
                     {
                         if (editingString != "")
                         {
@@ -436,23 +620,62 @@ namespace ViMG.IMGUIImpl
             LogLine("> " + entireLine);
 
             string[] splits = entireLine.Split(' ');
+            string[] parameters = splits.Length > 1 ? splits[1..] : [];
+
             string commandName = splits[0];
+
+            NetworkManager.NetworkSide netSide = GlobalState.NetMode == NetworkingMode.Client ? NetworkManager.NetworkSide.Client : NetworkManager.NetworkSide.Server;
+            RunCommand(commandName, netSide, parameters);            
+        }
+
+        public static ConsoleCommandAttribute? GetCommandByName(string name)
+        {
+            return commandsByName[name].Item2;
+        }
+
+        public struct CommandReturn
+        {
+            public string[] output;
+            public bool valid;
+        }
+
+        public static CommandReturn RunCommand(string commandName, NetworkManager.NetworkSide originatingSide, params string[] parameters)
+        {
+            return RunCommand(commandName, originatingSide, (Span<string>)parameters);
+        }
+
+        public static CommandReturn RunCommand(string commandName, NetworkManager.NetworkSide originatingSide, Span<string> parameters)
+        {
+            string[] newLines = [];
+            bool valid = false;
 
             if (commandsByName.TryGetValue(commandName, out var command))
             {
                 MethodInfo methodInfo = command.Item1;
                 // Note we leave out the command itself from the strings we pass in.
-                string[] parameters = splits.Length > 1 ? splits[1..] : null;
 
                 executingCommand = commandName;
-
-                try
+                if (originatingSide == NetworkManager.NetworkSide.Client && 
+                    (command.Item2.executionSide == ConsoleCommandRunSide.Server || command.Item2.executionSide == ConsoleCommandRunSide.ServerAndClient) &&
+                    GlobalState.NetMode == NetworkingMode.Client)
                 {
-                    methodInfo.Invoke(null, new object[] { parameters });
+                    // These commands are not run locally, but are instead sent to the server.
+                    SyncConsoleCommandClient.Instance.SendCommand(commandName, parameters.ToArray());
                 }
-                catch (Exception e)
+                else
                 {
-                    LogLine("[error] " + e.InnerException.Message);
+                    int before = lines.Length;
+                    try
+                    {
+                        methodInfo.Invoke(null, [parameters.ToArray()]);
+                        valid = true;
+                    }
+                    catch (Exception e)
+                    {
+                        LogLine("[error] " + e.InnerException.Message);
+                    }
+
+                    newLines = lines.Buffer[before..lines.Length];
                 }
             }
             else LogLine("[error] No command with name " + commandName + ".");
@@ -460,7 +683,23 @@ namespace ViMG.IMGUIImpl
             historyPos = -1;
             if (commandHistory.Length == MAX_HISTORY)
                 commandHistory.RemoveAt(0);
-            commandHistory.Add(editingString);
+            StringBuilder sb = new StringBuilder();
+            sb.Append(commandName);
+            if (parameters.Length > 0) 
+                sb.Append(' ');
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                sb.Append(parameters[i]);
+                if (i != parameters.Length - 1)
+                    sb.Append(' ');
+            }
+            commandHistory.Add(sb.ToString());
+
+            return new CommandReturn
+            {
+                output = newLines,
+                valid = valid,
+            };
         }
 
         private static unsafe int Callback(ImGuiInputTextCallbackData* data)
@@ -629,6 +868,11 @@ namespace ViMG.IMGUIImpl
             return 0;
         }
 
+        public static void LogError(string line)
+        {
+            LogLine("[error] " + line);
+        }
+
         public static void LogLine(string line)
         {
             if (lines.Length == MAX_LINES)
@@ -636,6 +880,48 @@ namespace ViMG.IMGUIImpl
             lines.Add(line);
 
             lastRunLines++;
+        }
+
+        public static void LogLineAndSend(string line)
+        {
+            LogLine(line);
+            if (GlobalState.NetMode == NetworkingMode.Server)
+            {
+                SyncConsoleOutput.Instance.SendOutput([line]);
+            }
+        }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}", trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}", trace.ToString()));
+            }
+        }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition, string message)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}\n{1}", message, trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}", trace.ToString()));
+            }
+        }
+
+        [Conditional("DEBUG")]
+        public static void Assert(bool condition, string? message, string detailedMessage, params object[] args)
+        {
+            if (!condition)
+            {
+                StackTrace trace = new StackTrace(1);
+                LogLine(string.Format("Assert failed: {0}", trace.ToString()));
+                throw new Exception(string.Format("Assert failed: {0}\n{1}\n{2}", message != null ? message : "", string.Format(detailedMessage, args), trace.ToString()));
+            }
         }
     }
 }

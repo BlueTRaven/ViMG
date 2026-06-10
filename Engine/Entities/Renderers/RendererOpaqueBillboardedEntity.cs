@@ -1,5 +1,8 @@
 ﻿using BepuPhysics.Constraints;
 using BrUtility;
+using Engine.Clients;
+using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
@@ -13,17 +16,17 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ViMG.Buffs;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Items;
 using ViMG.Rendering;
-using static ViMG.Collision3D;
-using static ViMG.Entities.EntityHelper;
 
 namespace ViMG.Entities.Renderers
 {
     public class RendererOpaqueBillboardedEntity : EntityRenderer
     {
-        public record struct TypeStatsDrawStats
+        public record struct RenderedEntityDrawStats
         {
             public bool shouldDraw = true;
 
@@ -33,31 +36,35 @@ namespace ViMG.Entities.Renderers
 
             public Color? color = Color.White;
 
-            public TypeStatsDrawStats() { }
+            public RenderedEntityDrawStats() { }
         }
 
-        public abstract class TypeStats : IRegisterable
+        private int[] rendererMapping = [];
+        public abstract class RenderedEntity : IRegisterable
         {
             public string Identifier { get; set; }
 
             public RendererDeferred.DrawMaterial Material;
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
-            public Type EntityType;
+            public int EntityTypeId;
 
-            public TypeStats(string identifier, Type entityType, RendererDeferred.DrawMaterial material)
+            public RenderedEntity(string identifier, int entityTypeId, RendererDeferred.DrawMaterial material)
             {
+                Debug.Assert(entityTypeId != 0, "Entity type id is invalid");
+
                 this.Identifier = identifier;
-                this.EntityType = entityType;
+                this.EntityTypeId = entityTypeId;
                 this.Material = material;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
 
+            public virtual void OnRender(ClientStates client, ref readonly SyncedEntity entity) { }
 
-            public abstract TypeStatsDrawStats[] GetDrawStats(Entity entity);
+            public virtual void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RenderedEntityDrawStats> renderedEntity) { }
         }
 
-        public ObjRegistry<TypeStats> registry;
+        public ObjRegistry<RenderedEntity> registry;
 
         public VerySimpleMesh mesh;
 
@@ -65,37 +72,46 @@ namespace ViMG.Entities.Renderers
         { 
             mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
 
-            registry = new ObjRegistry<TypeStats>();
+            registry = new ObjRegistry<RenderedEntity>();
         }
 
-        private Type?[]? renderedTypesCache = null;
-        public override Type?[] GetRenderedTypes()
+        private int[]? renderedTypesCache = null;
+        public override int[] GetRenderedTypes()
         {
             if (renderedTypesCache == null)
             {
-                renderedTypesCache = new Type[registry.Count + 1];
-                renderedTypesCache[0] = null;
-                int i = 1;
-                foreach (TypeStats stats in registry.GetIterable())
+                renderedTypesCache = new int[registry.Count];
+                var riter = registry.GetIterable();
+                int max = int.MinValue;
+                for (int i = 0; i < riter.Length; i++)
                 {
-                    renderedTypesCache[i] = stats.EntityType;
-                    i++;
+                    var stats = riter[i];
+                    max = int.Max(stats.EntityTypeId, max);
+                }
+                rendererMapping = new int[max + 1];
+
+                for (int i = 0; i < riter.Length; i++)
+                {
+                    var stats = riter[i];
+                    renderedTypesCache[i] = stats.EntityTypeId;
+                    rendererMapping[stats.EntityTypeId] = i + 1;
                 }
             }
             return renderedTypesCache;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> renderedEntities)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            TypeStats stats = registry.Get(renderedTypeIndex);
-            Type type = stats.EntityType;
+            // Need to convert global entity type registry (type) to local renderer registry. How do we do this without expensive dict lookup? Sparse array?
+            var renderer = registry.Get(rendererMapping[type]);
+            if (renderer == null) return;
+            renderer.Draws.Clear();
 
-            var entities = renderedEntities;//entityManager.GetAll(type);
-
-            stats.Draws.Clear();
-
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+            var prev = client.Previous(1);
+            var current = client.Current();
+            var camera = client.currInterpState.camera;
+            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(camera.RotationEuler.Y, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                    Matrix.CreateRotationY(camera.RotationEuler.X);
 
             RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
             {
@@ -103,19 +119,28 @@ namespace ViMG.Entities.Renderers
                 TintColor = Color.White.ToVector3(),
             };
 
-            foreach (Entity entity in entities)
+            FastList<RenderedEntityDrawStats> drawStats = new FastList<RenderedEntityDrawStats>();
+
+            for (int i = 0; i < current.entities.MaxEnts; i++)
             {
-                if (entity == null)
-                {
-                    Console.WriteLine("Entity was null");
-                    continue;
-                }
-                TypeStatsDrawStats[] drawStats = stats.GetDrawStats(entity);
-                foreach (TypeStatsDrawStats drawStat in drawStats)
+                drawStats.Clear();
+
+                var reference = current.entities.GetReference(i);
+                // TODO get rid of str compare
+                if (current.entities.GetTypeById(reference.id) != type) continue;
+
+                var entInterp = client.currInterpState.entities.GetByRef(ref reference); //GlobalState.Registry.EntityRegistry.Get(type).GetInterpolated(client, reference);
+                //var entCurr = client.Current().entities.GetById(reference.id);
+                //var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                renderer.OnRender(client, ref entInterp);
+                renderer.GetDrawStats(client, ref entInterp, drawStats);
+
+                foreach (RenderedEntityDrawStats drawStat in drawStats.Slice())
                 {
                     Vector2 scale = drawStat.scale ?? new Vector2(1);
                     Color color = drawStat.color ?? Color.White;
-                    Vector3 position = drawStat.position ?? entity.Position;
+                    Vector3 position = drawStat.position ?? entInterp.position;
 
                     RendererDeferred.DrawSourceRectParameters sourceRect;
                     if (drawStat.sourceRect.HasValue)
@@ -140,15 +165,15 @@ namespace ViMG.Entities.Renderers
                             TintColor = color.ToVector3(),
                         };
 
-                        stats.Draws.Add(draw);
+                        renderer.Draws.Add(draw);
                     }
                     else
                     {
-                        float distance = (Main.camera.Position - position).Length();
+                        float distance = (camera.Position - position).Length();
 
                         RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
                         {
-                            Material = stats.Material,
+                            Material = renderer.Material,
                             SourceRect = sourceRect,
                             TintColor = color.ToVector4(),
                             Mesh = mesh,
@@ -156,23 +181,23 @@ namespace ViMG.Entities.Renderers
                             SortValue = distance,
                         };
 
-                        Main.Renderer.AddTransparentDraw(draw);
+                        client.Renderer.AddTransparentDraw(draw);
                     }
                 }
             }
 
-            if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
+            if (renderer.SBO == null || renderer.SBO.ElementCount < renderer.Draws.Length)
             {
-                if (stats.SBO != null)
-                    stats.SBO.Dispose();
+                if (renderer.SBO != null)
+                    renderer.SBO.Dispose();
 
-                stats.SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), stats.Draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
+                renderer.SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), renderer.Draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
             }
 
-            stats.SBO.SetData(stats.Draws.Buffer);
+            renderer.SBO.SetData(renderer.Draws.Buffer);
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
+            client.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
+                renderer.Material, mesh, renderer.SBO, 0, renderer.Draws.Length));
         }
     }
 }

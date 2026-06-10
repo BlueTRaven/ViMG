@@ -10,10 +10,15 @@ namespace ViMG.Items
 {
     public class ItemIronChunk : Item
 	{
-		public ItemIronChunk() : base("iron_chunk", new RectangleF(48, 16, 16, 16))
+		public ItemIronChunk() : base("iron_chunk")
 		{
-			name = "Iron Ore Chunk";
+            name = "Iron Ore Chunk";
 			description = "A weighty chunk of iron ore. It's too raw to be used for anything.";
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 16, 16, 16));
+        }
 	}
 }

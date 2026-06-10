@@ -11,8 +11,18 @@ namespace ViMG.Cubes
 {
     public class CubeDebug : Cube
     {
-        public CubeDebug(string identifier, RectangleF sourceRect, Color color, int mineProgressRequirement) : base(identifier, sourceRect, color, mineProgressRequirement)
+        private readonly RectangleF sourceRect;
+        private readonly Color color;
+
+        public CubeDebug(string identifier, RectangleF sourceRect, Color color, int mineProgressRequirement) : base(identifier, mineProgressRequirement)
         {
+            this.sourceRect = sourceRect;
+            this.color = color;
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, sourceRect, color);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

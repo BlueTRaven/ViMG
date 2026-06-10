@@ -2,43 +2,56 @@
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
+using Engine.Clients;
+using Engine.IMGUIImpl;
+using Engine.Items;
+using Engine.Networking;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
 using ViMG.Generation;
+using ViMG.IMGUIImpl;
 using ViMG.Physics;
+using ViMG.Rendering;
 using ViMG.UIs;
-using static ViMG.WorldInfoIO;
 
 namespace ViMG.GameStates
 {
     public class GameStateTheIsland : GameState
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("GameStateTheIsland", true, Engine.Logger.LogLevel.Info);
+
+        [ConsoleCommandVar("pause_when_world_loaded", "Set GameStateManager.Paused to true when the current world is done loading.")]
+        public static bool PauseWhenWorldLoaded = false;
+
         private GraphicsDevice device;
         private TextHelper.FontInfo fi;
-        private Task<World> worldTask;
-        private World world;
+        private Task<World>? worldTask;
+        private World? world;
+        private ClientStates? client;
 
         public bool IsLoading;
         private static object lockObj = new object();
-        private static string loadMessage;
+        private static string loadMessage = "";
         public static string LoadMessage 
         {
             get 
             {
                 lock (lockObj) 
                 {
-                    //return a COPY since we might be modifying this value.
-                    //This is slow, but whatever, we're only using this during loading.
-                    return new string(loadMessage); 
+                    return loadMessage; 
                 } 
             }
             set 
@@ -52,6 +65,16 @@ namespace ViMG.GameStates
         public static int ProgressMin;
         public static int ProgressMax;
 
+        public PlayerManagerIO? playerIO;
+        public NetworkManager? netManagerServer;
+        public NetworkManager? netManagerClient;
+
+        // Set when world is loaded
+        public ManualResetEventSlim waiterWorld = new ManualResetEventSlim();
+        public ManualResetEventSlim waiterReset = new ManualResetEventSlim();
+
+        public string? localPlayerName = null;
+
         public GameStateTheIsland(GameStateManager manager) : base(manager)
         {
         }
@@ -61,117 +84,218 @@ namespace ViMG.GameStates
             this.device = device;
             base.LoadContent(device);
             
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         }
 
-        public void BeginLoadWorld(string worldName)
+        // Loads or creates a world.
+        public bool BeginLoadWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
+
+            waiterReset.Reset();
+            waiterWorld.Reset();
+
+            var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+            if (string.IsNullOrWhiteSpace(worldName) || worldName.Any(c => invalidChars.Contains(c)))
+            {
+                Logger.Log(Engine.Logger.LogLevel.Error, "'{0}' is an invalid world file name.", worldName);
+                return false;
+            }
+
+            Debug.Assert(!IsLoading);
 
             IsLoading = true;
             worldTask = new Task<World>(() =>
             {
-                ProfilingHelper.Start("Loading and Flushing World...");
-                World world;
-                if (!Directory.Exists("./saves/" + worldName + "/"))
+                ProfilingHelper.Start(Logger, "Loading and Flushing World...");
+
+                World? world;
+                if (!Directory.Exists(WorldIO.SaveFolder + worldName + "/"))
                 {
-                    world = CreateWorld(device, worldName);
+                    Logger.Info("Creating world {0} layer {1}", worldName, layer);
+                    world = CreateWorld(worldName, layer);
+                    playerIO = new PlayerManagerIO();
+                    playerIO.Load(worldName);
                 }
                 else
                 {
-                    world = LoadWorld(device, worldName);
+                    Logger.Info("Loading world {0} layer {1}", worldName, layer);
+                    world = LoadWorld(worldName, layer);
+                    playerIO = new PlayerManagerIO();
+                    playerIO.Load(worldName);
                 }
 
                 if (world == null) throw new Exception("Errored while loading world");
 
                 LoadMessage = "Loading World...";
-                ProfilingHelper.Start("Building Meshes...");
-                //Now we can tell the ChunkLoadManager what should be loaded.
-                world.ChunkLoadManager.UpdateLoadTarget(world.WorldInfo.playerPosition);
-                world.ChunkLoadManager.LoadAroundTarget(world, tempRenderDistance: 1);
+                ProfilingHelper.Start(Logger, "Building Meshes...");
 
                 LoadMessage = "Loading World...\nFlushing queue...";
                 //Finally, tell the ChunkLoadManager to actually load the things.
                 //(We have to tell it this manually as it queues things up to load, and we want it to finish loading instead of load things in the background
                 //as it normally does.)
                 world.ChunkLoadManager.FlushLoadQueue(world);
-                ProfilingHelper.End("Done Building Meshes.");
+                ProfilingHelper.End(Logger, "Done Building Meshes.");
 
                 LoadMessage = "Loading World...\nFinishing...";
-                world.FinishLoading(device);
+                world.FinishLoading();
 
                 IsLoading = false;
-                ProfilingHelper.End("Finished Loading and Flushing World.");
+                ProfilingHelper.End(Logger, "Finished Loading and Flushing World.");
 
                 return world;
             });
 
-            if (Main.MULTITHREAD_LOADING)
+            if (GlobalState.MULTITHREAD_LOADING)
                 worldTask.Start();
             else worldTask.RunSynchronously();
+
+            return true;
         }
 
-        public Task<World> BeginLoadLayer(string worldName, int layer)
+        public void Connect(string ip, int port, bool delay = false)
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
-
-            if (!LayerExists(layer))
+            if (netManagerServer != null)
             {
-                Console.WriteLine("Tried to load layer {0} but this layer was not yet implemented.", layer);
-                return null;
+                netManagerServer.Ip = ip;
+                netManagerServer.Port = port;
+            }
+            if (netManagerClient != null)
+            {
+                netManagerClient.Ip = ip;
+                netManagerClient.Port = port;
             }
 
-            //Note that this version assumes the world exists.
-            IsLoading = true;
-            var layerTask = new Task<World>(() =>
-            {
-                World world = LoadLayer(worldName, layer);
-                world.FinishLoading(device);
+            if (GlobalState.NetMode == NetworkingMode.Client)
+                ConnectLocal();
+        }
 
-                IsLoading = false;
-                return world;
-            });
+        public void ConnectLocal()
+        {
+            // NetworkManager defaults are already set up to connect locally, so we don't really need to do anything
+            netManagerServer?.Connect(NetworkingMode.Server);
+            netManagerClient?.Connect(NetworkingMode.Client);
+        }
 
-            if (Main.MULTITHREAD_LOADING)
-                layerTask.Start();
-            else layerTask.RunSynchronously();
-
-            return layerTask;
+        public void Disconnect()
+        {
+            netManagerServer?.Disconnect();
+            netManagerClient?.Disconnect();
         }
 
         public override void OnOpen(GameState changingFrom)
         {
             base.OnOpen(changingFrom);
+            Reset();
         }
 
         public override void OnClose(GameState changingTo)
         {
             base.OnClose(changingTo);
+            Reset();
+        }
+
+        public bool StartSingleplayer(string worldName)
+        {
+            if (BeginLoadWorld(worldName, 0))
+            {
+                client = new ClientStates(device);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool StartServer(string worldName, string ip, int port)
+        {
+            netManagerServer!.Ip = ip;
+            netManagerServer!.Port = port;
+            return BeginLoadWorld(worldName, GlobalState.Args.createLayer);
+        }
+
+        public void StartClient(string ip, int port)
+        {
+            netManagerClient!.Ip = ip;
+            netManagerClient!.Port = port;
+            client = new ClientStates(device);
+            ConnectLocal();
+        }
+
+        public bool NetPoll()
+        {
+            if (world == null)
+            {
+                if (worldTask != null && worldTask.IsCompleted)
+                {
+                    world = worldTask.Result;
+                    worldTask = null;
+                    waiterWorld.Set();
+
+                    ConnectLocal();
+
+                    if (PauseWhenWorldLoaded)
+                    {
+                        manager.Paused = true;
+                        // Shoud we continue to execute here or just return?
+                    }
+
+                    return true;
+                }
+            }
+
+            return world != null;
+        }
+
+        public override void UnfixedUpdate(double deltaTime)
+        {
+            base.UnfixedUpdate(deltaTime);
+
+            NetPoll();
 
             if (world != null)
             {
-                world.Dispose();
-                world = null;
+                // Server can only poll events if world is loaded?
+                // I don't know if this really should be true or not. We might want to just instantly disconnect players while waiting? Or something?
+                netManagerServer?.PollEvents();
             }
-            SetMenu(null);
+
+            if (GlobalState.NetMode != NetworkingMode.Server)
+            {
+                // If world takes longer than client whoami timeout, this might fail?
+                if (netManagerClient.ClientHasConnected())
+                {
+                    netManagerClient?.PollEvents();
+                }
+                else
+                {
+                    netManagerClient.CheckConnected();
+                }
+            }
         }
 
         public override void Update(double deltaTime)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            if (world == null)
+            if (world != null)
             {
-                if (worldTask.IsCompleted)
-                {
-                    world = worldTask.Result;
-                    worldTask = null;
-                }
+                if (!manager.Paused)
+                    world.Update(deltaTime);
             }
 
-            if (world != null && !manager.Paused)
+            if (GlobalState.NetMode != NetworkingMode.Server) 
             {
-                world.Update(deltaTime);
+                // If world takes longer than client whoami timeout, this might fail?
+                if (netManagerClient.ClientHasConnected())
+                {
+                    if (client != null && !manager.Paused)
+                    {
+                        client.CurrentTime += deltaTime;
+
+                        client.ChunkManager.ChunkMesher.Update(client.currInterpState.camera.Position, client.ChunkManager.CopyManager, client.Current().entities);
+                        client.UpdatePlayer(deltaTime);
+                    }
+                } 
             }
 
             base.Update(deltaTime);
@@ -182,12 +306,54 @@ namespace ViMG.GameStates
             return this.world;
         }
 
+        public ClientStates GetClient()
+        {
+            return client;
+        }
+
         public void SetWorld(World world)
         {
             this.world = world;
         }
 
-        public static World CreateWorld(GraphicsDevice? device, string worldName)
+        public void Reset()
+        {
+            Disconnect();
+            netManagerServer = null;
+            netManagerClient = null;
+
+            if (world != null)
+            {
+                world.Dispose();
+                world = null;
+            }
+            if (client != null)
+            {
+                client.Dispose();
+                client = null;
+            }
+            IMGUINetworkDebug.ClearMessages();
+            SyncWorldState.Instance.ServerShutdown();
+            SetMenu(null);
+
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
+            {
+                netManagerClient = new();
+                netManagerServer = new();
+            }
+            else if (GlobalState.NetMode == NetworkingMode.Server)
+            {
+                netManagerServer = new();
+            }
+            else if (GlobalState.NetMode == NetworkingMode.Client)
+            {
+                netManagerClient = new();
+            }
+
+            waiterReset.Set();
+        }
+
+        public static World CreateWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
@@ -195,16 +361,17 @@ namespace ViMG.GameStates
 
             var physicsInfo = new PhysicsInfo();
 
-            ChunkMesher? chunkMesher = device != null ? new(SIZE_IN_CHUNKS, physicsInfo, device) : null;
+            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
             var entityManager = new EntityManager();
-            var entIO = new EntityManagerIO(entityManager, 0);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", 0);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var inventoryManager = new InventoryManager();
+            var entIO = new EntityManagerIO(entityManager, layer);
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
             WorldInfoIO.WorldInfo worldInfo = new WorldInfoIO.WorldInfo()
             {
-                playerPosition = new Vector3(-1),
-                playerLayer = 0,
+                playerPositions = new Vector3[World.MAX_PLAYERS],
+                playerLayers = new int[World.MAX_PLAYERS],
                 furthestLayer = 0,
                 time = 0,
                 pointsOfInterest = new List<PointOfInterest>(),
@@ -216,51 +383,52 @@ namespace ViMG.GameStates
 
             var worldInfoIO = new WorldInfoIO();
                
-            Skybox? skybox = device != null ? new Skybox() : null;
-
             // This is up here so we can use this information when loading a world (coconut easter egg)
             // but it also might present a problem; if we error at any point during the creation/loading process,
             // pressing "Continue" will just try to load the same world that caused the error instead of staying the same.
-            Main.SessionInformation.LastLoadedSave = worldName;
+            GlobalState.SessionInformation.LastLoadedSave = worldName;
 
-            var generator = CreateLayerGenerator(0);
-            var logic = CreateLayerLogic(0);
+            var generator = CreateLayerGenerator(layer);
+            var logic = CreateLayerLogic(layer);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
+            chunkIO.CreateAll();
+
+            WorldPrototype prototype = new WorldPrototype(worldName, 0, entityManager, inventoryManager, chunkManager, worldInfo, logic, null, physicsInfo, new HousingManager());
 
             ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
-            ProfilingHelper.Start("Saving Chunks...");
+            Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
+            for (int i = 0; i < World.MAX_PLAYERS; i++)
+            {
+                prototype.WorldInfo.playerPositions[i] = playerSpawnPosition;
+                prototype.WorldInfo.playerLayers[i] = 0;
+            }
+            prototype.WorldInfo.spawnPosition = playerSpawnPosition;
+            prototype.WorldInfo.spawnLayer = 0;
+
+            ProfilingHelper.Start(Logger, "Saving Chunks...");
             chunkIO.Save(worldName);
 
-            ProfilingHelper.End("Done.");
+            ProfilingHelper.End(Logger, "Done.");
 
             var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
-            var player = new Player();
-            player.FirstCreated();
-            prototype.EntityManager.Add(player, true);
-
-            Vector3 playerSpawnPosition = generator.GetPlayerPosition(prototype.ChunkManager);
-            player.Position = playerSpawnPosition;
-            player.SpawnPosition = CubePosition.FromWorldSpace(playerSpawnPosition);
-            worldInfoIO.Info.spawnPosition = player.Position;
-            worldInfoIO.Info.spawnLayer = 0;
-            prototype.WorldInfo.playerPosition = player.Position;
-            prototype.WorldInfo.playerLayer = 0;
-
             World world = new World(prototype, chunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            if (!Main.IsHeadless)
-                world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             entityManager.AddLaterEntities();
 
-            ProfilingHelper.Start("Saving Entities...");
+            ProfilingHelper.Start(Logger, "Saving Entities...");
             entIO.SerializeAll(SIZE_IN_CHUNKS);
             entIO.Save(worldName);
-            ProfilingHelper.End("Done.");
 
-            ProfilingHelper.Start("Reloading...");
+            var playerIO = new PlayerManagerIO();
+            playerIO.SerializeAll(world);
+            playerIO.Save(worldName);
+
+            ProfilingHelper.End(Logger, "Done.");
+
+            ProfilingHelper.Start(Logger, "Reloading...");
+
             //The way world creation is set up is that it creates everything - the entire world - at the same time.
             //That means we'd have entirely too much stuff in memory after we're done. We're not going to be near half of that stuff.
             //Instead of letting that sit in memory, we just unload EVERYTHING
@@ -268,26 +436,30 @@ namespace ViMG.GameStates
             //The World is responsible for the loading later.
             //Note that the ChunkLoadManager isn't aware that anything is loaded (since we don't use the ChunkLoadManager for world generation).
             //So we just call the raw Unload functions.
+            world.isCreateWorldReloading = true;
             entityManager.UnloadAll();
+            entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
+            Array.Fill(world.player, null);
+            world.isCreateWorldReloading = false;
             //chunkLoadManager.UnloadAll();
-            
-            worldInfoIO.Save(worldName, world.WorldInfo);
-            Main.SessionIO?.Save();
 
-            ProfilingHelper.End("Done.");
+            worldInfoIO.Save(worldName, world.WorldInfo);
+            GlobalState.SessionIO?.Save();
+
+            ProfilingHelper.End(Logger, "Done.");
 
             return world;
         }
 
-        public World LoadWorld(GraphicsDevice device, string worldName)
+        public static World? LoadWorld(string worldName, int layer)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
-            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
 
             CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
                 new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
@@ -295,9 +467,10 @@ namespace ViMG.GameStates
             defaultPlayerSpawnLocation.Z = spawnZ;
             defaultPlayerSpawnLocation.Y = SIZE_IN_CUBES;
 
-            ProfilingHelper.Start("Loading world...");
+            ProfilingHelper.Start(Logger, "Loading world...");
             LoadMessage = "Loading World...";
             var entityManager = new EntityManager();
+            var inventoryManager = new InventoryManager();
             var worldInfoIO = new WorldInfoIO();
 
             LoadMessage = "Loading World...\n" +
@@ -306,29 +479,27 @@ namespace ViMG.GameStates
             if (worldInfoIO.HandleError(error, worldName))
                 return null;
 
-            if (worldInfo.playerPosition.LengthSquared() < 0)
-                worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
-
             var physicsInfo = new PhysicsInfo();
 
-            var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", worldInfo.playerLayer);
-            var entIO = new EntityManagerIO(entityManager, worldInfo.playerLayer);
-            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+            var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
+            var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
+            var entIO = new EntityManagerIO(entityManager, layer);
+            var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
             var housingManager = new HousingManager();
             housingManager.FinishLoading(worldInfo);
 
-            Main.SessionInformation.LastLoadedSave = worldName;
+            GlobalState.SessionInformation.LastLoadedSave = worldName;
 
-            var logic = CreateLayerLogic(worldInfo.playerLayer);
+            var logic = CreateLayerLogic(layer);
 
-            WorldPrototype prototype = new WorldPrototype(worldName, worldInfo.playerLayer, entityManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
+            WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, new Skybox(), physicsInfo, housingManager);
 
             error = chunkIO.Load(worldName);
             if (chunkIO.HandleError(error, worldName))
                 return null;
 
-            error = entIO.Load(worldName);//saver.Load(device, this, folderName);
+            error = entIO.Load(worldName);
+            entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
             if (entIO.HandleError(error, worldName))
                 return null;
 
@@ -337,14 +508,11 @@ namespace ViMG.GameStates
             LoadMessage = "Loading World...\n" +
                 "Deserializing...";
 
-            ProfilingHelper.End("World loading done.");
+            ProfilingHelper.End(Logger, "World loading done.");
 
             World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-            world.InitMeshes(device);
             prototype.Logic.Initialize(world);
             return world;
-
-            //EntityManager.Add(new EntityLeviathan());
         }
 
         public World LoadLayer(string worldName, int layer)
@@ -354,8 +522,8 @@ namespace ViMG.GameStates
             const int SIZE_IN_CHUNKS = 32;
             const int SIZE_IN_CUBES = SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE;
 
-            int spawnX = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
-            int spawnZ = Main.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnX = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
+            int spawnZ = GlobalState.random.Next(SIZE_IN_CUBES / 2 - 4, SIZE_IN_CUBES / 2 + 4);
 
             CubePosition defaultPlayerSpawnLocation = CubePosition.FromWorldSpace(
                 new Vector3(SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f, SIZE_IN_CUBES * Cube.CUBE_SCALE, SIZE_IN_CUBES * Cube.CUBE_SCALE / 2f));
@@ -373,39 +541,37 @@ namespace ViMG.GameStates
             if (worldInfoIO.HandleError(error, worldName))
                 return null;
 
-            if (worldInfo.playerPosition.LengthSquared() < 0)
-                worldInfo.playerPosition = defaultPlayerSpawnLocation.InWorldSpace();
-
             if (worldInfo.furthestLayer < layer)
             {
-                ProfilingHelper.Start("Creating Unvisited Layer...");
+                ProfilingHelper.Start(Logger, "Creating Unvisited Layer...");
 
                 worldInfo.furthestLayer = layer;
 
                 var entityManager = new EntityManager();
+                var inventoryManager = new InventoryManager();
                 
                 var physicsInfo = new PhysicsInfo();
 
-                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
+                var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
+                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
                 Skybox skybox = new Skybox();
 
-                Main.SessionInformation.LastLoadedSave = worldName;
+                GlobalState.SessionInformation.LastLoadedSave = worldName;
 
                 var generator = CreateLayerGenerator(layer);
                 var logic = CreateLayerLogic(layer);
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, new HousingManager());
 
                 ChunkGeneratorTasker.GenerateWorld(prototype, generator);
 
-                ProfilingHelper.Start("Saving Chunks...");
+                ProfilingHelper.Start(Logger, "Saving Chunks...");
                 chunkIO.Save(worldName);
 
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
                 var chunkLoadManager = new ChunkLoadManager(chunkMesher, prototype.ChunkManager, prototype.EntityManager, chunkIO, entIO);
 
@@ -413,12 +579,12 @@ namespace ViMG.GameStates
                 prototype.Logic.Initialize(world);
                 entityManager.AddLaterEntities();
 
-                ProfilingHelper.Start("Saving Entities...");
+                ProfilingHelper.Start(Logger, "Saving Entities...");
                 entIO.SerializeAll(SIZE_IN_CHUNKS);
                 entIO.Save(worldName);
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
-                ProfilingHelper.Start("Reloading...");
+                ProfilingHelper.Start(Logger, "Reloading...");
                 //The way world creation is set up is that it creates everything - the entire world - at the same time.
                 //That means we'd have entirely too much stuff in memory after we're done. We're not going to be near half of that stuff.
                 //Instead of letting that sit in memory, we just unload EVERYTHING
@@ -431,38 +597,40 @@ namespace ViMG.GameStates
 
                 worldInfoIO.Save(worldName, world.WorldInfo);
 
-                ProfilingHelper.End("Done.");
+                ProfilingHelper.End(Logger, "Done.");
 
                 return world;
             }
             else
             {
-                ProfilingHelper.Start("Loading Layer...");
+                ProfilingHelper.Start(Logger, "Loading Layer...");
 
                 var entityManager = new EntityManager();
+                var inventoryManager = new InventoryManager();
 
                 var physicsInfo = new PhysicsInfo();
 
-                var chunkMesher = new ChunkMesher(SIZE_IN_CHUNKS, physicsInfo, device);
-                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, "test", layer);
+                var chunkMesher = ChunkMesher.CollisionOnly(SIZE_IN_CHUNKS, physicsInfo);
+                var chunkIO = new ChunkManagerIO(SIZE_IN_CHUNKS, layer);
                 var entIO = new EntityManagerIO(entityManager, layer);
-                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, chunkMesher);
+                var chunkManager = new ChunkManager(SIZE_IN_CHUNKS, chunkIO, entityManager.MeshCubeTrackers, chunkMesher);
 
                 var housingManager = new HousingManager();
                 housingManager.FinishLoading(worldInfo);
 
-                Main.SessionInformation.LastLoadedSave = worldName;
+                GlobalState.SessionInformation.LastLoadedSave = worldName;
                 var logic = CreateLayerLogic(layer);
 
                 Skybox skybox = new Skybox();
 
-                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, chunkManager, worldInfo, logic, skybox, physicsInfo, housingManager);
+                WorldPrototype prototype = new WorldPrototype(worldName, layer, entityManager, inventoryManager, chunkManager, worldInfo, logic, skybox, physicsInfo, housingManager);
 
                 error = chunkIO.Load(worldName);
                 if (chunkIO.HandleError(error, worldName))
                     return null;
 
                 error = entIO.Load(worldName);//saver.Load(device, this, folderName);
+                entIO.RemoveSerializedIdsFromFreeList(entityManager.GetFreeList());
                 if (entIO.HandleError(error, worldName))
                     return null;
 
@@ -471,85 +639,74 @@ namespace ViMG.GameStates
                 LoadMessage = "Loading World...\n" +
                     "Deserializing...";
 
-                ProfilingHelper.End("World loading done.");
+                ProfilingHelper.End(Logger, "World loading done.");
 
                 World world = new World(prototype, ChunkLoadManager, worldInfoIO, entIO, chunkIO, SIZE_IN_CHUNKS * Chunk.CHUNK_SIZE);
-                world.InitMeshes(device);
                 prototype.Logic.Initialize(world);
                 return world;
             }
         }
 
-        private bool LayerExists(int layer)
-        {
-            switch (layer)
-            {
-                case 0:
-                    return true;
-                case 1:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         private static ChunkGenerator CreateLayerGenerator(int layer)
         {
-            if (Main.Registry.WorldLogicRegistry.generators == null || Main.Registry.WorldLogicRegistry.generators.Length < layer || Main.Registry.WorldLogicRegistry.generators[layer] == null) 
+            if (GlobalState.Registry.WorldLogicRegistry.generators == null || GlobalState.Registry.WorldLogicRegistry.generators.Length < layer || GlobalState.Registry.WorldLogicRegistry.generators[layer] == null) 
                 throw new Exception(string.Format("No LayerGenerator defined for layer {0}", layer));
-            ChunkGenerator generator = (ChunkGenerator)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.generators[layer], layer, 0);
-
-            //switch (layer)
-            //{
-            //    case 0:
-            //        generator = new ChunkGeneratorIsland(layer);
-            //        break;
-            //    case 1:
-            //        generator = new ChunkGeneratorCatacombs();
-            //        break;
-            //    default:
-            //        Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
-            //        generator = null;
-            //        break;
-            //}
+            ChunkGenerator generator = (ChunkGenerator)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.generators[layer], layer, 0);
 
             return generator;
         }
-
+            
         private static WorldLogics.WorldLogic CreateLayerLogic(int layer)
         {
-            if (Main.Registry.WorldLogicRegistry.logics == null || Main.Registry.WorldLogicRegistry.logics.Length < layer || Main.Registry.WorldLogicRegistry.logics[layer] == null)
+            if (GlobalState.Registry.WorldLogicRegistry.logics == null || GlobalState.Registry.WorldLogicRegistry.logics.Length < layer || GlobalState.Registry.WorldLogicRegistry.logics[layer] == null)
                 throw new Exception(string.Format("No WorldLogic defined for layer {0}", layer));
 
-            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(Main.Registry.WorldLogicRegistry.logics[layer]);
-
-            //switch (layer)
-            //{
-            //    case 0:
-            //        logic = new WorldLogics.WorldLogicIsland(worldName, device);
-            //        break;
-            //    case 1:
-            //        logic = new WorldLogics.WorldLogicCatacombs(device);
-            //        break;
-            //    default:
-            //        Console.WriteLine("LAYER {0} HAS NOT YET BEEN FILLED OUT YET AND IS UNIMPLEMENTED!", layer);
-            //        logic = null;
-            //        break;
-            //}
+            WorldLogics.WorldLogic logic = (WorldLogics.WorldLogic)Activator.CreateInstance(GlobalState.Registry.WorldLogicRegistry.logics[layer]);
 
             return logic;
         }
 
-        public override void Draw(GraphicsDevice device)
+        public void Save(bool backup)
+        {
+            if (world != null)
+            {
+                var watch = Stopwatch.StartNew();
+                GlobalState.SessionInformation.LastLoadedSave = world.LoadedFolderName;
+                GlobalState.SessionIO.Save();
+
+                if (backup)
+                {
+                    string dir = string.Format("saves_bkp/{0}", DateTime.Now.ToString("yyyy-MM-dd"));
+                    Directory.CreateDirectory(dir);
+                    using (FileStream fs = new FileStream(string.Format("{0}/{1}-{2}.zip", dir, world.LoadedFolderName, DateTime.Now.ToString("hh-mm-ss")), FileMode.Create, FileAccess.Write))
+                    {
+                        ZipFile.CreateFromDirectory(string.Format("{0}{1}", WorldIO.SaveFolder, world.LoadedFolderName), fs);
+                    }
+                }
+                world.SaveWorld();
+                playerIO?.SerializeAll(world);
+                playerIO?.Save(world.LoadedFolderName);
+                playerIO?.DecacheCurrentlySerialized(world.EntityManager);
+
+                IMGUIConsole.LogLineAndSend(string.Format("Saved Game in {0} seconds", watch.Elapsed.TotalSeconds));
+            }
+        }
+
+        public override void Draw(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            base.Draw(device);
+            base.Draw(device, batch, deltaTime);
 
-            if (world != null)
+            if (client != null)
             {
-                world.Draw(device);
+                client.Render(device, batch, deltaTime);
             }
+
+            //if (GlobalState.gameStateManager.netMode == GameStateManager.NetworkingMode.Singleplayer && world != null)
+            //{
+            //    world.DrawDebug(device);
+            //}
         }
 
         public override void DrawUI(SpriteBatch batch)
@@ -561,10 +718,15 @@ namespace ViMG.GameStates
                 base.DrawUI(batch);
             }
 
-            if (world != null && !IsLoading)
-            {
-                world.DrawUI(batch);
-            }
+            if (client != null)
+                client.RenderUI(device, batch, 0);
+
+            IMGUINetworkDebug.Render(batch);
+
+            //if (world != null && !IsLoading)
+            //{
+            //    world.DrawUI(batch);
+            //}
 
             if (IsLoading && LoadMessage != null)
             {
@@ -578,6 +740,44 @@ namespace ViMG.GameStates
                     new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y), 
                     Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
             }
+
+            if (GlobalState.NetMode == NetworkingMode.Client && !netManagerClient!.ClientHasConnected())
+            {
+                TextHelper.DrawText(batch, fi, string.Format("Connecting to {0}:{1}...", netManagerClient.Ip, netManagerClient.Port), Color.White,
+                    new Rectangle(0, 0, Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+                    Enums.Alignment.Center, Options.CurrentWindowResolution.X, 1);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("This is a ");
+            switch (GlobalState.NetMode)
+            {
+                case NetworkingMode.Client:
+                    sb.Append("Client session. Connected to: ");
+                    sb.Append(netManagerClient?.netManager.FirstPeer?.ToString());
+                    sb.Append(".");
+                    break;
+                case NetworkingMode.Server:
+                    sb.Append("Server session. There are ");
+                    sb.Append(netManagerServer?.uniqueNetPlayers);
+                    sb.Append(" connected players.");
+                    break;
+                case NetworkingMode.Singleplayer:
+                    sb.Append("Singleplayer session.");
+                    break;
+            }
+            TextHelper.DrawText(batch, fi, sb.ToString(), Color.White,
+                    new Rectangle(0, (int)(fi.font.LineSpacing * 1.5f), Options.CurrentWindowResolution.X, Options.CurrentWindowResolution.Y),
+                    Enums.Alignment.TopLeft, Options.CurrentWindowResolution.X, 1);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            
+            Disconnect();
+            client?.Dispose();
+            world?.Dispose();
         }
     }
 }

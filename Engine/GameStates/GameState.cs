@@ -8,7 +8,7 @@ using ViMG.UIs;
 
 namespace ViMG.GameStates
 {
-    public abstract class GameState
+    public abstract class GameState : IDisposable
     {
         private Stack<Menu> menuStack = new Stack<Menu>();
         private Menu currentMenu;
@@ -29,9 +29,19 @@ namespace ViMG.GameStates
 
         }
 
+        public virtual void UnfixedUpdate(double deltaTime)
+        {
+
+        }
+
         public virtual void Update(double deltaTime)
         {
+            bool doDisable = !currentMenu?.RespondToInput ?? false;
+            if (doDisable)
+                UI.BeginDisable();
             currentMenu?.Update(deltaTime);
+            if (doDisable)
+                UI.EndDisable();
         }
 
         public virtual void DrawUI(SpriteBatch batch)
@@ -39,7 +49,7 @@ namespace ViMG.GameStates
             currentMenu?.Draw(batch);
         }
 
-        public virtual void Draw(GraphicsDevice device)
+        public virtual void Draw(GraphicsDevice device, SpriteBatch batch, double deltaTime)
         {
 
         }
@@ -91,6 +101,11 @@ namespace ViMG.GameStates
         public Menu GetCurrentMenu()
         {
             return currentMenu;
+        }
+
+        public virtual void Dispose()
+        {
+
         }
     }
 }

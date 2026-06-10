@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -14,21 +15,31 @@ namespace ViMG.UIs
     public class MenuPause : Menu
     {
         private TextHelper.FontInfo fi;
+        private Texture2D uiTex;
+        private UI.ButtonConstructionParameters buttonParams;
 
-        private readonly World world;
-
-        public MenuPause(GameStateManager gsManager, World world) : base(gsManager)
+        public MenuPause(GameStateManager gsManager) : base(gsManager)
         {
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            uiTex = GlobalState.AssetsManager.GetAsset<Texture2D>("ui_buttons");
 
-            this.world = world;
+            buttonParams = new UI.ButtonConstructionParameters
+            {
+                bounds = new RectangleF(0, 0, 128, 32),
+                label = new UI.LabelConstructionParameters("", fi, 128, Vector2.Zero, alignment: Enums.Alignment.Center, height: 32),
+                nsSource = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 0, 128, 32), 4, 4, 4, 4),
+                nsClicked = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4),
+                nsHovered = new BrNineSlice.NineSlice(uiTex, new RectangleF(0, 32, 128, 32), 4, 4, 4, 4),
+                color = Color.White,
+            };
         }
 
         public override void OnOpen()
         {
             base.OnOpen();
 
-            gsManager.Paused = true;
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
+                gsManager.Paused = true;
             Main.MouseControl = true;
             Main.DrawCursor = true;
         }
@@ -37,7 +48,8 @@ namespace ViMG.UIs
         {
             base.OnClose();
 
-            gsManager.Paused = false;
+            if (GlobalState.NetMode == NetworkingMode.Singleplayer)
+                gsManager.Paused = false;
             Main.MouseControl = false;
             Main.DrawCursor = false;
         }
@@ -52,10 +64,12 @@ namespace ViMG.UIs
 
             int y = 0;
 
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                    new UI.LabelConstructionParameters("Resume", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft ||
-                Main.inputManager.JustPressed(Keys.Escape))
+            if (UI.MakeButton(buttonParams with
+            {
+                label = buttonParams.label.WithNewText("Resume"),
+                bounds = buttonParams.bounds with { y = y },
+            }).clickLeft ||
+                (Main.inputManager.JustPressed(Keys.Escape) && RespondToInput))
             {
                 //return to old menu.
                 gsManager.GetCurrentGameState().PopMenu();
@@ -63,38 +77,56 @@ namespace ViMG.UIs
 
             y += 32 + MARGIN;
 
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new UI.LabelConstructionParameters("Save", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+            if (GlobalState.NetMode != NetworkingMode.Client)
             {
-                world.SaveWorld();
+                if (UI.MakeButton(buttonParams with 
+                {
+                    label = buttonParams.label.WithNewText("Save"),
+                    bounds = buttonParams.bounds with { y = y },
+                }).clickLeft)
+                {
+                    gsManager.TheIsland.Save(false);
+                }
+
+                y += 32 + MARGIN;
             }
 
-            y += 32 + MARGIN;
-
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new UI.LabelConstructionParameters("Options", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+            if (UI.MakeButton(buttonParams with
+            {
+                label = buttonParams.label.WithNewText("Options"),
+                bounds = buttonParams.bounds with { y = y },
+            }).clickLeft)
             {
                 gsManager.GetCurrentGameState().PushMenu(new MenuOptions(gsManager));
             }
 
             y += 32 + MARGIN;
 
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new UI.LabelConstructionParameters("Exit To Title", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+            if (UI.MakeButton(buttonParams with
             {
-                Main.gameStateManager.SetGameState(Main.gameStateManager.MainMenu);
+                label = buttonParams.label.WithNewText("Exit to\nMenu") with
+                {
+                    height = buttonParams.bounds.height + 16,
+                },
+                bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
+            }).clickLeft)
+            {
+                GlobalState.GameStateManager.SetGameState(GlobalState.GameStateManager.MainMenu);
             }
 
-            y += 32 + MARGIN;
+            y += 48 + MARGIN;
 
-            if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, y, 128, 32), Main.assetsManager.GetAsset<Texture2D>("ui_buttons"),
-                new UI.LabelConstructionParameters("Exit To Desktop", fi, 128, Vector2.Zero),
-                new RectangleF(0, 0, 128, 32), new RectangleF(0, 32, 128, 32), new RectangleF(0, 32, 128, 32))).clickLeft)
+            if (UI.MakeButton(buttonParams with
             {
-                Main.Exit = true;
+                label = buttonParams.label.WithNewText("Exit to\nDesktop") with
+                {
+                    height = buttonParams.bounds.height + 16,
+                },
+                bounds = buttonParams.bounds with { y = y, height = buttonParams.bounds.height + 16 },
+            }).clickLeft)
+            {
+                GlobalState.GameStateManager.TheIsland.Disconnect();
+                GlobalState.Exit = true;
             }
         }
 

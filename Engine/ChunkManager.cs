@@ -1,6 +1,9 @@
 ﻿using BepuUtilities.Memory;
 using BrUtility;
+using Engine;
 using Engine.ChunkStuff;
+using Engine.Common.Entities;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -19,16 +22,18 @@ namespace ViMG
     //Try to stay away from dependance on World if possible
     public class ChunkManager
     {
-        private readonly struct CubeUpdated
+        public readonly struct CubeUpdated
         {
+            public readonly Player? player;
             public readonly double timeUpdated;
             public readonly CubePosition updated;
             public readonly CubePosition notified;
             public readonly ushort oldId;
             public readonly ushort newId;
 
-            public CubeUpdated(double timeUpdated, CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
+            public CubeUpdated(Player? player, double timeUpdated, CubePosition updated, CubePosition notified, ushort oldId, ushort newId)
             {
+                this.player = player;
                 this.timeUpdated = timeUpdated;
                 this.updated = updated;
                 this.notified = notified;
@@ -37,80 +42,47 @@ namespace ViMG
             }
         }
 
-        //[StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct CubeMeshInfo
-        {
-            public MeshHelper.CubeFace faces;
-            public byte meshVersion;
-            public byte version;
-
-            public CubeMeshInfo(MeshHelper.CubeFace faces)
-            {
-                this.faces = faces;
-
-                meshVersion = 0;
-                version = 1;
-            }
-        }
-
-        private static ChunkPosition[] chunkAdjacents = new ChunkPosition[6]
-        {
-            new ChunkPosition(-1, 0, 0),
-            new ChunkPosition(1, 0, 0),
-            new ChunkPosition(0, -1, 0),
-            new ChunkPosition(0, 1, 0),
-            new ChunkPosition(0, 0, -1),
-            new ChunkPosition(0, 0, 1),
-        };
-
-
-        private static CubePosition[] cubeAdjacents = new CubePosition[6]
-        {
+        private static CubePosition[] cubeAdjacents =
+        [
             new CubePosition(-1, 0, 0),
             new CubePosition(1, 0, 0),
             new CubePosition(0, -1, 0),
             new CubePosition(0, 1, 0),
             new CubePosition(0, 0, -1),
             new CubePosition(0, 0, 1),
-        };
+        ];
 
         public const int NUM_CHUNK_MESH_PASSES = 5;
-        private const int SIZEOF_CHUNK = (sizeof(ushort) * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 
         public readonly int SizeInChunksXZ;
         public readonly int SizeInCubes;
-        private readonly ChunkManagerIO io;
         public readonly ChunkMesher? ChunkMesher;
+        public readonly CopiedChunkManager CopyManager;
 
         public CubeView CubeView;
 
         //private CubeMeshInfo[] cubeMeshInfos;
         private Queue<CubeUpdated> updatedCubePositions = new Queue<CubeUpdated>();
 
-        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, ChunkMesher? chunkMesher)
+        public ChunkManager(int sizeInChunksXZ, ChunkManagerIO io, CubeTrackers cubeTrackers, ChunkMesher? chunkMesher)
         {
             this.SizeInChunksXZ = sizeInChunksXZ;
             this.SizeInCubes = sizeInChunksXZ * Chunk.CHUNK_SIZE;
-            this.io = io;
 
             ChunkMesher = chunkMesher;
 
-            int size = Marshal.SizeOf<CubeMeshInfo>();
-            
             CubeView = new CubeView(this, io);
+            this.CopyManager = new CopiedChunkManager(CubeView, io, cubeTrackers, sizeInChunksXZ);
         }
 
-        private FastList<CubeUpdated> uniqueUpdates = new FastList<CubeUpdated>();
-
-        //Update queue of chunks to mesh
-        public void Update(double deltaTime, World world, ChunkLoadManager loadManager)
+        public void Update(double deltaTime, World world)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
-            ChunkMesher?.Update(world);
+            ChunkMesher?.Update(Vector3.Zero, CopyManager, world.EntityManager);
 
-            const int MAX_UPDATE_PER_FRAME = 20;
-            int updatedThisFrame = 0; 
+            const int MAX_UPDATE_PER_FRAME = 200;
+            int updatedThisFrame = 0;
 
             //Notify anyone who might want to know that a cube was updated. This includes adjacents.
             while (updatedCubePositions.Count > 0 && updatedThisFrame < MAX_UPDATE_PER_FRAME)
@@ -121,16 +93,18 @@ namespace ViMG
                 {
                     world.OnCubeUpdate(updated.updated, updated.newId);
                     var entityTracking = world.EntityManager.GetEntityTrackingPosition(updated.updated).GetOrDefault(null);
-                    
+
                     if (entityTracking != null)
                     {
                         if (entityTracking is ICubeTracker tracker)
-                            tracker.TrackingCubeUpdated(world, this, updated.newId);
+                            tracker.TrackingCubeUpdated(world, this, updated.player, updated.newId);
                         else if (entityTracking is IMultiCubeTracker multiTracker)
-                            multiTracker.TrackingCubeUpdated(world, this, updated.updated, updated.newId, updated.timeUpdated);
+                            multiTracker.TrackingCubeUpdated(world, this, updated.player, updated.updated, updated.newId, updated.timeUpdated);
                     }
+
+                    SyncCubeUpdate.Instance.SendCubeUpdate(updated);
                 }
-                else CubeView.GetCube(updated.notified).GetOrDefault(Main.Registry.CubeRegistry.Air)
+                else CubeView.GetCube(updated.notified).GetOrDefault(GlobalState.Registry.CubeRegistry.Air)
                         .OnAdjacentUpdated(world, this, updated.notified, updated.updated, updated.newId, updated.timeUpdated);
 
                 updatedThisFrame++;
@@ -150,7 +124,7 @@ namespace ViMG
             //int layer = LayerFromPos(position);
 
             //if (layer > discoveredLayers)
-                //return false;
+            //return false;
 
             //position = LayerRelativePosition(position);
 
@@ -184,10 +158,16 @@ namespace ViMG
                     position.Z >= 0 && position.Z < SizeInChunksXZ;
         }
 
-        public void MarkCubeMeshInfoDirty(CubePosition position, ushort oldId, ushort updatedId)
+        /// <summary>
+        /// NOTE: also marks adjacent cubes and chunks as dirty.
+        /// </summary>
+        /// <param name="player">The player that triggered the action</param>
+        /// <param name="position">The position of the cube that is to be marked dirty</param>
+        /// <param name="oldId">The old id of the cube</param>
+        /// <param name="updatedId">The new id of the cube</param>
+        public void MarkCubeDirty(Player? player, CubePosition position, ushort oldId, ushort updatedId)
         {
-            //GetCubeMeshInfo(position).version++;
-            updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, position, oldId, updatedId));
+            updatedCubePositions.Enqueue(new CubeUpdated(player, GlobalState.Time, position, position, oldId, updatedId));
 
             for (int i = 0; i < 6; i++)
             {
@@ -195,12 +175,26 @@ namespace ViMG
 
                 if (IsInWorldBounds(adjacentPosition))
                 {
-                    //GetCubeMeshInfo(adjacentPosition).version++;
-
                     //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
                     ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
+                    CopyManager.MarkDirty(ChunkPosition.CubeChunk(adjacentPosition));
 
-                    updatedCubePositions.Enqueue(new CubeUpdated(Main.Time, position, adjacentPosition, oldId, updatedId));
+                    updatedCubePositions.Enqueue(new CubeUpdated(player, GlobalState.Time, position, adjacentPosition, oldId, updatedId));
+                }
+            }
+        }
+
+        public void MarkAdjacentChunksDirty(CubePosition position)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                CubePosition adjacentPosition = position + cubeAdjacents[i];
+
+                if (IsInWorldBounds(adjacentPosition))
+                {
+                    //Don't bother marking the original chunk as dirty since at least 1 of these six adjacents is guaranteed to be in the same chunk.
+                    ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(adjacentPosition));
+                    CopyManager.MarkDirty(ChunkPosition.CubeChunk(adjacentPosition));
                 }
             }
         }

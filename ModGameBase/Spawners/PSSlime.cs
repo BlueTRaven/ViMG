@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace ViMG.Spawners
         {
             entityManager.OnEntityAdded += OnEntityAdded;
             entityManager.OnEntityRemoved += OnEntityRemoved;
+            SpawnCap = 8;
         }
 
         //We rely on this callback for adding entities as we also want to add entities that are loaded.
@@ -50,8 +52,8 @@ namespace ViMG.Spawners
             if (position.Y < 181)
                 return false;
 
-            Cube c = manager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass"))
+            Cube c = manager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            if (c == GlobalState.Registry.CubeRegistry.Get("dirt") || c == GlobalState.Registry.CubeRegistry.Get("grass"))
                 return true;
 
             return false;
@@ -64,7 +66,7 @@ namespace ViMG.Spawners
 
         protected override void Spawn(World world, CubePosition position)
         {
-            if (bigSlimes.Count < 4 && Main.random.Next(0, 4) == 0)
+            if (bigSlimes.Count < 4 && GlobalState.random.Next(0, 4) == 0)
             {
                 SlimeBig bigSlime = new SlimeBig(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE * 2, 0));
                 world.EntityManager.Add(bigSlime);

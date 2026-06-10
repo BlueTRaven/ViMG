@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,31 +12,42 @@ using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class Line : Entity
+    public class Line : Entity, ISyncedEntity
     {
-        private static VerySimpleMesh mesh;
-        public readonly Vector3 endPosition;
-        public readonly float width;
-        public readonly float tileHeight;
-        public readonly RendererDeferred.DrawMaterial material;
-        public readonly RectangleF sourceRectangle;
-        public readonly Color color;
+        public Vector3 endPosition;
+        public float width;
+        public float tileHeight;
+        public int materialSet;
+        //public readonly RendererDeferred.DrawMaterial material;
+        //public readonly RectangleF sourceRectangle;
+        public Color color;
 
 		private float alive;
 		private float time;
+
+        public static (RendererDeferred.DrawMaterial, RectangleF) GetMaterialFromSet(int materialSet)
+        {
+            switch (materialSet) 
+            {
+                case 0:
+                default:
+                    return (new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty);
+            }
+        }
 
         public Line()
         {
         }
 
-        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color, float time)
+        public Line(Vector3 position, Vector3 endPosition, float width, float tileHeight, int materialSet, Color color, float time)
         {
             this.Position = position;
             this.endPosition = endPosition;
             this.width = width;
             this.tileHeight = tileHeight;
-            this.material = material;
-            this.sourceRectangle = sourceRectangle;
+            this.materialSet = materialSet;
+            //this.material = material;
+            //this.sourceRectangle = sourceRectangle;
             this.color = color;
             this.time = time;
         }
@@ -54,7 +66,7 @@ namespace ViMG.Entities
 			alive += (float)deltaTime;
 
 			if (alive >= time)
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 		}
 
         public Color GetColor()
@@ -67,17 +79,16 @@ namespace ViMG.Entities
             else return color;
         }
 
-        //public override void Draw(GraphicsDevice device, Effect effect)
-        //{
-        //    base.Draw(device, effect);
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
 
-        //    if (mesh.IBO == null)
-        //        mesh = MeshHelper.MakeQuad(device, 1, 1, Enums.Alignment.Bottom);
-        //    //mesh = MeshHelper.MakeEnemyQuad(device, 1, 1);
-
-        //    if (tileHeight != -1)
-        //        DrawHelper3D.DrawLineTiled(Position, endPosition, width, tileHeight, material, mesh, sourceRectangle, color);
-        //    else DrawHelper3D.DrawLine(Position, endPosition, width, material, mesh, sourceRectangle, color);
-        //}
+            state = new SyncedEntity
+            {
+                position = Position,
+                rotation = new Quaternion(endPosition.X, endPosition.Y, endPosition.Z, 1),
+                timers = { [0] = time, [1] = width, [2] = tileHeight, [3] = alive},
+                counters = { [0] = (int)color.PackedValue, [1] = materialSet }
+            };
+        }
     }
 }

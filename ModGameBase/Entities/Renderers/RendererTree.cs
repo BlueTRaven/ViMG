@@ -1,4 +1,7 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Trees;
+using BrUtility;
+using Engine;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,8 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ViMG.Entities;
 using ViMG.Cubes;
+using ViMG.Entities;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -98,57 +101,79 @@ namespace ViMG.Entities.Renderers
             }
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
+        private static int[] renderedTypes = [0];
+        public override int[] GetRenderedTypes()
         {
-            //IReadOnlyList<Entity> ents = entityManager.GetAll<Tree>();
-
-            var iter = new Iterator<Tree>(entities);
-
-            while (iter.Next(out Tree tree))
-            {
-                if (tree.NeedsRerender)
-                {
-                    //if the tree needs to be updated, just rerender the entire list
-                    //Kinda gross...
-                    needsRebuild = true;
-                    tree.NeedsRerender = false;
-                }
-            }
-            //for (int i = 0; i < ents.Count; i++)
-            //{
-            //    //Tree tree = ents.ElementAt(i) as Tree;
-            //}
-
-            if (needsRebuild)
-            {
-                draws.Clear();
-                //draws = new FastList<RendererDeferred.InstancedDraw>();
-                BuildList(entityManager.GetAll<Tree>());
-
-                needsRebuild = false;
-            }
-
-            if (needsReupload)
-            {
-                if (SBO == null || SBO.ElementCount < draws.Length)
-                {
-                    if (SBO != null)
-                        SBO.Dispose();
-
-                    SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
-                }
-                SBO.SetData(draws.Buffer);
-
-                needsReupload = false;
-            }
-
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
+            if (renderedTypes[0] == 0)
+                renderedTypes[0] = GlobalState.Registry.EntityRegistry.Get<Tree>().Id;
+            return renderedTypes;
         }
 
-        private static Type[] renderedTypes = new Type[] { typeof(Tree) };
-        public override Type[] GetRenderedTypes()
+        // TODO: can we optimize this like how we did it the old way, such that we only rerender when the tree changes?
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            return renderedTypes;
+            draws.Clear();
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
+            {
+                var reference = client.Current().entities.GetReference(i);
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                if (entCurr.counters[0] != 0)
+                {
+                    int size = entCurr.counters[0];
+                    int maxSize = entCurr.counters[1];
+                    for (int j = 0; j < size; j++)
+                    {
+                        if (j == 0)
+                        {
+                            Matrix w = Matrix.CreateTranslation(entCurr.position);
+                            Matrix.Transpose(ref w, out w);
+                            draws.Add(new RendererDeferred.InstancedDraw()
+                            {
+                                World = w,
+                                WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
+                                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(32, 80, 16, 16)),
+                            });
+                        }
+                        else if (j == maxSize - 1)
+                        {
+                            Matrix w = Matrix.CreateScale(2.5f, 3, 2.5f) * Matrix.CreateTranslation(entCurr.position + new Vector3(0, Cube.CUBE_SCALE * j, 0));
+                            Matrix.Transpose(ref w, out w);
+                            draws.Add(new RendererDeferred.InstancedDraw()
+                            {
+                                World = w,
+                                WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
+                                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 0, 80, 48)),
+                            });
+                        }
+                        else
+                        {
+                            Matrix w = Matrix.CreateTranslation(entCurr.position + new Vector3(0, Cube.CUBE_SCALE * j, 0));
+                            Matrix.Transpose(ref w, out w);
+                            draws.Add(new RendererDeferred.InstancedDraw()
+                            {
+                                World = w,
+                                WorldNormal = Matrix.Transpose(Matrix.Invert(w)),
+                                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(32, 48, 16, 16)),
+                            });
+                        }
+                    }
+                }
+            }
+            
+            if (SBO == null || SBO.ElementCount < draws.Length)
+            {
+                if (SBO != null)
+                    SBO.Dispose();
+
+                SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
+            }
+            SBO.SetData(draws.Buffer);
+
+            client.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(material, mesh, SBO, 0, draws.Length));
         }
     }
 }

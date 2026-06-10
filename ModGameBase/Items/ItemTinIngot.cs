@@ -9,10 +9,15 @@ namespace ViMG.Items
 {
     public class ItemTinIngot : Item
 	{
-		public ItemTinIngot() : base("ingot_tin", new RectangleF(96, 0, 16, 16))
-		{
-			name = "Tin Ingot";
+		public ItemTinIngot() : base("ingot_tin")
+        {
+            name = "Tin Ingot";
 			description = "A refined chunk of tin ore. Can be made into a variety of shapes and tools.";
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 0, 16, 16));
+        }
 	}
 }

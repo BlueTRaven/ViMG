@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.ChunkStuff;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ViMG.Items
     {
         ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item);
 
-        CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num);
+        CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num);
 
         bool CanPredictAir()
         {

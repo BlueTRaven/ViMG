@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,7 +19,7 @@ namespace ViMG.Items
         private static MagicAttackStats magicStats = 
             new MagicAttackStats(new AttackStats(DamageType.Magic, 2f, 0, Cube.CUBE_SCALE * 8), 2);
 
-        public ItemBookWinds() : base("book_spell_winds", new RectangleF(80, 32, 16, 16))
+        public ItemBookWinds() : base("book_spell_winds")
         {
             name = "Spellbook: Winds";
             description = "A spellbook with an explanation of how to cast \"Winds\".\n" +
@@ -25,8 +27,11 @@ namespace ViMG.Items
                 magicStats.GetTooltip() +
                 "Creates a powerful gust of wind, knocking enemies away.\n" +
                 "Magic Cost: 2";
+        }
 
-            flipXInHand = true;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 32, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -45,7 +50,7 @@ namespace ViMG.Items
             player.PerformAttack(DamageType.Magic, ref actionStats, ref damage, ref knockback);
 
             player.Magic -= 2;
-            player.SpawnHitboxLater(index, damage, DamageType.Magic, -Main.camera.ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
+            player.SpawnHitboxLater(index, damage, DamageType.Magic, -(player as IRotatable).ForwardYawOnly, knockback, Cube.CUBE_SCALE * 2f);
             
             return val;
         }

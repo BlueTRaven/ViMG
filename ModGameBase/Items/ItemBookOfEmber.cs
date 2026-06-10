@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,14 +16,17 @@ namespace ViMG.Items
     public class ItemBookOfEmber : Item
     {
 		private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 0.25f, 1, 0f), 1);
-        public ItemBookOfEmber() : base("book_spell_ember", new RectangleF(64, 32, 16, 16))
+        public ItemBookOfEmber() : base("book_spell_ember")
         {
-			name = "Spellbook: Ember";
+            name = "Spellbook: Ember";
 			description = "A spellbook with an explanation of how to cast \"Ember\".\n" +
 				magicStats.GetTooltip() +
 				"This spell will light a small fire on any surface in front of you.";
+        }
 
-			flipXInHand = true;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(64, 32, 16, 16), flipXInHand: true);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -36,9 +41,9 @@ namespace ViMG.Items
 
 			CubePosition placePos = player.IsLooking && player.CanPlace ? player.PlaceAtPos : player.LookAtEnd;
 
-			Cube cube = Main.Registry.CubeRegistry.Get("flame");
+			Cube cube = GlobalState.Registry.CubeRegistry.Get("flame");
 
-			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos) && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton))
+			if (cube.CanPlace(player.world, player.world.ChunkManager, placePos))
             {
                 actionStats = new ActionStats(magicStats.attackStats);
 				int damage = magicStats.attackStats.damage;

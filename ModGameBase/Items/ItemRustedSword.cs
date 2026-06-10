@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -24,14 +27,17 @@ namespace ViMG.Items
                 preUseTime = 6f / 60f,
             }, 5, Cube.CUBE_SCALE * 0.5f), Cube.CUBE_SCALE * 1f);
 
-        public ItemRustedSword() : base("sword_rusted", new RectangleF(32, 128, 16, 16))
+        public ItemRustedSword() : base("sword_rusted")
         {
             name = "Rusted Sword";
             description = "A rusted and ruined sword made of iron. Perhaps it had once been a fine blade, but it is now a shadow of its former self.\n" +
                 meleeStats.GetTooltip() +
                 "Hitting enemies applies bleed for 7 seconds.";
+        }
 
-            scale = 1f;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 128, 16, 16));
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -40,7 +46,7 @@ namespace ViMG.Items
 
             if (applyBuffs == null)
             {
-                applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(Main.Registry.BuffRegistry.Get("bleeding"), 7) };
+                applyBuffs = new Buff.BuffInstance[1] { new Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("bleeding"), 7) };
             }
 
             actionStats = new ActionStats(meleeStats.attackStats);
@@ -48,7 +54,7 @@ namespace ViMG.Items
             float knockback = meleeStats.attackStats.knockback;
             player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(index, damage, DamageType.Melee, -Main.camera.Forward, knockback, meleeStats.range, applyBuffs);
+            player.SpawnHitboxLater(index, damage, DamageType.Melee, -(player as IRotatable).Forward, knockback, meleeStats.range, applyBuffs);
 
             actionStats.animationType = UseAnimationType.SwingHorizontal;
 

@@ -19,19 +19,19 @@ namespace ViMG
         private static Stack<Batch> batches = new Stack<Batch>();
         private static Stack<Stopwatch> watches = new Stack<Stopwatch>();
 
-        public static void Start(string log, params object?[] strings)
+        public static void Start(Engine.Logger logger, string log, params object?[] strings)
         {
-            Console.WriteLine(string.Format(log, strings));
+            logger.Log(Engine.Logger.LogLevel.Info, log, strings);
 
             watches.Push(Stopwatch.StartNew());
         }
 
-        public static void End(string log)
+        public static void End(Engine.Logger logger, string log)
         {
             Stopwatch watch = watches.Pop();
             watch.Stop();
 
-            Console.WriteLine("{0} {1}s.", log, watch.Elapsed.TotalSeconds);
+            logger.Log(Engine.Logger.LogLevel.Info, "{0} {1}s.", log, watch.Elapsed.TotalSeconds);
         }
 
         public static void StartBatch(string log, params object?[] strings)

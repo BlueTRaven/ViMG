@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -47,7 +48,7 @@ namespace ViMG.Generation
 
 		protected Random GetRandom()
         {
-			if (Thread.CurrentThread == Main.MainThread)
+			if (Thread.CurrentThread == GlobalState.MainThread)
 				return random;
 			else return threadRandom;
         }

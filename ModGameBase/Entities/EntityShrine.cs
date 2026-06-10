@@ -1,4 +1,6 @@
 ﻿using BepuUtilities.Memory;
+using Engine;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(0)]
-    public class EntityShrine : Entity, ICubeTracker
+    public class EntityShrine : Entity, ICubeTracker, ISyncedEntity
     {
         public struct MeshingData
         {
@@ -70,7 +72,7 @@ namespace ViMG.Entities
             else return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
         }
 
@@ -85,9 +87,9 @@ namespace ViMG.Entities
             SaveHelper.SaveString(saveBytes, buff.Identifier);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
 
@@ -96,7 +98,7 @@ namespace ViMG.Entities
 
             cooldownTimer = SaveHelper.LoadFloat32(loadBytes, ref index);
 
-            buff = Main.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
+            buff = GlobalState.Registry.BuffRegistry.Get(SaveHelper.LoadString(loadBytes, ref index));
         }
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool) 
@@ -105,6 +107,15 @@ namespace ViMG.Entities
             md.Memory->cooldownTimer = cooldownTimer;
 
             return md.As<byte>();
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = Position,
+                timers = { [0] = cooldownTimer },
+            };
         }
     }
 }

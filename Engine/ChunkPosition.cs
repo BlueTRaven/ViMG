@@ -1,12 +1,14 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using ViMG.Cubes;
 
 namespace ViMG
 {
-	public struct ChunkPosition
+	public struct ChunkPosition : INetSerializable
 	{
 		public int X;
 		public int Y;
@@ -28,7 +30,7 @@ namespace ViMG
 
 		public CubePosition InCubeSpace()
 		{
-			return new CubePosition(X * Chunk.CHUNK_SIZE, Y * Chunk.CHUNK_SIZE, Z * Chunk.CHUNK_SIZE);
+			return new CubePosition(X * Chunk.CHUNK_SIZE, Y * Chunk.CHUNK_SIZE, Z * Chunk.CHUNK_SIZE, CubePosition.CoordinateSpace.CubeSpace);
 		}
 
 		public Vector3 InWorldSpace()
@@ -43,16 +45,12 @@ namespace ViMG
 
 		public static ChunkPosition CubeChunk(CubePosition position)
 		{
-			if (position.Coord == CubePosition.CoordinateSpace.ChunkSpace)
-				return new ChunkPosition(-1, -1, -1);
-			else
-			{
-				int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
-				int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
-				int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
+			Debug.Assert(position.Coord == CubePosition.CoordinateSpace.CubeSpace);
+			int x = (int)MathF.Floor(position.X / (float)Chunk.CHUNK_SIZE);
+			int y = (int)MathF.Floor(position.Y / (float)Chunk.CHUNK_SIZE);
+			int z = (int)MathF.Floor(position.Z / (float)Chunk.CHUNK_SIZE);
 
-				return new ChunkPosition(x, y, z);
-			}
+			return new ChunkPosition(x, y, z);
 		}
 
 		public override string ToString()
@@ -68,7 +66,21 @@ namespace ViMG
 				   Z == position.Z;
 		}
 
-		public static bool operator ==(ChunkPosition first, ChunkPosition second)
+        public void Serialize(NetDataWriter writer)
+        {
+			writer.Put(X);
+            writer.Put(Y);
+            writer.Put(Z);
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+			X = reader.GetInt();
+            Y = reader.GetInt();
+            Z = reader.GetInt();
+        }
+
+        public static bool operator ==(ChunkPosition first, ChunkPosition second)
 		{
 			return first.X == second.X && first.Y == second.Y && first.Z == second.Z;
 		}

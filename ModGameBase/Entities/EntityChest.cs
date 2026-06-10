@@ -1,4 +1,6 @@
 ﻿using BepuUtilities.Memory;
+using Engine.Items;
+using Engine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,8 +9,8 @@ using ViMG.UIs;
 namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
-	[EntityMeta(2, 1)]
-	public class EntityChest : Entity, ICubeTracker
+	[EntityMeta(3, 1)]
+	public class EntityChest : Entity, ICubeTracker, IHasInventory, ISyncedEntity
 	{
 		public struct MeshingData
 		{
@@ -16,19 +18,18 @@ namespace ViMG.Entities
         }
 		public CubePosition TrackedPosition { get; private set; }
 
-		private Inventory inventory;
+		private InventoryManager.InventoryReference inventory;
 		private int rows, columns;
 		private MeshingData meshingData;
 		public MeshHelper.CubeFace Facing => meshingData.facing;
 
         public EntityChest()
         {
-
         }
 
 		public EntityChest(CubePosition position, int rows, int columns, MeshHelper.CubeFace facing)
 		{
-			this.TrackedPosition = position;
+            this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
 			this.rows = rows;
 			this.columns = columns;
@@ -36,12 +37,10 @@ namespace ViMG.Entities
 			{
 				facing = facing
 			};
-
-            inventory = new Inventory(rows * columns);
 		}
 
 		//A separate constructor so world gen can provide prefilled inventory.
-		public EntityChest(CubePosition position, Inventory inventory, int rows, int columns, MeshHelper.CubeFace facing)
+		public EntityChest(CubePosition position, InventoryManager.InventoryReference inventory, int rows, int columns, MeshHelper.CubeFace facing)
         {
 			this.TrackedPosition = position;
 			this.Position = position.InWorldSpace();
@@ -58,24 +57,38 @@ namespace ViMG.Entities
 		{
 			base.Initialize(world);
 
+			world.InventoryManager.GetOrAdd(ref inventory, new Inventory.InventoryConfig(rows * columns));
 			Optional<Entity> tracker = world.EntityManager.GetEntityTrackingPosition(TrackedPosition);
 
-			if (!tracker.HasValue() || tracker.Get() != this)
-				world.EntityManager.Remove(this);
+			if (tracker.HasValue())
+				world.EntityManager.Kill(this);
 
 			world.ChunkManager.ChunkMesher?.MarkChunkDirty(ChunkPosition.CubeChunk(TrackedPosition));//, true);
 		}
 
-		public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+        public override void OnUnload()
+        {
+            base.OnUnload();
+
+			world.InventoryManager.Unload(inventory);
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+			var inventory = world.InventoryManager.Get(this.inventory);
+            inventory.ProcessEventsServer(this);
+        }	
+
+		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
 		public bool OnInteract(Player player)
 		{
-            Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuChest(Main.gameStateManager, player, player.GetInventory(), inventory, rows, columns));
-
-			return true;
+			return false;
 		}
 
 		public override void OnSave(List<byte> saveBytes)
@@ -88,14 +101,15 @@ namespace ViMG.Entities
 
 			SaveHelper.SaveInt32(saveBytes, (int)meshingData.facing);
 
-			inventory.Save(saveBytes);
+            var inventory = world.InventoryManager.Get(this.inventory);
+            inventory.Save(saveBytes);
 		}
 
-		public override void OnLoad(byte[] loadBytes, in int version)
-		{
-			base.OnLoad(loadBytes, version);
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			Position = TrackedPosition.InWorldSpace();
@@ -106,7 +120,8 @@ namespace ViMG.Entities
 			if (version >= 2)
                 meshingData.facing = (MeshHelper.CubeFace)SaveHelper.LoadInt32(loadBytes, ref index);
 
-			inventory = Inventory.Load(loadBytes, ref index);
+            inventory = world.InventoryManager.Add(new Inventory.InventoryConfig(rows * columns));
+			world.InventoryManager.Get(inventory).Load(loadBytes, ref index);
 		}
 
         public unsafe Buffer<byte> GetMeshingData(BufferPool bufferPool)
@@ -115,6 +130,21 @@ namespace ViMG.Entities
             md.Memory->facing = meshingData.facing;
 
             return md.As<byte>();
+        }
+
+		public bool InventoryAction(int activatingPlayer, int action)
+        {
+			return false;
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				position = Position,
+				state = (int)meshingData.facing,
+				counters = { [0] = rows, [1] = columns, [2] = inventory.id, [3] = inventory.generation },
+			};
         }
     }
 }

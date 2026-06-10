@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -50,7 +52,7 @@ namespace ViMG
 			}
 		}
 
-		public static void MakeXMeshVerts(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, Vector3 scale, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+		public static void MakeXMeshVerts(Cube.RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, Vector3 scale, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
 			int verticesStart = vertices.Length;
 
@@ -61,7 +63,7 @@ namespace ViMG
 			const float texelY = 1f / textureHeight;
 
 			//face doesn't matter, any works
-			RectangleF sourceRect = parameters.cube.GetSourceRect(pass, data, parameters);
+			RectangleF sourceRect = parameters.cube.Client?.GetSourceRect(pass, data, parameters) ?? RectangleF.Empty;
 			//convert source rect to texture space (0-1 instead of 0-width/height in pixels)
 			sourceRect = new RectangleF(sourceRect.x * texelX, sourceRect.y * texelY, sourceRect.width * texelX, sourceRect.height * texelY);
 
@@ -255,9 +257,9 @@ namespace ViMG
 			vertices.Add(new VertexCube(g, Color.White, ctx, nrmSecondPlaneMax));*/
 		}
 
-		public static void ApplyCubeAnim(Cube.RenderPass pass, ChunkStuff.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
+		public static void ApplyCubeAnim(Cube.RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face, FastList<VertexCube> vertices, int verticesStart, int verticesEnd)
         {
-			Cube.CubeAnimation anim = parameters.cube.GetAnimation(pass, data, parameters, parameters.faces);
+			Cube.CubeAnimation anim = parameters.cube.Client?.GetAnimation(pass, data, parameters, parameters.faces) ?? new();
 			if (anim.Valid)
 			{
 				for (int i = verticesStart; i < verticesEnd; i++)
@@ -325,36 +327,44 @@ namespace ViMG
 		}
 
 		private static RendererDeferred.DrawMaterial healthbarMaterial = new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel);
-		public static void DrawHealthbar(GraphicsDevice device, int health, int maxHealth, Vector3 position)
+		public static void DrawHealthbar(GraphicsDevice device, RendererDeferred renderer, Engine.Common.Camera camera, int health, int maxHealth, Vector3 position)
         {
 			if (meshHealthbar.IBO == null)
 				MakeMeshHealthbar(device);
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
+			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(
 				healthbarMaterial, meshHealthbar,
 				Matrix.CreateScale(new Vector3((float)health / (float)maxHealth, 1, 1)) *
 				Matrix.CreateTranslation(new Vector3(-Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 1.5f, 0)) *
-				Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-				Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
+				Matrix.CreateRotationX(Math.Clamp(-camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+				Matrix.CreateRotationY(-camera.RotationEuler.Y) *
 				Matrix.CreateTranslation(position), null));
 		}
+
+		private static bool lineMeshInit = false;
+		private static VerySimpleMesh lineMesh;
 		
 		//Draws a line that is tiled along the vertical axis.
-		public static void DrawLineTiled(Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
-			RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
+		public static void DrawLineTiled(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width, float tileHeight,
+			RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color)
 		{
-			Vector3 axis = endPosition - startPosition;
+			if (!lineMeshInit)
+			{
+				lineMesh = MeshHelper.MakeQuad(renderer.Device, 1, 1, Enums.Alignment.Bottom);
+				lineMeshInit = true;
+            }
+            Vector3 axis = endPosition - startPosition;
 			float distance = axis.Length();
 			axis.Normalize();
 
-			Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+			Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, camera.Position, axis, -camera.Forward, Vector3.Forward);
 
 			int tileTimes = (int)(distance / tileHeight);
 			float tileLastBit = distance % tileHeight;
 
 			for (int i = 0; i < tileTimes; i++)
 			{
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+				renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
 					Matrix.CreateScale(width, tileHeight, width) * mat * Matrix.CreateTranslation(axis * tileHeight * i),
 					sourceRectangle, color.ToVector3()));
 			}
@@ -366,7 +376,7 @@ namespace ViMG
 			Vector2 fixedPosition = sourceRectangle.Position;
 			fixedPosition.Y += sourceRectangle.height - fixedHeight;
 
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+			renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
 				Matrix.CreateScale(width, tileLastBit, width) * mat * Matrix.CreateTranslation(axis * tileHeight * tileTimes),
 				new RectangleF(fixedPosition, sourceRectangle.width, fixedHeight),
 				color.ToVector3()));
@@ -374,16 +384,22 @@ namespace ViMG
 
 		//Draws a stretched texture along a line.
 		//If you want the texture to be tiled properly, use DrawLineTiled.
-		public static void DrawLine(Vector3 startPosition, Vector3 endPosition, float width,
-            RendererDeferred.DrawMaterial material, VerySimpleMesh mesh, RectangleF sourceRectangle, Color color)
+		public static void DrawLine(RendererDeferred renderer, Engine.Common.Camera camera, Vector3 startPosition, Vector3 endPosition, float width,
+            RendererDeferred.DrawMaterial material, RectangleF sourceRectangle, Color color)
 		{
+            if (!lineMeshInit)
+            {
+                lineMesh = MeshHelper.MakeQuad(renderer.Device, 1, 1, Enums.Alignment.Bottom);
+                lineMeshInit = true;
+            }
+
             Vector3 axis = endPosition - startPosition;
             float distance = axis.Length();
             axis.Normalize();
 
-            Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, Main.camera.Position, axis, -Main.camera.Forward, Vector3.Forward);
+            Matrix mat = Matrix.CreateConstrainedBillboard(startPosition, camera.Position, axis, -camera.Forward, Vector3.Forward);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, lineMesh,
                 Matrix.CreateScale(width, distance, width) * mat,
                 sourceRectangle, color.ToVector3()));
         }
@@ -395,7 +411,7 @@ namespace ViMG
 			device.DepthStencilState = Main.nodepthDSS;
 
 			if (axesMesh == null)
-				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), Main.assetsManager.GetAsset<Texture2D>("axes"));
+				axesMesh = MakeAxes(device, Vector3.Zero, new Vector3(5), GlobalState.AssetsManager.GetAsset<Texture2D>("axes"));
 
 			axesMesh.DrawDebugVertexPositionTexture(device, Main.VertexPositionTextureDebugEffect, Color.White, Transform.FromTRS(position, Vector3.Zero, Vector3.One));
 		}

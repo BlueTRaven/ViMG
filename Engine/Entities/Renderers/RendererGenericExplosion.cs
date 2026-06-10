@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,28 +19,31 @@ namespace ViMG.Entities.Renderers
         public RendererGenericExplosion(GraphicsDevice device) : base("generic_explosion", device)
         {
             mesh = MeshHelper.MakeUVSphere(device, 1f);
-
         }
 
-        private static Type[] types = [ typeof(GenericExplosion) ];
-        public override Type[] GetRenderedTypes()
+        private static int[] types = [0];
+        public override int[] GetRenderedTypes()
         {
+            if (types[0] == 0)
+                types[0] = GlobalState.Registry.EntityRegistry.Get<GenericExplosion>().Id;
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            //var entities = entityManager.GetAll<GenericExplosion>();
-
-            //foreach (GenericExplosion explosion in entities)
-            var iter = new Iterator<GenericExplosion>(entities);
-            while (iter.Next(out GenericExplosion explosion))
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
-                float radius = (1 - explosion.timer / GenericExplosion.EXPLOSION_TIME) * explosion.radius;
-                float sort = (explosion.Position - Main.camera.Position).Length();
-                Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
+                var reference = client.Current().entities.GetReference(i);
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var entCurr = client.Current().entities.GetById(reference.id);
+                var entPrev = client.Previous(1).entities.GetById(reference.id);
+
+                float radius = (1 - entPrev.GetInterpTimer(entCurr, 0, client.TimeC) / GenericExplosion.EXPLOSION_TIME) * entPrev.GetInterpTimer(entCurr, 1, client.TimeC);
+                float sort = (entPrev.GetInterpPosition(entCurr, client.TimeC) - client.currInterpState.camera.Position).Length();
+                client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sort,
                     new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), mesh,
-                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(explosion.Position), null, Color.Red * 0.5f));
+                    Matrix.CreateScale(radius) * Matrix.CreateTranslation(entPrev.GetInterpPosition(entCurr, client.TimeC)), null, Color.Red * 0.5f));
             }
         }
     }

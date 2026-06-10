@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +18,7 @@ namespace ViMG.Entities
             float knockback = attackStats.attackStats.knockback;
             player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-            player.SpawnHitboxLater(inventorySlot, damage, DamageType.Melee, -Main.camera.Forward, knockback, attackStats.range);
+            player.SpawnHitboxLater(inventorySlot, damage, DamageType.Melee, -(player as IRotatable).Forward, knockback, attackStats.range);
 
             actionStats.animationType = UseAnimationType.SwingHorizontal;
         }

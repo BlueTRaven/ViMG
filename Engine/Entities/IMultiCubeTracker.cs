@@ -12,6 +12,15 @@ namespace ViMG.Entities
 
         public bool OnInteract(Player player);
 
-        public void TrackingCubeUpdated(World world, ChunkManager cm, CubePosition updatedPosition, ushort updatedId, double updatedTime);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="cm"></param>
+        /// <param name="playerWhoInitiated">The player that initiated this update. May be null.</param>
+        /// <param name="updatedPosition"></param>
+        /// <param name="updatedId"></param>
+        /// <param name="updatedTime"></param>
+        public void TrackingCubeUpdated(World world, ChunkManager cm, Player? playerWhoInitiated, CubePosition updatedPosition, ushort updatedId, double updatedTime);
     }
 }

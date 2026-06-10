@@ -2,9 +2,12 @@
 using BrUtility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Entities;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.ChunkStuff
 {
@@ -17,22 +20,24 @@ namespace ViMG.ChunkStuff
         private static CopiedChunkData TakeFromPool(CubePosition basePosition)
         {
             CopiedChunkData copied = null;
-
-            for (int i = 0; i < pooledCopies.Length; i++)
+            lock (pooledCopies)
             {
-                int ri = (lastUsedCopy + i) % pooledCopies.Length;
-
-                if (pooledCopies.Buffer[ri] == null)
-                    pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
-
-                if (!pooledCopies[ri].GetValid())
+                for (int i = 0; i < pooledCopies.Length; i++)
                 {
-                    copied = pooledCopies[ri];
-                    lastUsedCopy = ri;
+                    int ri = (lastUsedCopy + i) % pooledCopies.Length;
 
-                    copied.Take(basePosition);
+                    if (pooledCopies.Buffer[ri] == null)
+                        pooledCopies.Buffer[ri] = new CopiedChunkData(ri);
 
-                    break;
+                    if (!pooledCopies[ri].GetValid())
+                    {
+                        copied = pooledCopies[ri];
+                        lastUsedCopy = ri;
+
+                        copied.Take(basePosition);
+
+                        break;
+                    }
                 }
             }
 
@@ -48,13 +53,14 @@ namespace ViMG.ChunkStuff
             return copied;
         }
 
-        public static unsafe CopiedChunkData MakeCopy(World world, BufferPool bufferPool, ChunkPosition position)
+        public static unsafe CopiedChunkData MakeCopy(CubeView cubeView, EntityManager entityManager, int sizeInCubes, BufferPool bufferPool, ChunkPosition position)
         {
             using var zone = TracyImpl.Tracy.BeginZone();
 
             CubePosition basePosition = position.InCubeSpace();
 
             CopiedChunkData copied = TakeFromPool(basePosition);
+            IMGUIConsole.Assert(copied.GetValid());
 
             Span<CubePosition> queryPositions = stackalloc CubePosition[CopiedChunkData.SIZE];
 
@@ -76,12 +82,12 @@ namespace ViMG.ChunkStuff
                             if (pos.Z < 0)
                                 pos.Z = 0;
 
-                            if (pos.X >= world.sizeInCubes)
-                                pos.X = world.sizeInCubes - 1;
-                            if (pos.Y >= world.sizeInCubes)
-                                pos.Y = world.sizeInCubes - 1;
-                            if (pos.Z >= world.sizeInCubes)
-                                pos.Z = world.sizeInCubes - 1;
+                            if (pos.X >= sizeInCubes)
+                                pos.X = sizeInCubes - 1;
+                            if (pos.Y >= sizeInCubes)
+                                pos.Y = sizeInCubes - 1;
+                            if (pos.Z >= sizeInCubes)
+                                pos.Z = sizeInCubes - 1;
 
                             queryPositionsPtr[i] = pos;
                         }
@@ -89,10 +95,24 @@ namespace ViMG.ChunkStuff
                 }
             }
 
-            world.ChunkManager.CubeView.GetIds(queryPositions, copied.Ids);
-            world.EntityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
+            cubeView.GetIds(queryPositions, copied.PaddingIds);
+            entityManager.GetEntityMeshingDatas(queryPositions, copied.EntityMeshingDatas, bufferPool);
+
+            cubeView.GetIdsForChunk(position, copied.Ids);
 
             return copied;
+        }
+    
+        public static void Verify()
+        {
+            foreach (CopiedChunkData c in pooledCopies.Slice())
+            {
+                if (c != null)
+                {
+                    IMGUIConsole.Assert(!c.GetValid());
+                    IMGUIConsole.Assert(c.refcount == 0);
+                }
+            }
         }
     }
 }

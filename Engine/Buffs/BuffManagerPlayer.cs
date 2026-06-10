@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ namespace ViMG.Buffs
             this.player = player;
         }
 
-        public void Update(double deltaTime, ref Player.AccumulatedStats stats)
+        public void Update(double deltaTime, ref PlayerAccumulatedStats stats)
         {
             toAddLater.ForEach(x => ReallyAddBuff(x));
             toAddLater.Clear();

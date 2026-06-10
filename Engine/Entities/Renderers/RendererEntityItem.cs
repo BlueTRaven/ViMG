@@ -1,4 +1,6 @@
 ﻿using BepuPhysics.Constraints;
+using Engine;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,31 +19,39 @@ namespace ViMG.Entities.Renderers
         {
         }
 
-        private static Type[] types = [typeof(EntityItem)];
-        public override Type[] GetRenderedTypes()
+        private static int[] types = [0];
+        public override int[] GetRenderedTypes()
         {
+            if (types[0] == 0)
+                types[0] = GlobalState.Registry.EntityRegistry.Get<EntityItem>().Id;
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            //var items = entityManager.GetAll<EntityItem>();
+            base.RenderClientEnt(device, deltaTime, client, type);
 
-            //foreach (EntityItem itemEntity in items)
-            var iter = new Iterator<EntityItem>(entities);
-            while (iter.Next(out EntityItem itemEntity))
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
+                var reference = client.Current().entities.GetReference(i);
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var ent = client.currInterpState.entities.GetByRef(ref reference);
+
                 Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
 
-                if (itemEntity.ItemInstance.item is ItemCube)
+                ItemInstance itemInstance = new ItemInstance(GlobalState.Registry.ItemRegistry.Get(ent.counters[0]), ent.counters[1], ent.counters[2]);
+                if (itemInstance.item is ItemCube)
                     origin.Z = Cube.CUBE_SCALE / 4f;
 
-                var reference = itemEntity.world.PhysicsInfo.Simulation.Bodies[itemEntity.physicsHandle];
-                itemEntity.ItemInstance.item.DrawInWorld(device, itemEntity.world, itemEntity.ItemInstance,
-                    Matrix.CreateTranslation(-origin) *
-                    Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
-                    Matrix.CreateTranslation(reference.Pose.Position)
-                    );
+                if (itemInstance.item != null)
+                {
+                    itemInstance.item.Client.DrawInWorld(device, client.Renderer, itemInstance,
+                        Matrix.CreateTranslation(-origin) *
+                        Matrix.CreateFromQuaternion(ent.rotation) *
+                        Matrix.CreateTranslation(ent.position)
+                        );
+                }
             }
         }
     }

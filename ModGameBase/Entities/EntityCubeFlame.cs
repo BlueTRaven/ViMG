@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Common;
+using Engine.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
     [EntityMeta(1)]
-    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner
+    public class EntityCubeFlame : Entity, ICubeTracker, IHitboxOwner, ISyncedEntity
     {
         //Store time as the point in world time after which this entity will be destroyed.
         //We do it this way so that the timer technically keeps ticking even if we unload the chunk with this cube.
@@ -18,9 +20,6 @@ namespace ViMG.Entities
         private float time;
         private float timer;
         public CubePosition TrackedPosition { get; private set; }
-        private int light = -1;
-        private int ambientLight = -1;
-        private bool isShadowmapped;
         private int hitbox = -1;
 
         private bool needsTimeFix = false;
@@ -62,14 +61,21 @@ namespace ViMG.Entities
             Vector4 ambientLightColor = Color.OrangeRed.ToVector4();
             ambientLightColor.W = 0.25f;
 
-            LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-                Cube.CUBE_SCALE * 4f + s0, Cube.CUBE_SCALE * 8f, Color.OrangeRed.ToVector4()), LightHelper.LightUpdateType.UpdateClean,
-                sphere, ref light, ref isShadowmapped, true);
+            world.LightManager2.AddShadowmapped(new LightManager2.LightConfig
+            {
+                position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+                min = Cube.CUBE_SCALE * 4 + s0,
+                max = Cube.CUBE_SCALE * 8,
+                color = Color.OrangeRed.ToVector4(),
+            });
 
-            bool dummy = false;
-            LightHelper.UpdateLight(world.LightManager, new LightHelper.LightInfo(Position + new Vector3(Cube.CUBE_SCALE / 2f),
-                Cube.CUBE_SCALE * 6f + s0, Cube.CUBE_SCALE * 12f, ambientLightColor, false), LightHelper.LightUpdateType.UpdateClean,
-                sphere, ref ambientLight, ref dummy, false);
+            //world.LightManager2.Add(new LightManager2.LightConfig
+            //{
+            //    position = Position + new Vector3(Cube.CUBE_SCALE / 2f),
+            //    min = Cube.CUBE_SCALE * 3 + s0,
+            //    max = Cube.CUBE_SCALE * 8,
+            //    color = Color.OrangeRed.ToVector4() * 0.5f,
+            //});
             /*if (!Main.camera.GetFrustum().Intersects(sphere))
             {
                 if (light != -1)
@@ -91,7 +97,7 @@ namespace ViMG.Entities
 
             if (world.GetTime() > time)
             {
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 
                 world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
             }
@@ -102,28 +108,14 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         public override void OnUnload()
         {
             base.OnUnload();
-
-            if (light != -1)
-            {
-                if (isShadowmapped)
-                    world.LightManager.RemoveShadowmapped(light);
-                else world.LightManager.Remove(light);
-
-                light = -1;
-            }
-
-            if (ambientLight != -1)
-            {
-                world.LightManager.Remove(ambientLight);
-            }
 
             if (hitbox != -1)
             {
@@ -142,9 +134,9 @@ namespace ViMG.Entities
             SaveHelper.SaveFloat32(saveBytes, time);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
@@ -161,6 +153,15 @@ namespace ViMG.Entities
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = Position,
+                timers = { [0] = time }
+            };
         }
     }
 }

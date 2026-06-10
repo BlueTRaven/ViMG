@@ -1,9 +1,13 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ViMG.Cubes;
 using ViMG.Rendering;
 
 namespace ViMG.Items
@@ -20,7 +24,7 @@ namespace ViMG.Items
 
 			if (meta != null)
 			{
-				return meta.GetMaterial() + " Pickaxe";
+				return meta.GetName(item) + " Pickaxe";
 			}
 			else return base.GetName(item);
 		}
@@ -46,7 +50,7 @@ namespace ViMG.Items
 			{
 				if (player.ExpandedMineState)
 				{
-					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
+					CubePosition[] affectedPositions = metaItem.GetAffectedPositions(player.world.ChunkManager.CubeView, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out _);
 
                     float useTime = GetStats(inventory.Get(index)).cooldownTime;
                     useTime -= useTime * (player.GetStats().MiningScale);
@@ -61,15 +65,19 @@ namespace ViMG.Items
 					{
 						if (player.GetWorld().ChunkManager.IsInWorldBounds(affectedPositions[i]))
 						{
-							if (Main.Registry.CubeRegistry.GetOrDefault(ids[i], Main.Registry.CubeRegistry.Air).Touchable)
-								player.GetWorld().TryMineCube(affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
+							var cube = GlobalState.Registry.CubeRegistry.GetOrDefault(ids[i], GlobalState.Registry.CubeRegistry.Air);
+
+                            if (cube.Touchable)
+								player.GetWorld().TryMineCube(player, affectedPositions[i], metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 						}
 					}
 				}
                 else
                 {
-					if (player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable)
-						player.GetWorld().TryMineCube(player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
+					var cube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+                    
+                    if (cube.Touchable)
+						player.GetWorld().TryMineCube(player, player.LookAtPos, metaItem.GetStats(inventory.Get(index)).mineLevel, metaItem.GetStats(inventory.Get(index)).mineRate);
 				}
 			}
 
@@ -78,7 +86,7 @@ namespace ViMG.Items
 
 		public static ItemInstance CreatePickaxe(ItemInstance itemHead)
 		{
-			return new ItemInstance(Main.Registry.GetCurrentMod().Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
+			return new ItemInstance(GlobalState.Registry.GetCurrentMod().Registry.ItemRegistry.Get("pickaxe"), 1, itemHead.item.Id);
 		}
 
         public ref readonly ItemPickaxeHead.PickaxeStats GetStats(ItemInstance item)
@@ -86,9 +94,9 @@ namespace ViMG.Items
 			return ref Get(item).GetStats(item);
         }
 
-        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+        public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
-			return Get(item).GetAffectedPositions(player, item, standingPosition, hit, normal, out num);
+			return Get(item).GetAffectedPositions(cubeView, item, standingPosition, hit, normal, out num);
         }
     }
 }

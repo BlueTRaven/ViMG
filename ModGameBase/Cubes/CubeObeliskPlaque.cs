@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -6,16 +8,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.ChunkStuff;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubeObeliskPlaque : Cube
     {
-        public CubeObeliskPlaque() : base("obelisk_plaque", new RectangleF(64, 176, 16, 16), Color.White, 0, 4)
+        public CubeObeliskPlaque() : base("obelisk_plaque", 0, 4)
         {
         }
 
-        public override bool CanRightClick(World world, CubePosition position)
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeObeliskPlaque(this);
+        }
+
+        public override bool CanRightClick(CubePosition position)
         {
             return true;
         }
@@ -24,17 +32,24 @@ namespace ViMG.Cubes
         {
             base.OnRightClick(world, position);
 
-            Main.gameStateManager.TheIsland.PushMenu(world.MenuDialogue);
+            GlobalState.GameStateManager.TheIsland.PushMenu(world.MenuDialogue);
 
-            world.MenuDialogue.StartText("Here lies our sins\r\n" +
-                "Wicked were we, and so here our guilt lies\r\n" +
+            world.MenuDialogue.StartText("Here lies our grave sins\r\n" +
+                "Wicked were we, and here our guilt lies\r\n" +
                 "Buried deep below in vast vaults\r\n" +
                 "Do not delve deeper; heed our warning\r\n" +
                 "Do not speak His name\r\n" +
-                "For underneath is buried death");
+                "For underneath is buried our great death");
+        }
+    }
+
+    public class ClientCubeObeliskPlaque : ClientCube
+    {
+        public ClientCubeObeliskPlaque(Cube cube) : base(cube, new RectangleF(64, 176, 16, 16), Color.White)
+        {
         }
 
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
         {
             CubePosition opposite;
             switch (face)
@@ -56,7 +71,7 @@ namespace ViMG.Cubes
                     break;
             }
 
-            if (data != null && data.GetId(parameters.position + opposite) == Main.Registry.CubeRegistry.Get("obelisk").Id)
+            if (data.GetId(parameters.position + opposite) == GlobalState.Registry.CubeRegistry.Get("obelisk").Id)
                 return new RectangleF(64, 176, 16, 16);
 
             return new RectangleF(160, 208, 16, 16);

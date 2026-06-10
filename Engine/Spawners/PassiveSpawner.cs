@@ -6,16 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
 using BrUtility;
+using Engine;
 
 namespace ViMG.Spawners
 {
     public abstract class PassiveSpawner
     {
+        // Chance to spawn each check time
         protected float spawnChance;
         private readonly Rectangle3D spawnBounds;
+        // Minimum distance from a player
         protected readonly float spawnRadiusMin;
+        // Maximum distance from a player
         protected readonly float spawnRadiusMax;
         protected readonly PassiveSpawnerManager manager;
+        // How long before checking to spawn again
         private readonly float checkTime;
         private float checkTimer;
 
@@ -42,14 +47,14 @@ namespace ViMG.Spawners
 
         public virtual void Update(double deltaTime, World world)
         {
-            if (!Main.ENABLE_ENT_SPAWNING)
+            if (!GlobalState.ENABLE_ENT_SPAWNING)
                 return;
 
             checkTimer -= (float)deltaTime;
 
             if (checkTimer <= 0)
             {
-                checkTimer = checkTime;
+                checkTimer += checkTime;
 
                 DoSpawnCheck(world);
             }
@@ -57,7 +62,7 @@ namespace ViMG.Spawners
 
         protected void DoSpawnCheck(World world)
         {
-            if (Main.random.NextDouble() < spawnChance * manager.SpawnChanceMultipler)
+            if (GlobalState.random.NextDouble() < spawnChance * manager.SpawnChanceMultipler)
             {
                 const int MAX_TRIES = 20;
                 int tries = MAX_TRIES;
@@ -88,11 +93,14 @@ namespace ViMG.Spawners
                 radMax = MathHelper.ToRadians(360f - camera.HalfFOV);
             }*/
 
-            Vector3 v = -Main.camera.Forward;
+            Vector3 v = Vector3.Left;
             v = Vector3.Transform(v,
-                Matrix.CreateFromYawPitchRoll(Main.random.NextFloat(radMin, radMax), Main.random.NextFloat(radMin, radMax), 0));
-            v *= Main.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
-            v += world.player.Position;
+                Matrix.CreateFromYawPitchRoll(GlobalState.random.NextFloat(radMin, radMax), GlobalState.random.NextFloat(radMin, radMax), 0));
+            v *= GlobalState.random.NextFloat(spawnRadiusMin, spawnRadiusMax);
+            
+            Player? player = world.GetRandomPlayer();
+            if (player is not null)
+                v += player.Position;
 
             //TODO clamping to bounds can cause min to no longer be taken into account.
             v = spawnBounds.Clamp(v);
@@ -102,7 +110,7 @@ namespace ViMG.Spawners
             if (world.ChunkManager.IsInWorldBounds(ChunkPosition.WorldSpaceChunk(v)) && world.ChunkLoadManager.IsLoaded(ChunkPosition.WorldSpaceChunk(v)))
             {
                 var cubeAtPos = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(v)).Get();
-                if (cubeAtPos == null || cubeAtPos == Main.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
+                if (cubeAtPos == null || cubeAtPos == GlobalState.Registry.CubeRegistry.Air || cubeAtPos.Collision == Cube.CollisionValue.None)
                 {
                     CubePosition pos = world.ChunkManager.CubeView.GetFirstSolidDown(CubePosition.FromWorldSpace(v)).GetOrDefault(CubePosition.FromWorldSpace(v));
 

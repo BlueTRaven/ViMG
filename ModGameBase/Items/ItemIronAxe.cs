@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,18 +23,21 @@ namespace ViMG.Items
                 preUseTime = 10f / 60f,
             }, 8, Cube.CUBE_SCALE), Cube.CUBE_SCALE * 2.5f);
 
-        public ItemIronAxe() : base("wepaxe_iron", new RectangleF(128, 64, 32, 16))
+        public ItemIronAxe() : base("wepaxe_iron")
         {
             name = "Iron Axe";
             description = "An axe made of well-crafted iron.\n" +
                 meleeStats.GetTooltip();
+        }
 
-            flipXInHand = true; 
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(128, 64, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
-            origin = new Vector2(MESH_SIZE * 12f / 16f, MESH_SIZE * 4f / 16f);
+            //origin = new Vector2(MESH_SIZE * 12f / 16f, MESH_SIZE * 4f / 16f);
             PlayerHelper.MeleeWeaponLeftClick(player, index, meleeStats, out actionStats);
             actionStats.animationType = UseAnimationType.SwingVertical;
             return true;

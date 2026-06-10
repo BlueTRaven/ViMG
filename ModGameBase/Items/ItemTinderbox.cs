@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,10 +16,15 @@ namespace ViMG.Items
 {
     public class ItemTinderbox : Item
     {
-        public ItemTinderbox() : base("tinderbox", new RectangleF(32, 32, 16, 16))
+        public ItemTinderbox() : base("tinderbox")
         {
             name = "Tinderbox";
             description = "A tinderbox, as well as a set of flint and steel, used to light fires. Right-click on the ground to create a fire that should last you for some time.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 32, 16, 16));
         }
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -24,22 +32,21 @@ namespace ViMG.Items
 			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			//TODO check solidity not id != 0
-			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position - (player as IRotatable).Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
 			{
 				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
-					Cube cube = Main.Registry.CubeRegistry.Get("campfire");
+					Cube cube = GlobalState.Registry.CubeRegistry.Get("campfire");
 					var placeAtPos = CubePosition.FromWorldSpace(lookAtResult.hit + CubePosition.ToWorldSpaceV3(lookAtResult.normal));
 
-					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos)
-						&& Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton))
+					if (player.GetWorld().ChunkManager.IsInWorldBounds(placeAtPos) && cube.CanPlace(player.GetWorld(), player.GetWorld().ChunkManager, placeAtPos))
 					{
 						player.GetWorld().ChunkManager.CubeView.SetCube(placeAtPos, cube.Id);
 

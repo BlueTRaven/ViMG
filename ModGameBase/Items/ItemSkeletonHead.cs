@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemSkeletonHead : Item
     {
-        public ItemSkeletonHead() : base("skeleton_head", new RectangleF(48, 64, 16, 16))
+        public ItemSkeletonHead() : base("skeleton_head")
         {
             name = "Skeleton Head";
             description = "Unlike most skeletons on this strange island, this one doesn't appear to be alive.\n" +
@@ -21,7 +23,12 @@ namespace ViMG.Items
             Tags.Add("accessory");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 64, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

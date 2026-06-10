@@ -1,4 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
+using Engine;
+using Engine.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +15,11 @@ namespace ViMG.Entities
 {
     public class AIFlierMelee
     {
-		public enum State
+		private const int VERSION = 0;
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
+
+        public enum State
 		{
 			Normal,			//walking/idling/moving towards player/etc
 			Attack,			//attacking player
@@ -21,6 +29,7 @@ namespace ViMG.Entities
 
 		private State state;
 
+		public bool Invulnerable = false;
 		public float InvulnTimer;
 
 		public Vector3 Velocity;
@@ -88,8 +97,8 @@ namespace ViMG.Entities
 				ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
-					ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
-				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+					ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0 && !ai.Invulnerable);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0 && !ai.Invulnerable);
 
 				ai.buffManager.Update(deltaTime);
 				ai.noticeHandler.Update(deltaTime);
@@ -208,11 +217,11 @@ namespace ViMG.Entities
 				entity.Position += ai.Velocity * (float)deltaTime;
 
 				if (ai.CollidesWithWorld)
-					UpdateCollision();
+                    UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Remove(entity);
-			}
+                if (entity.world.DistanceFromPlayer(entity.Position) > 128 * Cube.CUBE_SCALE)
+                    entity.world.EntityManager.Kill(entity);
+            }
 
 			private void UpdateCollision()
 			{
@@ -247,7 +256,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -288,7 +297,7 @@ namespace ViMG.Entities
 
 			public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 			{
-				if (ai.InvulnTimer <= 0)
+				if (ai.InvulnTimer <= 0 && !ai.Invulnerable)
 				{
 					if (other.group == HitboxManager.Group.PLAYER_DEAL)
 					{
@@ -310,17 +319,8 @@ namespace ViMG.Entities
 
 			public void Hurt(int damage)
 			{
-                ai.Health -= damage;
-
-				if (ai.Health <= 0)
-				{
-                    ai.Health = 0;
-					entity.world.EntityManager.Remove(entity);
-
-					if (ai.touchHitbox != -1)
-						entity.world.HitboxManager.Remove(ai.touchHitbox);
-				}
-
+				EntityHelper.TakeDamage(entity, damage);
+                
 				ai.InvulnTimer = 0.25f;
 
 				//interrupt current attack
@@ -335,5 +335,31 @@ namespace ViMG.Entities
 				return ai.state;
 			}
 		}
-	}
+
+        public void OnSave(List<byte> saveBytes)
+        {
+            SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+        }
+
+        public void Get(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                health = Health,
+                velocity = Velocity,
+                position = Vector3.Zero,
+                rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
+                state = (int)this.state,
+                timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
+            };
+        }
+    }
 }

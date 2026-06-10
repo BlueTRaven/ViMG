@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemManaStar : Item
     {
-        public ItemManaStar() : base("mana_star", new RectangleF(176, 32, 16, 16))
+        public ItemManaStar() : base("mana_star")
         {
             name = "Mana Star";
             description = "A hefty astroid composed of an unknown blue material.\n" +
@@ -22,7 +24,12 @@ namespace ViMG.Items
             Tags.Add("gear_magic");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(176, 32, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

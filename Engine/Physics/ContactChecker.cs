@@ -10,7 +10,7 @@ using ViMG.Cubes;
 
 namespace ViMG.Physics
 {
-    public class ContactChecker
+    public struct ContactChecker
     {
         public bool WasOnGround;
         public bool OnGround;
@@ -18,7 +18,7 @@ namespace ViMG.Physics
         public Vector3 GroundNormal;
         public Vector3 Normal;
 
-        public void Update(World world, BodyHandle handle)
+        public void Update(PhysicsInfo physicsInfo, BodyHandle handle)
         {
             WasOnGround = OnGround;
             OnGround = false;
@@ -28,15 +28,15 @@ namespace ViMG.Physics
             int groundCount = 0;
             int totalCount = 0;
 
-            var sensorBody = world.PhysicsInfo.Simulation.Bodies[handle];
-            var extractor = new SolverContactDataExtractor(world.PhysicsInfo.GlobalBufferPool, sensorBody.Constraints.Count);
+            var sensorBody = physicsInfo.Simulation.Bodies[handle];
+            var extractor = new SolverContactDataExtractor(physicsInfo.GlobalBufferPool, sensorBody.Constraints.Count);
             //The basic idea behind the contact extractor is to submit it to a narrow phase contact accessor that is able to understand the solver's layout,
             //which will then call the contact extractor's relevant callbacks for the type of constraint encountered.
             //Here, we'll enumerate over all the constraints currently affecting the sensor body, attempting to extract contact data from each one.
             //If there are constraints that aren't contact constraints, they'll just get skipped.
             for (int i = 0; i < sensorBody.Constraints.Count; ++i)
             {
-                world.PhysicsInfo.Simulation.NarrowPhase.TryExtractSolverContactData(sensorBody.Constraints[i].ConnectingConstraintHandle, ref extractor);
+                physicsInfo.Simulation.NarrowPhase.TryExtractSolverContactData(sensorBody.Constraints[i].ConnectingConstraintHandle, ref extractor);
             }
             //We now have extracted contact data. Let's analyze it!
             //For the purposes of the demo, we'll draw debug shapes at the contacts to represent the different properties.
@@ -51,7 +51,7 @@ namespace ViMG.Physics
                 {
                     for (int contactIndex = 0; contactIndex < constraintContacts.Contacts.Count; ++contactIndex)
                     {
-                        //var other = world.PhysicsInfo.Simulation.Bodies[constraintContacts.BodyB].
+                        //var other = physicsInfo.Simulation.Bodies[constraintContacts.BodyB].
                         ref var contact = ref constraintContacts.Contacts[contactIndex];
 
                         float dot = Vector3.Dot(contact.Normal, Vector3.Up);

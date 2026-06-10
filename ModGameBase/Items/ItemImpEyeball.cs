@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,15 +13,20 @@ namespace ViMG.Items
 {
     public class ItemImpEyeball : Item
     {
-        public ItemImpEyeball() : base("imp_eyeball", new RectangleF(32, 48, 16, 16))
+        public ItemImpEyeball() : base("imp_eyeball")
         {
             name = "Imp Eyeball";
-            description = "An imp eyeball. It swivels to look at you no matter where you hold it. Gross.\n" +
+            description = "An imp eyeball. It swivels to look at you no matter what direction you hold it. Gross.\n" +
                 "-10 defense\n" +
                 "+5% magic damage";
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(32, 48, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

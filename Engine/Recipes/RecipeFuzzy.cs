@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Items;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
@@ -36,7 +37,7 @@ namespace ViMG.Recipes
 
 			for (int i = 0; i < inventory.NumSlots; i++)
 			{
-				if (inventory.Get(i).item == item.item)
+				if (inventory.Get(i).item == item.item && inventory.Get(i).damage == item.damage)
 				{
 					req -= inventory.Get(i).num;
 

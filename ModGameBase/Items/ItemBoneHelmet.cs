@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +18,7 @@ namespace ViMG.Items
         {
             public static SetBonusBoneArmor Instance = new SetBonusBoneArmor();
 
-            public override void AccumulateStats(Player player, ref Player.AccumulatedStats stats)
+            public override void AccumulateStats(Player player, ref PlayerAccumulatedStats stats)
             {
                 base.AccumulateStats(player, ref stats);
 
@@ -31,14 +33,19 @@ namespace ViMG.Items
             }
         }
 
-        public ItemBoneHelmet() : base("helmet_bone", new RectangleF(96, 80, 16, 16))
+        public ItemBoneHelmet() : base("helmet_bone")
         {
             name = "Bone Helmet";
             description = "A helmet carved from bone. Ordinarily fairly inflexible, enchantments make this armor piece fairly competent.";
             Tags.Add("armor_head");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemBoneHelmet(this);
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 
@@ -51,13 +58,20 @@ namespace ViMG.Items
             stats.DefenseFlat += 3;
             stats.HPFlat += 3;
         }
+    }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
+    public class ClientItemBoneHelmet : ClientItem
+    {
+        public ClientItemBoneHelmet(Item item) : base(item, new RectangleF(96, 80, 16, 16))
+        {
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
         {
             if (meshItemQuadInWorld.IBO == null)
                 MakeMesh(device);
 
-            Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
                 meshItemQuadInWorld, transform, SourceRect, new Color(191, 191, 139).ToVector3()));
         }
 

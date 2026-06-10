@@ -56,7 +56,7 @@ namespace ViMG.Entities
 
             Position = world.PhysicsInfo.Simulation.Bodies.GetBodyReference(physicsHandle).Pose.Position;
 
-            contactChecker.Update(world, physicsHandle);
+            contactChecker.Update(world.PhysicsInfo, physicsHandle);
 
             if (contactChecker.OnGround)
             {

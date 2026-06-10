@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemLeatherBoots : Item
     {
-        public ItemLeatherBoots() : base("run_leather_boots", new RectangleF(96, 48, 16, 16))
+        public ItemLeatherBoots() : base("run_leather_boots")
         {
             name = "Leather Boots";
             description = "Sturdy leather boots. They fit your feet perfectly.\n" +
@@ -21,7 +23,12 @@ namespace ViMG.Items
             Tags.Add("gear_run");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(96, 48, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -28,11 +30,11 @@ namespace ViMG.Items
         private static int currentStructure;
         private static string[] assetKeysList;
 
-        public ItemDebugStructurePaster() : base("DEBUGStructurePaster", new RectangleF(112, 112, 16, 16))
+        public ItemDebugStructurePaster() : base("DEBUGStructurePaster")
         {
             name = "DEBUG Structure Paster";
             description = "Allows you to paste structures, as they are defined in their structure files, into the world.";
-            assetKeysList = Main.assetsManager.GetAssetKeysList<Structure>().ToArray();
+            assetKeysList = GlobalState.AssetsManager.GetAssetKeysList<Structure>().ToArray();
         }
 
         public override void Hold(Player player, Inventory inventory, int index)
@@ -87,7 +89,7 @@ namespace ViMG.Items
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             CubePosition pos = CubePosition.FromWorldSpace(player.Position);
-            Structure structure = Main.assetsManager.GetAsset<Structure>(assetKeysList[currentStructure]);
+            Structure structure = GlobalState.AssetsManager.GetAsset<Structure>(assetKeysList[currentStructure]);
             PastedStructure pasted = new PastedStructure() 
             {
                 structure = structure, 
@@ -120,6 +122,13 @@ namespace ViMG.Items
             actionStats = new ActionStats(3);
 
             return true;
+        }
+    }
+
+    public class ClientItemDebugStructurePaster : ClientItem
+    {
+        public ClientItemDebugStructurePaster(Item item) : base(item, new RectangleF(112, 112, 16, 16))
+        {
         }
     }
 }

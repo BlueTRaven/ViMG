@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Physics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -75,6 +76,16 @@ namespace ViMG
 
             return new Rectangle3D(new Vector3(minX, minY, minZ), size);
 		}
+
+		public static Rectangle3D FromCenterRadius(Vector3 center, float radius)
+		{
+			return new Rectangle3D(center - new Vector3(radius), new Vector3(radius * 2));
+		}
+
+		public OrientedBoundingBox ToOBB()
+		{
+			return new OrientedBoundingBox(this);
+		}
     }
 
 	public struct Rectangle3DI
@@ -108,7 +119,12 @@ namespace ViMG
 			return point.X >= Position.X && point.X < Position.X + Size.X && point.Y >= Position.Y && point.Y < Position.Y + Size.Y && point.Z >= Position.Z && point.Z < Position.Z + Size.Z;
 		}
 
-		public Rectangle3DI Offset(Point3D offsetBy)
+        public bool Contains(Point3D point)
+        {
+            return point.X >= Position.X && point.X < Position.X + Size.X && point.Y >= Position.Y && point.Y < Position.Y + Size.Y && point.Z >= Position.Z && point.Z < Position.Z + Size.Z;
+        }
+
+        public Rectangle3DI Offset(Point3D offsetBy)
 		{
 			return new Rectangle3DI(Position + offsetBy, Size);
 		}

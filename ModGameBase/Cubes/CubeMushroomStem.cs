@@ -11,9 +11,14 @@ namespace ViMG.Cubes
 {
     public class CubeMushroomStem : Cube
     {
-        public CubeMushroomStem() : base("mushroom_stem", new CubeFacingLayout(new RectangleF(32, 96, 16, 16), new RectangleF(64, 96, 16, 16)), Color.White, 4)
+        public CubeMushroomStem() : base("mushroom_stem", 4)
         {
             Name = "Mushroom Stem";
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new CubeFacingLayout(new RectangleF(32, 96, 16, 16), new RectangleF(64, 96, 16, 16)), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)

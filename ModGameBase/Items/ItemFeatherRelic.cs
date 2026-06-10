@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace ViMG.Items
 {
     public class ItemFeatherRelic : Item
     {
-        public ItemFeatherRelic() : base("dj_feather_relic", new RectangleF(112, 48, 16, 16))
+        public ItemFeatherRelic() : base("dj_feather_relic")
         {
             name = "Feather Relic";
             description = "An ancient stone relic bearing the symbol of a feather. It feels as light as the symbol placed upon it would be.\n" +
@@ -20,7 +22,12 @@ namespace ViMG.Items
             Tags.Add("gear_dj");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 48, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 

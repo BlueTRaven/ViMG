@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -53,6 +54,7 @@ namespace ViMG.Entities
 
 		public Skeleton() { }
 
+		[Obsolete()]
 		public Skeleton(Vector3 position)
 		{
 			this.Position = position;
@@ -67,14 +69,14 @@ namespace ViMG.Entities
 			health = maxHealth;
 		}
 
-        public override void OnDelete()
+        public override void OnKill()
         {
-            base.OnDelete();
+            base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
-						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), 
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
+				new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 6.4f,
+						GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)), 
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("brittle_bone"), 1, 1));
 			world.EntityManager.Add(ent);
 		}
 
@@ -119,7 +121,7 @@ namespace ViMG.Entities
 					}
                 }
 
-				world.HitboxManager.Update(hitbox, Bounds);
+				world.HitboxManager.Update(hitbox, Bounds.ToOBB());
 			}
 
 			Vector3 actualMaxVel = MaxVelocity;
@@ -146,7 +148,7 @@ namespace ViMG.Entities
 						}
 
 						if (state == State.Active || state == State.LyingInPileKillable)
-							world.EntityManager.Remove(this);
+							world.EntityManager.Kill(this);
 					}
 				}
 			}
@@ -179,11 +181,11 @@ namespace ViMG.Entities
 						{
 							idleHome = new Vector2(Position.X, Position.Z);
 
-							idleTimer = Main.random.NextFloat(4f, 12f);
-							idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-							idleMovements = Main.random.Next(2, 6);
+							idleTimer = GlobalState.random.NextFloat(4f, 12f);
+							idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
+							idleMovements = GlobalState.random.Next(2, 6);
 
-							idleDirection = Main.random.NextAngle();
+							idleDirection = GlobalState.random.NextAngle();
 						}
 						else
 						{
@@ -195,8 +197,8 @@ namespace ViMG.Entities
 							if (idleTimer <= 0 && idleMoveTimer <= 0)
 							{
 								idleMovements--;
-								idleDirection = Main.random.NextAngle();
-								idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
+								idleDirection = GlobalState.random.NextAngle();
+								idleMoveTimer = GlobalState.random.NextFloat(0.25f, 2f);
 							}
 						}
 
@@ -258,8 +260,8 @@ namespace ViMG.Entities
 			shouldJump = false;
 			UpdateCollision();
 
-			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(this);
+            if (world.player.All(x => x == null || (x.Position - Position).Length() > 128 * Cube.CUBE_SCALE))
+                world.EntityManager.Kill(this);
 		}
 
 		//TODO performance
@@ -276,7 +278,7 @@ namespace ViMG.Entities
 						CubePosition pos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace); //CubePosition.FromWorldSpace(Position);
 
 						if (world.ChunkManager.IsInWorldBounds(pos) && 
-							world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
+							world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Collision != Cube.CollisionValue.None)
 						{
 							Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -309,7 +311,7 @@ namespace ViMG.Entities
 				var ray = world.RaycastVector(Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(Velocity.X, 0, Velocity.Z), Cube.CUBE_SCALE * 2,
 					(Vector3 pos) =>
 					{
-						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+						Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 						return cube.Collision != Cube.CollisionValue.None;
 					});
@@ -336,96 +338,6 @@ namespace ViMG.Entities
             }
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
-
-		//	if (mesh.IBO == null)
-		//		MakeMesh(device);
-
-		//	//world.DrawWireframeUnscaled(device, Bounds, Color.Red);
-
-		//	RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
-
-		//	if (state != State.Active)
-		//		sourceRect = new RectangleF(16, 0, 16, 32);
-
-		//	Vector3 tintColor = invulnTimer > 0 ? Color.Red.ToVector3() : Color.White.ToVector3();
-
-		//	Vector3 vibratePos = Vector3.Zero;
-
-		//	if (state != State.Active && resurrectTimer <= 4 && (resurrectTimer % (4f / 60f)) / (4f / 60f) < 0.25f)
-		//	{
-		//		if (resurrectTimer <= 1)
-  //              {
-		//			vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f), 0,
-		//				Main.random.NextFloat(-Cube.CUBE_SCALE / 8f, Cube.CUBE_SCALE / 8f));
-		//		}
-  //              else
-  //              {
-		//			vibratePos = new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f), 0,
-		//				Main.random.NextFloat(-Cube.CUBE_SCALE / 16f, Cube.CUBE_SCALE / 16f));
-  //              }
-  //          }
-
-		//	Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(material, mesh,
-		//		Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(vibratePos) *
-		//		Matrix.CreateTranslation(Position), sourceRect, tintColor));
-
-		//	if (health < maxHealth)
-		//		DrawHelper3D.DrawHealthbar(device, health, maxHealth, Position);
-		//}
-
-		private static void MakeMesh(GraphicsDevice device)
-		{
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE * 2, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
-
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
-
-			int offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
-
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);//new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("skeleton"));
-        }
-
 		public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
 		{
 			if (invulnTimer <= 0)
@@ -446,7 +358,7 @@ namespace ViMG.Entities
 						}
 
 						if (state == State.Active || state == State.LyingInPileKillable)
-							world.EntityManager.Remove(this);
+							world.EntityManager.Kill(this);
 					}
 
 					invulnTimer = 0.25f;
@@ -462,7 +374,7 @@ namespace ViMG.Entities
             {
 				if (updating == trackBoneBlockPosition)
 				{
-					if (updatedId != Main.Registry.CubeRegistry.Get("brittle_bone_block").Id)
+					if (updatedId != GlobalState.Registry.CubeRegistry.Get("brittle_bone_block").Id)
 					{
 						state = State.LyingInPileKillable;
 						resurrectTimer += 4;	//additional 4 seconds if we kill the block.
@@ -478,7 +390,7 @@ namespace ViMG.Entities
 		//TODO performance
 		private bool SearchForNearbyBoneBlocks()
         {
-			Cube boneBlock = Main.Registry.CubeRegistry.Get("brittle_bone_block");
+			Cube boneBlock = GlobalState.Registry.CubeRegistry.Get("brittle_bone_block");
 
 			const int searchRadius = 4;
 
@@ -490,7 +402,7 @@ namespace ViMG.Entities
                     {
 						CubePosition checkPos = CubePosition.FromWorldSpace(Position) + new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == boneBlock)
+						if (world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == boneBlock)
                         {
 							trackBoneBlockPosition = checkPos;
 

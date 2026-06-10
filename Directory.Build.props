@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
+	<!-- TEMPORARY -->
+	<DefineConstants>$(DefineConstants);NOTRACY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>$(DefineConstants);NOTRACY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RUNNING_TESTS)' == 'true'">
+	<DefineConstants>$(DefineConstants);RUNNING_TESTS;NOTRACY</DefineConstants>
+  </PropertyGroup>
+</Project>

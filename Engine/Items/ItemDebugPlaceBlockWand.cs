@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,7 +18,7 @@ namespace ViMG.Items
     {
         private const int MAX_PLACEABLE_BLOCKS = 80;
 
-        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand", new RectangleF(64, 64, 16, 16))
+        public ItemDebugPlaceBlockWand() : base("debug_placeblock_wand")
         {
             name = "DEBUG Place block wand";
             description = "Places blocks. For use in building.";
@@ -38,13 +41,13 @@ namespace ViMG.Items
         {
             if (player.IsLooking && player.CanPlace)
             {
-                Cube startCube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+                Cube startCube = player.world.ChunkManager.CubeView.GetCube(player.LookAtPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
                 //TODO safety
                 //This doesn't have the safety checks anymore.
-                CubePosition[] positions = GetAffectedPositions(player, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out int num);
+                CubePosition[] positions = GetAffectedPositions(player.world.ChunkManager.CubeView, inventory.Get(index), player.Position, player.LookAtPos.InWorldSpace(), player.LookAtNormal, out int num);
 
-                player.world.ChunkManager.CubeView.SetCubes(positions, startCube.Id, 0, num);
+                player.world.ChunkManager.CubeView.SetCubes(positions[..num], startCube.Id);
 
                 actionStats = new ActionStats(0.25f);
                 return true;
@@ -60,9 +63,9 @@ namespace ViMG.Items
 
         //TODO performance
         //Batching gets
-        public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+        public CubePosition[] GetAffectedPositions(ICubeGetter cubeView, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
         {
-            Cube startCube = player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+            Cube startCube = cubeView.GetCube(CubePosition.FromWorldSpace(hit)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
             if (normal.X != 0 && normal.Y == 0 && normal.Z == 0)
             {
@@ -111,17 +114,14 @@ namespace ViMG.Items
                 {
                     visitedPositions.Add(pos);
 
-                    if (player.world.ChunkManager.IsInWorldBounds(pos) && player.world.ChunkManager.IsInWorldBounds(checkPos))
+                    if (cubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == GlobalState.Registry.CubeRegistry.Air &&
+                        cubeView.GetCube(checkPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == startCube)
                     {
-                        if (player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air) == Main.Registry.CubeRegistry.Air && 
-                            player.world.ChunkManager.CubeView.GetCube(checkPos).GetOrDefault(Main.Registry.CubeRegistry.Air) == startCube)
-                        {
-                            validPositions[numPlaced++] = pos;
+                        validPositions[numPlaced++] = pos;
 
-                            for (int i = 0; i < 4; i++)
-                            {
-                                positions.Enqueue(pos + useOffsets[i]);
-                            }
+                        for (int i = 0; i < 4; i++)
+                        {
+                            positions.Enqueue(pos + useOffsets[i]);
                         }
                     }
                 }
@@ -137,6 +137,13 @@ namespace ViMG.Items
         public bool CanPredictAir()
         {
             return true;
+        }
+    }
+
+    public class ClientItemDebugPlaceBlockWand : ClientItem
+    {
+        public ClientItemDebugPlaceBlockWand(Item item) : base(item, new RectangleF(64, 64, 16, 16))
+        {
         }
     }
 }

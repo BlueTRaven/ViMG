@@ -1,5 +1,6 @@
 ﻿using BrNineSlice;
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -41,12 +42,12 @@ namespace ViMG.UIs
             UI.EndParent();
         }
 
-        private static NineSlice tooltipPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+        private static NineSlice tooltipPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
             new RectangleF(256, 64, 64, 64), 16);
         private static TextHelper.FontInfo tooltipLabelTitleFI = new TextHelper.FontInfo(
-            Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
         private static TextHelper.FontInfo tooltipLabelDescFI = new TextHelper.FontInfo(
-            Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true);
+            GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true);
         public static void MakeTooltip(Vector2 position, string title, string description)
         {
             const float minWidth = 256;
@@ -85,25 +86,25 @@ namespace ViMG.UIs
             Vector2 labelOffset = new Vector2(0, 12 * scale);
 
             RectangleF rect = new RectangleF(position, 16 * scale, 16 * scale);
-            Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.GetMaterial().Diffuse, coinsCopper.item.SourceRect));
+            Button button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsCopper.item.Client.GetMaterial().Diffuse, coinsCopper.item.Client.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsCopper.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsCopper.item.GetName(coinsCopper) + " x" + coinsCopper.num, coinsCopper.item.GetDescription(coinsCopper));
 
             rect = new RectangleF(position.X + 16 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.GetMaterial().Diffuse, coinsBronze.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsBronze.item.Client.GetMaterial().Diffuse, coinsBronze.item.Client.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsBronze.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsBronze.item.GetName(coinsBronze) + " x" + coinsBronze.num, coinsBronze.item.GetDescription(coinsBronze));
 
             rect = new RectangleF(position.X + 32 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.GetMaterial().Diffuse, coinsSilver.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsSilver.item.Client.GetMaterial().Diffuse, coinsSilver.item.Client.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsSilver.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsSilver.item.GetName(coinsSilver) + " x" + coinsSilver.num, coinsSilver.item.GetDescription(coinsSilver));
 
             rect = new RectangleF(position.X + 48 * scale, position.Y, 16 * scale, 16 * scale);
-            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.GetMaterial().Diffuse, coinsGold.item.SourceRect));
+            button = UI.MakeButton(new ButtonConstructionParameters(rect, coinsGold.item.Client.GetMaterial().Diffuse, coinsGold.item.Client.SourceRect));
             UI.MakeLabel(new UI.LabelConstructionParameters(coinsGold.num.ToString(), fi, 200, rect.Position + labelOffset));
             if (button.hovered)
                 MakeTooltip(rect.Position, coinsGold.item.GetName(coinsGold) + " x" + coinsGold.num, coinsGold.item.GetDescription(coinsGold));

@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <MonoGamePlatform>Windows</MonoGamePlatform>
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Tracy-CSharp" Version="0.10.0.2" />
+		<PackageReference Include="Tracy-CSharp" Version="0.11.1" />
 	</ItemGroup>
 	
 	<ItemGroup>
@@ -19,7 +19,6 @@
 		<ProjectReference Include="..\BrUtility\BrNineSlice\BrNineSlice.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\BrUtility\BrUtility\BrUtility.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\Engine\Engine.csproj" />
-		<ProjectReference Include="..\MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj" />
 		<ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj" />
 	</ItemGroup>
 

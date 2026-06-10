@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -18,23 +20,25 @@ namespace ViMG.Items
 		private static AttackStats attackStats = new AttackStats(DamageType.Ranged, 0.95f, 1, 1f);
 
 		private ProjectileManager.ProjectileBatchStats batchStatsWithMusketballs = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-45, 45), new Vector2(-45, 45));
-		private ProjectileManager.ProjectileVisStats visStatsWithMusketballs = new ProjectileManager.ProjectileVisStats(new RectangleF(0, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats statsWithMusketballs = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 4, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE, 1, true, 0.3f, true);
 
 		private ProjectileManager.ProjectileBatchStats batchStats = new ProjectileManager.ProjectileBatchStats(8, new Vector2(-25, 25), new Vector2(-25, 25));
-		private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(16, 0, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 1, 1f,
 			Cube.CUBE_SCALE * 0.5f, Cube.CUBE_SCALE);
 
-		public ItemStoneBlunderbuss() : base("stone_blunderbuss", new RectangleF(80, 128, 16, 16))
+		public ItemStoneBlunderbuss() : base("stone_blunderbuss")
         {
-			name = "Stone Blunderbuss";
-			description = "A blunderbuss crudely made from stone. Don't ask me how they made it.\n" +
+            name = "Stone Blunderbuss";
+			description = "A blunderbuss crudely made from stone. How? Don't ask.\n" +
 				attackStats.GetTooltip() +
 				"Fires high-damage bullets in a large spread. Musketballs are converted into stone shards, with higher damage but an even larger spread.\n" +
 				"Consumes 4 ammo per shot.";
-			flipXInHand = true;
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 128, 16, 16), flipXInHand: true);
         }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -44,8 +48,7 @@ namespace ViMG.Items
 			if (ammo.valid && ammo.num >= 4)
 			{
 				Vector3 direction = Vector3.Normalize(facing) * Cube.CUBE_SCALE * 26;
-				Rectangle3D bounds = new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 5f), new Vector3(Cube.CUBE_SCALE / 2.5f));
-				if (ammo.item == Main.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
+				if (ammo.item == GlobalState.Registry.ItemRegistry.Get("ammo_bullet_musketball"))
                 {
                     actionStats = new ActionStats(attackStatsWithMusketballs);
 					int damage = attackStatsWithMusketballs.damage;
@@ -55,7 +58,7 @@ namespace ViMG.Items
 					statsWithMusketballs.knockback = knockback;
 
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
-						batchStatsWithMusketballs, visStatsWithMusketballs, statsWithMusketballs, bounds, index);
+						batchStatsWithMusketballs, GlobalState.Registry.ProjectileRegistry.Get("musketball").Id, statsWithMusketballs, index);
                 }
                 else
                 {
@@ -67,7 +70,7 @@ namespace ViMG.Items
 					stats.knockback = knockback;
 
 					player.GetWorld().ProjectileManager.AddBatch(player, player.Position, direction, 1.5f, 
-						batchStats, visStats, stats, bounds, index);
+						batchStats, GlobalState.Registry.ProjectileRegistry.Get("shard").Id, stats, index);
 				}
 			
 				inventory.Remove(ammoIndex, 4);

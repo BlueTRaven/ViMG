@@ -22,7 +22,7 @@ namespace ViMG.Entities
         {
             this.Position = position;
 
-            CanBecomeInactive = false;
+            CanBeDisabled = false;
             AlwaysRender = true;
         }
 
@@ -32,7 +32,7 @@ namespace ViMG.Entities
 
             if (instance != null && instance != this)
             {
-                world.EntityManager.Remove(instance);
+                world.EntityManager.Kill(instance);
                 instance = this;
             }
         }
@@ -40,15 +40,11 @@ namespace ViMG.Entities
         public override void OnUnload()
         {
             base.OnUnload();
-
-            Main.Renderer.EffectEmptyEnabled = false;
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-
-            Main.Renderer.EffectEmptyEnabled = true;
 
             alive += (float)deltaTime;
 
@@ -67,11 +63,11 @@ namespace ViMG.Entities
 
             if (alive >= TOTAL_TIME)
             {
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
             }
 
-            Main.Renderer.EffectEmpty.Parameters["TintColor"].SetValue((Color.CornflowerBlue * 0.75f * sonarAlpha).ToVector4());
-            Main.Renderer.EffectEmpty.Parameters["PositionRadius"].SetValue(new Vector4(Main.camera.Position, sonarr));
+            //Main.Renderer.EffectEmpty.Parameters["TintColor"].SetValue((Color.CornflowerBlue * 0.75f * sonarAlpha).ToVector4());
+            //Main.Renderer.EffectEmpty.Parameters["PositionRadius"].SetValue(new Vector4(Main.camera.Position, sonarr));
         }
 
         //public override void Draw(GraphicsDevice device, Effect effect)

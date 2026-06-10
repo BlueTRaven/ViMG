@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,17 +17,20 @@ namespace ViMG.Items
 {
     public class ItemBookBubble : Item
     {
-        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 8, 8), 5);
+        private static MagicAttackStats magicStats = new MagicAttackStats(new AttackStats(DamageType.Magic, 1f, 8, Cube.CUBE_SCALE), 5);
 
-        public ItemBookBubble() : base("book_spell_bubble", new RectangleF(64, 48, 16, 16))
+        public ItemBookBubble() : base("book_spell_bubble")
         {
             name = "Spellbook: Bubble";
             description = "A spellbook with an explanation of how to cast \"Bubble\".\n" +
                 "Press LMB to use.\n" +
                 magicStats.GetTooltip() +
                 "Creates a floating bubble. Enemies that touch this bubble will cause it to explode and deal heavy damage.\n";
+        }
 
-            flipXInHand = true;
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(64, 48, 16, 16), flipXInHand: true);
         }
 
         public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -33,12 +39,12 @@ namespace ViMG.Items
 
             if (magicStats.CanUse(player))
             {
-                var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+                var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position - (player as IRotatable).Forward * Player.INTERACT_DISTANCE,
                 (Vector3 pos) =>
                 {
                     //TODO check solidity, not id != 0
                     return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
-                        player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+                        player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
                 });
 
                 Vector3 hitPos = lookAtResult.hasHit ? lookAtResult.hit : lookAtResult.end;

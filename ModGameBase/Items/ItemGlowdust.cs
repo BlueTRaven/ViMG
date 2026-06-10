@@ -9,10 +9,15 @@ namespace ViMG.Items
 {
     public class ItemGlowdust : Item
 	{
-		public ItemGlowdust() : base("glowdust", new RectangleF(16, 16, 16, 16))
-		{
-			name = "Glowdust";
-			description = "A strange glowing dust that sticks to your fingers.";
+		public ItemGlowdust() : base("glowdust")
+        {
+            name = "Glowdust";
+			description = "A strange glowing dust that sticks to your fingers.\nIt's combustible and works as a great fuel source.";
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 16, 16, 16));
+        }
 	}
 }

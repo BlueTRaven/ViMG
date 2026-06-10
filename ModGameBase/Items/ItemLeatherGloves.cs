@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemLeatherGloves : Item
     {
-        public ItemLeatherGloves() : base("leather_gloves", new RectangleF(48, 48, 16, 16))
+        public ItemLeatherGloves() : base("leather_gloves")
         {
             name = "Leather Gloves";
             description = "A pair of sturdy leather gloves.\n" +
@@ -21,7 +24,12 @@ namespace ViMG.Items
             Tags.Add("accessory");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 48, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 
@@ -32,7 +40,7 @@ namespace ViMG.Items
         {
             base.OnDealDamage(player, inventory, index, otherHitbox);
 
-            player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(Main.Registry.BuffRegistry.Get("leather_glove")));
+            player.GetBuffManager().AddBuff(new Buffs.Buff.BuffInstance(GlobalState.Registry.BuffRegistry.Get("leather_glove")));
         }
     }
 }

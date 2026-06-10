@@ -11,10 +11,15 @@ namespace ViMG.Items
 {
     public class ItemPaper : Item
     {
-        public ItemPaper() : base("paper", new RectangleF(128, 16, 16, 16))
+        public ItemPaper() : base("paper")
         {
             name = "Paper";
             description = "A simple piece of parchment paper without anything written on it.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(128, 16, 16, 16));
         }
     }
 }

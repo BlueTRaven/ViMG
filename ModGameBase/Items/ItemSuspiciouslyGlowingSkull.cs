@@ -1,4 +1,8 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Clients;
+using Engine.Items;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,37 +17,34 @@ namespace ViMG.Items
 {
     public class ItemSuspiciouslyGlowingSkull : Item
     {
-        private int light = -1;
-
-        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull", new RectangleF(64, 96, 32, 32))
+        public ItemSuspiciouslyGlowingSkull() : base("bs_suspiciously_glowing_skull")
         {
             name = "Suspiciously Glowing Skull";
             description = "A skull that emits a faint red glowing light. It's unsettling...\n" +
                 "Right click on an altar and something will happen.";
         }
 
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemSuspiciouslyGlowingSkull(this);
+        }
+
         public override void Hold(Player player, Inventory inventory, int index)
         {
             base.Hold(player, inventory, index);
 
-            if (light != -1)
+            player.world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
             {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
-
-            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE, Cube.CUBE_SCALE * 8, Color.Red.ToVector4() * 0.4f);
+                position = player.Position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = Color.Red.ToVector4() * 0.4f,
+            });
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)
         {
             base.EndHold(player, inventory, newIndex);
-
-            if (light != -1)
-            {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -54,16 +55,16 @@ namespace ViMG.Items
             (Vector3 pos) =>
             {
                 return player.world.ChunkManager.IsInWorldBounds(pos) &&
-                    player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Touchable;
+                    player.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Touchable;
             });
 
             if (lookAtResult.hasHit)
             {
                 CubePosition pos = CubePosition.FromWorldSpace(lookAtResult.hit);
 
-                Cube cube = player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air);
-                bool a = cube == Main.Registry.CubeRegistry.Get("ancient_altar_placeable");
-                bool b = cube == Main.Registry.CubeRegistry.Get("ancient_altar_generated");
+                Cube cube = player.world.ChunkManager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+                bool a = cube == GlobalState.Registry.CubeRegistry.Get("ancient_altar_placeable");
+                bool b = cube == GlobalState.Registry.CubeRegistry.Get("ancient_altar_generated");
 
                 if (a || b)
                 {
@@ -76,6 +77,26 @@ namespace ViMG.Items
             }
 
             return valid;
+        }
+    }
+
+    public class ClientItemSuspiciouslyGlowingSkull : ClientItem
+    {
+        public ClientItemSuspiciouslyGlowingSkull(Item item) : base(item, new RectangleF(64, 96, 32, 32))
+        {
+        }
+
+        public override void Hold(ClientStates client, SyncedEntity player, Inventory inventory, int index)
+        {
+            base.Hold(client, player, inventory, index);
+
+            client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+            {
+                position = player.position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = Color.Red.ToVector4() * 0.4f,
+            });
         }
     }
 }

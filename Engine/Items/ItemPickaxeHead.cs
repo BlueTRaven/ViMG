@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,14 +9,14 @@ using ViMG.Rendering;
 
 namespace ViMG.Items
 {
-    public class ItemPickaxeHead : Item, IHasAreaEffect
+	public class ItemPickaxeHead : Item, IHasAreaEffect
 	{
-		public readonly struct PickaxeStats 
+		public readonly struct PickaxeStats
 		{
 			public readonly float cooldownTime;
 			public readonly int mineLevel;
-            public readonly int mineRate;
-            public readonly int height;
+			public readonly int mineRate;
+			public readonly int height;
 			public readonly int width;
 			public readonly int depth;
 
@@ -23,33 +24,36 @@ namespace ViMG.Items
 			{
 				this.cooldownTime = cooldownTime;
 				this.mineLevel = mineLevel;
-                this.mineRate = mineRate;
-                this.height = height;
+				this.mineRate = mineRate;
+				this.height = height;
 				this.width = width;
 				this.depth = depth;
 			}
 
 			public string GetTooltip()
-            {
+			{
 				return String.Format("{0} Mining Level\n" +
 					"Mining Rate: {1}\n" +
 					"{2} Speed\n" +
 					"Size: {3}x{4}x{5} Width by Height by Depth\n", ((Util.MineTier)mineLevel).ToString(), mineRate, Util.CooldownToString(cooldownTime), width + 1, height + 1, depth + 1);
-            }
+			}
 		}
 
-		private Color color;
-		private PickaxeStats stats;
-		private string materialName;
+		private readonly PickaxeStats stats;
+		private readonly string materialName;
+		private readonly Color color;
 
-		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material,
-            new RectangleF(0, 144, 16, 16))
+		public ItemPickaxeHead(string material, Color color, PickaxeStats stats) : base("pickaxe_head_" + material)
 		{
 			this.materialName = char.ToUpper(material[0]) + material.Substring(1);
-
-			this.color = color;
-			this.stats = stats;
+            this.color = color;
+            this.stats = stats;
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemPickaxeHead(this, color);
+        }
 
 		public string GetItemMaterial()
 		{
@@ -67,7 +71,7 @@ namespace ViMG.Items
 		}
 
 		private CubePosition[] cachedAffectedPositions;
-		public CubePosition[] GetAffectedPositions(Player player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
+		public CubePosition[] GetAffectedPositions(ICubeGetter player, ItemInstance item, Vector3 standingPosition, Vector3 hit, Vector3 normal, out int num)
 		{
 			var lookAtPos = CubePosition.FromWorldSpace(hit);
 
@@ -195,20 +199,29 @@ namespace ViMG.Items
 			return cachedAffectedPositions;
 		}
 
-		public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
-		{
-			if (meshItemQuadInWorld.IBO == null)
-				MakeMesh(device);
-
-			Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-                meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
-		}
-
-		public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
-		{
-			//base.DrawInInventory(batch, position, scale);
-
-			batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
-		}
+		
 	}
+
+    public class ClientItemPickaxeHead : ClientItem
+    {
+		private readonly Color color;
+        public ClientItemPickaxeHead(Item item, Color color) : base(item, new RectangleF(0, 144, 16, 16))
+        {
+            this.color = color;
+        }
+
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
+        {
+            if (meshItemQuadInWorld.IBO == null)
+                MakeMesh(device);
+
+            renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+                meshItemQuadInWorld, transform, SourceRect, color.ToVector3()));
+        }
+
+        public override void DrawInInventory(SpriteBatch batch, ItemInstance item, Vector2 position, float scale)
+        {
+            batch.Draw(GetMaterial().Diffuse, position, SourceRect.ToRectangle(), color, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,12 +14,17 @@ namespace ViMG.Items
 {
     public class ItemScrollSonar : Item
     {
-        public ItemScrollSonar() : base("scroll_sonar", new RectangleF(112, 32, 16, 16))
+        public ItemScrollSonar() : base("scroll_sonar")
         {
             name = "Scroll: Void";
             description = "Locates nearby empty spaces.\n" +
                 "Magic Use: 5\n" +
                 "Consumed on use.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 32, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

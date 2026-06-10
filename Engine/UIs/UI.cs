@@ -1,8 +1,10 @@
 ﻿using BrNineSlice;
 using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -252,32 +254,48 @@ namespace ViMG.UIs
 		{
             public TextHelper.WrappedText text;
             public TextHelper.FontInfo font;
+			public Enums.Alignment alignment;
             public float width;
+			public float height;
             public Vector2 position;
 			public Color color;
 
 			public bool valid;
 
-            public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
+            public LabelConstructionParameters(string text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null, Enums.Alignment alignment = Enums.Alignment.TopLeft, float height = 0)
             {
 				this.text = TextHelper.GetWrappedText(font, text, width);
+				this.alignment = alignment;
                 this.font = font;
                 this.width = width;
+				this.height = height;
                 this.position = position;
 				this.color = color ?? Color.White;
 
 				valid = true;
             }
 
-            public LabelConstructionParameters(TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
+            public LabelConstructionParameters(TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null, Enums.Alignment alignment = Enums.Alignment.TopLeft, float height = 0)
             {
 				this.text = text;
+				this.alignment = alignment;
                 this.font = font;
                 this.width = width;
+				this.height = height;
                 this.position = position;
                 this.color = color ?? Color.White;
 
                 valid = true;
+            }
+
+			public LabelConstructionParameters WithNewText(string text)
+			{
+                var newText = TextHelper.GetWrappedText(font, text, width);
+
+				return this with
+				{
+					text = newText,
+				};
             }
         }
 
@@ -288,16 +306,34 @@ namespace ViMG.UIs
 			public readonly TextHelper.WrappedText text;
 			public readonly TextHelper.FontInfo font;
 			public readonly float width;
-			public readonly Vector2 position;
+			public readonly float height;
+			public readonly Enums.Alignment alignment;
+            public readonly Vector2 position;
 			public readonly Color color;
 
-			internal Label(ID id, TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null)
+			internal Label(ID id, LabelConstructionParameters parameters)
+			{
+                this.id = id;
+
+                this.text = parameters.text;
+                this.font = parameters.font;
+                this.alignment = parameters.alignment;
+                this.width = parameters.width;
+                this.height = parameters.height;
+                this.position = parameters.position;
+
+                this.color = parameters.color;
+            }
+
+			internal Label(ID id, TextHelper.WrappedText text, TextHelper.FontInfo font, float width, Vector2 position, Color? color = null, Enums.Alignment alignment = Enums.Alignment.TopLeft, float height = 0)
 			{
 				this.id = id;
 
 				this.text = text;
+				this.alignment = alignment;
 				this.font = font;
 				this.width = width;
+				this.height = height;
 				this.position = position;
 
 				this.color = color ?? Color.White;
@@ -309,15 +345,29 @@ namespace ViMG.UIs
 			public RectangleF bounds;
 
 			public LabelConstructionParameters label;
-			public Texture2D texture;
+			public Texture2D? texture;
 			public Color color;
 			public Color hoveredColor;
 			public Color clickedColor;
-			public RectangleF sourceRect;
+            public NineSlice? nsSource;
+            public NineSlice? nsHovered;
+            public NineSlice? nsClicked;
+            public RectangleF sourceRect;
 			public RectangleF hoveredSourceRect;
 			public RectangleF clickedSourceRect;
 
 			public bool valid;
+
+			public ButtonConstructionParameters(RectangleF bounds, LabelConstructionParameters labelParams, NineSlice source, NineSlice hovered, NineSlice clicked)
+			{
+				this.bounds = bounds;
+				this.label = labelParams;
+				this.nsSource = source;
+				this.nsHovered = hovered;
+				this.nsClicked = clicked;
+
+				valid = true;
+			}
 
 			public ButtonConstructionParameters(RectangleF bounds, Texture2D texture,
 				RectangleF? sourceRect)
@@ -439,13 +489,37 @@ namespace ViMG.UIs
 			public readonly RectangleF bounds;
 
 			public readonly Label label;
-			public readonly Texture2D texture;
+			public readonly Texture2D? texture;
 			public readonly Color color;
             public readonly Color hoveredColor;
             public readonly Color clickedColor;
+			public readonly NineSlice? nsSource;
+            public readonly NineSlice? nsHovered;
+            public readonly NineSlice? nsClicked;
             public readonly RectangleF sourceRect;
 			public readonly RectangleF hoveredSourceRect;
 			public readonly RectangleF clickedSourceRect;
+
+			internal Button(RectangleF bounds, ID id, Label label, ButtonConstructionParameters parameters, bool hovered, bool clickLeft, bool heldLeft, bool clickRight, bool heldRight) 
+			{
+                this.hovered = hovered;
+                this.clickLeft = clickLeft;
+                this.heldLeft = heldLeft;
+                this.clickRight = clickRight;
+                this.heldRight = heldRight;
+                this.bounds = bounds;
+                this.texture = parameters.texture;
+                this.color = parameters.color;
+                this.hoveredColor = parameters.hoveredColor;
+                this.clickedColor = parameters.clickedColor;
+				this.nsSource = parameters.nsSource;
+				this.nsHovered = parameters.nsHovered;
+				this.nsClicked = parameters.nsClicked;
+                this.sourceRect = parameters.sourceRect;
+                this.hoveredSourceRect = parameters.hoveredSourceRect;
+                this.clickedSourceRect = parameters.clickedSourceRect;
+				this.label = label;
+            }
 
 			internal Button(ID id, bool hovered, 
 				bool clickLeft, bool heldLeft, bool clickRight, bool heldRight,
@@ -476,15 +550,13 @@ namespace ViMG.UIs
 		{
 			public readonly Button button;
 			public readonly ItemInstance item;
-            public readonly int maxStackSize;
 			public readonly bool lookForInputs;
 			public readonly bool lookForOutputs;
 
-            public ItemSlot(Button button, ItemInstance item, bool lookForInputs, bool lookForOutputs, int maxStackSize = -1)
+            public ItemSlot(Button button, ItemInstance item, bool lookForInputs, bool lookForOutputs)
 			{
 				this.button = button;
 				this.item = item;
-                this.maxStackSize = maxStackSize;
 
 				this.lookForInputs = lookForInputs;
 				this.lookForOutputs = lookForOutputs;
@@ -637,7 +709,7 @@ namespace ViMG.UIs
 			if (parameters.valid)
 			{
 				ID id = MakeID(parameters.position);
-				Label label = new Label(id, parameters.text, parameters.font, parameters.width, id.position, parameters.color);
+				Label label = new Label(id, parameters.text, parameters.font, parameters.width, id.position, parameters.color, parameters.alignment, parameters.height);
 				labels.Add(label);
 
 				return label;
@@ -649,9 +721,9 @@ namespace ViMG.UIs
 		public static Button MakeButton(ButtonConstructionParameters parameters)
         {
 			ID id = MakeID(parameters.bounds.Position);
-			RectangleF mouseBounds = new RectangleF(id.position, parameters.bounds.Size);
+			RectangleF newBounds = new RectangleF(id.position, parameters.bounds.Size);
 
-			bool hovered = mouseBounds.Contains(Main.inputManager.GetMousePosition().ToVector2()) && isEnabled;
+			bool hovered = newBounds.Contains(Main.inputManager.GetMousePosition().ToVector2()) && isEnabled;
 			bool clickedLeft = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.LeftButton);
 			bool heldLeft = hovered && Main.inputManager.IsHeld(A1r.Input.MouseInput.LeftButton);
 			bool clickedRight = hovered && Main.inputManager.JustPressed(A1r.Input.MouseInput.RightButton);
@@ -666,10 +738,11 @@ namespace ViMG.UIs
 
 			EndParent();
 
-			Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, 
-				heldRight, mouseBounds, parameters.texture, parameters.color, parameters.hoveredColor, 
-				parameters.clickedColor, constructedLabel, parameters.sourceRect, parameters.hoveredSourceRect, 
-				parameters.clickedSourceRect);
+			Button button = new Button(newBounds, id, constructedLabel, parameters, hovered, clickedLeft, heldLeft, clickedRight, heldRight);
+			//Button button = new Button(id, hovered, clickedLeft, heldLeft, clickedRight, 
+			//	heldRight, mouseBounds, parameters.texture, parameters.color, parameters.hoveredColor, 
+			//	parameters.clickedColor, constructedLabel, parameters.sourceRect, parameters.hoveredSourceRect, 
+			//	parameters.clickedSourceRect);
 			buttons.Add(button);
 
 			return button;
@@ -741,11 +814,11 @@ namespace ViMG.UIs
 			EndParent();
 		}
 
-        public static ItemSlot MakeItemSlot(Button button, ItemInstance item, int maxStackSize = -1)
+        public static ItemSlot MakeItemSlot(Button button, ItemInstance item)
 		{
 			bool lookForInputs = button.hovered && Main.inputManager.JustPressed(Keys.U);
 			bool lookForOutputs = button.hovered && Main.inputManager.JustPressed(Keys.R);
-			ItemSlot itemSlot = new ItemSlot(button, item, lookForInputs, lookForOutputs, maxStackSize);
+			ItemSlot itemSlot = new ItemSlot(button, item, lookForInputs, lookForOutputs);
 
 			if (item.item != null && button.hovered)
 			{
@@ -771,26 +844,40 @@ namespace ViMG.UIs
 
 			foreach (Button button in buttons)
 			{
-				RectangleF sourceRect = button.sourceRect;
-				Color color = button.color;
-
-				if (button.hovered)
+				if (button.texture == null && button.nsSource != null)
 				{
-					sourceRect = button.hoveredSourceRect;
-					color = button.hoveredColor;
+					if (button.hovered && button.nsHovered != null)
+					{
+						button.nsHovered.Draw(batch, button.color, button.bounds, scale, 0.75f);
+					}
+					else if (button.clickLeft && button.nsClicked != null)
+					{
+						button.nsClicked.Draw(batch, button.color, button.bounds, scale, 0.75f);
+					}
+					else button.nsSource.Draw(batch, button.color, button.bounds, scale, 0.75f);
 				}
-				else if (button.clickLeft)
+				else
 				{
-					sourceRect = button.clickedSourceRect;
-					color = button.clickedColor;
+					RectangleF sourceRect = button.sourceRect;
+					Color color = button.color;
+
+					if (button.hovered)
+					{
+						sourceRect = button.hoveredSourceRect;
+						color = button.hoveredColor;
+					}
+					else if (button.clickLeft)
+					{
+						sourceRect = button.clickedSourceRect;
+						color = button.clickedColor;
+					}
+
+					Vector2 s = new Vector2(scale);
+					if (button.texture == DrawHelper.WhitePixel)
+						s *= button.bounds.Size.ToVector2();
+
+					batch.Draw(button.texture, button.bounds.Position, sourceRect.ToRectangle(), color, 0, Vector2.Zero, s, SpriteEffects.None, 0.75f);
 				}
-
-				Vector2 s = new Vector2(scale);
-				if (button.texture == DrawHelper.WhitePixel)
-					s *= button.bounds.Size.ToVector2();
-
-				batch.Draw(button.texture, button.bounds.Position, sourceRect.ToRectangle(), color, 0, Vector2.Zero, s, SpriteEffects.None, 0.75f);
-				
 				/*if (button.label.text != null)
 					TextHelper.DrawText(batch, button.label.font, button.label.text, Color.White, 
 						new RectangleF(button.label.position, button.label.width, 0).ToRectangle(), 
@@ -799,12 +886,34 @@ namespace ViMG.UIs
 
 			foreach (Label label in labels)
 			{
-				Rectangle bounds = new RectangleF(label.position, label.width, 0).ToRectangle();
+				Rectangle bounds = new RectangleF(label.position, label.width, label.height).ToRectangle();
 
-                Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length,
-					bounds, Enums.Alignment.TopLeft);
+				// Labels are aligned individually on the X axis, but aligned as a group on the Y axis
+				float verticalAlignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length, bounds, label.alignment).Y;
 
-				TextHelper.DrawText(batch, label.font, label.text, alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
+                int previ = 0;
+				int i = label.text.offset;
+				while (true)
+				{
+					if (i == label.text.length || label.text.text[i] == '\n')
+					{
+                        Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, previ, i - previ,
+							bounds, label.alignment);
+						alignmentOffset.Y = verticalAlignmentOffset;
+
+                        TextHelper.DrawText(batch, label.font, new TextHelper.WrappedText(label.text.wrapWidth, label.text.text, previ, i - previ), alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
+
+						bounds.Y += (int)(label.font.StringHeight(label.text.text.AsSpan()[previ..i]) * scale * label.font.size);
+
+                        if (i == label.text.length) break;
+						previ = i + 1;
+                    }
+					i += 1;
+                }
+                //Vector2 alignmentOffset = TextHelper.GetAlignmentOffset(label.font, label.text.text, label.text.offset, label.text.length,
+				//	bounds, label.alignment);
+
+				//TextHelper.DrawText(batch, label.font, label.text, alignmentOffset, label.color, bounds, 1, TextHelper.OverFlowAction.None);
 
 				//This is exclusively here for drawing textInput's cursor, since textInput uses a label.
 				if (iteration % 60 < 30)
@@ -849,7 +958,7 @@ namespace ViMG.UIs
 		//private static TextHelper.FontInfo tooltipFontLabel;
 		/*private static void DrawTooltip(SpriteBatch batch, Tooltip tooltip, float scale)
 		{
-            var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+            var fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
             Vector2 mousePos = Main.inputManager.GetMousePosition().ToVector2();
 
@@ -895,7 +1004,7 @@ namespace ViMG.UIs
 					int minW = Options.CurrentWindowResolution.X / 10;
 					int maxW = Options.CurrentWindowResolution.X / 5;
 
-					var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
+					var fi = new TextHelper.FontInfo(GlobalState.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true, Color.Black);
 
 					string name = itemSlot.item.item.GetName(itemSlot.item);
 					string description = itemSlot.item.item.GetDescription(itemSlot.item);
@@ -926,7 +1035,7 @@ namespace ViMG.UIs
 
 			if (itemSlot.item.item != null)
 			{
-				itemSlot.item.item.DrawInInventory(batch, itemSlot.item, itemSlot.button.bounds.Position, scale);
+				itemSlot.item.item.Client?.DrawInInventory(batch, itemSlot.item, itemSlot.button.bounds.Position, scale);
 				//batch.Draw(itemSlot.item.item.Texture, itemSlot.button.bounds.Position, itemSlot.item.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.86f);
 
 				int num = itemSlot.item.num;
@@ -939,7 +1048,7 @@ namespace ViMG.UIs
 					numString = "\u221E";
 				else numString = num.ToString();
 
-				TextHelper.DrawText(batch, new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
+				TextHelper.DrawText(batch, new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black),
 					numString, Color.White, itemSlot.button.bounds.ToRectangle(), Enums.Alignment.BottomRight, 
 					64, 0.87f, overflowAction: TextHelper.OverFlowAction.None);
 			}

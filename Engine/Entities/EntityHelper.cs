@@ -1,16 +1,96 @@
-﻿using BrUtility;
+﻿using BepuPhysics.Constraints;
+using BrUtility;
+using Engine.Common;
 using Microsoft.Xna.Framework;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.Buffs;
 using ViMG.Cubes;
 
 namespace ViMG.Entities
 {
     public static class EntityHelper
     {
+        public static bool UnloadIfDistanceFromPlayers(Entity entity, float distance = 128 * Cube.CUBE_SCALE)
+        {
+            if (entity.world.player.All(x => x == null || (x.Position - entity.Position).Length() > distance))
+            {
+                entity.world.EntityManager.Unload(entity);
+                return true;
+            }
+
+            return false;
+        }
+
+
+        public static bool DieIfDaytime(Entity entity)
+        {
+            if (entity.world.IsDay())
+            {
+                entity.world.EntityManager.Kill(entity);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool UnloadIfDaytime(Entity entity)
+        {
+            if (entity.world.IsDay())
+            {
+                entity.world.EntityManager.Unload(entity);
+                return true;
+            }
+            return false;
+        }
+
+        public struct DamageTimeOfDayConfig
+        {
+            public float MinTime;
+            public float MaxTime;
+            public int DamageAmt;
+            public float DamageTime;
+            // TODO: debuff
+        }
+
+        // NOTE: time is in time-of-day, meaning 0 to 0.5 = day, 0.5 to 1 = night
+        // TODO: correctly handle wrapping
+        public static bool TakeDamageIfTimeOfDay<T>(T entity, DamageTimeOfDayConfig config, ref float timer, double deltaTime) where T : Entity, IHasStats
+        {
+            if (timer > 0)
+                timer -= (float)deltaTime;
+
+            float normTime = entity.world.GetNormalizedTime();
+
+            if (normTime > config.MinTime && normTime < config.MaxTime)
+            {
+                if (timer <= 0)
+                {
+                    TakeDamage(entity, config.DamageAmt);
+                    timer += config.DamageTime;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static void TakeDamage<T>(T entity, int damage) where T : Entity, IHasStats
+        {
+            var stats = entity.GetStats();
+            stats.HP -= damage;
+
+            if (stats.HP <= 0)
+            {
+                stats.HP = 0;
+                entity.world.EntityManager.Kill(entity);
+            }
+            
+            entity.SetStats(stats);
+        }
+
         public struct DirectionalSourceRect
         {
             public RectangleF front;
@@ -21,28 +101,61 @@ namespace ViMG.Entities
             public RectangleF above;
         }
 
-        public static RectangleF GetEntityDirectionalSourceRect(Vector3 facing, DirectionalSourceRect directionalSourceRect)
+        public enum DirectionalSide
+        {
+            Front,
+            Back,
+            Left,
+            Right,
+            Top,
+            Bottom,
+        }
+
+        public static DirectionalSide GetEntityDirectionalSide(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
         {
             Vector2 facingXZ = Vector2.Normalize(facing.XZ());
-            Vector2 forwardXZ = Vector2.Normalize(Main.camera.Forward.XZ());
+            Vector2 forwardXZ = Vector2.Normalize(camera.Forward.XZ());
 
             float ang = float.Acos(Vector2.Dot(facingXZ, forwardXZ));
-            
-            RectangleF sourceRect = directionalSourceRect.front;
+
+            DirectionalSide side = DirectionalSide.Front;
 
             if (ang > MathHelper.ToRadians(180 - 45))
             {
                 //back
-                sourceRect = directionalSourceRect.back;
+                side = DirectionalSide.Back;
             }
             else if (ang > MathHelper.ToRadians(45))
             {
                 //sides
-                sourceRect = directionalSourceRect.sideRight;
+                side = DirectionalSide.Right;
 
-                float leftDot = Vector2.Dot(facing.XZ(), Main.camera.Right.XZ());
+                float leftDot = Vector2.Dot(facing.XZ(), camera.Right.XZ());
 
                 if (leftDot < 0)
+                {
+                    side = DirectionalSide.Left;
+                }
+            }
+
+            return side;
+        }
+
+        public static RectangleF GetEntityDirectionalSourceRect(DirectionalSide side, DirectionalSourceRect directionalSourceRect)
+        {
+            RectangleF sourceRect = directionalSourceRect.front;
+
+            if (side == DirectionalSide.Back)
+            {
+                //back
+                sourceRect = directionalSourceRect.back;
+            }
+            else if (side == DirectionalSide.Left || side == DirectionalSide.Right)
+            {
+                //sides
+                sourceRect = directionalSourceRect.sideRight;
+
+                if (side == DirectionalSide.Left)
                 {
                     if (directionalSourceRect.sideLeft == RectangleF.Empty)
                     {
@@ -56,8 +169,18 @@ namespace ViMG.Entities
                     }
                 }
             }
+            else
+            {
+                // TODO top and bottom
+            }
 
             return sourceRect;
+        }
+
+        public static RectangleF GetEntityDirectionalSourceRect(Engine.Common.Camera camera, Vector3 facing, DirectionalSourceRect directionalSourceRect)
+        {
+            var side = GetEntityDirectionalSide(camera, facing, directionalSourceRect);
+            return GetEntityDirectionalSourceRect(side, directionalSourceRect);
         }
 
         //adds velocity if it would not put the velocity over the velocity cap.
@@ -164,9 +287,13 @@ namespace ViMG.Entities
 
         public static void CalculateKnockback(ref Vector3 velocity, HitboxManager.Hitbox other, float kbMod = 1)
         {
-            Vector3 direction = Vector3.Normalize(other.direction);
+            Vector3 direction = Vector3.Zero;
+            // Fix NaNSplosion
+            if (other.direction != Vector3.Zero)
+                direction = Vector3.Normalize(other.direction);
+
             //knockback shouldn't be allowed to hit enemies down
-            if (direction.Y < 0)
+            if (direction.Y <= 0)
                 direction.Y = 1;
 
             Vector3 scaledKnockback = direction * new Vector3(Cube.CUBE_SCALE * 3.2f, Cube.CUBE_SCALE * 6.4f, Cube.CUBE_SCALE * 3.2f);

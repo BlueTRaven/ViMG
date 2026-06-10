@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace ViMG.Generation
     {
         private Cube stone;
 
-        public ChunkGeneratorCatacombs(int seed = 1337) : base(1, seed)
+        public ChunkGeneratorCatacombs(int layer, int seed = 1337) : base(layer, seed)
         {
         }
 
@@ -21,7 +22,7 @@ namespace ViMG.Generation
         {
             base.Initialize(sizeInCubesXZ, sizeInChunksY);
 
-            stone = Main.Registry.CubeRegistry.Get("stone_crypt");
+            stone = GlobalState.Registry.CubeRegistry.Get("stone_crypt");
         }
 
         public override void GenerateChunkBroad(ChunkGeneratorTasker.BroadGenerationState state)
@@ -64,8 +65,8 @@ namespace ViMG.Generation
                         if ((simplex * attenuationX < 0.25f && xDistance.Length() < SIZE) || 
                             (simplex * attenuationZ < 0.25f && zDistance.Length() < SIZE) || 
                             (simplex * attenuationY < 0.25f && yDistance.Length() < SIZE)) 
-                            state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, 0);
-                        else state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, stone.Id);
+                            state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, 0, false);
+                        else state.world.ChunkManager.CubeView.SetCube(cubeSpacePos, stone.Id, false);
                     }
                 }
             }

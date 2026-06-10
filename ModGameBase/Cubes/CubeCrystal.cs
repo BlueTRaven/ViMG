@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
+using Engine.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,16 +13,48 @@ using ViMG.Cubes;
 using ViMG.Items;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
+using static ViMG.Cubes.Cube;
+using static ViMG.UIs.UI;
 
 namespace ViMG.Cubes
 {
     public class CubeCrystal : Cube
     {
-        private static VerySimpleMesh heldMesh;
-
-        public CubeCrystal() : base("crystal_quartz", new RectangleF(48, 64, 16, 16), Color.White, 1)
+        public CubeCrystal() : base("crystal_quartz", 1)
         {
             Transparency = TransparencyValue.Transparent;
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubeCrystal(this);
+        }
+    
+        public override bool ShouldMeshPass(RenderPass pass)
+        {
+            return pass == RenderPass.Opaque;
+        }
+
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+        {
+            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
+            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
+        }
+
+        public override void GetDrops(List<ItemInstance> itemsToDrop)
+        {
+            base.GetDrops(itemsToDrop);
+
+            DropSelf(itemsToDrop);
+        }
+    }
+
+    public class ClientCubeCrystal : ClientCube
+    {
+        private static VerySimpleMesh heldMesh;
+
+        public ClientCubeCrystal(Cube cube) : base(cube, new RectangleF(48, 64, 16, 16), Color.White)
+        {
         }
 
         public override VerySimpleMesh GetHeldMesh(GraphicsDevice device)
@@ -43,33 +77,15 @@ namespace ViMG.Cubes
 
                 heldMesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
                 //heldMesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("cubes_textures"));
+                //heldMesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, GlobalState.assetsManager.GetAsset<Texture2D>("cubes_textures"));
             }
 
             return heldMesh;
         }
 
-        public override bool ShouldMeshPass(RenderPass pass)
+        public override RectangleF GetHeldSourceRect(ClientStates sclient)
         {
-            return pass == RenderPass.Opaque;
-        }
-
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
-        {
-            parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
-            DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);
-        }
-
-        public override RectangleF GetHeldSourceRect(World world)
-        {
-            return GetSourceRect(RenderPass.Transparent, default, new ChunkRenderMesher.CubeMeshingParameters() { id = Id, cube = this, faces = MeshHelper.CubeFace.ALL });
-        }
-
-        public override void GetDrops(List<ItemInstance> itemsToDrop)
-        {
-            base.GetDrops(itemsToDrop);
-
-            DropSelf(itemsToDrop);
+            return GetSourceRect(RenderPass.Transparent, default, new ChunkRenderMesher.CubeMeshingParameters() { id = cube.Id, cube = cube, faces = MeshHelper.CubeFace.ALL });
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ViMG.Rendering
 {
-    public class RendererBloom
+    public class RendererBloom : IDisposable
     {
         private const int NUM_MIPS = 4;
         private RenderTarget2D[] mips;
@@ -27,13 +28,14 @@ namespace ViMG.Rendering
             AlphaSourceBlend = Blend.One,
             AlphaDestinationBlend = Blend.One,
         };
+        private bool disposedValue;
 
         public RendererBloom(GraphicsDevice device)
         {
             this.device = device;
 
-            downsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_downsample");
-            upsampleEffect = Main.assetsManager.GetAsset<Effect>("bloom_upsample");
+            downsampleEffect = GlobalState.AssetsManager.GetAsset<Effect>("bloom_downsample");
+            upsampleEffect = GlobalState.AssetsManager.GetAsset<Effect>("bloom_upsample");
 
             ConstructRTs(Options.CurrentWindowResolution);
 
@@ -117,6 +119,36 @@ namespace ViMG.Rendering
             device.BlendState = oldBlendState;
 
             return sourceTexture;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                }
+
+                foreach (var item in mips)
+                {
+                    item.Dispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~RendererBloom()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

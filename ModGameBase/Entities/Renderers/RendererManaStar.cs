@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ViMG.Entities.EntityHelper;
 using ViMG.Cubes;
 using BrUtility;
 using ViMG.Rendering;
 using Microsoft.Xna.Framework;
+using Engine.Clients;
+using Engine;
 
 namespace ViMG.Entities.Renderers
 {
@@ -18,7 +19,7 @@ namespace ViMG.Entities.Renderers
     {
         private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("mana_star");
-        private static DirectionalSourceRect directionalSourceRect = new DirectionalSourceRect()
+        private static EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
         {
             front = new RectangleF(0, 0, 4, 4),
             back = new RectangleF(0, 0, 4, 4),
@@ -27,77 +28,89 @@ namespace ViMG.Entities.Renderers
 
         public RendererManaStar(GraphicsDevice device) : base("mana_star", device)
         {
+            mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
         }
 
-        private static Type[] types = [typeof(ManaStar)];
-        public override Type[] GetRenderedTypes()
+        private static int[]? types = null;
+        public override int[] GetRenderedTypes()
         {
+            if (types == null)
+                types = [GlobalState.Registry.EntityRegistry.Get<ManaStar>().Id];
             return types;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
+        public override void RenderClientEnt(GraphicsDevice device, double deltaTime, ClientStates client, int type)
         {
-            if (mesh.IBO == null)
-                mesh = MeshHelper.MakeQuad(device, Cube.CUBE_SCALE, Cube.CUBE_SCALE, Enums.Alignment.Bottom);
-
-            //var entities = entityManager.GetAll<ManaStar>();
-
-            //foreach (ManaStar manaStar in entities)
-            var iter = new Iterator<ManaStar>(entities);
-            while(iter.Next(out ManaStar manaStar))
+            for (int i = 0; i < client.Current().entities.MaxEnts; i++)
             {
-                if (manaStar.state == ManaStar.State.InSky || manaStar.state == ManaStar.State.DivingInSky)
+                var reference = client.Current().entities.GetReference(i);
+                if (client.Current().entities.GetTypeById(reference.id) != type) continue;
+
+                var ent = client.currInterpState.entities.GetById(reference.id);
+
+                var position = ent.position;
+                var timer = ent.timers[0];
+
+                var yawPitch = new Vector2(ent.rotation.X, ent.rotation.Y);
+
+                var state = (ManaStar.State)ent.state; //.GetInterpCounter(entCurr, 0);
+                //if (state != ManaStar.State.InSky) Console.WriteLine("{0}", state.ToString());
+
+                if (state == ManaStar.State.InSky || state == ManaStar.State.FallingInSky)
                 {
                     const float FAR_DISTANCE = 70;
                     const float NEAR_DISTANCE = 32;
                     float distance = FAR_DISTANCE;
 
-                    if (manaStar.state == ManaStar.State.DivingInSky)
-                        distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - manaStar.timer / ManaStar.DIVINGINSKY_TIME));
+                    if (state == ManaStar.State.FallingInSky)
+                        distance = MathHelper.Lerp(FAR_DISTANCE, NEAR_DISTANCE, Easings.EaseInCubic(1 - timer / ManaStar.FALLINGINSKY_TIME));
 
-                    Main.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
+                    client.Renderer.DrawsSkyboxPass.Add(new Rendering.RendererDeferred.TransparentDraw(900,
                         material, mesh,
                         Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
                         Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * distance) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y)) *
-                    Matrix.CreateTranslation(Main.camera.Position),
-                        directionalSourceRect.front, Color.White * manaStar.world.GetTimeOfNight()));
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X) *
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position),
+                        // TODO mult by time
+                        directionalSourceRect.front, Color.White /** world.GetTimeOfNight()*/));
                 }
-                else if (manaStar.state == ManaStar.State.DivingInWorld)
+                else if (state == ManaStar.State.FallingInWorld)
                 {
                     const float FAR_DISTANCE = 32;
 
-                    float t = 1 - manaStar.timer / ManaStar.DIVINGINWORLD_TIME;
+                    float t = 1 - timer / ManaStar.FALLINGINWORLD_TIME;
 
                     Matrix lerpStartRotMat = Matrix.CreateRotationX(MathHelper.ToRadians(-90)) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y));
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X);
 
-                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                        Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+                    Matrix lerpEndRotMat = Matrix.CreateRotationX(Math.Clamp(-client.currInterpState.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+                        Matrix.CreateRotationY(-client.currInterpState.camera.RotationEuler.Y);
 
                     Vector3 lerpStartPos = Vector3.Transform(Vector3.Zero, Matrix.CreateTranslation(Vector3.Up * Cube.CUBE_SCALE * FAR_DISTANCE) *
-                        Matrix.CreateRotationX(MathHelper.ToRadians(manaStar.pitchYaw.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(manaStar.pitchYaw.Y)) *
-                    Matrix.CreateTranslation(manaStar.cameraPosition));
-                    Vector3 lerpEndPos = manaStar.Position;
+                        Matrix.CreateRotationX(yawPitch.Y) *
+                        Matrix.CreateRotationY(yawPitch.X) *
+                        Matrix.CreateTranslation(client.currInterpState.camera.Position));
+                    Vector3 lerpEndPos = position;
 
-                    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
+                    RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(client.currInterpState.camera, Vector3.Normalize(lerpEndPos - lerpStartPos), directionalSourceRect);
                     float sx = float.Abs(sourceRect.width / 4f);
                     Vector3 p = Vector3.Lerp(lerpStartPos, lerpEndPos, Easings.EaseInExpo(t));
 
-                    float sortVal = (Main.camera.Position - manaStar.Position).Length();
+                    float sortVal = (client.currInterpState.camera.Position - position).Length();
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
                     material, mesh, lerpStartRotMat * Matrix.CreateTranslation(p),
-                        directionalSourceRect.front, Color.White * manaStar.world.GetTimeOfNight() * (1 - t)));
+                        // TODO mult by time
+                        directionalSourceRect.front, Color.White /** manaStar.world.GetTimeOfNight() * (1 - t)*/));
 
-                    Main.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
+                    client.Renderer.AddTransparentDraw(new Rendering.RendererDeferred.TransparentDraw(sortVal,
                         material, mesh,
                     Matrix.CreateScale(sx, 1, 1) *
                         lerpEndRotMat * Matrix.CreateTranslation(p),
-                        sourceRect, Color.White * manaStar.world.GetTimeOfNight() * t));
+                        // TODO mult by time
+                        sourceRect, Color.White /** manaStar.world.GetTimeOfNight() * t)*/));
                 }
             }
         }

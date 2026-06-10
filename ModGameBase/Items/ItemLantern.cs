@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine.Clients;
+using Engine.Items;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,8 +16,6 @@ namespace ViMG.Items
 {
     public class ItemLantern : Item
     {
-        private int light = -1;
-        private bool shadowmapped;
         private static Vector4 color;
 
         static ItemLantern()
@@ -23,50 +24,54 @@ namespace ViMG.Items
             color.W = 1.5f;
         }
 
-        public ItemLantern() : base("lantern", new RectangleF(32, 64, 16, 16))
+        public ItemLantern() : base("lantern")
         {
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemLantern(this);
         }
 
         public override void Hold(Player player, Inventory inventory, int index)
         {
             base.Hold(player, inventory, index);
 
-            if (light == -1)
+            player.world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
             {
-                player.world.LightManager.AddShadowmapped(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color, out light, out shadowmapped);
-            }
-            else
-            {
-                if (shadowmapped)
-                {
-                    player.world.LightManager.UpdateShadowmapped(light, player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color, true);
-                }
-                else
-                {
-                    player.world.LightManager.Update(light, player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 16, color);
-                }
-            }
-
-            /*if (light != -1)
-            {
-                player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
-
-            light = player.GetWorld().LightManager.Add(player.Position, Cube.CUBE_SCALE * 4, Cube.CUBE_SCALE * 8, Color.Orange.ToVector4());*/
+                position = player.Position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = color,
+            });
         }
 
         public override void EndHold(Player player, Inventory inventory, int newIndex)
         {
             base.EndHold(player, inventory, newIndex);
+        }
+    }
 
-            if (light != -1)
+    public class ClientItemLantern : ClientItem
+    {
+        private Vector4 color;
+        public ClientItemLantern(Item item) : base(item, new RectangleF(32, 64, 16, 16))
+        {
+            color = Color.Orange.ToVector4();
+            color.W = 1.5f;
+        }
+
+        public override void Hold(ClientStates client, SyncedEntity player, Inventory inventory, int index)
+        {
+            base.Hold(client, player, inventory, index);
+
+            client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
             {
-                if (shadowmapped)
-                    player.GetWorld().LightManager.RemoveShadowmapped(light);
-                else player.GetWorld().LightManager.Remove(light);
-                light = -1;
-            }
+                position = player.position,
+                min = Cube.CUBE_SCALE * 4,
+                max = Cube.CUBE_SCALE * 16,
+                color = color,
+            });
         }
     }
 }

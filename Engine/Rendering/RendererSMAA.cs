@@ -44,11 +44,14 @@
  * policies, either expressed or implied, of the copyright holders.
  */
 
-using System.Diagnostics;
+using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System.Diagnostics;
 using ViMG;
+using ViMG.IMGUIImpl;
 
 namespace SMAADemo
 {
@@ -158,11 +161,11 @@ namespace SMAADemo
             RenderTarget2D rt_rgba = null
             )
         {
-            Debug.Assert(_width > 0);
-            Debug.Assert(_height > 0);
-            Debug.Assert(_device != null);
+            IMGUIConsole.Assert(_width > 0);
+            IMGUIConsole.Assert(_height > 0);
+            IMGUIConsole.Assert(_device != null);
 
-            effect = Main.assetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
+            effect = GlobalState.AssetsManager.GetAsset<Effect>("SMAA_" + _preset.ToString());
 
             device = _device;
             width = _width;
@@ -174,7 +177,7 @@ namespace SMAADemo
             // If storage for the edges is not specified we will create it.
             if (rt_rg != null)
             {
-                Debug.Assert(rt_rg.DepthStencilFormat == DepthFormat.Depth24Stencil8);
+                IMGUIConsole.Assert(rt_rg.DepthStencilFormat == DepthFormat.Depth24Stencil8);
 
                 edgeTex = rt_rg;
                 releaseEdgeResources = false;
@@ -206,8 +209,8 @@ namespace SMAADemo
 
 
             // Load the precomputed textures.
-            areaTex = Main.assetsManager.GetAsset<Texture2D>("AreaTexDX10");
-            searchTex = Main.assetsManager.GetAsset<Texture2D>("SearchTex");
+            areaTex = GlobalState.AssetsManager.GetAsset<Texture2D>("AreaTexDX10");
+            searchTex = GlobalState.AssetsManager.GetAsset<Texture2D>("SearchTex");
 
             // Create some handles for techniques and variables.
             zplanesHandle = effect.Parameters["zplanes"];
@@ -245,7 +248,7 @@ namespace SMAADemo
                     edgeTex = null;
                 }
 
-                //Main.assetsManager.UnloadAsset<Effect>("SMAA_" + _preset.ToString());
+                //GlobalState.assetsManager.UnloadAsset<Effect>("SMAA_" + _preset.ToString());
                 effect = null;
                 //effect.Dispose();
 
@@ -272,28 +275,28 @@ namespace SMAADemo
          * from this function (the render target, the input layout, the 
          * depth-stencil and blend states...)
          */
-        public void Go(Texture2D edges,
+        public void Go(Engine.Common.Camera camera, Texture2D edges,
                 Texture2D src,
                 RenderTarget2D dst,
                 Input input)
         {
             pixelSizeHandle.SetValue(Vector2.One / new Vector2(width, height));
 
-            edgesDetectionPass(edges, input);
+            edgesDetectionPass(camera, edges, input);
             blendingWeightsCalculationPass();
             neighborhoodBlendingPass(src, dst);
         }
 
 
 
-        private void edgesDetectionPass(Texture2D edges, Input input)
+        private void edgesDetectionPass(Engine.Common.Camera camera, Texture2D edges, Input input)
         {
             // Set the render target and clear both the color and the stencil buffers.
             device.SetRenderTarget(edgeTex);
             device.Clear(ClearOptions.Stencil | ClearOptions.Target, new Color(0, 0, 0, 0), 1.0f, 0);
 
             // Setup variables.
-            zplanesHandle.SetValue(new Vector2(Main.camera.Near, Main.camera.Far));
+            zplanesHandle.SetValue(new Vector2(camera.Near, camera.Far));
             thresholdHandle.SetValue(threshold);
             maxSearchStepsHandle.SetValue((float)maxSearchSteps);
 
@@ -313,7 +316,7 @@ namespace SMAADemo
                     effect.CurrentTechnique = depthEdgeDetectionHandle;
                     break;
                 default:
-                    Debug.Assert(false);
+                    IMGUIConsole.Assert(false);
                     break;
             }
 

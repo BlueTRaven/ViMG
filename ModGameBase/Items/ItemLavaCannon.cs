@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,10 +18,9 @@ namespace ViMG.Items
     {
         private RangedAttackStats rangeAttackStats = new RangedAttackStats(new AttackStats(DamageType.Ranged, 2f, 14, 4), Cube.CUBE_SCALE * 20, 0);
 
-        private ProjectileManager.ProjectileVisStats visStats = new ProjectileManager.ProjectileVisStats(new RectangleF(32, 16, 16, 16), Cube.CUBE_SCALE);
 		private ProjectileManager.ProjectileStats stats;
 
-        public ItemLavaCannon() : base("cannon_lavacrystal", new RectangleF(128, 112, 32, 16))
+        public ItemLavaCannon() : base("cannon_lavacrystal")
         {
             name = "Lava Cannon";
             description = "Fires a crystal of lava that explodes upon impact.\n" +
@@ -28,9 +29,12 @@ namespace ViMG.Items
 
 			stats = new ProjectileManager.ProjectileStats(HitboxManager.Group.PLAYER_DEAL, 2, 1f,
 				Cube.CUBE_SCALE * 0.25f, Cube.CUBE_SCALE, 1, false, 0, true, effects: this);
-
-			flipXInHand = true;
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(128, 112, 32, 16), flipXInHand: true);
+        }
 
 		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
@@ -45,8 +49,7 @@ namespace ViMG.Items
 				stats.knockback = knockback;
 
 				player.GetWorld().ProjectileManager.Add(new ProjectileManager.Projectile(player, player.Position,
-					Vector3.Normalize(facing) * rangeAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, visStats, stats, index),
-					new Rectangle3D(new Vector3(-Cube.CUBE_SCALE / 10f), new Vector3(Cube.CUBE_SCALE / 5f)));
+					Vector3.Normalize(facing) * rangeAttackStats.projectileSpeed, Cube.CUBE_SCALE * 10, GlobalState.Registry.ProjectileRegistry.Get("lava_cannon").Id, stats, index));
 				
 				inventory.Remove(ammoIndex, 4);
 

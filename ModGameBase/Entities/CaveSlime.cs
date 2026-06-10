@@ -9,10 +9,14 @@ using ViMG.Cubes;
 using BrUtility;
 using ViMG.Buffs;
 using ViMG.Rendering;
+using Engine.Networking;
+using Engine;
 
 namespace ViMG.Entities
 {
-    public class CaveSlime : Entity, IHasStats
+    [EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+    [EntityMeta(0)]
+    public class CaveSlime : Entity, IHasStats, ISyncedEntity
     {
 		private static VerySimpleMesh mesh;
         private static RendererDeferred.DrawMaterial material = new RendererDeferred.DrawMaterial("slime");
@@ -25,20 +29,22 @@ namespace ViMG.Entities
 		public NoticeHandler<Player> noticeHandler;
 		public AISlime ai;
 
+		public CaveSlime() : this(Vector3.Zero) { }
+
 		public CaveSlime(Vector3 position)
 		{
 			this.Position = position;
-		}
+
+            noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
+            buffManager = new BuffManager(this);
+
+            ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
+                new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
+        }
 
 		public override void Initialize(World world)
 		{
 			base.Initialize(world);
-
-			noticeHandler = new NoticeHandler<Player>(this, Cube.CUBE_SCALE * 6.4f, false);
-			buffManager = new BuffManager(this);
-
-			ai = new AISlime(new Rectangle3D(new Vector3(-Cube.CUBE_SCALE * 0.35f, 0, -Cube.CUBE_SCALE * 0.35f),
-				new Vector3(Cube.CUBE_SCALE * 0.70f)), noticeHandler, buffManager, maxHealth);
 		}
 
 		public override void Update(double deltaTime)
@@ -49,20 +55,16 @@ namespace ViMG.Entities
 
 			AISlime.Funcs<CaveSlime> funcs = new AISlime.Funcs<CaveSlime> { ai = ai, entity = this };
 			funcs.Update(deltaTime);
-
-			//Kill self if too far away
-			if ((world.player.Position - Position).Length() > 128 * Cube.CUBE_SCALE)
-				world.EntityManager.Remove(this);
 		}
 
-		public override void OnDelete()
+		public override void OnKill()
 		{
-			base.OnDelete();
+			base.OnKill();
 
 			EntityItem ent = new EntityItem(Position,
-				new Vector3(Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
-					6.4f * Cube.CUBE_SCALE, Main.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE)),
-				new Items.ItemInstance(Main.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
+				new Vector3(GlobalState.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE),
+					6.4f * Cube.CUBE_SCALE, GlobalState.random.NextFloat(-5 * Cube.CUBE_SCALE, 5 * Cube.CUBE_SCALE)),
+				new Items.ItemInstance(GlobalState.Registry.ItemRegistry.Get("slime_chunk"), 1, 1));
 			world.EntityManager.Add(ent);
 		}
 
@@ -121,7 +123,42 @@ namespace ViMG.Entities
 			tintColor = stats.TintColor;
 
 			if (stats.HP <= 0 || stats.MaximumHP <= 0)
-				world.EntityManager.Remove(this);
+				world.EntityManager.Kill(this);
 		}
-	}
+
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
+
+            GetSyncedEntity(out var state);
+            state.OnSave(saveBytes);
+
+			ai?.OnSave(saveBytes);
+			SaveHelper.SaveInt32(saveBytes, maxHealth);
+        }
+
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
+
+            int index = 0;
+            var bs = new SyncedEntity();
+            bs.OnLoad(loadBytes, ref index);
+            Position = bs.position;
+            ai.Velocity = bs.velocity;
+            ai.Health = bs.health;
+
+            ai?.OnLoad(loadBytes, ref index);
+            maxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            SyncedEntity aiState = new SyncedEntity();
+            ai?.GetSyncedEntity(out aiState);
+            aiState.position = Position;
+            aiState.rotation = Quaternion.Identity;
+            state = aiState;
+        }
+    }
 }

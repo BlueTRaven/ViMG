@@ -39,7 +39,7 @@ namespace ViMG.Entities
 
             if (timer <= 0)
             {
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
 
                 world.ChunkManager.CubeView.SetCube(TrackedPosition, setTo);
             }
@@ -50,9 +50,9 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         public override void OnSave(List<byte> saveBytes)
@@ -66,9 +66,9 @@ namespace ViMG.Entities
             SaveHelper.SaveUInt16(saveBytes, setTo);
         }
 
-        public override void OnLoad(byte[] loadBytes, in int version)
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
             int index = 0;
             TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);

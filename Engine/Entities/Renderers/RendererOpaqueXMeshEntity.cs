@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -34,16 +35,16 @@ namespace ViMG.Entities.Renderers
         public abstract class RenderedEntity : IRegisterable
         {
             public string Identifier { get; set; }
-            public Type EntityType;
+            public int EntityTypeId;
 
             public RendererDeferred.DrawMaterial Material;
             public FastList<RendererDeferred.InstancedDraw> Draws;  //we cache a list here so we don't have to always allocate during a frame.
             public StructuredBuffer SBO;
 
-            public RenderedEntity(string identifier, Type entityType, RendererDeferred.DrawMaterial material)
+            public RenderedEntity(string identifier, int entityTypeId, RendererDeferred.DrawMaterial material)
             {
                 this.Identifier = identifier;
-                this.EntityType = entityType;
+                this.EntityTypeId = entityTypeId;
                 this.Material = material;
                 Draws = new FastList<RendererDeferred.InstancedDraw>();
             }
@@ -63,112 +64,111 @@ namespace ViMG.Entities.Renderers
             registry = new ObjRegistry<RenderedEntity>();
         }
 
-        private Type?[]? renderedTypesCache = null;
-        public override Type?[] GetRenderedTypes()
+        private int[]? renderedTypesCache = null;
+        public override int[] GetRenderedTypes()
         {
             if (renderedTypesCache == null)
             {
-                renderedTypesCache = new Type[registry.Count + 1];
-                renderedTypesCache[0] = null;
-                int i = 1;
+                renderedTypesCache = new int[registry.Count];
+                int i = 0;
                 foreach (RenderedEntity stats in registry.GetIterable())
                 {
-                    renderedTypesCache[i] = stats.EntityType;
+                    renderedTypesCache[i] = stats.EntityTypeId;
                     i++;
                 }
             }
             return renderedTypesCache;
         }
 
-        public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
-        {
-            RenderedEntity stats = registry.Get(renderedTypeIndex);
-            Type type = stats.EntityType;
+        //public override void Render(GraphicsDevice device, double deltaTime, EntityManager entityManager, int renderedTypeIndex, List<Entity> entities)
+        //{
+        //    RenderedEntity stats = registry.Get(renderedTypeIndex + 1);
+        //    Type type = GlobalState.Registry.EntityRegistry.Get(stats.EntityTypeId).type;
 
-            //var entities = entityManager.GetAll(type);
+        //    //var entities = entityManager.GetAll(type);
 
-            stats.Draws.Clear();
+        //    stats.Draws.Clear();
 
-            Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-                    Matrix.CreateRotationY(-Main.camera.Rotation.Y);
+        //    Matrix billboard = Matrix.CreateRotationX(Math.Clamp(-Main.camera.RotationEuler.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
+        //            Matrix.CreateRotationY(-Main.camera.RotationEuler.Y);
 
-            RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
-            {
-                SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 16, 16, 16)),
-                TintColor = Color.White.ToVector3(),
-            };
+        //    RendererDeferred.InstancedDraw baseDraw = new RendererDeferred.InstancedDraw()
+        //    {
+        //        SourceRect = new RendererDeferred.DrawSourceRectParameters(new RectangleF(0, 16, 16, 16)),
+        //        TintColor = Color.White.ToVector3(),
+        //    };
 
-            foreach (Entity entity in entities)
-            {
-                Debug.Assert(entity.GetType() == type);
+        //    foreach (Entity entity in entities)
+        //    {
+        //        IMGUIConsole.Assert(entity.GetType() == type);
 
-                if (entity == null)
-                {
-                    Console.WriteLine("Entity was null");
-                    continue;
-                }
-                RenderedEntityDrawStats[] drawStats = stats.GetDrawStats(entity);
-                foreach (RenderedEntityDrawStats drawStat in drawStats)
-                {
-                    Vector2 scale = drawStat.scale ?? new Vector2(1);
-                    Color color = drawStat.color ?? Color.White;
-                    Vector3 position = drawStat.position ?? entity.Position;
+        //        if (entity == null)
+        //        {
+        //            Console.WriteLine("Entity was null");
+        //            continue;
+        //        }
+        //        RenderedEntityDrawStats[] drawStats = stats.GetDrawStats(entity);
+        //        foreach (RenderedEntityDrawStats drawStat in drawStats)
+        //        {
+        //            Vector2 scale = drawStat.scale ?? new Vector2(1);
+        //            Color color = drawStat.color ?? Color.White;
+        //            Vector3 position = drawStat.position ?? entity.Position;
 
-                    RendererDeferred.DrawSourceRectParameters sourceRect;
-                    if (drawStat.sourceRect.HasValue)
-                    {
-                        sourceRect = new RendererDeferred.DrawSourceRectParameters(drawStat.sourceRect.Value);
-                    }
-                    else sourceRect = new RendererDeferred.DrawSourceRectParameters();
+        //            RendererDeferred.DrawSourceRectParameters sourceRect;
+        //            if (drawStat.sourceRect.HasValue)
+        //            {
+        //                sourceRect = new RendererDeferred.DrawSourceRectParameters(drawStat.sourceRect.Value);
+        //            }
+        //            else sourceRect = new RendererDeferred.DrawSourceRectParameters();
 
-                    Matrix mat = drawStat.matrix ?? Matrix.CreateScale(Cube.CUBE_SCALE) *
-                        Matrix.CreateScale(scale.X, scale.Y, 1) *
-                        Matrix.CreateTranslation(position);
-                    Matrix.Transpose(ref mat, out mat);
+        //            Matrix mat = drawStat.matrix ?? Matrix.CreateScale(Cube.CUBE_SCALE) *
+        //                Matrix.CreateScale(scale.X, scale.Y, 1) *
+        //                Matrix.CreateTranslation(position);
+        //            Matrix.Transpose(ref mat, out mat);
 
-                    if (color.A == 255)
-                    {
-                        RendererDeferred.InstancedDraw draw = baseDraw with
-                        {
-                            World = mat,
-                            WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
-                            SourceRect = sourceRect,
-                            TintColor = color.ToVector3(),
-                        };
+        //            if (color.A == 255)
+        //            {
+        //                RendererDeferred.InstancedDraw draw = baseDraw with
+        //                {
+        //                    World = mat,
+        //                    WorldNormal = Matrix.Transpose(Matrix.Invert(mat)),
+        //                    SourceRect = sourceRect,
+        //                    TintColor = color.ToVector3(),
+        //                };
 
-                        stats.Draws.Add(draw);
-                    }
-                    else
-                    {
-                        float distance = (Main.camera.Position - position).Length();
+        //                stats.Draws.Add(draw);
+        //            }
+        //            else
+        //            {
+        //                float distance = (Main.camera.Position - position).Length();
 
-                        RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
-                        {
-                            Material = stats.Material,
-                            SourceRect = sourceRect,
-                            TintColor = color.ToVector4(),
-                            Mesh = mesh,
-                            Transform = mat,
-                            SortValue = distance,
-                        };
+        //                RendererDeferred.TransparentDraw draw = new RendererDeferred.TransparentDraw
+        //                {
+        //                    Material = stats.Material,
+        //                    SourceRect = sourceRect,
+        //                    TintColor = color.ToVector4(),
+        //                    Mesh = mesh,
+        //                    Transform = mat,
+        //                    SortValue = distance,
+        //                };
 
-                        Main.Renderer.AddTransparentDraw(draw);
-                    }
-                }
-            }
+        //                Main.Renderer.AddTransparentDraw(draw);
+        //            }
+        //        }
+        //    }
 
-            if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
-            {
-                if (stats.SBO != null)
-                    stats.SBO.Dispose();
+        //    if (stats.SBO == null || stats.SBO.ElementCount < stats.Draws.Length)
+        //    {
+        //        if (stats.SBO != null)
+        //            stats.SBO.Dispose();
 
-                stats.SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), stats.Draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
-            }
+        //        stats.SBO = new StructuredBuffer(device, typeof(RendererDeferred.InstancedDraw), stats.Draws.Buffer.Length, BufferUsage.WriteOnly, ShaderAccess.Read);
+        //    }
 
-            stats.SBO.SetData(stats.Draws.Buffer);
+        //    stats.SBO.SetData(stats.Draws.Buffer);
 
-            Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
-                stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
-        }
+        //    Main.Renderer.DrawsPassGBufferInstanced.Add(new RendererDeferred.InstancedGBufferDraw(
+        //        stats.Material, mesh, stats.SBO, 0, stats.Draws.Length));
+        //}
     }
 }

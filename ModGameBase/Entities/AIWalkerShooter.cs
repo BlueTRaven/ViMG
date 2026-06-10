@@ -1,6 +1,10 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +18,11 @@ namespace ViMG.Entities
 	//Walks towards, then shoots at, the player.
     public class AIWalkerShooter
     {
+		private const int VERSION = 0;
+
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
+
         public enum State
         {
             Normal,
@@ -26,16 +35,11 @@ namespace ViMG.Entities
 		public Vector3 Facing;
         private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-        private readonly World world;
 		private readonly bool projectileBatch;
 		private readonly ProjectileManager.ProjectileBatchStats shotProjectileBatchStats;
         private readonly ProjectileManager.ProjectileStats shotProjectileStats;
-        private readonly ProjectileManager.ProjectileVisStats shotProjectileVisStats;
-        private float idleTimer;
-		private float idleMoveTimer;
-		private int idleMovements;
-		private Vector2 idleDirection;
-		private Vector2 idleHome;
+        private readonly int shotProjectileVisStatsId;
+		public IdleStats idle;
 
 		private State state;
 
@@ -60,38 +64,33 @@ namespace ViMG.Entities
 		public float MoveTowardsTargetDistance = Cube.CUBE_SCALE * 6f;
 		public float AttackTargetDistance = Cube.CUBE_SCALE * 8;
 
-		private bool isInRangeOfTarget;
-		public bool IsInRangeOfTarget => isInRangeOfTarget;
-
 		private Rectangle3D bounds;
 		private int touchHitbox = -1;
 
-		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
+		public AIWalkerShooter(Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth, 
 			ProjectileManager.ProjectileStats shotProjectileStats, 
-			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+			int shotProjectileVisStatsId)
         {
             this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
-            this.world = world;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
 
             this.shotProjectileStats = shotProjectileStats;
-            this.shotProjectileVisStats = shotProjectileVisStats;
+            this.shotProjectileVisStatsId = shotProjectileVisStatsId;
 
 			projectileBatch = false;
 			this.bounds = hitboxBounds;
         }
 
-		public AIWalkerShooter(World world, Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
+		public AIWalkerShooter(Rectangle3D hitboxBounds, NoticeHandler<Player> noticeHandler, BuffManager buffManager, int maxHealth,
 			ProjectileManager.ProjectileBatchStats shotProjectileBatchStats,
 			ProjectileManager.ProjectileStats shotProjectileStats,
-			ProjectileManager.ProjectileVisStats shotProjectileVisStats)
+			int shotProjectileVisStatsId)
 		{
 			this.noticeHandler = noticeHandler;
             this.buffManager = buffManager;
-            this.world = world;
 
 			this.Health = maxHealth;
 			this.MaxHealth = maxHealth;
@@ -100,15 +99,16 @@ namespace ViMG.Entities
 			this.shotProjectileBatchStats = shotProjectileBatchStats;
 
 			this.shotProjectileStats = shotProjectileStats;
-			this.shotProjectileVisStats = shotProjectileVisStats;
+			this.shotProjectileVisStatsId = shotProjectileVisStatsId;
 
 			this.bounds = hitboxBounds;
 		}
 
 		public struct Funcs<T> : IHitboxOwner where T : Entity, IHasStats
 		{
-			public T entity;
-			public AIWalkerShooter ai;
+			public required World world;
+			public required T entity;
+			public required AIWalkerShooter ai;
 			public void OnUnload()
 			{
 				if (ai.touchHitbox != -1)
@@ -120,8 +120,8 @@ namespace ViMG.Entities
                 ai.InvulnTimer -= (float)deltaTime;
 
 				if (ai.touchHitbox == -1)
-                    ai.touchHitbox = ai.world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
-				else ai.world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+                    ai.touchHitbox = world.HitboxManager.Add(this, ai.bounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, 4, 1f, ai.InvulnTimer <= 0);
+				else world.HitboxManager.Update(ai.touchHitbox, ai.bounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
 
 				Vector3 actualMaxVel = ai.MaxVelocity;
 
@@ -129,8 +129,6 @@ namespace ViMG.Entities
 
 				ai.noticeHandler.Update(deltaTime);
 				ai.buffManager.Update(deltaTime);
-
-				ai.isInRangeOfTarget = false;
 
 				if (ai.InvulnTimer <= 0 && ai.onGround)
 				{
@@ -144,7 +142,7 @@ namespace ViMG.Entities
 
 					if (ai.noticeHandler.Noticed)
 					{
-						ai.idleMovements = 0;
+						ai.idle.idleMovements = 0;
 
 						if (ai.state == State.Normal)
 						{
@@ -165,8 +163,6 @@ namespace ViMG.Entities
 
 							if (distance < ai.AttackTargetDistance)
 							{
-								ai.isInRangeOfTarget = true;
-
 								ai.attackTimer -= (float)deltaTime;
 
 								if (ai.attackTimer <= 0)
@@ -178,8 +174,6 @@ namespace ViMG.Entities
 						}
 						else if (ai.state == State.Attack)
 						{
-							ai.isInRangeOfTarget = true;
-
 							ai.Velocity.X *= 0.95f;
 							ai.Velocity.Z *= 0.95f;
 
@@ -191,16 +185,14 @@ namespace ViMG.Entities
 
 								if (!ai.projectileBatch)
 								{
-                                    ai.world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
+                                    world.ProjectileManager.Add(new ProjectileManager.Projectile(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0),
 										Vector3.Normalize(dir) * ai.ShootSpeed,
-										8, ai.shotProjectileVisStats, ai.shotProjectileStats),
-										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+										8, ai.shotProjectileVisStatsId, ai.shotProjectileStats));
 								}
 								else
 								{
-                                    ai.world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
-										ai.shotProjectileBatchStats, ai.shotProjectileVisStats, ai.shotProjectileStats,
-										new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 4), new Vector3(Cube.CUBE_SCALE / 2)));
+                                    world.ProjectileManager.AddBatch(this, entity.Position + new Vector3(0, Cube.CUBE_SCALE, 0), Vector3.Normalize(dir) * ai.ShootSpeed, 8,
+										ai.shotProjectileBatchStats, ai.shotProjectileVisStatsId, ai.shotProjectileStats);
 								}
 
 								ai.Facing = Vector3.Normalize(dir);
@@ -211,8 +203,6 @@ namespace ViMG.Entities
 						}
 						else if (ai.state == State.AttackStun)
 						{
-							ai.isInRangeOfTarget = true;
-
 							ai.Velocity.X *= 0.5f;
 							ai.Velocity.Z *= 0.5f;
 
@@ -230,40 +220,12 @@ namespace ViMG.Entities
 						ai.state = State.Normal;
 						ai.attackTimer = ai.AttackCooldownTime;
 
-						ai.idleTimer -= (float)deltaTime;
+						ai.idle.Update(entity.random, entity.Position, deltaTime);
 
-						if (ai.idleTimer <= 0)
-							ai.idleMoveTimer -= (float)deltaTime;
-
-						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
+						if (ai.idle.idleTimer <= 0)
 						{
-							ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
-
-							ai.idleTimer = Main.random.NextFloat(4f, 12f);
-							ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-							ai.idleMovements = Main.random.Next(2, 6);
-
-							ai.idleDirection = Main.random.NextAngle();
-						}
-						else
-						{
-							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
-
-							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-								ai.idleDirection = -ai.idleDirection;
-
-							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-							{
-								ai.idleMovements--;
-								ai.idleDirection = Main.random.NextAngle();
-								ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-							}
-						}
-
-						if (ai.idleTimer <= 0)
-						{
-							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
-							ai.Facing = Vector3.Normalize(new Vector3(ai.idleDirection.X, 0, ai.idleDirection.Y));
+							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idle.idleDirection, actualMaxVel);
+							ai.Facing = Vector3.Normalize(new Vector3(ai.idle.idleDirection.X, 0, ai.idle.idleDirection.Y));
 						}
 						else
 						{
@@ -282,8 +244,9 @@ namespace ViMG.Entities
 				ai.shouldJump = false;
 				UpdateCollision();
 
-				if ((ai.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-                    ai.world.EntityManager.Remove(entity);
+                var ent = this.entity;
+
+				EntityHelper.UnloadIfDistanceFromPlayers(entity);
 			}
 
 			private void UpdateCollision()
@@ -319,7 +282,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -350,10 +313,11 @@ namespace ViMG.Entities
 					if (ai.Velocity.Length() > Cube.CUBE_SCALE / 4f)
 					{
 						var ai = this.ai;
-						var ray = ai.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
+						var world = this.world;
+						var ray = world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 2,
 							(Vector3 pos) =>
 							{
-								Cube cube = ai.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+								Cube cube = world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 								return cube.Collision != Cube.CollisionValue.None;
 							});
@@ -365,7 +329,7 @@ namespace ViMG.Entities
 					}
 				}
 
-				foreach (T otherEntity in ai.world.EntityManager.GetAll<T>())
+				foreach (T otherEntity in world.EntityManager.GetAll<T>())
 				{
 					if (otherEntity != entity)
 					{
@@ -404,16 +368,7 @@ namespace ViMG.Entities
 
 			public void Hurt(int damage)
 			{
-                ai.Health -= damage;
-
-				if (ai.Health <= 0)
-				{
-                    ai.Health = 0;
-                    ai.world.EntityManager.Remove(entity);
-
-					if (ai.touchHitbox != -1)
-                        ai.world.HitboxManager.Remove(ai.touchHitbox);
-				}
+                EntityHelper.TakeDamage(entity, damage);
 
                 ai.shouldJumpLockTimer = 1f;
 				ai.InvulnTimer = 0.25f;
@@ -430,5 +385,35 @@ namespace ViMG.Entities
 				return ai.state;
 			}
 		}
-	}
+
+        public void OnSave(List<byte> saveBytes)
+        {
+            SaveHelper.SaveInt32(saveBytes, VERSION);
+            SaveHelper.SaveInt32(saveBytes, MaxHealth);
+
+			idle.OnSave(saveBytes);
+        }
+
+        public void OnLoad(byte[] loadBytes, ref int index)
+        {
+            int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+            MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			idle.OnLoad(loadBytes, ref index);
+        }
+
+        public void Get(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                health = Health,
+                velocity = Velocity,
+                position = Vector3.Zero,
+                rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
+                state = (int)this.state,
+                timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
+            };
+        }
+    }
 }

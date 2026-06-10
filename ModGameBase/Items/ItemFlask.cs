@@ -9,10 +9,15 @@ namespace ViMG.Items
 {
     public class ItemFlask : Item
 	{
-		public ItemFlask() : base("flask_empty", new RectangleF(0, 96, 16, 16))
+		public ItemFlask() : base("flask_empty")
 		{
-			name = "Empty Flask";
+            name = "Empty Flask";
 			description = "An empty flask without substance to fill its void.";
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 96, 16, 16));
+        }
 	}
 }

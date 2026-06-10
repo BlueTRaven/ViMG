@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,15 +15,11 @@ namespace ViMG.Entities
 {
     [EntitySerializable(EntitySerializableAttribute.SerializationType.All)]
 	[EntityMeta(0, 0)]
-	public class GlowNode : Entity, ICubeTracker
+	public class GlowNode : Entity, ICubeTracker, ISyncedEntity
 	{
 		private float radius;
 		private float fade;
 		private Vector4 color;
-
-		private int light = -1;
-
-		private static VerySimpleMesh mesh;
 
 		public CubePosition TrackedPosition { get; private set; }
 
@@ -43,7 +41,7 @@ namespace ViMG.Entities
         {
             base.Initialize(world);
 
-			DestroyOnInactive = false;	//Don't destroy glow node upon becoming inactive. Otherwise we orphan the cube.
+			DestroyOnDisabled = false;	//Don't destroy glow node upon becoming inactive. Otherwise we orphan the cube.
         }
 
         public override void Update(double deltaTime)
@@ -52,91 +50,18 @@ namespace ViMG.Entities
 
 			BoundingSphere sphere = new BoundingSphere(Position, radius);
 
-			if (!Main.camera.GetFrustum().Intersects(sphere))
+			world.LightManager2.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
 			{
-				if (light != -1)
-				{
-					world.LightManager.Remove(light);
-					light = -1;
-				}
-			}
-			else
-			{
-				if (light == -1)
-				{
-					light = world.LightManager.Add(Position, radius - fade, radius, color);
-				}
-			}
+				position = Position,
+                min = radius - fade,
+                max = radius,
+                color = color,
+            });
 		}
 
 		public override void OnUnload()
 		{
 			base.OnUnload();
-
-			if (light != -1)
-				world.LightManager.Remove(light);
-		}
-
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	base.Draw(device, effect);
-
-		//	if (mesh.IBO == null)
-		//		MakeMesh(device);
-
-		//	/*Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(mesh.texture, DrawHelper.BlackPixel, DrawHelper.WhitePixel,
-		//		mesh.VBO, mesh.IBO, Matrix.CreateRotationX(Math.Clamp(-Main.camera.Rotation.X, MathHelper.ToRadians(-15), MathHelper.ToRadians(15))) *
-		//		Matrix.CreateRotationY(-Main.camera.Rotation.Y) *
-		//		Matrix.CreateTranslation(Position), null));*/
-		//}
-
-		private void MakeMesh(GraphicsDevice device)
-		{
-			Vector3 min = -new Vector3(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE, 0);
-			Vector3 max = new Vector3(Cube.CUBE_SCALE / 2f, 0, 0);
-
-			Vector3 a = new Vector3(max.X, min.Y, max.Z);
-			Vector3 b = new Vector3(min.X, min.Y, max.Z);
-			Vector3 c = new Vector3(min.X, max.Y, max.Z);
-			Vector3 d = new Vector3(max.X, max.Y, max.Z);
-
-            FastList<VertexCube> vertices = new FastList<VertexCube>();
-            List<int> indices = new List<int>();
-
-			Vector2 atx = new Vector2(0, 1);
-			Vector2 btx = new Vector2(1, 1);
-			Vector2 ctx = new Vector2(1, 0);
-			Vector2 dtx = new Vector2(0, 0);
-
-			int offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, 1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, 1)));
-
-			offset = vertices.Length;
-			indices.Add(offset + 0);
-			indices.Add(offset + 1);
-			indices.Add(offset + 3);
-			indices.Add(offset + 1);
-			indices.Add(offset + 2);
-			indices.Add(offset + 3);
-
-			vertices.Add(new VertexCube(b, Color.White, btx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(a, Color.White, atx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(d, Color.White, dtx, new Vector3(0, 0, -1)));
-			vertices.Add(new VertexCube(c, Color.White, ctx, new Vector3(0, 0, -1)));
-
-			mesh = VerySimpleMesh.Opaque(device, new ChunkRenderMesher.VertexAttributes(vertices, indices));
-			//mesh = MeshHelper.MakeSimplerMesh(device, vertices.ToVertexOpaquePass(), indices);
-            //mesh = new SimpleMesh<VertexCube, int>(device, vertices, indices, Main.assetsManager.GetAsset<Texture2D>("glow_node"));
 		}
 
 		public bool OnInteract(Player player)
@@ -144,16 +69,16 @@ namespace ViMG.Entities
 			//world.MineCube(TrackedPosition, true);
 			//TODO this had killtrackedentities false?
 			world.ChunkManager.CubeView.SetCube(TrackedPosition, 0);
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 			
 			List<ItemInstance> items = new List<ItemInstance>();
-			Main.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
+			GlobalState.Registry.CubeRegistry.Get("glow_node").GetDrops(items);
 
 			foreach (ItemInstance item in items)
 			{
 				EntityItem ent = new EntityItem(Position,
-					new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, 
-						Main.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
+					new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5), Cube.CUBE_SCALE * 1.6f, 
+						GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 5, Cube.CUBE_SCALE * 5)),
 					item);
 				world.EntityManager.Add(ent);
 			}
@@ -161,10 +86,10 @@ namespace ViMG.Entities
 			return true;
 		}
 
-		public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+		public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
 		{
 			//world.ChunkManager2.GetChunk(TrackedPosition).GetData().SetCube(TrackedPosition, 0, killTrackedEntities: false);
-			world.EntityManager.Remove(this);
+			world.EntityManager.Kill(this);
 		}
 
         public override void OnSave(List<byte> saveBytes)
@@ -176,19 +101,28 @@ namespace ViMG.Entities
 			SaveHelper.SaveFloat32(saveBytes, radius);
 			SaveHelper.SaveFloat32(saveBytes, fade);
         }
-
-        public override void OnLoad(byte[] loadBytes, in int version)
+        
+		public override void OnLoad(World world, byte[] loadBytes, in int version)
         {
-            base.OnLoad(loadBytes, version);
+            base.OnLoad(world, loadBytes, version);
 
-			int index = 0;
+            int index = 0;
 			TrackedPosition = SaveHelper.LoadCubePosition(loadBytes, ref index);
 			color = SaveHelper.LoadVector4(loadBytes, ref index);
 			radius = SaveHelper.LoadFloat32(loadBytes, ref index);
 			fade = SaveHelper.LoadFloat32(loadBytes, ref index);
 
 			this.Position = TrackedPosition.InWorldSpace() + new Vector3(Cube.CUBE_SCALE / 2, Cube.CUBE_SCALE, Cube.CUBE_SCALE / 2f);
-
 		}
-	}
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				position = Position,
+				velocity = new Vector3(color.X, color.Y, color.Z),
+				timers = { [0] = radius, [1] = fade, [2] = color.W, },
+			};
+        }
+    }
 }

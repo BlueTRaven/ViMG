@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ViMG.IMGUIImpl;
 
 namespace ViMG.Physics
 {
@@ -47,7 +48,7 @@ namespace ViMG.Physics
         public SubgroupCollisionFilter(int groupId, int subgroupId)
         {
             GroupId = groupId;
-            Debug.Assert(subgroupId >= 0 && subgroupId < 16, "The subgroup field is a ushort; it can only hold 16 distinct subgroups.");
+            IMGUIConsole.Assert(subgroupId >= 0 && subgroupId < 16, "The subgroup field is a ushort; it can only hold 16 distinct subgroups.");
             SubgroupMembership = (ushort)(1 << subgroupId);
             CollidableSubgroups = ushort.MaxValue;
         }
@@ -58,7 +59,7 @@ namespace ViMG.Physics
         /// <param name="subgroupId">Subgroup id to disable collision with.</param>
         public void DisableCollision(int subgroupId)
         {
-            Debug.Assert(subgroupId >= 0 && subgroupId < 16, "The subgroup field is a ushort; it can only hold 16 distinct subgroups.");
+            IMGUIConsole.Assert(subgroupId >= 0 && subgroupId < 16, "The subgroup field is a ushort; it can only hold 16 distinct subgroups.");
             CollidableSubgroups ^= (ushort)(1 << subgroupId);
         }
 

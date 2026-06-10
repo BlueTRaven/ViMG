@@ -9,9 +9,14 @@ namespace ViMG.Items
 {
     public class ItemArrowStone : Item
 	{
-		public ItemArrowStone() : base("ammo_arrow_stone", new RectangleF(16, 48, 16, 16))
+		public ItemArrowStone() : base("ammo_arrow_stone")
 		{
-			Tags.Add("ammo_arrow");
+            Tags.Add("ammo_arrow");
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 48, 16, 16));
+        }
 	}
 }

@@ -1,4 +1,8 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Common;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,17 +20,17 @@ namespace ViMG.Items
     {
 		private Cube cube;
 
-        public ItemRope() : base("rope", new RectangleF(112, 64, 16, 16))
+        public ItemRope() : base("rope")
         {
             name = "Rope";
             description = "Sturdy, strong rope. Use it to traverse big pits!";
 
-			cube = Main.Registry.CubeRegistry.Get("rope");
+			cube = GlobalState.Registry.CubeRegistry.Get("rope");
 		}
 
-        public override RendererDeferred.DrawMaterial GetMaterial()
+        protected override ClientItem ClientInit()
         {
-			return StaticMaterials.Cubes;
+            return new ClientItem(this, new RectangleF(112, 64, 16, 16), material: StaticMaterials.Cubes);
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -34,11 +38,11 @@ namespace ViMG.Items
 			base.RightClick(player, inventory, index, facing, out actionStats);
 
 			//TODO check touch not id != 0
-			var lookAtResult = player.GetWorld().Raycast(Main.camera.Position, Main.camera.Position - Main.camera.Forward * Player.INTERACT_DISTANCE,
+			var lookAtResult = player.GetWorld().Raycast(player.Position, player.Position - (player as IRotatable).Forward * Player.INTERACT_DISTANCE,
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) &&
-					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -46,8 +50,8 @@ namespace ViMG.Items
 				if (player.GetWorld().ChunkManager.IsInWorldBounds(lookAtResult.hit))
 				{
 					//we're placing on a pre-existing rope block.
-					if (!Main.inputManager.IsPressed(Keys.LeftControl) && player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
-						.GetOrDefault(Main.Registry.CubeRegistry.Air) == cube)
+					if (player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(lookAtResult.hit))
+						.GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
 					{
 						Cube currentCube = cube;
 						CubePosition nextPos = CubePosition.FromWorldSpace(lookAtResult.hit);
@@ -56,7 +60,7 @@ namespace ViMG.Items
                         {
 							nextPos -= new CubePosition(0, 1, 0);
 
-							currentCube = player.GetWorld().ChunkManager.CubeView.GetCube(nextPos).GetOrDefault(Main.Registry.CubeRegistry.Air);
+							currentCube = player.GetWorld().ChunkManager.CubeView.GetCube(nextPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 							//if not in world bounds, then we can't place it, so just return false.
 							if (!player.GetWorld().ChunkManager.IsInWorldBounds(nextPos))

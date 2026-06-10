@@ -1,6 +1,13 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Clients;
+using Engine.Common;
+using Engine.Entities.Renderers;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +20,7 @@ namespace ViMG.Entities.Renderers
 {
     public class RendererOpaqueBillboardedEntityViMG
     {
-        private class TypeStatsGeneric : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedGeneric : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             private readonly RendererDeferred.DrawMaterial material;
             private readonly Vector2 scale;
@@ -21,7 +28,7 @@ namespace ViMG.Entities.Renderers
             private readonly Color color;
             private readonly RectangleF? sourceRect;
 
-            public TypeStatsGeneric(string identifier, Type entityType, RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null, Color? color = null, RectangleF? sourceRect = null) : base(identifier, entityType, material)
+            public RenderedGeneric(string identifier, int entityType, RendererDeferred.DrawMaterial material, Vector2? scale = null, Vector3? offset = null, Color? color = null, RectangleF? sourceRect = null) : base(identifier, entityType, material)
             {
                 this.material = material;
                 this.scale = scale ?? new Vector2(1);
@@ -30,455 +37,583 @@ namespace ViMG.Entities.Renderers
                 this.sourceRect = sourceRect;
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                RendererOpaqueBillboardedEntity.TypeStatsDrawStats stats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                RendererOpaqueBillboardedEntity.RenderedEntityDrawStats stats = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    position = entity.Position + offset,
+                    position = entity.position + offset,
                     scale = scale,
                     color = color,
                     sourceRect = sourceRect,
                     shouldDraw = true,
                 };
 
-                cachedStats[0] = stats;
-                return cachedStats;
+                renderedEntityStats.Add(stats);
             }
         }
 
-        private class TypeStatsSkeleton : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedImp : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSkeleton() : base("skeleton", typeof(Skeleton), new RendererDeferred.DrawMaterial("skeleton"))
+            public RenderedImp() : base("imp", GlobalState.Registry.EntityRegistry.Get<Imp>().Id, new RendererDeferred.DrawMaterial("imp"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void OnRender(ClientStates client, ref readonly SyncedEntity entity)
             {
-                Skeleton skeleton = (Skeleton)entity;
+                base.OnRender(client, in entity);
 
+                float p0 = (entity.aliveTime % 0.65f) / 0.65f;
+                float s0 = MathF.Sin(MathF.PI * 2 * p0) * Cube.CUBE_SCALE * 1.25f;
+
+                client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
+                {
+                    position = entity.position + new Vector3(Cube.CUBE_SCALE / 2f),
+                    min = Cube.CUBE_SCALE * 4f + s0,
+                    max = Cube.CUBE_SCALE * 8f,
+                    color = Color.OrangeRed.ToVector4(),
+                });
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                RectangleF sourceRect = new RectangleF(0, 16, 16, 16);
+
+                Color c = EntityRendererHelper.GetHurtColor(entity, 2);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    scale = new Vector2(1, 1.5f),
+                    sourceRect = sourceRect,
+                    color = c,
+                });
+            }
+        }
+
+        [Obsolete()]
+        private class RenderedSkeleton : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedSkeleton() : base("skeleton", GlobalState.Registry.EntityRegistry.Get<Skeleton>().Id, new RendererDeferred.DrawMaterial("skeleton"))
+            {
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                //Skeleton skeleton = (Skeleton)entity;
+
+                //RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
+
+                //if (skeleton.state != Skeleton.State.Active)
+                //    sourceRect = new RectangleF(16, 0, 16, 32);
+
+                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //{
+                //    scale = new Vector2(1, 2),
+                //    sourceRect = sourceRect,
+                //};
+                //return cachedStats;
+            }
+        }
+
+        private class RenderedSkeleton2 : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedSkeleton2() : base("skeleton2", GlobalState.Registry.EntityRegistry.Get<Skeleton2>().Id, new RendererDeferred.DrawMaterial("skeleton"))
+            {
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
                 RectangleF sourceRect = new RectangleF(0, 0, 16, 32);
 
-                if (skeleton.state != Skeleton.State.Active)
-                    sourceRect = new RectangleF(16, 0, 16, 32);
+                Color c = EntityRendererHelper.GetHurtColor(entity, 3);
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     scale = new Vector2(1, 2),
                     sourceRect = sourceRect,
-                };
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsBigSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedSkeletonBonePile : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsBigSlime() : base("slime_big", typeof(SlimeBig), new RendererDeferred.DrawMaterial("slime")) { }
-
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public RenderedSkeletonBonePile() : base("skeleton_bonepile", GlobalState.Registry.EntityRegistry.Get<SkeletonBonePile>().Id, new RendererDeferred.DrawMaterial("skeleton"))
             {
-                SlimeBig slime = entity as SlimeBig;
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                RectangleF sourceRect = new RectangleF(16, 0, 16, 32);
+
+                Color c =  EntityRendererHelper.GetHurtColor(entity, 0);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    scale = new Vector2(1, 2),
+                    sourceRect = sourceRect,
+                    color = c,
+                });
+            }
+        }
+
+        private class RenderedBigSlime : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedBigSlime() : base("slime_big", GlobalState.Registry.EntityRegistry.Get<SlimeBig>().Id, new RendererDeferred.DrawMaterial("slime")) { }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                const float minInterval = 0.65f;
+                const float maxInterval = 0.85f;
 
                 int ysrc = 32;
 
-                const float minInterval = 0.65f;
-                const float maxInterval = 0.85f;
+                float jumpTimer = entity.timers[0];
+                float jumpTime = entity.timers[1];
 
-                float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+                float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
 
-                if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
-                    ysrc = 64;
+                if ((jumpTimer % interval) / interval < 0.5f)
+                    ysrc += 32;
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                bool noticed = entity.counters[1] > 0;
+
+                Color c = EntityRendererHelper.GetHurtColor(entity, 2);
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    sourceRect = slime.noticeHandler.Noticed ? new RectangleF(32, ysrc, 32, 32) : new RectangleF(0, ysrc, 32, 32),
+                    position = entity.position,
                     scale = new Vector2(2),
-                };
-
-                return cachedStats;
+                    sourceRect = noticed ? new RectangleF(32, ysrc, 32, 32) : new RectangleF(0, ysrc, 32, 32),
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSlime() : base("slime", typeof(Slime), new RendererDeferred.DrawMaterial("slime")) { }
+            public RenderedSlime() : base(typeof(Slime).FullName, GlobalState.Registry.EntityRegistry.Get<Slime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Slime slime = entity as Slime;
-
-                int ysrc = 0;
-
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
 
-                 float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+                int ysrc = 0;
 
-                if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
+                float jumpTimer = entity.timers[0];
+                float jumpTime = entity.timers[1];
+
+                float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
+
+                if ((entity.aliveTime % interval) / interval < 0.5f)
                     ysrc = 16;
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
-                {
-                    sourceRect = slime.noticeHandler.Noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
-                };
+                bool noticed = entity.counters[1] > 0;
+                Color c = EntityRendererHelper.GetHurtColor(entity, 0);
 
-                return cachedStats;
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position,
+                    sourceRect = noticed ? new RectangleF(16, ysrc, 16, 16) : new RectangleF(0, ysrc, 16, 16),
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsCaveSlime : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedCaveSlime : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsCaveSlime() : base("slime_cave", typeof(CaveSlime), new RendererDeferred.DrawMaterial("slime")) { }
+            public RenderedCaveSlime() : base("slime_cave", GlobalState.Registry.EntityRegistry.Get<CaveSlime>().Id, new RendererDeferred.DrawMaterial("slime")) { }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                CaveSlime slime = entity as CaveSlime;
-
-                int ysrc = 0;
-
                 const float minInterval = 0.65f;
                 const float maxInterval = 0.85f;
 
-                float interval = MathHelper.Lerp(minInterval, maxInterval, slime.ai.JumpTimer / slime.ai.JumpTime) * 2;
+                int ysrc = 0;
 
-                if (slime.ai.OnGround && (slime.Alive % interval) / interval < 0.5f)
+                float jumpTimer = entity.timers[0];
+                float jumpTime = entity.timers[1];
+
+                float interval = MathHelper.Lerp(minInterval, maxInterval, jumpTimer / jumpTime) * 2;
+
+                if ((jumpTimer % interval) / interval < 0.5f)
                     ysrc = 16;
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
-                {
-                    sourceRect = slime.noticeHandler.Noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16),
-                };
+                bool noticed = entity.counters[1] > 0;
+                Color c = EntityRendererHelper.GetHurtColor(entity, 0);
 
-                return cachedStats;
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                {
+                    position = entity.position,
+                    sourceRect = noticed ? new RectangleF(48, ysrc, 16, 16) : new RectangleF(32, ysrc, 16, 16),
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsGhost : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedGhost : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsGhost() : base("ghost", typeof(Ghost), new RendererDeferred.DrawMaterial("grave_ghost"))
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 32, 32),
+                sideRight = new RectangleF(0, 32, 32, 32),
+                back = new RectangleF(0, 64, 32, 32)
+            };
+
+            public RenderedGhost() : base("ghost", GlobalState.Registry.EntityRegistry.Get<Ghost>().Id, new RendererDeferred.DrawMaterial("grave_ghost"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Ghost ghost = (Ghost)entity;
+                // TODO
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
-                RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
-
-                Vector3 velXZ = new Vector3(ghost.ai.Facing.X, 0, ghost.ai.Facing.Z);
-                velXZ.Normalize();
-
-                int direction = 0;
-                float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-                bool flipX = false;
-
-                if (facingDotCamera < -0.3f)
-                {
-                    direction = 2;
-                    sourceRect.y = 64;
-                }
-                else if (facingDotCamera < 0.2f)
-                {
-                    direction = 1;
-                    sourceRect.y = 32;
-
-                    float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
-
-                    if (facing < 0)
-                    {
-                        flipX = true;
-                    }
-                }
-
-                if (flipX)
-                {
-                    sourceRect.x += 32;
-                    sourceRect.width = -32;
-                }
-
-                AIFlierMelee.Funcs<Ghost> funcs = new AIFlierMelee.Funcs<Ghost> { ai = ghost.ai, entity = ghost };
-                if (funcs.GetState() == AIFlierMelee.State.Attack)
+                if ((AIFlierMelee.State)entity.state == AIFlierMelee.State.Attack)
                     sourceRect = new RectangleF(0, 96, 32, 32);
-                else if (funcs.GetState() == AIFlierMelee.State.AttackStun)
+                else if ((AIFlierMelee.State)entity.state == AIFlierMelee.State.AttackStun)
                     sourceRect = new RectangleF(32, 96, 32, 32);
 
                 Vector3 offset = Vector3.Zero;
 
-                offset.Y = MathF.Sin(MathF.PI * 2 * (entity.Alive % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
+                offset.Y = MathF.Sin(MathF.PI * 2 * (entity.aliveTime % 4f) / 4f) * Cube.CUBE_SCALE * 0.5f;
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerMelee.INVULN_TIMER_INDEX);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    position = entity.Position + offset,
+                    position = entity.position + offset,
                     sourceRect = sourceRect,
                     scale = new Vector2(2),
-                };
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsCultist : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedCultist : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsCultist() : base("cultist", typeof(Cultist), new RendererDeferred.DrawMaterial("cultist"))
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 22, 32),
+                sideRight = new RectangleF(0, 32, 22, 32),
+                back = new RectangleF(0, 64, 22, 32)
+            };
+
+            public RenderedCultist() : base("cultist", GlobalState.Registry.EntityRegistry.Get<Cultist>().Id, new RendererDeferred.DrawMaterial("cultist"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Cultist cultist = (Cultist)entity;
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
-                RectangleF sourceRect = new RectangleF(0, 0, 19, 32);
-
-                AIWalkerShooter.Funcs<Cultist> funcs = new AIWalkerShooter.Funcs<Cultist> { ai = cultist.ai, entity = cultist };
-                if (funcs.GetState() == AIWalkerShooter.State.Normal)
+                if (entity.state == (int)AIWalkerShooter.State.Normal)
                 {
-                    if (cultist.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    if (entity.velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
-                        float animP = (entity.Alive % 0.75f) / 0.75f;
+                        float animP = (entity.aliveTime % 0.75f) / 0.75f;
 
                         int frame = (int)(animP * 2f);
 
                         sourceRect = new RectangleF(22 + frame * 22, 0, 19, 32);
                     }
                 }
-                else if (funcs.GetState() == AIWalkerShooter.State.Attack)
+                else if (entity.state == (int)AIWalkerShooter.State.Attack)
                 {
-                    sourceRect = new RectangleF(65, 0, 19, 32);
+                    sourceRect.x = 65;
                 }
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerShooter.ATTACK_TIMER_INDEX);
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
+                    position = entity.position,
                     sourceRect = sourceRect,
                     scale = new Vector2(19f / 16f, 32f / 16f),
-                };
-
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsDucken : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedDucken : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsDucken() : base("ducken", typeof(Ducken), new RendererDeferred.DrawMaterial("ducken"))
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 0, 32, 32),
+                sideRight = new RectangleF(0, 32, 32, 32),
+                back = new RectangleF(0, 64, 32, 32)
+            };
+
+            public RenderedDucken() : base("ducken", GlobalState.Registry.EntityRegistry.Get<Ducken>().Id, new RendererDeferred.DrawMaterial("ducken"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Ducken ducken = (Ducken)entity;
+                Vector2 scale = Vector2.One;
 
-                RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
-                Vector3 velXZ = new Vector3(ducken.ai.Facing.X, 0, ducken.ai.Facing.Z);
-                velXZ.Normalize();
-
-                int direction = 0;
-                float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
-                bool flipX = false;
-
-                if (facingDotCamera < -0.3f)
+                if ((AIPassive.State)entity.state == AIPassive.State.Normal) 
                 {
-                    direction = 2;
-                    sourceRect.y = 64;
-                }
-                else if (facingDotCamera < 0.2f)
-                {
-                    direction = 1;
-                    sourceRect.y = 32;
-
-                    float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
-
-                    if (facing < 0)
-                    {
-                        flipX = true;
-                    }
-                }
-
-                AIPassive.Funcs<Ducken> funcs = new AIPassive.Funcs<Ducken> { ai = ducken.ai, entity = ducken };
-                if (funcs.GetState() == AIPassive.State.Normal)
-                {
-                    if (ducken.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    if (entity.velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
                         int numFrames;
 
-                        if (direction == 0 || direction == 2)
+                        if (side == EntityHelper.DirectionalSide.Front || side == EntityHelper.DirectionalSide.Back)
                             numFrames = 4;
-                        else if (direction == 1)
+                        else if (side == EntityHelper.DirectionalSide.Left || side == EntityHelper.DirectionalSide.Right)
                             numFrames = 2;
                         else numFrames = 0;
 
-                        float animP = (entity.Alive % 0.75f) / 0.75f;
+                        float animP = (entity.aliveTime % 0.75f) / 0.75f;
 
                         int frame = (int)(animP * numFrames);
 
                         sourceRect.x += 32 * frame;
-
-                        if (flipX)
-                        {
-                            sourceRect.x += 32;
-                            sourceRect.width = -32;
-                        }
                     }
                 }
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                Color c = EntityRendererHelper.GetHurtColor(entity, 3);
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
+                    position = entity.position,
                     sourceRect = sourceRect,
-                };
-                return cachedStats;
+                    scale = new Vector2(2),
+                    color = c,
+                });
+                //Ducken ducken = (Ducken)entity;
+
+                //RectangleF sourceRect = new RectangleF(0, 0, 32, 32);
+
+                //Vector3 velXZ = new Vector3(ducken.ai.Facing.X, 0, ducken.ai.Facing.Z);
+                //velXZ.Normalize();
+
+                //int direction = 0;
+                //float facingDotCamera = Vector3.Dot(velXZ, Main.camera.ForwardYawOnly);
+                //bool flipX = false;
+
+                //if (facingDotCamera < -0.3f)
+                //{
+                //    direction = 2;
+                //    sourceRect.y = 64;
+                //}
+                //else if (facingDotCamera < 0.2f)
+                //{
+                //    direction = 1;
+                //    sourceRect.y = 32;
+
+                //    float facing = velXZ.X * Main.camera.ForwardYawOnly.Z - velXZ.Z * Main.camera.ForwardYawOnly.X;
+
+                //    if (facing < 0)
+                //    {
+                //        flipX = true;
+                //    }
+                //}
+
+                //AIPassive.Funcs<Ducken> funcs = new AIPassive.Funcs<Ducken> { ai = ducken.ai, entity = ducken };
+                //if (funcs.GetState() == AIPassive.State.Normal)
+                //{
+                //    if (ducken.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                //    {
+                //        int numFrames;
+
+                //        if (direction == 0 || direction == 2)
+                //            numFrames = 4;
+                //        else if (direction == 1)
+                //            numFrames = 2;
+                //        else numFrames = 0;
+
+                //        float animP = (entity.Alive % 0.75f) / 0.75f;
+
+                //        int frame = (int)(animP * numFrames);
+
+                //        sourceRect.x += 32 * frame;
+
+                //        if (flipX)
+                //        {
+                //            sourceRect.x += 32;
+                //            sourceRect.width = -32;
+                //        }
+                //    }
+                //}
+
+                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //{
+                //    sourceRect = sourceRect,
+                //};
+                //return cachedStats;
             }
         }
 
-        private class TypeStatsGhoul : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedGhoul : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsGhoul() : base("ghoul", typeof(Ghoul), new RendererDeferred.DrawMaterial("ghoul"))
+            public RenderedGhoul() : base("ghoul", GlobalState.Registry.EntityRegistry.Get<Ghoul>().Id, new RendererDeferred.DrawMaterial("ghoul"))
             {
 
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Ghoul ghoul = entity as Ghoul;
-                Color color = Color.White * ghoul.GetAlpha();
+                // TODO
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                //Color color = Color.White * ghoul.GetAlpha();
+
+                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //{
+                //    color = color,
+                //    sourceRect = new RectangleF(0, 0, 16, 32),
+                //    scale = new Vector2(1, 2),
+                //};
+
+                //return cachedStats;
+            }
+        }
+
+        private class RenderedGlowNode : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedGlowNode() : base("glow_node", GlobalState.Registry.EntityRegistry.Get<GlowNode>().Id, new RendererDeferred.DrawMaterial("glow_node"))
+            {
+                Material.Emissive = DrawHelper.WhitePixel;
+            }
+
+            public override void OnRender(ClientStates client, ref readonly SyncedEntity entity)
+            {
+                base.OnRender(client, in entity);
+
+                var color = new Color(entity.velocity.X, entity.velocity.Y, entity.velocity.Z, entity.timers[2]);
+
+                float radius = entity.timers[0];
+                float fade = entity.timers[1];
+
+                client.LightManager.AddShadowmapped(new Engine.Common.LightManager2.LightConfig
                 {
-                    color = color,
-                    sourceRect = new RectangleF(0, 0, 16, 32),
-                    scale = new Vector2(1, 2),
-                };
-
-                return cachedStats;
-            }
-        }
-
-        private class TypeStatsLeviathan : RendererOpaqueBillboardedEntity.TypeStats
-        {
-            public TypeStatsLeviathan() : base("leviathan", typeof(EntityLeviathan), new RendererDeferred.DrawMaterial("leviathan"))
-            {
+                    position = entity.position - new Vector3(0, Cube.CUBE_SCALE / 2, 0),
+                    min = radius - fade,
+                    max = radius,
+                    color = color.ToVector4(),
+                });
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                EntityLeviathan leviathan = entity as EntityLeviathan;
-
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    color = Color.White * leviathan.GetAlpha(),
-                    sourceRect = new RectangleF(0, 0, 64, 64),
-                    scale = new Vector2(6),
-                };
-
-                return cachedStats;
+                    color = Color.White,
+                    position = entity.position - new Vector3(0, Cube.CUBE_SCALE, 0),
+                    shouldDraw = true,
+                });
             }
         }
 
-        private class TypeStatsHeart : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedLeviathan : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsHeart() : base("heart", typeof(Heart), new RendererDeferred.DrawMaterial("heart"))
+            public RenderedLeviathan() : base("leviathan", GlobalState.Registry.EntityRegistry.Get<EntityLeviathan>().Id, new RendererDeferred.DrawMaterial("leviathan"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Heart heart = entity as Heart;
-                float healthPercent = (float)heart.Health / (float)heart.MaxHealth;
+                // TODO
+
+                //cachedStats[0] = new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //{
+                //    color = Color.White * leviathan.GetAlpha(),
+                //    sourceRect = new RectangleF(0, 0, 64, 64),
+                //    scale = new Vector2(6),
+                //};
+
+                //return cachedStats;
+            }
+        }
+
+        private class RenderedHeart : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedHeart() : base("heart", GlobalState.Registry.EntityRegistry.Get<Heart>().Id, new RendererDeferred.DrawMaterial("heart"))
+            {
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                float healthPercent = (float)entity.health / (float)Heart.MaxHealth;
 
                 float interval = MathHelper.Lerp(0.25f, 2f, healthPercent);
 
-                float t = (entity.Alive % interval) / interval;
+                float t = (entity.aliveTime % interval) / interval;
 
                 float s = MathF.Sin(MathF.PI * 2 * t) * 0.5f + 0.5f;
 
                 float scale = MathHelper.Lerp(0.75f, 1.15f, s);
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
+                    position = entity.position,
                     sourceRect = new RectangleF(0, 0, 16, 21),
                     scale = new Vector2(scale),
-                };
-
-                return cachedStats;
+                });
             }
         }
 
-        private class TypeStatsPlayerBubble : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedPlayerBubble : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsPlayerBubble() : base("player_bubble", typeof(PlayerBubble), new RendererDeferred.DrawMaterial("bubble"))
+            public RenderedPlayerBubble() : base("player_bubble", GlobalState.Registry.EntityRegistry.Get<PlayerBubble>().Id, new RendererDeferred.DrawMaterial("bubble"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                float t0 = (entity.Alive % 1.75f) / 1.75f;
-                float t1 = ((entity.Alive + 0.45f) % 2.05f) / 2.05f;
+                float t0 = (entity.aliveTime % 1.75f) / 1.75f;
+                float t1 = ((entity.aliveTime + 0.45f) % 2.05f) / 2.05f;
                 float s0 = MathF.Sin(MathF.PI * 2 * t0) * 0.5f + 0.5f;
                 float s1 = MathF.Sin(MathF.PI * 2 * t1) * 0.5f + 0.5f;
 
                 float scaleX = MathHelper.Lerp(1f, 1.15f, s0);
                 float scaleY = MathHelper.Lerp(0.95f, 1.15f, s1);
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     scale = new Vector2(scaleX, scaleY),
-                    shouldDraw = !(entity as PlayerBubble).exploding,
-                    sourceRect = new RectangleF(0, 0, 64, 64),
-                };
-
-                return cachedStats;
+                    sourceRect = entity.counters[0] == 0 ? new RectangleF(0, 0, 64, 64) : new RectangleF(0, 64, 64, 64),
+                });
             }
         }
 
-        private class TypeStatsSnake : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedSnake : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSnake() : base("snake", typeof(Snake), new RendererDeferred.DrawMaterial("snake"))
+            private EntityHelper.DirectionalSourceRect directionalSourceRect = new()
+            {
+                front = new RectangleF(0, 16, 16, 16),
+                sideRight = new RectangleF(0, 0, 32, 16),
+                back = new RectangleF(32, 16, 16, 16)
+            };
+
+            public RenderedSnake() : base("snake", GlobalState.Registry.EntityRegistry.Get<Snake>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Snake snake = entity as Snake;
-
-                Vector3 velXZ = new Vector3(snake.ai.Velocity.X, 0, snake.ai.Velocity.Z);
-                velXZ.Normalize();
-
-                float facingDotCamera = Vector3.Dot(velXZ, -Main.camera.Forward);
-
-                //Facing within 45 degrees of the camera.
-                bool isFacingCamera = facingDotCamera < MathHelper.ToRadians(45);
-
-                RectangleF sourceRect = new RectangleF(0, 0, 32, 16);
                 Vector2 scale = Vector2.One;
 
-                if (isFacingCamera)
+                var side = EntityHelper.GetEntityDirectionalSide(client.currInterpState.camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
+                if (side == EntityHelper.DirectionalSide.Left || side == EntityHelper.DirectionalSide.Right)
                 {
-                    sourceRect = new RectangleF(0, 16, 16, 16);
+                    scale = new Vector2(2, 1);
                 }
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(side, directionalSourceRect);
 
-                var funcs = new AIWalkerMelee.Funcs<Snake> { ai = snake.ai, entity = snake };
-                if (funcs.GetState() == AIWalkerMelee.State.Normal)
+                if (entity.state == (int)AIWalkerMelee.State.Normal)
                 {
-                    if (snake.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    if (entity.velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
-                        float animP = (entity.Alive % 0.75f) / 0.75f;
+                        float animP = (entity.aliveTime % 0.75f) / 0.75f;
 
                         int frame = (int)(animP * 2f);
 
                         sourceRect.x += sourceRect.width * frame;
                     }
                 }
-                else if (funcs.GetState() == AIWalkerMelee.State.Attack)
+                else if (entity.state == (int)AIWalkerMelee.State.Attack)
                 {
                     scale = new Vector2(2);
                     sourceRect.y = 32;
@@ -486,93 +621,93 @@ namespace ViMG.Entities.Renderers
                     sourceRect.height = 32;
                     const int NUM_FRAMES = 4;
 
-                    int frame = (int)((1 - (snake.ai.AttackTimer / snake.ai.AttackLockTime)) * NUM_FRAMES);
+                    // TODO hardcoded 0.25 - "AttackLockTime"
+                    int frame = (int)((1 - (entity.timers[AIWalkerMelee.ATTACK_TIMER_INDEX] / 0.25f)) * NUM_FRAMES);
 
                     sourceRect.x = 32 * frame;
                 }
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                Color c = EntityRendererHelper.GetHurtColor(entity, AIWalkerMelee.INVULN_TIMER_INDEX);
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     sourceRect = sourceRect,
                     scale = scale,
-                };
-
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsSnakeFlying : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedSnakeFlying : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsSnakeFlying() : base("snake_flying", typeof(SnakeFlying), new RendererDeferred.DrawMaterial("snake"))
+            public RenderedSnakeFlying() : base("snake_flying", GlobalState.Registry.EntityRegistry.Get<SnakeFlying>().Id, new RendererDeferred.DrawMaterial("snake"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[2];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                SnakeFlying snake = entity as SnakeFlying;
-
                 RectangleF sourceRectSnake = new RectangleF(0, 34, 32, 32);
 
-                AIFlierMelee.Funcs<SnakeFlying> funcs = new AIFlierMelee.Funcs<SnakeFlying> { ai = snake.aiFlying, entity = snake };
-                if (funcs.GetState() == AIFlierMelee.State.Attack)
+                if (entity.state == (int)AIFlierMelee.State.Attack)
                 {
                     const int ATT_NUM_FRAMES = 4;
-                    int frame = (int)((1 - (snake.aiFlying.AttackTimer / snake.aiFlying.AttackLockTime)) * ATT_NUM_FRAMES);
+                    // TODO hardcoded 0.25 - "AttackLockTime"
+                    int frame = (int)((1 - (entity.timers[2] / 0.25f)) * ATT_NUM_FRAMES);
                     sourceRectSnake = new RectangleF(32 * frame, 34, 32, 32);
                 }
 
                 RectangleF sourceRectWings = new RectangleF(0, 64, 32, 32);
 
                 const int WINGS_NUM_FRAMES = 3;
-                int wingFrame = (int)((1 - ((entity.Alive % 0.25f) / 0.25f)) * WINGS_NUM_FRAMES);
+                int wingFrame = (int)((1 - ((entity.aliveTime % 0.25f) / 0.25f)) * WINGS_NUM_FRAMES);
                 sourceRectWings.x = 32 * wingFrame;
 
+                Color c = EntityRendererHelper.GetHurtColor(entity, 2);
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     sourceRect = sourceRectWings,
                     scale = new Vector2(2),
-                    position = entity.Position,
-                };
+                    position = entity.position,
 
-                cachedStats[1] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                    color = c,
+                });
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
                     sourceRect = sourceRectSnake,
                     scale = new Vector2(2),
-                    position = entity.Position,
-                };
+                    position = entity.position,
 
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsStoneBeetle : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedStoneBeetle : RendererOpaqueBillboardedEntity.RenderedEntity
         {
             private EntityHelper.DirectionalSourceRect directionalSourceRect = new EntityHelper.DirectionalSourceRect()
             {
                 front = new RectangleF(0, 0, 16, 16),
-                sideLeft = new RectangleF(0, 16, 16, 16),
+                sideRight = new RectangleF(0, 16, 16, 16),
                 back = new RectangleF(0, 32, 16, 16)
             };
 
-            public TypeStatsStoneBeetle() : base("stone_beetle", typeof(StoneBeetle), new RendererDeferred.DrawMaterial("stone_beetle"))
+            public RenderedStoneBeetle() : base("stone_beetle", GlobalState.Registry.EntityRegistry.Get<StoneBeetle>().Id, new RendererDeferred.DrawMaterial("stone_beetle"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                StoneBeetle beetle = entity as StoneBeetle;
+                //DrawHelper3D.DrawLine(client.Renderer, client.currInterpState.camera, entity.position, entity.position + Vector3.Transform(Vector3.Forward, entity.rotation) * 3, Cube.CUBE_SCALE * 0.25f, StaticMaterials.FlatColor, RectangleF.Empty, Color.White);
+                var camera = client.currInterpState.camera;
+                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(camera, Vector3.Transform(Vector3.Forward, entity.rotation), directionalSourceRect);
 
-                RectangleF sourceRect = EntityHelper.GetEntityDirectionalSourceRect(beetle.ai.Facing, directionalSourceRect);
-
-                AIWalkerShooter.Funcs<StoneBeetle> funcs = new AIWalkerShooter.Funcs<StoneBeetle> { ai = beetle.ai, entity = beetle };
-                if (funcs.GetState() == AIWalkerShooter.State.Normal)
+                if (entity.state == (int)AIWalkerShooter.State.Normal)
                 {
-                    if (beetle.ai.Velocity.Length() > Cube.CUBE_SCALE * 0.1f)
+                    if (entity.velocity.Length() > Cube.CUBE_SCALE * 0.1f)
                     {
-                        float animP = (entity.Alive % 0.75f) / 0.75f;
+                        float animP = (entity.aliveTime % 0.75f) / 0.75f;
 
                         int frame = (int)(animP * 2f);
 
@@ -580,97 +715,116 @@ namespace ViMG.Entities.Renderers
                     }
                 }
 
-                if (beetle.ai.IsInRangeOfTarget)
+                if (entity.counters[0] > 0)
                 {
                     sourceRect = new RectangleF(0, 48, 16, 16);
                 }
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                Color c = EntityRendererHelper.GetHurtColor(entity, 0);
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    position = entity.Position,
+                    position = entity.position,
                     sourceRect = sourceRect,
-                };
-                return cachedStats;
+                    color = c,
+                });
             }
         }
 
-        private class TypeStatsTestNPC : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedTestNPC : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsTestNPC() : base("test_npc", typeof(TestNPC), new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
+            public RenderedTestNPC(int type) : base(GlobalState.Registry.EntityRegistry.Get(type).Identifier, type, new RendererDeferred.DrawMaterial(DrawHelper.WhitePixel))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[1];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                var drawPos = entity.position - new Vector3(0, Cube.CUBE_SCALE * 1.5f, 0);
+
+                var color = Color.White;
+
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    color = Color.White,
-                    position = entity.Position,
+                    color = color,
+                    position = drawPos,
                     scale = new Vector2(1, 2),
                     shouldDraw = true,
-                };
-
-                return cachedStats;
+                });
             }
         }
 
-        private class TypeStatsLightStressTest : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedLightStressTest : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsLightStressTest() : base("light_stress_test", typeof(LightStressTest), new RendererDeferred.DrawMaterial("glow_node"))
+            public RenderedLightStressTest() : base("light_stress_test", GlobalState.Registry.EntityRegistry.Get<LightStressTest>().Id, new RendererDeferred.DrawMaterial("glow_node"))
             {
             }
 
-            private RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[64];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                for (int i = 0; i < 64; i++)
-                {
-                    var worldTime = entity.world.GetTime() * LightStressTest.Speed;
-                    float t = ((worldTime + 0.03f * i) % 2f) / 2f;
-                    float zt = ((worldTime + 0.03f * i + 0.3f) % 2f) / 2f;
+                // TODO
+                //for (int i = 0; i < 64; i++)
+                //{
+                //    var worldTime = entity.aliveTime * LightStressTest.Speed;
+                //    float t = ((worldTime + 0.03f * i) % 2f) / 2f;
+                //    float zt = ((worldTime + 0.03f * i + 0.3f) % 2f) / 2f;
 
-                    float x = MathF.Cos(MathF.PI * 2 * t) * LightStressTest.RADIUS_XZ;
-                    float y = MathF.Sin(MathF.PI * 2 * t) * LightStressTest.RADIUS_Y;
-                    float z = -MathF.Sin(MathF.PI * 2 * zt) * LightStressTest.RADIUS_XZ;
+                //    float x = MathF.Cos(MathF.PI * 2 * t) * LightStressTest.RADIUS_XZ;
+                //    float y = MathF.Sin(MathF.PI * 2 * t) * LightStressTest.RADIUS_Y;
+                //    float z = -MathF.Sin(MathF.PI * 2 * zt) * LightStressTest.RADIUS_XZ;
 
-                    Vector3 lightPos = entity.Position + new Vector3(x, y, z);
+                //    Vector3 lightPos = entity.position + new Vector3(x, y, z);
 
 
-                    cachedStats[i].position = lightPos;
-                }
+                //    cachedStats[i].position = lightPos;
+                //}
 
-                return cachedStats;
+                //return cachedStats;
             }
         }
 
-        private class TypeStatsWorm : RendererOpaqueBillboardedEntity.TypeStats
+        private class RenderedWorm : RendererOpaqueBillboardedEntity.RenderedEntity
         {
-            public TypeStatsWorm() : base("worm", typeof(Worm), new RendererDeferred.DrawMaterial("worm"))
+            public RenderedWorm() : base("worm", GlobalState.Registry.EntityRegistry.Get<Worm>().Id, new RendererDeferred.DrawMaterial("worm"))
             {
             }
 
-            private static RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] cachedStats = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats[9];
-            public override RendererOpaqueBillboardedEntity.TypeStatsDrawStats[] GetDrawStats(Entity entity)
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
             {
-                Worm worm = entity as Worm;
+                // TODO
 
-                cachedStats[0] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    position = entity.Position,
+                    position = entity.position,
                     sourceRect = new RectangleF(0, 0, 16, 16),
-                };
+                });
 
-                for (int i = 0; i < 8; i++)
+
+                //for (int i = 0; i < 8; i++)
+                //{
+                //    renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
+                //    {
+                //        position = worm.trainPositions[i],
+                //        sourceRect = new RectangleF(16, 0, 16, 16),
+                //    });
+                //}
+
+                //return cachedStats;
+            }
+        }
+
+        private class RenderedBonePillar : RendererOpaqueBillboardedEntity.RenderedEntity
+        {
+            public RenderedBonePillar() : base("bone_pillar", GlobalState.Registry.EntityRegistry.Get<BonePillar>().Id, new RendererDeferred.DrawMaterial("bone_pillar"))
+            {
+            }
+
+            public override void GetDrawStats(ClientStates client, ref readonly SyncedEntity entity, FastList<RendererOpaqueBillboardedEntity.RenderedEntityDrawStats> renderedEntityStats)
+            {
+                renderedEntityStats.Add(new RendererOpaqueBillboardedEntity.RenderedEntityDrawStats
                 {
-                    cachedStats[i + 1] = new RendererOpaqueBillboardedEntity.TypeStatsDrawStats
-                    {
-                        position = worm.trainPositions[i],
-                        sourceRect = new RectangleF(16, 0, 16, 16),
-                    };
-                }
-
-                return cachedStats;
+                    scale = new Vector2(1, 3),
+                    position = entity.position,
+                });
             }
         }
 
@@ -678,26 +832,30 @@ namespace ViMG.Entities.Renderers
 
         public static void DoRegistration(RendererOpaqueBillboardedEntity renderer)
         {
-            renderer.registry.Register(new TypeStatsGeneric("imp", typeof(Imp), new RendererDeferred.DrawMaterial("imp"), sourceRect: new RectangleF(0, 16, 16, 16)));
-            renderer.registry.Register(new TypeStatsSkeleton());
-            renderer.registry.Register(new TypeStatsSlime());
-            renderer.registry.Register(new TypeStatsBigSlime());
-            renderer.registry.Register(new TypeStatsCaveSlime());
-            renderer.registry.Register(new TypeStatsGhost());
-            renderer.registry.Register(new TypeStatsCultist());
-            renderer.registry.Register(new TypeStatsGeneric("salamander", typeof(CaveSalamander), new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
-            renderer.registry.Register(new TypeStatsDucken());
-            renderer.registry.Register(new TypeStatsGhoul());
-            renderer.registry.Register(new TypeStatsGeneric("glow_node", typeof(GlowNode), new RendererDeferred.DrawMaterial(Main.assetsManager.GetAsset<Texture2D>("glow_node"), emissive: DrawHelper.WhitePixel), offset: new Vector3(0, -Cube.CUBE_SCALE, 0)));
-            renderer.registry.Register(new TypeStatsLeviathan());
-            renderer.registry.Register(new TypeStatsHeart());
-            renderer.registry.Register(new TypeStatsPlayerBubble());
-            renderer.registry.Register(new TypeStatsSnake());
-            renderer.registry.Register(new TypeStatsSnakeFlying());
-            renderer.registry.Register(new TypeStatsStoneBeetle());
-            renderer.registry.Register(new TypeStatsTestNPC());
-            renderer.registry.Register(new TypeStatsLightStressTest());
-            renderer.registry.Register(new TypeStatsWorm());
+            renderer.registry.Register(new RenderedImp());
+            renderer.registry.Register(new RenderedSkeleton());
+            renderer.registry.Register(new RenderedSkeleton2());
+            renderer.registry.Register(new RenderedSkeletonBonePile());
+            renderer.registry.Register(new RenderedSlime());
+            renderer.registry.Register(new RenderedBigSlime());
+            renderer.registry.Register(new RenderedCaveSlime());
+            renderer.registry.Register(new RenderedGhost());
+            renderer.registry.Register(new RenderedCultist());
+            renderer.registry.Register(new RenderedGeneric("salamander", GlobalState.Registry.EntityRegistry.Get<CaveSalamander>().Id, new RendererDeferred.DrawMaterial("salamander"), sourceRect: new RectangleF(0, 0, 16, 16)));
+            renderer.registry.Register(new RenderedDucken());
+            renderer.registry.Register(new RenderedGhoul());
+            renderer.registry.Register(new RenderedGlowNode());
+            renderer.registry.Register(new RenderedLeviathan());
+            renderer.registry.Register(new RenderedHeart());
+            renderer.registry.Register(new RenderedPlayerBubble());
+            renderer.registry.Register(new RenderedSnake());
+            renderer.registry.Register(new RenderedSnakeFlying());
+            renderer.registry.Register(new RenderedStoneBeetle());
+            renderer.registry.Register(new RenderedTestNPC(GlobalState.Registry.EntityRegistry.Get<TestNPC>().Id));
+            //renderer.registry.Register(new RenderedTestNPC(GlobalState.Registry.EntityRegistry.Get<Player>().Id));
+            renderer.registry.Register(new RenderedLightStressTest());
+            renderer.registry.Register(new RenderedWorm());
+            renderer.registry.Register(new RenderedBonePillar());
         }
     }
 }

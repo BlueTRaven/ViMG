@@ -1,6 +1,9 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,13 +15,15 @@ using ViMG.Physics;
 
 namespace ViMG.Entities
 {
-	public class EntityItem : Entity
+	[EntitySerializable(EntitySerializableAttribute.SerializationType.Server)]
+	[EntityMeta(0)]
+	public class EntityItem : Entity, ISyncedEntity
 	{
 		//public Vector3 Velocity;
 		public readonly Vector3 InitialVelocity;
 		public Vector3 MaxVelocity = new Vector3(10, 15, 10) * Cube.CUBE_SCALE;
 		
-		public readonly ItemInstance ItemInstance;
+		public ItemInstance ItemInstance;
 
 		private Rectangle3D bounds = new Rectangle3D(-new Vector3(Cube.CUBE_SCALE / 2f), new Vector3(Cube.CUBE_SCALE / 2f));
 		public Rectangle3D Bounds => bounds.Offset(Position);
@@ -30,6 +35,9 @@ namespace ViMG.Entities
 		private Box box;
 		private TypedIndex physicsShapeIndex;
 		public BodyHandle physicsHandle;
+
+		[EntityCtorUsage(EntityCtorUsageType.Serialization)]
+		public EntityItem() { }
 
 		public EntityItem(Vector3 position, Vector3 initialVelocity, ItemInstance item)
 		{
@@ -49,8 +57,8 @@ namespace ViMG.Entities
 			else box = new Box(Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 2f, Cube.CUBE_SCALE / 8f);
 
 			const float scale = MathF.PI;
-			Vector3 initialAngular = new Vector3(Main.random.NextFloat(-scale, scale), Main.random.NextFloat(-scale, scale),
-				Main.random.NextFloat(-scale, scale));
+			Vector3 initialAngular = new Vector3(GlobalState.random.NextFloat(-scale, scale), GlobalState.random.NextFloat(-scale, scale),
+				GlobalState.random.NextFloat(-scale, scale));
 
 			physicsShapeIndex = world.PhysicsInfo.Simulation.Shapes.Add(box);
 			physicsHandle = world.PhysicsInfo.Simulation.Bodies.Add(
@@ -77,13 +85,12 @@ namespace ViMG.Entities
 			velocity.X = Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
 			velocity.Z = Math.Clamp(velocity.Z, -MaxVelocity.Z, MaxVelocity.Z);
 
-            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid)
+            if (world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(Position)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid)
                 velocity.Y -= PhysicsInfo.SIM_GRAVITY * (float)deltaTime * 4f;
 
             world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 
 			Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
-
 
 			if (ItemInstance.item is ItemCube)
 				origin.Z = Cube.CUBE_SCALE / 4f;
@@ -108,19 +115,37 @@ namespace ViMG.Entities
 			world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear = velocity.ToNumerics();
 		}
 
-		//public override void Draw(GraphicsDevice device, Effect effect)
-		//{
-		//	Vector3 origin = new Vector3(Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 4f, Cube.CUBE_SCALE / 16f);
+        public override void OnSave(List<byte> saveBytes)
+        {
+            base.OnSave(saveBytes);
 
-		//	if (Item.item is ItemCube)
-		//		origin.Z = Cube.CUBE_SCALE / 4f;
+			SaveHelper.SaveItemInstance(saveBytes, ItemInstance);
 
-		//	var reference = world.PhysicsInfo.Simulation.Bodies[physicsHandle];
-		//	Item.item.DrawInWorld(device, world, Item,
-		//		Matrix.CreateTranslation(-origin) *
-		//		Matrix.CreateFromQuaternion(new Quaternion(reference.Pose.Orientation.X, reference.Pose.Orientation.Y, reference.Pose.Orientation.Z, reference.Pose.Orientation.W)) *
-		//		Matrix.CreateTranslation(reference.Pose.Position)
-		//		);
-		//}
-	}
+			GetSyncedEntity(out var state);
+			state.OnSave(saveBytes);
+        }
+
+        public override void OnLoad(World world, byte[] loadBytes, in int version)
+        {
+            base.OnLoad(world, loadBytes, version);
+
+            int index = 0;
+			ItemInstance = SaveHelper.LoadItemInstance(loadBytes, ref index);
+
+			var state = new SyncedEntity();
+			state.OnLoad(loadBytes, ref index);
+			Position = state.position;
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Position,
+                velocity = world.PhysicsInfo.Simulation.Bodies[physicsHandle].MotionState.Velocity.Linear,
+                rotation = world.PhysicsInfo.Simulation.Bodies[physicsHandle].Pose.Orientation,
+				counters = { [0] = ItemInstance.item.Id, [1] = ItemInstance.num, [2] = ItemInstance.damage },
+            };
+        }
+    }
 }

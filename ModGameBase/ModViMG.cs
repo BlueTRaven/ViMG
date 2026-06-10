@@ -1,5 +1,10 @@
-﻿using Engine.Mods;
+﻿using Engine;
+using Engine.Items;
+using Engine.Mods;
 using Microsoft.Xna.Framework.Graphics;
+using ModGameBase.Entities;
+using ModGameBase.Networking;
+using ModGameBase.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +32,9 @@ namespace ViMG
                 if (device != null)
                     this.RendererRegistry = new RendererRegistryViMG(device);
                 this.WorldLogicRegistry = new WorldLogicRegistryViMG();
+                EntityRegistry = new EntityRegistryViMG();
+                ProjectileRegistry = new ProjectileRegistryViMG();
+                MessageRegistry = new MessageRegistryViMG();
             }
         }
 
@@ -38,10 +46,10 @@ namespace ViMG
         {
             base.OnRegister();
 
-            if (Main.Registry.RendererRegistry != null)
+            if (GlobalState.Registry.RendererRegistry != null)
             {
-                RendererOpaqueBillboardedEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("generic_billboard") as RendererOpaqueBillboardedEntity);
-                RendererOpaqueXMeshEntityViMG.DoRegistration(Main.Registry.RendererRegistry.Get("xmesh") as RendererOpaqueXMeshEntity);
+                RendererOpaqueBillboardedEntityViMG.DoRegistration(GlobalState.Registry.RendererRegistry.Get("generic_billboard") as RendererOpaqueBillboardedEntity);
+                RendererOpaqueXMeshEntityViMG.DoRegistration(GlobalState.Registry.RendererRegistry.Get("xmesh") as RendererOpaqueXMeshEntity);
             }
         }
 
@@ -55,13 +63,13 @@ namespace ViMG
         {
             base.AddSpawnInventoryItems(inventory);
 
-            inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(Main.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));
-            inventory.Add(ItemSword.CreateSword(new ItemInstance(Main.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
+            inventory.Add(ItemPickaxe.CreatePickaxe(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("pickaxe_head_tin"), 1, 1)));
+            inventory.Add(ItemSword.CreateSword(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("sword_blade_tin"), 1, 1)));
         }
 
         public static ModRegistryServiceViMG GetRegistry()
         {
-            return Main.Registry.ModRegistry.Get("ViMG").Registry as ModRegistryServiceViMG;
+            return GlobalState.Registry.ModRegistry.Get("ViMG").Registry as ModRegistryServiceViMG;
         }
     }
 }

@@ -1,26 +1,39 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.GameStates;
 using ViMG.Rendering;
 
 namespace ViMG.Items
 {
     public class ItemCube : Item
 	{
-		private ushort cubeId;
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("ItemCube", true, Engine.Logger.LogLevel.Info);
 
-		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier, 
-			cube.GetHeldSourceRect())
+        public readonly ushort CubeId;
+        private readonly Cube cube;
+
+		public ItemCube(Cube cube, ushort cubeId) : base("item_" + cube.Identifier)
 		{
-			this.cubeId = cubeId;
+			this.CubeId = cubeId;
+            this.cube = cube;
 
-			name = Main.Registry.CubeRegistry.Get(cubeId).Name;
-			description = Main.Registry.CubeRegistry.Get(cubeId).Description;
+			name = GlobalState.Registry.CubeRegistry.Get(cubeId).Name;
+			description = GlobalState.Registry.CubeRegistry.Get(cubeId).Description;
 		}
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItemCube(this, cube.Client.GetHeldSourceRect());
+        }
 
 		public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
@@ -28,43 +41,45 @@ namespace ViMG.Items
 
 			if (player.IsLooking && player.CanPlace)
 			{
-				if (player.world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(player.PlaceAtPos)))
+				if (player.world.PlaceCube(player, player.PlaceAtPos, CubeId))
 				{
-					player.world.ChunkManager.CubeView.SetCube(player.PlaceAtPos, cubeId);
-					inventory.Remove(index, 1);
-					Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-					cube.OnPlayerPlaced(player, player.PlaceAtPos);
-					//player.world.ChunkManager2.SetCube(player.PlaceAtPos, cubeId);
+                    Logger.Log(Engine.Logger.LogLevel.Info, "placed at {0} - chunk pos {1}", player.PlaceAtPos, ChunkPosition.CubeChunk(player.PlaceAtPos));
+                    inventory.Remove(index, 1);
 
-					//player.world.ChunkLoadManager.ReloadChunk(player.world, ChunkPosition.CubeChunk(player.PlaceAtPos));
+                    actionStats.useTime = 0.25f;
+                    actionStats.useAnimTime = 0.25f;
 
-					//cubes can be placed as fast as possible
-					actionStats.useTime = 0.25f;
-					actionStats.useAnimTime = 0.25f;
-
-					return true;
-				}
+                    return true;
+                }
 			}
 
 			return false;
 		}
+	}
+
+    public class ClientItemCube : ClientItem
+    {
+        public ClientItemCube(Item item, RectangleF sourceRect) : base(item, sourceRect)
+        {
+        }
 
         public override RendererDeferred.DrawMaterial GetMaterial()
         {
             return StaticMaterials.Cubes;
         }
 
-        public override void DrawInWorld(GraphicsDevice device, World world, ItemInstance item, Matrix transform)
-		{
-			//base.Draw(device, transform);
+        public override void DrawInWorld(GraphicsDevice device, RendererDeferred renderer, ItemInstance item, Matrix transform)
+        {
+            //base.Draw(device, transform);
 
-			Cube cube = Main.Registry.CubeRegistry.Get(cubeId);
-			var mesh = cube.GetHeldMesh(device);
+            Cube cube = GlobalState.Registry.CubeRegistry.Get((this.item as ItemCube).CubeId) ?? GlobalState.Registry.CubeRegistry.Air;
 
-			Matrix scaled = Matrix.CreateScale(0.35f) * transform;
-			if (mesh.IBO != null)
-				Main.Renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
-					mesh, scaled, cube.GetHeldSourceRect(world)));
-		}
-	}
+            var mesh = cube.Client.GetHeldMesh(device);
+
+            Matrix scaled = Matrix.CreateScale(0.35f) * transform;
+            if (mesh.IBO != null)
+                renderer.AddOpaqueDraw(new Rendering.RendererDeferred.GBufferDraw(GetMaterial(),
+                    mesh, scaled));
+        }
+    }
 }

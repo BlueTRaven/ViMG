@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -39,7 +40,7 @@ namespace ViMG.UIs
 				this.filterCatalyst = currentCatalysts[0];
 			GetFilteredRecipes();
 
-			fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+			fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 		}
 
 		public override void OnOpen()
@@ -62,8 +63,11 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			//TODO: size should be determined statically for each catalyst rather than asking to do a UI.
-			Size eachSize = Size.Zero;
+            if (GlobalState.GameStateManager.GetCurrentGameState().GetCurrentMenu() == this && (Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.E) || Main.inputManager.JustPressed(Microsoft.Xna.Framework.Input.Keys.Escape)))
+                GlobalState.GameStateManager.GetCurrentGameState().PopMenu();
+
+            //TODO: size should be determined statically for each catalyst rather than asking to do a UI.
+            Size eachSize = Size.Zero;
 			if (currentRecipes != null && currentRecipes.Count > 0)
 				eachSize = filterCatalyst.GetSize();
 			
@@ -92,7 +96,7 @@ namespace ViMG.UIs
 
 			foreach (IRecipeCatalyst catalyst in currentCatalysts)
 			{
-				var button = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+				var button = UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 							new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16)));
 
 				UI.MakeTexture(bounds, catalyst.GetTexture(), catalyst.GetSourceRect());
@@ -113,7 +117,7 @@ namespace ViMG.UIs
 			{
 				if (page > 0)
 				{
-					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 						new RectangleF(0, 112, 8, 8), new RectangleF(8, 112, 8, 8), new RectangleF(8, 112, 8, 8))).clickLeft)
 					{
 						page--;
@@ -122,7 +126,7 @@ namespace ViMG.UIs
 
 				if (page * numPerPage + numPerPage < currentRecipes.Count)
 				{
-					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					if (UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(SIZE * 8 - SIZE / 2, MAX_PAGE_HEIGHT - SIZE / 2, SIZE / 2, SIZE / 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 						new RectangleF(0, 120, 8, 8), new RectangleF(8, 120, 8, 8), new RectangleF(8, 120, 8, 8))).clickLeft)
 					{
 						page++;
@@ -172,9 +176,9 @@ namespace ViMG.UIs
 			if (!itemInstance.valid)
 				return false;
 
-			foreach (var catalyst in Main.Registry.RecipeRegistry.GetCatalysts())
+			foreach (var catalyst in GlobalState.Registry.RecipeRegistry.GetCatalysts())
 			{
-				foreach (Recipe recipe in Main.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
+				foreach (Recipe recipe in GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
 				{
 					if (HasFilteredItem(recipe, itemInstance, includeInputs, includeOutputs))
 					{
@@ -190,14 +194,14 @@ namespace ViMG.UIs
 		{
 			if (!filterItem.valid)
 			{
-				return new List<IRecipeCatalyst>(Main.Registry.RecipeRegistry.GetCatalysts());
+				return new List<IRecipeCatalyst>(GlobalState.Registry.RecipeRegistry.GetCatalysts());
 			}
 
 			List<IRecipeCatalyst> catalysts = new List<IRecipeCatalyst>();
 
-			foreach (var catalyst in Main.Registry.RecipeRegistry.GetCatalysts())
+			foreach (var catalyst in GlobalState.Registry.RecipeRegistry.GetCatalysts())
 			{
-				foreach (Recipe recipe in Main.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
+				foreach (Recipe recipe in GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(catalyst))
 				{
 					if (HasFilteredItem(recipe, filterItem, includeInputs, includeOutputs))
 					{
@@ -216,7 +220,7 @@ namespace ViMG.UIs
 			{
 				currentRecipes = new List<Recipe>();
 
-				var catalystRecipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(filterCatalyst);
+				var catalystRecipes = GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(filterCatalyst);
 
 				if (catalystRecipes != null)
 				{

@@ -7,12 +7,21 @@ using System.Threading.Tasks;
 using ViMG.Buffs;
 using ViMG.Cubes;
 using BrUtility;
+using Engine.Networking;
+using Engine;
+using ModGameBase.Entities;
+using System.Data;
 
 namespace ViMG.Entities
 {
-    public class AIWalkerMelee
+    public class AIWalkerMelee : ISyncedEntity
     {
-		public enum State
+        public const int VERSION = 1;
+
+        public const int ATTACK_TIMER_INDEX = 2;
+        public const int INVULN_TIMER_INDEX = 3;
+
+        public enum State
 		{
 			Paused,
 			Normal,
@@ -22,13 +31,10 @@ namespace ViMG.Entities
 
 		public Vector3 MaxVelocity = new Vector3(Cube.CUBE_SCALE * 1.5f, Cube.CUBE_SCALE * 17, Cube.CUBE_SCALE * 1.5f);
 		public Vector3 Velocity;
+		public Vector3 Facing;
 		private readonly NoticeHandler<Player> noticeHandler;
 		private readonly BuffManager buffManager;
-		private float idleTimer;
-		private float idleMoveTimer;
-		private int idleMovements;
-		private Vector2 idleDirection;
-		private Vector2 idleHome;
+		private IdleStats idle;
 
 		private State state;
 
@@ -36,6 +42,7 @@ namespace ViMG.Entities
 
 		public float AttackTimer => attackTimer;
 
+		public float TakeDamageTimer;
 		public float InvulnTimer;
 
 		private bool onGround;
@@ -100,7 +107,7 @@ namespace ViMG.Entities
 
 				if (ai.touchHitbox == -1)
                     ai.touchHitbox = entity.world.HitboxManager.Add(this, ai.touchHitboxBounds.Offset(entity.Position), Vector3.Zero, HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.TouchDamage, 1f, ai.InvulnTimer <= 0);
-				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position), ai.InvulnTimer <= 0);
+				else entity.world.HitboxManager.Update(ai.touchHitbox, ai.touchHitboxBounds.Offset(entity.Position).ToOBB(), ai.InvulnTimer <= 0);
 
 				Vector3 actualMaxVel = ai.MaxVelocity;
 
@@ -123,7 +130,7 @@ namespace ViMG.Entities
 
 					if (ai.noticeHandler.Noticed)
 					{
-                        ai.idleMovements = 0;
+						ai.idle.idleMovements = 0;
 
 						if (ai.state == State.Paused)
 						{
@@ -144,8 +151,9 @@ namespace ViMG.Entities
 							if (distance > ai.MoveTowardsTargetDistance)
 							{
 								EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, dir, actualMaxVel);
-							}
-							else
+                                ai.Facing = Vector3.Normalize(dir);
+                            }
+                            else
 							{
                                 ai.Velocity.X *= 0.95f;
                                 ai.Velocity.Z *= 0.95f;
@@ -179,6 +187,8 @@ namespace ViMG.Entities
 								if (ai.attackHitbox == -1)
                                     ai.attackHitbox = entity.world.HitboxManager.Add(this, ai.attackHitboxBounds.Offset(entity.Position + Vector3.Normalize(dir) * Cube.CUBE_SCALE * 1.5f),
 										Vector3.Normalize(ai.Velocity), HitboxManager.Group.ENEMYHOSTILE_BOTH, ai.AttackDamage, 1);
+
+                                ai.Facing = Vector3.Normalize(dir);
 
                                 ai.state = State.AttackStun;
                                 ai.attackTimer = ai.AttackStunTime;
@@ -214,46 +224,19 @@ namespace ViMG.Entities
                         ai.state = State.Normal;
                         ai.attackTimer = ai.AttackCooldownTime;
 
-                        ai.idleTimer -= (float)deltaTime;
-
-						if (ai.idleTimer <= 0)
-                            ai.idleMoveTimer -= (float)deltaTime;
-
-						if (ai.idleMovements == 0 && ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-						{
-                            ai.idleHome = new Vector2(entity.Position.X, entity.Position.Z);
-
-                            ai.idleTimer = Main.random.NextFloat(4f, 12f);
-                            ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-                            ai.idleMovements = Main.random.Next(2, 6);
-
-                            ai.idleDirection = Main.random.NextAngle();
-						}
-						else
-						{
-							float distFromIdleHome = (new Vector2(entity.Position.X, entity.Position.Z) - ai.idleHome).Length();
-
-							if (distFromIdleHome > Cube.CUBES_PER_UNIT * 16)
-                                ai.idleDirection = -ai.idleDirection;
-
-							if (ai.idleTimer <= 0 && ai.idleMoveTimer <= 0)
-							{
-                                ai.idleMovements--;
-                                ai.idleDirection = Main.random.NextAngle();
-                                ai.idleMoveTimer = Main.random.NextFloat(0.25f, 2f);
-							}
-						}
-
-						if (ai.idleTimer <= 0)
-						{
-							EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idleDirection, actualMaxVel);
-						}
-						else
-						{
+						ai.idle.Update(entity.random, entity.Position, deltaTime);
+                        
+						if (ai.idle.idleTimer <= 0)
+                        {
+                            EntityHelper.AddCappedVelocityHorizontal(ref ai.Velocity, ai.idle.idleDirection, actualMaxVel);
+                            ai.Facing = Vector3.Normalize(new Vector3(ai.idle.idleDirection.X, 0, ai.idle.idleDirection.Y));
+                        }
+                        else
+                        {
                             ai.Velocity.X *= 0.85f;
                             ai.Velocity.Z *= 0.85f;
-						}
-					}
+                        }
+                    }
 				}
 
 				if (ai.Velocity.Y < -actualMaxVel.Y)
@@ -265,8 +248,9 @@ namespace ViMG.Entities
                 ai.shouldJump = false;
 				UpdateCollision();
 
-				if ((entity.world.player.Position - entity.Position).Length() > 128 * Cube.CUBE_SCALE)
-					entity.world.EntityManager.Remove(entity);
+                var ent = this.entity;
+                if (entity.world.player.All(x => x == null || (x.Position - ent.Position).Length() > 128 * Cube.CUBE_SCALE))
+                    entity.world.EntityManager.Kill(entity);
 			}
 
 			private void UpdateCollision()
@@ -302,7 +286,7 @@ namespace ViMG.Entities
 					CubePosition pos = positions[i];
 					ushort id = ids[i];
 
-					if (Main.Registry.CubeRegistry.GetOrDefault(id, Main.Registry.CubeRegistry.Air).Solid)
+					if (GlobalState.Registry.CubeRegistry.GetOrDefault(id, GlobalState.Registry.CubeRegistry.Air).Solid)
 					{
 						Rectangle3D cubeBounds = CubePosition.BoundsWorldSpace(pos);
 
@@ -336,7 +320,7 @@ namespace ViMG.Entities
 						var ray = entity.world.RaycastVector(entity.Position + new Vector3(0, Cube.CUBE_SCALE / 2f, 0), new Vector3(ai.Velocity.X, 0, ai.Velocity.Z), Cube.CUBE_SCALE * 1.15f,
 							(Vector3 pos) =>
 							{
-								Cube cube = entity.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air);
+								Cube cube = entity.world.ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 
 								return cube.Collision != Cube.CollisionValue.None;
 							});
@@ -383,19 +367,11 @@ namespace ViMG.Entities
 
 			public void Hurt(int damage)
 			{
-                ai.Health -= damage;
-
-				if (ai.Health <= 0)
-				{
-                    ai.Health = 0;
-					entity.world.EntityManager.Remove(entity);
-
-					if (ai.touchHitbox != -1)
-						entity.world.HitboxManager.Remove(ai.touchHitbox);
-				}
+				EntityHelper.TakeDamage(entity, damage);
 
                 ai.shouldJumpLockTimer = 1f;
                 ai.InvulnTimer = 0.25f;
+				ai.TakeDamageTimer = 0.125f;
 
 				//interrupt current attack
 				if (ai.state == State.Attack || ai.state == State.AttackStun)
@@ -419,5 +395,37 @@ namespace ViMG.Entities
 				return (new Vector2(otherPosition.X, otherPosition.Z) - new Vector2(position.X, position.Z)).Length();
 			}
 		}
-	}
+
+		public void OnSave(List<byte> saveBytes)
+		{
+			SaveHelper.SaveInt32(saveBytes, VERSION);
+			SaveHelper.SaveInt32(saveBytes, MaxHealth);
+        }
+
+		public void OnLoad(byte[] loadBytes, ref int index)
+		{
+			int version = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			MaxHealth = SaveHelper.LoadInt32(loadBytes, ref index);
+
+			if (version == 0)
+			{
+				SaveHelper.LoadVector2(loadBytes, ref index);
+				SaveHelper.LoadVector2(loadBytes, ref index);
+			}
+        }
+
+		public void GetSyncedEntity(out SyncedEntity state)
+        {
+			state = new SyncedEntity
+			{
+				health = Health,
+				velocity = Velocity,
+				position = Vector3.Zero,
+				rotation = EngineMathHelper.DirectionYawOnlyToQuaternion(-Facing, Vector3.Up),
+				state = (int)this.state,
+				timers = { [ATTACK_TIMER_INDEX] = attackTimer, [INVULN_TIMER_INDEX] = InvulnTimer },
+			};
+        }
+    }
 }

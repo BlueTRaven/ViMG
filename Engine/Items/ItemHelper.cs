@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ViMG.Cubes;
 using ViMG.Entities;
 using BrUtility;
+using Engine;
 
 namespace ViMG.Items
 {
@@ -17,20 +18,20 @@ namespace ViMG.Items
             GetCoins(value, out var coinsCopper, out var coinsBronze, out var coinsSilver, out var coinsGold, out _);
 
             for (int i = 0; i < coinsCopper.num; i++)
-                entityManager.Add(new EntityItem(position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
-                    Cube.CUBE_SCALE * 1f, Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsCopper, 1)));
+                entityManager.Add(new EntityItem(position, new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
+                    Cube.CUBE_SCALE * 1f, GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsCopper, 1)));
 
             for (int i = 0; i < coinsBronze.num; i++)
-                entityManager.Add(new EntityItem(position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
-                    Cube.CUBE_SCALE * 1f, Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsBronze, 1)));
+                entityManager.Add(new EntityItem(position, new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
+                    Cube.CUBE_SCALE * 1f, GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsBronze, 1)));
 
             for (int i = 0; i < coinsSilver.num; i++)
-                entityManager.Add(new EntityItem(position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
-                    Cube.CUBE_SCALE * 1f, Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsSilver, 1)));
+                entityManager.Add(new EntityItem(position, new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
+                    Cube.CUBE_SCALE * 1f, GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsSilver, 1)));
 
             for (int i = 0; i < coinsGold.num; i++)
-                entityManager.Add(new EntityItem(position, new Vector3(Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
-                    Cube.CUBE_SCALE * 1f, Main.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsGold, 1)));
+                entityManager.Add(new EntityItem(position, new Vector3(GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f), 
+                    Cube.CUBE_SCALE * 1f, GlobalState.random.NextFloat(-Cube.CUBE_SCALE * 3.5f, Cube.CUBE_SCALE * 3.5f)), new ItemInstance(coinsGold, 1)));
         }
         //coinsInDenomination: a 4-length span containing the different coins.
         //0: copper coins
@@ -54,10 +55,10 @@ namespace ViMG.Items
             if (valueGold > 0)
                 maxDenom = 3;
 
-            coinsCopper = new ItemInstance(Main.Registry.ItemRegistry.Get("coin_copper"), value, 0);
-            coinsBronze = new ItemInstance(Main.Registry.ItemRegistry.Get("coin_bronze"), valueBronze, 0);
-            coinsSilver = new ItemInstance(Main.Registry.ItemRegistry.Get("coin_silver"), valueSilver, 0);
-            coinsGold = new ItemInstance(Main.Registry.ItemRegistry.Get("coin_gold"), valueGold, 0);
+            coinsCopper = new ItemInstance(GlobalState.Registry.ItemRegistry.Get("coin_copper"), value, 0);
+            coinsBronze = new ItemInstance(GlobalState.Registry.ItemRegistry.Get("coin_bronze"), valueBronze, 0);
+            coinsSilver = new ItemInstance(GlobalState.Registry.ItemRegistry.Get("coin_silver"), valueSilver, 0);
+            coinsGold = new ItemInstance(GlobalState.Registry.ItemRegistry.Get("coin_gold"), valueGold, 0);
         }
     }
 }

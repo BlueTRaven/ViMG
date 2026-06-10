@@ -12,13 +12,18 @@ namespace ViMG.Cubes
 {
     public class CubeCaveRoot : Cube
     {
-        public CubeCaveRoot() : base("crop_cave_root", new RectangleF(), Color.White, 1, 0)
+        public CubeCaveRoot() : base("crop_cave_root", 1, 0)
         {
             Name = "Cave Root";
             Description = "A hardy but bitter tasting tuber. Despite its taste, it alone can sustain a man for many years.";
 
             //The entity is responsible for drawing this
             Transparency = TransparencyValue.Invisible;
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(), Color.White);
         }
 
         public override bool ShouldMeshPass(RenderPass pass)

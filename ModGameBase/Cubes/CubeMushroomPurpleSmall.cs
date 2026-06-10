@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,10 +14,15 @@ namespace ViMG.Cubes
 {
     public class CubeMushroomPurpleSmall : Cube
     {
-        public CubeMushroomPurpleSmall() : base("mushroom_purple_small", new RectangleF(96, 112, 16, 16), Color.White, 1)
+        public CubeMushroomPurpleSmall() : base("mushroom_purple_small", 1)
         {
             Transparency = TransparencyValue.Transparent | TransparencyValue.InvisibleOnDepth;
             Collision = CollisionValue.None;
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(96, 112, 16, 16), Color.White);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
@@ -31,7 +37,7 @@ namespace ViMG.Cubes
             return pass == RenderPass.Opaque;
         }
 
-        public override void MakeCubeVerts(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
+        public override void MakeCubeVerts(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, FastList<VertexCube> vertices, List<int> indices, int vertexOffset = 0)
         {
             parameters.positionWS += new Vector3(CUBE_SCALE / 2f, 0, CUBE_SCALE / 2f);
             DrawHelper3D.MakeXMeshVerts(pass, data, parameters, Vector3.One, vertices, indices, vertexOffset);

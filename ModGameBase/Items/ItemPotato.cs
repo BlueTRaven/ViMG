@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,15 +16,20 @@ namespace ViMG.Items
     {
         private static Buffs.Buff.BuffInstance[] buffs = new Buffs.Buff.BuffInstance[] 
         {
-            new(Main.Registry.BuffRegistry.Get("well_fed"), 30f),
-            new(Main.Registry.BuffRegistry.Get("str_up"), 3f * 60f, 5)
+            new(GlobalState.Registry.BuffRegistry.Get("well_fed"), 30f),
+            new(GlobalState.Registry.BuffRegistry.Get("str_up"), 3f * 60f, 5)
         };
 
-        public ItemPotato() : base("food_potato", new RectangleF(192, 80, 16, 16))
+        public ItemPotato() : base("food_potato")
         {
             name = "Potato";
             description = "A hearty potato.\n" +
                 "Grants Well Fed for 30 seconds and 5% Strength Up for 3 minutes.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(192, 80, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

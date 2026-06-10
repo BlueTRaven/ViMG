@@ -1,7 +1,8 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpDX.MediaFoundation;
 using SMAADemo;
 using System;
 using System.Collections.Generic;
@@ -9,13 +10,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ViMG.IMGUIImpl;
 using ViMG.VertexDeclarations;
 
 namespace ViMG.Rendering
 {
-    public class RendererDeferred
+    public class RendererDeferred : IDisposable
     {
+        private static Engine.Logger Logger = Engine.Logger.InitLogger("RendererDeferred", true, Engine.Logger.LogLevel.Info);
+
         public struct DrawSourceRectParameters
         {
             public bool UseSourceRect;
@@ -60,13 +64,24 @@ namespace ViMG.Rendering
 
             public DrawMaterial(string name)
             {
-                Diffuse = Main.assetsManager.GetAsset<Texture2D>(name);
-                Normal = Main.assetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
-                Specular = Main.assetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.BlackPixel;
-                Emissive = Main.assetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
+                Diffuse = GlobalState.AssetsManager.GetAsset<Texture2D>(name);
+                Normal = GlobalState.AssetsManager.GetAsset<Texture2D>(name + "_normal") ?? DrawHelper.NormalPixel;
+                Specular = GlobalState.AssetsManager.GetAsset<Texture2D>(name + "_specular") ?? DrawHelper.BlackPixel;
+                Emissive = GlobalState.AssetsManager.GetAsset<Texture2D>(name + "_emissive") ?? DrawHelper.BlackPixel;
 
                 if (Diffuse == null)
-                    throw new Exception("AAAAA");
+                    throw new FileNotFoundException("No asset with name '{0}' found for material", name);
+            }
+
+            public DrawMaterial(string diffuseName, string? normalName, string? specularName, string? emissiveName)
+            {
+                Diffuse = GlobalState.AssetsManager.GetAsset<Texture2D>(diffuseName);
+                Normal = normalName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(normalName) : DrawHelper.NormalPixel;
+                Specular = specularName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(specularName) : DrawHelper.BlackPixel;
+                Emissive = emissiveName != null ? GlobalState.AssetsManager.GetAsset<Texture2D>(emissiveName) : DrawHelper.BlackPixel;
+
+                if (Diffuse == null)
+                    throw new FileNotFoundException("No asset with name '{0}' found for material", diffuseName);
             }
         }
 
@@ -200,7 +215,7 @@ namespace ViMG.Rendering
             public Color Color;
         }
 
-        private readonly GraphicsDevice device;
+        public readonly GraphicsDevice Device;
 
         private RenderTarget2D diffuse;       //RGB albedo data; A specular data
         private RenderTarget2D lightAccum;  //RGB ambient + emissive to begin with. Light is accumulated after gbuffer pass.
@@ -260,7 +275,7 @@ namespace ViMG.Rendering
         private VertexBuffer vboUVSphere;
         private IndexBuffer iboUVSphere;
 
-        private uint[] lightVolumeIndices = new uint[LightManager.MAX_LIGHTS];
+        private uint[] lightVolumeIndices = new uint[LightManager.LightsMax];
         private StructuredBuffer bufferLightVolumeIndices;
 
         public List<GBufferDraw> DrawsPassGBuffer = new List<GBufferDraw>();
@@ -289,10 +304,11 @@ namespace ViMG.Rendering
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
         public VerySimpleMesh DEBUGSphereMesh;
         public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
+        private bool disposedValue;
 
         public RendererDeferred(GraphicsDevice device)
         {
-            DEBUGCubemapMesh = MeshHelper.MakeCubemap(device, -Vector3.One, Vector3.One);
+            DEBUGCubemapMesh = MeshHelper.MakeDebugCubemap(device, -Vector3.One, Vector3.One);
             DEBUGSphereMesh = MeshHelper.MakeUVSphere(device, 1);
 
             FastList<VertexCube> cubeVertices = new FastList<VertexCube>();
@@ -337,45 +353,45 @@ namespace ViMG.Rendering
             depthReadNoWriteDSS = DepthStencilState.DepthRead;
             noDepthReadWriteDSS = DepthStencilState.None;
 
-            this.device = device;
+            this.Device = device;
 
             ConstructRTs(Options.CurrentWindowResolution);
 
-            EffectGBuffer = Main.assetsManager.GetAsset<Effect>("deferred_gbuffer");
-            EffectDeferred = Main.assetsManager.GetAsset<Effect>("deferred");
-            EffectLightAccumCSM = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
-            EffectLightAccumPointLight = Main.assetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
-            EffectTransparent = Main.assetsManager.GetAsset<Effect>("transparent");
-            EffectSkybox = Main.assetsManager.GetAsset<Effect>("skybox");
-            EffectEmpty = Main.assetsManager.GetAsset<Effect>("air");
-            EffectHDR = Main.assetsManager.GetAsset<Effect>("hdr");
-            EffectFXAA = Main.assetsManager.GetAsset<Effect>("fxaa");
-            EffectRadialFog = Main.assetsManager.GetAsset<Effect>("radial_fog");
-            EffectAurora = Main.assetsManager.GetAsset<Effect>("aurora");
-            EffectStars = Main.assetsManager.GetAsset<Effect>("stars");
+            EffectGBuffer = GlobalState.AssetsManager.GetAsset<Effect>("deferred_gbuffer");
+            EffectDeferred = GlobalState.AssetsManager.GetAsset<Effect>("deferred");
+            EffectLightAccumCSM = GlobalState.AssetsManager.GetAsset<Effect>("deferred_lightaccum_csmlight");
+            EffectLightAccumPointLight = GlobalState.AssetsManager.GetAsset<Effect>("deferred_lightaccum_pointlight");
+            EffectTransparent = GlobalState.AssetsManager.GetAsset<Effect>("transparent");
+            EffectSkybox = GlobalState.AssetsManager.GetAsset<Effect>("skybox");
+            EffectEmpty = GlobalState.AssetsManager.GetAsset<Effect>("air");
+            EffectHDR = GlobalState.AssetsManager.GetAsset<Effect>("hdr");
+            EffectFXAA = GlobalState.AssetsManager.GetAsset<Effect>("fxaa");
+            EffectRadialFog = GlobalState.AssetsManager.GetAsset<Effect>("radial_fog");
+            EffectAurora = GlobalState.AssetsManager.GetAsset<Effect>("aurora");
+            EffectStars = GlobalState.AssetsManager.GetAsset<Effect>("stars");
 
-            DEBUGEffectVisualizeCubemap = Main.assetsManager.GetAsset<Effect>("visualize_cubemap");
+            DEBUGEffectVisualizeCubemap = GlobalState.AssetsManager.GetAsset<Effect>("visualize_cubemap");
 
             //EffectGBuffer.Parameters["AmbientStrength"].SetValue(0.1f);
             EffectGBuffer.Parameters["SpecularPower"].SetValue(4);
 
-            //EffectRadialFog.Parameters["Color"].SetValue(Main.assetsManager.GetAsset<Texture2D>("fog_colormap"));
+            //EffectRadialFog.Parameters["Color"].SetValue(GlobalState.assetsManager.GetAsset<Texture2D>("fog_colormap"));
 
             Main.WindowResizedEvent += ConstructRTs;
 
-            VertexPositionTexture[] vpt = new VertexPositionTexture[4]
-            {
+            VertexPositionTexture[] vpt =
+            [
                 new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0)),
                 new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0)),
                 new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1)),
                 new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)),
-            };
+            ];
 
-            uint[] indices = new uint[6]
-            {
+            uint[] indices =
+            [
                 0, 1, 2,
                 2, 3, 0,
-            };
+            ];
 
             vboQuad = new VertexBuffer(device, typeof(VertexPositionTexture), vpt.Length, BufferUsage.WriteOnly);
             vboQuad.SetData(vpt);
@@ -420,18 +436,18 @@ namespace ViMG.Rendering
             normal?.Dispose();
             ao?.Dispose();
 
-            diffuse = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+            diffuse = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
             diffuse.Name = "Diffuse";
-            lightAccum = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            lightAccum = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             lightAccum.Name = "Light Accumulation";
-            depth = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            depth = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             depth.Name = "Depth";
             //TODO get rid of; use inverse wvp + depth to calculate
-            position = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            position = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             position.Name = "Position (World Space)";
-            normal = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            normal = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             normal.Name = "Normal (World Space)";
-            ao = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ao = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Single, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ao.Name = "AO";
 
             //Note that diffuse must be first.
@@ -457,10 +473,10 @@ namespace ViMG.Rendering
             ldrOutputPing?.Dispose();
             ldrOutputPong?.Dispose();
 
-            preTransparencyOutput = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            skybox = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            ldrOutputPing = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            ldrOutputPong = new RenderTarget2D(device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            preTransparencyOutput = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            skybox = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ldrOutputPing = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ldrOutputPong = new RenderTarget2D(Device, rez.X, rez.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
 
         private void ConstructSMAA(Point rez)
@@ -473,19 +489,19 @@ namespace ViMG.Rendering
                     switch (Options.CurrentSMAAQuality)
                     {
                         case Options.SMAAQuality.SMAA_ULTRA:
-                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.ULTRA);
+                            smaa = new SMAA(Device, rez.X, rez.Y, SMAA.Preset.ULTRA);
                             previousSMAAOption = Options.SMAAQuality.SMAA_ULTRA;
                             break;
                         case Options.SMAAQuality.SMAA_HIGH:
-                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.HIGH);
+                            smaa = new SMAA(Device, rez.X, rez.Y, SMAA.Preset.HIGH);
                             previousSMAAOption = Options.SMAAQuality.SMAA_HIGH;
                             break;
                         case Options.SMAAQuality.SMAA_MEDIUM:
-                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.MEDIUM);
+                            smaa = new SMAA(Device, rez.X, rez.Y, SMAA.Preset.MEDIUM);
                             previousSMAAOption = Options.SMAAQuality.SMAA_MEDIUM;
                             break;
                         case Options.SMAAQuality.SMAA_LOW:
-                            smaa = new SMAA(device, rez.X, rez.Y, SMAA.Preset.LOW);
+                            smaa = new SMAA(Device, rez.X, rez.Y, SMAA.Preset.LOW);
                             previousSMAAOption = Options.SMAAQuality.SMAA_LOW;
                             break;
                     }
@@ -502,7 +518,7 @@ namespace ViMG.Rendering
 
             if (Options.CurrentAntiAliasing == Options.AntiAliasing.FXAA)
             {
-                fxaa = new RendererFXAA(device, rez);
+                fxaa = new RendererFXAA(Device, rez);
                 previousFXAAOption = Options.CurrentFXAAQuality;
             }
             else
@@ -513,9 +529,9 @@ namespace ViMG.Rendering
 
         public void SetPipelineState()
         {
-            device.RasterizerState = Main.genericRS;
-            device.BlendState = noAlphaBlendBS;
-            device.DepthStencilState = DepthStencilState.Default;
+            Device.RasterizerState = Main.genericRS;
+            Device.BlendState = noAlphaBlendBS;
+            Device.DepthStencilState = DepthStencilState.Default;
         }
 
         public void Update(double deltaTime)
@@ -567,7 +583,7 @@ namespace ViMG.Rendering
             }
         }
 
-        public void Draw(SpriteBatch batch)
+        public void Draw(SpriteBatch batch, Engine.Common.Camera camera)
         {
             SetPipelineState();
 
@@ -577,30 +593,30 @@ namespace ViMG.Rendering
             if (Options.CurrentFXAAQuality != previousFXAAOption)
                 ConstructFXAA(Options.CurrentWindowResolution);
 
-            device.SetRenderTargets(gbufferTargets);
-            device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Transparent, device.Viewport.MaxDepth, 0);
+            Device.SetRenderTargets(gbufferTargets);
+            Device.Clear(ClearOptions.DepthBuffer | ClearOptions.Target, Color.Transparent, Device.Viewport.MaxDepth, 0);
 
-            device.SetRenderTarget(ao);
-            device.Clear(Color.White);
+            Device.SetRenderTarget(ao);
+            Device.Clear(Color.White);
 
-            device.SetRenderTargets(gbufferTargets);
+            Device.SetRenderTargets(gbufferTargets);
 
             if (DrawsPassGBuffer.Count > 0)
             {
-                Matrix viewProjection = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
-                EffectGBuffer.Parameters["View"].SetValue(Main.camera.GetViewMatrix());
+                Matrix viewProjection = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+                EffectGBuffer.Parameters["View"].SetValue(camera.GetViewMatrix());
                 EffectGBuffer.Parameters["ViewProjection"].SetValue(viewProjection);
                 EffectGBuffer.Parameters["UseInstancing"].SetValue(false);
 
-                device.SamplerStates[1] = bilinearClampSS;
+                Device.SamplerStates[1] = bilinearClampSS;
 
                 foreach (GBufferDraw draw in DrawsPassGBuffer)
                 {
                     if (draw.Mesh.IBO != null)
                     {
-                        device.SetVertexBuffers(draw.Mesh.Bindings);
+                        Device.SetVertexBuffers(draw.Mesh.Bindings);
                         //device.SetVertexBuffer(draw.VBO);
-                        device.Indices = draw.Mesh.IBO;
+                        Device.Indices = draw.Mesh.IBO;
 
                         EffectGBuffer.Parameters["World"].SetValue(draw.World);
                         EffectGBuffer.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(draw.World)));
@@ -625,7 +641,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
+                            Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                             NumDrawCalls++;
                         }
@@ -638,8 +654,8 @@ namespace ViMG.Rendering
 
                     foreach (InstancedGBufferDraw draw in DrawsPassGBufferInstanced)
                     {
-                        device.SetVertexBuffers(draw.Mesh.Bindings);
-                        device.Indices = draw.Mesh.IBO;
+                        Device.SetVertexBuffers(draw.Mesh.Bindings);
+                        Device.Indices = draw.Mesh.IBO;
                         //device.SetVertexBuffer(draw.VBO);
                         //device.Indices = draw.IBO;
 
@@ -655,7 +671,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectGBuffer.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.Mesh.IBO.IndexCount, draw.Mesh.IBO.IndexCount / 3, draw.SBOLen);
+                            Device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, draw.SBOStart * draw.Mesh.IBO.IndexCount, draw.Mesh.IBO.IndexCount / 3, draw.SBOLen);
 
                             NumDrawCalls++;
                         }
@@ -663,19 +679,19 @@ namespace ViMG.Rendering
                 }
             }
 
-            device.SetVertexBuffer(vboQuad);
-            device.Indices = iboQuad;
+            Device.SetVertexBuffer(vboQuad);
+            Device.Indices = iboQuad;
 
-            device.SetRenderTarget(lightAccum);
+            Device.SetRenderTarget(lightAccum);
 
             if (DoCSMLight)
             {
                 EffectLightAccumCSM.Parameters["Position"].SetValue(position);
                 EffectLightAccumCSM.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumCSM.Parameters["Normal"].SetValue(normal);
-                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(Main.camera.Position);
-                device.SamplerStates[1] = shadowBorderClampSS;
-                device.BlendState = additiveBS;
+                EffectLightAccumCSM.Parameters["CameraPosition"].SetValue(camera.Position);
+                Device.SamplerStates[1] = shadowBorderClampSS;
+                Device.BlendState = additiveBS;
 
                 DrawFullscreenQuad(EffectLightAccumCSM);
 
@@ -684,27 +700,27 @@ namespace ViMG.Rendering
 
             if (DrawsPointLightVolumePass.Count > 0)
             {
-                device.SetRenderTarget(lightAccum);
-                device.RasterizerState = cullCWRS;
-                device.SamplerStates[1] = shadowBorderClampSS;
-                device.BlendState = additiveBS;
-                device.DepthStencilState = depthReadNoWriteDSS;
+                Device.SetRenderTarget(lightAccum);
+                Device.RasterizerState = cullCWRS;
+                Device.SamplerStates[1] = shadowBorderClampSS;
+                Device.BlendState = additiveBS;
+                Device.DepthStencilState = depthReadNoWriteDSS;
 
                 EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(-camera.Position);
 
-                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
                 EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
                 EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(false);
 
-                device.SetVertexBuffer(vboUVSphere);
-                device.Indices = iboUVSphere;
+                Device.SetVertexBuffer(vboUVSphere);
+                Device.Indices = iboUVSphere;
 
                 if (!Options.UseInstancedLightVolumes)
                 {
@@ -715,7 +731,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                            Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
                         }
                     }
                 }
@@ -733,38 +749,38 @@ namespace ViMG.Rendering
                     foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.Count);
+                        Device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsPointLightVolumePass.Count);
                     }
                 }
 
                 NumPointLightsRendered = DrawsPointLightVolumePass.Count;
 
-                device.RasterizerState = cullCCWRS;
+                Device.RasterizerState = cullCCWRS;
             }
 
             if (DrawsShadowmappedPointLightVolumePass.Count > 0)
             {
-                device.SetRenderTarget(lightAccum);
-                device.RasterizerState = cullCWRS;
-                device.SamplerStates[1] = shadowBorderClampSS;
-                device.BlendState = additiveBS;
-                device.DepthStencilState = depthReadNoWriteDSS;
+                Device.SetRenderTarget(lightAccum);
+                Device.RasterizerState = cullCWRS;
+                Device.SamplerStates[1] = shadowBorderClampSS;
+                Device.BlendState = additiveBS;
+                Device.DepthStencilState = depthReadNoWriteDSS;
 
                 EffectLightAccumPointLight.Parameters["Position"].SetValue(position);
                 //EffectLightAccumPointLight.Parameters["Depth"].SetValue(depth);
                 EffectLightAccumPointLight.Parameters["Normal"].SetValue(normal);
                 //EffectLightAccumPointLight.Parameters["Diffuse"].SetValue(diffuse);
-                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectLightAccumPointLight.Parameters["CameraPosition"].SetValue(camera.Position);
 
-                Matrix viewProj = Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix();
+                Matrix viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
                 EffectLightAccumPointLight.Parameters["ViewProjection"].SetValue(viewProj);
                 //EffectLightAccumPointLight.Parameters["InvViewProjection"].SetValue(Matrix.Invert(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix()));
                 EffectLightAccumPointLight.Parameters["UseInstancing"].SetValue(Options.UseInstancedLightVolumes);
                 EffectLightAccumPointLight.Parameters["UseShadowmap"].SetValue(true);
 
-                device.SetVertexBuffer(vboUVSphere);
-                device.Indices = iboUVSphere;
+                Device.SetVertexBuffer(vboUVSphere);
+                Device.Indices = iboUVSphere;
 
                 if (!Options.UseInstancedLightVolumes)
                 {
@@ -775,7 +791,7 @@ namespace ViMG.Rendering
                         foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                         {
                             pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
+                            Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3);
                         }
                     }
                 }
@@ -793,23 +809,23 @@ namespace ViMG.Rendering
                     foreach (var pass in EffectLightAccumPointLight.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsShadowmappedPointLightVolumePass.Count);
+                        Device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, iboUVSphere.IndexCount / 3, DrawsShadowmappedPointLightVolumePass.Count);
                     }
                 }
 
                 NumPointLightsRendered += DrawsShadowmappedPointLightVolumePass.Count;
 
-                device.RasterizerState = cullCCWRS;
+                Device.RasterizerState = cullCCWRS;
             }
 
             //Skybox
             //===============================================================================================================================================
-            device.SetRenderTarget(skybox);
-            device.Clear(Color.Transparent);
+            Device.SetRenderTarget(skybox);
+            Device.Clear(Color.Transparent);
 
-            device.BlendState = BlendState.AlphaBlend;
+            Device.BlendState = BlendState.AlphaBlend;
 
-            EffectSkybox.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+            EffectSkybox.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
             const int SEA_FLOOR = 128; // TODO: put this somewhere
             EffectSkybox.Parameters["SeaLevel"].SetValue(SEA_FLOOR * Cubes.Cube.CUBE_SCALE);
 
@@ -818,8 +834,8 @@ namespace ViMG.Rendering
 
             foreach (TransparentDraw draw in DrawsSkyboxPass)
             {
-                device.SetVertexBuffers(draw.Mesh.Bindings);
-                device.Indices = draw.Mesh.IBO;
+                Device.SetVertexBuffers(draw.Mesh.Bindings);
+                Device.Indices = draw.Mesh.IBO;
                 //device.SetVertexBuffer(draw.VBO);
                 //device.Indices = draw.IBO;
 
@@ -840,7 +856,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectSkybox.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                     NumDrawCalls++;
                 }
@@ -869,9 +885,9 @@ namespace ViMG.Rendering
             //Diffuse Composite
             //Composits all of the gbuffer back into one buffer.
             //===============================================================================================================================================
-            device.SetRenderTarget(preTransparencyOutput);
-            device.Clear(ClearOptions.Target, Color.Transparent, 0, 0);
-            device.BlendState = noAlphaBlendBS;
+            Device.SetRenderTarget(preTransparencyOutput);
+            Device.Clear(ClearOptions.Target, Color.Transparent, 0, 0);
+            Device.BlendState = noAlphaBlendBS;
 
             EffectDeferred.Parameters["Diffuse"].SetValue(diffuse);
             //EffectDeferred.Parameters["Depth"].SetValue(depth);
@@ -880,8 +896,8 @@ namespace ViMG.Rendering
             //EffectDeferred.Parameters["Normal"].SetValue(normal);
             EffectDeferred.Parameters["AO"].SetValue(ao);
 
-            device.SetVertexBuffer(vboQuad);
-            device.Indices = iboQuad;
+            Device.SetVertexBuffer(vboQuad);
+            Device.Indices = iboQuad;
             DrawFullscreenQuad(EffectDeferred);
             //===============================================================================================================================================
 
@@ -889,18 +905,18 @@ namespace ViMG.Rendering
             //===============================================================================================================================================
             if (true)
             {
-                device.BlendState = BlendState.AlphaBlend;
+                Device.BlendState = BlendState.AlphaBlend;
 
-                device.SetRenderTarget(preTransparencyOutput);
+                Device.SetRenderTarget(preTransparencyOutput);
 
                 EffectRadialFog.CurrentTechnique = EffectRadialFog.Techniques["T2"];
                 EffectRadialFog.Parameters["Position"].SetValue(position);
                 EffectRadialFog.Parameters["Color"].SetValue(skybox);
                 EffectRadialFog.Parameters["FogExtents"].SetValue(FogExtents);
-                EffectRadialFog.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+                EffectRadialFog.Parameters["CameraPosition"].SetValue(camera.Position);
 
-                device.SetVertexBuffer(vboQuad);
-                device.Indices = iboQuad;
+                Device.SetVertexBuffer(vboQuad);
+                Device.Indices = iboQuad;
                 DrawFullscreenQuad(EffectRadialFog);
             }
             //===============================================================================================================================================
@@ -908,28 +924,28 @@ namespace ViMG.Rendering
             //Transparent pass
             //===============================================================================================================================================
             //We want to reuse the diffuse target and its depth buffer, so copy the output data back to diffuse
-            device.SetRenderTarget(diffuse);
-            device.Clear(ClearOptions.Target, Color.Transparent, 0, 0);
-            device.DepthStencilState = noDepthReadWriteDSS; //disable reading and writing the depth buffer.
+            Device.SetRenderTarget(diffuse);
+            Device.Clear(ClearOptions.Target, Color.Transparent, 0, 0);
+            Device.DepthStencilState = noDepthReadWriteDSS; //disable reading and writing the depth buffer.
             EffectCopy.Texture = preTransparencyOutput;
             DrawFullscreenQuad(EffectCopy);
 
-            device.DepthStencilState = depthReadNoWriteDSS;
-            device.BlendState = BlendState.AlphaBlend;
+            Device.DepthStencilState = depthReadNoWriteDSS;
+            Device.BlendState = BlendState.AlphaBlend;
 
             //TODO sorting should be done in update, not draw
             DrawsTransparentPass = DrawsTransparentPass.OrderByDescending(x => x.SortValue).ToList();
 
-            EffectTransparent.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
-            EffectTransparent.Parameters["CameraPosition"].SetValue(Main.camera.Position);
+            EffectTransparent.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+            EffectTransparent.Parameters["CameraPosition"].SetValue(camera.Position);
             EffectTransparent.Parameters["FogExtents"].SetValue(FogExtents);
 
             EffectTransparent.CurrentTechnique = EffectTransparent.Techniques["T1"];
             //device.RasterizerState = Main.noCullRS;
             foreach (TransparentDraw draw in DrawsTransparentPass)
             {
-                device.SetVertexBuffers(draw.Mesh.Bindings);
-                device.Indices = draw.Mesh.IBO;
+                Device.SetVertexBuffers(draw.Mesh.Bindings);
+                Device.Indices = draw.Mesh.IBO;
                 //device.SetVertexBuffer(draw.VBO);
                 //device.Indices = draw.IBO;
 
@@ -951,7 +967,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                     NumDrawCalls++;
                 }
@@ -960,13 +976,13 @@ namespace ViMG.Rendering
 
             //DEBUG
             //===============================================================================================================================================
-            device.RasterizerState = RasterizerState.CullNone;
+            Device.RasterizerState = RasterizerState.CullNone;
 
-            device.SetVertexBuffers(DEBUGSphereMesh.Bindings);
-            device.Indices = DEBUGSphereMesh.IBO;
+            Device.SetVertexBuffers(DEBUGSphereMesh.Bindings);
+            Device.Indices = DEBUGSphereMesh.IBO;
 
-            device.DepthStencilState = noDepthReadWriteDSS;
-            device.BlendState = BlendState.AlphaBlend;
+            Device.DepthStencilState = noDepthReadWriteDSS;
+            Device.BlendState = BlendState.AlphaBlend;
 
             foreach (DEBUGDraw draw in DEBUGMarkersSphere)
             {
@@ -980,15 +996,15 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGSphereMesh.IBO.IndexCount / 3);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGSphereMesh.IBO.IndexCount / 3);
                 }
             }
 
-            device.SetVertexBuffer(DEBUGCubeMesh.VBO);
-            device.Indices = DEBUGCubeMesh.IBO;
+            Device.SetVertexBuffer(DEBUGCubeMesh.VBO);
+            Device.Indices = DEBUGCubeMesh.IBO;
 
-            device.DepthStencilState = noDepthReadWriteDSS;
-            device.BlendState = BlendState.AlphaBlend;
+            Device.DepthStencilState = noDepthReadWriteDSS;
+            Device.BlendState = BlendState.AlphaBlend;
 
             foreach (DEBUGDraw draw in DEBUGMarkersRect)
             {
@@ -1002,7 +1018,7 @@ namespace ViMG.Rendering
                 foreach (var pass in EffectTransparent.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, DEBUGCubeMesh.IBO.IndexCount / 3);
                 }
             }
             //===============================================================================================================================================
@@ -1033,14 +1049,14 @@ namespace ViMG.Rendering
 
             if (EffectEmptyEnabled)
             {
-                EffectEmpty.Parameters["ViewProjection"].SetValue(Main.camera.GetViewMatrix() * Main.camera.GetProjectionMatrix());
+                EffectEmpty.Parameters["ViewProjection"].SetValue(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
-                device.DepthStencilState = DepthStencilState.None;
+                Device.DepthStencilState = DepthStencilState.None;
                 //device.RasterizerState = cullCWRS;
                 foreach (TransparentDraw draw in DrawsEmptyPass)
                 {
-                    device.SetVertexBuffers(draw.Mesh.Bindings);
-                    device.Indices = draw.Mesh.IBO;
+                    Device.SetVertexBuffers(draw.Mesh.Bindings);
+                    Device.Indices = draw.Mesh.IBO;
                     //device.SetVertexBuffer(draw.VBO);
                     //device.Indices = draw.IBO;
 
@@ -1050,7 +1066,7 @@ namespace ViMG.Rendering
                     foreach (var pass in EffectEmpty.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
+                        Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, draw.Mesh.IBO.IndexCount / 3);
 
                         NumDrawCalls++;
                     }
@@ -1060,28 +1076,28 @@ namespace ViMG.Rendering
             if (Options.BloomEnabled)
                 bloom.Draw(diffuse);
 
-            device.BlendState = noAlphaBlendBS;
+            Device.BlendState = noAlphaBlendBS;
 
             //Post-processing
             //===============================================================================================================================================
             //convert HDR to LDR for rendering to screen.
-            device.SetRenderTarget(ldrOutputPing);
-            device.Clear(Color.Black);
+            Device.SetRenderTarget(ldrOutputPing);
+            Device.Clear(Color.Black);
             EffectHDR.CurrentTechnique = Options.CurrentHDRType == Options.HDRType.HDR_EXP ? EffectHDR.Techniques["TechHDRExp"] : EffectHDR.Techniques["TechHDRAces"];
             EffectHDR.Parameters["Texture"].SetValue(diffuse);
             //EffectHDR.Parameters["Exposure"].SetValue(...);
-            device.SetVertexBuffer(vboQuad);
-            device.Indices = iboQuad;
+            Device.SetVertexBuffer(vboQuad);
+            Device.Indices = iboQuad;
             DrawFullscreenQuad(EffectHDR);
 
             if (Options.CurrentAntiAliasing == Options.AntiAliasing.FXAA)
             {
-                device.SamplerStates[0] = SamplerState.LinearClamp;
+                Device.SamplerStates[0] = SamplerState.LinearClamp;
 
                 fxaa.Render(ldrOutputPing, ldrOutputPong);
                 outputRT = ldrOutputPong;
 
-                device.SamplerStates[0] = SamplerState.PointWrap;
+                Device.SamplerStates[0] = SamplerState.PointWrap;
             }
             else if (Options.CurrentAntiAliasing == Options.AntiAliasing.SMAA)
             {
@@ -1090,7 +1106,7 @@ namespace ViMG.Rendering
 
                 //depth for depth,
                 //otherwise ldrOutputPing for lumi/color?
-                smaa.Go(depth, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
+                smaa.Go(camera, depth, ldrOutputPing, ldrOutputPong, SMAA.Input.DEPTH);
 
                 outputRT = ldrOutputPong;
             }
@@ -1110,7 +1126,7 @@ namespace ViMG.Rendering
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboQuad.IndexCount / 3);
+                Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iboQuad.IndexCount / 3);
 
                 NumDrawCalls++;
             }
@@ -1125,21 +1141,25 @@ namespace ViMG.Rendering
             else return gbufferTargets[currentOutput].RenderTarget.Name;
         }
 
-        public RenderTargetBinding GetOutput()
+        public RenderTargetBinding? GetOutput()
         {
+
             if (currentOutput == -1 || currentOutput == -2)
-                return outputRT;
+            {
+                if (outputRT == null) return null;
+                else return outputRT;
+            }
             else return gbufferTargets[currentOutput];
         }
 
         public void AddOpaqueDraw(GBufferDraw draw)
         {
-            Debug.Assert(draw.Mesh.VBOPosition != null, "OpaqueDraw requires a position VBO");
-            Debug.Assert(draw.Mesh.VBOColor != null, "OpaqueDraw requires a color VBO");
-            Debug.Assert(draw.Mesh.VBOTexCoord != null, "OpaqueDraw requires a texcoord VBO");
-            Debug.Assert(draw.Mesh.VBONormal != null, "OpaqueDraw requires a normal VBO");
-            Debug.Assert(draw.Mesh.VBOAO != null, "OpaqueDraw requires a AO VBO");
-            Debug.Assert(draw.Mesh.VBOAnim != null, "OpaqueDraw requires a Animation VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOPosition != null, "OpaqueDraw requires a position VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOColor != null, "OpaqueDraw requires a color VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOTexCoord != null, "OpaqueDraw requires a texcoord VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBONormal != null, "OpaqueDraw requires a normal VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOAO != null, "OpaqueDraw requires a AO VBO");
+            IMGUIConsole.Assert(draw.Mesh.VBOAnim != null, "OpaqueDraw requires a Animation VBO");
 
             DrawsPassGBuffer.Add(draw);
         }
@@ -1148,11 +1168,130 @@ namespace ViMG.Rendering
         {
             if (draw.Material.Diffuse == null)
             {
-                Console.WriteLine("Cannot add draw without diffuse material.");
+                Logger.Log(Engine.Logger.LogLevel.Error, "Cannot add draw without diffuse material.");
                 return;
             }
 
             DrawsTransparentPass.Add(draw);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                //             private RenderTarget2D diffuse;       //RGB albedo data; A specular data
+                //private RenderTarget2D lightAccum;  //RGB ambient + emissive to begin with. Light is accumulated after gbuffer pass.
+                //private RenderTarget2D depth;       //R depth data
+                //private RenderTarget2D position;    //RGB position data; A unused
+                //private RenderTarget2D normal;      //RGB normal data; A unused
+                //private RenderTarget2D ao;          //R AO data
+
+                //private RenderTarget2D skybox;
+
+                //private RenderTarget2D preTransparencyOutput;
+                //private RenderTarget2D ldrOutputPing;
+                //private RenderTarget2D ldrOutputPong;
+
+                //private RenderTarget2D outputRT;
+
+                diffuse.Dispose();
+                lightAccum.Dispose();
+                depth.Dispose();
+                position.Dispose();
+                normal.Dispose();
+                ao.Dispose();
+
+                skybox.Dispose();
+
+                preTransparencyOutput.Dispose();
+                ldrOutputPing.Dispose();
+                ldrOutputPong.Dispose();
+
+                outputRT.Dispose();
+
+                //                private RendererBloom bloom;
+                //private SMAA smaa;
+                //private RendererFXAA fxaa;
+
+                bloom.Dispose();
+                smaa?.Dispose();
+                fxaa?.Dispose();
+
+                //            private BasicEffect EffectCopy;
+                //private SamplerState shadowBorderClampSS;
+                //private SamplerState bilinearClampSS;
+                //private BlendState noAlphaBlendBS;
+                //private BlendState normalBS;
+                //private BlendState additiveBS;
+                //private RasterizerState cullCWRS;
+                //private RasterizerState cullCCWRS;
+                //private DepthStencilState depthReadNoWriteDSS;
+                //private DepthStencilState noDepthReadWriteDSS;
+
+                //private VertexBuffer vboQuad;
+                //private IndexBuffer iboQuad;
+                //private VertexBuffer vboUVSphere;
+                //private IndexBuffer iboUVSphere;
+
+                EffectCopy.Dispose();
+                shadowBorderClampSS.Dispose();
+                bilinearClampSS.Dispose();
+                noAlphaBlendBS.Dispose();
+                normalBS.Dispose();
+                additiveBS.Dispose();
+                cullCWRS.Dispose();
+                cullCCWRS.Dispose();
+                depthReadNoWriteDSS.Dispose();
+                noDepthReadWriteDSS.Dispose();
+                vboQuad.Dispose();
+                iboQuad.Dispose();
+                vboUVSphere.Dispose();
+                iboUVSphere.Dispose();
+
+                //            public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubemapMesh;
+                //public VerySimpleMesh DEBUGSphereMesh;
+                //public (VertexBuffer VBO, IndexBuffer IBO) DEBUGCubeMesh;
+
+                DEBUGCubemapMesh.VBO.Dispose();
+                DEBUGCubemapMesh.IBO.Dispose();
+                DEBUGSphereMesh.Dispose();
+                DEBUGCubeMesh.VBO.Dispose();
+                DEBUGCubeMesh.IBO.Dispose();
+
+                Logger.Log(Engine.Logger.LogLevel.Debug, "Counts:\n" +
+                    "{0} {1}\n" +
+                    "{2} {3}\n" +
+                    "{4} {5}\n" +
+                    "{6} {7}\n" +
+                    "{8} {9}\n" +
+                    "{10} {11}\n" +
+                    "{12} {13}\n",
+                    "GBuffer", DrawsPassGBuffer.Count,
+                    "GBuffer Instanced", DrawsPassGBufferInstanced.Count,
+                    "Point Light Volume", DrawsPointLightVolumePass.Count,
+                    "Shadowmapped Point Light Volume", DrawsShadowmappedPointLightVolumePass.Count,
+                    "Skybox", DrawsSkyboxPass.Count,
+                    "Transparent", DrawsTransparentPass.Count,
+                    "Empty", DrawsEmptyPass.Count);
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~RendererDeferred()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

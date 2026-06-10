@@ -1,13 +1,23 @@
-﻿using BrNineSlice;
+﻿using BepuPhysics.Constraints;
+using BrNineSlice;
 using BrUtility;
+using Engine;
+using Engine.Items;
+using Engine.Networking.Messages;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 using System.Text;
+using ViMG.Entities;
+using ViMG.Entities.Renderers;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.UIs.MenuHelper;
 using static ViMG.UIs.UI;
 
 namespace ViMG.UIs
@@ -30,7 +40,7 @@ namespace ViMG.UIs
 
 		public interface IWhiteList
 		{
-			public bool Matches(Item item);
+			public bool Matches(Inventory inventory, Item? item);
 		}
 
 		public readonly struct WhiteListName : IWhiteList
@@ -42,9 +52,9 @@ namespace ViMG.UIs
 				this.names = names;
 			}
 
-			public bool Matches(Item item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
-				return names.Contains(item.Identifier);
+				return names.Contains(item?.Identifier ?? "");
 			}
 		}
 
@@ -57,15 +67,15 @@ namespace ViMG.UIs
 				this.name = name;
 			}
 
-			public bool Matches(Item item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
-				return item.Identifier == name;
+				return item?.Identifier == name;
 			}
 		}
 
 		public readonly struct WhiteListNone : IWhiteList
 		{
-			public bool Matches(Item item)
+			public bool Matches(Inventory inventory, Item? item)
 			{
 				return true;
 			}
@@ -79,11 +89,11 @@ namespace ViMG.UIs
 				this.tags = tags;
             }
 
-            public bool Matches(Item item)
+            public bool Matches(Inventory inventory, Item? item)
             {
 				foreach (string tag in tags)
                 {
-					if (item.Tags.Contains(tag))
+					if (item?.Tags.Contains(tag) ?? false)
 						return true;
                 }
 
@@ -96,16 +106,14 @@ namespace ViMG.UIs
 		//B. not already contained in the inventory.
         public readonly struct WhitelistAccessories : IWhiteList
         {
-			private readonly Inventory inventory;
 			private readonly string[] tags;
 
-			public WhitelistAccessories(Inventory inventory, string[] tags)
+			public WhitelistAccessories(string[] tags)
             {
-				this.inventory = inventory;
 				this.tags = tags;
             }
 
-            public bool Matches(Item item)
+            public bool Matches(Inventory inventory, Item item)
             {
 				for (int i = 0; i < inventory.NumSlots; i++)
 				{
@@ -124,16 +132,16 @@ namespace ViMG.UIs
         }
 
 		public static UI.ButtonConstructionParameters ButtonParameters = new UI.ButtonConstructionParameters(
-			new RectangleF(0, 0, 18, 18), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+			new RectangleF(0, 0, 18, 18), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), 
 			new RectangleF(92, 0, 18, 18), new RectangleF(110, 0, 18, 18), new RectangleF(110, 0, 18, 18));
         public static UI.ButtonConstructionParameters ActionButtonParameters = new UI.ButtonConstructionParameters(
-			new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+			new RectangleF(Vector2.Zero, 18 * 2, 18 * 2), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
             new RectangleF(92, 18, 18, 18), new RectangleF(110, 18, 18, 18), new RectangleF(110, 18, 18, 18));
 
-        public static NineSlice MainPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
-        public static NineSlice SecondaryPanelNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
+        public static NineSlice MainPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(192, 64, 64, 64), 16);
+        public static NineSlice SecondaryPanelNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(256, 64, 64, 64), 16);
 
-        public static void DoPlayerInventory(Player player, Inventory inventory, ref Items.ItemInstance held, 
+        public static void DoPlayerInventory(EntityManager.EntityReference player, Inventory inventory, Inventory heldInventory, 
 			int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
 		{
 			UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
@@ -151,14 +159,14 @@ namespace ViMG.UIs
 
 					UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
+                    ItemInstance oldItem = inventory.Get(i);
+
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), oldItem);
 					
 					if (itemSlots != null)
 						itemSlots[i] = itemslot;
 
-					var oldItem = inventory.Get(i);
-
-					var output = HandleItemSlot(player, inventory, i, itemslot, ref held, new MenuHelper.WhiteListNone());
+					var output = HandleItemSlot(player, inventory, i, itemslot, heldInventory);
 
 					if (output == ItemSlotClickOutput.NeedsSwapInventory)
 					{
@@ -179,25 +187,56 @@ namespace ViMG.UIs
 			UI.EndParent();
 		}
 
+		public static void DoEntityInventory(EntityManager.EntityReference owner, Inventory inventory, Inventory heldInventory,
+            int rows = 4, int columns = 8, float size = 16, float padding = 8, UI.ItemSlot[] itemSlots = null)
+        {
+            UI.MakePanel(Color.White, new RectangleF(0, 0, GetInventorySize(rows, columns, size, padding)), MainPanelNS);
+
+            UI.StartParent(new Vector2(16));
+
+            UI.ButtonConstructionParameters buttonParameters = ButtonParameters;
+            buttonParameters.bounds.Size = new Size(size);
+
+            for (int y = 0; y < rows; y++)
+            {
+                for (int x = 0; x < columns; x++)
+                {
+                    int i = y * columns + x;
+
+                    UI.StartParent(new Vector2(x * size + x * padding, y * size + y * padding));
+
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), inventory.Get(i));
+
+                    if (itemSlots != null)
+                        itemSlots[i] = itemslot;
+
+                    var oldItem = inventory.Get(i);
+
+                    var output = HandleItemSlot(owner, inventory, i, itemslot, heldInventory);
+
+                    if (output == ItemSlotClickOutput.NeedsSwapInventory)
+                    {
+                        ref readonly var item = ref inventory.Get(i);
+
+                        int first = inventory.FirstEmpty();
+
+                        if (first != -1)
+                        {
+                            inventory.Set(item, first);
+                            inventory.Remove(i, item.num);
+                        }
+                    }
+
+                    UI.EndParent();
+                }
+            }
+            UI.EndParent();
+        }
+
 		public static Size GetInventorySize(int rows, int columns, float size, float padding)
         {
 			return new Size(columns * size + columns * padding + 32, rows * size + rows * padding + 32);
         }
-
-		public static ItemSlotClickOutput HandleItemSlot(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot)
-		{
-			ItemSlotClickOutput output = ItemSlotClickOutput.None;
-
-			if (itemSlot.button.hovered && Main.inputManager.JustPressed(Keys.R))
-			{
-                Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(Main.gameStateManager, 
-					null, inventory.Get(index)));
-
-				return ItemSlotClickOutput.FilterRecipe;
-			}
-
-			return output;
-		}
 
 		public static ItemSlotClickOutput HandleRecipeFilter(GameStateManager gsManager, ItemInstance item, in UI.Button itemSlotButton)
         {
@@ -226,158 +265,200 @@ namespace ViMG.UIs
 			return ItemSlotClickOutput.None;
         }
 
-		public static ItemSlotClickOutput HandleItemSlot<TWhiteList>(Player player, Inventory inventory, int index, in UI.ItemSlot itemSlot, ref ItemInstance held, TWhiteList whiteList) 
-			where TWhiteList : struct, IWhiteList
+		public static ItemSlotClickOutput HandleItemSlot(EntityManager.EntityReference invOwner, Inventory inventory, int index, in UI.ItemSlot itemSlot, Inventory heldInventory)
 		{
 			ItemSlotClickOutput output = ItemSlotClickOutput.None;
 
-			ItemSlotClickOutput reciperval = HandleRecipeFilter(Main.gameStateManager, inventory.Get(index), itemSlot.button);
+			ItemSlotClickOutput reciperval = HandleRecipeFilter(GlobalState.GameStateManager, inventory.Get(index), itemSlot.button);
 
 			if (reciperval != ItemSlotClickOutput.None)
 				return reciperval;
 
 			if (itemSlot.button.clickLeft)
 			{
-				if (Main.inputManager.IsHeld(Keys.LeftShift) && itemSlot.item.valid)
-				{
-					//defer this functionality to the user since we might need to swap between different inventories and this function can only see one inventory.
-					output = ItemSlotClickOutput.NeedsSwapInventory;
-				}
-				else if (!held.valid && itemSlot.item.valid)
-				{
-					//Pick up the item - put it in the held item instance
-					held = itemSlot.item.Copy();
-					inventory.Remove(index, held.num);
-
-					output = ItemSlotClickOutput.PickupFromSlot;
-
-					held.item.StartHold(player, inventory, -1);
-				}
-				else if (held.valid && itemSlot.item.valid)
-				{
-					// Merge stacks
-					if (inventory.Get(index).item == held.item && held.damage == itemSlot.item.damage)
-					{
-						int total = itemSlot.item.num + held.num;
-
-						if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
-						{
-							inventory.Set(new ItemInstance(held, itemSlot.item.num + held.num), index);
-							held = new ItemInstance();
-
-							output = ItemSlotClickOutput.MergeInSlotCompletely;
-						}
-						else
-						{
-							int rem = held.num - (itemSlot.maxStackSize - itemSlot.item.num);
-
-							inventory.Set(new ItemInstance(itemSlot.item, itemSlot.maxStackSize), index);
-							held = new ItemInstance(held, rem);
-
-							output = ItemSlotClickOutput.MergeInSlotSome;
-						}
-					}
-					else
-					{
-						// attempt to swap stacks
-						if (itemSlot.maxStackSize == -1 || held.num <= itemSlot.maxStackSize)
-						{
-							if (!whiteList.Matches(held.item))
-								return ItemSlotClickOutput.None;
-
-							var oldHeld = held;
-							held = itemSlot.item.Copy();
-							inventory.Set(oldHeld, index);
-
-							output = ItemSlotClickOutput.Swap;
-
-							oldHeld.item.EndHold(player, inventory, -1);
-							held.item.StartHold(player, inventory, -1);
-						}
-						//Cannot swap stacks if doing so would put us above the max stack size. Swapping would have to involve actively removing or dropping items.
-						else output = ItemSlotClickOutput.None;
-					}
-				}
-				else if (held.valid && !itemSlot.item.valid)
-				{
-					// Place in slot. The held item is set to an empty item instance.
-
-					int total = held.num;
-
-					if (total <= itemSlot.maxStackSize || itemSlot.maxStackSize == -1)
-					{
-						if (!whiteList.Matches(held.item))
-							return ItemSlotClickOutput.None;
-
-						held.item.EndHold(player, inventory, index);
-
-						inventory.Set(held, index);
-						held = new ItemInstance();
-
-						output = ItemSlotClickOutput.PlaceInSlotAll;
-					}
-                    else
-                    {
-						int rem = held.num - itemSlot.maxStackSize;
-
-						inventory.Set(new ItemInstance(held, itemSlot.maxStackSize), index);
-						held = new ItemInstance(held, rem);
-
-						output = ItemSlotClickOutput.PlaceInSlotSome;
-					}
-				}
+				//output = DoClick(player, inventory, heldInventory, index, Main.inputManager.IsHeld(Keys.LeftShift));
 			}
 			else if (itemSlot.button.clickRight)
 			{
-				//right clicking picks up one item from the slot's stack and puts it 
-				if (!held.valid && itemSlot.item.valid)
+				//output = DoRightClick(player, inventory, heldInventory, index);
+			}
+
+			//if (output != ItemSlotClickOutput.None)
+			if (itemSlot.button.clickLeft || itemSlot.button.clickRight)
+			{
+				// TODO
+				// playerIndex will always be the local player index (this is only called for handling menus, after all!)
+				GlobalState.GameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
 				{
-					//Pick up the item - put it in the held item instance
-					held = new ItemInstance(itemSlot.item, 1);
-					inventory.Remove(index, 1);
-
-					output = ItemSlotClickOutput.PickupFromSlot;
-				}
-				else if (held.valid && itemSlot.item.valid)
-				{
-					// Merge stacks
-					if (inventory.Get(index).item == held.item && held.damage == itemSlot.item.damage)
-					{
-						if (itemSlot.item.num != itemSlot.maxStackSize)
-						{
-							inventory.Set(new ItemInstance(held, itemSlot.item.num + 1), index);
-
-							if (held.num - 1 > 0)
-								held = new ItemInstance(held, held.num - 1);
-							else held = new ItemInstance();
-
-							output = ItemSlotClickOutput.MergeInSlotSome;
-						}
-						else output = ItemSlotClickOutput.None;
-					}
-					else
-					{
-						// Don't do anything on the right click case. We can't swap.
-					}
-				}
-				else if (held.valid && !itemSlot.item.valid)
-				{
-					// Place in slot. The held item is set to an empty item instance.
-
-					if (!whiteList.Matches(held.item))
-						return ItemSlotClickOutput.None;
-
-					inventory.Set(new ItemInstance(held, 1), index);
-					if (held.num - 1 > 0)
-						held = new ItemInstance(held, held.num - 1);
-					else held = new ItemInstance();
-
-					output = ItemSlotClickOutput.PlaceInSlotAll;
-				}
+					playerId = (byte)0,
+					entity = invOwner,
+					inventory = new InventoryManager.InventoryReference((ushort)inventory.id, (short)inventory.generation),
+					inventoryIndex = index,
+					output = output,
+				});
+				//inventory.AddClick(player, index, output);
 			}
 
 			return output;
 		}
+
+		public static ItemSlotClickOutput DoClick(Player player, Inventory inventory, Inventory heldInventory, int index, bool shiftHeld) 
+		{
+			ItemSlotClickOutput output = ItemSlotClickOutput.None;
+
+			var ourItem = inventory.Get(index);
+			var ourWhitelist = inventory.GetWhiteList(index);
+			var ourMaxStackSize = inventory.GetMaxStackSize(index);
+
+            if (shiftHeld && ourItem.valid)
+            {
+                //defer this functionality to the user since we might need to swap between different inventories and this function can only see one inventory.
+                output = ItemSlotClickOutput.NeedsSwapInventory;
+            }
+            else if (!heldInventory.Get(0).valid && ourItem.valid)
+            {
+                //Pick up the item - put it in the held item instance
+                heldInventory.Set(ourItem.Copy(), 0);
+                inventory.Remove(index);
+
+                output = ItemSlotClickOutput.PickupFromSlot;
+
+                heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+            }
+            else if (heldInventory.Get(0).valid && ourItem.valid)
+            {
+                // Merge stacks
+                if (ourItem.item == heldInventory.Get(0).item && heldInventory.Get(0).damage == ourItem.damage)
+                {
+                    int total = ourItem.num + heldInventory.Get(0).num;
+
+                    if (total <= ourMaxStackSize || ourMaxStackSize == -1)
+                    {
+                        var newItem = heldInventory.Get(0);
+                        newItem = new ItemInstance(newItem, newItem.num + ourItem.num);
+
+                        inventory.Set(newItem, index);
+                        heldInventory.Remove(0);
+
+                        output = ItemSlotClickOutput.MergeInSlotCompletely;
+                    }
+                    else
+                    {
+                        //int rem = heldInventory.Get(0).num - (itemSlot.maxStackSize - itemSlot.item.num);
+
+                        inventory.Set(new ItemInstance(ourItem, ourMaxStackSize), index);
+                        heldInventory.Remove(ourMaxStackSize - ourItem.num);
+
+                        //held = new ItemInstance(held, rem);
+
+                        output = ItemSlotClickOutput.MergeInSlotSome;
+                    }
+                }
+                else
+                {
+                    // attempt to swap stacks
+                    if (ourMaxStackSize == -1 || heldInventory.Get(0).num <= ourMaxStackSize)
+                    {
+                        if (!ourWhitelist?.Matches(inventory, heldInventory.Get(0).item) ?? false)
+                            return ItemSlotClickOutput.None;
+
+                        var oldHeld = heldInventory.Get(0);
+                        heldInventory.Set(ourItem.Copy(), 0);
+                        inventory.Set(oldHeld, index);
+
+                        output = ItemSlotClickOutput.Swap;
+
+                        oldHeld.item.EndHold(player, inventory, -1);
+                        heldInventory.Get(0).item?.StartHold(player, inventory, -1);
+                    }
+                    //Cannot swap stacks if doing so would put us above the max stack size. Swapping would have to involve actively removing or dropping items.
+                    else output = ItemSlotClickOutput.None;
+                }
+            }
+            else if (heldInventory.Get(0).valid && !ourItem.valid)
+            {
+                // Place in slot. The held item is set to an empty item instance.
+
+                int total = heldInventory.Get(0).num;
+
+                if (total <= ourMaxStackSize || ourMaxStackSize == -1)
+                {
+                    if (!ourWhitelist?.Matches(inventory, heldInventory.Get(0).item) ?? false)
+                        return ItemSlotClickOutput.None;
+
+                    heldInventory.Get(0).item.EndHold(player, inventory, index);
+
+                    inventory.Set(heldInventory.Get(0), index);
+                    heldInventory.Remove(0);
+
+                    output = ItemSlotClickOutput.PlaceInSlotAll;
+                }
+                else
+                {
+                    //int rem = heldInventory.Get(0).num - itemSlot.maxStackSize;
+
+                    inventory.Set(new ItemInstance(heldInventory.Get(0), ourMaxStackSize), index);
+                    heldInventory.Remove(0, ourMaxStackSize);
+
+                    output = ItemSlotClickOutput.PlaceInSlotSome;
+                }
+            }
+
+			return output;
+        }
+
+		public static ItemSlotClickOutput DoRightClick(Player player, Inventory inventory, Inventory heldInventory, int index)
+        {
+			var output = ItemSlotClickOutput.None;
+
+            var ourItem = inventory.Get(index);
+            var ourWhitelist = inventory.GetWhiteList(index);
+            var ourMaxStackSize = inventory.GetMaxStackSize(index);
+
+            //right clicking picks up one item from the slot's stack and puts it 
+            if (!heldInventory.Get(0).valid && ourItem.valid)
+            {
+                //Pick up the item - put it in the held item instance
+                heldInventory.Set(new ItemInstance(ourItem, 1), 0);
+                inventory.Remove(index, 1);
+
+                output = ItemSlotClickOutput.PickupFromSlot;
+            }
+            else if (heldInventory.Get(0).valid && ourItem.valid)
+            {
+                // Merge stacks
+                if (inventory.Get(index).item == heldInventory.Get(0).item && heldInventory.Get(0).damage == ourItem.damage)
+                {
+                    if (ourItem.num != ourMaxStackSize)
+                    {
+                        inventory.Set(new ItemInstance(heldInventory.Get(0), ourItem.num + 1), index);
+
+                        heldInventory.Remove(0, 1);
+
+                        output = ItemSlotClickOutput.MergeInSlotSome;
+                    }
+                    else output = ItemSlotClickOutput.None;
+                }
+                else
+                {
+                    // Don't do anything on the right click case. We can't swap.
+                }
+            }
+            else if (heldInventory.Get(0).valid && !ourItem.valid)
+            {
+                // Place in slot. The held item is set to an empty item instance.
+
+                if (!inventory.GetWhiteList(index)?.Matches(inventory, heldInventory.Get(0).item) ?? false)
+                    return ItemSlotClickOutput.None;
+
+                inventory.Set(new ItemInstance(heldInventory.Get(0), 1), index);
+                heldInventory.Remove(0, 1);
+
+                output = ItemSlotClickOutput.PlaceInSlotAll;
+            }
+
+			return output;
+        }
 
 		public static void SwapInventory(Inventory a, Inventory b, int indexA)
 		{
@@ -403,12 +484,12 @@ namespace ViMG.UIs
 		{
 			if (held.valid)
 			{
-				var fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black);
+				var fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_tny"), 1, true, Color.Black);
 
 				Vector2 pos = Main.inputManager.GetMousePosition().ToVector2();
 				RectangleF bounds = new RectangleF(pos, size, size);
 
-				held.item.DrawInInventory(batch, held, pos, scale);
+				held.item?.Client?.DrawInInventory(batch, held, pos, scale);
 				//batch.Draw(held.item.Texture, pos, held.item.SourceRect.ToRectangle(), Color.White, 0, Vector2.Zero, scale, SpriteEffects.None, 0.99f);
 
 				int num = held.num;
@@ -423,5 +504,29 @@ namespace ViMG.UIs
                     64, 1f, overflowAction: TextHelper.OverFlowAction.None);
 			}
 		}
+
+		/// <summary>
+		/// Wrapper function for inventory actions; does network synchronization
+		/// </summary>
+		/// <returns></returns>
+		public static bool InventoryAction<T>(T entity, int activatingPlayer, int action) where T : Entity, IHasInventory
+		{
+			return entity.InventoryAction(activatingPlayer, action);
+		}
+
+		public static void InventoryActionClient(EntityManager.EntityReference entity, InventoryManager.InventoryReference inventory, int activatingPlayer, int action)
+		{
+			Debug.Assert(GlobalState.NetMode != NetworkingMode.Server);
+
+            GlobalState.GameStateManager.TheIsland.netManagerClient?.SendMessageToAll(SyncInventoryInput.Instance, GlobalState.GameStateManager.TheIsland.netManagerClient.netManager, new SyncInventoryInput.ClickToSync
+            {
+                playerId = (byte)activatingPlayer,
+                entity = entity,
+                inventory = inventory,
+                inventoryIndex = -1,
+                output = ItemSlotClickOutput.None,
+                action = action,
+            });
+        }
 	}
 }

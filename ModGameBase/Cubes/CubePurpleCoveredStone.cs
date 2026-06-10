@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.ChunkStuff;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,14 +10,20 @@ using System.Threading.Tasks;
 using ViMG.ChunkStuff;
 using ViMG.GameStates;
 using ViMG.Items;
+using static ViMG.Cubes.Cube;
 
 namespace ViMG.Cubes
 {
     public class CubePurpleCoveredStone : Cube
     {
-        public CubePurpleCoveredStone() : base("stone_covered_purple", new CubeFacingLayout(new RectangleF(0, 112, 16, 16), new RectangleF(16, 112, 16, 16), new RectangleF(16, 0, 16, 16)), Color.White, 3)
+        public CubePurpleCoveredStone() : base("stone_covered_purple", 3)
         {
             Name = "Purple Mushroom Covered Stone";
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new ClientCubePurpleCoveredStone(this);
         }
 
         public override void GetDrops(List<ItemInstance> itemsToDrop)
@@ -23,26 +31,7 @@ namespace ViMG.Cubes
             base.GetDrops(itemsToDrop);
 
             //drop stone instead of orange stuff
-            itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("item_stone"), 1, 1));
-        }
-
-        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
-        {
-            if (data == null || !data.GetValid())
-                return base.GetSourceRect(pass, data, parameters, face);
-
-            //we're meshing one of the sides.
-            if ((face & MeshHelper.CubeFace.SIDES) > 0)
-            {
-                //if the cube above is the same
-                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0)).GetOrDefault(Main.Registry.CubeRegistry.Air) == this)
-                {
-                    //use the stone texture for the sides
-                    return new RectangleF(16, 0, 16, 16);
-                }
-            }
-
-            return base.GetSourceRect(pass, data, parameters, face);
+            itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("item_stone"), 1, 1));
         }
 
         private Cube mushroomStem;
@@ -67,12 +56,12 @@ namespace ViMG.Cubes
 
             if (mushroomStem == null)
             {
-                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
-                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
-                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");
+                mushroomStem = GlobalState.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_top");
+                mushroomSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_small");
             }
 
-            if (Main.random.NextFloat() < 1f / 30f)
+            if (GlobalState.random.NextFloat() < 1f / 30f)
                 SpawnMushrooms(world.ChunkManager, position, false);
         }
 
@@ -82,13 +71,13 @@ namespace ViMG.Cubes
 
             if (mushroomStem == null)
             {
-                mushroomStem = Main.Registry.CubeRegistry.Get("mushroom_stem");
-                mushroomTop = Main.Registry.CubeRegistry.Get("mushroom_purple_top");
-                mushroomSmall = Main.Registry.CubeRegistry.Get("mushroom_purple_small");
+                mushroomStem = GlobalState.Registry.CubeRegistry.Get("mushroom_stem");
+                mushroomTop = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_top");
+                mushroomSmall = GlobalState.Registry.CubeRegistry.Get("mushroom_purple_small");
             }
 
             //Don't try to spawn a mushroom most of the time
-            if (Main.random.NextFloat() < 0.05f)
+            if (GlobalState.random.NextFloat() < 0.05f)
                 SpawnMushrooms(world.ChunkManager, position, true);
         }
 
@@ -98,7 +87,7 @@ namespace ViMG.Cubes
             CubePosition abovePosition = position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.CubeSpace);
             if (ChunkHelper.CanPlaceIfNonSolid(manager, abovePosition, out Cube offsetCube))
             {
-                bool smallMushroom = Main.random.NextCoinFlip();
+                bool smallMushroom = GlobalState.random.NextCoinFlip();
 
                 if (smallMushroom)
                 {
@@ -106,7 +95,7 @@ namespace ViMG.Cubes
                 }
                 else
                 {
-                    int size = Main.random.Next(3, 8);
+                    int size = GlobalState.random.Next(3, 8);
                     bool canPlaceBigMushroom = true;
 
                     if (restrictBase)
@@ -191,6 +180,29 @@ namespace ViMG.Cubes
                     }
                 }
             }
+        }
+    }
+
+    public class ClientCubePurpleCoveredStone : ClientCube
+    {
+        public ClientCubePurpleCoveredStone(Cube cube) : base(cube, new CubeFacingLayout(new RectangleF(0, 112, 16, 16), new RectangleF(16, 112, 16, 16), new RectangleF(16, 0, 16, 16)), Color.White)
+        {
+        }
+
+        public override RectangleF GetSourceRect(RenderPass pass, CopiedChunkManager.CopiedChunkData data, ChunkRenderMesher.CubeMeshingParameters parameters, MeshHelper.CubeFace face)
+        {
+            //we're meshing one of the sides.
+            if ((face & MeshHelper.CubeFace.SIDES) > 0)
+            {
+                //if the cube above is the same
+                if (data.GetCube(parameters.position + new CubePosition(0, 1, 0, CubePosition.CoordinateSpace.ChunkSpace)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air) == cube)
+                {
+                    //use the stone texture for the sides
+                    return new RectangleF(16, 0, 16, 16);
+                }
+            }
+
+            return base.GetSourceRect(pass, data, parameters, face);
         }
     }
 }

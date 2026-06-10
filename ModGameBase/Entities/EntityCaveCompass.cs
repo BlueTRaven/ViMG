@@ -82,11 +82,6 @@ namespace ViMG.Entities
 
             Vector3 dir = center - Position;
 
-            //if (c != null && ChunkPosition.WorldSpaceChunk(world.player.Position) == c.Position)
-            {
-                dir = world.player.Position - Position;
-            }
-
             if (CubePosition.FromWorldSpace(Position).Y > 180f)
             {
                 //z to prevent gymbal lock
@@ -107,9 +102,9 @@ namespace ViMG.Entities
             return false;
         }
 
-        public void TrackingCubeUpdated(World world, ChunkManager manager, ushort updatedId)
+        public void TrackingCubeUpdated(World world, ChunkManager manager, Player? player, ushort updatedId)
         {
-            world.EntityManager.Remove(this);
+            world.EntityManager.Kill(this);
         }
 
         public Matrix GetMatrix()

@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace ViMG
 {
+	[Obsolete]
 	public class SimpleMesh<TVert, TIndex> where TVert : struct, IVertexType where TIndex : struct
 	{
 		public VertexBuffer VBO;
@@ -52,7 +54,7 @@ namespace ViMG
 			//TODO: opengl doesn't support multithreaded uploading.
 			//IF we end up supporting opengl (not sure we will)
 			//then this will cause issues as we have to explicitly call Upload
-			if (Thread.CurrentThread == Main.MainThread || Main.MULTITHREAD_UPLOADMESH)
+			if (Thread.CurrentThread == GlobalState.MainThread || GlobalState.MULTITHREAD_UPLOADMESH)
 				Upload(device, vertices, indices);
 			else UploadLater(vertices, indices);
 		}
@@ -60,7 +62,7 @@ namespace ViMG
 		private void Upload(GraphicsDevice device, List<TVert> vertices, List<TIndex> indices)
 		{
 			//don't attempt to upload if we've exited or the device is lost.
-			if (Main.Exit || device.IsDisposed)
+			if (GlobalState.Exit || device.IsDisposed)
 				return;
 
 			if (Uploaded)
@@ -154,11 +156,11 @@ namespace ViMG
 				device.Textures[i] = null;
 			}
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			effect.Parameters["World"].SetValue(transform);
-			effect.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(transform)));
-			effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//effect.Parameters["World"].SetValue(transform);
+			//effect.Parameters["WorldNormal"].SetValue(Matrix.Transpose(Matrix.Invert(transform)));
+			//effect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 			Texture2D useTexture = texture;
 
@@ -211,10 +213,10 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			vertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector4());
-			vertexPositionColorDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//vertexPositionColorDebugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector4());
+			//vertexPositionColorDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
 
 			foreach (var pass in vertexPositionColorDebugEffect.CurrentTechnique.Passes)
 			{
@@ -228,11 +230,11 @@ namespace ViMG
 			if (!Use(device))
 				return;
 
-			Main.WVP.SetWorld(transform);
+			//Main.WVP.SetWorld(transform);
 
-			vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
-			vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
-			vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(overrideTexture == null ? texture : overrideTexture);
+			//vertexPositionTextureDebugEffect.Parameters["DiffuseColor"].SetValue(diffuseColor.ToVector4());
+			//vertexPositionTextureDebugEffect.Parameters["WorldViewProjection"].SetValue(Main.WVP.Get());
+			//vertexPositionTextureDebugEffect.Parameters["Texture"].SetValue(overrideTexture == null ? texture : overrideTexture);
 
 			foreach (var pass in vertexPositionTextureDebugEffect.CurrentTechnique.Passes)
 			{

@@ -11,18 +11,18 @@ namespace Engine.Mods
     public class ModManager
     {
         private List<Assembly> loadedAssemblies = new List<Assembly>();
-        
+
         public void LoadModDlls()
         {
-            foreach (string str in Main.SessionInformation.LoadedMods)
+            foreach (string str in GlobalState.SessionInformation.LoadedMods)
             {
-                string? modsFolder = Main.SessionInformation.ModsFolder;
+                string? modsFolder = GlobalState.SessionInformation.ModsFolder;
 
                 if (modsFolder == null)
                 {
                     string basePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-                    string relativePath = string.Format("../mods/{0}", "net8.0-windows");
+                    string relativePath = string.Format("../mods/{0}", "net9.0-windows7.0");
                     modsFolder = Path.Combine(basePath, relativePath);
                 }
                 loadedAssemblies.Add(Assembly.LoadFile(string.Format("{0}/{1}.dll", modsFolder, str)));

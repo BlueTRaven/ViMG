@@ -11,10 +11,15 @@ namespace ViMG.Items
 {
     public class ItemString : Item
     {
-        public ItemString() : base("string", new RectangleF(16, 32, 16, 16))
+        public ItemString() : base("string")
         {
             name = "String";
             description = "A simple piece of string extracted from Fibrous Plants.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 32, 16, 16));
         }
     }
 }

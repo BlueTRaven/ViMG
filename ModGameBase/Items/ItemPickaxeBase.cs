@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Engine;
+using Engine.Items;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -10,11 +13,16 @@ namespace ViMG.Items
 {
     public class ItemPickaxeBase : Item
 	{
-		public ItemPickaxeBase() : base("pickaxe_base", new BrUtility.RectangleF(16, 0, 16, 16))
-		{
-		}
+		public ItemPickaxeBase() : base("pickaxe_base")
+        {
+        }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(16, 0, 16, 16));
+        }
+
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 			
@@ -23,7 +31,7 @@ namespace ViMG.Items
 			(Vector3 pos) =>
 			{
 				return player.GetWorld().ChunkManager.IsInWorldBounds(pos) && 
-					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(Main.Registry.CubeRegistry.Air).Solid;
+					player.GetWorld().ChunkManager.CubeView.GetCube(CubePosition.FromWorldSpace(pos)).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Solid;
 			});
 
 			if (lookAtResult.hasHit)
@@ -43,7 +51,7 @@ namespace ViMG.Items
 
 							if (player.GetWorld().ChunkManager.IsInWorldBounds(minePos))
 							{
-								player.GetWorld().TryMineCube(minePos, 0, 1);
+								player.GetWorld().TryMineCube(player, minePos, 0, 1);
 							}
 						}
 					}

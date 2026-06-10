@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,15 +16,20 @@ namespace ViMG.Items
     {
         private static Buffs.Buff.BuffInstance[] buffs = new Buffs.Buff.BuffInstance[] 
         {
-            new(Main.Registry.BuffRegistry.Get("well_fed"), 30f),
-            new(Main.Registry.BuffRegistry.Get("fire_resist"), 3f * 30f),
+            new(GlobalState.Registry.BuffRegistry.Get("well_fed"), 30f),
+            new(GlobalState.Registry.BuffRegistry.Get("fire_resist"), 3f * 30f),
         };
 
-        public ItemPinkPepper() : base("food_pink_pepper", new RectangleF(176, 80, 16, 16))
+        public ItemPinkPepper() : base("food_pink_pepper")
         {
             name = "Pink Pepper";
             description = "A sweet-then-bitter tasting pepper. It appears to be native to this island...\n" +
                 "Grants Well Fed for 30 seconds and resistance to On Fire for 3 minutes.";
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(176, 80, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)

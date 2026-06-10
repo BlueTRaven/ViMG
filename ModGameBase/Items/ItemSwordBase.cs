@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility;
+using Engine.Entities;
+using Engine.Items;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -10,11 +13,16 @@ namespace ViMG.Items
 {
     public class ItemSwordBase : Item
 	{
-		public ItemSwordBase() : base("sword_base", new BrUtility.RectangleF(0, 0, 16, 16))
-		{
-		}
+		public ItemSwordBase() : base("sword_base")
+        {
+        }
 
-		public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(0, 0, 16, 16));
+        }
+
+        public override bool LeftClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
 		{
 			base.LeftClick(player, inventory, index, facing, out actionStats);
 
@@ -23,7 +31,7 @@ namespace ViMG.Items
 			float knockback = 1f;
 			player.PerformAttack(DamageType.Melee, ref actionStats, ref damage, ref knockback);
 
-			player.SpawnHitboxLater(index, 1, DamageType.Melee, -Main.camera.Forward, 1f);
+			player.SpawnHitboxLater(index, 1, DamageType.Melee, -(player as IRotatable).Forward, 1f);
 
             actionStats.animationType = UseAnimationType.SwingHorizontal;
 

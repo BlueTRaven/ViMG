@@ -1,5 +1,8 @@
-﻿using BrNineSlice;
+﻿using BepuPhysics.Constraints;
+using BrNineSlice;
 using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -8,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Text;
 using ViMG.Buffs;
+using ViMG.Entities;
 using ViMG.GameStates;
 using ViMG.Items;
 using ViMG.Recipes;
@@ -47,18 +51,19 @@ namespace ViMG.UIs
 
 		private const float HEALTHBAR_HEIGHT = 16;
 
-		private Player player;
-		private Inventory inventory;
-		private Inventory craftInventory;
-		private Inventory accessoryInventory;
-		private Inventory gearInventory;
+		private EntityManager.EntityReference player;
+		private InventoryManager.InventoryReference heldInventory;
+		private InventoryManager.InventoryReference inventory;
+		private InventoryManager.InventoryReference craftInventory;
+		private InventoryManager.InventoryReference accessoryInventory;
+		private InventoryManager.InventoryReference gearInventory;
 
 		private static string[] tagsLegs = new string[1] { "armor_legs" };
 		private static string[] tagsBody = new string[1] { "armor_body" };
 		private static string[] tagsHead = new string[1] { "armor_head" };
 		private static string[] tagsAccessories = new string[1] { "accessory" };
 
-		private static string[][] tagsGearBySlot = new string[4][]
+		public static string[][] tagsGearBySlot = new string[4][]
 		{
 			new string[1] { "gear_heart" },
 			new string[1] { "gear_run" },
@@ -71,28 +76,27 @@ namespace ViMG.UIs
 			("Heart", "Your heart. It beats steadily within your chest. Some say it could be replaced... who wouldn't want a better heart?\n" +
 				"Gear equipped here increases your maximum hp."),
             ("Boots", "All a man really needs is a pair of good boots.\n" +
-				"Gear equippeed here allows you to run."),
+				"Gear equipped here allows you to run."),
             ("Magic", "Magic - who knows how it works?\n" +
 				"Gear equipped here increases your maximum magic."),
             ("Feather Artifact", "Gear equipped here allows you to jump multiple times.")
         };
 
-		private static string[][] tagsAccessoriesBySlot = new string[6][]
-		{
-			tagsLegs,
+		public static string[][] tagsAccessoriesBySlot =
+        [
+            tagsLegs,
 			tagsBody,
 			tagsHead,
 			tagsAccessories,
 			tagsAccessories,
 			tagsAccessories,
-		};
+		];
 
         public int HoverIndex;
 		public int HighlightIndex;
 		private bool opened;
 		public bool IsOpened => opened;
 
-		private ItemInstance held;
 		private FastList<PickedUpItem> pickedupItems = new FastList<PickedUpItem>();
 
 		private bool craftInventoryUpdated;
@@ -102,28 +106,27 @@ namespace ViMG.UIs
 
 		private TextHelper.FontInfo fi;
 
-		public MenuPlayer(GameStateManager gsManager, Player player, Inventory playerInventory, Inventory craftInventory, Inventory accessoryInventory, Inventory gearInventory) : base(gsManager)
+		public MenuPlayer(GameStateManager gsManager, EntityManager.EntityReference player, InventoryManager.InventoryReference heldInventory, InventoryManager.InventoryReference playerInventory, InventoryManager.InventoryReference craftInventory, InventoryManager.InventoryReference accessoryInventory, InventoryManager.InventoryReference gearInventory) : base(gsManager)
 		{
 			this.player = player;
 
+			this.heldInventory = heldInventory;
 			this.inventory = playerInventory;
-
 			this.craftInventory = craftInventory;
             this.accessoryInventory = accessoryInventory;
 			this.gearInventory = gearInventory;
-            playerInventory.Get(HighlightIndex).item?.StartHold(player, playerInventory, HighlightIndex);
 		}
 
         public override void LoadContent()
         {
             base.LoadContent();
 
-            fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+            fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
-			healthbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
-			healthbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
-			magicbarLowerNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
-            magicbarUpperNS = new NineSlice(Main.assetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
+			healthbarLowerNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 48, 24, 8), 8, 8, 2, 2);
+			healthbarUpperNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 32, 24, 8), 7, 7, 1, 1);
+			magicbarLowerNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(48, 264, 24, 8), 8, 8, 2, 2);
+            magicbarUpperNS = new NineSlice(GlobalState.AssetsManager.GetAsset<Texture2D>("bars"), new RectangleF(120, 248, 24, 8), 7, 7, 1, 1);
         }
 
         public void Open()
@@ -168,7 +171,14 @@ namespace ViMG.UIs
 		{
 			base.Update(deltaTime);
 
-			UI.Start();
+			var invManager = gsManager.TheIsland.GetClient().inventoryManager;
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
+
+            UI.Start();
 
 			if (gsManager.TheIsland.IsLoading)
 			{
@@ -183,9 +193,9 @@ namespace ViMG.UIs
 
 			UI.StartParent(new Vector2(MARGIN, MARGIN + 32));
 
-			ItemInstance preHighlightedHotbar = inventory.Get(HighlightIndex);
+			ItemInstance preHighlightedHotbar = inventory?.Get(HighlightIndex) ?? new();
 
-			MenuHelper.DoPlayerInventory(player, inventory, ref held, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
+			MenuHelper.DoPlayerInventory(player, inventory, heldInventory, (opened ? Player.INVENTORY_ROWS : 1), Player.INVENTORY_COLUMNS, 18 * 2f, 2f, inventoryItemSlots);
 
 			int s = Player.INVENTORY_COLUMNS;
 			if (opened)
@@ -198,74 +208,32 @@ namespace ViMG.UIs
 					HoverIndex = i;
 			}
 
-			if (preHighlightedHotbar.valid && preHighlightedHotbar.item != inventory.Get(HighlightIndex).item)
-            {
-				preHighlightedHotbar.item.StartHold(player, inventory, HighlightIndex);
-
-				if (inventory.Get(HighlightIndex).valid)
-					inventory.Get(HighlightIndex).item.StartHold(player, inventory, HighlightIndex);
-            }
-
 			UI.EndParent();
 
 			UI.StartParent(new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - HEALTHBAR_MAX, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING));
 
-			List<Buff.BuffInstance> buffs = player.GetBuffManager().GetBuffs();
+			// TODO: buff sync stuff
+			//List<Buff.BuffInstance> buffs = player.GetBuffManager().GetBuffs();
 
-			int index = 0;
-			foreach (Buff.BuffInstance buff in buffs)
-            {
-				int x = index % 8;
-				int y = index / 8;
+			//int index = 0;
+			//foreach (Buff.BuffInstance buff in buffs)
+   //         {
+			//	int x = index % 8;
+			//	int y = index / 8;
 
-				Texture2D texture = buff.buff.texture ?? Main.assetsManager.GetAsset<Texture2D>("ui_inventory");
-				RectangleF sourceRect = buff.buff.sourceRect;
+			//	Texture2D texture = buff.buff.texture ?? GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory");
+			//	RectangleF sourceRect = buff.buff.sourceRect;
 
-				Vector2 position = new Vector2(x * (SIZE + MARGIN), y * (SIZE + MARGIN));
-				var button = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(position, new Size(SIZE)), texture, sourceRect));
+			//	Vector2 position = new Vector2(x * (SIZE + MARGIN), y * (SIZE + MARGIN));
+			//	var button = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(position, new Size(SIZE)), texture, sourceRect));
 
-				if (button.hovered)
-                {
-					UIWidgets.MakeTooltip(position, string.Format("{0} x{1} - {2:0.00}s", buff.buff.Name, buff.stack, buff.duration), buff.buff.Description);
+			//	if (button.hovered)
+   //             {
+			//		UIWidgets.MakeTooltip(position, string.Format("{0} x{1} - {2:0.00}s", buff.buff.Name, buff.stack, buff.duration), buff.buff.Description);
+   //             }
 
-					/*UI.DisableParent();
-
-					const int minW = 128;
-					const int minH = 16;
-
-					const int maxW = 256;
-
-					string name = buff.buff.Name;
-					string description = buff.buff.Description;
-
-					float widthName = fi.StringWidth(name);
-					Size sizeDescription = fi.StringSize(TextHelper.WrapText(fi, description, maxW));
-
-					float textWidthMax = Math.Max(minW, Math.Max(widthName, sizeDescription.Width));
-
-					float height = fi.StringHeight(name);
-					height += sizeDescription.Height;
-					height += 8;    //for padding
-
-					RectangleF bounds = new RectangleF(Main.inputManager.GetMousePosition().ToVector2() + new Vector2(16), textWidthMax, Math.Max(height, minH));
-
-					int overlapFarX = (int)bounds.x + (int)bounds.width - Options.CurrentWindowResolution.X;
-					int overlapFarY = (int)bounds.y + (int)bounds.height - Options.CurrentWindowResolution.Y;
-
-					if (overlapFarX > 0)
-						bounds.x -= overlapFarX;
-					if (overlapFarY > 0)
-						bounds.y -= overlapFarY;
-
-					UI.MakeLabel(name, fi, bounds.width, bounds.Position);
-					bounds.y += fi.StringHeight(name);
-					bounds.y += 8;
-					UI.MakeLabel(description, fi, bounds.width, bounds.Position);
-					UI.EnableParent();*/
-                }
-
-				index++;
-            }
+			//	index++;
+   //         }
 
 			UI.EndParent();
 
@@ -274,7 +242,7 @@ namespace ViMG.UIs
 				if (Main.inputManager.JustPressed(Keys.Escape))
 					Close();
 
-				TextHelper.FontInfo fi = new TextHelper.FontInfo(Main.assetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
+				TextHelper.FontInfo fi = new TextHelper.FontInfo(GlobalState.AssetsManager.GetAsset<SpriteFont>("fira_mono_sml"), 1, true);
 
 				UI.StartParent(new Vector2(MARGIN * 2f + MenuHelper.GetInventorySize(Player.INVENTORY_ROWS, Player.INVENTORY_COLUMNS, 18 * 2f, 2f).Width, MARGIN * 2f));
 
@@ -284,12 +252,13 @@ namespace ViMG.UIs
 				pos = new Vector2(16 * 3.5f * SCALE, 0);
 
 				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(0, 16, 123 * SCALE, 55 * SCALE), 
-					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+					GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"),
 					new RectangleF(128, 0, 123, 55), below: true));
 				//UI.MakePanel(new Color(139, 139, 139), new RectangleF(0, 0, SIZE * 7, SIZE * 2 + MARGIN * 2));
 
 				UI.StartParent(new Vector2(MARGIN, 18 + MARGIN));
 
+				// Craft inventory stuff
 				UI.ButtonConstructionParameters buttonParameters = MenuHelper.ButtonParameters;
 				UI.ButtonConstructionParameters actionButtonParameters = MenuHelper.ActionButtonParameters;
 				for (int y = 0; y < 2; y++)
@@ -305,8 +274,8 @@ namespace ViMG.UIs
 
 						var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), craftInventory.Get(i));
 
-						var output = MenuHelper.ItemSlotClickOutput.None;
-						if ((output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, ref held, new MenuHelper.WhiteListNone())) != MenuHelper.ItemSlotClickOutput.None)
+						var output = MenuHelper.HandleItemSlot(player, craftInventory, i, itemslot, heldInventory);
+						if (output != MenuHelper.ItemSlotClickOutput.None)
 						{
 							if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 							{
@@ -318,7 +287,7 @@ namespace ViMG.UIs
 					}
 				}
 
-				if (craftInventoryUpdated)
+				if (true)
 				{
 					currentRecipe = FindRecipe(craftInventory);
 
@@ -340,7 +309,7 @@ namespace ViMG.UIs
 
 				bounds = new RectangleF(16 * 2 * 4.125f, 2, SIZE, SIZE);
 
-				UI.MakeTexture(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
+				UI.MakeTexture(bounds, GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32, 48, 16, 16));
 
 				bounds.x += 29 * 2f;
 				bounds.y -= 2;
@@ -351,7 +320,7 @@ namespace ViMG.UIs
 				//bounds.x += SIZE;
                 //buttonParameters.bounds.Position = bounds.Position;
 
-                /*UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, Main.assetsManager.GetAsset<Texture2D>("ui_inventory"),
+                /*UI.MakeItemSlot(UI.MakeButton(new UI.ButtonConstructionParameters(bounds, GlobalState.assetsManager.GetAsset<Texture2D>("ui_inventory"),
 								new RectangleF(0, 0, 16, 16), new RectangleF(16, 0, 16, 16), new RectangleF(16, 0, 16, 16))),
 								craftInventory.Get(7));*/
 
@@ -360,7 +329,7 @@ namespace ViMG.UIs
 
                 UI.Button craftRecipeButton = UI.MakeButton(actionButtonParameters);
 				UI.MakeTexture(new UI.TextureConstructionParameters(new RectangleF(bounds.x + 1, bounds.y + 1, 16 * SCALE, 16 * SCALE),
-					Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16)));
+					GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(0, 96, 16, 16)));
 
 				if (craftRecipeButton.clickLeft)
 				{
@@ -375,7 +344,7 @@ namespace ViMG.UIs
 				}
 
 				UI.StartParent(new Vector2(0, 2 * SIZE + MARGIN_CRAFTING * 2));
-				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16), Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), 
+				UI.Button recipeBookButton = UI.MakeButton(new UI.ButtonConstructionParameters(new RectangleF(0, 0, 16, 16), GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), 
 					new RectangleF(0, 80, 16, 16), new RectangleF(16, 80, 16, 16), new RectangleF(16, 80, 16, 16)));
 				UI.EndParent();
 
@@ -388,7 +357,7 @@ namespace ViMG.UIs
 				
 				if (recipeBookButton.clickLeft)
 				{
-                    Main.gameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, Main.Registry.RecipeRegistry.catalystByName["Inventory"], new ItemInstance()));
+                    GlobalState.GameStateManager.GetCurrentGameState().PushMenu(new MenuRecipeBook(gsManager, GlobalState.Registry.RecipeRegistry.catalystByName["Inventory"], new ItemInstance()));
 				}
 
 				UI.EndParent();
@@ -405,20 +374,20 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(16, 16));
 
+				// Accessory inventory stuff
 				buttonParameters.bounds.Position = Vector2.Zero;
 				for (int i = 0; i < 3; i++)
 				{
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i), 1);
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i));
 
 					if (!accessoryInventory.Get(i).valid)
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE), 
-							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
+							GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * i, 96, 16, 16));
 
-					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, ref held,
-						new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
+					var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i, itemslot, heldInventory);
+					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
@@ -442,15 +411,14 @@ namespace ViMG.UIs
                 {
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2f, 0));
 
-                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i + 3), 1);
+                    var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), accessoryInventory.Get(i + 3));
 
                     if (!accessoryInventory.Get(i + 3).valid)
                         UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
-                            Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
+                            GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(32 + 16 * (i + 3), 96, 16, 16));
 
-                    var output = MenuHelper.ItemSlotClickOutput.None;
-                    if ((output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, ref held,
-                        new MenuHelper.WhitelistAccessories(accessoryInventory, tagsAccessoriesBySlot[i + 3]))) != MenuHelper.ItemSlotClickOutput.None)
+                    var output = MenuHelper.HandleItemSlot(player, accessoryInventory, i + 3, itemslot, heldInventory);
+                    if (output != MenuHelper.ItemSlotClickOutput.None)
                     {
                         if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
                         {
@@ -470,8 +438,8 @@ namespace ViMG.UIs
 
 				UI.StartParent(new Vector2(16));
 
+				// Gear inventory stuff
 				buttonParameters.bounds.Position = Vector2.Zero;
-
 				for (int i = 0; i < 4; i++)
 				{
 					UI.StartParent(new Vector2(i * 18 * SCALE + i * 2, 0));
@@ -481,20 +449,19 @@ namespace ViMG.UIs
 
 					//buttonParameters.bounds.Position = pos;
 
-					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i), 1);
+					var itemslot = UI.MakeItemSlot(UI.MakeButton(buttonParameters), gearInventory.Get(i));
 
 					if (!gearInventory.Get(i).valid)
 					{
 						UI.MakeTexture(new RectangleF(Vector2.Zero, SIZE, SIZE),
-							Main.assetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
+							GlobalState.AssetsManager.GetAsset<Texture2D>("ui_inventory"), new RectangleF(48 + 16 * i, 112, 16, 16));
 
 						if (itemslot.button.hovered)
 							UIWidgets.MakeTooltip(new Vector2(0, SIZE), tooltipsByGearSlot[i].name, tooltipsByGearSlot[i].description);
 					}
 
-					var output = MenuHelper.ItemSlotClickOutput.None;
-					if ((output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, ref held,
-						new MenuHelper.WhitelistTag(tagsGearBySlot[i]))) != MenuHelper.ItemSlotClickOutput.None)
+					var output = MenuHelper.HandleItemSlot(player, gearInventory, i, itemslot, heldInventory);
+					if (output != MenuHelper.ItemSlotClickOutput.None)
 					{
 						if (output == MenuHelper.ItemSlotClickOutput.NeedsSwapInventory)
 						{
@@ -510,7 +477,8 @@ namespace ViMG.UIs
 
                 UI.StartParent(MenuHelper.GetInventorySize(1, 3, 18 * 2f, 2f).ToVector2() + new Vector2(MARGIN));
 
-				UIWidgets.MakeCoinCounter(Vector2.Zero, player.Currency, SCALE, fi);
+				// TODO currency
+				//UIWidgets.MakeCoinCounter(Vector2.Zero, player.Currency, SCALE, fi);
 
 				UI.EndParent();
 
@@ -521,11 +489,11 @@ namespace ViMG.UIs
                 pos.X = 0;
 				pos.Y += SIZE + MARGIN;
 
-				if (Main.Debug)
+				if (GlobalState.Debug)
 				{
 					UI.StartParent(new Vector2(MARGIN, 256 + 128));
 
-					var allItems = Main.Registry.ItemRegistry.GetIterable();
+					var allItems = GlobalState.Registry.ItemRegistry.GetIterable();
 
 					for (int i = 0; i < 8 * 8; i++)
 					{
@@ -577,9 +545,6 @@ namespace ViMG.UIs
 			}
 			else
 			{
-				if (Main.inputManager.JustPressed(Keys.Escape))
-					gsManager.GetCurrentGameState().PushMenu(new MenuPause(gsManager, player.world));
-
 				for (int y = 0; y < 2; y++)
 				{
 					for (int x = 0; x < 3; x++)
@@ -596,26 +561,29 @@ namespace ViMG.UIs
 				}
 			}
 
+			// TODO: max health (20 rn)
             Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), HEALTHBAR_PADDING);
+                WIDTH_PER_HEALTH * 20, HEALTHBAR_PADDING);
             RectangleF hbRect = new RectangleF(hbPos,
-                new Vector2(WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_HEALTH * 20, 8 * HEALTHBAR_SCALE));
 
 			if (hbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
 			{
 				UIWidgets.MakeTooltip(hbPos, "Health", string.Format("{0}/{1}\n" +
-					"Your health. If this is reduced to zero, you die. So don't let that happen.", player.Health, player.GetCalculatedMaxHealth()));
+					"Your health. If this is reduced to zero, you die. So don't let that happen.", gsManager.TheIsland.GetClient().Current().entities.GetByRef(player).health, 20));
 			}
 
+			// TODO: max magic (5 rn)
             Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+                WIDTH_PER_MAGIC * 5, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
             RectangleF mbRect = new RectangleF(mbPos,
-                new Vector2(WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_MAGIC * 5, 8 * HEALTHBAR_SCALE));
 
             if (mbRect.Contains(Main.inputManager.GetMousePosition().ToVector2()))
             {
+				// TODO player magic
                 UIWidgets.MakeTooltip(mbPos, "Magic", string.Format("{0}/{1}\n" +
-                    "Your magic. Used to cast magical spells.", player.Magic, player.GetCalculatedMaxMagic()));
+                    "Your magic. Used to cast magical spells.", 0, 5));
             }
 
             float unit = (float)Options.CurrentWindowResolution.X / 80f;
@@ -640,7 +608,7 @@ namespace ViMG.UIs
 						unit * 8, unit * 8);
 					rect = rect.Offset(Options.CurrentWindowResolution.ToVector2() / 2f);
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect, Color.White * p));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect, Color.White * p));
 				}
 				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE)
                 {
@@ -657,7 +625,7 @@ namespace ViMG.UIs
 						MathHelper.Lerp(Options.CurrentWindowResolution.Y / 2f, 
 							Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))), p));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect));
 				}
 				else if (pu.timer <= PickedUpItem.DUR_HOLDMID + PickedUpItem.DUR_ANIM_TO_SIDE + PickedUpItem.DUR_HOLDSIDE)
                 {
@@ -665,7 +633,7 @@ namespace ViMG.UIs
 
 					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect));
 					UI.MakeLabel(new UI.LabelConstructionParameters(
 						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128, 
 						rect.Position + new Vector2(unit, 0), Color.White));
@@ -680,7 +648,7 @@ namespace ViMG.UIs
 
 					rect = rect.Offset(unit * 4f + unit, Options.CurrentWindowResolution.Y / 2f + (pu.currentIndex * (unit * 2 + (unit / 2f))));
 
-					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.GetMaterial().Diffuse, pu.item.item.SourceRect, color: Color.White * (1 - p)));
+					UI.MakeTexture(new UI.TextureConstructionParameters(rect, pu.item.item.Client.GetMaterial().Diffuse, pu.item.item.Client.SourceRect, color: Color.White * (1 - p)));
 					UI.MakeLabel(new UI.LabelConstructionParameters(
 						string.Format("x{0} {1}", pu.item.num, pu.item.item.GetName(pu.item)), fi, 128,
 						rect.Position + new Vector2(unit, 0), Color.White * (1 - p)));
@@ -709,10 +677,10 @@ namespace ViMG.UIs
 				pickedupItems.Add(new PickedUpItem(item, pickedupItems.Length));
         }
 
-		private Recipe FindRecipe(Inventory inventory)
+		private static Recipe FindRecipe(Inventory inventory)
 		{
 			// Null is the equivalent of the "inventory" catalyst
-			var recipes = Main.Registry.RecipeRegistry.GetRecipesByCatalyst(Main.Registry.RecipeRegistry.catalystByName["Inventory"]);
+			var recipes = GlobalState.Registry.RecipeRegistry.GetRecipesByCatalyst(GlobalState.Registry.RecipeRegistry.catalystByName["Inventory"]);
 
 			Recipe rr = null;
 
@@ -729,7 +697,46 @@ namespace ViMG.UIs
 
 		private void CraftItem(Recipe recipe)
 		{
-			if (recipe.Matches(craftInventory))
+            var invManager = gsManager.TheIsland.GetClient().inventoryManager;
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
+
+            if (recipe.Matches(craftInventory))
+			{
+                MenuHelper.InventoryActionClient(player, this.craftInventory, gsManager.TheIsland.GetClient().Current().entities.GetPlayerIndex(player), 1);
+
+                //for (int i = 0; i < recipe.Layout.Length; i++)
+                //{
+                //	if (recipe.Layout[i].valid)
+                //	{
+                //		int numLeft = recipe.Layout[i].num;
+
+                //		craftInventory.FindExact(recipe.Layout[i], 6, out int index);
+
+                //		int overflow = inventory.Get(i).num - numLeft;
+                //		craftInventory.Remove(index, numLeft);
+                //		craftInventoryUpdated = true;
+
+                //		if (overflow < 0)
+                //			numLeft -= Math.Abs(overflow);
+                //		else numLeft -= numLeft;
+                //	}
+                //}
+
+                //for (int i = 0; i < recipe.Outputs.Length; i++)
+                //{
+                //	inventory.Add(recipe.Outputs[i]);
+                //}
+            }
+		}
+
+		public static void InventoryAction(Inventory inventory, Inventory outputInventory)
+		{
+			var recipe = FindRecipe(inventory);
+			if (recipe != null)
 			{
 				for (int i = 0; i < recipe.Layout.Length; i++)
 				{
@@ -737,21 +744,20 @@ namespace ViMG.UIs
 					{
 						int numLeft = recipe.Layout[i].num;
 
-							craftInventory.FindExact(recipe.Layout[i], 6, out int index);
+						inventory.FindExact(recipe.Layout[i], 6, out int index);
 
-							int overflow = inventory.Get(i).num - numLeft;
-							craftInventory.Remove(index, numLeft);
-							craftInventoryUpdated = true;
+						int overflow = inventory.Get(i).num - numLeft;
+						inventory.Remove(index, numLeft);
 
-							if (overflow < 0)
-								numLeft -= Math.Abs(overflow);
-							else numLeft -= numLeft;
+						if (overflow < 0)
+							numLeft -= Math.Abs(overflow);
+						else numLeft -= numLeft;
 					}
 				}
 
 				for (int i = 0; i < recipe.Outputs.Length; i++)
 				{
-					inventory.Add(recipe.Outputs[i]);
+					outputInventory.Add(recipe.Outputs[i]);
 				}
 			}
 		}
@@ -764,21 +770,32 @@ namespace ViMG.UIs
         public override void Draw(SpriteBatch batch)
 		{
 			base.Draw(batch);
+            
+			var invManager = gsManager.TheIsland.GetClient().inventoryManager;
+            var heldInventory = invManager.Get(this.heldInventory);
+            var inventory = invManager.Get(this.inventory);
+            var craftInventory = invManager.Get(this.craftInventory);
+            var accessoryInventory = invManager.Get(this.accessoryInventory);
+            var gearInventory = invManager.Get(this.gearInventory);
 
-			UI.Draw(batch, SCALE);
+			var playerRef = gsManager.TheIsland.GetClient().Current().entities.GetLocalPlayerRef();
+			var playerEnt = gsManager.TheIsland.GetClient().Current().entities.GetByRef(ref playerRef);
+			var player = playerEnt.GetExtra<Player.PlayerExtraState>();
+
+            UI.Draw(batch, SCALE);
 
 			if (opened)
 			{
-				MenuHelper.DrawHeldItem(batch, held, SIZE, SCALE);
+				MenuHelper.DrawHeldItem(batch, heldInventory.Get(0), SIZE, SCALE);
 			}
 
 			Vector2 hbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING - 
-				WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), HEALTHBAR_PADDING);
+				WIDTH_PER_HEALTH * player.maxHealth, HEALTHBAR_PADDING);
 			RectangleF hbRect = new RectangleF(hbPos,
-                new Vector2(WIDTH_PER_HEALTH * player.GetCalculatedMaxHealth(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_HEALTH * player.maxHealth, 8 * HEALTHBAR_SCALE));
 
-			float health = player.Health;
-			float lostHealth = player.GetCalculatedMaxHealth() - player.Health;
+			float health = playerEnt.health;
+			float lostHealth = player.maxHealth - health;
 
             healthbarLowerNS.Draw(batch, Color.White, hbRect, HEALTHBAR_SCALE, 0);
 
@@ -790,12 +807,12 @@ namespace ViMG.UIs
 			}
 
             Vector2 mbPos = new Vector2(Options.CurrentWindowResolution.X - HEALTHBAR_PADDING -
-                WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
+                WIDTH_PER_MAGIC * player.maxMagic, HEALTHBAR_PADDING + HEALTHBAR_HEIGHT + HEALTHBAR_PADDING);
             RectangleF mbRect = new RectangleF(mbPos,
-                new Vector2(WIDTH_PER_MAGIC * player.GetCalculatedMaxMagic(), 8 * HEALTHBAR_SCALE));
+                new Vector2(WIDTH_PER_MAGIC * player.maxMagic, 8 * HEALTHBAR_SCALE));
 
-            float magic = player.Magic;
-			float lostMagic = player.GetCalculatedMaxMagic() - player.Magic;
+            float magic = player.magic;
+			float lostMagic = player.maxMagic - magic;
 
 			magicbarLowerNS.Draw(batch, Color.White, mbRect, HEALTHBAR_SCALE, 0);
 		

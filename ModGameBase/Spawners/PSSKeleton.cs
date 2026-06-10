@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine;
+using Microsoft.Xna.Framework;
+using ModGameBase.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace ViMG.Spawners
 {
     public class PSSKeleton : PassiveSpawner
     {
-        private List<Skeleton> skeletons = new List<Skeleton>();
+        private List<Skeleton2> skeletons = new List<Skeleton2>();
 
         public PSSKeleton(PassiveSpawnerManager manager, EntityManager entityManager) : base(manager, 0.5f, 1f / 10f,
             new Rectangle3D(new Vector3(112, 0, 112) * Cube.CUBE_SCALE, new Vector3(512 - 112, 512, 512 - 112) * Cube.CUBE_SCALE))
@@ -25,28 +27,28 @@ namespace ViMG.Spawners
         //but that assumes we're using the same "load the world all at once" style that we're doing.
         private void OnEntityAdded(Entity entity)
         {
-            if (entity is Skeleton s)
+            if (entity is Skeleton2 s)
                 skeletons.Add(s);
         }
 
         private void OnEntityRemoved(Entity entity)
         {
-            if (entity is Skeleton s)
+            if (entity is Skeleton2 s)
                 skeletons.Remove(s);
         }
 
         public override bool CanAreaSpawn(World world, ChunkManager manager, CubePosition position)
         {
-            //Don't spawn during the day, and don't spawn when the player is looking at the given position.
-            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight() || Main.camera.FrustumContains(position.InWorldSpace()))
+            //Don't spawn during the day
+            if (!world.ChunkLoadManager.IsLoaded(ChunkPosition.CubeChunk(position)) || !world.IsNight())
                 return false;
 
             if (position.Y < 181)
                 return false;
 
-            Cube c = manager.CubeView.GetCube(position).GetOrDefault(Main.Registry.CubeRegistry.Air);
-            if (c == Main.Registry.CubeRegistry.Get("dirt") || c == Main.Registry.CubeRegistry.Get("grass") || 
-                c == Main.Registry.CubeRegistry.Get("stone"))
+            Cube c = manager.CubeView.GetCube(position).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
+            if (c == GlobalState.Registry.CubeRegistry.Get("dirt") || c == GlobalState.Registry.CubeRegistry.Get("grass") || 
+                c == GlobalState.Registry.CubeRegistry.Get("stone"))
                 return true;
 
             return false;
@@ -62,7 +64,7 @@ namespace ViMG.Spawners
                 if (position.X < minR || position.Z < minR || position.X > maxR || position.Z > maxR)
                     return;
 
-                Skeleton slime = new Skeleton(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
+                Skeleton2 slime = new Skeleton2(position.InWorldSpace() + new Vector3(0, Cube.CUBE_SCALE, 0));
                 world.EntityManager.Add(slime);
             }
         }

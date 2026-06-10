@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,8 +14,13 @@ namespace ViMG.Items
 {
     public class ItemScrollFind : Item
     {
-        public ItemScrollFind() : base("scroll_find", new RectangleF(112, 32, 16, 16))
+        public ItemScrollFind() : base("scroll_find")
         {
+        }
+
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(112, 32, 16, 16));
         }
 
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
@@ -45,7 +51,7 @@ namespace ViMG.Items
 			if (point.valid) 
 			{
 				player.world.EntityManager.Add(new Entities.Line(player.Position, point.position.InWorldSpace(), Cube.CUBE_SCALE / 16f, -1,
-					new Rendering.RendererDeferred.DrawMaterial(DrawHelper.WhitePixel), RectangleF.Empty, Color.Red, 2f * 60f));
+					0, Color.Red, 2f * 60f));
 
 				player.Magic -= 5;
 

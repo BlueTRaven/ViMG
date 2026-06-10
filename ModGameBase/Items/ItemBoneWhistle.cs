@@ -1,4 +1,7 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Entities;
+using Engine.Items;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,7 +14,7 @@ namespace ViMG.Items
 {
     public class ItemBoneWhistle : Item
     {
-        public ItemBoneWhistle() : base("bone_whistle", new RectangleF(80, 80, 16, 16))
+        public ItemBoneWhistle() : base("bone_whistle")
         {
             name = "Bone Whistle";
             description = "A whistle carved of bone.\n" +
@@ -21,7 +24,12 @@ namespace ViMG.Items
             Tags.Add("accessory");
         }
 
-        public override void AccumulateStats(Player player, Inventory inventory, int index, ref Player.AccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(80, 80, 16, 16));
+        }
+
+        public override void AccumulateStats(Player player, Inventory inventory, int index, ref PlayerAccumulatedStats stats, ref SetBonus.SetBonusInstance bonus)
         {
             base.AccumulateStats(player, inventory, index, ref stats, ref bonus);
 
@@ -30,7 +38,8 @@ namespace ViMG.Items
 
         public static bool HasBoneWhistle(Player player)
         {
-            return player.GetAccessoryInventory().Find(Main.Registry.ItemRegistry.Get("bone_whistle")).valid;
+            var accessoryInventory = player.world.InventoryManager.Get(player.accessoryInventory);
+            return accessoryInventory.Find(GlobalState.Registry.ItemRegistry.Get("bone_whistle")).valid;
         }
     }
 }

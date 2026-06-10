@@ -8,12 +8,17 @@ namespace ViMG.Cubes
 {
 	public class CubeWater : Cube
 	{
-		public CubeWater() : base("water", new RectangleF(0, 16, 16, 16), Color.White, -1)
+		public CubeWater() : base("water", -1)
 		{
 			Touchable = false;
 			Transparency = TransparencyValue.TransparentOccludesSiblings;
 			Collision = CollisionValue.LiquidWater;
-		}
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(0, 16, 16, 16), Color.White);
+        }
 
         public override bool ShouldMeshPass(RenderPass pass)
         {

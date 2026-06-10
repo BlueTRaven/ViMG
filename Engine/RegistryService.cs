@@ -1,4 +1,9 @@
-﻿using Engine.Mods;
+﻿using Engine;
+using Engine.Entities;
+using Engine.Entities.Renderers;
+using Engine.Mods;
+using Engine.Networking.Messages;
+using Engine.Projectiles;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -6,7 +11,6 @@ using System.Reflection;
 using System.Text;
 using ViMG.Buffs;
 using ViMG.Cubes;
-using ViMG.Entities.Renderers;
 using ViMG.Items;
 using ViMG.Recipes;
 using ViMG.WorldLogics;
@@ -22,8 +26,11 @@ namespace ViMG
 		public CubeRegistry CubeRegistry;
 		public RecipeRegistry RecipeRegistry;
 		public BuffRegistry BuffRegistry;
+        public EntityRegistry EntityRegistry;
+        public ProjectileRegistry ProjectileRegistry;
 		public RendererRegistry RendererRegistry;
 		public WorldLogicRegistry WorldLogicRegistry;
+        public MessageRegistry MessageRegistry;
 
 		public RegistryService(GraphicsDevice? device)
 		{
@@ -32,9 +39,12 @@ namespace ViMG
 			CubeRegistry = new CubeRegistry();
 			RecipeRegistry = new RecipeRegistry();
 			BuffRegistry = new BuffRegistry();
+            EntityRegistry = new EntityRegistry();
+            ProjectileRegistry = new ProjectileRegistry();
             if (device != null)
 			    RendererRegistry = new RendererRegistry(device);
 			WorldLogicRegistry = new WorldLogicRegistry();
+            MessageRegistry = new MessageRegistry();
             this.device = device;
         }
 
@@ -45,8 +55,11 @@ namespace ViMG
 			ItemRegistry.RegisterAll();
 			RecipeRegistry.RegisterAll();
 			BuffRegistry.RegisterAll();
+            EntityRegistry.RegisterAll();
+            ProjectileRegistry.RegisterAll();
 			RendererRegistry?.RegisterAll();
 			WorldLogicRegistry.RegisterAll();
+            MessageRegistry.RegisterAll();
 
 			RecipeRegistry.PostRegistration();
 
@@ -92,6 +105,8 @@ namespace ViMG
                 foreach (Item item in ItemRegistry.GetIterable())
                 {
                     (item as IRegisterable).LoadContent(device);
+                    if (!GlobalState.IsHeadless)
+                        item.DoClientInit();
                 }
             }
 
@@ -133,6 +148,38 @@ namespace ViMG
                 }
             }
 
+            foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.EntityRegistry?.RegisterAll();
+                    EntityRegistry.AddFromOther(service.EntityRegistry);
+                }
+            }
+
+            EntityRegistry.PostRegistration();
+
+            if (device != null)
+            {
+                foreach (EntityType item in EntityRegistry.GetIterable())
+                {
+                    (item as IRegisterable).LoadContent(device);
+                }
+            }
+
+            foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.ProjectileRegistry?.RegisterAll();
+                    ProjectileRegistry.AddFromOther(service.ProjectileRegistry);
+                }
+            }
+
+            ProjectileRegistry.PostRegistration();
+
             if (RendererRegistry != null)
             {
                 foreach (Mod mod in ModRegistry.GetIterable())
@@ -154,6 +201,17 @@ namespace ViMG
                 {
                     service.WorldLogicRegistry?.RegisterAll();
                     WorldLogicRegistry.AddFromOther(service.WorldLogicRegistry);
+                }
+            }
+
+            foreach (Mod mod in ModRegistry.GetIterable())
+            {
+                var service = mod.Registry;
+                if (service != null)
+                {
+                    service.MessageRegistry?.RegisterAll();
+                    service.MessageRegistry?.PostRegistration();
+                    MessageRegistry.AddFromOther(service.MessageRegistry);
                 }
             }
 

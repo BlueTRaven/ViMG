@@ -8,7 +8,7 @@ namespace ViMG
 {
     public abstract class WorldIO
     {
-        public const string SAVE_FOLDER = "./saves/";
+        public static string SaveFolder = "./saves/";
         
         public enum LoadError
         {

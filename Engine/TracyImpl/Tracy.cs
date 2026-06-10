@@ -701,6 +701,30 @@ namespace ViMG.TracyImpl
 #endif
         }
 
+        public static void FrameMark(string str)
+        {
+#if !NOTRACY
+            using CString cs = new CString(str);
+            TracyNative.PInvoke.TracyEmitFrameMark(cs);
+#endif
+        }
+
+        public static void SetThreadName(string str)
+        {
+#if !NOTRACY
+            using CString cs = new CString(str);
+            TracyNative.PInvoke.TracySetThreadName(cs);
+#endif
+        }
+
+        public static void EmitMessage(string str)
+        {
+#if !NOTRACY
+            using CString cs = new CString(str);
+            TracyNative.PInvoke.TracyEmitMessageL(cs, 0);
+#endif
+        }
+
         public struct Zone : IDisposable
         {
             private TracyNative.PInvoke.TracyCZoneContext context;
@@ -728,12 +752,18 @@ namespace ViMG.TracyImpl
 #if NOTRACY
             return new Zone();
 #else
-
             ulong srcLoc;
-            
+
+            using CString filePathC = (CString)filePath;
+            using CString functionNameC = (CString)filePath;
+
             if (name == null)
-                srcLoc = TracyNative.PInvoke.TracyAllocSrcloc((uint)lineNumber, (CString)filePath, (ulong)filePath.Length, (CString)functionName, (ulong)functionName.Length);
-            else srcLoc = TracyNative.PInvoke.TracyAllocSrclocName((uint)lineNumber, (CString)filePath, (ulong)filePath.Length, (CString)functionName, (ulong)functionName.Length, (CString)name, (ulong)name.Length);
+                srcLoc = TracyNative.PInvoke.TracyAllocSrcloc((uint)lineNumber, filePathC, (ulong)filePath.Length, functionNameC, (ulong)functionName.Length);
+            else
+            {
+                using CString nameC = (CString)name;
+                srcLoc = TracyNative.PInvoke.TracyAllocSrclocName((uint)lineNumber, filePathC, (ulong)filePath.Length, functionNameC, (ulong)functionName.Length, nameC, (ulong)name.Length);
+            }
 
             var ctx = TracyNative.PInvoke.TracyEmitZoneBeginAlloc(srcLoc, 1);
 

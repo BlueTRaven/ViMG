@@ -1,6 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BrUtility.Src;
+using Engine;
+using Engine.Items;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,7 +60,7 @@ namespace ViMG
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = manager.CubeView.GetCube(realPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -73,9 +77,9 @@ namespace ViMG
 			}
 		}
 
-		public delegate bool ShouldWriteFn(EntityManager entityManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
+		public delegate bool ShouldWriteFn(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, CubePosition position, Structure structure, int structureIndex, ref ushort id);
 
-		public static void PlaceStructureWithBlacklist(EntityManager entityManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
+		public static void PlaceStructureWithBlacklist(EntityManager entityManager, InventoryManager inventoryManager, ChunkManager chunkManager, Structure structure, CubePosition pos,
 			Span<ushort> overwriteWorldBlacklist, ShouldWriteFn shouldWrite, bool markDirty)
 		{
 			for (int z = 0; z < structure.size.Z; z++)
@@ -91,13 +95,13 @@ namespace ViMG
 						{
 							bool canWrite = true;
 							ushort placeId = structure.data[i];
-							if (shouldWrite != null && !shouldWrite(entityManager, chunkManager, realPos, structure, i, ref placeId))
+							if (shouldWrite != null && !shouldWrite(entityManager, inventoryManager, chunkManager, realPos, structure, i, ref placeId))
 								canWrite = false;
 
 							//Allow world cube to be overwritten by structure
 							if (!overwriteWorldBlacklist.IsEmpty)
 							{
-								int overwritingId = chunkManager.CubeView.GetCube(realPos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id;
+								int overwritingId = chunkManager.CubeView.GetCube(realPos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id;
 
 								for (int j = 0; j < overwriteWorldBlacklist.Length; j++)
 								{
@@ -121,17 +125,17 @@ namespace ViMG
 			switch (num)
             {
 				case 0:
-					return Main.Registry.CubeRegistry.Get("shrine_shimu");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_shimu");
 				case 1:
-					return Main.Registry.CubeRegistry.Get("shrine_irat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_irat");
 				case 2:
-					return Main.Registry.CubeRegistry.Get("shrine_adrath");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_adrath");
 				case 3:
-					return Main.Registry.CubeRegistry.Get("shrine_akkat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_akkat");
 				case 4:
-					return Main.Registry.CubeRegistry.Get("shrine_gidamu");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_gidamu");
 				case 5:
-					return Main.Registry.CubeRegistry.Get("shrine_arat");
+					return GlobalState.Registry.CubeRegistry.Get("shrine_arat");
 				default: return null;
 			}
         }
@@ -140,7 +144,7 @@ namespace ViMG
         {
 			if (manager.IsInWorldBounds(positionInCubeSpace))
 			{
-				offsetCube = manager.CubeView.GetCube(positionInCubeSpace).GetOrDefault(Main.Registry.CubeRegistry.Air);
+				offsetCube = manager.CubeView.GetCube(positionInCubeSpace).GetOrDefault(GlobalState.Registry.CubeRegistry.Air);
 				if (!offsetCube.Solid)
 				{
 					return true;
@@ -231,9 +235,11 @@ namespace ViMG
 			return positions;
 		}
 
-		public static List<CubePosition> SelectInArea(ChunkManager manager, Rectangle3DI bounds, ushort ofType)
+		public static void SelectInArea(FastStackList<CubePosition> selected, ChunkManager manager, Rectangle3DI bounds, ushort ofType)
         {
-			List<CubePosition> selected = new List<CubePosition>();
+			Debug.Assert(selected.Capacity >= bounds.Size.X * bounds.Size.Y * bounds.Size.Z);
+
+			//List<CubePosition> selected = new List<CubePosition>();
 
 			for (int z = bounds.Position.Z; z <= bounds.FarPosition.Z; z++)
             {
@@ -243,15 +249,13 @@ namespace ViMG
                     {
 						CubePosition pos = new CubePosition(x, y, z, CubePosition.CoordinateSpace.CubeSpace);
 
-						if (manager.IsInWorldBounds(pos) && manager.CubeView.GetCube(pos).GetOrDefault(Main.Registry.CubeRegistry.Air).Id == ofType)
+						if (manager.IsInWorldBounds(pos) && manager.CubeView.GetCube(pos).GetOrDefault(GlobalState.Registry.CubeRegistry.Air).Id == ofType)
                         {
 							selected.Add(pos);
                         }
                     }
 				}
 			}
-
-			return selected;
         }
 	}
 }

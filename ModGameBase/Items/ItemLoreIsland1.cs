@@ -1,4 +1,6 @@
 ﻿using BrUtility;
+using Engine;
+using Engine.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,17 +22,22 @@ namespace ViMG.Items
             "of day or weather. Rain or shine, thunderstorm or placid sea; this layer of fog is eternal and has never once ceased its vigil.\n" +
             "All those who enter this fog are forever lost.";
 
-        public ItemLoreIsland1() : base("book_lore_island1", new RectangleF(48, 32, 16, 16))
+        public ItemLoreIsland1() : base("book_lore_island1")
         {
             name = "The Island of Vi: A Mythica";
             description = "(Lore Item)\n" +
                 "By Serris of Agaldam";
         }
 
+        protected override ClientItem ClientInit()
+        {
+            return new ClientItem(this, new RectangleF(48, 32, 16, 16));
+        }
+
         public override bool RightClick(Player player, Inventory inventory, int index, Vector3 facing, out ActionStats actionStats)
         {
             player.world.MenuDialogue.StartText(text);
-            Main.gameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
+            GlobalState.GameStateManager.TheIsland.PushMenu(player.world.MenuDialogue);
 
             return base.RightClick(player, inventory, index, facing, out actionStats);
         }

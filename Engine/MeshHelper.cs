@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Security;
 using System.Text;
 using ViMG.Cubes;
+using ViMG.IMGUIImpl;
 using ViMG.Rendering;
 using ViMG.VertexDeclarations;
 
@@ -15,17 +16,17 @@ namespace ViMG
 {
     public static class MeshHelper
 	{
-		private static Color[] faceColors = new Color[6]
-		{
-			Color.Red,
+		private static Color[] faceColors =
+        [
+            Color.Red,
 			Color.Green,
 			Color.Yellow,
 			Color.Blue,
 			Color.Pink,
 			Color.Purple
-		};
+		];
 
-		public static (VertexBuffer VBO, IndexBuffer IBO) MakeCubemap(GraphicsDevice device, Vector3 min, Vector3 max)
+		public static (VertexBuffer VBO, IndexBuffer IBO) MakeDebugCubemap(GraphicsDevice device, Vector3 min, Vector3 max)
         {
 			FastList<VertexCube> vertices = new FastList<VertexCube>();
 			List<int> indices = new List<int>();
@@ -149,9 +150,9 @@ namespace ViMG
         public static unsafe void BakeTangents<T>(int start, int end, FastList<T> vertices)
 			where T : struct, IVertexDeclGetters
         {
-            using var zone = TracyImpl.Tracy.BeginZone();
+            //using var zone = TracyImpl.Tracy.BeginZone();
 
-            Debug.Assert((end - start) % 4 == 0);
+            IMGUIConsole.Assert((end - start) % 4 == 0);
 
 				for (int i = start; i < end; i += 4)
 				{
@@ -175,21 +176,21 @@ namespace ViMG
 						);*/
 
 					Vector3 bitangent = Vector3.Cross(vert1.GetNormal(), tangent);
-					/*Vector3 bitangent = new Vector3(
-						f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
-						f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
-						f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
-						);*/
+				/*Vector3 bitangent = new Vector3(
+					f * (-dUV2.X * edge1.X + dUV1.X * edge2.X),
+					f * (-dUV2.X * edge1.Y + dUV1.X * edge2.Y),
+					f * (-dUV2.X * edge1.Z + dUV1.X * edge2.Z)
+					);*/
 
-					vert1.SetTangent(tangent, bitangent);
-					vert2.SetTangent(tangent, bitangent);
-					vert3.SetTangent(tangent, bitangent);
-					vert4.SetTangent(tangent, bitangent);
+                vert1.SetTangent(tangent, bitangent);
+				vert2.SetTangent(tangent, bitangent);
+				vert3.SetTangent(tangent, bitangent);
+				vert4.SetTangent(tangent, bitangent);
 
-					vertices.Buffer[i + 0] = vert1;
-					vertices.Buffer[i + 1] = vert2;
-					vertices.Buffer[i + 2] = vert3;
-					vertices.Buffer[i + 3] = vert4;
+				vertices.Buffer[i + 0] = vert1;
+				vertices.Buffer[i + 1] = vert2;
+				vertices.Buffer[i + 2] = vert3;
+				vertices.Buffer[i + 3] = vert4;
 			}
         }
 
@@ -831,5 +832,213 @@ namespace ViMG
 			vertices.Add(new VertexPositionTexture(c, ctx));
 			vertices.Add(new VertexPositionTexture(d, dtx));
 		}
-	}
+
+		public static VerySimpleMesh MakeSkybox(GraphicsDevice device, float width, float height)
+		{
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
+
+            Vector3 l_b_f = new Vector3(0, 0, 1);
+            Vector3 r_b_f = new Vector3(1, 0, 1);
+            Vector3 r_b_n = new Vector3(1, 0, 0);
+            Vector3 l_b_n = new Vector3(0, 0, 0);
+
+            Vector3 l_t_n = new Vector3(0, 1, 0);
+            Vector3 r_t_n = new Vector3(1, 1, 0);
+            Vector3 r_t_f = new Vector3(1, 1, 1);
+            Vector3 l_t_f = new Vector3(0, 1, 1);
+
+            float SKYBOX_SIDE_SIZE = 1024f;
+            float SKYBOX_WIDTH = SKYBOX_SIDE_SIZE * width;
+            float SKYBOX_HEIGHT = SKYBOX_SIDE_SIZE * height;
+
+            //front face
+            int offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, 0), new Vector3(0, 0, 1)));
+
+            //right face
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(-1, 0, 0)));
+
+            //back face
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(0, 0, -1)));
+
+            //left face
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE / SKYBOX_HEIGHT), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 3f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 4f / SKYBOX_WIDTH, 0), new Vector3(1, 0, 0)));
+
+            //top face
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, -1, 0)));
+
+
+            //bottom face
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 2f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 1 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(SKYBOX_SIDE_SIZE * 2 / SKYBOX_WIDTH, SKYBOX_SIDE_SIZE * 1f / SKYBOX_HEIGHT), new Vector3(0, 1, 0)));
+
+            return VerySimpleMesh.Transparent(device, ChunkRenderMesher.VertexAttributes.Transparent(vertices, indices));
+
+        }
+
+        public static VerySimpleMesh MakeCube(GraphicsDevice device, Vector3 min, Vector3 max, VerySimpleMesh.Pass pass)
+        {
+            return MakeCubemap(device, max, min, pass);
+        }
+
+        public static VerySimpleMesh MakeCubemap(GraphicsDevice device, Vector3 min, Vector3 max, VerySimpleMesh.Pass pass)
+        {
+            FastList<VertexCube> vertices = new FastList<VertexCube>();
+            List<int> indices = new List<int>();
+
+            Vector3 l_t_f = new Vector3(min.X, min.Y, max.Z);
+            Vector3 r_t_f = new Vector3(max.X, min.Y, max.Z);
+            Vector3 r_t_n = new Vector3(max.X, min.Y, min.Z);
+            Vector3 l_t_n = new Vector3(min.X, min.Y, min.Z);
+
+            Vector3 l_b_n = new Vector3(min.X, max.Y, min.Z);
+            Vector3 r_b_n = new Vector3(max.X, max.Y, min.Z);
+            Vector3 r_b_f = new Vector3(max.X, max.Y, max.Z);
+            Vector3 l_b_f = new Vector3(min.X, max.Y, max.Z);
+
+            indices.Add(0);
+            indices.Add(1);
+            indices.Add(3);
+            indices.Add(1);
+            indices.Add(2);
+            indices.Add(3);
+
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, 0), new Vector3(0, 1, 0)));
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(1, 0), new Vector3(0, 1, 0)));
+
+            int offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(1, 1), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(0, 1), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(0, 0), new Vector3(0, 0, 1)));
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(1, 0), new Vector3(0, 0, 1)));
+
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(1, 1), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_t_n, Color.White, new Vector2(0, 1), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(-1, 0, 0)));
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(1, 0), new Vector3(-1, 0, 0)));
+
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(1, 1), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(r_t_f, Color.White, new Vector2(0, 1), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 0), new Vector3(0, 0, -1)));
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 0), new Vector3(0, 0, -1)));
+
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_t_n, Color.White, new Vector2(1, 1), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_t_f, Color.White, new Vector2(0, 1), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(0, 0), new Vector3(1, 0, 0)));
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(1, 0, 0)));
+
+            offset = vertices.Length;
+            indices.Add(offset + 0);
+            indices.Add(offset + 1);
+            indices.Add(offset + 3);
+            indices.Add(offset + 1);
+            indices.Add(offset + 2);
+            indices.Add(offset + 3);
+
+            vertices.Add(new VertexCube(l_b_f, Color.White, new Vector2(1, 1), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(r_b_f, Color.White, new Vector2(0, 1), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(r_b_n, Color.White, new Vector2(0, 0), new Vector3(0, -1, 0)));
+            vertices.Add(new VertexCube(l_b_n, Color.White, new Vector2(1, 0), new Vector3(0, -1, 0)));
+
+            return VerySimpleMesh.New(device, new ChunkRenderMesher.VertexAttributes(vertices, indices), pass);
+        }
+    }
 }

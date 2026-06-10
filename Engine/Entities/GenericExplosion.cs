@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -6,11 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using ViMG.Rendering;
 
 namespace ViMG.Entities
 {
-    public class GenericExplosion : Entity, IHitboxOwner
+    public class GenericExplosion : Entity, IHitboxOwner, ISyncedEntity
     {
         //private VerySimpleMesh mesh;
 
@@ -20,7 +22,7 @@ namespace ViMG.Entities
         private readonly HitboxManager.Group group;
         private readonly int damage;
         private readonly float knockback;
-        public readonly float radius;
+        public float radius;
 
         private float hitboxTimer;
         public float timer;
@@ -61,11 +63,11 @@ namespace ViMG.Entities
 
                 float hitboxSize = (1 - hitboxTimer / HITBOX_TIME) * radius;
 
-                world.HitboxManager.Update(hitbox, new Rectangle3D(Position - new Vector3(hitboxSize / 2f), new Vector3(hitboxSize)));
+                world.HitboxManager.Update(hitbox, new Engine.Physics.OrientedBoundingBox(Position, new(hitboxSize / 2f), Quaternion.Identity));
             }
 
             if (timer <= 0)
-                world.EntityManager.Remove(this);
+                world.EntityManager.Kill(this);
         }
 
         public override void OnUnload()
@@ -92,6 +94,15 @@ namespace ViMG.Entities
 
         public void OnInteractWithOther(HitboxManager.Hitbox us, HitboxManager.Hitbox other)
         {
+        }
+
+        public void GetSyncedEntity(out SyncedEntity state)
+        {
+            state = new SyncedEntity
+            {
+                position = Position,
+                timers = { [0] = timer, [1] = radius }
+            };
         }
     }
 }

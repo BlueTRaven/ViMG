@@ -1,4 +1,5 @@
 ﻿using BrUtility;
+using Engine;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,16 +12,21 @@ namespace ViMG.Cubes
 {
 	public class CubeTree : Cube
 	{
-		public CubeTree() : base("tree", new RectangleF(64, 0, 16, 16), Color.White, 2)
+		public CubeTree() : base("tree", 2)
 		{
 			Transparency = TransparencyValue.Invisible;
-		}
+        }
+
+        public override ClientCube ClientInit()
+        {
+            return new(this, new RectangleF(64, 0, 16, 16), Color.White);
+        }
 
 		public override void GetDrops(List<ItemInstance> itemsToDrop)
 		{
 			base.GetDrops(itemsToDrop);
 
-			itemsToDrop.Add(new ItemInstance(Main.Registry.ItemRegistry.Get("wood"), 1, 1));
+			itemsToDrop.Add(new ItemInstance(GlobalState.Registry.ItemRegistry.Get("wood"), 1, 1));
 		}
 	}
 }
