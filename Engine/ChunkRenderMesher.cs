@@ -251,10 +251,12 @@ namespace ViMG
 
 				if (task.IsCompleted)
 				{
-					if (!task.IsCompletedSuccessfully)
-						throw new Exception("???");
+                    if (!task.IsCompletedSuccessfully)
+                    {
+                        throw task.Exception ?? new Exception("Task did not complete successfully, but did not throw an exception?");
+                    }
 
-					BatchRenderMeshTaskResult batchResult = task.Result;
+                    BatchRenderMeshTaskResult batchResult = task.Result;
 					task.Dispose();
 
 					for (int j = 0; j < batchResult.num; j++)
